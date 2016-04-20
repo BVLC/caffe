@@ -11,6 +11,9 @@
 #include <limits>
 
 #define BIGNUM_OR_MAX(A) ((A) > (std::numeric_limits<size_t>::max()) ? (std::numeric_limits<size_t>::max()) : (A))
+#ifndef _LMDB_MAP_SIZE
+#define _LMDB_MAP_SIZE 1099511627776
+#endif
 
 namespace caffe { namespace db {
 

@@ -16,6 +16,7 @@
 #	You should not set this flag if you will be reading LMDBs with any
 #	possibility of simultaneous read and write
 # ALLOW_LMDB_NOLOCK := 1
+# LMDB_MAP_SIZE := 4294967295 # 1TB is the default - uncomment this to avoid overflow on 32bit systems.
 
 # Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
