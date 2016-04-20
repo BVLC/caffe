@@ -191,7 +191,7 @@ ifeq ($(USE_LEVELDB), 1)
 endif
 ifeq ($(USE_LMDB), 1)
 	LIBRARIES += lmdb
-    COMMON_FLAGS += -D_LMDB_MAP_SIZE=$(LMDB_MAP_SIZE)
+	COMMON_FLAGS += -D_LMDB_MAP_SIZE=$(LMDB_MAP_SIZE)
 endif
 ifeq ($(USE_OPENCV), 1)
 	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 
