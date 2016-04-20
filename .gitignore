@@ -22,6 +22,7 @@
 
 # Compiled python
 *.pyc
+*.pyo
 
 # Compiled MATLAB
 *.mex*
