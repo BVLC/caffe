@@ -1,37 +1,65 @@
-# Caffe
+# Windows Caffe
 
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+**This is an experimental, Microsoft-led branch by Pavle Josipovic (@pavlejosipovic). It is a work-in-progress.**
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
+This branch of Caffe ports the framework to Windows.
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+[![Travis Build Status](https://api.travis-ci.org/BVLC/caffe.svg?branch=windows)](https://travis-ci.org/BVLC/caffe) Travis (Linux build)
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+[![Build status](https://ci.appveyor.com/api/projects/status/128eg95svel2a2xs?svg=true)]
+(https://ci.appveyor.com/project/pavlejosipovic/caffe-v45qi) AppVeyor (Windows build)
 
-and step-by-step examples.
+## Windows Setup
+**Requirements**: Visual Studio 2013
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+### Pre-Build Steps
+Copy `.\windows\CommonSettings.props.example` to `.\windows\CommonSettings.props`
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+By defaults Windows build requires `CUDA` and `cuDNN` libraries.
+Both can be disabled by adjusting build variables in `.\windows\CommonSettings.props`.
+Python support is disabled by default, but can be enabled via `.\windows\CommonSettings.props` as well.
+3rd party dependencies required by Caffe are automatically resolved via NuGet.
 
-Happy brewing!
+### CUDA
+Download `CUDA Toolkit 7.5` [from nVidia website](https://developer.nvidia.com/cuda-toolkit).
+If you don't have CUDA installed, you can experiment with CPU_ONLY build.
+In `.\windows\CommonSettings.props` set `CpuOnlyBuild` to `true` and set `UseCuDNN` to `false`.
 
-## License and Citation
+### cuDNN
+Download `cuDNN v3` or `cuDNN v4` [from nVidia website](https://developer.nvidia.com/cudnn).
+Unpack downloaded zip to %CUDA_PATH% (environment variable set by CUDA installer).
+Alternatively, you can unpack zip to any location and set `CuDnnPath` to point to this location in `.\windows\CommonSettings.props`.
+`CuDnnPath` defined in `.\windows\CommonSettings.props`.
+Also, you can disable cuDNN by setting `UseCuDNN` to `false` in the property file.
 
-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BVLC reference models are released for unrestricted use.
+### Python
+To build Caffe Python wrapper set `PythonSupport` to `true` in `.\windows\CommonSettings.props`.
+Download Miniconda 2.7 64-bit Windows installer [from Miniconda website] (http://conda.pydata.org/miniconda.html).
+Install for all users and add Python to PATH (through installer).
 
-Please cite Caffe in your publications if it helps your research:
+Run the following commands from elevated command prompt:
 
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
+```
+conda install --yes numpy scipy matplotlib scikit-image pip
+pip install protobuf
+```
+
+#### Remark
+After you have built solution with Python support, in order to use it you have to either:  
+* set `PythonPath` environment variable to point to `<caffe_root>\Build\x64\Release\pycaffe`, or
+* copy folder `<caffe_root>\Build\x64\Release\pycaffe\caffe` under `<python_root>\lib\site-packages`.
+
+### Matlab
+To build Caffe Matlab wrapper set `MatlabSupport` to `true` and `MatlabDir` to the root of your Matlab installation in `.\windows\CommonSettings.props`.
+
+#### Remark
+After you have built solution with Matlab support, in order to use it you have to:
+* add the generated `matcaffe` folder to Matlab search path, and
+* add `<caffe_root>\Build\x64\Release` to your system path.
+
+### Build
+Now, you should be able to build `.\windows\Caffe.sln`
+
+## Further Details
+
+Refer to the BVLC/caffe master branch README for all other details such as license, citation, and so on.
