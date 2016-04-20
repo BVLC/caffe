@@ -1,12 +1,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <string>
 #include <vector>
+#include "caffe/blob.hpp"
+#include "caffe/internode/configuration.hpp"
+#include "caffe/multinode/BlobComms.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/serialization/bitfield.hpp"
-#include "caffe/blob.hpp"
-#include "caffe/multinode/BlobComms.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
-#include "caffe/internode/configuration.hpp"
 #include "caffe/solver_factory.hpp"
 
 namespace caffe {
@@ -44,15 +45,15 @@ struct BlobCommsTest : public Test {
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
   shared_ptr<Solver<float> > solver;
-  
+
   string address;
   int num_of_threads;
-  
+
     virtual void SetUp() {
     const_info_mock.reset(new BlobConstInfoMock());
     sync_mock.reset(new StrictMock<SyncedMock>());
     sync_info = BlobInfoFactory<float>::create_sync_info(const_info_mock);
-    //if (register_handler)
+    // if (register_handler)
       sync_info->register_synced_handler(sync_mock.get());
     EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(1));
   }
@@ -62,7 +63,7 @@ struct BlobCommsTest : public Test {
     sync_mock.reset();
     const_info_mock.reset();
   }
-  
+
   void buildOne(){
     LOG(INFO) << "1";
     SolverParameter solverparam = SolverParameter::default_instance();
@@ -70,7 +71,8 @@ struct BlobCommsTest : public Test {
     solver.reset(SolverRegistry<float>::CreateSolver(solverparam));
     LOG(INFO) << "2";
     comm = internode::create_communication_daemon();
-    codec = BlobCodec<float>::create_codec(MultinodeParameter::default_instance(), true);
+    codec = BlobCodec<float>::create_codec(
+            MultinodeParameter::default_instance(), true);
     waypoint = internode::configure_client(comm, address, codec->packet_size());
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
     comms = BlobComms<float>::create(
@@ -80,15 +82,14 @@ struct BlobCommsTest : public Test {
             num_of_threads);
 
       waypoint->register_receive_handler(comms.get());
-      comms->send_iter_size(solver->param().iter_size());      
-  } 
+      comms->send_iter_size(solver->param().iter_size());
+  }
 };
 
-TEST_F(BlobCommsTest, LOL_test1)
-{
+TEST_F(BlobCommsTest, LOL_test1) {
     buildOne();
     EXPECT_EQ(0, comms->currently_sending_version());
 }
-        
+
 }  // namespace
 }  // namespace caffe
