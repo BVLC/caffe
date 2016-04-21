@@ -77,7 +77,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   leveldb::Options options;
   options.error_if_exists = true;
   options.create_if_missing = true;
-  options.write_buffer_size = 268435456;
+  options.write_buffer_size = 128*1024*1024;
   leveldb::WriteBatch* batch = NULL;
 
   // Open db
@@ -93,7 +93,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     CHECK_EQ(mkdir(db_path, 0744), 0)
         << "mkdir " << db_path << "failed";
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
-    CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
+    CHECK_EQ(mdb_env_set_mapsize(mdb_env, 128*1024*1024), MDB_SUCCESS)
         << "mdb_env_set_mapsize failed";
     CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";
