@@ -185,9 +185,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     this->InitSolverFromProtoString(proto.str());
     if (from_snapshot != NULL) {
       this->solver_->Restore(from_snapshot);
-      vector<Blob<Dtype>*> empty_bottom_vec;
       for (int i = 0; i < this->solver_->iter(); ++i) {
-        this->solver_->net()->Forward(empty_bottom_vec);
+        this->solver_->net()->Forward();
       }
     }
     if (devices == 1) {
@@ -205,7 +204,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       Caffe::set_solver_count(gpus.size());
       this->sync_.reset(new P2PSync<Dtype>(
           this->solver_, NULL, this->solver_->param()));
-      this->sync_->run(gpus);
+      this->sync_->Run(gpus);
       Caffe::set_solver_count(1);
     }
     if (snapshot) {
@@ -231,8 +230,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     // Run a forward pass, and manually compute the update values from the
     // result.
     Net<Dtype>& net = *this->solver_->net();
-    vector<Blob<Dtype>*> empty_bottom_vec;
-    net.Forward(empty_bottom_vec);
+    net.Forward();
     ASSERT_TRUE(net.has_blob("data"));
     const Blob<Dtype>& data = *net.blob_by_name("data");
     ASSERT_TRUE(net.has_blob("targets"));
