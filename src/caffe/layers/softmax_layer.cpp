@@ -24,7 +24,8 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* mult = sum_multiplier_.cpu_data();
   int channels = bottom[0]->shape(softmax_axis_);
@@ -102,7 +103,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #pragma omp parallel for
 #endif
     for (int j = 0; j < channels; j++) {
-      caffe_div(inner_num_, top_data + j*inner_num_, scale_data, top_data + j*inner_num_);
+      caffe_div(inner_num_, top_data + j*inner_num_, scale_data,
+              top_data + j*inner_num_);
     }
     top_data += channels*inner_num_;
   }
