@@ -44,6 +44,15 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
   padded_width_ = width_ + 2 * pad_w_;
   padded_height_ = height_ + 2 * pad_h_;
+#ifndef CPU_ONLY
+#ifdef USE_GREENTEA
+  if (std::is_same<Dtype, float>::value) {
+    M_ = this->num_output_ / this->group_;
+    this->num_ = bottom[0]->count(0, this->channel_axis_);
+    SetUp(bottom, top, Caffe::GetDefaultDevice()->backend());
+  }
+#endif
+#endif
 }
 
 template<typename Dtype>
@@ -69,9 +78,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   const int_tp height_out = top[0]->shape(this->channel_axis_ + 1);
   const int_tp width_out = top[0]->shape(this->channel_axis_ + 2);
-
-  // Prepare the matrix multiplication computation.
-  // Each input will be convolved as a single GEMM.
   M_ = this->num_output_ / this->group_;
   K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
   N_ = height_out * width_out;

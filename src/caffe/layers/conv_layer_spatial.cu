@@ -953,41 +953,19 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   outputFile = "./spatialkernels/" + key_;
   std::ifstream cachedKernel(outputFile.c_str());
 
-  if (cachedKernel) {
-    int_tp x, y, z, type;
-    cachedKernel >> x;
-    cachedKernel >> y;
-    cachedKernel >> z;
-    cachedKernel >> type;
-    create_convolution_kernel(bottom, top, type, x, y, z);
-    kernel_index_ = kernelQueue.size() - 1;
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[0];
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[1];
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[2];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[0];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[1];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[2];
-    cachedKernel >> kernelQueue[kernel_index_]->swizzle_weights;
-    cachedKernel >> kernelQueue[kernel_index_]->batched_execute;
-    cachedKernel >> kernelQueue[kernel_index_]->use_null_local;
+  create_convolution_kernel(bottom, top, 4, 1, 1, 1);
 
-    tuned_ = true;
-    return;
-  } else {
-    create_convolution_kernel(bottom, top, 4, 1, 1, 1);
+  for (int_tp y = 1; y < 4; y++)
+    for (int_tp z = 1; z < 16 && z < M_; z++) {
+      create_convolution_kernel(bottom, top, 1, 4, y, z);
+      if (num_ > 1)
+        create_convolution_kernel(bottom, top, 3, 4, y, z);
+    }
 
-    for (int_tp y = 1; y < 4; y++)
-      for (int_tp z = 1; z < 16 && z < M_; z++) {
-        create_convolution_kernel(bottom, top, 1, 4, y, z);
-        if (num_ > 1)
-          create_convolution_kernel(bottom, top, 3, 4, y, z);
-      }
-
-    create_convolution_kernel(bottom, top, 2, 3, 3, 1);
-    create_convolution_kernel(bottom, top, 2, 5, 5, 1);
-    create_convolution_kernel(bottom, top, 2, 3, 4, 1);
-    create_convolution_kernel(bottom, top, 2, 6, 4, 1);
-  }
+  create_convolution_kernel(bottom, top, 2, 3, 3, 1);
+  create_convolution_kernel(bottom, top, 2, 5, 5, 1);
+  create_convolution_kernel(bottom, top, 2, 3, 4, 1);
+  create_convolution_kernel(bottom, top, 2, 6, 4, 1);
 
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     tune_local_size(bottom, top, kernelQueue[x]);
@@ -1226,17 +1204,84 @@ void ConvolutionLayerSpatial<float>::Backward_gpu(
   }
 }
 
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
+   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  // Generates static key_
+  if (tuned_)
+    return;
+  generate_key();
+  // Initializes unique kernel ID
+  kernel_uid_ = 0;
+
+  // Creates a verification kernel to verify kernel results
+  if (create_verification_kernel(bottom, top) != true)
+    exit(-1);
+
+  string outputFile;
+  outputFile = "./spatialkernels/" + key_;
+  std::ifstream cachedKernel(outputFile.c_str());
+
+  if (cachedKernel) {
+    int_tp x, y, z, type;
+    cachedKernel >> x;
+    cachedKernel >> y;
+    cachedKernel >> z;
+    cachedKernel >> type;
+    create_convolution_kernel(bottom, top, type, x, y, z);
+    kernel_index_ = kernelQueue.size() - 1;
+    if (kernel_index_ == -1) {
+      std::cerr << "Failed to get kernel from cached configurations."
+                << std::endl;
+      std::cerr << "Deleting broken cache file and try tuning again..."
+                << std::endl;
+      string bakFile = outputFile + ".bak";
+      std::rename(outputFile.c_str(), bakFile.c_str());
+      return;
+    }
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[0];
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[1];
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[2];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[0];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[1];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[2];
+    cachedKernel >> kernelQueue[kernel_index_]->swizzle_weights;
+    cachedKernel >> kernelQueue[kernel_index_]->batched_execute;
+    cachedKernel >> kernelQueue[kernel_index_]->use_null_local;
+
+    tuned_ = true;
+   }
+   return;
+}
+
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::SetUp(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top, caffe::Backend backend) {
+  if (backend == caffe::BACKEND_OpenCL) {
+    load_cached_kernels(bottom, top);
+  }
+}
+
 template<>
 bool ConvolutionLayerSpatial<double>::generate_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
   return false;
 }
+
+template void ConvolutionLayerSpatial<float>::SetUp(
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    caffe::Backend backend);
+
+template void ConvolutionLayerSpatial<double>::SetUp(
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
+    caffe::Backend backend);
+
 template<>
 void ConvolutionLayerSpatial<double>::create_convolution_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp kernelType,
     int_tp blockWidth, int_tp blockHeight,
     int_tp blockDepth) {
@@ -1245,7 +1290,7 @@ void ConvolutionLayerSpatial<double>::create_convolution_kernel(
 }
 template<>
 bool ConvolutionLayerSpatial<double>::generate_batched_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1253,7 +1298,7 @@ bool ConvolutionLayerSpatial<double>::generate_batched_kernel(
 }
 template<>
 bool ConvolutionLayerSpatial<double>::setup_IDLF(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1262,7 +1307,7 @@ bool ConvolutionLayerSpatial<double>::setup_IDLF(
 
 template<>
 bool ConvolutionLayerSpatial<double>::verify_result(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1271,7 +1316,7 @@ bool ConvolutionLayerSpatial<double>::verify_result(
 
 template<>
 bool ConvolutionLayerSpatial<double>::create_basic_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1280,14 +1325,14 @@ bool ConvolutionLayerSpatial<double>::create_basic_kernel(
 
 template<>
 bool ConvolutionLayerSpatial<double>::create_verification_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
   return false;
 }
 
 template<>
 bool ConvolutionLayerSpatial<double>::tune_local_size(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     kernelConfig* config) {
   NOT_IMPLEMENTED;
   return false;
@@ -1295,7 +1340,7 @@ bool ConvolutionLayerSpatial<double>::tune_local_size(
 
 template<>
 cl_int ConvolutionLayerSpatial<double>::convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1304,7 +1349,7 @@ cl_int ConvolutionLayerSpatial<double>::convolve(
 
 template<>
 cl_int ConvolutionLayerSpatial<double>::batched_convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1313,7 +1358,7 @@ cl_int ConvolutionLayerSpatial<double>::batched_convolve(
 
 template<>
 float ConvolutionLayerSpatial<double>::timed_convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1322,7 +1367,7 @@ float ConvolutionLayerSpatial<double>::timed_convolve(
 
 template<>
 void ConvolutionLayerSpatial<double>::setup_convolution(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
 }
 
@@ -1378,6 +1423,5 @@ void ConvolutionLayerSpatial<double>::Backward_gpu(
 
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerSpatial);
 #endif
-
 
 }  // namespace caffe
