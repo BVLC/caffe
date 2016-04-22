@@ -83,13 +83,18 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   for (int i = 0; i < outer_num_; ++i) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int k = 0; k < inner_num_; k++) {
-      scale_data[k] = bottom_data[i*dim + k];
+      Dtype max_val = bottom_data[i * dim + k];
       for (int j = 1; j < channels; j++) {
-        scale_data[k] = std::max(scale_data[k],
-                             bottom_data[i * dim + j * inner_num_ + k]);
+        Dtype value = bottom_data[i * dim + k + j * inner_num_];
+        if (max_val < value) max_val = value;
       }
+      scale_data[k] = max_val;
     }
+
     // subtraction
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
         1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data);
@@ -123,6 +128,9 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
   for (int i = 0; i < outer_num_; ++i) {
     // compute dot(top_diff, top_data) and subtract them from the bottom diff
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int k = 0; k < inner_num_; ++k) {
       scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
           bottom_diff + i * dim + k, inner_num_,
