@@ -378,9 +378,9 @@ ifeq ($(BLAS), mkl)
 
 	# detect support for mkl-dnn primitives
 	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
-	    CXXFLAGS += -DMKLDNN_SUPPORTED
-	    ifeq ($(USE_MKLDNN), 1)
-		CXXFLAGS += -DUSE_MKLDNN
+	    CXXFLAGS += -DMKL2017_SUPPORTED
+	    ifeq ($(USE_MKL2017_AS_DEFAULT_ENGINE), 1)
+		CXXFLAGS += -DUSE_MKL2017_AS_DEFAULT_ENGINE
 	    endif
 	endif
 else ifeq ($(BLAS), open)

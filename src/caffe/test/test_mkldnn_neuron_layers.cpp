@@ -1,4 +1,4 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <algorithm>
 #include <vector>
 
@@ -17,11 +17,11 @@
 namespace caffe {
 
 template <typename TypeParam>
-class MklDnnNeuronLayerTest : public MultiDeviceTest<TypeParam> {
+class MKLNeuronLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  MklDnnNeuronLayerTest()
+  MKLNeuronLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
@@ -32,19 +32,19 @@ class MklDnnNeuronLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~MklDnnNeuronLayerTest() { delete blob_bottom_; delete blob_top_; }
+  virtual ~MKLNeuronLayerTest() { delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MklDnnNeuronLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(MKLNeuronLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(MklDnnNeuronLayerTest, TestReLU) {
+TYPED_TEST(MKLNeuronLayerTest, TestReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  MklDnnReLULayer<Dtype> layer(layer_param);
+  MKLReLULayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -56,14 +56,14 @@ TYPED_TEST(MklDnnNeuronLayerTest, TestReLU) {
   }
 }
 
-TYPED_TEST(MklDnnNeuronLayerTest, TestReLUGradient) {
+TYPED_TEST(MKLNeuronLayerTest, TestReLUGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  MklDnnReLULayer<Dtype> layer(layer_param);
+  MKLReLULayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED

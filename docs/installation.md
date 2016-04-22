@@ -65,16 +65,16 @@ with a free trial and [student](http://software.intel.com/en-us/intel-education-
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
 
-### Intel MKLDNN (optional)
+### Intel MKL2017 (optional)
 
 Caffe can use optimized primitives that are part of MKL package since [Intel MKL 2017 Beta release]( https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305)
 Currently supported layers are: convolution, LRN , ReLU and max pooling.
 
-To make use of MKLDNN primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add `-DBLAS=mkl` to your commandline invoking cmake)
-Support for MKLDNN will be detected and compiled into the caffe. To use optimized MKLDNN primitive for a layer, set `engine: MKLDNN` in the layer's parameters definition.
-Example of network accelerated by using MKLDNN is located in models/mkldnn_alexnet directory.
+To make use of MKL2017 primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add `-DBLAS=mkl` to your commandline invoking cmake)
+Support for MKL2017 will be detected and compiled into the caffe. To use optimized MKL2017 primitive for a layer, set `engine: MKL2017` in the layer's parameters definition.
+Example of network accelerated by using MKL2017 is located in models/mkldnn_alexnet directory.
 
-If `USE_MKLDNN := 1` is set in Makefile.config, then MKLDNN engine will be used as a default engine for all layers supported by MKLDNN. (When using cmake, add `-DUSE_MKLDNN=ON` to your commandline invoking cmake)
+If `USE_MKL2017_AS_DEFAULT_ENGINE := 1` is set in Makefile.config, then MKL2017 engine will be used as a default engine for all layers supported by MKL2017. (When using cmake, add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline invoking cmake)
 
 ### OpenMP (optional)
 

@@ -1,4 +1,4 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <algorithm>
 #include <cfloat>
 #include <vector>
@@ -12,13 +12,13 @@
 
 namespace caffe {
 template <typename Dtype>
-MklDnnPoolingLayer<Dtype>::~MklDnnPoolingLayer() {
+MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
 }
 
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
 
@@ -158,7 +158,7 @@ void MklDnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
@@ -209,7 +209,7 @@ void MklDnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // printf(" len(top_data) = %i\n", sizeof(top_data)/sizeof(Dtype));
   const int top_count = top[0]->count();
@@ -252,9 +252,9 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     } else if (NULL == poolingFwd) {
       // Is it the first pass? Create a primitive.
       CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKLDNN);
-      shared_ptr<MklDnnData<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MklDnnData<Dtype> >
+              PrvMemDescr::PRV_DESCR_MKL2017);
+      shared_ptr<MKLData<Dtype> > mem_descr
+        =  boost::static_pointer_cast<MKLData<Dtype> >
               (bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
@@ -321,7 +321,7 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
@@ -374,17 +374,17 @@ void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 
 #ifdef CPU_ONLY
-STUB_GPU(MklDnnPoolingLayer);
+STUB_GPU(MKLPoolingLayer);
 #else
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void MKLPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MklDnnPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void MKLPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
   {NOT_IMPLEMENTED;}
 #endif
 
-INSTANTIATE_CLASS(MklDnnPoolingLayer);
+INSTANTIATE_CLASS(MKLPoolingLayer);
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED

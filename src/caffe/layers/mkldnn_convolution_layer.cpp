@@ -1,4 +1,4 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <vector>
 
 #include "caffe/filler.hpp"
@@ -13,24 +13,24 @@
 
 namespace caffe {
 template <typename Dtype>
-MklDnnConvolutionLayer<Dtype>::MklDnnConvolutionLayer(
+MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
   const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param),
-        fwd_bottom_data   (new MklDnnData<Dtype>()),
-        fwd_top_data      (new MklDnnData<Dtype>()),
-        fwd_filter_data   (new MklDnnData<Dtype>()),
-        fwd_bias_data     (new MklDnnData<Dtype>()),
-        bwdd_top_diff     (new MklDnnDiff<Dtype>()),
-        bwdd_bottom_diff  (new MklDnnDiff<Dtype>()),
-        bwdd_filter_data  (new MklDnnData<Dtype>()),
-        bwdf_top_diff     (new MklDnnDiff<Dtype>()),
-        bwdf_filter_diff  (new MklDnnDiff<Dtype>()),
-        bwdf_bottom_data  (new MklDnnData<Dtype>()),
-        bwdb_top_diff     (new MklDnnDiff<Dtype>()),
-        bwdb_bias_diff    (new MklDnnDiff<Dtype>()) {}
+        fwd_bottom_data   (new MKLData<Dtype>()),
+        fwd_top_data      (new MKLData<Dtype>()),
+        fwd_filter_data   (new MKLData<Dtype>()),
+        fwd_bias_data     (new MKLData<Dtype>()),
+        bwdd_top_diff     (new MKLDiff<Dtype>()),
+        bwdd_bottom_diff  (new MKLDiff<Dtype>()),
+        bwdd_filter_data  (new MKLData<Dtype>()),
+        bwdf_top_diff     (new MKLDiff<Dtype>()),
+        bwdf_filter_diff  (new MKLDiff<Dtype>()),
+        bwdf_bottom_data  (new MKLData<Dtype>()),
+        bwdb_top_diff     (new MKLDiff<Dtype>()),
+        bwdb_bias_diff    (new MKLDiff<Dtype>()) {}
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::compute_output_shape() {
+void MKLConvolutionLayer<Dtype>::compute_output_shape() {
   ConvolutionLayer<Dtype>::compute_output_shape();
   this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
       / this->stride_h_ + 1;
@@ -39,7 +39,7 @@ void MklDnnConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer() {
+MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
@@ -47,7 +47,7 @@ MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer() {
 }
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
+void MKLConvolutionLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
@@ -368,7 +368,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
 }
 
 template <typename Dtype, bool is_diff>
-void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
+void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
         void* cpu_ptr) {
   CHECK(prv_ptr);
   CHECK(cpu_ptr);
@@ -385,9 +385,9 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
 }
 
 template <typename Dtype, bool is_diff>
-Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
+Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
   Blob<Dtype>* blob, bool set_prv_ptr,
-  MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
+  MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
   if (this->convert_to_int) {
     int status;
     void *convert_resources[dnnResourceNumber];
@@ -434,10 +434,10 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
             (blob->get_prv_descriptor_data());
 
       CHECK_EQ(prv_mem_descriptor->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKLDNN);
+              PrvMemDescr::PRV_DESCR_MKL2017);
 
-      shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > current_descr =
-        boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> >
+      shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > current_descr =
+        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, is_diff> >
               (prv_mem_descriptor);
 
       if (!dnnLayoutCompare<Dtype>(current_descr->layout_int,
@@ -509,7 +509,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Forward_cpu(
+void MKLConvolutionLayer<Dtype>::Forward_cpu(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int status;
   size_t n, g;
@@ -557,7 +557,7 @@ void MklDnnConvolutionLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Backward_cpu(
+void MKLConvolutionLayer<Dtype>::Backward_cpu(
   const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
   const vector<Blob<Dtype>*>& bottom) {
   int status;
@@ -653,19 +653,19 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(MklDnnConvolutionLayer);
+STUB_GPU(MKLConvolutionLayer);
 #else
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Forward_gpu(
+void MKLConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
   {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Backward_gpu(
+void MKLConvolutionLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom)
   {NOT_IMPLEMENTED;}
 #endif
 
-INSTANTIATE_CLASS(MklDnnConvolutionLayer);
+INSTANTIATE_CLASS(MKLConvolutionLayer);
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED
