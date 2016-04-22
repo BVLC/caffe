@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 
 namespace caffe {
 template <typename Dtype>

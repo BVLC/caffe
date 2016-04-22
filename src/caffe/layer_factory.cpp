@@ -15,7 +15,7 @@
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
 #ifdef MKL2017_SUPPORTED
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 #endif
 #include "caffe/proto/caffe.pb.h"
 

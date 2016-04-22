@@ -3,7 +3,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 
 // Uncomment to see where the layout conversions are done
 // #undef DLOG

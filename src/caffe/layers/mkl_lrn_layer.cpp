@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
