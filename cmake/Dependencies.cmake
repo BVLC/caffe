@@ -12,7 +12,7 @@ add_definitions(
     -DBOOST_ENABLE_ASSERT_HANDLER
 )
 if(NOT DEFINED WIN32)
-list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
+  list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 endif()
 
 # ---[ Threads
