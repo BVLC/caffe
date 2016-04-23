@@ -40,15 +40,6 @@ private:\
   classname& operator=(const classname&)
 
 // Instantiate a class with float and double specifications.
-#if 0   // TEST-MOD
-
-#define INSTANTIATE_CLASS(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<float>; \
-  template class classname<double>
-
-#else
-
 #define GET_CLASS_GUARD_NAME(classname)  gInstantiationGuard##classname
 
 #define INSTANTIATE_CLASS(classname) \
@@ -56,8 +47,6 @@ private:\
   template class classname<float>; \
   template class classname<double>
     
-#endif
-
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \
       const std::vector<Blob<float>*>& bottom, \

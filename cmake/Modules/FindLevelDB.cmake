@@ -14,7 +14,6 @@ find_library(LevelDB_LIBRARY NAMES leveldb
                              PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
                              DOC "Path to leveldb library." )
                              
-# TEST-ADD-BEGIN
 if(DEFINED WIN32)
     find_library(LevelDB_DEBUG_LIBRARY NAMES leveldbd
                               PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
@@ -23,7 +22,6 @@ if(DEFINED WIN32)
                               PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
                               DOC "Path to leveldb library." )
 endif()
-# TEST-ADD-END                             
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LevelDB DEFAULT_MSG LevelDB_INCLUDE LevelDB_LIBRARY)
@@ -31,7 +29,6 @@ find_package_handle_standard_args(LevelDB DEFAULT_MSG LevelDB_INCLUDE LevelDB_LI
 if(LEVELDB_FOUND)
   message(STATUS "Found LevelDB (include: ${LevelDB_INCLUDE}, library: ${LevelDB_LIBRARY})")
   set(LevelDB_INCLUDES ${LevelDB_INCLUDE})
-  # TEST-MOD:   set(LevelDB_LIBRARIES ${LevelDB_LIBRARY})
   if(DEFINED WIN32)
     list(APPEND LevelDB_LIBRARIES 
          debug ${LevelDB_DEBUG_LIBRARY}
@@ -40,7 +37,6 @@ if(LEVELDB_FOUND)
   else()
     list(APPEND LevelDB_LIBRARIES ${LevelDB_LIBRARY})
   endif()
-  # TEST-MOD-END
   mark_as_advanced(LevelDB_INCLUDE LevelDB_LIBRARY)
 
   if(EXISTS "${LevelDB_INCLUDE}/leveldb/db.h")

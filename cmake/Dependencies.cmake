@@ -2,11 +2,8 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-# TEST-MOD: find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread date_time chrono filesystem)
-# TEST-MOD-END
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-# TEST-ADD-BEGIN
 link_directories(
     ${Boost_LIBRARY_DIR_RELEASE}
 )
@@ -15,11 +12,8 @@ add_definitions(
     -DBOOST_ENABLE_ASSERT_HANDLER
 )
 if(NOT DEFINED WIN32)
-# TEST-ADD-END
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
-# TEST-ADD-BEGIN
 endif()
-# TEST-ADD-END
 
 # ---[ Threads
 find_package(Threads REQUIRED)
