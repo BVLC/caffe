@@ -10,10 +10,11 @@ caffe_leave_only_selected_tests(test_cuda ${BUILD_only_tests})
 # That's why the lines below are commented. TODO: remove them
 
 # definition needed to include CMake generated files
-#add_definitions(-DCMAKE_BUILD)
+add_definitions(-DCMAKE_BUILD)
 
 # generates test_data/sample_data_list.txt.gen.cmake
-#caffe_configure_testdatafile(test_data/sample_data_list.txt)
+caffe_configure_testdatafile(test_data/sample_data_list.txt)
+caffe_configure_testdatafile(test_data/solver_data_list.txt)
 
 set(the_target test.testbin)
 set(test_args --gtest_shuffle)

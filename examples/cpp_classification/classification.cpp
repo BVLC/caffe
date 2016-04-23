@@ -6,7 +6,9 @@
 #endif  // USE_OPENCV
 #include <algorithm>
 #include <iosfwd>
+#if !defined(_MSC_VER)
 #include <memory>
+#endif  // #if !defined(_MSC_VER)
 #include <string>
 #include <utility>
 #include <vector>

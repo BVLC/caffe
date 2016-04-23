@@ -18,6 +18,8 @@
 
 #include "caffe/util/device_alternate.hpp"
 
+#include "caffe/msvc/caffe_msvc.hpp"
+
 // Convert macro to string
 #define STRINGIFY(m) #m
 #define AS_STRING(m) STRINGIFY(m)
@@ -38,10 +40,23 @@ private:\
   classname& operator=(const classname&)
 
 // Instantiate a class with float and double specifications.
+#if 0   // TEST-MOD
+
 #define INSTANTIATE_CLASS(classname) \
   char gInstantiationGuard##classname; \
   template class classname<float>; \
   template class classname<double>
+
+#else
+
+#define GET_CLASS_GUARD_NAME(classname)  gInstantiationGuard##classname
+
+#define INSTANTIATE_CLASS(classname) \
+  char GET_CLASS_GUARD_NAME(classname); \
+  template class classname<float>; \
+  template class classname<double>
+    
+#endif
 
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \

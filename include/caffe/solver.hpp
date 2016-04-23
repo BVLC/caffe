@@ -158,4 +158,6 @@ class WorkerSolver : public Solver<Dtype> {
 
 }  // namespace caffe
 
+#include "caffe/msvc/caffe_msvc_registry.hpp"
+
 #endif  // CAFFE_SOLVER_HPP_

@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "caffe/util/io.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 

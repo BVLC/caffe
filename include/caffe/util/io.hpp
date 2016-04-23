@@ -1,12 +1,13 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
-#include <boost/filesystem.hpp>
 #include <iomanip>
 #include <iostream>  // NOLINT(readability/streams)
 #include <string>
 
 #include "google/protobuf/message.h"
+#include "boost/filesystem.hpp"
+using namespace boost::filesystem;
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -16,10 +17,16 @@
 #define CAFFE_TMP_DIR_RETRIES 100
 #endif
 
+#if !defined(_MSC_VER)
+#include <unistd.h>
+#else   // #if !defined(_MSC_VER)
+#include "caffe/msvc/caffe_msvc_io.hpp"
+
+#endif  // #if !defined(_MSC_VER)
+
 namespace caffe {
 
 using ::google::protobuf::Message;
-using ::boost::filesystem::path;
 
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
