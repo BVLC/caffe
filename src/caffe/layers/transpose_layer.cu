@@ -12,9 +12,9 @@ __global__ void transpose_gpu(const int nthreads, const Dtype* from_data,
 
     int from_index = index, to_index = 0;
     for (int i = 0; i < num_axes; i++) {
-    from_inds[i] = from_index / from_counts[i];
-    from_index = from_index % from_counts[i];
-  }
+      from_inds[i] = from_index / from_counts[i];
+      from_index = from_index % from_counts[i];
+    }
   for (int i = 0; i < num_axes; i++) {
     to_index += from_inds[map[i]] * to_counts[i];
   }

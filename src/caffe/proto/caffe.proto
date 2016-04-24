@@ -1128,6 +1128,14 @@ message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }
 
+message TransposeParameter {
+  // For example, if you want to transpose NxCxHxW into WxNxHxC,
+  // the parameter should be the following:
+  // transpose_param { dim: 3 dim: 0 dim: 2 dim: 1 }
+  // ie, if the i-th dim has value n, then the i-th axis of top is equal to the n-th axis of bottom.
+  repeated int32 dim = 1;
+}
+
 message WindowDataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -1372,12 +1380,4 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
-}
-
-message TransposeParameter {
-  // For example, if you want to transpose NxCxHxW into WxNxHxC,
-  // the parameter should be the following:
-  // transpose_param { dim: 3 dim: 0 dim: 2 dim: 1 }
-  // ie, if the i-th dim has value n, then the i-th axis of top is equal to the n-th axis of bottom.
-  repeated int32 dim=1;
 }
