@@ -90,10 +90,12 @@ static std::string FATAL="FATAL";
 #define ERROR ERROR
 #define FATAL FATAL
 
+static std::ostream nullstream(0);
+
 #define CHECK(condition)						\
   if (!(condition)) \
     throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Check failed (custom): " #condition ""); \
-  LOG_IF(ERROR, false) \
+  nullstream									\
   << "Check failed (custom): " #condition " "
 
 #define CHECK_LT(x, y) CHECK((x) < (y))
@@ -137,13 +139,6 @@ static std::string FATAL="FATAL";
 #define DCHECK_NE(x, y) CHECK((x) != (y))
 #endif  // NDEBUG
 
-/*static std::string INFO="INFO";
-static std::string WARNING="WARNING";
-static std::string ERROR="ERROR";
-static std::string FATAL="FATAL";*/
-
-static std::ostream nullstream(0);
-
 inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout)
 {
   if (severity != FATAL)
@@ -157,7 +152,6 @@ inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout
     {
       throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Fatal Caffe error"); // XXX: cannot report the exact location of the trigger...
     }
-  //return out;
 }
 
 inline std::ostream& LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
