@@ -1,3 +1,13 @@
+# Caffe Rpi
+This is a fork for Caffe that runs on Raspberry Pi. To run a demo that classifies images continuously, do the following
+
+- On one terminal, type
+-- sh cont\_classifiy\_squeezenet.sh
+- On another terminal, type
+-- python python/cont\_record.py
+
+and the classification would work in realtime :D ! Make sure you have opencv in your python dependency as well has compiled the project. I have made some patches so the compilation should just work. if I missed any setup steps here or if you run into any issue, please let me know.
+
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
