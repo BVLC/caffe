@@ -10,7 +10,7 @@
 #define TEMPLATE_PREFIX template <typename Dtype> inline    
 #define SPEC_PREFIX template <> inline
 
-#ifdef USE_MKL2017BETA_UPDATE_API
+#ifdef USE_MKL2017_NEW_API
     #define ATTRIBUTES attributes,
 #else
     typedef void* dnnPrimitiveAttributes_t;
@@ -81,7 +81,7 @@ SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
         dnnLayout_t layout)
     {return dnnLayoutDelete_F64(layout);}
 
-#ifdef USE_MKL2017BETA_UPDATE_API
+#ifdef USE_MKL2017_NEW_API
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesCreate(
         dnnPrimitiveAttributes_t *attributes);
 SPEC_PREFIX dnnError_t dnnPrimitiveAttributesCreate<float>(
