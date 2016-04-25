@@ -52,7 +52,7 @@ void LibDNNConvolutionLayer<Dtype>::Reshape(
     config.dilation = dilation_vec;
     config.group = this->group_;
     config.bias_term = this->bias_term_;
-    config.fast_unsafe_math = false;
+    config.fast_unsafe_math = true;
     config.weights_backward = this->param_propagate_down_[0];
     config.bias_backward = this->param_propagate_down_[1];
 

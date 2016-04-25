@@ -1090,6 +1090,10 @@ viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels(
     build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
   }
 
+  if (is_same<Dtype, float>::value) {
+    build_opts += "-cl-single-precision-constant ";
+  }
+
   ctx->build_options(build_opts);
 
   // std::cout << kernel_ << std::endl;
