@@ -9,11 +9,6 @@ caffe_leave_only_selected_tests(test_cuda ${BUILD_only_tests})
 # source files, because test target is executed in source directory
 # That's why the lines below are commented. TODO: remove them
 
-# # TEST-DEL-BEGIN
-# # definition needed to include CMake generated files
-# add_definitions(-DCMAKE_BUILD)
-# # TEST-DEL-END
-
 # generates test_data/sample_data_list.txt.gen.cmake
 caffe_configure_testdatafile(test_data/sample_data_list.txt)
 caffe_configure_testdatafile(test_data/solver_data_list.txt)

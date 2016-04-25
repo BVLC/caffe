@@ -14,10 +14,8 @@ set(CAFFE_TARGET_VERSION "1.0.0-rc3")
 set(CAFFE_TARGET_SOVERSION "1.0.0-rc3")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
-# TEST-ADD-BEGIN
 # definition needed to include CMake generated files
 add_definitions(-DCMAKE_BUILD)
-# TEST-ADD-END
 
 add_definitions(
 	-D_VARIADIC_MAX=10
