@@ -72,7 +72,7 @@ Currently supported layers are: convolution, LRN , ReLU and max pooling.
 
 To make use of MKL2017 primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add `-DBLAS=mkl` to your commandline invoking cmake)
 Support for MKL2017 will be detected and compiled into the caffe. To use optimized MKL2017 primitive for a layer, set `engine: MKL2017` in the layer's parameters definition.
-Example of network accelerated by using MKL2017 is located in models/mkldnn_alexnet directory.
+Example of network accelerated by using MKL2017 is located in models/mkl2017_alexnet directory.
 
 If `USE_MKL2017_AS_DEFAULT_ENGINE := 1` is set in Makefile.config, then MKL2017 engine will be used as a default engine for all layers supported by MKL2017. (When using cmake, add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline invoking cmake)
 

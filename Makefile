@@ -376,7 +376,7 @@ ifeq ($(BLAS), mkl)
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 
-	# detect support for mkl-dnn primitives
+	# detect support for mkl2017 primitives
 	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
 	    CXXFLAGS += -DMKL2017_SUPPORTED
 	    ifeq ($(USE_MKL2017_AS_DEFAULT_ENGINE), 1)
