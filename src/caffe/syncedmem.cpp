@@ -8,6 +8,11 @@
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
+
+#define ZEROCOPY_SUPPORTED(device, ptr, size) \
+             (device->isHostUnified() &&\
+             ((uintptr_t)(ptr) % OPENCL_PAGE_ALIGN) == 0 &&\
+             ((size) % OPENCL_CACHE_ALIGN) == 0)
 #endif
 
 namespace caffe {
@@ -75,7 +80,7 @@ SyncedMemory::~SyncedMemory() {
     } else {
 #ifdef USE_GREENTEA
       // Free device memory
-      viennacl::ocl::context ctx = viennacl::ocl::get_context(
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           device_->id());
       ctx.get_queue().finish();
       CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
@@ -83,6 +88,10 @@ SyncedMemory::~SyncedMemory() {
       gpu_ptr_ = nullptr;
       cl_gpu_mem_ = nullptr;
       ctx.get_queue().finish();
+      if (own_zero_copy_data_ && own_cpu_data_ && cpu_ptr_) {
+        CaffeFreeHost(cpu_ptr_, device_);
+        cpu_ptr_ = nullptr;
+      }
       device_->DecreaseMemoryUsage(size_);
 #endif  // USE_GREENTEA
     }
@@ -109,16 +118,35 @@ inline void SyncedMemory::to_cpu() {
       if (cpu_ptr_ == nullptr) {
         CaffeMallocHost(&cpu_ptr_, size_, device_);
         own_cpu_data_ = true;
+#ifdef USE_GREENTEA
+        CHECK_EQ(own_zero_copy_data_, false)
+           << "Allocate host memory for a zero copy buffer.";
+#endif
       }
+
       if (device_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
-        greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
+        if (!own_zero_copy_data_)
+          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
+        else {
+          void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                                (cl_mem) gpu_ptr_,
+                                true,
+                                CL_MAP_READ | CL_MAP_WRITE,
+                                0, size_, 0, NULL, NULL, NULL);
+          CHECK_EQ(mapped_ptr, cpu_ptr_)
+            << "Device claims it support zero copy"
+            << " but failed to create correct user ptr buffer";
+          clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                  (cl_mem) gpu_ptr_,
+                                  mapped_ptr, 0, NULL, NULL);
+        }
         ctx.get_queue().finish();
 #endif
       }
@@ -147,7 +175,7 @@ inline void SyncedMemory::to_gpu() {
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
         ctx.get_queue().finish();
         cl_int err;
@@ -155,15 +183,43 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                      CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                      size_, nullptr, &err);
-        } else {
-          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                       size_, nullptr, &err);
+        } else if (device_->isHostUnified()) {
+            //auto saved_mode = Caffe::mode();
+            //Caffe::set_mode(Caffe::GPU);
+            CaffeMallocHost(&cpu_ptr_, size_, device_);
+            //Caffe::set_mode(saved_mode);
+            caffe_memset(size_, 0, cpu_ptr_);
+            own_cpu_data_ = true;
+            cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
+                              CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                              size_, cpu_ptr_, &err);
+            void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                                  cl_gpu_mem_,
+                                  true,
+                                  CL_MAP_READ | CL_MAP_WRITE,
+                                  0, size_, 0, NULL, NULL, NULL);
+            CHECK_EQ(mapped_ptr, cpu_ptr_)
+              << "Device claims it support zero copy"
+              << " but failed to create correct user ptr buffer";
+            clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                    cl_gpu_mem_,
+                                    mapped_ptr, 0, NULL, NULL);
+            own_zero_copy_data_ = true;
         }
+
+        if (cl_gpu_mem_ == nullptr)
+            cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
+                                         CL_MEM_READ_WRITE,
+                                         size_, nullptr, &err);
+
         CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                         << size_ << " failed.";
+
         device_->IncreaseMemoryUsage(size_);
-        int_tp alpha = 0;
-        greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
+        if (!own_zero_copy_data_) {
+          int_tp alpha = 0;
+          greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
+        }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
         own_gpu_data_ = true;
@@ -184,7 +240,7 @@ inline void SyncedMemory::to_gpu() {
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
         ctx.get_queue().finish();
         if (gpu_ptr_ == nullptr) {
@@ -193,17 +249,34 @@ inline void SyncedMemory::to_gpu() {
             cl_gpu_mem_ = clCreateBuffer(
                 ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 size_, nullptr, &err);
-          } else {
+          } else if(ZEROCOPY_SUPPORTED(device_, cpu_ptr_, size_)) {
+              cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
+                               CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                               size_, cpu_ptr_, &err);
+              void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                                    (cl_mem) cl_gpu_mem_,
+                                    true,
+                                    CL_MAP_READ | CL_MAP_WRITE,
+                                    0, size_, 0, NULL, NULL, NULL);
+              CHECK_EQ(mapped_ptr, cpu_ptr_)
+                << "Device claims it support zero copy"
+                << " but failed to create correct user ptr buffer";
+              clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                      cl_gpu_mem_,
+                                      mapped_ptr, 0, NULL, NULL);
+              own_zero_copy_data_ = true;
+          }
+          if (cl_gpu_mem_ == nullptr)
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                          size_, nullptr, &err);
-          }
           CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                           << size_ << " failed.";
           device_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           ctx.get_queue().finish();
         }
-        greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
+        if (!own_zero_copy_data_)
+          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
         ctx.get_queue().finish();
         own_gpu_data_ = true;
 #endif  // USE_GREENTEA
