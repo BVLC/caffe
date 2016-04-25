@@ -184,12 +184,16 @@ LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 USE_LEVELDB ?= 1
 USE_LMDB ?= 1
 USE_OPENCV ?= 1
+USE_RASPICAM ?= 1
 
 ifeq ($(USE_LEVELDB), 1)
 	LIBRARIES += leveldb snappy
 endif
 ifeq ($(USE_LMDB), 1)
 	LIBRARIES += lmdb
+endif
+ifeq ($(USE_RASPICAM), 1)
+	LIBRARIES += lraspicam lmmal lmmal_core lmmal_util
 endif
 ifeq ($(USE_OPENCV), 1)
 	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 

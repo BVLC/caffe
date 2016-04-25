@@ -67,6 +67,14 @@ if(NOT HAVE_CUDA)
   add_definitions(-DCPU_ONLY)
 endif()
 
+# raspicam
+if(USE_RASPICAM)
+  message(STATUS "Using RaspiCam")
+  include_directories(SYSTEM "/opt/vc/lib")
+  list(APPEND Caffe_LINKER_LIBS "/usr/local/lib/libraspicam.so;/usr/local/lib/libraspicam_cv.so;/opt/vc/lib/libmmal.so;/opt/vc/lib/libmmal_core.so;/opt/vc/lib/libmmal_util.so")
+endif()
+ 
+
 # ---[ OpenCV
 if(USE_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
@@ -75,7 +83,7 @@ if(USE_OPENCV)
   endif()
   include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
   list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
-  message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
+  message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH}) (${OpenCV_LIBS})")
   add_definitions(-DUSE_OPENCV)
 endif()
 
