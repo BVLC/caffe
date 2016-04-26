@@ -230,7 +230,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   std::string key_;
   std::string kernel_name_;
   std::string verification_kernel;
-  Blob<Dtype> col_buffer_;
+  Blob<Dtype> spatial_col_buffer_;
   Blob<Dtype> swizzled_weights_;
   Blob<Dtype> bias_multiplier_;
 

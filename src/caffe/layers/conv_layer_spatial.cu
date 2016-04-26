@@ -1078,7 +1078,7 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
     bottom_index_ = i;
     bottom_data = bottom[i]->gpu_data();
     top_data = top[i]->mutable_gpu_data();
-    col_data = col_buffer_.mutable_gpu_data();
+    col_data = spatial_col_buffer_.mutable_gpu_data();
     weight = this->blobs_[0]->gpu_data();
     swizzled_weights = swizzled_weights_.mutable_gpu_data();
 
@@ -1109,89 +1109,39 @@ template<>
 void ConvolutionLayerSpatial<float>::Backward_gpu(
     const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<float>*>& bottom) {
-  const float* weight = NULL;
-  float* weight_diff = NULL;
-
-  if (this->param_propagate_down_[0]) {
-    weight = this->blobs_[0]->gpu_data();
-    weight_diff = this->blobs_[0]->mutable_gpu_diff();
-    greentea_gpu_set<float>(this->device_->id(), this->blobs_[0]->count(), 0.f,
-                            (cl_mem) weight_diff, 0.f);
-  }
-  float* bias_diff = NULL;
-  if (bias_term_ && this->param_propagate_down_[1]) {
-    bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    greentea_gpu_set(this->device_->id(), this->blobs_[1]->count(), 0.f,
-                     (cl_mem) bias_diff, 0.f);
-  }
-  const int_tp weight_offset = M_ * K_;
-  const int_tp col_offset = K_ * N_;
-  const int_tp top_offset = M_ * N_;
+  const float* weight = this->blobs_[0]->gpu_data();
+  float* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int_tp i = 0; i < top.size(); ++i) {
-    const float* top_diff = NULL;
+    const float* top_diff = top[i]->gpu_diff();
     // Bias gradient, if necessary.
-    if (bias_term_ && this->param_propagate_down_[1]) {
-      top_diff = top[i]->gpu_diff();
-      for (int_tp n = 0; n < num_; ++n) {
-        greentea_gpu_gemv<float>(this->device_->id(), CblasNoTrans, num_output_,
-                                 N_, 1.f, (cl_mem) top_diff, n * this->top_dim_,
-                                 (cl_mem) bias_multiplier_.gpu_data(), 0, 1.,
-                                 (cl_mem) bias_diff, 0);
+    if (this->bias_term_ && this->param_propagate_down_[1]) {
+      float* bias_diff = this->blobs_[1]->mutable_gpu_diff();
+      for (int_tp n = 0; n < this->num_; ++n) {
+        this->backward_gpu_bias(bias_diff, top_diff, n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
-      if (!top_diff) {
-        top_diff = top[i]->gpu_diff();
-      }
-      float* col_data = col_buffer_.mutable_gpu_data();
-      float* col_diff = col_buffer_.mutable_gpu_diff();
       const float* bottom_data = bottom[i]->gpu_data();
       float* bottom_diff = bottom[i]->mutable_gpu_diff();
-      for (int_tp n = 0; n < num_; ++n) {
-        // Since we saved memory in the forward pass by not storing all col
-        // data, we will need to recompute them.
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_->id());
-        viennacl::ocl::program &program = this->device_->program();
-
-        greentea_im2col_gpu<float>(&program, &ctx, (cl_mem) bottom_data,
-                                   n * this->bottom_dim_, channels_, height_,
-                                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                                   stride_h_, stride_w_, 1, 1,
-                                   (cl_mem) col_data, 0);
-
+      for (int_tp n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          for (int_tp g = 0; g < group_; ++g) {
-            greentea_gpu_gemm<float>(this->device_->id(), CblasNoTrans,
-                                     CblasTrans, M_, K_, N_, 1.f,
-                                     (cl_mem) top_diff,
-                                     n * this->top_dim_ + top_offset * g,
-                                     (cl_mem) col_data, col_offset * g, 1.f,
-                                     (cl_mem) weight_diff, weight_offset * g);
-          }
+          this->weight_gpu_gemm(bottom_data, n * this->bottom_dim_,
+              top_diff, n * this->top_dim_, weight_diff);
         }
-        // gradient w.r.t. bottom data, if necessary
-        if (propagate_down[i]) {
-          if (weight == NULL) {
-            weight = this->blobs_[0]->gpu_data();
-          }
-          for (int_tp g = 0; g < group_; ++g) {
-            greentea_gpu_gemm<float>(this->device_->id(), CblasTrans,
-                                     CblasNoTrans, K_, N_, M_, 1.f,
-                                     (cl_mem) weight, weight_offset * g,
-                                     (cl_mem) top_diff,
-                                     n * this->top_dim_ + top_offset * g, 0.f,
-                                     (cl_mem) col_diff, col_offset * g);
-          }
-          // col2im back to the data
-
-          greentea_col2im_gpu<float>(&program, &ctx, (cl_mem) col_diff, 0,
-                                     channels_, height_, width_, kernel_h_,
-                                     kernel_w_, pad_h_, pad_w_, stride_h_,
-                                     stride_w_, 1, 1, (cl_mem) bottom_diff,
-                                     n * this->bottom_dim_);
+      }
+      // gradient w.r.t. bottom data, if necessary.
+      if (propagate_down[i]) {
+        // Multi queue execution, all previous work needs to be done first
+        this->device_->FinishQueues();
+        for (int_tp n = 0; n < this->num_; ++n) {
+          // Multi queue execution, go through work queues
+          this->device_->SwitchQueue(n);
+          this->backward_gpu_gemm(top_diff, n * this->top_dim_, weight,
+                                  bottom_diff, n * this->bottom_dim_);
         }
+        // Multi queue execution, finish all queues
+        this->device_->FinishQueues();
       }
     }
   }
