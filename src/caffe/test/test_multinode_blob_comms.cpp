@@ -133,11 +133,21 @@ struct BlobCommsTest : public Test {
   }
 };
 
-TEST_F(BlobCommsTest, CurrentlySendingVersion) {
+TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
     buildOne();
     EXPECT_EQ(0, comms->currently_sending_version());
     EXPECT_EQ(0, comms->currently_sending_version(0));
     EXPECT_DEATH(comms->currently_sending_version(1), "");
+}
+
+TEST_F(BlobCommsTest, SendIterSize) {
+    buildOne();
+    comms->send_iter_size(1);
+    EXPECT_EQ(1, comms->currently_sending_version());
+   comms->send_iter_size(2);
+    EXPECT_EQ(2, comms->currently_sending_version());
+   comms->send_iter_size(3);
+    EXPECT_EQ(3, comms->currently_sending_version());
 }
 
 }  // namespace
