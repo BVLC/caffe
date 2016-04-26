@@ -43,8 +43,8 @@ MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
-	if (this->bias_term_)
-		dnnDelete<Dtype>(convolutionBwdBias);
+    if (this->bias_term_)
+        dnnDelete<Dtype>(convolutionBwdBias);
 }
 
 template <typename Dtype>
@@ -293,7 +293,8 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       g,
       dimension,
       tdata_sizes);
-    CHECK_EQ(status, 0) << "Failed dnnConvolutionCreateBackwardBias with status "
+    CHECK_EQ(status, 0)
+            << "Failed dnnConvolutionCreateBackwardBias with status "
             << status << "\n";
 
     status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
