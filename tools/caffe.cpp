@@ -511,10 +511,13 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
-      return GetBrewFunction(caffe::string(argv[1]))();
+      int ret = GetBrewFunction(caffe::string(argv[1]))();
+      caffe::internode::mpi_finalize();
+      return ret;
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();
+      caffe::internode::mpi_finalize();
       return 1;
     }
 #endif
@@ -522,4 +525,5 @@ int main(int argc, char** argv) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
   caffe::internode::mpi_finalize();
+  return 0;
 }

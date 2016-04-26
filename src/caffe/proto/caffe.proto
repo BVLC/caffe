@@ -637,7 +637,7 @@ message ConvolutionParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
-    MKLDNN = 3;
+    MKL2017 = 3;
   }
   optional Engine engine = 15 [default = DEFAULT];
 
@@ -905,7 +905,7 @@ message LRNParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
-    MKLDNN = 3;
+    MKL2017 = 3;
   }
   optional Engine engine = 6 [default = DEFAULT];
 }
@@ -950,7 +950,7 @@ message PoolingParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
-    MKLDNN = 3;
+    MKL2017 = 3;
   }
   optional Engine engine = 11 [default = DEFAULT];
   // If global_pooling then it will pool over the size of the bottom by doing
@@ -1020,7 +1020,7 @@ message ReLUParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
-    MKLDNN = 3;
+    MKL2017 = 3;
   }
   optional Engine engine = 2 [default = DEFAULT];
 }

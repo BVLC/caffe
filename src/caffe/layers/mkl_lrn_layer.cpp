@@ -1,14 +1,14 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-MklDnnLRNLayer<Dtype>::~MklDnnLRNLayer() {
+MKLLRNLayer<Dtype>::~MKLLRNLayer() {
   dnnDelete<Dtype>(lrnFwd);
   dnnDelete<Dtype>(lrnBwd);
   dnnReleaseBuffer<Dtype>(lrn_buffer_);
@@ -16,7 +16,7 @@ MklDnnLRNLayer<Dtype>::~MklDnnLRNLayer() {
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   size_ = this->layer_param_.lrn_param().local_size();
   CHECK_EQ(size_ % 2, 1) << "LRN only supports odd values for local_size";
@@ -54,7 +54,7 @@ void MklDnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MKLLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
@@ -75,7 +75,7 @@ void MklDnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MKLLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
@@ -90,7 +90,7 @@ void MklDnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
+void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const void* bottom_data =
     reinterpret_cast<const void*>(bottom[0]->prv_data());
@@ -100,9 +100,9 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     // Is it the first pass? Create a primitive.
     if (lrnFwd == NULL) {
       CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKLDNN);
-      shared_ptr<MklDnnData<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MklDnnData<Dtype> >
+              PrvMemDescr::PRV_DESCR_MKL2017);
+      shared_ptr<MKLData<Dtype> > mem_descr
+        =  boost::static_pointer_cast<MKLData<Dtype> >
               (bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
@@ -126,7 +126,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     top[0]->set_prv_descriptor_data(fwd_top_data);
 
   } else {
-    DLOG(INFO) << "Using cpu_data in MklDnnLRNLayer.";
+    DLOG(INFO) << "Using cpu_data in MKLLRNLayer.";
     if (lrnFwd == NULL) {
       // First pass
       dnnError_t e;
@@ -157,7 +157,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MKLLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
@@ -172,7 +172,7 @@ void MklDnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
+void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const void* top_diff = reinterpret_cast<const void*>(top[0]->prv_diff());
@@ -185,9 +185,9 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     // Is it the first pass? Create a primitive.
     if (lrnBwd == NULL) {
       CHECK_EQ((top[0]->get_prv_descriptor_diff())->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKLDNN);
-      shared_ptr<MklDnnDiff<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MklDnnDiff<Dtype> >
+              PrvMemDescr::PRV_DESCR_MKL2017);
+      shared_ptr<MKLDiff<Dtype> > mem_descr
+        =  boost::static_pointer_cast<MKLDiff<Dtype> >
               (top[0]->get_prv_descriptor_diff());
       CHECK(mem_descr != NULL);
 
@@ -201,7 +201,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     bottom[0]->set_prv_descriptor_diff(bwd_bottom_diff);
 
   } else {
-    DLOG(INFO) << "Using cpu_data in MklDnnLRNLayer.";
+    DLOG(INFO) << "Using cpu_data in MKLLRNLayer.";
     top_diff = reinterpret_cast<const void*>(top[0]->cpu_diff());
     bottom_data = reinterpret_cast<const void*>(bottom[0]->cpu_data());
     bottom_diff = reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
@@ -226,28 +226,28 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
 
 #ifdef CPU_ONLY
-STUB_GPU(MklDnnLRNLayer);
-STUB_GPU_FORWARD(MklDnnLRNLayer, CrossChannelForward);
-STUB_GPU_BACKWARD(MklDnnLRNLayer, CrossChannelBackward);
+STUB_GPU(MKLLRNLayer);
+STUB_GPU_FORWARD(MKLLRNLayer, CrossChannelForward);
+STUB_GPU_BACKWARD(MKLLRNLayer, CrossChannelBackward);
 #else
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void MKLLRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void MKLLRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
   {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::CrossChannelForward_gpu(
+void MKLLRNLayer<Dtype>::CrossChannelForward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
   {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MklDnnLRNLayer<Dtype>::CrossChannelBackward_gpu(
+void MKLLRNLayer<Dtype>::CrossChannelBackward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {NOT_IMPLEMENTED;}
 
 #endif
 
-INSTANTIATE_CLASS(MklDnnLRNLayer);
+INSTANTIATE_CLASS(MKLLRNLayer);
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED

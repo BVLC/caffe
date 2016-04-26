@@ -282,6 +282,9 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
     }
   }
 
+  ~RemoteDataReader() {
+    StopInternalThread();
+  }
 
   void send_req() {
     DataReq req;
@@ -338,6 +341,7 @@ class ReaderKeeper {
     static ReaderKeeper instance_;
     return instance_;
   }
+
   shared_ptr<Queue> get_queue(const LayerParameter& param) {
     RemoteDataParameter rparam = param.remote_data_param();
 
@@ -362,6 +366,10 @@ class ReaderKeeper {
     return (queues[rparam.address()] =
       shared_ptr<Queue>(reader, data_queue.get()));
   }
+
+  void remove_queue(string address) {
+    queues.erase(address);
+  }
 };
 
 }  // namespace
@@ -372,6 +380,12 @@ RemoteDataLayer<Dtype>::RemoteDataLayer(const LayerParameter& param)
   , queue(ReaderKeeper<Dtype>::instance()
       .get_queue(param))
   , transform_blob(new Blob<Dtype>()) {
+}
+
+template <typename Dtype>
+RemoteDataLayer<Dtype>::~RemoteDataLayer() {
+  RemoteDataParameter rparam = Layer<Dtype>::layer_param().remote_data_param();
+  ReaderKeeper<Dtype>::instance().remove_queue(rparam.address());
 }
 
 template <typename Dtype>

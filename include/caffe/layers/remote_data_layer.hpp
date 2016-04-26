@@ -33,6 +33,7 @@ class RemoteDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
  public:
   explicit RemoteDataLayer(const LayerParameter& param);
+  ~RemoteDataLayer();
 
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {

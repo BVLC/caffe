@@ -1,4 +1,4 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -14,11 +14,11 @@
 namespace caffe {
 
 template <typename TypeParam>
-class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
+class MKLPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  MklDnnPoolingLayerTest()
+  MKLPoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
         blob_top_mask_(new Blob<size_t>()) {}
@@ -32,7 +32,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~MklDnnPoolingLayerTest() {
+  virtual ~MKLPoolingLayerTest() {
     delete blob_bottom_;
     delete blob_top_;
     delete blob_top_mask_;
@@ -72,7 +72,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 13] = 2;
       blob_bottom_->mutable_cpu_data()[i + 14] = 3;
     }
-    MklDnnPoolingLayer<Dtype> layer(layer_param);
+    MKLPoolingLayer<Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -170,7 +170,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 34] = 18;
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
-    MklDnnPoolingLayer<Dtype> layer(layer_param);
+    MKLPoolingLayer<Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -295,7 +295,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 34] = 18;
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
-    MklDnnPoolingLayer<Dtype> layer(layer_param);
+    MKLPoolingLayer<Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -368,15 +368,15 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(MklDnnPoolingLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(MKLPoolingLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestSetup) {
+TYPED_TEST(MKLPoolingLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
-  MklDnnPoolingLayer<Dtype> layer(layer_param);
+  MKLPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -384,7 +384,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestSetupPadded) {
+TYPED_TEST(MKLPoolingLayerTest, TestSetupPadded) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -392,7 +392,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestSetupPadded) {
   pooling_param->set_stride(2);
   pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  MklDnnPoolingLayer<Dtype> layer(layer_param);
+  MKLPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -400,13 +400,13 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestSetupPadded) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestSetupGlobalPooling) {
+TYPED_TEST(MKLPoolingLayerTest, TestSetupGlobalPooling) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_global_pooling(true);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  MklDnnPoolingLayer<Dtype> layer(layer_param);
+  MKLPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -415,7 +415,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestSetupGlobalPooling) {
 }
 
 /*
-TYPED_TEST(MklDnnPoolingLayerTest, PrintBackward) {
+TYPED_TEST(MKLPoolingLayerTest, PrintBackward) {
   LayerParameter layer_param;
   layer_param.set_kernelsize(3);
   layer_param.set_stride(2);
@@ -440,13 +440,13 @@ TYPED_TEST(MklDnnPoolingLayerTest, PrintBackward) {
 }
 */
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMax) {
+TYPED_TEST(MKLPoolingLayerTest, TestForwardMax) {
   this->TestForwardSquare();
   this->TestForwardRectHigh();
   this->TestForwardRectWide();
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxTopMask) {
+TYPED_TEST(MKLPoolingLayerTest, TestForwardMaxTopMask) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* >
           (this->blob_top_mask_));
@@ -455,7 +455,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxTopMask) {
   this->TestForwardRectWide();
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMax) {
+TYPED_TEST(MKLPoolingLayerTest, TestGradientMax) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
@@ -466,7 +466,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMax) {
       pooling_param->set_stride(2);
       pooling_param->set_pad(1);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-      MklDnnPoolingLayer<Dtype> layer(layer_param);
+      MKLPoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -474,7 +474,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMax) {
   }
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxPadded) {
+TYPED_TEST(MKLPoolingLayerTest, TestForwardMaxPadded) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -496,7 +496,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxPadded) {
   this->blob_bottom_->mutable_cpu_data()[6] = 4;
   this->blob_bottom_->mutable_cpu_data()[7] = 2;
   this->blob_bottom_->mutable_cpu_data()[8] = 1;
-  MklDnnPoolingLayer<Dtype> layer(layer_param);
+  MKLPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -520,7 +520,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxPadded) {
 }
 
 #if 0
-TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
+TYPED_TEST(MKLPoolingLayerTest, TestGradientMaxTopMask) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
@@ -532,7 +532,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* >
               (this->blob_top_mask_));
-      MklDnnPoolingLayer<Dtype> layer(layer_param);
+      MKLPoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -543,7 +543,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
 #endif
 
 #if 0  // Average Pooling
-TYPED_TEST(MklDnnPoolingLayerTest, TestForwardAve) {
+TYPED_TEST(MKLPoolingLayerTest, TestForwardAve) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -556,7 +556,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardAve) {
   filler_param.set_value(Dtype(2));
   ConstantFiller<Dtype> filler(filler_param);
   filler.Fill(this->blob_bottom_);
-  MklDnnPoolingLayer<Dtype> layer(layer_param);
+  MKLPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -575,7 +575,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardAve) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 8.0 / 9, epsilon);
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAve) {
+TYPED_TEST(MKLPoolingLayerTest, TestGradientAve) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
@@ -585,7 +585,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAve) {
       pooling_param->set_kernel_w(kernel_w);
       pooling_param->set_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      MklDnnPoolingLayer<Dtype> layer(layer_param);
+      MKLPoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -593,7 +593,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAve) {
   }
 }
 
-TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAvePadded) {
+TYPED_TEST(MKLPoolingLayerTest, TestGradientAvePadded) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
@@ -604,7 +604,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAvePadded) {
       pooling_param->set_stride(2);
       pooling_param->set_pad(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      MklDnnPoolingLayer<Dtype> layer(layer_param);
+      MKLPoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -613,4 +613,4 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAvePadded) {
 }
 #endif
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED
