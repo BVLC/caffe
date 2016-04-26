@@ -68,22 +68,17 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
-#ifndef CPU_ONLY
-#ifdef USE_GREENTEA
+
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
-#endif
-#endif
+
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
-#ifndef CPU_ONLY
-#ifdef USE_GREENTEA
+
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
-#endif
-#endif
 
   virtual inline bool reverse_dimensions() {
     return false;
