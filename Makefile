@@ -180,20 +180,22 @@ endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 
+USE_RASPICAM ?= 1
+ifeq ($(USE_RASPICAM), 1)
+	LIBRARY_DIRS += /opt/vc/lib/
+	LIBRARIES += raspicam raspicam_cv mmal mmal_core mmal_util
+endif
+
 # handle IO dependencies
 USE_LEVELDB ?= 1
 USE_LMDB ?= 1
 USE_OPENCV ?= 1
-USE_RASPICAM ?= 1
 
 ifeq ($(USE_LEVELDB), 1)
 	LIBRARIES += leveldb snappy
 endif
 ifeq ($(USE_LMDB), 1)
 	LIBRARIES += lmdb
-endif
-ifeq ($(USE_RASPICAM), 1)
-	LIBRARIES += lraspicam lmmal lmmal_core lmmal_util
 endif
 ifeq ($(USE_OPENCV), 1)
 	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 
@@ -363,39 +365,8 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 endif
 
 # BLAS configuration (default = ATLAS)
-BLAS ?= atlas
-ifeq ($(BLAS), mkl)
-	# MKL
-	LIBRARIES += mkl_rt
-	COMMON_FLAGS += -DUSE_MKL
-	MKLROOT ?= /opt/intel/mkl
-	BLAS_INCLUDE ?= $(MKLROOT)/include
-	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
-else ifeq ($(BLAS), open)
-	# OpenBLAS
-	LIBRARIES += openblas
-else
-	# ATLAS
-	ifeq ($(LINUX), 1)
-		ifeq ($(BLAS), atlas)
-			# Linux simply has cblas and atlas
-			LIBRARIES += cblas atlas
-		endif
-	else ifeq ($(OSX), 1)
-		# OS X packages atlas as the vecLib framework
-		LIBRARIES += cblas
-		# 10.10 has accelerate while 10.9 has veclib
-		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep 'version' | sed 's/[^0-9]*\([0-9]\).*/\1/')
-		XCODE_CLT_GEQ_6 := $(shell [ $(XCODE_CLT_VER) -gt 5 ] && echo 1)
-		ifeq ($(XCODE_CLT_GEQ_6), 1)
-			BLAS_INCLUDE ?= /System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
-			LDFLAGS += -framework Accelerate
-		else
-			BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
-			LDFLAGS += -framework vecLib
-		endif
-	endif
-endif
+BLAS ?= open
+LIBRARIES += openblas
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 

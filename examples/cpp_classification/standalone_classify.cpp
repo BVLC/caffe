@@ -14,6 +14,7 @@
 #include <future>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include <boost/filesystem.hpp>
 #include <boost/range.hpp>
 
@@ -31,7 +32,7 @@ class Classifier {
              const string& mean_file,
              const string& label_file);
 
-  std::vector<Prediction> Classify(const cv::Mat& img, int N = 5);
+  std::vector<Prediction> Classify(const cv::Mat& img, int N = 4);
 
  private:
   void SetMean(const string& mean_file);
@@ -75,20 +76,22 @@ Classifier::Classifier(const string& model_file,
   input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
 
   /* Load the binaryproto mean file. */
-  std::cout << "Before loading the mean file" << std::endl;
   SetMean(mean_file);
 
   /* Load labels. */
   std::cout << "Before loading the labels" << std::endl;
   std::ifstream labels(label_file.c_str());
   CHECK(labels) << "Unable to open labels file " << label_file;
+  std::cout << "After loading model" << std::endl;
   string line;
   while (std::getline(labels, line))
     labels_.push_back(string(line));
+  std::cout << "Finished loading lable file" << std::endl;
 
   Blob<float>* output_layer = net_->output_blobs()[0];
   CHECK_EQ(labels_.size(), output_layer->channels())
     << "Number of labels is different from the output layer dimension.";
+  std::cout << "Done initializing" << std::endl;
 }
 
 static bool PairCompare(const std::pair<float, int>& lhs,
@@ -245,50 +248,96 @@ int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
 
   // mutex for launching tasks
-  std::mutex g_launch_prediction;
-
   string model_file   = argv[1];
   string trained_file = argv[2];
   string mean_file    = argv[3];
   string label_file   = argv[4];
   Classifier classifier(model_file, trained_file, mean_file, label_file);
 
+  std::cout << "Trying to setup up the camera" << std::endl;
   raspicam::RaspiCam_Cv Camera;
   Camera.set(CV_CAP_PROP_FRAME_WIDTH,  640);
   Camera.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
+  std::cout << "Trying to open the camera" << std::endl;
+
   if (!Camera.open()) {
     LOG(FATAL) << "Cannot open camera!";   
   }
+  std::cout << "Camera opened, trying to open a new window" << std::endl;
   cv::namedWindow( "Display", cv::WINDOW_AUTOSIZE );
-  cv::Mat image;
+
+  std::mutex g_image_lock;
+  cv::Mat global_image;
+
+  std::mutex g_prediction_lock;
+  std::vector<Prediction> prediction_results;
+  std::cout << "Trying to start async task" << std::endl;
+
+  std::thread t([&classifier, &g_image_lock, &global_image, &g_prediction_lock, &prediction_results] () {
+    while(1) {
+      if (global_image.empty()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
+
+      g_image_lock.lock();
+      cv::Mat image_local = global_image;
+      g_image_lock.unlock();
+
+      cv::Mat lap;
+      cv::Laplacian(image_local, lap, CV_64F);
+      cv::Scalar mu, sigma;
+      cv::meanStdDev(lap, mu, sigma);
+      double variance = sigma.val[0] * sigma.val[0];
+      std::cout << "Show variance " << variance << std::endl;
+
+      std::vector<Prediction> predictions = classifier.Classify(image_local);
+
+      // Print the top N predictions.
+      std::cout << "==================" << std::endl;
+      for (size_t i = 0; i < predictions.size(); ++i) {
+        Prediction p = predictions[i];
+        std::cout << std::fixed << std::setprecision(4) << p.second << " - \""
+                  << p.first << "\"" << std::endl;
+      }
+      g_prediction_lock.lock();
+      prediction_results = predictions;
+      g_prediction_lock.unlock();
+    }
+  });
+
+  std::cout << "Detaching " << std::endl;
+  t.detach();
+  std::cout << "Detached " << std::endl;
+
   while(1) {
+    cv::Mat image;
     Camera.grab();
     Camera.retrieve(image);
-    cv::imshow("Display", image);
-    char key = cv::waitKey(1);
 
     if (image.empty()) {
       std::cout << "Unable to decode image ";
       sleep(1);
       continue;
     }
-    bool hasLock = g_launch_prediction.try_lock();
+    bool hasLock = g_image_lock.try_lock();
     if (hasLock) {
-      std::async(std::launch::async, [&classifier, &g_launch_prediction, image] () {
-        LOG(INFO) << "Start classification";
-        std::vector<Prediction> predictions = classifier.Classify(image);
-
-        // Print the top N predictions.
-        std::cout << "==================";
-        for (size_t i = 0; i < predictions.size(); ++i) {
-          Prediction p = predictions[i];
-          std::cout << std::fixed << std::setprecision(4) << p.second << " - \""
-                    << p.first << "\"" << std::endl;
-        }
-        g_launch_prediction.unlock();
-      });
+      global_image = image;
+      g_image_lock.unlock();
     }
+
+
+    g_prediction_lock.lock();
+    std::vector<Prediction> local_prediction = prediction_results;
+    g_prediction_lock.unlock();
+    for (size_t i = 0; i < local_prediction.size(); i++) {
+      if (local_prediction[i].second < 0.1) {
+        continue;
+      }
+      cv::putText(image, local_prediction[i].first, cv::Point2f(50, 100 * (i + 1)), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 255, 255), 2);
+    }
+    cv::imshow("Display", image);
+    char key = cv::waitKey(1);
   }
 }
 #else
