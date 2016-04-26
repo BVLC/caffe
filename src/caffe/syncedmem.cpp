@@ -132,9 +132,9 @@ inline void SyncedMemory::to_cpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
-        if (!own_zero_copy_data_)
+        if (!own_zero_copy_data_) {
           greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
-        else {
+        } else {
           void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
                                 (cl_mem) gpu_ptr_,
                                 true,
@@ -184,16 +184,17 @@ inline void SyncedMemory::to_gpu() {
                      CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                      size_, nullptr, &err);
         } else if (device_->isHostUnified()) {
-            //auto saved_mode = Caffe::mode();
-            //Caffe::set_mode(Caffe::GPU);
+            // auto saved_mode = Caffe::mode();
+            // Caffe::set_mode(Caffe::GPU);
             CaffeMallocHost(&cpu_ptr_, size_, device_);
-            //Caffe::set_mode(saved_mode);
+            // Caffe::set_mode(saved_mode);
             caffe_memset(size_, 0, cpu_ptr_);
             own_cpu_data_ = true;
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                               CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                               size_, cpu_ptr_, &err);
-            void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+            void *mapped_ptr = clEnqueueMapBuffer(
+                                  ctx.get_queue().handle().get(),
                                   cl_gpu_mem_,
                                   true,
                                   CL_MAP_READ | CL_MAP_WRITE,
@@ -249,11 +250,12 @@ inline void SyncedMemory::to_gpu() {
             cl_gpu_mem_ = clCreateBuffer(
                 ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 size_, nullptr, &err);
-          } else if(ZEROCOPY_SUPPORTED(device_, cpu_ptr_, size_)) {
+          } else if (ZEROCOPY_SUPPORTED(device_, cpu_ptr_, size_)) {
               cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                                size_, cpu_ptr_, &err);
-              void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+              void *mapped_ptr = clEnqueueMapBuffer(
+                                    ctx.get_queue().handle().get(),
                                     (cl_mem) cl_gpu_mem_,
                                     true,
                                     CL_MAP_READ | CL_MAP_WRITE,
