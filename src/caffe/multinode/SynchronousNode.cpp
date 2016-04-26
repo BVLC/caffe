@@ -258,12 +258,12 @@ class SynchronousSync : public InternalThread
     , down_sync(BlobInfoFactory<Dtype>::create_sync_info(const_info))
     , keychain(BlobKeyChain<Dtype>::create(const_info->layers()))
     , comms_up(BlobComms<Dtype>::create(blob_accessor,
-        solver, const_info, up_sync, up_waypoint, codec, keychain,
+        const_info, up_sync, up_waypoint, codec, keychain,
         typename BlobComms<Dtype>::Settings(
           BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
         0))
     , comms_down(BlobComms<Dtype>::create(blob_accessor,
-        solver, const_info, down_sync, down_waypoint, codec, keychain,
+        const_info, down_sync, down_waypoint, codec, keychain,
         typename BlobComms<Dtype>::Settings(
           BlobEncoding::PARAMS, BlobEncoding::GRADS, 1.0, 1.0),
         0))

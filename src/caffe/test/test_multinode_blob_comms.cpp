@@ -11,6 +11,7 @@
 #include "caffe/serialization/bitfield.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
 #include "caffe/solver_factory.hpp"
+#include "caffe/internode/tree_cluster.hpp"
 
 namespace caffe {
 namespace {
@@ -20,6 +21,7 @@ using ::testing::Return;
 using ::testing::Test;
 using ::testing::StrictMock;
 using ::testing::Mock;
+using ::boost::assign::list_of;
 
 struct BlobConstInfoMock : BlobConstInfo {
   MOCK_CONST_METHOD2(parts, uint32_t(int a, int b));
@@ -30,87 +32,112 @@ struct BlobConstInfoMock : BlobConstInfo {
   MOCK_CONST_METHOD1(needs_syncing, bool(int a));
 };
 
-struct SyncedMock : public BlobSyncInfo::Handler {
-  MOCK_METHOD4(synced, void(int a, int b, int c, uint32_t d));
-  MOCK_METHOD2(synced, void(int a, uint32_t b));
-  MOCK_METHOD1(synced, void(uint32_t a));
+struct BlobSyncInfoMock : BlobSyncInfo {
+  MOCK_METHOD5(received, bool(
+          internode::RemoteId from,
+          int layer_id, int blob_id, int part, uint32_t version));
+  
+  MOCK_METHOD1(register_synced_handler, void(BlobSyncInfo::Handler* handler));
+  MOCK_CONST_METHOD4(received_version, uint32_t(
+          internode::RemoteId from,
+          int layer_id, int blob_id, int part));
+  
+  MOCK_METHOD1(add_remote, void(internode::RemoteId id));
+  MOCK_METHOD1(remove_remote, void(internode::RemoteId id));
+};
+
+struct WaypointMock : internode::Waypoint {
+  MOCK_METHOD3(async_send, void(const char* buffer, size_t size, SentCallback));
+  MOCK_CONST_METHOD0(id, internode::RemoteId());
+  MOCK_CONST_METHOD0(address, string());
+  MOCK_METHOD1(register_receive_handler, void(Waypoint::Handler* handler));
+  MOCK_CONST_METHOD0(guaranteed_comm, bool());
+  MOCK_CONST_METHOD0(max_packet_size, size_t());
 };
 
 template<typename Dtype>
 class BlobAccessorMock : public BlobAccessor<Dtype> {
-  Blob<Dtype> *blob;
   vector<int> v;
-  
+  Blob<Dtype> blob;
  public:
   BlobAccessorMock() 
-  : v(boost::assign::list_of(1)(1)(1)(1))
-  , blob(new Blob<Dtype>) {}
-  
+  : v(boost::assign::list_of(1)(1)(1)(1).operator vector<int> ())
+  , blob(v) {}
+    
   virtual Blob<Dtype>* get_blob(int layer, int blob_id) {
-    return blob;
+    return &blob;
   }
 };
 
 struct BlobCommsTest : public Test {
-  shared_ptr<internode::Daemon> comm;
+  //shared_ptr<internode::Daemon> comm;
   shared_ptr<BlobCodec<float> > codec;
-  shared_ptr<internode::Waypoint> waypoint;
+  shared_ptr<WaypointMock> waypoint;
 
   shared_ptr<BlobAccessorMock<float> > blob_accessor_mock;
   shared_ptr<BlobConstInfoMock> const_info_mock;
-  shared_ptr<SyncedMock> sync_mock;
-  shared_ptr<BlobSyncInfo> sync_info;
+  shared_ptr<BlobSyncInfoMock> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
-  shared_ptr<Solver<float> > solver;
-  //shared_ptr<Blob<float> > mocked_blob;
 
-  string address;
   int num_of_threads;
-
-    virtual void SetUp() {
-    const_info_mock.reset(new BlobConstInfoMock());
-    blob_accessor_mock.reset(new BlobAccessorMock<float>());
-    sync_mock.reset(new StrictMock<SyncedMock>());
-    sync_info = BlobInfoFactory<float>::create_sync_info(const_info_mock);
-    // if (register_handler)
-      sync_info->register_synced_handler(sync_mock.get());
-    EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(1));
-    //mocked_blob = boost::make_shared<Blob<float> >(v);
-    //EXPECT_CALL(*blob_accessor_mock, get_blob(0,0)).WillRepeatedly(
-     //       Return(static_cast<Blob<float>* >(mocked_blob.get())));
+  
+  void prepare_const_mock(
+      vector<vector<int> > vparts, bool register_handler = true) {
+    EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(vparts.size()));
+    for (int i = 0; i < vparts.size(); ++i) {
+      EXPECT_CALL(*const_info_mock, blobs(i)).WillRepeatedly(Return(vparts.at(i).size()));
+      int totalpartsinlayer = 0;
+      for (int j = 0; j < vparts.at(i).size(); ++j) {
+        EXPECT_CALL(*const_info_mock, parts(i, j))
+          .WillRepeatedly(Return(vparts.at(i).at(j)));
+        totalpartsinlayer+=vparts.at(i).at(j);
+      }
+      EXPECT_CALL(*const_info_mock, parts(i)).WillRepeatedly(Return(totalpartsinlayer));
+    }
+    EXPECT_CALL(*const_info_mock, needs_syncing(_)).WillRepeatedly(Return(true));
   }
+
+  virtual void SetUp() {
+    const_info_mock.reset(new BlobConstInfoMock());
+    prepare_const_mock(list_of<vector<int> >(list_of<int>(1)));
+    
+    blob_accessor_mock.reset(new BlobAccessorMock<float>());
+    sync_info.reset(new BlobSyncInfoMock());
+  }
+  
+  BlobCommsTest()
+      : num_of_threads(1) {
+ }
 
   virtual void TearDown() {
     sync_info.reset();
-    sync_mock.reset();
     blob_accessor_mock.reset();
     const_info_mock.reset();
   }
 
-  void buildOne(){
-    SolverParameter solverparam = SolverParameter::default_instance();
-    //solverparam.set_train_net("1");
-    solver.reset(SolverRegistry<float>::CreateSolver(solverparam));
-    comm = internode::create_communication_daemon();
+  void buildOne() {
+    //comm = internode::create_communication_daemon();
     codec = BlobCodec<float>::create_codec(
             MultinodeParameter::default_instance(), true);
-    waypoint = internode::configure_client(comm, address, codec->packet_size());
+    waypoint.reset(new WaypointMock());
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
     comms = BlobComms<float>::create(blob_accessor_mock,
-            solver, const_info_mock, sync_info, waypoint, codec, keychain,
+            const_info_mock, sync_info, waypoint, codec, keychain,
             typename BlobComms<float>::Settings(
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
             num_of_threads);
 
-      waypoint->register_receive_handler(comms.get());
-      comms->send_iter_size(solver->param().iter_size());
+    //waypoint->register_receive_handler(comms.get());
+    //comms->send_iter_size();
   }
 };
 
-TEST_F(BlobCommsTest, LOL_test1) {
+TEST_F(BlobCommsTest, CurrentlySendingVersion) {
     buildOne();
     EXPECT_EQ(0, comms->currently_sending_version());
+    EXPECT_EQ(0, comms->currently_sending_version(0));
+    EXPECT_DEATH(comms->currently_sending_version(1), "");
 }
 
 }  // namespace

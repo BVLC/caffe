@@ -120,7 +120,7 @@ struct SynchronousParamSyncingImpl
     , keychain(BlobKeyChain<Dtype>::create_empty(const_info->layers()))
     , comms(
         BlobComms<Dtype>::create(blob_accessor,
-          solver, const_info, sync_info, waypoint, codec, keychain,
+          const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
           num_of_threads))
