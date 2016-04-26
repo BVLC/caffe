@@ -14,6 +14,13 @@ set(CAFFE_TARGET_VERSION "1.0.0-rc3")
 set(CAFFE_TARGET_SOVERSION "1.0.0-rc3")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
+# definition needed to include CMake generated files
+add_definitions(-DCMAKE_BUILD)
+
+add_definitions(
+	-D_VARIADIC_MAX=10
+)
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
@@ -24,6 +31,9 @@ include(cmake/Targets.cmake)
 include(cmake/Misc.cmake)
 include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
+if( DEFINED WIN32 )
+    include(cmake/Msvc.cmake)
+endif()
 
 # ---[ Options
 caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
@@ -54,8 +64,6 @@ if(USE_libstdcpp)
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
-
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
 
@@ -66,6 +74,14 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
 include_directories(BEFORE src) # This is needed for gtest.
+
+list(APPEND Caffe_LINKER_LIBS 
+	proto 
+	caffe 
+	)
+
+list(APPEND Caffe_LINK 
+	${Caffe_LINKER_LIBS})
 
 # ---[ Subdirectories
 add_subdirectory(src/gtest)
@@ -90,3 +106,4 @@ caffe_print_configuration_summary()
 
 # ---[ Export configs generation
 caffe_generate_export_configs()
+

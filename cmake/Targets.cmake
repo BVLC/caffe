@@ -61,6 +61,8 @@ function(caffe_pickup_caffe_sources root)
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/layers/*.cu")
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/util/*.cu")
   caffe_source_group("Source\\Proto"  GLOB "${root}/src/caffe/proto/*.proto")
+  caffe_source_group("Include\\msvc"  GLOB "${root}/include/caffe/msvc/*.hpp")
+  caffe_source_group("Source\\msvc"  GLOB "${root}/src/caffe/msvc/*.cpp")
 
   # source groups for test target
   caffe_source_group("Include"      GLOB "${root}/include/caffe/test/test_*.h*")

@@ -3,6 +3,11 @@
 #endif
 #include <glog/logging.h>
 #include <stdio.h>
+#if !defined(_MSC_VER)
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#endif  // #if !defined(_MSC_VER)
+#include <sys/stat.h>
 
 #include <sstream>
 #include <string>

@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
-#include "caffe/layer_factory.hpp"
 #include "caffe/layers/scale_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 

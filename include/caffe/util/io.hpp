@@ -16,6 +16,13 @@
 #define CAFFE_TMP_DIR_RETRIES 100
 #endif
 
+#if !defined(_MSC_VER)
+#include <unistd.h>
+#else   // #if !defined(_MSC_VER)
+#include "caffe/msvc/caffe_msvc_io.hpp"
+
+#endif  // #if !defined(_MSC_VER)
+
 namespace caffe {
 
 using ::google::protobuf::Message;

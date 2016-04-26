@@ -515,4 +515,6 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
 
 }  // namespace caffe
 
+#include "caffe/msvc/caffe_msvc_registry.hpp"
+
 #endif  // CAFFE_LAYER_H_

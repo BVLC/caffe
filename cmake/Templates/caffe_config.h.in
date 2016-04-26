@@ -9,10 +9,6 @@
 
 /* NVIDA cuDNN */
 #cmakedefine HAVE_CUDNN
-#cmakedefine USE_CUDNN
-
-/* NVIDA cuDNN */
-#cmakedefine CPU_ONLY
 
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
@@ -20,7 +16,7 @@
 /* Temporary (TODO: remove) */
 #if 1
   #define CMAKE_SOURCE_DIR SOURCE_FOLDER "/src/"
-  #define EXAMPLES_SOURCE_DIR BINARY_FOLDER "/examples/"
+  #define EXAMPLES_SOURCE_DIR SOURCE_FOLDER "/examples/"
   #define CMAKE_EXT ".gen.cmake"
 #else
   #define CMAKE_SOURCE_DIR "src/"
@@ -31,8 +27,3 @@
 /* Matlab */
 #cmakedefine HAVE_MATLAB
 
-/* IO libraries */
-#cmakedefine USE_OPENCV
-#cmakedefine USE_LEVELDB
-#cmakedefine USE_LMDB
-#cmakedefine ALLOW_LMDB_NOLOCK

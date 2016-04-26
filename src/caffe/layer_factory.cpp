@@ -33,6 +33,8 @@
 
 namespace caffe {
 
+    char GET_CLASS_GUARD_NAME(LayerFactory);
+
 // Get convolution layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(

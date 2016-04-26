@@ -2,9 +2,15 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread date_time chrono filesystem)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
+link_directories(
+    ${Boost_LIBRARY_DIR_RELEASE}
+)
+
+if(NOT DEFINED WIN32)
+  list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
+endif()
 
 # ---[ Threads
 find_package(Threads REQUIRED)
@@ -12,6 +18,10 @@ list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
+add_definitions(
+	-DGOOGLE_GLOG_DLL_DECL=
+	-DGLOG_NO_ABBREVIATED_SEVERITIES
+	)
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
 
@@ -23,8 +33,45 @@ list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
 # ---[ Google-protobuf
 include(cmake/ProtoBuf.cmake)
 
+# ---[ SZIP
+set(SZIP_DIR "/usr/local/szip" CACHE PATH "Path to SZIP root.")
+find_path(SZIP_INCLUDE_DIR NAMES "szlib.h" HINTS ${SZIP_DIR}/include)
+if(EXISTS ${SZIP_INCLUDE_DIR})
+  include_directories(SYSTEM ${SZIP_INCLUDE_DIR})
+endif()
+
+set(LIBEXT "a")
+if( DEFINED WIN32 )
+	set(LIBEXT "lib")
+endif()
+find_file(SZIP_DEBUG_LIBRARY NAMES "szip_D.${LIBEXT}" "libszip_D.${LIBEXT}" HINTS ${SZIP_DIR}/lib)
+find_file(SZIP_RELEASE_LIBRARY NAMES "szip.${LIBEXT}" "libszip.${LIBEXT}" HINTS ${SZIP_DIR}/lib)
+if(EXISTS ${SZIP_DEBUG_LIBRARY} AND EXISTS ${SZIP_RELEASE_LIBRARY})
+list(APPEND Caffe_LINKER_LIBS 
+	debug ${SZIP_DEBUG_LIBRARY}
+	optimized ${SZIP_RELEASE_LIBRARY}
+	)
+endif()
+	
+# ---[ ZLIB
+# TODO: Skip if Caffe_LINKER_LIBS already contains zlib.
+set(ZLIB_DIR "/usr/local/zlib" CACHE PATH "Path to ZLIB root.")
+find_path(ZLIB_INCLUDE_DIR NAMES "zlib.h" HINTS ${ZLIB_DIR}/include)
+if(EXISTS ${ZLIB_INCLUDE_DIR})
+	include_directories(SYSTEM ${ZLIB_INCLUDE_DIR})
+endif()
+
+find_file(ZLIB_DEBUG_LIBRARY NAMES "zlib_D.${LIBEXT}" "libzlib_D.${LIBEXT}" HINTS ${ZLIB_DIR}/lib)
+find_file(ZLIB_RELEASE_LIBRARY NAMES "zlib.${LIBEXT}" "libzlib.${LIBEXT}" HINTS ${ZLIB_DIR}/lib)
+if(EXISTS ${ZLIB_DEBUG_LIBRARY} AND EXISTS ${ZLIB_RELEASE_LIBRARY})
+	list(APPEND Caffe_LINKER_LIBS 
+		debug ${ZLIB_DEBUG_LIBRARY}
+		optimized ${ZLIB_RELEASE_LIBRARY}
+		)
+endif()
+
 # ---[ HDF5
-find_package(HDF5 COMPONENTS HL REQUIRED)
+find_package(HDF5 COMPONENTS C HL REQUIRED)
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
 

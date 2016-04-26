@@ -27,6 +27,10 @@ void hdf5_load_nd_dataset_helper(
   status = H5LTget_dataset_info(
       file_id, dataset_name_, dims.data(), &class_, NULL);
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
+#if defined(_MSC_VER)
+  if ( H5T_FLOAT != class_ && H5T_INTEGER != class_ )
+      LOG(FATAL) << "Expected float, double, or integer data";
+#else   // #if defined(_MSC_VER)
   switch (class_) {
   case H5T_FLOAT:
     // In VC++ declaring and initializing variables in case statement without
@@ -82,6 +86,7 @@ void hdf5_load_nd_dataset_helper(
       LOG(FATAL) << "Datatype class unknown";
     }
   }
+#endif  // #if defined(_MSC_VER)
 
   vector<int> blob_dims(dims.size());
   for (int i = 0; i < dims.size(); ++i) {
