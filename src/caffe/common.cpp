@@ -12,17 +12,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
-#if defined(BOOST_ENABLE_ASSERT_HANDLER)
-
-namespace boost {
-    void assertion_failed(char const * expr, char const * function,
-                          char const * file, long line)
-    {
-        LOG(ERROR) << "[" << file << ":" << line << "] " << function  << "(): " << expr << std::endl;
-    }
-}
-#endif  // #if defined(BOOST_ENABLE_ASSERT_HANDLER)
-
 namespace caffe {
 
 // Make sure each thread can have different values.

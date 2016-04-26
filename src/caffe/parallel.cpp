@@ -356,21 +356,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
     CHECK(attributes.device == device);
 #endif
 
-    // This change is for sm_10, 
-    // which can use at most 64K blocks per dim.
-    // On machine with older GPU, 
-    // windows might choose sm_10.
-    // Note that the value 1 << 24 is based on the assumption 
-    // that the block size is 512.
-    // TODO: Make this value more configurable.
-    // TODO: figure out the specification of arch in the run time.
-    const size_t uNrOfItemsPerIteration = (size_t)1 << 24;
-    size_t uNrOfIerations = (size_ + uNrOfItemsPerIteration - 1) / uNrOfItemsPerIteration;
-    for(size_t i = 0, uBase = 0; i < uNrOfIerations; i++, uBase += uNrOfItemsPerIteration)
-    {
-      size_t uNrOfItemsToAdd = std::min(size_ - uBase, uNrOfItemsPerIteration);
-        caffe_gpu_add(uNrOfItemsToAdd, src + uBase, dst + uBase, dst + uBase);
-    }
+    caffe_gpu_add(size_, src, dst, dst);
   }
 
   // Send gradients to parent

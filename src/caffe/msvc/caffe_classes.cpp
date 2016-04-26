@@ -1,4 +1,3 @@
-#pragma once
 
 #if defined(_MSC_VER)
 
@@ -23,7 +22,7 @@ char GET_CLASS_GUARD_NAME(CuDNNTanHLayer);
 char GET_CLASS_GUARD_NAME(WindowDataLayer);
 
 #endif  // #if !defined(USE_CUDNN)
-}
+}  // namespace caffe
 
 #endif
 

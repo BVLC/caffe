@@ -46,7 +46,8 @@ private:\
   char GET_CLASS_GUARD_NAME(classname); \
   template class classname<float>; \
   template class classname<double>
-    
+
+
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \
       const std::vector<Blob<float>*>& bottom, \

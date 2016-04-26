@@ -28,7 +28,7 @@ void hdf5_load_nd_dataset_helper(
       file_id, dataset_name_, dims.data(), &class_, NULL);
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
 #if defined(_MSC_VER)
-  if(H5T_FLOAT != class_ && H5T_INTEGER != class_ )
+  if ( H5T_FLOAT != class_ && H5T_INTEGER != class_ )
       LOG(FATAL) << "Expected float, double, or integer data";
 #else   // #if defined(_MSC_VER)
   switch (class_) {

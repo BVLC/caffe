@@ -7,10 +7,7 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 link_directories(
     ${Boost_LIBRARY_DIR_RELEASE}
 )
- 
-add_definitions(
-    -DBOOST_ENABLE_ASSERT_HANDLER
-)
+
 if(NOT DEFINED WIN32)
   list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 endif()

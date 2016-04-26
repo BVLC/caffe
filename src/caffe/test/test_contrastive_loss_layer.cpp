@@ -77,7 +77,9 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
     if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
       loss += dist_sq;
     } else {
-        Dtype dist = std::max(margin - (Dtype)sqrt((double)dist_sq), (Dtype)0.0);
+        Dtype dist = std::max(
+          margin - static_cast<Dtype>(sqrt(static_cast<double>(dist_sq))),
+          static_cast<Dtype>(0.0));
       loss += dist*dist;
     }
   }
