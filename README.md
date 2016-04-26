@@ -80,7 +80,7 @@ You can downloaded the fftw3 source code from https://github.com/FFTW/fftw3.git
 
 and the clFFT from https://github.com/listenlink/clFFT.git
 
-Then config the Cmake option with ```-DUSE_FFT=ON``` when useing cmake build system or enable the Makefile.config.example line 36 ```USE_FFT := 1``` when using makefile build system
+Then config the Cmake option with ```-DUSE_FFT=ON``` when using cmake build system or enable the Makefile.config.example line 36 ```USE_FFT := 1``` when using makefile build system
 
 Like the ```INTEL_SPATIAL```, modify the convolution_param to ```engine: FFT```to use fft based convolution engine.
 
