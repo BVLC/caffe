@@ -1,6 +1,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <boost/filesystem.hpp>
+
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/conv_spatial_layer.hpp"
@@ -25,6 +27,8 @@ namespace caffe {
 #else
 #define dbgPrint(x)
 #endif
+
+#define CACHE_DIRECTORY ".spatialkernels/"
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -947,10 +951,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   CHECK_EQ(create_verification_kernel(bottom, top), true) <<
     "Spatial Convolution auto tuner failed to create verification kernel.";
 
-  string outputFile;
-  outputFile = "./spatialkernels/" + key_;
-  std::ifstream cachedKernel(outputFile.c_str());
-
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   const viennacl::ocl::device &device = ctx.current_device();
   if (device.vendor().find("Intel") != std::string::npos &&
@@ -1045,6 +1045,26 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
           kernelQueue[x]->kernelName);
   }
 
+  tuned_ = true;
+
+  const boost::filesystem::path& path = CACHE_DIRECTORY;
+  const boost::filesystem::path& dir = boost::filesystem::unique_path(path).string();
+  bool hasCacheDir = false;
+  if (!boost::filesystem::exists(dir))
+    hasCacheDir = boost::filesystem::create_directory(dir);
+  else
+    hasCacheDir = boost::filesystem::is_directory(dir);
+
+  if (hasCacheDir != true) {
+    std::cout << "Failed to create cache directory,"
+              << "will tune again for next running" << std::endl;
+    return;
+  }
+
+
+  string outputFile;
+  outputFile = CACHE_DIRECTORY + key_;
+  std::ifstream cachedKernel(outputFile.c_str());
   std::ofstream outputKernel;
   outputKernel.open(outputFile.c_str());
   outputKernel << kernelQueue[kernel_index_]->workItem_output[0] << " "
@@ -1061,7 +1081,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                << kernelQueue[kernel_index_]->batched_execute << " "
                << kernelQueue[kernel_index_]->use_null_local << " ";
   outputKernel.close();
-  tuned_ = true;
 }
 
 template<>
@@ -1157,7 +1176,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     exit(-1);
 
   string outputFile;
-  outputFile = "./spatialkernels/" + key_;
+  outputFile = CACHE_DIRECTORY + key_;
   std::ifstream cachedKernel(outputFile.c_str());
 
   if (cachedKernel) {
