@@ -1,7 +1,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <boost/filesystem.hpp>
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
@@ -16,6 +15,8 @@
 #include "caffe/greentea/greentea_im2col.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
+
+#include <boost/filesystem.hpp>
 
 namespace caffe {
 #ifndef CPU_ONLY
@@ -988,7 +989,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     while (failures < kernelQueue.size()) {
       int_tp fastestKernel = -1;
       float fastestTime = 999999990000000000000000000.0f;
-  
+
       for (int_tp x = 0; x < kernelQueue.size(); x++) {
         if (kernelQueue[x]->executionTime < fastestTime
             && kernelQueue[x]->tested == false) {
@@ -996,13 +997,11 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
           fastestTime = kernelQueue[x]->executionTime;
         }
       }
-  
       // Test fastest kernel
       timed_convolve(bottom, top, bottom_index_, num_,
                      kernelQueue[fastestKernel]);
       bool verified = verify_result(bottom, top, bottom_index_, num_,
                                     kernelQueue[fastestKernel]);
-  
       if (verified == true) {
         kernelQueue[fastestKernel]->verified = true;
         kernel_index_ = fastestKernel;
@@ -1014,25 +1013,24 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         failures++;
       }
     }
-  
   #ifdef dbg
     float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
         kernelQueue[kernel_index_]);
   #else
-    timed_convolve(bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]);
+    timed_convolve(bottom, top, bottom_index_, num_,
+                   kernelQueue[kernel_index_]);
   #endif
     dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
-  
     verification = verify_result(bottom, top, bottom_index_, num_,
                                       kernelQueue[kernel_index_]);
   }
-  if (verification)
+  if (verification) {
     dbgPrint(std::cout << "Kernel passed verification:" << verify_result(
             bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]) <<
         std::endl);
-  else {
-    std::cout << "Verification of kernel was not successful, fallback to basic kernel"
-              << std::endl;
+  } else {
+    std::cout << "Verification of kernel was not successful,"
+              << "fallback to basic kernel" << std::endl;
     create_basic_kernel(bottom, top, 1, 1, 1);
     kernel_index_ = kernelQueue.size() - 1;
   }
@@ -1048,7 +1046,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   tuned_ = true;
 
   const boost::filesystem::path& path = CACHE_DIRECTORY;
-  const boost::filesystem::path& dir = boost::filesystem::unique_path(path).string();
+  const boost::filesystem::path& dir =
+                   boost::filesystem::unique_path(path).string();
   bool hasCacheDir = false;
   if (!boost::filesystem::exists(dir))
     hasCacheDir = boost::filesystem::create_directory(dir);
