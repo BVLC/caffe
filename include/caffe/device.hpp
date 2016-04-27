@@ -53,6 +53,7 @@ class device {
   void DecreaseMemoryUsage(uint_tp bytes);
   void ResetPeakMemoryUsage();
   bool CheckCapability(std::string cap);
+  bool CheckVendor(std::string vendor);
 
  private:
   int current_queue_id_;
