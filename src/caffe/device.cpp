@@ -191,8 +191,7 @@ bool device::CheckCapability(std::string cap) {
   return true;
 }
 
-bool device::CheckVendor(std::string vendor)
-{
+bool device::CheckVendor(std::string vendor) {
   if (backend_ == BACKEND_CUDA) {
     if (vendor.compare("NVIDIA") == 0)
       return true;
