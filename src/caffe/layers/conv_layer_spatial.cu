@@ -944,8 +944,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   kernel_uid_ = 0;
 
   // Creates a verification kernel to verify kernel results
-  if (create_verification_kernel(bottom, top) != true)
-    exit(-1);
+  CHECK_EQ(create_verification_kernel(bottom, top), true) <<
+    "Spatial Convolution auto tuner failed to create verification kernel.";
 
   string outputFile;
   outputFile = "./spatialkernels/" + key_;
@@ -966,22 +966,14 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     create_convolution_kernel(bottom, top, 2, 5, 5, 1);
     create_convolution_kernel(bottom, top, 2, 3, 4, 1);
     create_convolution_kernel(bottom, top, 2, 6, 4, 1);
-    create_convolution_kernel(bottom, top, 4, 1, 1, 1);
-    for (int_tp y = 1; y < 4; y++)
-      for (int_tp z = 1; z < 16 && z < M_; z++) {
-        create_convolution_kernel(bottom, top, 1, 4, y, z);
-        if (num_ > 1)
-          create_convolution_kernel(bottom, top, 3, 4, y, z);
-      }
-  } else {
-    create_convolution_kernel(bottom, top, 4, 1, 1, 1);
-    for (int_tp y = 1; y < 4; y++)
-      for (int_tp z = 1; z < 16 && z < M_; z++) {
-        create_convolution_kernel(bottom, top, 1, 4, y, z);
-        if (num_ > 1)
-          create_convolution_kernel(bottom, top, 3, 4, y, z);
-      }
   }
+  for (int_tp y = 1; y < 4; y += 1)
+    for (int_tp z = 1; z < 16 && z < M_; z += 1) {
+      if (4 * y * z > 32) continue;
+      create_convolution_kernel(bottom, top, 1, 4, y, z);
+      if (num_ > 1)
+        create_convolution_kernel(bottom, top, 3, 4, y, z);
+    }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     tune_local_size(bottom, top, kernelQueue[x]);
@@ -991,55 +983,59 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                                                    num_, kernelQueue[x]);
 
   int_tp failures = 0;
-  while (failures < kernelQueue.size()) {
-    int_tp fastestKernel = -1;
-    float fastestTime = 999999990000000000000000000.0f;
-
-    for (int_tp x = 0; x < kernelQueue.size(); x++) {
-      if (kernelQueue[x]->executionTime < fastestTime
-          && kernelQueue[x]->tested == false) {
-        fastestKernel = x;
-        fastestTime = kernelQueue[x]->executionTime;
+  bool verification = false;
+  if (kernelQueue.size()) {
+    while (failures < kernelQueue.size()) {
+      int_tp fastestKernel = -1;
+      float fastestTime = 999999990000000000000000000.0f;
+  
+      for (int_tp x = 0; x < kernelQueue.size(); x++) {
+        if (kernelQueue[x]->executionTime < fastestTime
+            && kernelQueue[x]->tested == false) {
+          fastestKernel = x;
+          fastestTime = kernelQueue[x]->executionTime;
+        }
+      }
+  
+      // Test fastest kernel
+      timed_convolve(bottom, top, bottom_index_, num_,
+                     kernelQueue[fastestKernel]);
+      bool verified = verify_result(bottom, top, bottom_index_, num_,
+                                    kernelQueue[fastestKernel]);
+  
+      if (verified == true) {
+        kernelQueue[fastestKernel]->verified = true;
+        kernel_index_ = fastestKernel;
+        break;
+      } else {
+        kernelQueue[fastestKernel]->tested = true;
+        dbgPrint(std::cout << "Kernel " << fastestKernel <<
+            " failed verification" << std::endl);
+        failures++;
       }
     }
-
-    // Test fastest kernel
-    timed_convolve(bottom, top, bottom_index_, num_,
-                   kernelQueue[fastestKernel]);
-    bool verified = verify_result(bottom, top, bottom_index_, num_,
-                                  kernelQueue[fastestKernel]);
-
-    if (verified == true) {
-      kernelQueue[fastestKernel]->verified = true;
-      kernel_index_ = fastestKernel;
-      break;
-    } else {
-      kernelQueue[fastestKernel]->tested = true;
-      dbgPrint(std::cout << "Kernel " << fastestKernel <<
-          " failed verification" << std::endl);
-      failures++;
-    }
+  
+  #ifdef dbg
+    float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
+        kernelQueue[kernel_index_]);
+  #else
+    timed_convolve(bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]);
+  #endif
+    dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
+  
+    verification = verify_result(bottom, top, bottom_index_, num_,
+                                      kernelQueue[kernel_index_]);
   }
-
-#ifdef dbg
-  float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
-      kernelQueue[kernel_index_]);
-#else
-  timed_convolve(bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]);
-#endif
-  dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
-
-  bool verification = verify_result(bottom, top, bottom_index_, num_,
-                                    kernelQueue[kernel_index_]);
-
   if (verification)
     dbgPrint(std::cout << "Kernel passed verification:" << verify_result(
             bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]) <<
         std::endl);
-  else
-    std::cout << "Verification of kernel was not successful, results for "
-              "this layer may not be accurate"
+  else {
+    std::cout << "Verification of kernel was not successful, fallback to basic kernel"
               << std::endl;
+    create_basic_kernel(bottom, top, 1, 1, 1);
+    kernel_index_ = kernelQueue.size() - 1;
+  }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (x != kernel_index_)
@@ -1065,13 +1061,13 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                << kernelQueue[kernel_index_]->batched_execute << " "
                << kernelQueue[kernel_index_]->use_null_local << " ";
   outputKernel.close();
-
   tuned_ = true;
 }
 
 template<>
 void ConvolutionLayerSpatial<float>::Forward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+
   for (int_tp i = 0; i < bottom.size(); ++i) {
     bottom_index_ = i;
     bottom_data = bottom[i]->gpu_data();
@@ -1088,12 +1084,13 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
 
     bias_offset_ = 0;
 
-    if (bias_term_) {
+    if (bias_term_)
       bias_ = this->blobs_[1]->gpu_data();
-    }
 
-    if (!tuned_)
+    if (!tuned_) {
       setup_convolution(bottom, top);
+      CHECK_EQ(tuned_, true) << "Spatial convolution auto-tuning failed.";
+    }
 
     if (kernelQueue[kernel_index_]->batched_execute)
       batched_convolve(bottom, top, i, num_, kernelQueue[kernel_index_]);
