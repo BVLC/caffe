@@ -17,6 +17,8 @@
 #include <chrono>
 #include <boost/filesystem.hpp>
 #include <boost/range.hpp>
+#include <boost/circular_buffer.hpp>
+#include <math.h>       /* fabs */
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)
@@ -237,6 +239,21 @@ void Classifier::Preprocess(const cv::Mat& img,
     << "Input channels are not wrapping the input layer of the network.";
 }
 
+std::pair<float, float> mean_and_variance(const boost::circular_buffer<float>& xs) {
+    // begin(xs) will point to the first element in xs
+    // end(xs) will point to the last element in xs
+    // the distance between them gives the number of elements
+    size_t N = end(xs) - begin(xs);
+    // first pass through all data (hidden in accumulate):
+    float m = std::accumulate(begin(xs), end(xs), 0.0) / N;
+    float s2 = 0;
+    // second pass through all data:
+    for(auto x : xs) {
+        s2 += (x - m) * (x - m);
+    }
+    return std::pair<float, float>(m, s2 / (N-1));
+}
+
 int main(int argc, char** argv) {
   if (argc != 6) {
     std::cerr << "Usage: " << argv[0]
@@ -246,6 +263,7 @@ int main(int argc, char** argv) {
   }
 
   ::google::InitGoogleLogging(argv[0]);
+  const int RLV_SIZE = 5;
 
   // mutex for launching tasks
   string model_file   = argv[1];
@@ -274,7 +292,10 @@ int main(int argc, char** argv) {
   std::vector<Prediction> prediction_results;
   std::cout << "Trying to start async task" << std::endl;
 
-  std::thread t([&classifier, &g_image_lock, &global_image, &g_prediction_lock, &prediction_results] () {
+  // Running Laplatian variance of buffer size RLV_SIZE
+  boost::circular_buffer<float> rlv(RLV_SIZE);
+
+  std::thread t([&classifier, &g_image_lock, &global_image, &g_prediction_lock, &prediction_results, &rlv] () {
     while(1) {
       if (global_image.empty()) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -288,8 +309,28 @@ int main(int argc, char** argv) {
       cv::Laplacian(image_local, lap, CV_64F);
       cv::Scalar mu, sigma;
       cv::meanStdDev(lap, mu, sigma);
-      double variance = sigma.val[0] * sigma.val[0];
-      std::cout << "Show variance " << variance << std::endl;
+      float var = sigma.val[0] * sigma.val[0];
+  
+      // If running buffer is too small, accummulate some more
+      if (rlv.size() < RLV_SIZE) {
+        rlv.push_back(var);
+        continue;
+      }
+      
+      std::pair<float, float> meanAndVar = mean_and_variance(rlv);
+      std::cout << "Show mean " << meanAndVar.first << " and variance " << meanAndVar.second 
+        << " and fabs " << fabs(var - meanAndVar.first)
+        << " and current variance " << var
+        << std::endl;
+      rlv.push_back(var);
+      
+      // If not much has changed in the history, just keep skipping
+      if (meanAndVar.second < (meanAndVar.first / 5.0)) {
+        continue;
+      }
+      if (fabs(var - meanAndVar.first) > meanAndVar.second) {
+        continue;
+      }
 
       std::vector<Prediction> predictions = classifier.Classify(image_local);
 
