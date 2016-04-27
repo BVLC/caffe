@@ -68,11 +68,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
       engine = ConvolutionParameter_Engine_CUDNN;
     }
 #endif
-#ifdef USE_LIBDNN
     if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
-      engine = ConvolutionParameter_Engine_LIBDNN;
-    }
+      if (Caffe::GetDevice(param.device(), true)->CheckVendor("Intel"))
+        engine = ConvolutionParameter_Engine_INTEL_SPATIAL;
+#ifdef USE_LIBDNN
+      else
+        engine = ConvolutionParameter_Engine_LIBDNN;
 #endif
+    }
   }
 
   if (engine == ConvolutionParameter_Engine_INTEL_SPATIAL) {
