@@ -73,10 +73,10 @@ int main(int argc, char** argv) {
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
-  std::string filename;
-  int label;
-  while (infile >> filename >> label) {
-    lines.push_back(std::make_pair(filename, label));
+  std::string line;
+  while (getline(infile, line)) {
+    size_t pos = line.find_last_of(' ');
+    lines.push_back(std::make_pair(line.substr(0, pos), std::stoi(line.substr(pos + 1))));
   }
   if (FLAGS_shuffle) {
     // randomly shuffle data
