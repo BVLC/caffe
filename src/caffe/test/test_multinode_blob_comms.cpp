@@ -143,13 +143,8 @@ TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
 TEST_F(BlobCommsTest, SendIterSize) {
     buildOne();
     comms->send_iter_size(1);
-//    EXPECT_CALL(waypoint_mock, async_send(
-//            A<const char*>(),
-//            A<size_t>(),
-//            A<Waypoint::SentCallback>()))
-//        .WithArg<2>().WillRepeatedly(InvokeCallback);
-    EXPECT_CALL(waypoint_mock, async_send(_,_,_))
-        .WillRepeatedly(testing::InvokeArgument<2>(true));
+    EXPECT_CALL(*waypoint_mock, async_send(_,_,_))
+        .WillRepeatedly(testing::InvokeArgument<2>());
     EXPECT_EQ(1, comms->currently_sending_version());
    comms->send_iter_size(2);
     EXPECT_EQ(2, comms->currently_sending_version());
