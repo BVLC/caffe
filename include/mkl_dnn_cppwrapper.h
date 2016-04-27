@@ -7,21 +7,21 @@
 #include "mkl_dnn_types.h"
 #include "mkl_dnn.h"
 
-#define TEMPLATE_PREFIX template <typename Dtype> inline    
+#define TEMPLATE_PREFIX template <typename Dtype> inline
 #define SPEC_PREFIX template <> inline
 
 #ifdef USE_MKL2017_NEW_API
     #define ATTRIBUTES attributes,
 #else
     typedef void* dnnPrimitiveAttributes_t;
-    #define ATTRIBUTES	
+    #define ATTRIBUTES
 #endif
 
 TEMPLATE_PREFIX dnnError_t dnnLayoutCreate(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[]);
 SPEC_PREFIX dnnError_t dnnLayoutCreate<float>(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
-	{return dnnLayoutCreate_F32(pLayout, dimension, size, strides);}
+        {return dnnLayoutCreate_F32(pLayout, dimension, size, strides);}
 SPEC_PREFIX dnnError_t dnnLayoutCreate<double>(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
         {return dnnLayoutCreate_F64(pLayout, dimension, size, strides);}
@@ -62,7 +62,7 @@ SPEC_PREFIX dnnError_t dnnAllocateBuffer<float>(
 SPEC_PREFIX dnnError_t dnnAllocateBuffer<double>(
         void **pPtr, dnnLayout_t layout)
     {return dnnAllocateBuffer_F64(pPtr, layout);}
-    
+
 TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer(
         void *ptr);
 SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
@@ -71,7 +71,7 @@ SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
 SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
         void *ptr)
     {return dnnReleaseBuffer_F64(ptr);}
-    
+
 TEMPLATE_PREFIX dnnError_t dnnLayoutDelete(
         dnnLayout_t layout);
 SPEC_PREFIX dnnError_t dnnLayoutDelete<float>(

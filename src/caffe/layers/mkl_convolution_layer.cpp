@@ -43,7 +43,8 @@ MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
-    dnnDelete<Dtype>(convolutionBwdBias);
+    if (this->bias_term_)
+        dnnDelete<Dtype>(convolutionBwdBias);
 }
 
 template <typename Dtype>
@@ -101,7 +102,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
   int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
 
-  if (g > 1) {
+  if (this->bias_term_) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
       NULL,
@@ -115,10 +116,11 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       inputOffset,
       dnnBorderZeros);
   } else {
-    status = dnnConvolutionCreateForwardBias<Dtype>(
+    status = dnnGroupsConvolutionCreateForward<Dtype>(
       &convolutionFwd,
       NULL,
       dnnAlgorithmConvolutionDirect,
+      g,
       dimension,
       bdata_sizes,
       tdata_sizes,
@@ -143,11 +145,6 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           &fwd_filter_data->layout_int, convolutionFwd, dnnResourceFilter);
   CHECK_EQ(status, 0) <<
           "Failed dnnLayoutCreateFromPrimitive with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-
   status = dnnLayoutCreate<Dtype>(
           &fwd_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
   CHECK_EQ(status, 0)
@@ -163,46 +160,39 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   CHECK_EQ(status, 0)
           << "Failed creation of l_fwd_filter_data_usr layout with status "
           << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_bias_data->layout_usr, 1, bias_sizes, bias_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of l_fwd_bias_data_usr layout with status "
-          << status << "\n";
 
   fwd_bottom_data->create_conversions();
   fwd_top_data   ->create_conversions();
   fwd_filter_data->create_conversions();
-  fwd_bias_data  ->create_conversions();
+
+  if (this->bias_term_) {
+    status = dnnLayoutCreateFromPrimitive<Dtype>(
+            &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
+    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+            << status << "\n";
+    status = dnnLayoutCreate<Dtype>(
+            &fwd_bias_data->layout_usr, 1, bias_sizes, bias_strides);
+    CHECK_EQ(status, 0)
+            << "Failed creation of l_fwd_bias_data_usr layout with status "
+            << status << "\n";
+    fwd_bias_data  ->create_conversions();
+  }
 
 /*
  * Backward by data layer setup
  */
-  if (g > 1) {
-    status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
-      &convolutionBwdData,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  } else {
-    status = dnnConvolutionCreateBackwardData<Dtype>(
-      &convolutionBwdData,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  }
+  status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
+    &convolutionBwdData,
+    NULL,
+    dnnAlgorithmConvolutionDirect,
+    g,
+    dimension,
+    bdata_sizes,
+    tdata_sizes,
+    fdata_sizes,
+    convolutionStrides,
+    inputOffset,
+    dnnBorderZeros);
   CHECK_EQ(status, 0)
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
@@ -243,33 +233,18 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 /*
  * Backward by filter layer setup
  */
-
-  if (g > 1) {
-    status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
-      &convolutionBwdFilter,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  } else {
-    status = dnnConvolutionCreateBackwardFilter<Dtype>(
-      &convolutionBwdFilter,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  }
+  status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
+    &convolutionBwdFilter,
+    NULL,
+    dnnAlgorithmConvolutionDirect,
+    g,
+    dimension,
+    bdata_sizes,
+    tdata_sizes,
+    fdata_sizes,
+    convolutionStrides,
+    inputOffset,
+    dnnBorderZeros);
   CHECK_EQ(status, 0)
           << "Failed dnnConvolutionCreateBackwardFilter with status "
           << status << "\n";
@@ -310,7 +285,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 /*
  * Backward by bias layer setup
  */
-  if (g > 1) {
+  if (this->bias_term_) {
     status = dnnGroupsConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
       NULL,
@@ -318,39 +293,33 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       g,
       dimension,
       tdata_sizes);
-  } else {
-    status = dnnConvolutionCreateBackwardBias<Dtype>(
-      &convolutionBwdBias,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      dimension,
-      tdata_sizes);
+    CHECK_EQ(status, 0)
+            << "Failed dnnConvolutionCreateBackwardBias with status "
+            << status << "\n";
+
+    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
+            convolutionBwdBias, dnnResourceDiffDst);
+    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+            << status << "\n";
+    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int,
+            convolutionBwdBias, dnnResourceDiffBias);
+    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+            << status << "\n";
+
+    status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension,
+            tdata_sizes, tdata_strides);
+    CHECK_EQ(status, 0)
+            << "Failed creation of bwdb_top_diff->layout_usr with status "
+            << status << "\n";
+    status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr, 1,
+            bias_sizes, bias_strides);
+    CHECK_EQ(status, 0)
+            << "Failed creation of bwdb_bias_diff->layout_usr with status "
+            << status << "\n";
+
+    bwdb_top_diff->create_conversions();
+    bwdb_bias_diff->create_conversions();
   }
-  CHECK_EQ(status, 0) << "Failed dnnConvolutionCreateBackwardBias with status "
-          << status << "\n";
-
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
-          convolutionBwdBias, dnnResourceDiffDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int,
-          convolutionBwdBias, dnnResourceDiffBias);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-
-  status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension,
-          tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdb_top_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr, 1,
-          bias_sizes, bias_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdb_bias_diff->layout_usr with status "
-          << status << "\n";
-
-  bwdb_top_diff->create_conversions();
-  bwdb_bias_diff->create_conversions();
 
   // Names are for debugging purposes only. TODO: Consider removing this.
   fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
@@ -542,8 +511,10 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
     fwd_bottom_data->get_converted_prv(bottom[0], false);
   res_convolutionFwd[dnnResourceFilter] =
     fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
-  res_convolutionFwd[dnnResourceBias] =
-    fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
+  if (this->bias_term_) {
+    res_convolutionFwd[dnnResourceBias] =
+      fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
+  }
 
   if (fwd_top_data->convert_from_int) {
     top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
