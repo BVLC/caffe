@@ -191,6 +191,25 @@ bool device::CheckCapability(std::string cap) {
   return true;
 }
 
+bool device::CheckVendor(std::string vendor)
+{
+  if (backend_ == BACKEND_CUDA) {
+    if (vendor.compare("NVIDIA") == 0)
+      return true;
+  }
+#ifdef USE_GREENTEA
+  else if (backend_ == BACKEND_OpenCL) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+    const viennacl::ocl::device &device = ctx.current_device();
+
+    if (device.vendor().find(vendor) != std::string::npos)
+      return true;
+  }
+#endif
+
+  return false;
+}
+
 #ifdef USE_GREENTEA
 viennacl::ocl::program &device::program() {
   return ocl_program_;
