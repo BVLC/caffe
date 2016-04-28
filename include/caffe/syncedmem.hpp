@@ -32,6 +32,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
+        own_zero_copy_data_(false),
         device_(device_context),
         cl_gpu_mem_(NULL) {
   }
@@ -42,6 +43,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
+        own_zero_copy_data_(false),
         device_(device_context),
         cl_gpu_mem_(NULL) {
   }
@@ -53,6 +55,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
+        own_zero_copy_data_(false),
         device_(device_context) {
   }
   explicit SyncedMemory(uint_tp size, device *device_context)
@@ -62,6 +65,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
+        own_zero_copy_data_(false),
         device_(device_context) {
   }
 #endif
@@ -102,6 +106,7 @@ class SyncedMemory {
   SyncedHead head_;
   bool own_cpu_data_;
   bool own_gpu_data_;
+  bool own_zero_copy_data_;
   device *device_;
 
 #ifdef USE_GREENTEA

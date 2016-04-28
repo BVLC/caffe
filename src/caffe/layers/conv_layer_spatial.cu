@@ -1,6 +1,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/conv_spatial_layer.hpp"
@@ -15,18 +16,20 @@
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
-namespace caffe {
+#include <boost/filesystem.hpp>
 
+namespace caffe {
+#ifndef CPU_ONLY
 #ifdef USE_GREENTEA
 
 // #define dbg
-
 #ifdef dbg
 #define dbgPrint(x) (x)
 #else
 #define dbgPrint(x)
 #endif
 
+#define CACHE_DIRECTORY ".spatialkernels/"
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -940,72 +943,38 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
 template<>
 void ConvolutionLayerSpatial<float>::setup_convolution(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
-  // Calculate variables used for kernel generation
-  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
-  kernel_h_ = kernel_shape_data[0];
-  kernel_w_ = kernel_shape_data[1];
-  height_ = bottom[0]->shape(this->channel_axis_ + 1);
-  width_ = bottom[0]->shape(this->channel_axis_ + 2);
-  const int_tp* pad_data = this->pad_.cpu_data();
-  pad_h_ = pad_data[0];
-  pad_w_ = pad_data[1];
-  const int_tp* stride_data = this->stride_.cpu_data();
-  stride_h_ = stride_data[0];
-  stride_w_ = stride_data[1];
-
-  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  padded_width_ = width_ + 2 * pad_w_;
-  padded_height_ = height_ + 2 * pad_h_;
-
   // Generates static key_
   generate_key();
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
   // Creates a verification kernel to verify kernel results
-  if (create_verification_kernel(bottom, top) != true)
-    exit(-1);
+  CHECK_EQ(create_verification_kernel(bottom, top), true) <<
+    "Spatial Convolution auto tuner failed to create verification kernel.";
 
-  string outputFile;
-  outputFile = "./spatialkernels/" + key_;
-  std::ifstream cachedKernel(outputFile.c_str());
-
-  if (cachedKernel) {
-    int_tp x, y, z, type;
-    cachedKernel >> x;
-    cachedKernel >> y;
-    cachedKernel >> z;
-    cachedKernel >> type;
-    create_convolution_kernel(bottom, top, type, x, y, z);
-    kernel_index_ = kernelQueue.size() - 1;
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[0];
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[1];
-    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[2];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[0];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[1];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[2];
-    cachedKernel >> kernelQueue[kernel_index_]->swizzle_weights;
-    cachedKernel >> kernelQueue[kernel_index_]->batched_execute;
-    cachedKernel >> kernelQueue[kernel_index_]->use_null_local;
-
-    tuned_ = true;
-    return;
-  } else {
-    create_convolution_kernel(bottom, top, 4, 1, 1, 1);
-
-    for (int_tp y = 1; y < 4; y++)
-      for (int_tp z = 1; z < 16 && z < M_; z++) {
-        create_convolution_kernel(bottom, top, 1, 4, y, z);
-        if (num_ > 1)
-          create_convolution_kernel(bottom, top, 3, 4, y, z);
-      }
-
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  const viennacl::ocl::device &device = ctx.current_device();
+  if (device.vendor().find("Intel") != std::string::npos &&
+    M_ % 16 == 0) {
+    /* IDLF kernel is using Intel specific extension which make
+       them intel only. */
+    create_convolution_kernel(bottom, top, 2, 4, 2, 1);
+    create_convolution_kernel(bottom, top, 2, 4, 4, 1);
+    create_convolution_kernel(bottom, top, 2, 8, 2, 1);
+    create_convolution_kernel(bottom, top, 2, 8, 4, 1);
+    create_convolution_kernel(bottom, top, 2, 6, 4, 1);
     create_convolution_kernel(bottom, top, 2, 3, 3, 1);
     create_convolution_kernel(bottom, top, 2, 5, 5, 1);
     create_convolution_kernel(bottom, top, 2, 3, 4, 1);
     create_convolution_kernel(bottom, top, 2, 6, 4, 1);
   }
+  for (int_tp y = 1; y < 4; y += 1)
+    for (int_tp z = 1; z < 16 && z < M_; z += 1) {
+      if (4 * y * z > 32) continue;
+      create_convolution_kernel(bottom, top, 1, 4, y, z);
+      if (num_ > 1)
+        create_convolution_kernel(bottom, top, 3, 4, y, z);
+    }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     tune_local_size(bottom, top, kernelQueue[x]);
@@ -1015,55 +984,56 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                                                    num_, kernelQueue[x]);
 
   int_tp failures = 0;
-  while (failures < kernelQueue.size()) {
-    int_tp fastestKernel = -1;
-    float fastestTime = 999999990000000000000000000.0f;
+  bool verification = false;
+  if (kernelQueue.size()) {
+    while (failures < kernelQueue.size()) {
+      int_tp fastestKernel = -1;
+      float fastestTime = 999999990000000000000000000.0f;
 
-    for (int_tp x = 0; x < kernelQueue.size(); x++) {
-      if (kernelQueue[x]->executionTime < fastestTime
-          && kernelQueue[x]->tested == false) {
-        fastestKernel = x;
-        fastestTime = kernelQueue[x]->executionTime;
+      for (int_tp x = 0; x < kernelQueue.size(); x++) {
+        if (kernelQueue[x]->executionTime < fastestTime
+            && kernelQueue[x]->tested == false) {
+          fastestKernel = x;
+          fastestTime = kernelQueue[x]->executionTime;
+        }
+      }
+      // Test fastest kernel
+      timed_convolve(bottom, top, bottom_index_, num_,
+                     kernelQueue[fastestKernel]);
+      bool verified = verify_result(bottom, top, bottom_index_, num_,
+                                    kernelQueue[fastestKernel]);
+      if (verified == true) {
+        kernelQueue[fastestKernel]->verified = true;
+        kernel_index_ = fastestKernel;
+        break;
+      } else {
+        kernelQueue[fastestKernel]->tested = true;
+        dbgPrint(std::cout << "Kernel " << fastestKernel <<
+            " failed verification" << std::endl);
+        failures++;
       }
     }
-
-    // Test fastest kernel
+  #ifdef dbg
+    float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
+        kernelQueue[kernel_index_]);
+  #else
     timed_convolve(bottom, top, bottom_index_, num_,
-                   kernelQueue[fastestKernel]);
-    bool verified = verify_result(bottom, top, bottom_index_, num_,
-                                  kernelQueue[fastestKernel]);
-
-    if (verified == true) {
-      kernelQueue[fastestKernel]->verified = true;
-      kernel_index_ = fastestKernel;
-      break;
-    } else {
-      kernelQueue[fastestKernel]->tested = true;
-      dbgPrint(std::cout << "Kernel " << fastestKernel <<
-          " failed verification" << std::endl);
-      failures++;
-    }
+                   kernelQueue[kernel_index_]);
+  #endif
+    dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
+    verification = verify_result(bottom, top, bottom_index_, num_,
+                                      kernelQueue[kernel_index_]);
   }
-
-#ifdef dbg
-  float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
-      kernelQueue[kernel_index_]);
-#else
-  timed_convolve(bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]);
-#endif
-  dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
-
-  bool verification = verify_result(bottom, top, bottom_index_, num_,
-                                    kernelQueue[kernel_index_]);
-
-  if (verification)
+  if (verification) {
     dbgPrint(std::cout << "Kernel passed verification:" << verify_result(
             bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]) <<
         std::endl);
-  else
-    std::cout << "Verification of kernel was not successful, results for "
-              "this layer may not be accurate"
-              << std::endl;
+  } else {
+    std::cout << "Verification of kernel was not successful,"
+              << "fallback to basic kernel" << std::endl;
+    create_basic_kernel(bottom, top, 1, 1, 1);
+    kernel_index_ = kernelQueue.size() - 1;
+  }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (x != kernel_index_)
@@ -1073,6 +1043,27 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
           kernelQueue[x]->kernelName);
   }
 
+  tuned_ = true;
+
+  const boost::filesystem::path& path = CACHE_DIRECTORY;
+  const boost::filesystem::path& dir =
+                   boost::filesystem::unique_path(path).string();
+  bool hasCacheDir = false;
+  if (!boost::filesystem::exists(dir))
+    hasCacheDir = boost::filesystem::create_directory(dir);
+  else
+    hasCacheDir = boost::filesystem::is_directory(dir);
+
+  if (hasCacheDir != true) {
+    std::cout << "Failed to create cache directory,"
+              << "will tune again for next running" << std::endl;
+    return;
+  }
+
+
+  string outputFile;
+  outputFile = CACHE_DIRECTORY + key_;
+  std::ifstream cachedKernel(outputFile.c_str());
   std::ofstream outputKernel;
   outputKernel.open(outputFile.c_str());
   outputKernel << kernelQueue[kernel_index_]->workItem_output[0] << " "
@@ -1089,30 +1080,17 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                << kernelQueue[kernel_index_]->batched_execute << " "
                << kernelQueue[kernel_index_]->use_null_local << " ";
   outputKernel.close();
-
-  tuned_ = true;
 }
 
 template<>
 void ConvolutionLayerSpatial<float>::Forward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
 
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  const viennacl::ocl::device &device = ctx.current_device();
-#if 0
-  std::cout << device.extensions();
-  if (device.extensions().find("cl_intel_subgroup") == std::string::npos) {
-#else
-  if (device.vendor().find("Intel") == std::string::npos) {
-#endif
-    Forward_cpu(bottom, top);
-    return;
-  }
   for (int_tp i = 0; i < bottom.size(); ++i) {
     bottom_index_ = i;
     bottom_data = bottom[i]->gpu_data();
     top_data = top[i]->mutable_gpu_data();
-    col_data = col_buffer_.mutable_gpu_data();
+    col_data = spatial_col_buffer_.mutable_gpu_data();
     weight = this->blobs_[0]->gpu_data();
     swizzled_weights = swizzled_weights_.mutable_gpu_data();
 
@@ -1124,12 +1102,13 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
 
     bias_offset_ = 0;
 
-    if (bias_term_) {
+    if (bias_term_)
       bias_ = this->blobs_[1]->gpu_data();
-    }
 
-    if (!tuned_)
+    if (!tuned_) {
       setup_convolution(bottom, top);
+      CHECK_EQ(tuned_, true) << "Spatial convolution auto-tuning failed.";
+    }
 
     if (kernelQueue[kernel_index_]->batched_execute)
       batched_convolve(bottom, top, i, num_, kernelQueue[kernel_index_]);
@@ -1143,118 +1122,123 @@ template<>
 void ConvolutionLayerSpatial<float>::Backward_gpu(
     const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<float>*>& bottom) {
-
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  const viennacl::ocl::device &device = ctx.current_device();
-#if 0
-  std::cout << device.extensions();
-  if (device.extensions().find("cl_intel_subgroup") == std::string::npos) {
-#else
-  if (device.vendor().find("Intel") == std::string::npos) {
-#endif
-    Backward_cpu(top, propagate_down, bottom);
-    return;
-  }
-
-  const float* weight = NULL;
-  float* weight_diff = NULL;
-
-  if (this->param_propagate_down_[0]) {
-    weight = this->blobs_[0]->gpu_data();
-    weight_diff = this->blobs_[0]->mutable_gpu_diff();
-    greentea_gpu_set<float>(this->device_->id(), this->blobs_[0]->count(), 0.f,
-                            (cl_mem) weight_diff, 0.f);
-  }
-  float* bias_diff = NULL;
-  if (bias_term_ && this->param_propagate_down_[1]) {
-    bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    greentea_gpu_set(this->device_->id(), this->blobs_[1]->count(), 0.f,
-                     (cl_mem) bias_diff, 0.f);
-  }
-  const int_tp weight_offset = M_ * K_;
-  const int_tp col_offset = K_ * N_;
-  const int_tp top_offset = M_ * N_;
+  const float* weight = this->blobs_[0]->gpu_data();
+  float* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int_tp i = 0; i < top.size(); ++i) {
-    const float* top_diff = NULL;
+    const float* top_diff = top[i]->gpu_diff();
     // Bias gradient, if necessary.
-    if (bias_term_ && this->param_propagate_down_[1]) {
-      top_diff = top[i]->gpu_diff();
-      for (int_tp n = 0; n < num_; ++n) {
-        greentea_gpu_gemv<float>(this->device_->id(), CblasNoTrans, num_output_,
-                                 N_, 1.f, (cl_mem) top_diff, n * this->top_dim_,
-                                 (cl_mem) bias_multiplier_.gpu_data(), 0, 1.,
-                                 (cl_mem) bias_diff, 0);
+    if (this->bias_term_ && this->param_propagate_down_[1]) {
+      float* bias_diff = this->blobs_[1]->mutable_gpu_diff();
+      for (int_tp n = 0; n < this->num_; ++n) {
+        this->backward_gpu_bias(bias_diff, top_diff, n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
-      if (!top_diff) {
-        top_diff = top[i]->gpu_diff();
-      }
-      float* col_data = col_buffer_.mutable_gpu_data();
-      float* col_diff = col_buffer_.mutable_gpu_diff();
       const float* bottom_data = bottom[i]->gpu_data();
       float* bottom_diff = bottom[i]->mutable_gpu_diff();
-      for (int_tp n = 0; n < num_; ++n) {
-        // Since we saved memory in the forward pass by not storing all col
-        // data, we will need to recompute them.
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_->id());
-        viennacl::ocl::program &program = this->device_->program();
-
-        greentea_im2col_gpu<float>(&program, &ctx, (cl_mem) bottom_data,
-                                   n * this->bottom_dim_, channels_, height_,
-                                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                                   stride_h_, stride_w_, 1, 1,
-                                   (cl_mem) col_data, 0);
-
+      for (int_tp n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          for (int_tp g = 0; g < group_; ++g) {
-            greentea_gpu_gemm<float>(this->device_->id(), CblasNoTrans,
-                                     CblasTrans, M_, K_, N_, 1.f,
-                                     (cl_mem) top_diff,
-                                     n * this->top_dim_ + top_offset * g,
-                                     (cl_mem) col_data, col_offset * g, 1.f,
-                                     (cl_mem) weight_diff, weight_offset * g);
-          }
-        }
-        // gradient w.r.t. bottom data, if necessary
-        if (propagate_down[i]) {
-          if (weight == NULL) {
-            weight = this->blobs_[0]->gpu_data();
-          }
-          for (int_tp g = 0; g < group_; ++g) {
-            greentea_gpu_gemm<float>(this->device_->id(), CblasTrans,
-                                     CblasNoTrans, K_, N_, M_, 1.f,
-                                     (cl_mem) weight, weight_offset * g,
-                                     (cl_mem) top_diff,
-                                     n * this->top_dim_ + top_offset * g, 0.f,
-                                     (cl_mem) col_diff, col_offset * g);
-          }
-          // col2im back to the data
-
-          greentea_col2im_gpu<float>(&program, &ctx, (cl_mem) col_diff, 0,
-                                     channels_, height_, width_, kernel_h_,
-                                     kernel_w_, pad_h_, pad_w_, stride_h_,
-                                     stride_w_, 1, 1, (cl_mem) bottom_diff,
-                                     n * this->bottom_dim_);
+          this->weight_gpu_gemm(bottom_data, n * this->bottom_dim_,
+              top_diff, n * this->top_dim_, weight_diff);
         }
       }
+      // gradient w.r.t. bottom data, if necessary.
+      if (propagate_down[i]) {
+        // Multi queue execution, all previous work needs to be done first
+        this->device_->FinishQueues();
+        for (int_tp n = 0; n < this->num_; ++n) {
+          // Multi queue execution, go through work queues
+          this->device_->SwitchQueue(n);
+          this->backward_gpu_gemm(top_diff, n * this->top_dim_, weight,
+                                  bottom_diff, n * this->bottom_dim_);
+        }
+        // Multi queue execution, finish all queues
+        this->device_->FinishQueues();
+      }
     }
+  }
+}
+
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  // Generates static key_
+  if (tuned_)
+    return;
+  generate_key();
+  // Initializes unique kernel ID
+  kernel_uid_ = 0;
+
+  // Creates a verification kernel to verify kernel results
+  if (create_verification_kernel(bottom, top) != true)
+    exit(-1);
+
+  string outputFile;
+  outputFile = CACHE_DIRECTORY + key_;
+  std::ifstream cachedKernel(outputFile.c_str());
+
+  if (cachedKernel) {
+    int_tp x, y, z, type;
+    cachedKernel >> x;
+    cachedKernel >> y;
+    cachedKernel >> z;
+    cachedKernel >> type;
+    create_convolution_kernel(bottom, top, type, x, y, z);
+    kernel_index_ = kernelQueue.size() - 1;
+  if (kernel_index_ == -1) {
+    std::cerr << "Failed to get kernel from cached configurations."
+              << std::endl;
+    std::cerr << "Deleting broken cache file and try tuning again..."
+              << std::endl;
+    string bakFile = outputFile + ".bak";
+    std::rename(outputFile.c_str(), bakFile.c_str());
+    return;
+  }
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[0];
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[1];
+    cachedKernel >> kernelQueue[kernel_index_]->global_work_size[2];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[0];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[1];
+    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[2];
+    cachedKernel >> kernelQueue[kernel_index_]->swizzle_weights;
+    cachedKernel >> kernelQueue[kernel_index_]->batched_execute;
+    cachedKernel >> kernelQueue[kernel_index_]->use_null_local;
+
+    tuned_ = true;
+  }
+  return;
+}
+
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::SetUp(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+    caffe::Backend backend) {
+  if (backend == caffe::BACKEND_OpenCL) {
+    load_cached_kernels(bottom, top);
   }
 }
 
 template<>
 bool ConvolutionLayerSpatial<double>::generate_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
   return false;
 }
+
+template void ConvolutionLayerSpatial<float>::SetUp(
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    caffe::Backend backend);
+
+template void ConvolutionLayerSpatial<double>::SetUp(
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
+    caffe::Backend backend);
+
 template<>
 void ConvolutionLayerSpatial<double>::create_convolution_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp kernelType,
     int_tp blockWidth, int_tp blockHeight,
     int_tp blockDepth) {
@@ -1263,7 +1247,7 @@ void ConvolutionLayerSpatial<double>::create_convolution_kernel(
 }
 template<>
 bool ConvolutionLayerSpatial<double>::generate_batched_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1271,7 +1255,7 @@ bool ConvolutionLayerSpatial<double>::generate_batched_kernel(
 }
 template<>
 bool ConvolutionLayerSpatial<double>::setup_IDLF(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1280,7 +1264,7 @@ bool ConvolutionLayerSpatial<double>::setup_IDLF(
 
 template<>
 bool ConvolutionLayerSpatial<double>::verify_result(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1289,7 +1273,7 @@ bool ConvolutionLayerSpatial<double>::verify_result(
 
 template<>
 bool ConvolutionLayerSpatial<double>::create_basic_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   NOT_IMPLEMENTED;
@@ -1298,14 +1282,14 @@ bool ConvolutionLayerSpatial<double>::create_basic_kernel(
 
 template<>
 bool ConvolutionLayerSpatial<double>::create_verification_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
   return false;
 }
 
 template<>
 bool ConvolutionLayerSpatial<double>::tune_local_size(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     kernelConfig* config) {
   NOT_IMPLEMENTED;
   return false;
@@ -1313,7 +1297,7 @@ bool ConvolutionLayerSpatial<double>::tune_local_size(
 
 template<>
 cl_int ConvolutionLayerSpatial<double>::convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1322,7 +1306,7 @@ cl_int ConvolutionLayerSpatial<double>::convolve(
 
 template<>
 cl_int ConvolutionLayerSpatial<double>::batched_convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1331,7 +1315,7 @@ cl_int ConvolutionLayerSpatial<double>::batched_convolve(
 
 template<>
 float ConvolutionLayerSpatial<double>::timed_convolve(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   NOT_IMPLEMENTED;
@@ -1340,7 +1324,7 @@ float ConvolutionLayerSpatial<double>::timed_convolve(
 
 template<>
 void ConvolutionLayerSpatial<double>::setup_convolution(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
 }
 
@@ -1393,9 +1377,21 @@ void ConvolutionLayerSpatial<double>::Backward_gpu(
     const vector<Blob<double>*>& bottom) {
   NOT_IMPLEMENTED;
 }
+#else
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  NOT_IMPLEMENTED;
+}
 
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::Backward_gpu(
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  NOT_IMPLEMENTED;
+}
+#endif
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerSpatial);
 #endif
-
 
 }  // namespace caffe

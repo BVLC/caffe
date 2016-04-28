@@ -29,17 +29,16 @@ For 4th or 5th generation Intel Cores and Intel® Xeon® v3, or Intel® Xeon® v
 We recommend the driver at the following link: https://software.intel.com/en-us/articles/opencl-drivers#latest_linux_driver.
 For 3th generation cores and atom, we recommend Beignet: https://www.freedesktop.org/wiki/Software/Beignet/.
 
-The spatial domain convolution kernel is for Intel platform only currently, due to
-a vendor specific extension cl_intel_subgroup. This convolution kernel applies auto-tuner
-mechanism to tune a best kernel for current parameters then store the result to the sub
-directory spatialkernels. Thus at the first run, it will take relatively long time to perform
-the auto-tuning process. At the second run, it will get the result from the cache subdirectory
-directly.
+The spatial domain convolution kernel supports all OpenCL platforms now. This convolution kernel
+applies auto-tuner mechanism to tune a best kernel for current parameters then store the
+result to the subdirectory ".spatialkernels". Thus at the first run, it will take relatively
+long time to perform the auto-tuning process. At the second run, it will get the result from the
+cache subdirectory directly.
 
-To use this fast convolution kernel, you need to create a subdirectory "spatialkernels" at
-the current directory firstly otherwise, it will not store the tuning result.
+The spatial domain convolution is enabled by default for Intel Gen Graphics paltform. For
+other platforms, we need to modify net model specification as below:
 
-To enable spatial domain convolution, open the net model specification, and add entry "engine: SPATIAL" to all convolution layer specification.
+add entry "engine: SPATIAL" to all convolution layer specification.
 
 Take AlexNet as an example, we edit file $CAFFE_ROOT/models/bvlc_alexnet/train_val.prototxt, and add the following line to make conv1 layer to be computed using spatial convolution..
 
@@ -80,7 +79,7 @@ You can downloaded the fftw3 source code from https://github.com/FFTW/fftw3.git
 
 and the clFFT from https://github.com/listenlink/clFFT.git
 
-Then config the Cmake option with ```-DUSE_FFT=ON``` when useing cmake build system or enable the Makefile.config.example line 36 ```USE_FFT := 1``` when using makefile build system
+Then config the Cmake option with ```-DUSE_FFT=ON``` when using cmake build system or enable the Makefile.config.example line 36 ```USE_FFT := 1``` when using makefile build system
 
 Like the ```INTEL_SPATIAL```, modify the convolution_param to ```engine: FFT```to use fft based convolution engine.
 

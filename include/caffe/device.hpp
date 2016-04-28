@@ -35,6 +35,7 @@ class device {
 #ifdef USE_GREENTEA
   viennacl::ocl::program &program();
   void SetProgram();
+  bool isHostUnified();
 #endif  // USE_GREENTEA
 
   template<typename Dtype>
@@ -52,6 +53,7 @@ class device {
   void DecreaseMemoryUsage(uint_tp bytes);
   void ResetPeakMemoryUsage();
   bool CheckCapability(std::string cap);
+  bool CheckVendor(std::string vendor);
 
  private:
   int current_queue_id_;
@@ -65,6 +67,7 @@ class device {
   std::vector<shared_ptr<Blob<double> > > buff_d_;
 #ifdef USE_GREENTEA
   viennacl::ocl::program ocl_program_;
+  bool host_unified_;
 #endif  // USE_GREENTEA
 };
 }  // namespace caffe
