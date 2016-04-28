@@ -510,7 +510,7 @@ void collect(bool use_gpu, const char *prefix, const char *name, int id,
 
 int collect() {
   #ifndef DETERMINISTIC
-    LOG(ERROR) << "Recompile caffe with DETERMINISTIC define to run collect tool";
+    LOG(ERROR) << "Recompile caffe with DETERMINISTIC to run collect tool";
     return 1;
   #endif
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition!";
