@@ -99,6 +99,7 @@ class DataTransformer {
    *    Datum containing the data to be transformed.
    */
   vector<int> InferBlobShape(const Datum& datum);
+  vector<int> InferBlobShape(const SparseDatum &datum);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.

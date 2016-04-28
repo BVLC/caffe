@@ -40,6 +40,14 @@ message Datum {
   optional bool encoded = 7 [default = false];
 }
 
+message SparseDatum {
+  optional int32 size = 1 [default = 0];
+  optional int32 nnz = 2 [default = 0];  //number of non zeros entries
+  repeated int32 indices = 3 [packed=true];
+  optional float label = 4;
+  repeated float data = 5 [packed=true];
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
@@ -306,7 +314,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 145 (last added: crop_param)
+// LayerParameter next available layer-specific ID: 146 (last added: crop_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -1106,6 +1114,7 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
+// Message that stores parameters used by TanHLayer
 message TanHParameter {
   enum Engine {
     DEFAULT = 0;
