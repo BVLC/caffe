@@ -70,6 +70,10 @@ struct is_same<T, T> {
 
 #ifdef USE_GREENTEA
 
+#if defined(USE_CLBLAS) && defined(USE_CLBLAST)
+#error Only one of USE_CLBLAS and USE_CLBLAST can be defined!
+#endif
+
 #ifdef USE_CLBLAS
 #define GREENTEA_CL_BLAS_CHECK(condition) \
     {clblasStatus status = condition; \
