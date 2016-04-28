@@ -1,9 +1,8 @@
 #include <string>
 
 #include "caffe/common.hpp"
-#ifdef USE_GREENTEA
+#ifdef USE_LIBDNN
 #include "caffe/device.hpp"
-#include "caffe/greentea/greentea_im2col.hpp"
 #include "caffe/greentea/libdnn.hpp"
 
 
@@ -43,33 +42,41 @@ libdnn_conv<Dtype>::libdnn_conv(libdnn_config config) {
   }
 
   generate_kernels();
-  compile_kernels(&(viennacl::ocl::get_context(dev_ptr_->id())));
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    compile_kernels_opencl(&(viennacl::ocl::get_context(dev_ptr_->id())));
+  }
+  if (dev_ptr_->backend() == BACKEND_CUDA) {
+    compile_kernels_cuda();
+  }
 }
 
 template<typename Dtype>
 std::string libdnn_conv<Dtype>::generate_header() {
   std::stringstream ss;
-  if (std::is_same<Dtype, double>::value) {
-    // Test/enable KHR 64 bit (double)
-    ss << "#if defined(cl_khr_fp64)" << std::endl;
-    ss << "#pragma OPENCL EXTENSION cl_khr_fp64 : enable" << std::endl;
-    ss << "#define DOUBLE_SUPPORT_AVAILABLE" << std::endl;
 
-    // Test/enable AMD 64 bit (double)
-    ss << "#elif defined(cl_amd_fp64)" << std::endl;
-    ss << "#pragma OPENCL EXTENSION cl_amd_fp64 : enable" << std::endl;
-    ss << "#define DOUBLE_SUPPORT_AVAILABLE" << std::endl;
-    ss << "#endif" << std::endl;
-  }
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    if (std::is_same<Dtype, double>::value) {
+      // Test/enable KHR 64 bit (double)
+      ss << "#if defined(cl_khr_fp64)" << std::endl;
+      ss << "#pragma OPENCL EXTENSION cl_khr_fp64 : enable" << std::endl;
+      ss << "#define DOUBLE_SUPPORT_AVAILABLE" << std::endl;
 
-  // 64 bit integers
-  if (sizeof(int_tp) == 8) {
-    // Test/enable 64 bit atomics
-    ss << "#if defined(cl_khr_int64_base_atomics)" << std::endl;
-    ss << "#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable"
-       << std::endl;
-    ss << "#define ATOMICS_64_AVAILABLE" << std::endl;
-    ss << "#endif" << std::endl;
+      // Test/enable AMD 64 bit (double)
+      ss << "#elif defined(cl_amd_fp64)" << std::endl;
+      ss << "#pragma OPENCL EXTENSION cl_amd_fp64 : enable" << std::endl;
+      ss << "#define DOUBLE_SUPPORT_AVAILABLE" << std::endl;
+      ss << "#endif" << std::endl;
+    }
+
+    // 64 bit integers
+    if (sizeof(int_tp) == 8) {
+      // Test/enable 64 bit atomics
+      ss << "#if defined(cl_khr_int64_base_atomics)" << std::endl;
+      ss << "#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable"
+         << std::endl;
+      ss << "#define ATOMICS_64_AVAILABLE" << std::endl;
+      ss << "#endif" << std::endl;
+    }
   }
 
   if (std::is_same<Dtype, double>::value) {
@@ -88,6 +95,40 @@ std::string libdnn_conv<Dtype>::generate_header() {
     ss << "#define uint_tp unsigned int" << std::endl;
     ss << "#define int_tpc int" << std::endl;
     ss << "#define uint_tpc unsigned int" << std::endl;
+  }
+
+  if (dev_ptr_->backend() == BACKEND_CUDA) {
+    // Prepare definitions for OpenCL => CUDA cross compile
+    // Mainly from: http://www.cedricnugteren.nl/tutorial.php?page=10
+    ss << "#define __kernel __placeholder__" << std::endl;
+    ss << "#define __global" << std::endl;
+    ss << "#define __placeholder__ extern \"C\" __global__" << std::endl;
+    ss << "#define __local __shared__" << std::endl;
+    ss << "#define barrier(x) __syncthreads()" << std::endl;
+
+    ss << "__device__ int get_local_id(int x) {" << std::endl;
+    ss << "if (x == 0) return threadIdx.x;" << std::endl;
+    ss << "if (x == 1) return threadIdx.y;" << std::endl;
+    ss << "if (x == 2) return threadIdx.z;" << std::endl;
+    ss << "return 0;" << std::endl;
+    ss << "}" << std::endl;
+
+    ss << "__device__ int get_group_id(int x) {" << std::endl;
+    ss << "if (x == 0) return blockIdx.x;" << std::endl;
+    ss << "if (x == 1) return blockIdx.y;" << std::endl;
+    ss << "if (x == 2) return blockIdx.z;" << std::endl;
+    ss << "return 0;" << std::endl;
+    ss << "}" << std::endl;
+
+    ss << "__device__ int get_global_id(int x) {" << std::endl;
+    ss << "if (x == 0) return blockIdx.x * blockDim.x"
+       << " + threadIdx.x;" << std::endl;
+    ss << "if (x == 1) return blockIdx.y * blockDim.y"
+       << " + threadIdx.y;" << std::endl;
+    ss << "if (x == 2) return blockIdx.z * blockDim.z"
+       << " + threadIdx.z;" << std::endl;
+    ss << "return 0;" << std::endl;
+    ss << "}" << std::endl;
   }
 
   return ss.str();
@@ -1080,8 +1121,9 @@ void libdnn_conv<Dtype>::generate_kernels() {
   kernel_ = ss.str();
 }
 
+#ifdef USE_GREENTEA
 template<typename Dtype>
-viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels(
+viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels_opencl(
     viennacl::ocl::context *ctx) {
 
   std::string build_opts = "";
@@ -1098,54 +1140,46 @@ viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels(
 
   // std::cout << kernel_ << std::endl;
 
-  program_ = ctx->add_program(kernel_.c_str(), "kernel_program");
-  return program_;
+  ocl_program_ = ctx->add_program(kernel_.c_str(), "kernel_program");
+  return ocl_program_;
 }
+#endif  // USE_GREENTEA
+
+#ifdef USE_CUDA
+template<typename Dtype>
+nvrtcProgram libdnn_conv<Dtype>::compile_kernels_cuda() {
+  nvrtcCreateProgram(&cuda_program_, kernel_.c_str(), NULL, 0, NULL, NULL);
+  nvrtcCompileProgram(cuda_program_, 0, NULL);
+
+  size_t ptxSize;
+  nvrtcGetPTXSize(cuda_program_, &ptxSize);
+  char *ptx = new char[ptxSize];
+  nvrtcGetPTX(cuda_program_, ptx);
+
+  cuModuleLoadDataEx(&cuda_module_, ptx, 0, 0, 0);
+
+  /*
+  size_t log_size;
+  nvrtcGetProgramLogSize(cuda_program_, &log_size);
+  std::vector<char> log(log_size);
+  nvrtcGetProgramLog(cuda_program_, log.data());
+
+  std::cout << "CUDA compile log:" << std::endl;
+  std::cout << log.data() << std::endl;
+  */
+  return cuda_program_;
+}
+#endif  // USE_CUDA
 
 template<typename Dtype>
-void libdnn_conv<Dtype>::forward(cl_mem bottom_data, cl_mem weight, cl_mem bias,
-                                 cl_mem top_data, int_tp batch_size) {
-  viennacl::ocl::kernel &kernel = program_.get_kernel("conv_forward");
-
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
-
-  kernel.local_work_size(0, 16);
-  kernel.local_work_size(1, 16);
-  kernel.local_work_size(2, 1);
-
-  kernel.global_work_size(0, ((this->N_FW_ - 1) / 64 + 1) * 16);
-  kernel.global_work_size(1, ((this->M_FW_ - 1) / 64 + 1) * 16);
-  kernel.global_work_size(2, batch_size * group_);
-
-  // for (int i = 0; i < 3; ++i) {
-  // std::cout << i << "; local: "
-  //           << kernel.local_work_size(i) << ", global: "
-  //           << kernel.global_work_size(i) << std::endl;
-  // }
-
-  if (bias_term_) {
-    viennacl::ocl::enqueue(
-        kernel(WrapHandle(bottom_data, &ctx), WrapHandle(weight, &ctx),
-               WrapHandle(bias, &ctx), WrapHandle(top_data, &ctx)),
-        ctx.get_queue());
-  } else {
-    viennacl::ocl::enqueue(
-        kernel(WrapHandle(bottom_data, &ctx), WrapHandle(weight, &ctx),
-               WrapHandle(top_data, &ctx)),
-        ctx.get_queue());
-  }
-}
-
-template<typename Dtype>
-void libdnn_conv<Dtype>::backward(bool prop_down_data,
-                                  cl_mem top_data, cl_mem top_diff,
-                                  cl_mem weight, cl_mem weight_diff,
-                                  cl_mem bias, cl_mem bias_diff,
-                                  cl_mem bottom_data, cl_mem bottom_diff,
-                                  int_tp batch_size) {
-  // Backprop w.r.t. data
-  if (prop_down_data) {
-    viennacl::ocl::kernel &kernel = program_.get_kernel("conv_backward");
+void libdnn_conv<Dtype>::forward(const Dtype* bottom_data,
+                                 const Dtype* weight,
+                                 const Dtype* bias,
+                                 Dtype* top_data,
+                                 int_tp batch_size) {
+#ifdef USE_GREENTEA
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_forward");
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
 
@@ -1153,8 +1187,8 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data,
     kernel.local_work_size(1, 16);
     kernel.local_work_size(2, 1);
 
-    kernel.global_work_size(0, ((this->N_BW_ - 1) / 64 + 1) * 16);
-    kernel.global_work_size(1, ((this->M_BW_ - 1) / 64 + 1) * 16);
+    kernel.global_work_size(0, ((this->N_FW_ - 1) / 64 + 1) * 16);
+    kernel.global_work_size(1, ((this->M_FW_ - 1) / 64 + 1) * 16);
     kernel.global_work_size(2, batch_size * group_);
 
     // for (int i = 0; i < 3; ++i) {
@@ -1165,59 +1199,193 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data,
 
     if (bias_term_) {
       viennacl::ocl::enqueue(
-          kernel(WrapHandle(top_diff, &ctx), WrapHandle(weight, &ctx),
-                 WrapHandle(bias, &ctx), WrapHandle(bottom_diff, &ctx)),
+          kernel(WrapHandle((cl_mem)bottom_data, &ctx),
+                 WrapHandle((cl_mem)weight, &ctx),
+                 WrapHandle((cl_mem)bias, &ctx),
+                 WrapHandle((cl_mem)top_data, &ctx)),
           ctx.get_queue());
     } else {
       viennacl::ocl::enqueue(
-          kernel(WrapHandle(top_diff, &ctx), WrapHandle(weight, &ctx),
-                 WrapHandle(bottom_diff, &ctx)),
+          kernel(WrapHandle((cl_mem)bottom_data, &ctx),
+                 WrapHandle((cl_mem)weight, &ctx),
+                 WrapHandle((cl_mem)top_data, &ctx)),
           ctx.get_queue());
     }
   }
+#endif  // USE_GREENEA
 
-  // Backprop w.r.t. weights and bias
-  if (this->weights_backward_ || this->bias_backward_) {
-    viennacl::ocl::kernel &kernel = program_.get_kernel("conv_weights");
-
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
-
-    kernel.local_work_size(0, 16);
-    kernel.local_work_size(1, 16);
-    kernel.local_work_size(2, 1);
-
-    kernel.global_work_size(0, ((this->N_WG_ - 1) / 64 + 1) * 16);
-    kernel.global_work_size(1, ((this->M_WG_ - 1) / 64 + 1) * 16);
-
-    if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
-      kernel.global_work_size(2, group_);
-    } else {
-      kernel.global_work_size(2, batch_size * group_);
-    }
-
-    // for (int i = 0; i < 3; ++i) {
-    // std::cout << i << "; local: "
-    //           << kernel.local_work_size(i) << ", global: "
-    //           << kernel.global_work_size(i) << std::endl;
-    // }
+#ifdef USE_CUDA
+  if (dev_ptr_->backend() == BACKEND_CUDA) {
+    CUfunction kernel;
+    cuModuleGetFunction(&kernel, cuda_module_, "conv_forward");
 
     if (bias_term_) {
-      viennacl::ocl::enqueue(
-          kernel(WrapHandle(bottom_data, &ctx), WrapHandle(top_diff, &ctx),
-                 WrapHandle(bias_diff, &ctx), WrapHandle(weight_diff, &ctx),
-                 batch_size),
-          ctx.get_queue());
+      void *args[] = { &bottom_data, &weight, &bias, &top_data };
+      cuLaunchKernel(kernel,
+                     (this->N_FW_ - 1) / 64 + 1,  // Grid X
+                     (this->M_FW_ - 1) / 64 + 1,  // Grid Y
+                     batch_size * group_,         // Grid Z
+                     16, 16, 1,                   // Local
+                     0, NULL, args, 0);           // Arguments
     } else {
-      viennacl::ocl::enqueue(
-          kernel(WrapHandle(bottom_data, &ctx), WrapHandle(top_diff, &ctx),
-                 WrapHandle(weight_diff, &ctx), batch_size),
-          ctx.get_queue());
+      void *args[] = { &bottom_data, &weight, &top_data };
+      cuLaunchKernel(kernel,
+                     (this->N_FW_ - 1) / 64 + 1,  // Grid X
+                     (this->M_FW_ - 1) / 64 + 1,  // Grid Y
+                     batch_size * group_,         // Grid Z
+                     16, 16, 1,                   // Local
+                     0, NULL, args, 0);           // Arguments
+    }
+    cuCtxSynchronize();
+  }
+#endif  // USE_CUDA
+}
+
+template<typename Dtype>
+void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
+                                  const Dtype* top_diff, const Dtype* weight,
+                                  Dtype* weight_diff, const Dtype* bias,
+                                  Dtype* bias_diff, const Dtype* bottom_data,
+                                  Dtype* bottom_diff,
+                                  int_tp batch_size) {
+#ifdef USE_GREENTEA
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    // Backprop w.r.t. data
+    if (prop_down_data) {
+      viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_backward");
+
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
+
+      kernel.local_work_size(0, 16);
+      kernel.local_work_size(1, 16);
+      kernel.local_work_size(2, 1);
+
+      kernel.global_work_size(0, ((this->N_BW_ - 1) / 64 + 1) * 16);
+      kernel.global_work_size(1, ((this->M_BW_ - 1) / 64 + 1) * 16);
+      kernel.global_work_size(2, batch_size * group_);
+
+      // for (int i = 0; i < 3; ++i) {
+      // std::cout << i << "; local: "
+      //           << kernel.local_work_size(i) << ", global: "
+      //           << kernel.global_work_size(i) << std::endl;
+      // }
+
+      if (bias_term_) {
+        viennacl::ocl::enqueue(
+            kernel(WrapHandle((cl_mem) top_diff, &ctx),
+                   WrapHandle((cl_mem) weight, &ctx),
+                   WrapHandle((cl_mem) bias, &ctx),
+                   WrapHandle((cl_mem) bottom_diff, &ctx)),
+            ctx.get_queue());
+      } else {
+        viennacl::ocl::enqueue(
+            kernel(WrapHandle((cl_mem) top_diff, &ctx),
+                   WrapHandle((cl_mem) weight, &ctx),
+                   WrapHandle((cl_mem) bottom_diff, &ctx)),
+            ctx.get_queue());
+      }
+    }
+
+    // Backprop w.r.t. weights and bias
+    if (this->weights_backward_ || this->bias_backward_) {
+      viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_weights");
+
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
+
+      kernel.local_work_size(0, 16);
+      kernel.local_work_size(1, 16);
+      kernel.local_work_size(2, 1);
+
+      kernel.global_work_size(0, ((this->N_WG_ - 1) / 64 + 1) * 16);
+      kernel.global_work_size(1, ((this->M_WG_ - 1) / 64 + 1) * 16);
+
+      if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
+        kernel.global_work_size(2, group_);
+      } else {
+        kernel.global_work_size(2, batch_size * group_);
+      }
+
+      // for (int i = 0; i < 3; ++i) {
+      // std::cout << i << "; local: "
+      //           << kernel.local_work_size(i) << ", global: "
+      //           << kernel.global_work_size(i) << std::endl;
+      // }
+
+      if (bias_term_) {
+        viennacl::ocl::enqueue(
+            kernel(WrapHandle((cl_mem) bottom_data, &ctx),
+                   WrapHandle((cl_mem) top_diff, &ctx),
+                   WrapHandle((cl_mem) bias_diff, &ctx),
+                   WrapHandle((cl_mem) weight_diff, &ctx), batch_size),
+            ctx.get_queue());
+      } else {
+        viennacl::ocl::enqueue(
+            kernel(WrapHandle((cl_mem) bottom_data, &ctx),
+                   WrapHandle((cl_mem) top_diff, &ctx),
+                   WrapHandle((cl_mem) weight_diff, &ctx), batch_size),
+            ctx.get_queue());
+      }
     }
   }
+#endif  // USE_GREENEA
+
+#ifdef USE_CUDA
+  if (dev_ptr_->backend() == BACKEND_CUDA) {
+    // Backprop w.r.t. data
+    if (prop_down_data) {
+      CUfunction kernel;
+      cuModuleGetFunction(&kernel, cuda_module_, "conv_backward");
+
+      if (bias_term_) {
+        void *args[] = { &top_diff, &weight, &bias, &bottom_diff };
+        cuLaunchKernel(kernel,
+                       (this->N_BW_ - 1) / 64 + 1,  // Grid X
+                       (this->M_BW_ - 1) / 64 + 1,  // Grid Y
+                       batch_size * group_,         // Grid Z
+                       16, 16, 1,                   // Local
+                       0, NULL, args, 0);           // Arguments
+      } else {
+        void *args[] = { &top_diff, &weight, &bottom_diff };
+        cuLaunchKernel(kernel,
+                       (this->N_BW_ - 1) / 64 + 1,  // Grid X
+                       (this->M_BW_ - 1) / 64 + 1,  // Grid Y
+                       batch_size * group_,         // Grid Z
+                       16, 16, 1,                   // Local
+                       0, NULL, args, 0);           // Arguments
+      }
+    }
+
+    // Backprop w.r.t. weights and bias
+    if (this->weights_backward_ || this->bias_backward_) {
+      CUfunction kernel;
+      cuModuleGetFunction(&kernel, cuda_module_, "conv_weights");
+
+      if (bias_term_) {
+        void *args[] = { &bottom_data, &top_diff,
+            &bias_diff, &weight_diff, &batch_size };
+        cuLaunchKernel(kernel,
+                       (this->N_WG_ - 1) / 64 + 1,  // Grid X
+                       (this->M_WG_ - 1) / 64 + 1,  // Grid Y
+                       group_,                      // Grid Z
+                       16, 16, 1,                   // Local
+                       0, NULL, args, 0);           // Arguments
+      } else {
+        void *args[] = { &bottom_data, &top_diff,
+            &weight_diff, &batch_size };
+        cuLaunchKernel(kernel,
+                       (this->N_WG_ - 1) / 64 + 1,  // Grid X
+                       (this->M_WG_ - 1) / 64 + 1,  // Grid Y
+                       group_,                      // Grid Z
+                       16, 16, 1,                   // Local
+                       0, NULL, args, 0);           // Arguments
+      }
+    }
+  }
+#endif  // USE_CUDA
 }
 
 INSTANTIATE_CLASS(libdnn_conv);
 
 }  // namespace caffe
 
-#endif  // USE_GREENTEA
+#endif  // USE_LIBDNN

@@ -79,8 +79,8 @@ void LibDNNConvolutionLayer<Dtype>::Forward_gpu(
   for (int_tp i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
-    libdnn_.get()->forward((cl_mem) bottom_data, (cl_mem) weight, (cl_mem) bias,
-                           (cl_mem) top_data, bottom[i]->shape()[0]);
+    libdnn_.get()->forward(bottom_data, weight, bias,
+                           top_data, bottom[i]->shape()[0]);
   }
 }
 
@@ -105,10 +105,10 @@ void LibDNNConvolutionLayer<Dtype>::Backward_gpu(
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
     libdnn_.get()->backward(propagate_down[i],
-                            (cl_mem) top_data, (cl_mem) top_diff,
-                            (cl_mem) weight, (cl_mem) weight_diff,
-                            (cl_mem) bias, (cl_mem) bias_diff,
-                            (cl_mem) bottom_data, (cl_mem) bottom_diff,
+                            top_data, top_diff,
+                            weight, weight_diff,
+                            bias, bias_diff,
+                            bottom_data, bottom_diff,
                           bottom[i]->shape()[0]);
   }
 }
