@@ -42,12 +42,16 @@ libdnn_conv<Dtype>::libdnn_conv(libdnn_config config) {
   }
 
   generate_kernels();
+#ifdef USE_GREENTEA
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
     compile_kernels_opencl(&(viennacl::ocl::get_context(dev_ptr_->id())));
   }
+#endif  // USE_GREETEA
+#ifdef USE_CUDA
   if (dev_ptr_->backend() == BACKEND_CUDA) {
     compile_kernels_cuda();
   }
+#endif  // USE_CUDA
 }
 
 template<typename Dtype>
@@ -1212,7 +1216,7 @@ void libdnn_conv<Dtype>::forward(const Dtype* bottom_data,
           ctx.get_queue());
     }
   }
-#endif  // USE_GREENEA
+#endif  // USE_GREENTEA
 
 #ifdef USE_CUDA
   if (dev_ptr_->backend() == BACKEND_CUDA) {
@@ -1327,7 +1331,7 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
       }
     }
   }
-#endif  // USE_GREENEA
+#endif  // USE_GREENTEA
 
 #ifdef USE_CUDA
   if (dev_ptr_->backend() == BACKEND_CUDA) {
