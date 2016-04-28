@@ -18,6 +18,10 @@ VIENNACL_DIR = ../ViennaCL
 # Override BLAS, use clBLAS insead of ViennaclBLAS.
 # USE_CLBLAS := 1
 
+# Custom clBLAS lib and include directories.
+# CLBLAS_INCLUDE := /path/to/clblas/include
+# CLBLAS_LIB     := /path/to/clblas/lib
+
 # Override BLAS, use ISAAC instead of ViennaclBLAS.
 # USE_ISAAC := 1
 
