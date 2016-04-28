@@ -89,6 +89,14 @@ inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
     std::vector<int> stride) {
   CHECK_EQ(shape.size(), stride.size())
       << "Dimensions of shape and stride don't match !";
+  // fill shape with 1 to create tensors with at least 4 dimensions
+  // to prevent CUDNN_STATUS_BAD_PARAM error in CUDNN v4
+  // TODO(christian.payer@gmx.net): check CUDNN doc, probably fixed
+  // in newer versions
+  for (int i = shape.size(); i < 4; ++i) {
+    shape.push_back(1);
+    stride.push_back(1);
+  }
   CUDNN_CHECK(cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type,
         shape.size(), shape.data(), stride.data()));
 }
