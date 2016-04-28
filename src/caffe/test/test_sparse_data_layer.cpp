@@ -84,8 +84,7 @@ class DataLayerSparseTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
-    for (int iter = 0; iter < 100; ++iter) { //XXX: was 100
-      std::cerr << "\n**************** iter=" << iter << std::endl;
+    for (int iter = 0; iter < 100; ++iter) { 
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
       for (int i = 0; i < 6; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
@@ -188,14 +187,14 @@ this->Fill(DataParameter_DB_LEVELDB);
 this->TestRead2();
 }
 
-  /*TYPED_TEST(DataLayerSparseTest, TestReadLMDB) {
+TYPED_TEST(DataLayerSparseTest, TestReadLMDB) {
 this->Fill(DataParameter_DB_LMDB);
 this->TestRead();
-}*/
+}
 
-  /*TYPED_TEST(DataLayerSparseTest, TestReadLMDB2) {
+TYPED_TEST(DataLayerSparseTest, TestReadLMDB2) {
 this->Fill(DataParameter_DB_LMDB);
 this->TestRead2();
-}*/
+}
 
 }  // namespace caffe

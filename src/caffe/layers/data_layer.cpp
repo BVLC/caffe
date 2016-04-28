@@ -29,10 +29,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   // Read a data point, and use it to initialize the top blob.
-  std::cerr << "\nreading top point\n";
   Datum& datum = *(reader_.full().peek());
-  std::cerr << "output labels=" << this->output_labels_ << std::endl;
-  std::cerr << "\ndone reading top point\n";
 
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
@@ -100,7 +97,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     trans_time += timer.MicroSeconds();
     
-    std::cerr << "\npushing data\n";
     reader_.free().push(const_cast<Datum*>(&datum));
   }
   timer.Stop();
