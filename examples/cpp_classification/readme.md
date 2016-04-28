@@ -42,7 +42,7 @@ script:
 The ImageNet labels file (also called the *synset file*) is also
 required in order to map a prediction to the name of the class:
 ```
-./data/ilsvrc12/get_ilsvrc_aux.sh.
+./data/ilsvrc12/get_ilsvrc_aux.sh
 ```
 Using the files that were downloaded, we can classify the provided cat
 image (`examples/images/cat.jpg`) using this command:
