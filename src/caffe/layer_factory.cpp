@@ -69,9 +69,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
     }
 #endif
 #ifdef USE_LIBDNN
-    if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
-      engine = ConvolutionParameter_Engine_LIBDNN;
-    }
+    engine = ConvolutionParameter_Engine_LIBDNN;
 #endif
   }
 

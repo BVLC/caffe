@@ -3,12 +3,21 @@
 #ifdef USE_GREENTEA
 #include <string>
 #include <vector>
+#include "caffe/device.hpp"
+
+#ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/ocl/context.hpp"
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
+#endif  // USE_GREENTEA
+
+#ifdef USE_CUDA
+#include "cuda.h"
+#include "nvrtc.h"
+#endif  // USE_CUDA
 
 namespace caffe {
 
@@ -54,13 +63,14 @@ template<typename Dtype>
 class libdnn_conv {
  public:
   explicit libdnn_conv(libdnn_config config);
-  void forward(cl_mem bottom_data, cl_mem weight, cl_mem bias,
-               cl_mem top_data, int_tp batch_size);
+  void forward(const Dtype* bottom_data, const Dtype* weight,
+               const Dtype* bias,
+               Dtype* top_data, int_tp batch_size);
   void backward(bool prop_down_data,
-                cl_mem top_data, cl_mem top_diff,
-                cl_mem weight, cl_mem weight_diff,
-                cl_mem bias, cl_mem bias_diff,
-                cl_mem bottom_data, cl_mem bottom_diff,
+                const Dtype* top_data, const Dtype* top_diff,
+                const Dtype* weight, Dtype* weight_diff,
+                const Dtype* bias, Dtype* bias_diff,
+                const Dtype* bottom_data, Dtype* bottom_diff,
                 int_tp batch_size);
 
  protected:
@@ -74,7 +84,12 @@ class libdnn_conv {
   std::string generate_fw_kernels(std::string name);
   std::string generate_bw_kernels(std::string name);
   std::string generate_wg_kernels(std::string name);
-  viennacl::ocl::program compile_kernels(viennacl::ocl::context *ctx);
+#ifdef USE_GREENTEA
+  viennacl::ocl::program compile_kernels_opencl(viennacl::ocl::context *ctx);
+#endif  // USE_GREETEA
+#ifdef USE_CUDA
+  nvrtcProgram compile_kernels_cuda();
+#endif  // USE_CUDA
   template<class T>
   void add_def(std::stringstream& ss, const char* name, T value);  // NOLINT
   template<class T>
@@ -82,7 +97,16 @@ class libdnn_conv {
 
  private:
   device* dev_ptr_;
-  viennacl::ocl::program program_;
+
+#ifdef USE_GREENTEA
+  viennacl::ocl::program ocl_program_;
+#endif  // USE_GREENTEA
+
+#ifdef USE_CUDA
+  nvrtcProgram cuda_program_;
+  CUmodule cuda_module_;
+#endif  // USE_CUDA
+
   std::string kernel_;
 
   // Forward GEMM sizes

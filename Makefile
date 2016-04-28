@@ -177,14 +177,16 @@ CUDA_LIB_DIR :=
 # add <cuda>/lib64 only if it exists
 ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 	CUDA_LIB_DIR += $(CUDA_DIR)/lib64
+	CUDA_LIB_DIR += $(CUDA_DIR)/lib64/stubs
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
+CUDA_LIB_DIR += $(CUDA_DIR)/lib/stubs
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifeq ($(USE_CUDA), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
-	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES := cudart cublas curand
+	LIBRARY_DIRS += $(CUDA_LIB_DIR) $(CUDA_LIB_DIR)/stubs
+	LIBRARIES := cudart cublas curand nvrtc cuda
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
