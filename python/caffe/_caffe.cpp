@@ -255,7 +255,16 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
     .def("save", &Net_Save);
-  bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >();
+  
+  const boost::python::type_info ainfo = boost::python::type_id<shared_ptr<Net<Dtype> > >();
+  const boost::python::converter::registration* areg = boost::python::converter::registry::query(ainfo);
+  if (areg == NULL)
+  {
+     bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >();
+  }
+  else if ((*areg).m_to_python == NULL) {
+     bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >();
+  }
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -275,7 +284,17 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
-  bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >();
+  
+  const boost::python::type_info binfo = boost::python::type_id<shared_ptr<Blob<Dtype> > >();
+  const boost::python::converter::registration* breg = boost::python::converter::registry::query(binfo);
+  if (breg == NULL)
+  {
+     bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >();
+  }
+  else if ((*breg).m_to_python == NULL) {
+     bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >();
+  }
+
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
     boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
@@ -284,7 +303,16 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
-  bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
+  
+  const boost::python::type_info cinfo = boost::python::type_id<shared_ptr<Layer<Dtype> > >();
+  const boost::python::converter::registration* creg = boost::python::converter::registry::query(cinfo);
+  if (creg == NULL)
+  {
+     bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
+  }
+  else if ((*creg).m_to_python == NULL) {
+     bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
+  }
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init);
 
@@ -299,7 +327,17 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("step", &Solver<Dtype>::Step)
     .def("restore", &Solver<Dtype>::Restore)
     .def("snapshot", &Solver<Dtype>::Snapshot);
-  bp::register_ptr_to_python<shared_ptr<Solver<Dtype> > >();
+  
+  const boost::python::type_info dinfo = boost::python::type_id<shared_ptr<Solver<Dtype> > >();
+  const boost::python::converter::registration* dreg = boost::python::converter::registry::query(dinfo);
+  if (dreg == NULL)
+  {
+     bp::register_ptr_to_python<shared_ptr<Solver<Dtype> > >();
+  }
+  else if ((*dreg).m_to_python == NULL) {
+     bp::register_ptr_to_python<shared_ptr<Solver<Dtype> > >();
+  }
+
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
