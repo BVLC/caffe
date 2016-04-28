@@ -41,12 +41,17 @@ void device::Init() {
 
     std::vector<uint_tp> temp(3);
     clGetDeviceInfo(ctx.devices()[0].id(),
-    CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                    CL_DEVICE_MAX_WORK_ITEM_SIZES,
                     sizeof(uint_tp), &temp[0], NULL);
     workgroup_sizes_[0] = temp[0];
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];
+    cl_bool host_unified;
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_HOST_UNIFIED_MEMORY,
+                    sizeof(cl_bool), &host_unified, NULL);
 
+    host_unified_ = host_unified;
     SetProgram();
 
     for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
@@ -186,6 +191,24 @@ bool device::CheckCapability(std::string cap) {
   return true;
 }
 
+bool device::CheckVendor(std::string vendor) {
+  if (backend_ == BACKEND_CUDA) {
+    if (vendor.compare("NVIDIA") == 0)
+      return true;
+  }
+#ifdef USE_GREENTEA
+  else if (backend_ == BACKEND_OpenCL) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+    const viennacl::ocl::device &device = ctx.current_device();
+
+    if (device.vendor().find(vendor) != std::string::npos)
+      return true;
+  }
+#endif
+
+  return false;
+}
+
 #ifdef USE_GREENTEA
 viennacl::ocl::program &device::program() {
   return ocl_program_;
@@ -194,6 +217,10 @@ viennacl::ocl::program &device::program() {
 void device::SetProgram() {
   ocl_program_ = RegisterKernels(
       &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+}
+
+bool device::isHostUnified() {
+  return host_unified_;
 }
 
 const char* clGetErrorString(cl_int error) {
