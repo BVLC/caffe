@@ -283,7 +283,7 @@ void caffe_abs<double>(const int n, const double* a, double* y) {
 
 unsigned int caffe_rng_rand() {
 #ifdef DETERMINISTIC
-    return 4;
+    return 5153;
 #else
     return (*caffe_rng())();
 #endif
