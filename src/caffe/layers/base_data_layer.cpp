@@ -202,7 +202,6 @@ void BasePrefetchingSparseDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
-//TODO: test
 template <typename Dtype>
 void BasePrefetchingSparseDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -214,47 +213,15 @@ void BasePrefetchingSparseDataLayer<Dtype>::Forward_cpu(
     top[0]->mutable_cpu_data());*/
   if (SparseBlob<Dtype>* sparseBlob = dynamic_cast<SparseBlob<Dtype>*>(top[0]))
     {
-      //std::cerr << "\nForward_cpu nnz=" << batch->data_.nnz() << std::endl;
-      Dtype *n_data;
-      int* n_indices;
-      int* n_ptr;
-      bool use_cuda = false;
-      CaffeMallocHost((void**)&n_data,sizeof(Dtype)*batch->data_.nnz(),&use_cuda);
-      CaffeMallocHost((void**)&n_indices,sizeof(int)*batch->data_.nnz(),&use_cuda);
-      CaffeMallocHost((void**)&n_ptr,sizeof(int)*(batch->data_.shape()[0]+1),&use_cuda);
-      /*n_data = (Dtype*)malloc(sizeof(Dtype)*batch->data_.nnz());
-      n_indices = (int*)malloc(sizeof(int)*batch->data_.nnz());
-      n_ptr = (int*)malloc(sizeof(int)*batch->data_.shape()[0]+1);*/
-
-      // caffe_copy does not do int (only Dtype)
-      memcpy(n_data,batch->data_.cpu_data(),sizeof(Dtype)*batch->data_.nnz());
-      memcpy(n_indices,batch->data_.cpu_indices(),sizeof(int)*batch->data_.nnz());
-      memcpy(n_ptr,batch->data_.cpu_ptr(),sizeof(int)*(batch->data_.shape()[0]+1));
-      sparseBlob->set_cpu_data(
-                               const_cast<Dtype*>(n_data),
-				 const_cast<int*>(n_indices),
-				 const_cast<int*>(n_ptr),
-				 batch->data_.nnz(),batch->data_.nnz());
-
-
-	    /*sparseBlob->set_cpu_data(
-                               const_cast<Dtype*>(batch->data_.cpu_data()),
-			       const_cast<int*>(batch->data_.cpu_indices()),
-			       const_cast<int*>(batch->data_.cpu_ptr()),
-			       batch->data_.nnz(),batch->data_.nnz());*/
-      
-      //sparseBlob->Reshape(batch->data_.shape(),batch->data_.nnz());
+      // Reshape to loaded data.
+      sparseBlob->ReshapeLike(batch->data_);
       // Copy the data
-      //std::cerr << "batch data nnz=" << batch->data_.nnz() << std::endl;
-      /*caffe_copy(batch->data_.count(), batch->data_.cpu_data(),
-	sparseBlob->mutable_cpu_data());
-      caffe_copy(batch->data_.nnz(), batch->data_.cpu_indices(),
-	sparseBlob->mutable_cpu_indices());
-      caffe_copy(batch->data_.shape()[0]+1, batch->data_.cpu_ptr(),
-      sparseBlob->mutable_cpu_ptr());*/
-      /*memcpy(sparseBlob->mutable_cpu_indices(),batch->data_.cpu_indices(),sizeof(int)*batch->data_.nnz());
-	memcpy(sparseBlob->mutable_cpu_ptr(),batch->data_.cpu_ptr(),sizeof(int)*batch->data_.shape()[0]+1);*/
-      
+      caffe_copy(batch->data_.nnz(), batch->data_.cpu_data(),
+         sparseBlob->mutable_cpu_data());
+      caffe_copy<int>(batch->data_.nnz(), batch->data_.cpu_indices(),
+         sparseBlob->mutable_cpu_indices());
+      caffe_copy<int>(batch->data_.shape()[0]+1, batch->data_.cpu_ptr(),
+         sparseBlob->mutable_cpu_ptr());
     } else {
     LOG(FATAL) << "The top blob in the data layer sparse is not sparse";
     }
