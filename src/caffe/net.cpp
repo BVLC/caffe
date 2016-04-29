@@ -42,9 +42,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";
 
-  // TODO: This is temporary location , as it should be called after layer initialization
-  // OpenMP manager needed some info (for example number of backgroud threads)
-  // that is available after layers are constructed
+  // TODO: This is temporary location , as it should be called after layer
+  // initialization OpenMP manager needed some info (for example number of
+  // backgroud threads) that is available after layers are constructed
 #ifdef _OPENMP
   static bool executed = false;
   if (!executed) {
@@ -199,7 +199,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
   }
 
-  // TODO: OpenMP manager should be initialized here, after MKL beta fix is applied.
+  // TODO: OpenMP manager should be initialized here, after MKL beta fix is
+  // applied.
 
 
   // Go through the net backwards to determine which blobs contribute to the
