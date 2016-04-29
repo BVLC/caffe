@@ -21,6 +21,7 @@ void CuDNNBatchNormLayer<Dtype>::Forward_gpu(
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* save_mean = save_mean_.mutable_gpu_data();
   Dtype* save_inv_var = save_inv_var_.mutable_gpu_data();
+  double epsilon = max(this->eps_, CUDNN_BN_MIN_EPSILON);
 
   if (this->phase_ == TRAIN) {
     // Call Batch normalization forward
@@ -37,9 +38,9 @@ void CuDNNBatchNormLayer<Dtype>::Forward_gpu(
       scale_data,
       bias_data,
       1-this->moving_average_fraction_,
-      this->blobs_[3]->mutable_gpu_data(),  // mean
-      this->blobs_[4]->mutable_gpu_data(),  // variance
-      epsilon_,
+      this->blobs_[2]->mutable_gpu_data(),  // mean
+      this->blobs_[3]->mutable_gpu_data(),  // variance
+      epsilon,
       save_mean,
       save_inv_var));
   } else if (this->phase_ == TEST) {
@@ -55,9 +56,9 @@ void CuDNNBatchNormLayer<Dtype>::Forward_gpu(
       scale_bias_mean_var_desc_,
       scale_data,
       bias_data,
-      this->blobs_[3]->gpu_data(),  // mean
-      this->blobs_[4]->gpu_data(),  // variance
-      epsilon_));
+      this->blobs_[2]->gpu_data(),  // mean
+      this->blobs_[3]->gpu_data(),  // variance
+      epsilon));
   } else {
     LOG(FATAL) << "Unknown phase";
   }
@@ -77,6 +78,8 @@ void CuDNNBatchNormLayer<Dtype>::Backward_gpu(
   const Dtype* scale_data = this->blobs_[0]->gpu_data();
   Dtype* scale_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
+
+  double epsilon = max(this->eps_, CUDNN_BN_MIN_EPSILON);
 
   // call Batch Normalization Backward
   CUDNN_CHECK(cudnnBatchNormalizationBackward(
@@ -98,7 +101,7 @@ void CuDNNBatchNormLayer<Dtype>::Backward_gpu(
       scale_data,
       scale_diff,
       bias_diff,
-      this->epsilon_,
+      epsilon,
       save_mean,
       save_inv_var));
 }

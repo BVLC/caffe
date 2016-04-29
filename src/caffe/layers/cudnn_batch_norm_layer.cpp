@@ -24,16 +24,17 @@ void CuDNNBatchNormLayer<Dtype>::LayerSetUp(
   // If there's enough demand we can implement CUDNN_BATCHNORM_PER_ACTIVATION
   // though it's not currently implemented for the CPU layer
   mode_ = CUDNN_BATCHNORM_SPATIAL;
+  int channels = bottom[0]->channels();
 
-  if (this->blobs_.size() > 5) {
+  if (this->blobs_.size() != 5) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(5);
-    this->blobs_[0].reset(new Blob<Dtype>(1, bottom[0]->channels(), 1, 1));
-    this->blobs_[1].reset(new Blob<Dtype>(1, bottom[0]->channels(), 1, 1));
-    this->blobs_[2].reset(new Blob<Dtype>(1, 1, 1, 1));
-    this->blobs_[3].reset(new Blob<Dtype>(1, bottom[0]->channels(), 1, 1));
-    this->blobs_[4].reset(new Blob<Dtype>(1, bottom[0]->channels(), 1, 1));
+    this->blobs_[0].reset(new Blob<Dtype>(1, channels, 1, 1));
+    this->blobs_[1].reset(new Blob<Dtype>(1, channels, 1, 1));
+    this->blobs_[2].reset(new Blob<Dtype>(1, channels, 1, 1));
+    this->blobs_[3].reset(new Blob<Dtype>(1, channels, 1, 1));
+    this->blobs_[4].reset(new Blob<Dtype>(1, 1, 1, 1));
 
     shared_ptr<Filler<Dtype> > scale_filler(
       GetFiller<Dtype>(this->layer_param_.batch_norm_param().scale_filler()));

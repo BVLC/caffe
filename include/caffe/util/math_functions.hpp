@@ -33,6 +33,16 @@ template <typename Dtype>
 void caffe_cpu_axpby(const int N, const Dtype alpha, const Dtype* X,
     const Dtype beta, Dtype* Y);
 
+// y[i]= max(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_cpu_eltwise_max(const int N, const Dtype alpha, const Dtype* X,
+    const Dtype beta, Dtype* Y);
+
+// y[i]= min(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_cpu_eltwise_min(const int N, const Dtype alpha, const Dtype* X,
+    const Dtype beta, Dtype* Y);
+
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype *X, Dtype *Y);
 
@@ -245,6 +255,17 @@ void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
+
+// y[i]= max(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_gpu_eltwise_max(const int n, const Dtype alpha, const Dtype* x,
+    const Dtype beta, Dtype* y);
+
+// y[i]= min(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_gpu_eltwise_min(const int n, const Dtype alpha, const Dtype* x,
+    const Dtype beta, Dtype* y);
+
 
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \

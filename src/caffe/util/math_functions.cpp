@@ -1,6 +1,7 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
+#include <algorithm>
 #include <limits>
 
 #include "caffe/common.hpp"
@@ -371,5 +372,32 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
 }
+
+// y[i]= max(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_cpu_eltwise_max(const int N, const Dtype alpha, const Dtype* x,
+  const Dtype beta, Dtype* y) {
+  for (int i = 0; i < N; ++i) {
+    y[i] = std::max(alpha * x[i], beta * y[i]);
+  }
+}
+template void caffe_cpu_eltwise_max<float>(const int N,
+    const float alpha, const float* x, const float beta, float* y);
+template void caffe_cpu_eltwise_max<double>(const int N,
+    const double alpha, const double* x, const double beta, double* y);
+
+// y[i]= min(a*x[i], b*y[i])
+template <typename Dtype>
+void caffe_cpu_eltwise_min(const int N, const Dtype alpha, const Dtype* x,
+  const Dtype beta, Dtype* y) {
+  for (int i = 0; i < N; ++i) {
+    y[i] = std::min(alpha * x[i], beta * y[i]);
+  }
+}
+template void caffe_cpu_eltwise_min<float>(const int N,
+    const float alpha, const float* x, const float beta, float* y);
+template void caffe_cpu_eltwise_min<double>(const int N,
+    const double alpha, const double* x, const double beta, double* y);
+
 
 }  // namespace caffe

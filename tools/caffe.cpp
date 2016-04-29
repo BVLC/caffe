@@ -413,7 +413,6 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
 
-
   // initialize gpu memory arena
   vector<int> gpus;
   get_gpus(&gpus);

@@ -84,7 +84,6 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   // Allocate device buffers
   CUDA_CHECK(cudaSetDevice(device));
   buffer_device_ = device;
-  // CUDA_CHECK(cudaMalloc(&data_, size_ * sizeof(Dtype)));
   gpu_memory::allocate(reinterpret_cast<void **>(&data_),
                            size_ * sizeof(Dtype));
 
@@ -93,7 +92,6 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
       root_solver->net()->learnable_params();
   apply_buffers(net, data_, size_, copy);
 
-  // CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
   gpu_memory::allocate(reinterpret_cast<void **>(&diff_),
                            size_ * sizeof(Dtype));
   caffe_gpu_set(size_, Dtype(0), diff_);

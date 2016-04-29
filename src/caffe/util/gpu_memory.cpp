@@ -44,9 +44,7 @@ namespace caffe {
     default:
       break;
     }
-    if (debug)
-      std::cout << "gpu_memory initialized with "
-                << getPoolName()  << std::endl;
+    VLOG_IF(1, debug) << "gpu_memory initialized with " << getPoolName();
   }
 
   void gpu_memory::destroy() {
@@ -126,13 +124,11 @@ namespace caffe {
     CUDA_CHECK(cudaMemGetInfo(&dev_info_[device].free,
                               &dev_info_[device].total));
 
-    if (debug_) {
-      std::cout << "cudaGetDeviceProperties: Mem = "
-                << props.totalGlobalMem <<std::endl;
-      std::cout << "cudaMemGetInfo_[" << device
-                <<": Free= " << dev_info_[device].free
-                << " Total= " << dev_info_[device].total << std::endl;
-    }
+    VLOG_IF(1, debug_) << "cudaGetDeviceProperties: Mem = "
+                       << props.totalGlobalMem;
+    VLOG_IF(1, debug_) << "cudaMemGetInfo_[" << device
+                       << "]: Free=" << dev_info_[device].free
+                       << " Total=" << dev_info_[device].total;
 
     // make sure we don't have more that total device memory
     dev_info_[device].total = std::min(props.totalGlobalMem,

@@ -16,7 +16,7 @@ template <typename Dtype>
 class CuDNNBatchNormLayer : public BatchNormLayer<Dtype> {
  public:
   explicit CuDNNBatchNormLayer(const LayerParameter& param)
-      : BatchNormLayer<Dtype>(param), epsilon_(1e-4), handles_setup_(false) {}
+      : BatchNormLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -34,7 +34,6 @@ class CuDNNBatchNormLayer : public BatchNormLayer<Dtype> {
   cudnnTensorDescriptor_t scale_bias_mean_var_desc_;
   cudnnBatchNormMode_t mode_;
 
-  double epsilon_;
   Blob<Dtype> save_mean_, save_inv_var_;
   bool handles_setup_;
 };
