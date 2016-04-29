@@ -1,6 +1,5 @@
 #ifndef CAFFE_GREENTEA_LIBDNN_HPP_
 #define CAFFE_GREENTEA_LIBDNN_HPP_
-#ifdef USE_GREENTEA
 #include <string>
 #include <vector>
 #include "caffe/device.hpp"
@@ -155,5 +154,4 @@ class libdnn_conv {
 
 }  // namespace caffe
 
-#endif  // USE_GREENTEA
 #endif /* CAFFE_GREENTEA_LIBDNN_HPP_ */
