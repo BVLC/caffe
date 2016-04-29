@@ -142,7 +142,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
     -------
     pydot graph object
     """
-    pydot_graph = pydot.Dot(caffe_net.name,
+    pydot_graph = pydot.Dot(caffe_net.name if caffe_net.name else 'Net',
                             graph_type='digraph',
                             rankdir=rankdir)
     pydot_nodes = {}
