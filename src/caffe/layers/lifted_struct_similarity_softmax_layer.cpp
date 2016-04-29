@@ -206,9 +206,9 @@ void LiftedStructSimilaritySoftmaxLossLayer<Dtype>::Backward_cpu(const vector<Bl
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(LiftedStructSimilaritySoftmaxLossLayer);
-#endif
+//#ifdef CPU_ONLY
+//STUB_GPU(LiftedStructSimilaritySoftmaxLossLayer);
+//#endif
 
 INSTANTIATE_CLASS(LiftedStructSimilaritySoftmaxLossLayer);
 REGISTER_LAYER_CLASS(LiftedStructSimilaritySoftmaxLoss);
