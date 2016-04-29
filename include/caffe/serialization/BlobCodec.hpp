@@ -19,7 +19,7 @@ struct BlobEncoding {
     GRADS = 1
   };
 };
-typedef typename BlobEncoding::What BlobEncodingWhat;
+typedef BlobEncoding::What BlobEncodingWhat;
 
 template <typename Dtype>
 class BlobCodec {
