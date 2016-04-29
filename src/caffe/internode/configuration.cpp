@@ -73,7 +73,7 @@ struct Protocol {
 };
 
 struct AddressInfo {
-  typename Protocol::Type protocol;
+  Protocol::Type protocol;
   string ip;
   string port;
   string group_ip;
