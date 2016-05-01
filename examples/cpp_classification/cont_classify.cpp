@@ -1,8 +1,8 @@
 #include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
 #include <algorithm>
 #include <iosfwd>

@@ -1,10 +1,9 @@
 #include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
-#include <raspicam/raspicam_cv.h>
 #include <algorithm>
 #include <iosfwd>
 #include <memory>
@@ -272,18 +271,14 @@ int main(int argc, char** argv) {
   string label_file   = argv[4];
   Classifier classifier(model_file, trained_file, mean_file, label_file);
 
-  std::cout << "Trying to setup up the camera" << std::endl;
-  raspicam::RaspiCam_Cv Camera;
-  Camera.set(CV_CAP_PROP_FRAME_WIDTH,  640);
-  Camera.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-
   std::cout << "Trying to open the camera" << std::endl;
-
-  if (!Camera.open()) {
+  cv::VideoCapture cap(0);
+  if (!cap.isOpened()) {
     LOG(FATAL) << "Cannot open camera!";   
   }
+
   std::cout << "Camera opened, trying to open a new window" << std::endl;
-  cv::namedWindow( "Display", cv::WINDOW_AUTOSIZE );
+  cv::namedWindow("Display", cv::WINDOW_AUTOSIZE);
 
   std::mutex g_image_lock;
   cv::Mat global_image;
@@ -353,8 +348,7 @@ int main(int argc, char** argv) {
 
   while(1) {
     cv::Mat image;
-    Camera.grab();
-    Camera.retrieve(image);
+    cap >> image;
 
     if (image.empty()) {
       std::cout << "Unable to decode image ";
@@ -363,7 +357,7 @@ int main(int argc, char** argv) {
     }
     bool hasLock = g_image_lock.try_lock();
     if (hasLock) {
-      global_image = image;
+      global_image = image.clone();
       g_image_lock.unlock();
     }
 

@@ -180,12 +180,6 @@ endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 
-USE_RASPICAM ?= 1
-ifeq ($(USE_RASPICAM), 1)
-	LIBRARY_DIRS += /opt/vc/lib/
-	LIBRARIES += raspicam raspicam_cv mmal mmal_core mmal_util
-endif
-
 # handle IO dependencies
 USE_LEVELDB ?= 1
 USE_LMDB ?= 1
@@ -377,7 +371,7 @@ CXXFLAGS += -MMD -MP
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS) -std=c++11
+CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS) -std=c++11 -pg
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
