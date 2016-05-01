@@ -146,8 +146,7 @@ def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, label_edge
     -------
     pydot graph object
     """
-
-    pydot_graph = pydot.Dot(caffe_net.name,
+    pydot_graph = pydot.Dot(caffe_net.name if caffe_net.name else 'Net',
                             graph_type='digraph',
                             rankdir=rankdir)
 
