@@ -132,5 +132,30 @@ TYPED_TEST(DBTest, TestWrite) {
   txn->Commit();
 }
 
+TYPED_TEST(DBTest, TestGet) {
+  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  db->Open(this->source_, db::READ);
+  scoped_ptr<db::Cursor> cursor(db->NewCursor());
+  cursor->Get("fish-bike.jpg");
+  EXPECT_TRUE(cursor->valid());
+  Datum datum;
+  string key = cursor->key();
+  datum.ParseFromString(cursor->value());
+  EXPECT_EQ(key, "fish-bike.jpg");
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 323);
+  EXPECT_EQ(datum.width(), 481);
+  EXPECT_TRUE(cursor->valid());
+  cursor->Get("cat.jpg");
+  key = cursor->key();
+  datum.ParseFromString(cursor->value());
+  EXPECT_EQ(key, "cat.jpg");
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 360);
+  EXPECT_EQ(datum.width(), 480);
+  cursor->Get("not-here.jpg");
+  EXPECT_FALSE(cursor->valid());
+}
+
 }  // namespace caffe
 #endif  // USE_LEVELDB, USE_LMDB and USE_OPENCV
