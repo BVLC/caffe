@@ -1,6 +1,7 @@
+find_package(PythonInterp 2 EXACT REQUIRED)
 
-set(CMAKE_SOURCE_DIR ..)
-set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
+set(CMAKE_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+set(LINT_COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
 set(SRC_FILE_EXTENSIONS h hpp hu c cpp cu cc)
 set(EXCLUDE_FILE_EXTENSTIONS pb.h pb.cc)
 set(LINT_DIRS include src/caffe examples tools python matlab)
@@ -22,7 +23,9 @@ foreach(ext ${EXCLUDE_FILE_EXTENSTIONS})
 endforeach()
 
 # exclude generated pb files
-list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+if (EXCLUDED_FILES)
+  list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+endif (EXCLUDED_FILES)
 
 execute_process(
     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}
