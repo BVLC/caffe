@@ -26,6 +26,7 @@ def parse_log(path_to_log):
     regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_learning_rate = re.compile('lr = ([-+]?[0-9]*\.?[0-9]+([eE]?[-+]?[0-9]+)?)')
+    regex_GPUs = re.compile('Using GPUs ([0-9|,]?)')
 
     # Pick out lines of interest
     iteration = -1
@@ -36,6 +37,14 @@ def parse_log(path_to_log):
     test_row = None
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
+    GPU=-1
+    with open(path_to_log) as f:
+        output_match = regex_GPUs.search(f.readline())
+        if output_match:
+            GPU=output_match.group(1)
+
+
+
     with open(path_to_log) as f:
         start_time = extract_seconds.get_start_time(f, logfile_year)
         last_time = start_time
@@ -70,11 +79,13 @@ def parse_log(path_to_log):
 
             train_dict_list, train_row = parse_line_for_net_output(
                 regex_train_output, train_row, train_dict_list,
-                line, iteration, seconds, learning_rate
+                line, iteration, seconds, learning_rate,
+                gpu=GPU
             )
             test_dict_list, test_row = parse_line_for_net_output(
                 regex_test_output, test_row, test_dict_list,
-                line, iteration, seconds, learning_rate
+                line, iteration, seconds, learning_rate,
+                gpu=GPU
             )
 
     fix_initial_nan_learning_rate(train_dict_list)
@@ -84,7 +95,7 @@ def parse_log(path_to_log):
 
 
 def parse_line_for_net_output(regex_obj, row, row_dict_list,
-                              line, iteration, seconds, learning_rate):
+                              line, iteration, seconds, learning_rate,gpu=-1):
     """Parse a single line for training or test output
 
     Returns a a tuple with (row_dict_list, row)
@@ -107,7 +118,8 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
             row = OrderedDict([
                 ('NumIters', iteration),
                 ('Seconds', seconds),
-                ('LearningRate', learning_rate)
+                ('LearningRate', learning_rate),
+                ('GPU', gpu)
             ])
 
         # output_num is not used; may be used in the future
