@@ -32,17 +32,19 @@
 
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_CLBLAS
-#include <clBLAS.h>
+#if defined(USE_CLBLAS)
+  #include <clBLAS.h>
+#elif defined(USE_CLBLAST)
+  #include <clblast.h>
 #else
-#include "viennacl/linalg/inner_prod.hpp"
-#include "viennacl/linalg/norm_1.hpp"
-#include "viennacl/linalg/norm_2.hpp"
-#include "viennacl/linalg/norm_inf.hpp"
-#include "viennacl/linalg/prod.hpp"
-#include "viennacl/matrix.hpp"
-#include "viennacl/scalar.hpp"
-#include "viennacl/vector.hpp"
+  #include "viennacl/linalg/inner_prod.hpp"
+  #include "viennacl/linalg/norm_1.hpp"
+  #include "viennacl/linalg/norm_2.hpp"
+  #include "viennacl/linalg/norm_inf.hpp"
+  #include "viennacl/linalg/prod.hpp"
+  #include "viennacl/matrix.hpp"
+  #include "viennacl/scalar.hpp"
+  #include "viennacl/vector.hpp"
 #endif
 
 // ViennaCL 1.5.1 compability fix
