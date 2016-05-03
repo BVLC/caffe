@@ -36,6 +36,8 @@
   #include <clBLAS.h>
 #elif defined (USE_CLBLAST)
   #include <clblast.h>
+  // FIXME: CLBlast 0.6.0 does not support xASUM, so falling back to ViennaCL.
+  #include "viennacl/linalg/norm_1.hpp"
 #else
   #include "viennacl/linalg/inner_prod.hpp"
   #include "viennacl/linalg/norm_1.hpp"
@@ -231,8 +233,44 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
               C, offC, ldc, 1, &queue, 0, NULL, NULL));
     }
 
-// TODO
-// #if defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    clblast::Layout layout = clblast::Layout::kRowMajor;
+    clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
+      clblast::Transpose::kNo : clblast::Transpose::kYes;
+    clblast::Transpose b_transpose = (TransB == CblasNoTrans) ?
+      clblast::Transpose::kNo : clblast::Transpose::kYes;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Gemm<float>(
+          layout, a_transpose, b_transpose,
+          M, N, K,
+          alpha,
+          A, offA, lda,
+          B, offB, ldb,
+          beta,
+          C, offC, ldc,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Gemm<double>(
+          layout, a_transpose, b_transpose,
+          M, N, K,
+          alpha,
+          A, offA, lda,
+          B, offB, ldb,
+          beta,
+          C, offC, ldc,
+          &queue, event
+        )
+      );
+    }
 
 #else  // default (ViennaCL)
 
@@ -362,8 +400,46 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
               beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
     }
 
-// TODO
-// #elif defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    clblast::Layout layout = clblast::Layout::kRowMajor;
+    clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
+      clblast::Transpose::kNo : clblast::Transpose::kYes;
+
+    const size_t ldA = N;
+    const size_t incx = 1;
+    const size_t incy = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Gemv<float>(
+          layout, a_transpose,
+          M, N,
+          alpha,
+          A, offA, ldA,
+          x, offx, incx,
+          beta,
+          y, offy, incy,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Gemv<double>(
+          layout, a_transpose,
+          M, N,
+          alpha,
+          A, offA, ldA,
+          x, offx, incx,
+          beta,
+          y, offy, incy,
+          &queue, event
+        )
+      );
+    }
 
 #else // default (ViennaCL)
 
@@ -448,8 +524,35 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
 
-// TODO
-// #if defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    const size_t incX = 1;
+    const size_t incY = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Axpy<float>(
+          N,
+          alpha,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Axpy<double>(
+          N,
+          alpha,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    }
 
 #else // default (ViennaCL)
 
@@ -556,8 +659,32 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
               1, 1, &queue, 0, NULL, NULL));
     }
 
-// TODO
-// #if defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    const size_t incx = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Scal<float>(
+          N,
+          alpha,
+          x, offx, incx,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Scal<double>(
+          N,
+          alpha,
+          x, offx, incx,
+          &queue, event
+        )
+      );
+    }
 
 #else // default (ViennaCL)
 
@@ -649,8 +776,47 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-// TODO
-// #elif defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    cl_int err = CL_SUCCESS;
+    cl_mem Z = clCreateBuffer(
+      ctx.handle().get(), CL_MEM_READ_WRITE,
+      sizeof(Dtype), NULL, &err);
+    // TODO: error handling.
+
+    const size_t offZ = 0;
+
+    const size_t incX = 1;
+    const size_t incY = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Dot<float>(
+          n,
+          Z, offZ,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Dot<double>(
+          n,
+          Z, offZ,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    }
+
+    greentea_gpu_memcpy(sizeof(Dtype), Z, offZ, out, &ctx);
+
+    clReleaseMemObject(Z);
 
 #else // default (ViennaCL)
 
@@ -722,8 +888,8 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-// TODO
 // #elif defined (USE_CLBLAST)
+// TODO: CLBlast 0.6.0 does not support xASUM, so falling back to ViennaCL.
 
 #else // default (ViennaCL)
 
@@ -773,9 +939,11 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
 
 #if defined (USE_CLBLAS)
 
+    // FIXME: Remove, as can reuse ctx obtained above?
     viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
     cl_command_queue queue = ctx.get_queue().handle().get();
 
+    // FIXME: Use xAXPY with beta = 0?
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasScopy(n, X, offX, 1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
@@ -788,8 +956,49 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           clblasDscal(n, alpha, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
 
-// TODO
-// #elif defined (USE_CLBLAST)
+#elif defined (USE_CLBLAST)
+
+    cl_command_queue queue = ctx.get_queue().handle().get();
+    cl_event * event = NULL;
+
+    const size_t incX = 1;
+    const size_t incY = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Copy<float>(
+          n,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Scal<float>(
+          n,
+          alpha,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Copy<double>(
+          n,
+          X, offX, incX,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Scal<double>(
+          n,
+          alpha,
+          Y, offY, incY,
+          &queue, event
+        )
+      );
+    }
 
 #else // default (ViennaCL)
 
