@@ -74,10 +74,18 @@ struct is_same<T, T> {
 #error Only one of USE_CLBLAS and USE_CLBLAST can be defined!
 #endif
 
-#ifdef USE_CLBLAS
+#if defined (USE_CLBLAS)
 #define GREENTEA_CL_BLAS_CHECK(condition) \
     {clblasStatus status = condition; \
-    CHECK_EQ(status, clblasSuccess) << "GreenTea CL BLAS ERROR";}
+    CHECK_EQ(status, clblasSuccess) << \
+    "GREENTEA ERROR: clBLAS error";}
+#endif
+
+#if defined (USE_CLBLAST)
+#define GREENTEA_CLBLAST_CHECK(condition) \
+    {clblast::StatusCode status = condition; \
+    CHECK_EQ(status, clblast::StatusCode::kSuccess) << \
+    "GREENTEA ERROR: CLBlast error";}
 #endif
 
 // Macro to select the single (_float) or double (_double) precision kernel
