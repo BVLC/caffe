@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
@@ -32,27 +33,27 @@ using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
-  CHECK_NE(fd, -1) << "File not found: " << filename;
-  FileInputStream* input = new FileInputStream(fd);
+  FILE* fp = fopen(filename, "r");
+  CHECK_NOTNULL(fp);
+  FileInputStream* input = new FileInputStream(fileno(fp));
   bool success = google::protobuf::TextFormat::Parse(input, proto);
   delete input;
-  close(fd);
+  fclose(fp);
   return success;
 }
 
 void WriteProtoToTextFile(const Message& proto, const char* filename) {
-  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  FileOutputStream* output = new FileOutputStream(fd);
+  FILE* fp = fopen(filename, "w");
+  FileOutputStream* output = new FileOutputStream(fileno(fp));
   CHECK(google::protobuf::TextFormat::Print(proto, output));
   delete output;
-  close(fd);
+  fclose(fp);
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
-  CHECK_NE(fd, -1) << "File not found: " << filename;
-  ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+  FILE* fp = fopen(filename, "r");
+  CHECK_NOTNULL(fp);
+  ZeroCopyInputStream* raw_input = new FileInputStream(fileno(fp));
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
   coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
 
@@ -60,7 +61,7 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 
   delete coded_input;
   delete raw_input;
-  close(fd);
+  fclose(fp);
   return success;
 }
 
