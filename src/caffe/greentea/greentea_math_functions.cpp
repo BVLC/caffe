@@ -235,8 +235,9 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
     clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
@@ -254,7 +255,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -267,7 +268,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
@@ -402,8 +403,9 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
     clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
@@ -423,7 +425,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -436,7 +438,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
@@ -526,8 +528,9 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     const size_t incX = 1;
     const size_t incY = 1;
@@ -539,7 +542,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -549,7 +552,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
@@ -661,8 +664,9 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     const size_t incx = 1;
 
@@ -672,7 +676,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           N,
           alpha,
           x, offx, incx,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -681,7 +685,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           N,
           alpha,
           x, offx, incx,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
@@ -778,8 +782,9 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     cl_int err = CL_SUCCESS;
     cl_mem Z = clCreateBuffer(
@@ -799,7 +804,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -809,7 +814,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
@@ -958,8 +963,9 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    cl_command_queue queue = ctx.get_queue().handle().get();
-    cl_event * event = NULL;
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
 
     const size_t incX = 1;
     const size_t incY = 1;
@@ -970,7 +976,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
       GREENTEA_CLBLAST_CHECK(
@@ -978,7 +984,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           alpha,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     } else {
@@ -987,7 +993,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
       GREENTEA_CLBLAST_CHECK(
@@ -995,7 +1001,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           alpha,
           Y, offY, incY,
-          &queue, event
+          &queues[0], &events[0]
         )
       );
     }
