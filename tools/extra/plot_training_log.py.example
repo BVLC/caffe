@@ -68,9 +68,9 @@ def get_field_descriptions(chart_type):
         get_chart_type_description_separator())
     y_axis_field = description[0]
     x_axis_field = description[1]
-    return x_axis_field, y_axis_field    
+    return x_axis_field, y_axis_field
 
-def get_field_indecies(x_axis_field, y_axis_field):    
+def get_field_indecies(x_axis_field, y_axis_field):
     data_file_type = get_data_file_type(chart_type)
     fields = create_field_index()[0][data_file_type]
     return fields[x_axis_field], fields[y_axis_field]
@@ -138,8 +138,8 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
     plt.title(get_chart_type_description(chart_type))
     plt.xlabel(x_axis_field)
-    plt.ylabel(y_axis_field)  
-    plt.savefig(path_to_png)     
+    plt.ylabel(y_axis_field)
+    plt.savefig(path_to_png)
     plt.show()
 
 def print_help():
@@ -164,7 +164,7 @@ Supported chart types:""" % (len(get_supported_chart_types()) - 1,
 
 def is_valid_chart_type(chart_type):
     return chart_type >= 0 and chart_type < len(get_supported_chart_types())
-  
+
 if __name__ == '__main__':
     if len(sys.argv) < 4:
         print_help()
