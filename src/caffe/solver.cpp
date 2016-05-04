@@ -65,7 +65,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param,
-                      shared_ptr<Net<Dtype> > &net,
+                      shared_ptr<Net<Dtype> > net,
                       const vector<shared_ptr<Net<Dtype> > >& test_nets,
                       const bool &allow_any_phase,
                       const Solver* root_solver)
@@ -75,7 +75,7 @@ Solver<Dtype>::Solver(const SolverParameter& param,
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file,
-                      shared_ptr<Net<Dtype> > &net,
+                      shared_ptr<Net<Dtype> > net,
                       const vector<shared_ptr<Net<Dtype> > >& test_nets,
                       const bool &allow_any_phase,
                       const Solver* root_solver)
@@ -87,8 +87,8 @@ Solver<Dtype>::Solver(const string& param_file,
 
 template <typename Dtype>
 void Solver<Dtype>::InitForNet(const SolverParameter& param,
-                               shared_ptr<Net<Dtype> > &net,
-                               const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                               shared_ptr<Net<Dtype> > net,
+                               const vector<shared_ptr<Net<Dtype> > >& test_nets,  // NOLINT
                                const bool &allow_any_phase) {
   CHECK(Caffe::root_solver() || root_solver_)
     << "root_solver_ needs to be set for all non-root solvers";
@@ -123,7 +123,7 @@ void Solver<Dtype>::InitForNet(const SolverParameter& param,
   current_step_ = 0;
   net_ = net;
 }
-  
+
 template <typename Dtype>
 void Solver<Dtype>::InitTrainNet() {
   const int num_train_nets = param_.has_net() + param_.has_net_param() +

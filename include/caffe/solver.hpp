@@ -44,20 +44,20 @@ class Solver {
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   Solver(const SolverParameter& param,
-         shared_ptr<Net<Dtype> > &net,
+         shared_ptr<Net<Dtype> > net,
          const vector<shared_ptr<Net<Dtype> > >& test_nets,
-         const bool &allow_any_phase=false,
+         const bool &allow_any_phase = false,
          const Solver* root_solver = NULL);
   Solver(const string& param_file,
-         shared_ptr<Net<Dtype> > &net,
+         shared_ptr<Net<Dtype> > net,
          const vector<shared_ptr<Net<Dtype> > >& test_nets,
-         const bool &allow_any_phase=false,
+         const bool &allow_any_phase = false,
          const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
   void InitForNet(const SolverParameter& param,
-                  shared_ptr<Net<Dtype> > &net,
+                  shared_ptr<Net<Dtype> > net,
                   const vector<shared_ptr<Net<Dtype> > >& test_nets,
-                  const bool &allow_test_phase=false);
+                  const bool &allow_test_phase = false);
   void InitTrainNet();
   void InitTestNets();
 
