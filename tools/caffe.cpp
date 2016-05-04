@@ -489,22 +489,32 @@ int time() {
 RegisterBrewFunction(time);
 
 
-// Collect: Debugging extansion for layer-specific data collection
+// collect & compare: Debugging extansion for CPU-GPU functional comparison
 #include <stdio.h>
 typedef float real_t;
 
-void collect(bool use_gpu, const char *prefix, const char *name, int id,
+void getFileName(char *file_name, bool use_gpu, const char *name, int id) {
+  const char *prefix = use_gpu ? "GPU" : "CPU";
+  snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
+}
+
+void saveToFile(bool use_gpu, const char *name, int id,
     const real_t *data, unsigned count) {
   char file_name[FILENAME_MAX];
-  snprintf(file_name, sizeof(file_name), "%s_%s%02i%s%s.bin",
-    use_gpu ? "GPU" : "CPU",
-    prefix ? prefix : name,
-    id,
-    prefix ? "_" : "",
-    prefix ? name : "");
+  getFileName(file_name, use_gpu, name, id);
 
-  FILE *file = fopen(file_name, "wb");
+  FILE *file = fopen(file_name, "w+b");
   fwrite(data, sizeof(data[0]), count, file);
+  fclose(file);
+}
+
+void loadFromFile(bool use_gpu, const char *name, int id,
+    real_t *data, unsigned count) {
+  char file_name[FILENAME_MAX];
+  getFileName(file_name, use_gpu, name, id);
+
+  FILE *file = fopen(file_name, "rb");
+  fread(data, sizeof(data[0]), count, file);
   fclose(file);
 }
 
@@ -535,6 +545,7 @@ int collect() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
+  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
   LOG(INFO) << "*** Collect procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -543,33 +554,107 @@ int collect() {
   }
 
   for (int i = 0; i < layers.size(); ++i) {
-    LOG(INFO) << "Collect FW Layer[" << i << "]: " << layers[i]->type();
+    LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
+    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    collect(use_gpu, "FWLayer", layers[i]->type(), i,
+    saveToFile(use_gpu, "Fwrd", i,
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
-    LOG(INFO) << "Collect BW Layer[" << i << "]: " << layers[i]->type();
+    LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
+    fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
     if (bottom_need_backward[i][0]) {
-      collect(use_gpu, "BWLayer", layers[i]->type(), i,
+      saveToFile(use_gpu, "Bwrd", i,
         bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
     }
   }
 
+  LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-    LOG(INFO) << "Collect Param[" << i << "]";
-    collect(use_gpu, NULL, "Gradients",
-      i, params[i]->cpu_diff(), params[i]->count());
-    collect(use_gpu, NULL, "Weights",
-      i, params[i]->cpu_data(), params[i]->count());
+    saveToFile(use_gpu, "Grad", i,
+      params[i]->cpu_diff(), params[i]->count());
+    saveToFile(use_gpu, "Wght", i,
+      params[i]->cpu_data(), params[i]->count());
   }
 
   LOG(INFO) << "*** Collect procedure ends ***";
+  fclose(infoFile);
   return 0;
 }
 RegisterBrewFunction(collect);
+
+int compare() {
+  #ifndef DETERMINISTIC
+    LOG(ERROR) << "Recompile caffe with DETERMINISTIC to run compare tool";
+    return 1;
+  #endif
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition!";
+
+  vector<int> gpus;
+  get_gpus(&gpus);
+  bool use_gpu = (gpus.size() != 0);
+  if (use_gpu) {
+    LOG(INFO) << "Use GPU with device ID " << gpus[0];
+    Caffe::SetDevice(gpus[0]);
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  }
+
+  Net<real_t> caffe_net(FLAGS_model, caffe::TRAIN);
+  const vector<shared_ptr<Layer<real_t> > >& layers = caffe_net.layers();
+  const vector<shared_ptr<Blob<real_t> > >& params = caffe_net.params();
+  const vector<vector<Blob<real_t>*> >& bottom_vecs = caffe_net.bottom_vecs();
+  const vector<vector<Blob<real_t>*> >& top_vecs = caffe_net.top_vecs();
+  const vector<vector<bool> >& bottom_need_backward =
+    caffe_net.bottom_need_backward();
+
+  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
+  LOG(INFO) << "*** Compare procedure begins ***";
+
+  for (int i = 0; i < params.size(); i++) {
+    caffe::caffe_set(params[i]->count(), 0.f,
+      params[i]->mutable_cpu_diff());
+  }
+
+  for (int i = 0; i < layers.size(); ++i) {
+    LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
+    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
+    layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+    saveToFile(use_gpu, "Fwrd", i,
+      top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
+    loadFromFile(!use_gpu, "Fwrd", i,
+      top_vecs[i][0]->mutable_cpu_data(), top_vecs[i][0]->count());
+  }
+
+  for (int i = layers.size() - 1; i >= 0; --i) {
+    LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
+    fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
+    layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
+    if (bottom_need_backward[i][0]) {
+      saveToFile(use_gpu, "Bwrd", i,
+        bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+      loadFromFile(!use_gpu, "Bwrd", i,
+        bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+    }
+  }
+
+  LOG(INFO) << "Collecting gradients and weights";
+  for (int i = 0; i < params.size(); i++) {
+    saveToFile(use_gpu, "Grad", i,
+      params[i]->cpu_diff(), params[i]->count());
+    saveToFile(use_gpu, "Wght", i,
+      params[i]->cpu_data(), params[i]->count());
+  }
+
+  LOG(INFO) << "*** Compare procedure ends ***";
+  fclose(infoFile);
+  return 0;
+}
+RegisterBrewFunction(compare);
 
 
 int main(int argc, char** argv) {
@@ -588,7 +673,9 @@ int main(int argc, char** argv) {
       "  model_server    run model server - remote model source\n"
       "  data_server     run data server - remote data source\n"
       "  device_query    show GPU diagnostic information\n"
-      "  time            benchmark model execution time");
+      "  time            benchmark model execution time\n"
+      "  collect         collects layer data on specified device\n"
+      "  compare         collects layer data using inputs from opposite device");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {
