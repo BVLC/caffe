@@ -160,7 +160,7 @@ Supported chart types:""" % (len(get_supported_chart_types()) - 1,
     num = len(supported_chart_types)
     for i in xrange(num):
         print '    %d: %s' % (i, supported_chart_types[i])
-    exit
+    sys.exit()
 
 def is_valid_chart_type(chart_type):
     return chart_type >= 0 and chart_type < len(get_supported_chart_types())
@@ -171,17 +171,19 @@ if __name__ == '__main__':
     else:
         chart_type = int(sys.argv[1])
         if not is_valid_chart_type(chart_type):
+            print '%s is not a valid chart type.' % chart_type
             print_help()
         path_to_png = sys.argv[2]
         if not path_to_png.endswith('.png'):
             print 'Path must ends with png' % path_to_png
-            exit            
+            sys.exit()
         path_to_logs = sys.argv[3:]
         for path_to_log in path_to_logs:
             if not os.path.exists(path_to_log):
                 print 'Path does not exist: %s' % path_to_log
-                exit
+                sys.exit()
             if not path_to_log.endswith(get_log_file_suffix()):
+                print 'Log file must end in %s.' % get_log_file_suffix()
                 print_help()
         ## plot_chart accpets multiple path_to_logs
         plot_chart(chart_type, path_to_png, path_to_logs)
