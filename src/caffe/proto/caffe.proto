@@ -987,7 +987,7 @@ message ReshapeParameter {
   //   reshape_param { shape { dim:  2  dim: 2  dim:  4 } }
   //   reshape_param { shape { dim:  0  dim: 2  dim:  4 } }
   //   reshape_param { shape { dim:  0  dim: 2  dim: -1 } }
-  //   reshape_param { shape { dim: -1  dim: 0  dim:  2 } }
+  //   reshape_param { shape { dim:  0  dim:-1  dim:  4 } }
   //
   optional BlobShape shape = 1;
 
