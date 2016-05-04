@@ -72,7 +72,7 @@ def get_field_descriptions(chart_type):
     x_axis_field = description[1]
     return x_axis_field, y_axis_field
 
-def get_field_indecies(x_axis_field, y_axis_field):
+def get_field_indices(x_axis_field, y_axis_field):
     data_file_type = get_data_file_type(chart_type)
     fields = create_field_index()[0][data_file_type]
     return fields[x_axis_field], fields[y_axis_field]
@@ -113,7 +113,7 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
         os.system('%s %s' % (get_log_parsing_script(), path_to_log))
         data_file = get_data_file(chart_type, path_to_log)
         x_axis_field, y_axis_field = get_field_descriptions(chart_type)
-        x, y = get_field_indecies(x_axis_field, y_axis_field)
+        x, y = get_field_indices(x_axis_field, y_axis_field)
         data = load_data(data_file, x, y)
         ## TODO: more systematic color cycle for lines
         color = [random.random(), random.random(), random.random()]
