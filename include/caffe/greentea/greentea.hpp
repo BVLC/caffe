@@ -76,22 +76,16 @@ struct is_same<T, T> {
 
 #if defined (USE_CLBLAS)
 #define GREENTEA_CL_BLAS_CHECK(condition) \
-  { clblasStatus status = condition; \
-    CHECK_EQ(\
-      status,\
-      clblasSuccess\
-    ) << "GREENTEA ERROR: clBLAS returned " << status; }
+    {clblasStatus status = condition; \
+    CHECK_EQ(status, clblasSuccess) << \
+    "GREENTEA ERROR: clBLAS error";}
 #endif
 
-// clblast::StatusCode is an enum class, so when reporting an error
-// an explicit cast to the underlying type int is required.
 #if defined (USE_CLBLAST)
 #define GREENTEA_CLBLAST_CHECK(condition) \
-  { clblast::StatusCode status = condition; \
-    CHECK_EQ(\
-      static_cast<int>(status),\
-      static_cast<int>(clblast::StatusCode::kSuccess)\
-    ) << "GREENTEA ERROR: CLBlast returned " << static_cast<int>(status); }
+    {clblast::StatusCode status = condition; \
+    CHECK_EQ(status, clblast::StatusCode::kSuccess) << \
+    "GREENTEA ERROR: CLBlast error";}
 #endif
 
 // Macro to select the single (_float) or double (_double) precision kernel
