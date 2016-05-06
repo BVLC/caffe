@@ -38,7 +38,13 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   int_tp* shape_data = static_cast<int_tp*>(shape_data_->mutable_cpu_data());
   for (int_tp i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
-    CHECK_LE(shape[i], LONG_MAX / count_)<< "blob size exceeds INT_MAX";
+    if (count_ != 0) {
+#ifdef USE_INDEX_64
+      CHECK_LE(shape[i], LONG_MAX / count_) << "blob size exceeds INT_MAX";
+#else
+      CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
+#endif  // USE_INDEX_64
+    }
     count_ *= shape[i];
     shape_[i] = shape[i];
     shape_data[i] = shape[i];
