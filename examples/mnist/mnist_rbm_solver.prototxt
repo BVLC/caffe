@@ -1,0 +1,12 @@
+net: "examples/mnist/mnist_rbm.prototxt"
+test_iter: 500
+test_interval: 500
+base_lr: 0.05
+lr_policy: "fixed"
+display:  1000
+max_iter: 65000
+snapshot: 1000
+snapshot_prefix: "examples/mnist/mnist_rbm"
+# solver mode: CPU or GPU
+solver_mode: GPU
+
