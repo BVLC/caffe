@@ -10,10 +10,10 @@ import argparse
 import numpy as np
 import pandas as pd
 from skimage import io
-import multiprocessing
+import multiprocessing.dummy as multiprocessing
 
 # Flickr returns a special image if the request is unavailable.
-MISSING_IMAGE_SHA1 = '6a92790b1c2a301c6e7ddef645dca1f53ea97ac2'
+MISSING_IMAGE_SHA1 = '10f3f7f79e6528aa9d828316248997568ac0d833'
 
 example_dirname = os.path.abspath(os.path.dirname(__file__))
 caffe_dirname = os.path.abspath(os.path.join(example_dirname, '../..'))
