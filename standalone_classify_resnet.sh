@@ -3,5 +3,5 @@ nice -20 \
  models/ResNet/ResNet-50-deploy.prototxt \
  models/ResNet/ResNet-50-model.caffemodel \
  models/ResNet/ResNet_mean.binaryproto \
- data/ilsvrc12/synset_words.txt \
+ data/ilsvrc12/synset_words_short.txt \
  examples/images/cat.jpg

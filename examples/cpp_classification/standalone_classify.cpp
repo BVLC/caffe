@@ -14,6 +14,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <unordered_map>
 #include <boost/filesystem.hpp>
 #include <boost/range.hpp>
 #include <boost/circular_buffer.hpp>
@@ -33,7 +34,7 @@ class Classifier {
              const string& mean_file,
              const string& label_file);
 
-  std::vector<Prediction> Classify(const cv::Mat& img, int N = 4);
+  std::vector<Prediction> Classify(const cv::Mat& img, int N = 2);
 
  private:
   void SetMean(const string& mean_file);
@@ -253,6 +254,12 @@ std::pair<float, float> mean_and_variance(const boost::circular_buffer<float>& x
     return std::pair<float, float>(m, s2 / (N-1));
 }
 
+void print_prediction(const std::string& prediction, const std::string& trashClass, cv::Mat& image) {
+  cv::putText(image, "I think it's a " + prediction, cv::Point2f(50, 100), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255, 255), 3);
+
+  cv::putText(image, "It should go to " + trashClass, cv::Point2f(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255, 255), 3);
+}
+
 int main(int argc, char** argv) {
   if (argc != 6) {
     std::cerr << "Usage: " << argv[0]
@@ -260,6 +267,16 @@ int main(int argc, char** argv) {
               << " mean.binaryproto labels.txt img.jpg" << std::endl;
     return 1;
   }
+
+  std::unordered_map<std::string, std::string> labelToTrashClass {
+    {"bottle", "Recycle"},
+    {"water bottle", "Recycle"},
+    {"wine bottle", "Recycle"},
+    {"Granny Smith", "Compost"},
+    {"banana", "Compost"},
+    {"cellular telephone, cellular phone, cellphone, cell, mobile phone", "electronics bin in building 17"},
+    {"iPod", "electronics bin in building 17"},
+  };
 
   ::google::InitGoogleLogging(argv[0]);
   const int RLV_SIZE = 5;
@@ -369,7 +386,11 @@ int main(int argc, char** argv) {
       if (local_prediction[i].second < 0.1) {
         continue;
       }
-      cv::putText(image, local_prediction[i].first, cv::Point2f(50, 100 * (i + 1)), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 255, 255), 2);
+      auto it = labelToTrashClass.find(local_prediction[i].first);
+      if (it != labelToTrashClass.end()) {
+        print_prediction(local_prediction[i].first, it->second, image);
+        break;
+      }
     }
     cv::imshow("Display", image);
     char key = cv::waitKey(1);

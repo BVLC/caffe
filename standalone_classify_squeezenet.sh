@@ -3,5 +3,5 @@ nice -20 \
  SqueezeNet/SqueezeNet_v1.0/deploy.prototxt \
  SqueezeNet/SqueezeNet_v1.0/squeezenet_v1.0.caffemodel \
  data/ilsvrc12/imagenet_mean.binaryproto \
- data/ilsvrc12/synset_words.txt \
+ data/ilsvrc12/synset_words_short.txt \
  examples/images/cat.jpg
