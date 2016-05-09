@@ -66,17 +66,17 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  virtual void multicast_cpu(int N, int C, int S, const Dtype *x, Dtype *y);
+  virtual void multicast_cpu(int N, int C, int S, const Dtype* x, Dtype* y);
   virtual void compute_sum_per_channel_cpu(int N, int C, int S,
-      const Dtype *x, Dtype *y);
+      const Dtype* x, Dtype* y);
   virtual void compute_mean_per_channel_cpu(int N, int C, int S,
-      const Dtype *x, Dtype *y);
+      const Dtype* x, Dtype* y);
 #ifndef CPU_ONLY
   virtual void compute_sum_per_channel_gpu(int N, int C, int S,
-      const Dtype *x, Dtype *y);
-  virtual void multicast_gpu(int N, int C, int S, const Dtype *x, Dtype *y);
+      const Dtype *x, Dtype* y);
+  virtual void multicast_gpu(int N, int C, int S, const Dtype* x, Dtype* y);
   virtual void compute_mean_per_channel_gpu(int N, int C, int S,
-      const Dtype *x, Dtype *y);
+      const Dtype* x, Dtype* y);
 #endif
 
   Blob<Dtype> mean_, variance_, inv_variance_, x_norm_;

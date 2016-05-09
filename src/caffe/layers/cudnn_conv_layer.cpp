@@ -17,9 +17,7 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
-
   // Initialize algorithm arrays
   fwd_algo_       = new cudnnConvolutionFwdAlgo_t[bottom.size()];
   bwd_filter_algo_= new cudnnConvolutionBwdFilterAlgo_t[bottom.size()];
@@ -53,8 +51,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
       kernel_h, kernel_w);
 
   this->weight_offset_ = (this->num_output_ / this->group_) *
-                         (this->channels_ / this->group_) *
-                         kernel_h * kernel_w;
+      (this->channels_ / this->group_) * kernel_h * kernel_w;
   // Create tensor descriptor(s) for data and corresponding convolution(s).
   for (int i = 0; i < bottom.size(); i++) {
     cudnnTensorDescriptor_t bottom_desc;
@@ -74,6 +71,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   }
 
   handles_setup_ = true;
+  backward_passed_ = false;
 }
 
 template <typename Dtype>
@@ -100,7 +98,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
   size_t workspace_limit_bytes, total_memory;
-  gpu_memory::getInfo(&workspace_limit_bytes, &total_memory);
+  GPUMemoryManager::GetInfo(&workspace_limit_bytes, &total_memory);
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
@@ -117,7 +115,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
         filter_desc_, pad_h, pad_w, stride_h, stride_w);
 
-    if (!this->IsForwardPassed() || !this->IsBackwardPassed()) {
+    // Have to pass full fwd/bwd cycle before taking the rest of memory
+    if (!backward_passed_) {
       continue;
     }
 
@@ -139,10 +138,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       fwd_algo_[i],
       &(workspace_fwd_sizes_[i])));
 
-    //
     // choose backward algorithm for filter
-      CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(
-            Caffe::cudnn_handle(),
+    CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(
+          Caffe::cudnn_handle(),
           bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
           CUDNN_CONVOLUTION_BWD_FILTER_SPECIFY_WORKSPACE_LIMIT,
           workspace_limit_bytes, &bwd_filter_algo_[i]) );
@@ -155,7 +153,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
     // choose backward algo for data
     CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(
-            Caffe::cudnn_handle(),
+          Caffe::cudnn_handle(),
           filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
           CUDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT,
         workspace_limit_bytes, &bwd_data_algo_[i]));

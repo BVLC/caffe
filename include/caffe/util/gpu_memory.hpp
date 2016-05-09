@@ -6,54 +6,64 @@
 
 namespace caffe {
 
-class gpu_memory {
+class GPUMemoryManager {
  public:
   enum PoolMode {
-    NoPool,     // Straight CUDA malllc/free. May be very expensive
-    CubPool,     // CUB caching allocator
+    NO_POOL,  // Straight CUDA malloc/free (may be expensive)
+    CUB_POOL,  // CUB caching allocator
 #ifdef CPU_ONLY
-    DefaultPool = NoPool
+    DEFAULT_POOL = NO_POOL
 #else
-    DefaultPool = CubPool     // CUB pool is able to use unified memory properly
+    DEFAULT_POOL = CUB_POOL  // CUB pool is able to use unified memory properly
 #endif
   };
 
-  static const char* getPoolName();
-  static bool usingPool() {
-    return mode_ != NoPool;
+  static const char* pool_name();
+  static bool using_pool() {
+    return mode_ != NO_POOL;
   }
 
-  class arena {
+  class Arena {
    public:
-    arena(const std::vector<int>& gpus,
-          PoolMode m = DefaultPool, bool debug = false) {
+    Arena(const std::vector<int>& gpus, PoolMode m = DEFAULT_POOL, bool debug =
+        false) {
       init(gpus, m, debug);
     }
-    ~arena() {
+    ~Arena() {
       destroy();
-     }
+    }
   };
 
 #ifndef CPU_ONLY
-  class buffer {
+  class Buffer {
    public:
     // Construction/destruction
-    buffer(): ptr_(NULL), stream_(), size_(0) {}
-    buffer(size_t size, cudaStream_t s = cudaStreamDefault): stream_(s) {
+    Buffer() :
+        ptr_(NULL), stream_(), size_(0) {
+    }
+    Buffer(size_t size, cudaStream_t s = cudaStreamDefault) :
+        stream_(s) {
       reserve(size);
     }
-    ~buffer() { gpu_memory::deallocate(ptr_, stream_); }
+    ~Buffer() {
+      GPUMemoryManager::deallocate(ptr_, stream_);
+    }
 
     // Accessors
-    void* data() const { return ptr_; }
-    size_t size() const { return size_; }
+    void* data() const {
+      return ptr_;
+    }
+    size_t size() const {
+      return size_;
+    }
 
     // Memory allocation/release
     void reserve(size_t size) {
       if (size > size_) {
-        if (ptr_)
-          gpu_memory::deallocate(ptr_, stream_);
-        gpu_memory::allocate(&ptr_, size, stream_);
+        if (ptr_) {
+          GPUMemoryManager::deallocate(ptr_, stream_);
+        }
+        GPUMemoryManager::allocate(&ptr_, size, stream_);
         size_ = size;
       }
     }
@@ -64,8 +74,8 @@ class gpu_memory {
      * If pool is not available, it does nothing (retaining memory)
      */
     void release() {
-      if (gpu_memory::usingPool()) {
-        gpu_memory::deallocate(ptr_, stream_);
+      if (GPUMemoryManager::using_pool()) {
+        GPUMemoryManager::deallocate(ptr_, stream_);
         ptr_ = NULL;
         size_ = 0;
       }
@@ -73,49 +83,44 @@ class gpu_memory {
     }
 
    private:
-    void*         ptr_;
-    cudaStream_t  stream_;
-    size_t        size_;
+    void* ptr_;
+    cudaStream_t stream_;
+    size_t size_;
   };
   static void update_dev_info(int device);
-
-# endif
+#endif  // CPU_ONLY
 
  private:
   static void init(const std::vector<int>&, PoolMode, bool);
   static void destroy();
 
-  static bool             initialized_;
-  static PoolMode         mode_;
-  static bool             debug_;
+  static bool initialized_;
+  static PoolMode mode_;
+  static bool debug_;
 
 #ifndef CPU_ONLY
   struct MemInfo {
-    MemInfo()  {
-      free = total = flush_count = 0;
+    MemInfo() {
+      free_ = total_ = flush_count_ = 0;
     }
-    size_t   free;
-    size_t   total;
-    unsigned flush_count;
+    size_t free_;
+    size_t total_;
+    unsigned flush_count_;
   };
-
-  static vector<MemInfo>  dev_info_;
+  static vector<MemInfo> dev_info_;
 
  public:
   typedef void* pointer;
-
-  static void allocate(pointer* ptr, size_t size,
-                       cudaStream_t stream = cudaStreamDefault);
+  static void allocate(pointer* ptr, size_t size, cudaStream_t stream =
+      cudaStreamDefault);
   static void deallocate(pointer ptr, cudaStream_t = cudaStreamDefault);
-
-  static void getInfo(size_t *free_mem, size_t *used_mem);
+  static void GetInfo(size_t* free_mem, size_t* used_mem);
 
  private:
-  static void initMEM(const std::vector<int>& gpus, PoolMode m);
-
+  static void InitMemory(const std::vector<int>& gpus, PoolMode m);
 #endif
 };
 
 }  // namespace caffe
 
-# endif
+#endif

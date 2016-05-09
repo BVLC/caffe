@@ -40,8 +40,8 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   int size_, pre_pad_;
   Dtype alpha_, beta_, k_;
 
-  size_t             tempDataSize_;
-  gpu_memory::buffer temp1_, temp2_;
+  size_t tempDataSize_;
+  GPUMemoryManager::Buffer temp1_, temp2_;
 };
 #endif
 

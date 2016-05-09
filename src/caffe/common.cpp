@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
@@ -12,7 +11,6 @@ namespace caffe {
 
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
-
 
 Caffe& Caffe::Get() {
   if (!thread_instance_.get()) {
@@ -252,6 +250,7 @@ int Caffe::FindDevice(const int start_id) {
   }
   return -1;
 }
+
 class Caffe::RNG::Generator {
  public:
   Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
@@ -339,4 +338,3 @@ const char* curandGetErrorString(curandStatus_t error) {
 #endif  // CPU_ONLY
 
 }  // namespace caffe
-

@@ -49,7 +49,6 @@ void CuDNNBatchNormLayer<Dtype>::LayerSetUp(
                 this->blobs_[i]->mutable_cpu_data());
     }
   }
-
   handles_setup_ = true;
 }
 
@@ -60,11 +59,9 @@ void CuDNNBatchNormLayer<Dtype>::Reshape(
   BatchNormLayer<Dtype>::Reshape(bottom, top);
 
   // set up main tensors
-  cudnn::setTensor4dDesc<Dtype>(
-    &bottom_desc_, bottom[0]->num(),
+  cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, bottom[0]->num(),
     bottom[0]->channels(), bottom[0]->height(), bottom[0]->width());
-  cudnn::setTensor4dDesc<Dtype>(
-    &top_desc_, bottom[0]->num(),
+  cudnn::setTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(),
     bottom[0]->channels(), bottom[0]->height(), bottom[0]->width());
 
   // aux tensors for caching mean & invVar from fwd to bwd pass
@@ -81,18 +78,19 @@ void CuDNNBatchNormLayer<Dtype>::Reshape(
     LOG(FATAL) << "Unknown cudnnBatchNormMode_t";
   }
   CUDNN_CHECK(cudnnDeriveBNTensorDescriptor(scale_bias_mean_var_desc_,
-                                            bottom_desc_, mode_));
+      bottom_desc_, mode_));
 }
 
 template <typename Dtype>
 CuDNNBatchNormLayer<Dtype>::~CuDNNBatchNormLayer() {
   if (!handles_setup_) return;
-
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
   cudnnDestroyTensorDescriptor(scale_bias_mean_var_desc_);
 }
 
 INSTANTIATE_CLASS(CuDNNBatchNormLayer);
+
 }  // namespace caffe
+
 #endif

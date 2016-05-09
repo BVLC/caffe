@@ -545,9 +545,6 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
-  for (int i = start; i <= end; ++i) {
-    layers_[i]->ForwardPassed(true);
-  }
   return loss;
 }
 
@@ -593,9 +590,6 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
     }
-  }
-  for (int i = start; i >= end; --i) {
-    layers_[i]->BackwardPassed(true);
   }
 }
 

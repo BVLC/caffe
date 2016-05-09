@@ -413,10 +413,10 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
 
-  // initialize gpu memory arena
+  // Initialize gpu memory arena
   vector<int> gpus;
   get_gpus(&gpus);
-  caffe::gpu_memory::arena arena(gpus, caffe::gpu_memory::DefaultPool, false);
+  caffe::GPUMemoryManager::Arena arena(gpus);
 
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER

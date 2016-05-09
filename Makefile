@@ -7,19 +7,12 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
-# Rectify input parameters
-ifeq ($(CPU_ONLY),1)
-  USE_CUDNN=0
-endif
-
-PROJECT_DIR=$(PWD)
-
 BUILD_DIR_LINK := $(BUILD_DIR)
 ifeq ($(RELEASE_BUILD_DIR),)
-	RELEASE_BUILD_DIR := $(PROJECT_DIR)/.$(BUILD_DIR)_release
+	RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
 endif
 ifeq ($(DEBUG_BUILD_DIR),)
-	DEBUG_BUILD_DIR := $(PROJECT_DIR)/.$(BUILD_DIR)_debug
+	DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
 endif
 
 DEBUG ?= 0
@@ -31,7 +24,7 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
-THIRDPARTY_DIR=$(PROJECT_DIR)/3rdparty
+THIRDPARTY_DIR := ./3rdparty
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -265,12 +258,12 @@ endif
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
-        # older versions of gcc are too dumb to build boost with -Wuninitalized
+	# older versions of gcc are too dumb to build boost with -Wuninitalized
 	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
-        # boost::thread is reasonably called boost_thread (compare OS X)
-        # We will also explicitly add stdc++ to the link target.
+	# boost::thread is reasonably called boost_thread (compare OS X)
+	# We will also explicitly add stdc++ to the link target.
 	LIBRARIES += boost_thread stdc++
 	VERSIONFLAGS += -Wl,-soname,$(DYNAMIC_SONAME_SHORT) -Wl,-rpath,$(ORIGIN)/../lib
 endif
@@ -286,7 +279,7 @@ ifeq ($(OSX), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
 		endif
-                # clang throws this warning for cuda headers
+		# clang throws this warning for cuda headers
 		WARNINGS += -Wno-unneeded-internal-declaration
 		# 10.11 strips DYLD_* env vars so link CUDA (rpath is available on 10.5+)
 		OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
@@ -297,11 +290,11 @@ ifeq ($(OSX), 1)
 			endif
 		endif
 	endif
-        # gtest needs to use its own tuple to not conflict with clang
+	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
-        # boost::thread is called boost_thread-mt to mark multithreading on OS X
+	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
-        # we need to explicitly ask for the rpath to be obeyed
+	# we need to explicitly ask for the rpath to be obeyed
 	ORIGIN := @loader_path
 	VERSIONFLAGS += -Wl,-install_name,$(DYNAMIC_SONAME_SHORT) -Wl,-rpath,$(ORIGIN)/../../build/lib
 else
@@ -334,8 +327,8 @@ endif
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
-	INCLUDE_DIRS += ${CUDNN_DIR}/include
-	LIBRARY_DIRS += ${CUDNN_DIR}/install/cuda/lib64
+	INCLUDE_DIRS += $(CUDNN_DIR)/include
+	LIBRARY_DIRS += $(CUDNN_DIR)/install/cuda/lib64
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
@@ -363,14 +356,6 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
-# Benchmarks
-ifeq ($(BENCHMARK_DATA), 1)
-	COMMON_FLAGS += -DBENCHMARK_DATA
-endif
-ifeq ($(BENCHMARK_SOLVER), 1)
-	COMMON_FLAGS += -DBENCHMARK_SOLVER
-endif
-
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -380,26 +365,26 @@ endif
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
-        # MKL
+	# MKL
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
 	MKLROOT ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 else ifeq ($(BLAS), open)
-        # OpenBLAS
+	# OpenBLAS
 	LIBRARIES += openblas
 else
-        # ATLAS
+	# ATLAS
 	ifeq ($(LINUX), 1)
 		ifeq ($(BLAS), atlas)
-                # Linux simply has cblas and atlas
+			# Linux simply has cblas and atlas
 			LIBRARIES += cblas atlas
 		endif
 	else ifeq ($(OSX), 1)
-                # OS X packages atlas as the vecLib framework
+		# OS X packages atlas as the vecLib framework
 		LIBRARIES += cblas
-                # 10.10 has accelerate while 10.9 has veclib
+		# 10.10 has accelerate while 10.9 has veclib
 		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep 'version' | sed 's/[^0-9]*\([0-9]\).*/\1/')
 		XCODE_CLT_GEQ_6 := $(shell [ $(XCODE_CLT_VER) -gt 5 ] && echo 1)
 		ifeq ($(XCODE_CLT_GEQ_6), 1)
@@ -420,7 +405,6 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 CXXFLAGS += -MMD -MP
 
 # Complete build flags.
-
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
@@ -460,12 +444,12 @@ endif
 # Define build targets
 ##############################
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
-	py mat py$(PROJECT) mat$(PROJECT) thirdparty proto runtest \
+	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
 all: lib tools examples
 
-lib:  $(STATIC_NAME) $(DYNAMIC_NAME)
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -579,7 +563,7 @@ $(BUILD_DIR)/.linked:
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
-$(DYNAMIC_NAME): $(OBJS)| $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_SONAME_SHORT); ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_SONAME_SHORT)

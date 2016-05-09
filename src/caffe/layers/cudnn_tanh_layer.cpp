@@ -14,7 +14,7 @@ void CuDNNTanHLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
   cudnnCreateActivationDescriptor(&activ_desc_);
   cudnnSetActivationDescriptor(activ_desc_, CUDNN_ACTIVATION_TANH,
-                               CUDNN_PROPAGATE_NAN, 0.0);
+      CUDNN_PROPAGATE_NAN, 0.0);
   handles_setup_ = true;
 }
 
