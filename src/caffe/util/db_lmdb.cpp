@@ -79,15 +79,25 @@ void LMDBTransaction::Commit() {
     }
   }
 
+  int commit_rc = 0;
   if (!out_of_memory) {
     // Commit the transaction
-    MDB_CHECK(mdb_txn_commit(mdb_txn));
-    mdb_dbi_close(mdb_env_, mdb_dbi);
-    keys.clear();
-    values.clear();
-  } else {
+    commit_rc = mdb_txn_commit(mdb_txn);
+    //MDB_CHECK(commit_rc);
+    if(commit_rc == MDB_MAP_FULL){
+	out_of_memory = true;
+    } else {
+	MDB_CHECK(commit_rc);
+        mdb_dbi_close(mdb_env_, mdb_dbi);
+        keys.clear();
+        values.clear();
+    }
+  } 
+  if(out_of_memory){
     // Double the map size and retry
-    mdb_txn_abort(mdb_txn);
+    if(commit_rc != MDB_MAP_FULL){
+    	mdb_txn_abort(mdb_txn);
+    }
     mdb_dbi_close(mdb_env_, mdb_dbi);
     DoubleMapSize();
     Commit();
