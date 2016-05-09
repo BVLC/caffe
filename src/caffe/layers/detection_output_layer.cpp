@@ -378,6 +378,15 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       }
     }
   }
+  if (visualize_) {
+#ifdef USE_OPENCV
+    vector<cv::Mat> cv_imgs;
+    this->data_transformer_->TransformInv(bottom[3], &cv_imgs);
+    vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
+    VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
+        label_to_display_name_);
+#endif  // USE_OPENCV
+  }
 }
 
 #ifdef CPU_ONLY
