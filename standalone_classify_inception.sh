@@ -3,5 +3,5 @@ nice -20 \
  models/bvlc_googlenet/deploy.prototxt \
  models/bvlc_googlenet/bvlc_googlenet.caffemodel \
  data/ilsvrc12/imagenet_mean.binaryproto \
- data/ilsvrc12/synset_words.txt \
+ data/ilsvrc12/synset_words_short.txt \
  examples/images/cat.jpg

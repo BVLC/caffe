@@ -1,3 +1,4 @@
+cd ~/workspace/caffe-rpi;
 nice -20 \
 ./build/examples/cpp_classification/standalone_classify.bin \
  SqueezeNet/SqueezeNet_v1.0/deploy.prototxt \

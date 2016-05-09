@@ -34,7 +34,7 @@ class Classifier {
              const string& mean_file,
              const string& label_file);
 
-  std::vector<Prediction> Classify(const cv::Mat& img, int N = 2);
+  std::vector<Prediction> Classify(const cv::Mat& img, int N = 4);
 
  private:
   void SetMean(const string& mean_file);
@@ -255,9 +255,10 @@ std::pair<float, float> mean_and_variance(const boost::circular_buffer<float>& x
 }
 
 void print_prediction(const std::string& prediction, const std::string& trashClass, cv::Mat& image) {
-  cv::putText(image, "I think it's a " + prediction, cv::Point2f(50, 100), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255, 255), 3);
+  cv::rectangle(image, cv::Point2f(0, 0), cv::Point2f(600, 250), cv::Scalar(255, 255, 255, 255), -1);
 
-  cv::putText(image, "It should go to " + trashClass, cv::Point2f(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255, 255), 3);
+  cv::putText(image, prediction, cv::Point2f(50, 100), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255, 255), 4);
+  cv::putText(image, "It should go to " + trashClass, cv::Point2f(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255, 255), 2);
 }
 
 int main(int argc, char** argv) {
@@ -270,16 +271,31 @@ int main(int argc, char** argv) {
 
   std::unordered_map<std::string, std::string> labelToTrashClass {
     {"bottle", "Recycle"},
+    {"remote control, remote", "nowhere. Keep it!"},
+    {"beer bottle", "Recycle"},
+    {"cup", "Recycle"},
+    {"carton", "Recycle"},
+    {"packet, packaging", "Landfill"},
+    {"soccer ball", "Landfill"},
+    {"pillow", "Landfill"},
+    {"paper towel", "Recycle"},
+    {"mouse, computer mouse", "electronics bin"},
     {"water bottle", "Recycle"},
     {"wine bottle", "Recycle"},
     {"Granny Smith", "Compost"},
+    {"custard apple", "Compost"},
+    {"pomegranate", "Compost"},
+    {"dough", "Compost"},
+    {"coffee cup", "Recycle"},
     {"banana", "Compost"},
     {"cellular telephone, cellular phone, cellphone, cell, mobile phone", "electronics bin in building 17"},
+    {"hand-held computer, hand-held microcomputer", "electronics bin in building 17"},
     {"iPod", "electronics bin in building 17"},
   };
 
   ::google::InitGoogleLogging(argv[0]);
   const int RLV_SIZE = 5;
+  int frame_skipped = 0;
 
   // mutex for launching tasks
   string model_file   = argv[1];
@@ -295,10 +311,11 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Camera opened, trying to open a new window" << std::endl;
-  cv::namedWindow("Display", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow("Display", cv::WINDOW_NORMAL);
+  cv::setWindowProperty("Display", cv::WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 
   std::mutex g_image_lock;
-  cv::Mat global_image;
+  cv::Mat global_image; 
 
   std::mutex g_prediction_lock;
   std::vector<Prediction> prediction_results;
@@ -307,8 +324,9 @@ int main(int argc, char** argv) {
   // Running Laplatian variance of buffer size RLV_SIZE
   boost::circular_buffer<float> rlv(RLV_SIZE);
 
-  std::thread t([&classifier, &g_image_lock, &global_image, &g_prediction_lock, &prediction_results, &rlv] () {
+  std::thread t([&classifier, &g_image_lock, &global_image, &g_prediction_lock, &prediction_results, &rlv, &frame_skipped] () {
     while(1) {
+    std::cout << "starting async task" << std::endl;
       if (global_image.empty()) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
@@ -321,8 +339,9 @@ int main(int argc, char** argv) {
       cv::Laplacian(image_local, lap, CV_64F);
       cv::Scalar mu, sigma;
       cv::meanStdDev(lap, mu, sigma);
+
       float var = sigma.val[0] * sigma.val[0];
-  
+
       // If running buffer is too small, accummulate some more
       if (rlv.size() < RLV_SIZE) {
         rlv.push_back(var);
@@ -344,6 +363,13 @@ int main(int argc, char** argv) {
         continue;
       }
 
+      // something significant and we need to scan, so make sure we skip a few
+      frame_skipped++;
+      if (frame_skipped < 2) {
+        continue;
+      }
+      frame_skipped = 0;
+
       std::vector<Prediction> predictions = classifier.Classify(image_local);
 
       // Print the top N predictions.
@@ -362,6 +388,7 @@ int main(int argc, char** argv) {
   std::cout << "Detaching " << std::endl;
   t.detach();
   std::cout << "Detached " << std::endl;
+  std::pair<std::string, std::string> previousResult;
 
   while(1) {
     cv::Mat image;
@@ -372,12 +399,12 @@ int main(int argc, char** argv) {
       sleep(1);
       continue;
     }
+
     bool hasLock = g_image_lock.try_lock();
     if (hasLock) {
       global_image = image.clone();
       g_image_lock.unlock();
     }
-
 
     g_prediction_lock.lock();
     std::vector<Prediction> local_prediction = prediction_results;
@@ -389,11 +416,22 @@ int main(int argc, char** argv) {
       auto it = labelToTrashClass.find(local_prediction[i].first);
       if (it != labelToTrashClass.end()) {
         print_prediction(local_prediction[i].first, it->second, image);
+        previousResult = std::make_pair(local_prediction[i].first, it->second);
         break;
+      } 
+
+      // At this point, which means it has not been broken out of the loop
+      // show cached result once in case it is a blurred frame
+      if (!previousResult.first.empty()) {
+        print_prediction(previousResult.first, previousResult.second, image);
+        previousResult.first.clear();
       }
     }
     cv::imshow("Display", image);
     char key = cv::waitKey(1);
+    if (key == 'q') {
+      exit(0);
+    }
   }
 }
 #else
