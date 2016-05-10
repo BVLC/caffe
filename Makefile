@@ -25,6 +25,8 @@ else
 endif
 
 THIRDPARTY_DIR := ./3rdparty
+CUB_DIR := $(THIRDPARTY_DIR)/cub
+CUB_VERSION := 1.5.2
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -573,7 +575,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
+$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS) $(CUB_DIR)
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
@@ -586,7 +588,7 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 
-$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
+$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS) $(CUB_DIR)
 	@ echo NVCC $<
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
@@ -643,6 +645,7 @@ $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
 
 clean:
+	@- $(RM) -rf $(CUB_DIR)
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(OTHER_BUILD_DIR)
 	@- $(RM) -rf $(BUILD_DIR_LINK)
@@ -692,5 +695,8 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	cd $(DISTRIBUTE_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_SONAME_SHORT) $(DYNAMIC_NAME_SHORT)
 	# add python - it's not the standard way, indeed...
 	cp -r python $(DISTRIBUTE_DIR)/python
+
+$(CUB_DIR):
+	@ $(THIRDPARTY_DIR)/getCUB.sh $(CUB_VERSION)
 
 -include $(DEPS)
