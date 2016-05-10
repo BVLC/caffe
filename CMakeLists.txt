@@ -91,3 +91,8 @@ caffe_print_configuration_summary()
 
 # ---[ Export configs generation
 caffe_generate_export_configs()
+
+# ---[ CUB Memory Manager
+set(CUB_VERSION "1.5.2")
+set(THIRDPARTY_DIR ./3rdparty)
+execute_process(COMMAND ${THIRDPARTY_DIR}/getCUB.sh ${CUB_VERSION})
