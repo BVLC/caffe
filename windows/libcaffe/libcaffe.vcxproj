@@ -144,6 +144,7 @@
     <ClCompile Include="..\..\src\caffe\layers\multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\mvn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\neuron_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\parameter_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\power_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\prelu_layer.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="..\..\include\caffe\layers\multinomial_logistic_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\mvn_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\neuron_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\parameter_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\pooling_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\power_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\prelu_layer.hpp" />
