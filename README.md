@@ -201,6 +201,7 @@ Please cite SSD in your publications if it helps your research:
 1. [Installation](#installation)
 2. [Preparation](#preparation)
 3. [Train/Eval](#traineval)
+4. [Models](#models)
 4. [Contact](#contact)
 
 ### Installation
@@ -284,6 +285,13 @@ Please cite SSD in your publications if it helps your research:
 
 5. To train on other dataset, please refer to data/OTHERDATASET for more details.
 We currently add support for MSCOCO.
+
+### Models
+1. Models trained on VOC0712: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_500x500.tar.gz)
+
+2. Models trained on MSCOCO trainval35k: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_coco_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_coco_SSD_500x500.tar.gz)
+
+3. Models trained on ILSVRC2015 trainval1: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_ilsvrc15_SSD_300x300.tar.gz)
 
 ### Contact
 Please direct all comments and report all bugs to:
