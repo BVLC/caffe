@@ -80,12 +80,12 @@ def parse_log(path_to_log):
             train_dict_list, train_row = parse_line_for_net_output(
                 regex_train_output, train_row, train_dict_list,
                 line, iteration, seconds, learning_rate,
-                gpu=GPU
+                gpu=GPU,time=time,
             )
             test_dict_list, test_row = parse_line_for_net_output(
                 regex_test_output, test_row, test_dict_list,
                 line, iteration, seconds, learning_rate,
-                gpu=GPU
+                gpu=GPU,time=time,
             )
 
     fix_initial_nan_learning_rate(train_dict_list)
@@ -95,7 +95,7 @@ def parse_log(path_to_log):
 
 
 def parse_line_for_net_output(regex_obj, row, row_dict_list,
-                              line, iteration, seconds, learning_rate,gpu=-1):
+                              line, iteration, seconds, learning_rate,gpu=-1,time=None):
     """Parse a single line for training or test output
 
     Returns a a tuple with (row_dict_list, row)
@@ -119,7 +119,8 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
                 ('NumIters', iteration),
                 ('Seconds', seconds),
                 ('LearningRate', learning_rate),
-                ('GPU', gpu)
+                ('GPU', gpu),
+                ('Time',time)
             ])
 
         # output_num is not used; may be used in the future
