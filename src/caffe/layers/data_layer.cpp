@@ -29,6 +29,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum& datum = *(reader_.full().peek());
 
+  // Let know data transformer about data reader used for getting data
+  this->data_transformer_->setDataReader(&reader_);
+
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
@@ -125,6 +128,11 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
 
+    // Copy label. We need to copy it before we release datum
+    // which happens in transform threads
+    if (this->output_labels_) {
+      top_label[item_id] = datum.label();
+    }
 #ifdef _OPENMP
     this->transformed_datas_[item_id]->set_cpu_data(top_data + offset);
     this->data_transformer_->Transform(datum,
@@ -133,11 +141,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->transformed_data_.set_cpu_data(top_data + offset);
     this->data_transformer_->Transform(datum, &(this->transformed_data_));
 #endif
-    // Copy label.
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
-    }
-    reader_.free().push(const_cast<Datum*>(&datum));
   }
   trans_timer.Stop();
   batch_timer.Stop();

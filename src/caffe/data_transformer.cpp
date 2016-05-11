@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "caffe/data_reader.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -15,7 +16,7 @@ namespace caffe {
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
-    : param_(param), phase_(phase) {
+    : param_(param), phase_(phase), data_reader_used(NULL) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -39,9 +40,22 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 }
 
 template<typename Dtype>
+void DataTransformer<Dtype>::setDataReader(DataReader* data_reader) {
+  this->data_reader_used = data_reader;
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::dataReaderPushFreeDatum(const Datum* datum_ptr) {
+  if (this->data_reader_used != NULL) {
+    this->data_reader_used->free().push(const_cast<Datum*>(datum_ptr));
+  }
+}
+
+template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Dtype* transformed_data) {
   const string& data = datum.data();
+  const Datum* datum_ptr = &datum;
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
@@ -93,8 +107,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean)
+                     width, data_ptr, mean, datum_ptr)
 #endif
+      {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -108,12 +123,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean)
+                     width, data_ptr, mean, datum_ptr)
 #endif
+        {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -127,6 +145,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       }
     } else if (has_mean_values) {  // mean values
         CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)
@@ -144,8 +164,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean_ptr)
+                     width, data_ptr, mean_ptr, datum_ptr)
 #endif
+        {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -159,12 +180,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
               }
             }
           }
+         dataReaderPushFreeDatum(datum_ptr);
+         }
        } else {  // do_mirror
 #ifdef _OPENMP
          #pragma omp task default(none) \
          firstprivate(transformed_data, h_off, w_off, height, \
-                      width, data_ptr, mean_ptr)
+                      width, data_ptr, mean_ptr, datum_ptr)
 #endif
+         {
          for (int c = 0; c < datum_channels; ++c) {
            for (int h = 0; h < height; ++h) {
              for (int w = 0; w < width; ++w) {
@@ -178,6 +202,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
              }
            }
          }
+         dataReaderPushFreeDatum(datum_ptr);
+         }
        }
 
       } else {  // no mean file
@@ -185,8 +211,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   #ifdef _OPENMP
           #pragma omp task default(none) \
           firstprivate(transformed_data, h_off, w_off, \
-                       height, width, data_ptr)
+                       height, width, data_ptr, datum_ptr)
 #endif
+          {
           for (int c = 0; c < datum_channels; ++c) {
             for (int h = 0; h < height; ++h) {
               for (int w = 0; w < width; ++w) {
@@ -199,12 +226,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
               }
             }
           }
+          dataReaderPushFreeDatum(datum_ptr);
+          }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
-                     height, width, data_ptr)
+                     height, width, data_ptr, datum_ptr)
 #endif
+      {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -217,10 +247,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       }
     }
   } else {  // float (no uint8_t)
-    const Datum* datum_ptr = &datum;
     if (has_mean_file == true) {
       if (do_mirror == false) {
 #ifdef _OPENMP
@@ -228,6 +259,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean)
 #endif
+{
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -240,12 +272,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean)
 #endif
+      {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -258,6 +293,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       }
 
     } else if (has_mean_values) {  // mean values
@@ -278,6 +315,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean_ptr)
 #endif
+        {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -290,12 +328,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       } else {  // do_mirror
 #ifdef _OPENMP
          #pragma omp task default(none) \
          firstprivate(transformed_data, h_off, \
                       w_off, height, width, datum_ptr, mean_ptr)
 #endif
+        {
          for (int c = 0; c < datum_channels; ++c) {
            for (int h = 0; h < height; ++h) {
              for (int w = 0; w < width; ++w) {
@@ -308,6 +349,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
              }
            }
          }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
        }
 
     } else {  // no mean file
@@ -317,6 +360,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         firstprivate(transformed_data, h_off, w_off, \
                      height, width, datum_ptr)
 #endif
+      {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -328,12 +372,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
                      height, width, datum_ptr)
 #endif
+        {
         for (int c = 0; c < datum_channels; ++c) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
@@ -345,6 +392,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
+       dataReaderPushFreeDatum(datum_ptr);
+       }
       }
     }
   }  // no mean_values

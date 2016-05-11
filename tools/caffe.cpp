@@ -675,7 +675,7 @@ int main(int argc, char** argv) {
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time\n"
       "  collect         collects layer data on specified device\n"
-      "  compare         collects layer data using inputs from opposite device");
+      "  compare         collects layer data using inputs from other device");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {

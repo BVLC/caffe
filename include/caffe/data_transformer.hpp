@@ -9,6 +9,7 @@
 
 namespace caffe {
 
+class DataReader;
 /**
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
@@ -24,6 +25,23 @@ class DataTransformer {
    *    transformation.
    */
   void InitRand();
+
+  /**
+   * @brief Let know data transformer about data reader used
+   *
+   *  @param data_read
+   *    pointer to data_reader that gives datums for transformations
+   */
+  void setDataReader(DataReader* data_reader);
+
+  /**
+   * @brief Mark for currently set data_reader, given datum to
+   *  be free to be used for further reading ops
+   *
+   *  @param datum_ptr
+   *    pointer to datum to be used for further data reads
+   */
+  void dataReaderPushFreeDatum(const Datum* datum_ptr);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -147,6 +165,9 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+
+  // Data reader used if any to get data
+  DataReader* data_reader_used;
 };
 
 }  // namespace caffe
