@@ -44,8 +44,24 @@ class Classifier(caffe.Net):
             image_dims = self.crop_dims
         self.image_dims = image_dims
 
+    def predict_multi(self, inputs, oversample=True):
+        """
+        Predicts multi-label classification probabilities of inputs (for
+        architectures with multiple output blobs).
 
-    def prepare_inputs(self, inputs, oversample):
+        Parameters
+        ----------
+        inputs : iterable of (H x W x K) input ndarrays.
+        oversample : boolean
+            average predictions across center, corners, and mirrors
+            when True (default). Center-only prediction when False.
+
+        Returns
+        -------
+        predictions: a dictionary where the keys are names of the blobs at the
+            last layer(s) and the values are (N x C) ndarray of class
+            probabilities for N images and C classes.
+        """
         # Scale to standardize input dimensions.
         input_ = np.zeros((len(inputs),
                            self.image_dims[0],
@@ -67,24 +83,12 @@ class Classifier(caffe.Net):
             ])
             crop = crop.astype(int)
             input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
+
+        # Classify
         caffe_in = np.zeros(np.array(input_.shape)[[0, 3, 1, 2]],
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
             caffe_in[ix] = self.transformer.preprocess(self.inputs[0], in_)
-        return caffe_in
-
-
-    def predict_multi(self, inputs, oversample=True):
-        """
-        Predicts multi-label classification probabilities of inputs. 
-
-        Works very similarly to the method predict, but returns a dictionary
-        of probabilities, where the keys are the names of the top blobs of the 
-        last network's level.
-        """
-        # Preparing the input data.
-        caffe_in = self._prepare_inputs(inputs, oversample)
-        # Classify
         out = self.forward_all(**{self.inputs[0]: caffe_in})
         multipreds = {}
         for bname in self.outputs:
@@ -95,7 +99,6 @@ class Classifier(caffe.Net):
                 tmparray = tmparray.reshape((len(tmparray) / 10, 10, -1))
                 multipreds[bname] = tmparray.mean(1)
         return multipreds
-
     
     def predict(self, inputs, oversample=True):
         """
@@ -114,4 +117,6 @@ class Classifier(caffe.Net):
             classes.
         """
         multipreds = self.predict_multi(inputs, oversample)
+        ## Returns only the classification probabilities of the first output 
+        ## blob.
         return multipreds[self.outputs[0]]
