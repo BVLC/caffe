@@ -1,5 +1,4 @@
 PROJECT := caffe
-COMMON_FLAGS += -Wno-unused-local-typedefs
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
