@@ -89,6 +89,7 @@ class Classifier(caffe.Net):
         multipreds = {}
         for bname in self.outputs:
             multipreds[bname] = out[bname]
+            # For oversampling, average predictions across crops.
             if oversample:
                 tmparray = multipreds[bname]
                 tmparray = tmparray.reshape((len(tmparray) / 10, 10, -1))
