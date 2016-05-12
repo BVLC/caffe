@@ -36,8 +36,6 @@
   #include <clBLAS.h>
 #elif defined (USE_CLBLAST)
   #include <clblast.h>
-  // FIXME: CLBlast 0.6.0 does not support xASUM, so falling back to ViennaCL.
-  #include "viennacl/linalg/norm_1.hpp"
 #else
   #include "viennacl/linalg/inner_prod.hpp"
   #include "viennacl/linalg/norm_1.hpp"
@@ -787,13 +785,11 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     cl_event events[num_queues] = { NULL };
 
     cl_int err = CL_SUCCESS;
-    cl_mem Z = clCreateBuffer(
-      ctx.handle().get(), CL_MEM_READ_WRITE,
+    cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
       sizeof(Dtype), NULL, &err);
     // TODO: error handling.
 
     const size_t offZ = 0;
-
     const size_t incX = 1;
     const size_t incY = 1;
 
@@ -893,8 +889,43 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-// #elif defined (USE_CLBLAST)
-// TODO: CLBlast 0.6.0 does not support xASUM, so falling back to ViennaCL.
+#elif defined (USE_CLBLAST)
+
+    const cl_uint num_queues = 1;
+    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
+    cl_event events[num_queues] = { NULL };
+
+    cl_int err = CL_SUCCESS;
+    cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+      sizeof(Dtype), NULL, &err);
+    // TODO: error handling.
+
+    const size_t offZ = 0;
+    const size_t incX = 1;
+
+    if (std::is_same<Dtype, float>::value) {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Asum<float>(
+          n,
+          Z, offZ,
+          X, offX, incX,
+          &queues[0], &events[0]
+        )
+      );
+    } else {
+      GREENTEA_CLBLAST_CHECK(
+        clblast::Asum<double>(
+          n,
+          Z, offZ,
+          X, offX, incX,
+          &queues[0], &events[0]
+        )
+      );
+    }
+
+    greentea_gpu_memcpy(sizeof(Dtype), Z, offZ, Y, &ctx);
+
+    clReleaseMemObject(Z);
 
 #else // default (ViennaCL)
 
