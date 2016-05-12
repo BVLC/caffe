@@ -90,8 +90,8 @@ class Classifier(caffe.Net):
         for bname in self.outputs:
             multipreds[bname] = out[bname]
             if oversample:
-                tmparray = multipreds[bname].reshape(
-                    (len(predictions) / 10, 10, -1))
+                tmparray = multipreds[bname]
+                tmparray = tmparray.reshape((len(tmparray) / 10, 10, -1))
                 multipreds[bname] = tmparray.mean(1)
         return multipreds
 
