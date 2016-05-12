@@ -10,7 +10,7 @@ namespace caffe { namespace db {
 void LMDB::Open(const string& source, Mode mode) {
   MDB_CHECK(mdb_env_create(&mdb_env_));
   if (mode == NEW) {
-    CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << "failed";
+    CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << " failed";
   }
   int flags = 0;
   if (mode == READ) {
