@@ -36,8 +36,6 @@
   #include <clBLAS.h>
 #elif defined (USE_CLBLAST)
   #include <clblast.h>
-  // FIXME: CLBlast 0.6.0 has some issues with xDOT, so falling back to ViennaCL.
-  #include "viennacl/linalg/inner_prod.hpp"
   // FIXME: CLBlast 0.6.0 does not support xASUM, so falling back to ViennaCL.
   #include "viennacl/linalg/norm_1.hpp"
 #else
@@ -782,8 +780,8 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-//#elif defined (USE_CLBLAST)
-#if 0
+#elif defined (USE_CLBLAST)
+
     const cl_uint num_queues = 1;
     cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
     cl_event events[num_queues] = { NULL };
@@ -824,7 +822,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     greentea_gpu_memcpy(sizeof(Dtype), Z, offZ, out, &ctx);
 
     clReleaseMemObject(Z);
-#endif // 0
+
 #else // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
