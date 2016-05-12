@@ -1,0 +1,4 @@
+[submodule "SqueezeNet"]
+path = SqueezeNet 
+url = https://github.com/DeepScale/SqueezeNet
+
