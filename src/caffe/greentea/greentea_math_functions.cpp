@@ -233,9 +233,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
     clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
@@ -253,7 +251,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -266,7 +264,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -401,9 +399,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
     clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
@@ -423,7 +419,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -436,7 +432,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -526,9 +522,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     const size_t incX = 1;
     const size_t incY = 1;
@@ -540,7 +534,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -550,7 +544,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -662,9 +656,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     const size_t incx = 1;
 
@@ -674,7 +666,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           N,
           alpha,
           x, offx, incx,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -683,7 +675,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           N,
           alpha,
           x, offx, incx,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -780,9 +772,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     cl_int err = CL_SUCCESS;
     cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
@@ -800,7 +790,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -810,7 +800,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -891,9 +881,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     cl_int err = CL_SUCCESS;
     cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
@@ -909,7 +897,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
           n,
           Z, offZ,
           X, offX, incX,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -918,7 +906,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
           n,
           Z, offZ,
           X, offX, incX,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
@@ -994,9 +982,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
 
 #elif defined (USE_CLBLAST)
 
-    const cl_uint num_queues = 1;
-    cl_command_queue queues[num_queues] = { ctx.get_queue().handle().get() };
-    cl_event events[num_queues] = { NULL };
+    cl_command_queue queue = ctx.get_queue().handle().get();
 
     const size_t incX = 1;
     const size_t incY = 1;
@@ -1007,7 +993,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
       GREENTEA_CLBLAST_CHECK(
@@ -1015,7 +1001,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           alpha,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     } else {
@@ -1024,7 +1010,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
       GREENTEA_CLBLAST_CHECK(
@@ -1032,7 +1018,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           alpha,
           Y, offY, incY,
-          &queues[0], &events[0]
+          &queue
         )
       );
     }
