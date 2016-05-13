@@ -15,14 +15,21 @@ USE_GREENTEA := 0
 # Folder of the ViennaCL header-only library
 VIENNACL_DIR = ../ViennaCL
 
-# Override BLAS, use clBLAS insead of ViennaclBLAS.
+# Override OpenCL BLAS: use clBLAS instead of ViennaCL.
 # USE_CLBLAS := 1
 
 # Custom clBLAS lib and include directories.
 # CLBLAS_INCLUDE := /path/to/clblas/include
 # CLBLAS_LIB     := /path/to/clblas/lib
 
-# Override BLAS, use ISAAC instead of ViennaclBLAS.
+# Override OpenCL BLAS: use CLBlast instead of ViennaCL.
+# USE_CLBLAST := 1
+
+# Custom CLBlast lib and include directories.
+# CLBLAST_INCLUDE := /path/to/clblast/include
+# CLBLAST_LIB     := /path/to/clblast/lib
+
+# Override OpenCL BLAS: use ISAAC instead of ViennaCL.
 # USE_ISAAC := 1
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
