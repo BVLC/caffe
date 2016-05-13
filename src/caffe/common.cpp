@@ -13,12 +13,14 @@
 #include "caffe/device.hpp"
 #include "caffe/util/rng.hpp"
 
-#ifdef USE_GREENTEA
-#include "caffe/greentea/cl_kernels.hpp"
-#ifdef USE_CLBLAS
-#include <clBLAS.h>
-#endif  // USE_CLBLAS
-#endif
+#if defined (USE_GREENTEA)
+  #include "caffe/greentea/cl_kernels.hpp"
+  #if defined (USE_CLBLAS)
+    #include <clBLAS.h>
+  #elif defined (USE_CLBLAST)
+    #include <clblast.h>
+  #endif // USE_CLBLAS or USE_CLBLAST
+#endif // USE_GREENTEA
 
 namespace caffe {
 

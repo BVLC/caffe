@@ -362,19 +362,27 @@ ifeq ($(USE_GREENTEA),1)
 		LIBRARIES += clBLAS
 		COMMON_FLAGS += -DUSE_CLBLAS
 	endif
-
-        ifeq ($(USE_FFT), 1)
-                CLFFT_INCLUDE_DIR := /usr/include
-		CLFFT_LIB_DIR := /usr/lib64/clfft
-  	        INCLUDE_DIRS += $(CLFFT_INCLUDE_DIR)
-		LIBRARY_DIRS += $(CLFFT_LIB_DIR)
-		LIBRARIES += clFFT
-        endif
 	
-	# Use ISAAC clBLAS replacement
+	# Use CLBlast as clBLAS replacement
+	ifeq ($(USE_CLBLAST), 1)
+		LIBRARY_DIRS += $(CLBLAST_LIB)
+		INCLUDE_DIRS += $(CLBLAST_INCLUDE)
+		LIBRARIES += clblast
+		COMMON_FLAGS += -DUSE_CLBLAST
+	endif
+
+	# Use ISAAC as clBLAS replacement
 	ifeq ($(USE_ISAAC), 1)
 		LIBRARIES += isaac
 		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+
+	ifeq ($(USE_FFT), 1)
+		CLFFT_INCLUDE_DIR := /usr/include
+		CLFFT_LIB_DIR := /usr/lib64/clfft
+		INCLUDE_DIRS += $(CLFFT_INCLUDE_DIR)
+		LIBRARY_DIRS += $(CLFFT_LIB_DIR)
+		LIBRARIES += clFFT
 	endif
 	
 	# Requires valid OpenCL library
