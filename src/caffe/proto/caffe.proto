@@ -577,6 +577,7 @@ message ConvolutionParameter {
 
   optional uint32 group = 5 [default = 1]; // The group size for group conv
 
+
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
   enum Engine {
@@ -585,6 +586,11 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+  
+  // nd convolution specific parameters
+  optional BlobShape pad_shape = 41;
+  optional BlobShape kernel_shape = 42;
+  optional BlobShape stride_shape = 43;
 
   // The axis to interpret as "channels" when performing convolution.
   // Preceding dimensions are treated as independent inputs;
@@ -896,6 +902,11 @@ message PoolingParameter {
   optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
   optional uint32 stride_h = 7; // The stride height
   optional uint32 stride_w = 8; // The stride width
+  
+  // nd pooling specific parameters
+  optional BlobShape pad_shape = 41;
+  optional BlobShape kernel_shape = 42;
+  optional BlobShape stride_shape = 43;
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
