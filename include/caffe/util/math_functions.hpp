@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
+#include <cstring>  // for memset
 
 #include "glog/logging.h"
 

@@ -11,6 +11,7 @@
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
 # USE_LMDB := 0
+# USE_HDF5 := 0
 
 # uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
 #	You should not set this flag if you will be reading LMDBs with any
