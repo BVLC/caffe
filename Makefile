@@ -575,7 +575,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS) $(CUB_DIR)
+$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
@@ -645,7 +645,6 @@ $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
 
 clean:
-	@- $(RM) -rf $(CUB_DIR)
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(OTHER_BUILD_DIR)
 	@- $(RM) -rf $(BUILD_DIR_LINK)
@@ -675,6 +674,7 @@ superclean: clean supercleanfiles
 		echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
 		$(RM) $(SUPERCLEAN_FILES); \
 	fi
+	@- $(RM) -rf $(CUB_DIR)
 
 $(DIST_ALIASES): $(DISTRIBUTE_DIR)
 
