@@ -98,6 +98,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
+# N.B. both build and distribute dirs are cleared on `make clean`
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
 
