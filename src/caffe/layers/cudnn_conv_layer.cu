@@ -1,4 +1,5 @@
 #ifdef USE_CUDNN
+#include <algorithm>
 #include <vector>
 
 #include "caffe/filler.hpp"
@@ -76,17 +77,16 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Test free space and force reshape if allocations have changed
     size_t workspace_limit_bytes, total_memory;
     GPUMemoryManager::GetInfo(&workspace_limit_bytes, &total_memory);
-    if (workspace_bwd_filter_sizes_[i] > workspace_limit_bytes
-        || workspace_bwd_data_sizes_[i] > workspace_limit_bytes) {
+    if (workspace_bwd_filter_sizes_[i] > workspace_limit_bytes ||
+        workspace_bwd_data_sizes_[i] > workspace_limit_bytes ||
+        // We need to get workspace sizes for the default algos at 1st run
+        backward_passed_ctr_ == 0) {
       this->Reshape(bottom, top);
     }
-
     // To remove pressure on allocator, allocate the larger of the
     // workspaces needed for the following steps
-    size_t workspace_reserve =
-        workspace_bwd_filter_sizes_[i] > workspace_bwd_data_sizes_[i] ?
-        workspace_bwd_filter_sizes_[i] : workspace_bwd_data_sizes_[i];
-    workspace.reserve(workspace_reserve);
+    workspace.reserve(std::max(workspace_bwd_filter_sizes_[i],
+        workspace_bwd_data_sizes_[i]));
 
     // Backward through cuDNN in parallel over groups and gradients.
     for (int g = 0; g < this->group_; g++) {
@@ -133,7 +133,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
-  backward_passed_ = true;
+  ++backward_passed_ctr_;
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
