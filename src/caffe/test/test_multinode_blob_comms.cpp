@@ -13,7 +13,6 @@
 #include "caffe/serialization/bitfield.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
 #include "caffe/solver_factory.hpp"
-// #include "caffe/multinode/SendCallback.hpp"
 
 namespace caffe {
 namespace {
@@ -22,8 +21,10 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::Test;
 using ::testing::StrictMock;
+using ::testing::NiceMock;
 using ::testing::Mock;
 using ::testing::SaveArg;
+using ::testing::Invoke;
 using ::boost::assign::list_of;
 using ::caffe::internode::Waypoint;
 
@@ -60,6 +61,49 @@ struct WaypointMock : internode::Waypoint {
 };
 
 template<typename Dtype>
+struct BlobKeyChainMock : public BlobKeyChain<Dtype> {
+  MOCK_METHOD1(lock, void(int layer_id));
+  MOCK_METHOD3(lock, void(int layer_id, int blob_id, int part));
+  MOCK_METHOD1(unlock,void (int layer_id));
+  MOCK_METHOD3(unlock, void(int layer_id, int blob_id, int part));   
+};
+
+template <typename Dtype>
+class BlobCodecMock : public BlobCodec<Dtype> {
+ public:
+     typedef typename BlobEncoding::What What;
+//     template <Dtype>
+     BlobCodecMock() {
+      real_ = BlobCodec<Dtype>::create_codec(
+         MultinodeParameter::default_instance(), true);
+      ON_CALL(*this, encode(_,_,_,_))
+        .WillByDefault(Invoke(real_.get(), &BlobCodec<Dtype>::encode));
+      ON_CALL(*this, decode(_,_,_,_,_))
+        .WillByDefault(Invoke(real_.get(), &BlobCodec<Dtype>::decode));
+      ON_CALL(*this, max_elements_per_part())
+        .WillByDefault(Invoke(real_.get(), &BlobCodec<Dtype>::max_elements_per_part));
+      ON_CALL(*this, packet_size())
+        .WillByDefault(Invoke(real_.get(), &BlobCodec<Dtype>::packet_size));
+     };
+    MOCK_CONST_METHOD4_T(encode, uint32_t(BlobUpdate* msg,
+                          const Blob<Dtype>* src,
+                          What what,
+                          uint32_t part));
+
+    MOCK_CONST_METHOD5_T(decode, bool(const BlobUpdate& update,
+                      Blob<Dtype>* dest,
+                      What what,
+                      Dtype alpha,
+                      Dtype beta));
+
+    MOCK_CONST_METHOD0_T(max_elements_per_part, size_t());
+    MOCK_CONST_METHOD0_T(packet_size, size_t());
+
+ private:
+  shared_ptr<BlobCodec<Dtype> > real_; 
+};
+
+template<typename Dtype>
 class BlobAccessorMock : public BlobAccessor<Dtype> {
   vector<int> v;
   Blob<Dtype> blob;
@@ -73,16 +117,22 @@ class BlobAccessorMock : public BlobAccessor<Dtype> {
   }
 };
 
+MATCHER_P(BufferEq, str, "") {
+  return std::equal(str.c_str(), str.c_str() + str.size(), arg);
+}
+
 struct BlobCommsTest : public Test {
-  shared_ptr<BlobCodec<float> > codec;
+//  shared_ptr<BlobCodec<float> > codec;
+  shared_ptr<BlobCodecMock<float> > codec_mock;
   shared_ptr<WaypointMock> waypoint_mock;
 
   shared_ptr<BlobAccessorMock<float> > blob_accessor_mock;
   shared_ptr<BlobConstInfoMock> const_info_mock;
   shared_ptr<BlobSyncInfoMock> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
+  shared_ptr<BlobKeyChainMock<float> > keychain_mock;
   shared_ptr<BlobComms<float> > comms;
-
+  BlobComms<float>::Settings settings;
   int num_of_threads;
 
   void prepare_const_mock(
@@ -107,34 +157,86 @@ struct BlobCommsTest : public Test {
 
   virtual void SetUp() {
     waypoint_mock.reset(new StrictMock<WaypointMock>());
-
+    codec_mock.reset(new NiceMock<BlobCodecMock<float> >());
     const_info_mock.reset(new StrictMock<BlobConstInfoMock>());
     prepare_const_mock(list_of<vector<int> >(list_of<int>(1)));
+    keychain_mock.reset(new StrictMock<BlobKeyChainMock<float> >() );
 
     blob_accessor_mock.reset(new StrictMock<BlobAccessorMock<float> >());
     sync_info.reset(new StrictMock<BlobSyncInfoMock>());
   }
 
   BlobCommsTest()
-      : num_of_threads(1) {}
+      : settings(BlobComms<float>::Settings(
+              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0))
+        , num_of_threads(1){}
 
   virtual void TearDown() {
+    codec_mock.reset();
     sync_info.reset();
     blob_accessor_mock.reset();
+    keychain_mock.reset();
     const_info_mock.reset();
     waypoint_mock.reset();
   }
 
   void buildOne() {
-    codec = BlobCodec<float>::create_codec(
-            MultinodeParameter::default_instance(), true);
+//    codec = BlobCodec<float>::create_codec(
+//            MultinodeParameter::default_instance(), true);
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
+//    settings = BlobComms<float>::Settings(
+//              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0);
     comms = BlobComms<float>::create(blob_accessor_mock,
-            const_info_mock, sync_info, waypoint_mock, codec, keychain,
-            typename BlobComms<float>::Settings(
-              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
-            num_of_threads);
+            const_info_mock, sync_info, waypoint_mock, codec_mock, keychain_mock,
+           settings, num_of_threads);
   }
+  
+  void pushOne(      
+          int layer_id, 
+          int blob_id, 
+          int part_id, 
+          uint32_t version,
+          int size){
+    shared_ptr<BlobCodec<float> > codec = BlobCodec<float>::create_codec(
+            MultinodeParameter::default_instance(), true);
+      
+    BlobUpdate update;
+    update.mutable_info()->set_layer_id(layer_id);
+    update.mutable_info()->set_blob_id(blob_id);
+    update.mutable_info()->set_part(part_id);
+    update.mutable_info()->set_version(version);  
+  //  update.set_iters(size);
+    codec->encode(
+        &update, blob_accessor_mock->get_blob(layer_id, blob_id), 
+        settings.what_sent, update.info().part());     
+    
+    string str = update.SerializeAsString();
+
+    Waypoint::SentCallback callback;
+    BlobUpdate update_call;
+
+
+    //  EXPECT_CALL(codec, encode(&update, update.ByteSize(), _))
+    //      .WillOnce(SaveArg<2>(&callback));
+    //  EXPECT_CALL(*blob_accessor_mock, get_blob(_, _))
+    //      .Times(1);  
+    EXPECT_CALL(*keychain_mock, lock(layer_id))
+        .Times(1);
+    
+    EXPECT_CALL(*codec_mock, encode(
+            _,blob_accessor_mock->get_blob(layer_id, blob_id),
+            BlobEncoding::GRADS, part_id))
+        .Times(1);
+//    update_call(true);
+    
+    EXPECT_CALL(*keychain_mock, unlock(layer_id))
+          .Times(1);  
+
+    EXPECT_CALL(*waypoint_mock, async_send(BufferEq(str), update.ByteSize(), _))
+        .WillOnce(SaveArg<2>(&callback));    
+    comms->push(layer_id, blob_id, part_id,version);
+    callback(true);
+  };
 };
 
 TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
@@ -144,9 +246,6 @@ TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
     EXPECT_DEATH(comms->currently_sending_version(1), "");
 }
 
-MATCHER_P(BufferEq, str, "") {
-  return std::equal(str.c_str(), str.c_str() + str.size(), arg);
-}
 
 void SendIterSize(
         shared_ptr<BlobComms<float> > comms,
@@ -171,6 +270,9 @@ TEST_F(BlobCommsTest, SendIterSize) {
   SendIterSize(comms, waypoint_mock, 101);
   SendIterSize(comms, waypoint_mock, 1);
 }
-
+TEST_F(BlobCommsTest, pushOne) {
+  buildOne();
+  pushOne(0, 0, 0, 1, 10);
+}
 }  // namespace
 }  // namespace caffe
