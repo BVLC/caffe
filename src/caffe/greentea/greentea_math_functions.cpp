@@ -32,10 +32,10 @@
 
 #include "caffe/util/math_functions.hpp"
 
-#if defined (USE_CLBLAS)
-  #include <clBLAS.h>
-#elif defined (USE_CLBLAST)
-  #include <clblast.h>
+#if defined(USE_CLBLAS)
+  #include <clBLAS.h>       // NOLINT
+#elif defined(USE_CLBLAST)
+  #include <clblast.h>      // NOLINT
 #else
   #include "viennacl/linalg/inner_prod.hpp"
   #include "viennacl/linalg/norm_1.hpp"
@@ -209,7 +209,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     int_tp ldb = (TransB == CblasNoTrans) ? N : K;
     int_tp ldc = N;
 
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     clblasOrder clOrder = clblasRowMajor;
     clblasTranspose clTransA =
@@ -231,7 +231,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
               C, offC, ldc, 1, &queue, 0, NULL, NULL));
     }
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -251,9 +251,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Gemm<double>(
@@ -264,9 +262,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           B, offB, ldb,
           beta,
           C, offC, ldc,
-          &queue
-        )
-      );
+          &queue));
     }
 
 #else  // default (ViennaCL)
@@ -322,7 +318,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     else if (TransA == CblasNoTrans && TransB == CblasNoTrans)
       viennacl::linalg::prod_impl(matA, matB, matC, alpha, beta);
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -377,8 +373,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), y, yptr, 0, NULL,
     NULL);
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     clblasTranspose clTransA =
     (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
@@ -397,7 +392,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
               beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
     }
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -419,9 +414,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Gemv<double>(
@@ -432,12 +425,10 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           x, offx, incx,
           beta,
           y, offy, incy,
-          &queue
-        )
-      );
+          &queue));
     }
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -460,12 +451,13 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                                                       size_type(N)
                                                       VCL_ROW_MAJOR);
     v2 *= beta;
-    if (TransA == CblasTrans)
+    if (TransA == CblasTrans) {
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
-    else
+    } else {
       v2 += alpha * viennacl::linalg::prod(mat, v1);
+    }
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -505,8 +497,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
     NULL);
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -520,7 +511,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -534,9 +525,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Axpy<double>(
@@ -544,12 +533,10 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           alpha,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     }
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -562,10 +549,9 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     viennacl::vector_base<Dtype, size_t, ptrdiff_t> v2(Y, size_type(N),
                                                      size_type(offY),
                                                      difference_type(1), ctx);
-
     v2 += alpha * v1;
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -641,8 +627,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x, xptr, 0, NULL,
     NULL);
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -654,7 +639,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
               1, 1, &queue, 0, NULL, NULL));
     }
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -666,21 +651,17 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
           N,
           alpha,
           x, offx, incx,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Scal<double>(
           N,
           alpha,
           x, offx, incx,
-          &queue
-        )
-      );
+          &queue));
     }
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -690,10 +671,9 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(x, size_type(N),
                                                      size_type(offx),
                                                      difference_type(1), ctx);
-
     v1 *= alpha;
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -744,8 +724,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     NULL);
 
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -770,7 +749,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -790,9 +769,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Dot<double>(
@@ -800,16 +777,13 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
           Z, offZ,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     }
 
     greentea_gpu_memcpy(sizeof(Dtype), Z, offZ, out, &ctx);
-
     clReleaseMemObject(Z);
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -825,7 +799,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
     *out = viennacl::linalg::inner_prod(v1, v2);
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -853,8 +827,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
     NULL);
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -879,7 +852,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -897,25 +870,21 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
           n,
           Z, offZ,
           X, offX, incX,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Asum<double>(
           n,
           Z, offZ,
           X, offX, incX,
-          &queue
-        )
-      );
+          &queue));
     }
 
     greentea_gpu_memcpy(sizeof(Dtype), Z, offZ, Y, &ctx);
 
     clReleaseMemObject(Z);
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -928,7 +897,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
     *Y = viennacl::linalg::norm_1(v1);
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
@@ -960,8 +929,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
     NULL);
   } else {
-
-#if defined (USE_CLBLAS)
+#if defined(USE_CLBLAS)
 
     // FIXME: Remove, as can reuse ctx obtained above?
     viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
@@ -980,7 +948,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           clblasDscal(n, alpha, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
 
-#elif defined (USE_CLBLAST)
+#elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
@@ -993,37 +961,29 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
       GREENTEA_CLBLAST_CHECK(
         clblast::Scal<float>(
           n,
           alpha,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     } else {
       GREENTEA_CLBLAST_CHECK(
         clblast::Copy<double>(
           n,
           X, offX, incX,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
       GREENTEA_CLBLAST_CHECK(
         clblast::Scal<double>(
           n,
           alpha,
           Y, offY, incY,
-          &queue
-        )
-      );
+          &queue));
     }
 
-#else // default (ViennaCL)
+#else  // default (ViennaCL)
 
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type size_type;
@@ -1039,7 +999,7 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
 
     v2 = v1 * alpha;
 
-#endif // clBLAS, CLBlast, or default (ViennaCL)
+#endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
 
