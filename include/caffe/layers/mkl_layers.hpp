@@ -467,7 +467,7 @@ class MKLEltwiseLayer : public Layer<Dtype> {
 
   bool stable_prod_grad_;
 };
-#endif // #ifdef USE_MKL2017_NEW_API
+#endif  // #ifdef USE_MKL2017_NEW_API
 
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKL2017_LAYERS_HPP_
