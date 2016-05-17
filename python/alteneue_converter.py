@@ -18,11 +18,11 @@ if __name__ == "__main__":
         with open(args.output_file,'w') as g:
             in_data_section = False
             for line in f:
-                print('incoming line:'+line)
+#                print('incoming line:'+line)
                 if in_data_section:
-                    print('already in data section')
+#                    print('already in data section')
                     if not 'input_dim' in line:
-                        print('end of data section')
+#                        print('end of data section')
                         in_data_section = False
                         input_param_line = input_param_line + ' } } \n}\n'
                         g.write(input_param_line)
@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         input_param_line = input_param_line+' dim: '+str(val)
                         continue
                 if ('input' in line and 'data' in line.lower()):
-                    print('now in data section')
+#                    print('now in data section')
                     in_data_section = True
                     line = 'layer { \n  name: \"data\"\n  type:\"Input\" \n  top: \"data\" \n '
                     input_param_line = ' input_param { shape: { '
@@ -51,5 +51,5 @@ if __name__ == "__main__":
                     if not '"' in new_type:
                         new_type = '\"'+ new_type+ '\"'
                     line = ' type: '+new_type + '\n'
-                print('new line:'+line)
+#                print('new line:'+line)
                 g.write(line)
