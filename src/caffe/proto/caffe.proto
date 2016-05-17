@@ -450,6 +450,7 @@ message LayerParameter {
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
+  optional SplitParameter split_param = 146;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
@@ -548,7 +549,12 @@ message ConcatParameter {
 
   // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
-}
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 3 [default = DEFAULT];}
 
 message BatchNormParameter {
   // If false, accumulate global mean/variance values via a moving average. If
@@ -560,6 +566,25 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 4 [default = DEFAULT];
+  optional bool use_weight_bias = 5 [default = true];
+  optional bool bias_term = 6 [default = true]; // whether to have bias terms
+  optional FillerParameter filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+}
+
+message SplitParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
 }
 
 message BiasParameter {
@@ -745,6 +770,12 @@ message EltwiseParameter {
   // Whether to use an asymptotically slower (for >2 inputs) but stabler method
   // of computing the gradient for the PROD operation. (No effect for SUM op.)
   optional bool stable_prod_grad = 3 [default = true];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 4 [default = DEFAULT];
 }
 
 // Message that stores parameters used by ELULayer

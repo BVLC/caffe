@@ -18,7 +18,7 @@ void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   size_t dim = bottom[0]->shape().size();
   size_t sizes[dim], strides[dim];
   for (size_t d = 0; d < dim; ++d) {
-      sizes[d] = bottom[0]->shape()[d];
+      sizes[d] = bottom[0]->shape()[dim - 1 - d];
       strides[d] = (d == 0) ? 1 : strides[d-1]*sizes[d-1];
   }
 
