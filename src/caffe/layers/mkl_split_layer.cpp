@@ -1,4 +1,4 @@
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
 #include <vector>
 
 #include "caffe/layers/mkl_layers.hpp"
@@ -167,4 +167,4 @@ void MKLSplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
 INSTANTIATE_CLASS(MKLSplitLayer);
 }  // namespace caffe
-#endif  // #ifdef MKL2017_SUPPORTED
+#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)

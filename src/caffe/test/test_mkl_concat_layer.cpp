@@ -1,4 +1,4 @@
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -153,4 +153,4 @@ TYPED_TEST(MKLConcatLayerTest, TestGradientChannelsBottomOneOnly) {
 }
 
 }  // namespace caffe
-#endif  // #ifdef MKL2017_SUPPORTED
+#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)

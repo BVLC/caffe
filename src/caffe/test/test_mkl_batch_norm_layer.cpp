@@ -1,4 +1,4 @@
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
 #include <algorithm>
 #include <cstring>
 #include <vector>
@@ -133,4 +133,4 @@ namespace caffe {
   }
 
 }  // namespace caffe
-#endif  // #ifdef MKL2017_SUPPORTED
+#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)

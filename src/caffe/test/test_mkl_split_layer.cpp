@@ -1,4 +1,4 @@
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
 #include <string>
 #include <vector>
 
@@ -982,4 +982,4 @@ TEST_F(MKLSplitLayerInsertionTest, TestWithInPlace) {
 }
 
 }  // namespace caffe
-#endif  // #ifdef MKL2017_SUPPORTED
+#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)

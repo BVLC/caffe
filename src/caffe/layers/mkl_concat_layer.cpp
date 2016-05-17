@@ -1,4 +1,4 @@
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -224,4 +224,4 @@ void MKLConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
 INSTANTIATE_CLASS(MKLConcatLayer);
 }  // namespace caffe
-#endif  // #ifdef MKL_DNN_SUPPORTED
+#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
