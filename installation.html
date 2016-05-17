@@ -102,7 +102,7 @@ The official Makefile and <code class="highlighter-rouge">Makefile.config</code>
 <ul>
   <li><a href="http://opencv.org/">OpenCV</a> &gt;= 2.4 including 3.0</li>
   <li>IO libraries: <code class="highlighter-rouge">lmdb</code>, <code class="highlighter-rouge">leveldb</code> (note: leveldb requires <code class="highlighter-rouge">snappy</code>)</li>
-  <li>cuDNN for GPU acceleration (v4)</li>
+  <li>cuDNN for GPU acceleration (v5)</li>
 </ul>
 
 <p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
@@ -112,7 +112,7 @@ The official Makefile and <code class="highlighter-rouge">Makefile.config</code>
   <li>For MATLAB Caffe: MATLAB with the <code class="highlighter-rouge">mex</code> compiler.</li>
 </ul>
 
-<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v4; older versions are supported in older Caffe.</p>
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v5; older versions are supported in older Caffe.</p>
 
 <p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code class="highlighter-rouge">CPU_ONLY := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 
@@ -218,7 +218,7 @@ make runtest
 
 <p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with Titan Xs, K80s, GTX 980s, K40s, K20s, Titans, and GTX 770s including models at ImageNet/ILSVRC scale. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
 
-<p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capbility &gt;= 3.0.</p>
+<p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capability &gt;= 3.0.</p>
 
 <p>Once installed, check your times against our <a href="performance_hardware.html">reference performance numbers</a> to make sure everything is configured properly.</p>
 
