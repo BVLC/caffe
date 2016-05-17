@@ -9,6 +9,7 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
+#include <algorithm>
 #include <limits>
 
 #include "caffe/common.hpp"
@@ -346,11 +347,37 @@ void caffe_rng_gaussian<double>(const int n, const double mu,
 
 #ifdef USE_MKL
 static void bernoulli_generate(int n, double p, int* r) {
-  VSLStreamStatePtr stream;
   int seed = 17 + caffe_rng_rand() % 4096;
-  vslNewStream(&stream, VSL_BRNG_MCG31, seed);
-  viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, stream, n, r, p);
-  vslDeleteStream(&stream);
+
+#ifdef _OPENMP
+  int nthr = omp_get_max_threads();
+  // TODO: Threshold is a function of num threads and CPU speed and constant
+  int threshold =  nthr * 768;
+  bool run_parallel =
+    (Caffe::mode() != Caffe::GPU) &&
+    (omp_in_parallel() == 0) &&
+    (n >= threshold);
+  if (!run_parallel) nthr = 1;
+
+# pragma omp parallel num_threads(nthr)
+  {
+    const int ithr = omp_get_thread_num();
+    const int avg_amount = n / nthr;
+    const int my_offset = ithr * avg_amount;
+    const int my_amount = std::min(my_offset + avg_amount, n) - my_offset;
+#else
+  {
+    const int my_amount = n;
+    const int my_offset = 0;
+#endif
+
+    VSLStreamStatePtr stream;
+    vslNewStream(&stream, VSL_BRNG_MCG31, seed);
+    vslSkipAheadStream(stream, my_offset);
+    viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, stream, my_amount,
+      r + my_offset, p);
+    vslDeleteStream(&stream);
+  }
 }
 #endif
 
