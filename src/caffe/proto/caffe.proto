@@ -552,7 +552,6 @@ message ConcatParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
-    CUDNN = 2;
     MKL2017 = 3;
   }
   optional Engine engine = 3 [default = DEFAULT];}
@@ -570,7 +569,6 @@ message BatchNormParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
-    CUDNN = 2;
     MKL2017 = 3;
   }
   optional Engine engine = 4 [default = DEFAULT];
@@ -584,7 +582,6 @@ message SplitParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
-    CUDNN = 2;
     MKL2017 = 3;
   }
   optional Engine engine = 1 [default = DEFAULT];
@@ -776,7 +773,6 @@ message EltwiseParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
-    CUDNN = 2;
     MKL2017 = 3;
   }
   optional Engine engine = 4 [default = DEFAULT];

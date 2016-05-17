@@ -8,10 +8,9 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-//#include "caffe/layers/split_layer.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/insert_splits.hpp"
-#include "caffe/layers/mkl_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

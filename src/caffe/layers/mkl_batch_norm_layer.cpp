@@ -3,14 +3,13 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/layers/mkl_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer()
-{
+MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
   if (batchNormFwd != NULL) dnnDelete<Dtype>(batchNormFwd);
   if (batchNormBwdData != NULL) dnnDelete<Dtype>(batchNormBwdData);
   if (batchNormBwdScaleShift != NULL) dnnDelete<Dtype>(batchNormBwdScaleShift);
@@ -23,7 +22,6 @@ MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer()
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
   eps_ = this->layer_param_.batch_norm_param().eps();
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
   bias_term_ = this->layer_param_.batch_norm_param().bias_term();
@@ -53,12 +51,15 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   scaleShift_buffer_ = NULL;
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
-  batchNormFwd = NULL; // Will be allocated in a "lazy" way in first forward pass
-  batchNormBwdData = NULL; // Will be allocated in a "lazy" way in first backward pass
-  batchNormBwdScaleShift = NULL;  // Will be allocated in a "lazy" way in first backward pass if it is required
 
-  if (use_weight_bias_)
-  {
+  // Will be allocated in a "lazy" way in first forward pass
+  batchNormFwd = NULL;
+  // Will be allocated in a "lazy" way in first backward pass
+  batchNormBwdData = NULL;
+  // Will be allocated in a "lazy" way in first backward pass if it is required
+  batchNormBwdScaleShift = NULL;
+
+  if (use_weight_bias_) {
     if ( bias_term_ ) {
         this->blobs_.resize(2);
     } else {
@@ -70,7 +71,8 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     this->blobs_[0].reset(new Blob<Dtype>(scaleshift_shape));
     Dtype* data = this->blobs_[0]->mutable_cpu_data();
-    FillerParameter filler_param(this->layer_param_.batch_norm_param().filler());
+    FillerParameter filler_param(
+      this->layer_param_.batch_norm_param().filler());
     if (!this->layer_param_.batch_norm_param().has_filler()) {
       filler_param.set_type("constant");
       filler_param.set_value(1);
@@ -81,12 +83,14 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     if ( bias_term_ ) {
       this->blobs_[1].reset(new Blob<Dtype>(scaleshift_shape));
       Dtype* data = this->blobs_[1]->mutable_cpu_data();
-      FillerParameter bias_filler_param(this->layer_param_.batch_norm_param().bias_filler());
+      FillerParameter bias_filler_param(
+        this->layer_param_.batch_norm_param().bias_filler());
       if (!this->layer_param_.batch_norm_param().has_bias_filler()) {
         bias_filler_param.set_type("constant");
         bias_filler_param.set_value(0);
       }
-      shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(bias_filler_param));
+      shared_ptr<Filler<Dtype> > bias_filler(
+        GetFiller<Dtype>(bias_filler_param));
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
@@ -95,8 +99,7 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top)
-{
+      const vector<Blob<Dtype>*>& top) {
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -107,24 +110,27 @@ void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  void* bottom_data = (void*)bottom[0]->prv_data();
+  void* bottom_data =
+    reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
   void* top_data = NULL;
   int is_first_pass = 0;
 
-  if(NULL != bottom_data)
-  {
+  if (NULL != bottom_data) {
     // Is it the first pass? Create a primitive.
     if (batchNormFwd == NULL) {
       is_first_pass = 1;
 
-      CHECK((bottom[0]->get_prv_descriptor_data())->get_descr_type() == PrvMemDescr::PRV_DESCR_MKL2017);
+      CHECK((bottom[0]->get_prv_descriptor_data())->get_descr_type() ==
+        PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLData<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MKLData<Dtype> > (bottom[0]->get_prv_descriptor_data());
+        =  boost::static_pointer_cast<MKLData<Dtype> >(
+           bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;
 
-      e = dnnBatchNormalizationCreateForward<Dtype>(&batchNormFwd, NULL, mem_descr->layout_int, eps_);
+      e = dnnBatchNormalizationCreateForward<Dtype>(
+        &batchNormFwd, NULL, mem_descr->layout_int, eps_);
       CHECK_EQ(e, E_SUCCESS);
 
       fwd_top_data = mem_descr;
@@ -139,30 +145,35 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       is_first_pass = 1;
 
       dnnError_t e;
-      e = dnnBatchNormalizationCreateForward<Dtype>(&batchNormFwd, NULL, layout_usr_, eps_);
+      e = dnnBatchNormalizationCreateForward<Dtype>(
+        &batchNormFwd, NULL, layout_usr_, eps_);
       CHECK_EQ(e, E_SUCCESS);
     }
-    bottom_data = (void*)bottom[0]->cpu_data();
+    bottom_data =
+      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
     top_data = top[0]->mutable_cpu_data();
   }
   if (is_first_pass == 1) {
       dnnError_t e;
 
       dnnLayout_t workspace_buffer_l = NULL;
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&workspace_buffer_l, batchNormFwd, dnnResourceWorkspace);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(
+        &workspace_buffer_l, batchNormFwd, dnnResourceWorkspace);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnAllocateBuffer<Dtype>((void **)&workspace_buffer_, workspace_buffer_l);
+      e = dnnAllocateBuffer<Dtype>(
+        reinterpret_cast<void**>(&workspace_buffer_), workspace_buffer_l);
       CHECK_EQ(e, E_SUCCESS);
       dnnLayoutDelete<Dtype>(workspace_buffer_l);
 
       dnnLayout_t scaleShift_buffer_l = NULL;
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&scaleShift_buffer_l, batchNormFwd, dnnResourceScaleShift);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(
+        &scaleShift_buffer_l, batchNormFwd, dnnResourceScaleShift);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnAllocateBuffer<Dtype>((void **)&scaleShift_buffer_, scaleShift_buffer_l);
+      e = dnnAllocateBuffer<Dtype>(
+        reinterpret_cast<void**>(&scaleShift_buffer_), scaleShift_buffer_l);
       CHECK_EQ(e, E_SUCCESS);
       dnnLayoutDelete<Dtype>(scaleShift_buffer_l);
-      if (!use_weight_bias_)
-      {
+      if (!use_weight_bias_) {
          for (int i = 0; i < channels_; i++) {
             scaleShift_buffer_[i] = 1.0;
             scaleShift_buffer_[channels_ + i] = 0;
@@ -195,42 +206,56 @@ template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  void* top_diff = (void*)top[0]->prv_diff();
-  void* bottom_data = (void*)bottom[0]->prv_data();
+  void* top_diff =
+    reinterpret_cast<void *>(const_cast<Dtype*>(top[0]->prv_diff()));
+  void* bottom_data =
+    reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
   void* bottom_diff = NULL;
 
   if (top_diff && bottom_data) {
-    bottom_diff = (void*)bottom[0]->mutable_prv_diff();
+    bottom_diff =
+      reinterpret_cast<void *>(
+        const_cast<Dtype*>(bottom[0]->mutable_prv_diff()));
     // Is it the first pass? Create a primitive.
     if (batchNormBwdData == NULL) {
-      CHECK((top[0]->get_prv_descriptor_diff())->get_descr_type() == PrvMemDescr::PRV_DESCR_MKL2017);
+      CHECK((top[0]->get_prv_descriptor_diff())->get_descr_type() ==
+        PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLDiff<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MKLDiff<Dtype> > (top[0]->get_prv_descriptor_diff());
+        =  boost::static_pointer_cast<MKLDiff<Dtype> >(
+             top[0]->get_prv_descriptor_diff());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;
-      e = dnnBatchNormalizationCreateBackwardData<Dtype>(&batchNormBwdData, NULL, mem_descr->layout_int, eps_);
+      e = dnnBatchNormalizationCreateBackwardData<Dtype>(
+        &batchNormBwdData, NULL, mem_descr->layout_int, eps_);
       CHECK_EQ(e, E_SUCCESS);
 
       bwd_bottom_diff = mem_descr;
 
       if (use_weight_bias_) {
-        e = dnnBatchNormalizationCreateBackwardScaleShift<Dtype>(&batchNormBwdScaleShift, NULL, mem_descr->layout_int, eps_);
+        e = dnnBatchNormalizationCreateBackwardScaleShift<Dtype>(
+          &batchNormBwdScaleShift, NULL, mem_descr->layout_int, eps_);
       }
     }
     bottom[0]->set_prv_descriptor_diff(bwd_bottom_diff);
 
   } else {
     DLOG(INFO) << "Using cpu_data in MKLBatchNormLayer.";
-    top_diff = (void*)top[0]->cpu_diff();
-    bottom_data = (void*)bottom[0]->cpu_data();
-    bottom_diff = (void*)bottom[0]->mutable_cpu_diff();
+    top_diff =
+      reinterpret_cast<void *>(const_cast<Dtype*>(top[0]->cpu_diff()));
+    bottom_data =
+      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
+    bottom_diff =
+      reinterpret_cast<void *>(
+        const_cast<Dtype*>(bottom[0]->mutable_cpu_diff()));
     if (batchNormBwdData == NULL) {
       dnnError_t e;
-      e = dnnBatchNormalizationCreateBackwardData<Dtype>(&batchNormBwdData, NULL, layout_usr_, eps_);
+      e = dnnBatchNormalizationCreateBackwardData<Dtype>(
+        &batchNormBwdData, NULL, layout_usr_, eps_);
       CHECK_EQ(e, E_SUCCESS);
       if (use_weight_bias_) {
-        e = dnnBatchNormalizationCreateBackwardScaleShift<Dtype>(&batchNormBwdScaleShift, NULL, layout_usr_, eps_);
+        e = dnnBatchNormalizationCreateBackwardScaleShift<Dtype>(
+          &batchNormBwdScaleShift, NULL, layout_usr_, eps_);
         CHECK_EQ(e, E_SUCCESS);
       }
     }
@@ -283,6 +308,6 @@ void MKLBatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif
 
 INSTANTIATE_CLASS(MKLBatchNormLayer);
-//REGISTER_LAYER_CLASS(MKLBatchNorm);
+// REGISTER_LAYER_CLASS(MKLBatchNorm);
 }  // namespace caffe
-#endif //#ifdef MKL2017_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED

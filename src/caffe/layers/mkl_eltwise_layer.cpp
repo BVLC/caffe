@@ -8,9 +8,9 @@
 namespace caffe {
 
 template <typename Dtype>
-MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer()
-{
-  if (sumPrimitive != NULL) dnnDelete<Dtype>(sumPrimitive);
+MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
+  if (sumPrimitive != NULL)
+    dnnDelete<Dtype>(sumPrimitive);
 }
 
 template <typename Dtype>
@@ -24,8 +24,9 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       && this->layer_param().eltwise_param().coeff_size())) <<
       "MKLEltwise layer only takes coefficients for summation.";
 
-  CHECK(this->layer_param().eltwise_param().operation() == EltwiseParameter_EltwiseOp_SUM) <<
-      "MKLEltwise Layer only process summation.";
+  CHECK(this->layer_param().eltwise_param().operation() ==
+    EltwiseParameter_EltwiseOp_SUM)
+      << "MKLEltwise Layer only process summation.";
 
   op_ = this->layer_param_.eltwise_param().operation();
   // Blob-wise coefficients for the elementwise operation.
@@ -49,14 +50,17 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       strides_src[d] = (d == 0) ? 1 : strides_src[d-1]*sizes_src[d-1];
   }
 
-  for ( size_t i = 0; i < num_bottoms; ++i) {
-      fwd_bottom_data.push_back(shared_ptr<MKLData<Dtype> >(new MKLData<Dtype>));
+  for (size_t i = 0; i < num_bottoms; ++i) {
+      fwd_bottom_data.push_back(
+        shared_ptr<MKLData<Dtype> >(new MKLData<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      e = dnnLayoutCreate<Dtype>(&(fwd_bottom_data[i]->layout_usr), dim_src, sizes_src, strides_src);
+      e = dnnLayoutCreate<Dtype>(&(fwd_bottom_data[i]->layout_usr),
+         dim_src, sizes_src, strides_src);
       CHECK_EQ(e, E_SUCCESS);
   }
 
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim_src, sizes_src, strides_src);
+  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr,
+    dim_src, sizes_src, strides_src);
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -76,29 +80,31 @@ void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Forward_cpu(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
-{
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   dnnError_t e;
   vector<void*> bottom_data;
   bool num_prv = 0;
   for (size_t i = 0; i < num_bottoms; i++) {
-    bottom_data.push_back((void*)bottom[i]->prv_data());
+    bottom_data.push_back(
+      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[i]->prv_data())));
     if (bottom_data[i] != NULL) {
       num_prv += 1;
     } else {
-      bottom_data[i] = (void*)bottom[i]->cpu_data();
+      bottom_data[i] =
+        reinterpret_cast<void *>(const_cast<Dtype*>(bottom[i]->cpu_data()));
     }
   }
 
-  if (num_prv > 0)
-  {
+  if (num_prv > 0) {
     if (sumPrimitive == NULL) {
       dnnLayout_t int_layout = NULL;
       for (size_t i = 0; i < num_bottoms; ++i) {
-        if ( bottom[i]->prv_data() != NULL) {
-          CHECK((bottom[i]->get_prv_descriptor_data())->get_descr_type() == PrvMemDescr::PRV_DESCR_MKL2017);
+        if (bottom[i]->prv_data() != NULL) {
+          CHECK((bottom[i]->get_prv_descriptor_data())->get_descr_type()
+            == PrvMemDescr::PRV_DESCR_MKL2017);
           shared_ptr<MKLData<Dtype> > mem_descr =
-              boost::static_pointer_cast<MKLData<Dtype> > (bottom[i]->get_prv_descriptor_data());
+              boost::static_pointer_cast<MKLData<Dtype> >(
+                bottom[i]->get_prv_descriptor_data());
           CHECK(mem_descr != NULL);
           fwd_bottom_data[i] = mem_descr;
           if (int_layout == NULL) {
@@ -106,26 +112,29 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
           }
         }
       }
-      e = dnnSumCreate<Dtype>(&sumPrimitive, NULL, num_bottoms, int_layout, &coeffs_[0]);
+      e = dnnSumCreate<Dtype>(&sumPrimitive, NULL,
+        num_bottoms, int_layout, &coeffs_[0]);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int, sumPrimitive, dnnResourceDst);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
+        sumPrimitive, dnnResourceDst);
       CHECK_EQ(e, E_SUCCESS);
       fwd_top_data->create_conversions();
 
       for (int i = 0; i < num_bottoms; ++i) {
-        if ( bottom[i]->prv_data() == NULL) {
-          e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_bottom_data[i]->layout_int, sumPrimitive, (dnnResourceType_t)(dnnResourceMultipleSrc + i));
+        if (bottom[i]->prv_data() == NULL) {
+          e = dnnLayoutCreateFromPrimitive<Dtype>(
+            &fwd_bottom_data[i]->layout_int, sumPrimitive,
+              (dnnResourceType_t)(dnnResourceMultipleSrc + i));
           CHECK_EQ(e, E_SUCCESS);
           fwd_bottom_data[i]->create_conversions();
         }
       }
     }
-  }
-  else
-  {
+  } else {
     if (sumPrimitive == NULL) {
-      e = dnnSumCreate<Dtype>(&sumPrimitive, NULL, num_bottoms, fwd_top_data->layout_usr, &coeffs_[0]);
+      e = dnnSumCreate<Dtype>(&sumPrimitive, NULL, num_bottoms,
+        fwd_top_data->layout_usr, &coeffs_[0]);
       CHECK_EQ(e, E_SUCCESS);
     }
   }
@@ -134,18 +143,22 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
   case EltwiseParameter_EltwiseOp_SUM:
     void *eltwise_res[dnnResourceNumber];
     for (int i = 0; i < num_bottoms; ++i) {
-      if (fwd_bottom_data[i]->convert_to_int ) {
-        eltwise_res[dnnResourceMultipleSrc + i] = fwd_bottom_data[i]->get_converted_prv(bottom[i], false);
+      if (fwd_bottom_data[i]->convert_to_int) {
+        eltwise_res[dnnResourceMultipleSrc + i] =
+          fwd_bottom_data[i]->get_converted_prv(bottom[i], false);
       } else {
-        eltwise_res[dnnResourceMultipleSrc + i] = (void*)bottom_data[i];
+        eltwise_res[dnnResourceMultipleSrc + i] =
+          reinterpret_cast<void *>(bottom_data[i]);
       }
     }
 
     if (fwd_top_data->convert_from_int) {
       top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
-      eltwise_res[dnnResourceDst] = (void*)fwd_top_data->internal_ptr;
+      eltwise_res[dnnResourceDst] =
+        reinterpret_cast<void*>(const_cast<Dtype*>(fwd_top_data->internal_ptr));
     } else {
-      eltwise_res[dnnResourceDst] = (void*)(top[0]->mutable_cpu_data());
+      eltwise_res[dnnResourceDst] =
+        reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
     }
 
     e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
@@ -158,7 +171,6 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
-
 }
 
 template <typename Dtype>

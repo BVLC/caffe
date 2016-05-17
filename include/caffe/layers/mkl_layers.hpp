@@ -303,24 +303,28 @@ class MKLConcatLayer : public Layer<Dtype> {
   explicit MKLConcatLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
       fwd_top_data_    (new MKLData<Dtype>()),
-      bwd_top_diff_    (new MKLDiff<Dtype>()){}
+      bwd_top_diff_    (new MKLDiff<Dtype>()) {
+      }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
   ~MKLConcatLayer();
 
-protected:
+ protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
 
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-private:
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+ private:
   dnnPrimitive_t concatFwd_;
   dnnPrimitive_t concatBwd_;
   shared_ptr<MKLData<Dtype> > fwd_top_data_;
@@ -343,8 +347,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
       : Layer<Dtype>(param),
         fwd_top_data    (new MKLData<Dtype>()),
         bwd_bottom_diff (new MKLDiff<Dtype>()),
-        batchNormFwd(NULL), batchNormBwdData(NULL), batchNormBwdScaleShift(NULL)
-       {
+        batchNormFwd(NULL), batchNormBwdData(NULL),
+        batchNormBwdScaleShift(NULL) {
        }
   virtual ~MKLBatchNormLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -390,8 +394,7 @@ class MKLSplitLayer : public Layer<Dtype> {
   explicit MKLSplitLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         bwd_bottom_diff (new MKLDiff<Dtype>()),
-        sumPrimitive(NULL)
-       {
+        sumPrimitive(NULL) {
        }
   virtual ~MKLSplitLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -427,8 +430,7 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   explicit MKLEltwiseLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         fwd_top_data       (new MKLData<Dtype>()),
-        sumPrimitive(NULL)
-       {
+        sumPrimitive(NULL) {
        }
   virtual ~MKLEltwiseLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -465,5 +467,5 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   bool stable_prod_grad_;
 };
 
-} // namespace caffe
+}  // namespace caffe
 #endif  // #ifndef CAFFE_MKL2017_LAYERS_HPP_

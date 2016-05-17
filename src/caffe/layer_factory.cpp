@@ -7,6 +7,8 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
+#include "caffe/layers/batch_norm_layer.hpp"
+#include "caffe/layers/concat_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
@@ -14,8 +16,6 @@
 #include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
-#include "caffe/layers/concat_layer.hpp"
-#include "caffe/layers/batch_norm_layer.hpp"
 #ifdef MKL2017_SUPPORTED
 #include "caffe/layers/mkl_layers.hpp"
 #endif
@@ -30,7 +30,6 @@
 #include "caffe/layers/cudnn_sigmoid_layer.hpp"
 #include "caffe/layers/cudnn_softmax_layer.hpp"
 #include "caffe/layers/cudnn_tanh_layer.hpp"
-#include "caffe/layers/batch_norm_layer.hpp"
 #endif
 
 #ifdef WITH_PYTHON_LAYER
@@ -191,21 +190,6 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
 
   if (engine == BatchNormParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new BatchNormLayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == BatchNormParameter_Engine_CUDNN) {
-    BatchNormParameter batch_norm_param = param.batch_norm_param();
-
-    if (batch_norm_param.norm_region() ==BatchNormParameter_NormRegion_WITHIN_CHANNEL) {
-      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
-    } else {
-      // local size is too big to be handled through cuDNN
-      if (param.batch_norm_param().local_size() > CUDNN_BatchNorm_MAX_N) {
-        return shared_ptr<Layer<Dtype> >(new BatchNormLayer<Dtype>(param));
-      } else {
-        return shared_ptr<Layer<Dtype> >(new CuDNNBatchNormLayer<Dtype>(param));
-      }
-    }
-#endif
 #ifdef MKL2017_SUPPORTED
   } else if (engine == BatchNormParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLBatchNormLayer<Dtype>(param));
