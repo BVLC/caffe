@@ -30,12 +30,13 @@ class device {
   int id() const;
   int list_id() const;
   int current_queue_id();
-  int WorkgroupSize(int id);
+  int workgroup_size(int id);
+  int max_workgroup_size(int id);
 
 #ifdef USE_GREENTEA
   viennacl::ocl::program &program();
   void SetProgram();
-  bool isHostUnified();
+  bool is_host_unified();
 #endif  // USE_GREENTEA
 
   template<typename Dtype>
@@ -58,6 +59,7 @@ class device {
  private:
   int current_queue_id_;
   std::vector<int> workgroup_sizes_;
+  int max_workgroup_size_;
   int id_;
   int list_id_;
   Backend backend_;

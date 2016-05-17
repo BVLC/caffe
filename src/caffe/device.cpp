@@ -74,9 +74,12 @@ int device::list_id() const {
   return list_id_;
 }
 
-int device::WorkgroupSize(int id) {
-  return workgroup_sizes_[id];
-  return 0;
+int device::workgroup_size(int id) {
+  return workgroup_sizes_[id % 3];
+}
+
+int device::max_workgroup_size(int id) {
+  return max_workgroup_size_;
 }
 
 int device::num_queues() {
@@ -188,7 +191,7 @@ bool device::CheckCapability(std::string cap) {
     return extsstr.find(cap) != std::string::npos;
 #endif
   }
-  return true;
+  return false;
 }
 
 bool device::CheckVendor(std::string vendor) {
@@ -219,7 +222,7 @@ void device::SetProgram() {
       &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
 }
 
-bool device::isHostUnified() {
+bool device::is_host_unified() {
   return host_unified_;
 }
 

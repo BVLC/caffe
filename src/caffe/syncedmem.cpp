@@ -10,7 +10,7 @@
 #include "caffe/greentea/greentea_math_functions.hpp"
 
 #define ZEROCOPY_SUPPORTED(device, ptr, size) \
-             (device->isHostUnified() &&\
+             (device->is_host_unified() &&\
              ((uintptr_t)(ptr) % OPENCL_PAGE_ALIGN) == 0 &&\
              ((size) % OPENCL_CACHE_ALIGN) == 0)
 #endif
@@ -183,7 +183,7 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                      CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                      size_, nullptr, &err);
-        } else if (device_->isHostUnified()) {
+        } else if (device_->is_host_unified()) {
             // auto saved_mode = Caffe::mode();
             // Caffe::set_mode(Caffe::GPU);
             CaffeMallocHost(&cpu_ptr_, size_, device_);

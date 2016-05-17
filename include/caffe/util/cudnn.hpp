@@ -165,9 +165,19 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
   const int* shape_ptr = &shape_int[0];
 
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
+<<<<<<< HEAD
   CUDNN_CHECK(cudnnSetFilterNdDescriptor(*desc, dataType<Dtype>::type,
                                          num_spatial_dims + 2,
                                          shape_ptr));
+=======
+#if CUDNN_VERSION_MIN(5, 0, 0)
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
+      CUDNN_TENSOR_NCHW, n, c, h, w));
+#else
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor_v4(*desc, dataType<Dtype>::type,
+      CUDNN_TENSOR_NCHW, n, c, h, w));
+#endif
+>>>>>>> 7cf3538407f183fc277479f434acf7086a9cc34f
 }
 
 template <typename Dtype>
@@ -216,6 +226,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     LOG(FATAL) << "Unknown pooling method.";
   }
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+<<<<<<< HEAD
 
   std::vector<int> shape_int(num_spatial_dims);
   std::vector<int> pad_int(num_spatial_dims);
@@ -236,6 +247,23 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
                                           shape_ptr,
                                           pad_ptr,
                                           stride_ptr));
+=======
+#if CUDNN_VERSION_MIN(5, 0, 0)
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode,
+        CUDNN_PROPAGATE_NAN, h, w, pad_h, pad_w, stride_h, stride_w));
+#else
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor_v4(*pool_desc, *mode,
+        CUDNN_PROPAGATE_NAN, h, w, pad_h, pad_w, stride_h, stride_w));
+#endif
+}
+
+template <typename Dtype>
+inline void createActivationDescriptor(cudnnActivationDescriptor_t* activ_desc,
+    cudnnActivationMode_t mode) {
+  CUDNN_CHECK(cudnnCreateActivationDescriptor(activ_desc));
+  CUDNN_CHECK(cudnnSetActivationDescriptor(*activ_desc, mode,
+                                           CUDNN_PROPAGATE_NAN, Dtype(0)));
+>>>>>>> 7cf3538407f183fc277479f434acf7086a9cc34f
 }
 
 }  // namespace cudnn
