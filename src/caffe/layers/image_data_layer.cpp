@@ -1,6 +1,7 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 
+#include <cstdlib>
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <string>
@@ -37,9 +38,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string filename;
-  int label;
-  while (infile >> filename >> label) {
+  string line;
+  while (std::getline(infile, line)) {
+    int split_i = line.find_last_of(" ");
+    string filename = line.substr(0, split_i);
+    int label = atoi(line.substr(split_i + 1).c_str());
     lines_.push_back(std::make_pair(filename, label));
   }
 

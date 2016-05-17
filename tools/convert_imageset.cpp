@@ -9,6 +9,7 @@
 //   ....
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <utility>
@@ -73,9 +74,12 @@ int main(int argc, char** argv) {
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
-  std::string filename;
-  int label;
-  while (infile >> filename >> label) {
+
+  string line;
+  while (std::getline(infile, line)) {
+    int split_i = line.find_last_of(" ");
+    string filename = line.substr(0, split_i);
+    int label = atoi(line.substr(split_i + 1).c_str());
     lines.push_back(std::make_pair(filename, label));
   }
   if (FLAGS_shuffle) {
