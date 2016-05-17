@@ -116,7 +116,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   trans_timer.Start();
 #ifdef _OPENMP
-  #pragma omp parallel
+  #pragma omp parallel if (batch_size > 1)
   #pragma omp single nowait
 #endif
   for (int item_id = 0; item_id < batch_size; ++item_id) {
