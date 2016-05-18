@@ -179,9 +179,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   BatchNormParameter_Engine engine = param.batch_norm_param().engine();
 
   if (engine == BatchNormParameter_Engine_DEFAULT) {
-#ifdef USE_CUDNN
-    engine = BatchNormParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = BatchNormParameter_Engine_MKL2017;
 #else
     engine = BatchNormParameter_Engine_CAFFE;
@@ -207,9 +205,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
   SplitParameter_Engine engine = param.split_param().engine();
 
   if (engine == SplitParameter_Engine_DEFAULT) {
-#ifdef USE_CUDNN
-    engine = SplitParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = SplitParameter_Engine_MKL2017;
 #else
     engine = SplitParameter_Engine_CAFFE;
@@ -218,21 +214,6 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
 
   if (engine == SplitParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new SplitLayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == SplitParameter_Engine_CUDNN) {
-    SplitParameter split_param = param.split_param();
-
-    if (split_param.norm_region() ==SplitParameter_NormRegion_WITHIN_CHANNEL) {
-      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
-    } else {
-      // local size is too big to be handled through cuDNN
-      if (param.split_param().local_size() > CUDNN_Split_MAX_N) {
-        return shared_ptr<Layer<Dtype> >(new SplitLayer<Dtype>(param));
-      } else {
-        return shared_ptr<Layer<Dtype> >(new CuDNNSplitLayer<Dtype>(param));
-      }
-    }
-#endif
 #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == SplitParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLSplitLayer<Dtype>(param));
