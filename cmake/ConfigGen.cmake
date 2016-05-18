@@ -109,7 +109,7 @@ function(caffe_generate_export_configs)
 
   # ---[ Configure and install version file ]---
 
-  # TODO: Lines below are commented because Caffe does't declare its version in headers.
+  # TODO: Lines below are commented because Caffe doesn't declare its version in headers.
   # When the declarations are added, modify `caffe_extract_caffe_version()` macro and uncomment
 
   # configure_file(cmake/Templates/CaffeConfigVersion.cmake.in "${PROJECT_BINARY_DIR}/CaffeConfigVersion.cmake" @ONLY)
