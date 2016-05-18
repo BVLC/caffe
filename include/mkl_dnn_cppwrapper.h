@@ -633,4 +633,153 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateBackward<double>(
         srcLayout,
         kernelSize, kernelStride,
         inputOffset,border_type);}
+
+#ifdef USE_MKL2017_NEW_API
+TEMPLATE_PREFIX dnnError_t dnnConcatCreate(
+        dnnPrimitive_t *pConcat,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src[]);
+SPEC_PREFIX dnnError_t dnnConcatCreate<float>(
+        dnnPrimitive_t *pConcat,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src[])
+{return dnnConcatCreate_F32(
+        pConcat,
+        ATTRIBUTES
+        N,
+        src);}
+SPEC_PREFIX dnnError_t dnnConcatCreate<double>(
+        dnnPrimitive_t *pConcat,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src[])
+{return dnnConcatCreate_F64(
+        pConcat,
+        ATTRIBUTES
+        N,
+        src);}
+
+
+TEMPLATE_PREFIX dnnError_t dnnSplitCreate(
+        dnnPrimitive_t *pSplit,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src,
+        size_t dst[]);
+SPEC_PREFIX dnnError_t dnnSplitCreate<float>(
+        dnnPrimitive_t *pSplit,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src,
+        size_t dst[])
+{return dnnSplitCreate_F32(
+        pSplit,
+        ATTRIBUTES
+        N,
+        src,
+        dst);}
+SPEC_PREFIX dnnError_t dnnSplitCreate<double>(
+        dnnPrimitive_t *pSplit,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t N,
+        dnnLayout_t src,
+        size_t dst[])
+{return dnnSplitCreate_F64(
+        pSplit,
+        ATTRIBUTES
+        N,
+        src,
+        dst);}
+
+TEMPLATE_PREFIX dnnError_t dnnSumCreate(
+        dnnPrimitive_t *pSum,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t nSummands, dnnLayout_t layout, Dtype *coefficients);
+SPEC_PREFIX dnnError_t dnnSumCreate<float>(
+        dnnPrimitive_t *pSum,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t nSummands, dnnLayout_t layout, float *coefficients)
+{return dnnSumCreate_F32(
+        pSum,
+        ATTRIBUTES
+        nSummands,
+        layout, coefficients);}
+SPEC_PREFIX dnnError_t dnnSumCreate<double>(
+        dnnPrimitive_t *pSum,
+        dnnPrimitiveAttributes_t attributes,
+        const size_t nSummands, dnnLayout_t layout, double *coefficients)
+{return dnnSumCreate_F64(
+        pSum,
+        ATTRIBUTES
+        nSummands,
+        layout, coefficients);}
+
+TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateForward(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps);
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<float>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateForward_F32(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<double>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateForward_F64(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+
+
+TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardData(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps);
+SPEC_PREFIX  dnnError_t dnnBatchNormalizationCreateBackwardData<float>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateBackwardData_F32(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardData<double>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateBackwardData_F64(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+
+TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps);
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<float>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateBackwardScaleShift_F32(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<double>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps)
+{return dnnBatchNormalizationCreateBackwardScaleShift_F64(
+        pBatchNormalization,
+        ATTRIBUTES
+        dataLayout, eps); }
+#endif // #ifdef USE_MKL2017_NEW_API
+
 #endif
