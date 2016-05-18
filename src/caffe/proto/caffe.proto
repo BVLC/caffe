@@ -795,6 +795,11 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+  // The label value to assign to ignored labels.
+  optional int32 ignore_label = 13 [default = -1];
+  // The following separators indicate how a list of labels are separated.
+  optional string label_separator = 14 [default = " "];
+  optional string label_list_separator = 15 [default = ";"];
 }
 
 message InfogainLossParameter {

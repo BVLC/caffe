@@ -1,7 +1,7 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 
-#include <fstream>  // NOLINT(readability/streams)
+#include <fstream>   // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <string>
 #include <utility>
@@ -24,23 +24,99 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 
 template <typename Dtype>
 void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+                                           const vector<Blob<Dtype>*>& top) {
   const int new_height = this->layer_param_.image_data_param().new_height();
-  const int new_width  = this->layer_param_.image_data_param().new_width();
-  const bool is_color  = this->layer_param_.image_data_param().is_color();
+  const int new_width = this->layer_param_.image_data_param().new_width();
+  const bool is_color = this->layer_param_.image_data_param().is_color();
   string root_folder = this->layer_param_.image_data_param().root_folder();
 
+  // Initialise the label values.
+  LABEL_VALUES[0] = USE_LABEL;
+  LABEL_VALUES[1] = ignore_label_;
+
+  // The separators used for label lists.
+  char label_separator =
+      this->layer_param_.image_data_param().label_separator().at(0);
+  char label_list_separator =
+      this->layer_param_.image_data_param().label_list_separator().at(0);
+
   CHECK((new_height == 0 && new_width == 0) ||
-      (new_height > 0 && new_width > 0)) << "Current implementation requires "
-      "new_height and new_width to be set at the same time.";
+        (new_height > 0 && new_width > 0))
+      << "Current implementation requires "
+         "new_height and new_width to be set at the same time.";
+
+  CHECK_NE(label_separator, label_list_separator)
+      << "The separators "
+         "specified for the labels and the list of labels may not be the same.";
+
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
   string filename;
   int label;
-  while (infile >> filename >> label) {
-    lines_.push_back(std::make_pair(filename, label));
+
+  int max_label_id = 0;
+  bool is_multi_label = false;
+
+  string line;
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+
+    // Check if this is a comment line
+    if (iss.peek() == '#') continue;
+
+    iss >> filename;
+    vector<vector<int> > labels(NUM_LABEL_LISTS);
+    int total_labels = 0;
+
+    while (iss.peek() == ' ') {
+      iss.ignore();
+    }
+
+
+    for (int v = 0; v < labels.size(); ++v) {
+      while (iss.peek() == ' ') {
+        iss.ignore();
+      }
+      // Check for the label and ignore list separator.
+      if (iss.peek() == label_list_separator) {
+        iss.ignore();
+        is_multi_label = true;
+        continue;
+      }
+      while (iss >> label) {
+        if (label > max_label_id) {
+          max_label_id = label;
+        }
+        labels[v].push_back(label);
+        total_labels++;
+
+        // Check for the item separator.
+        if (iss.peek() == label_separator) {
+          iss.ignore();
+        }
+        // Check for the label and ignore list separator.
+        if (iss.peek() == label_list_separator) {
+          iss.ignore();
+          break;
+        }
+      }
+    }
+
+    // The example is multi-label if more than one label has been specified per
+    // line (this includes ignore labels).
+    if (total_labels > 1) {
+      is_multi_label = true;
+    }
+
+    lines_.push_back(std::make_pair(filename, labels));
+  }
+
+  if (is_multi_label) {
+    num_labels_per_line_ = max_label_id + 1;
+  } else {
+    num_labels_per_line_ = 1;
   }
 
   if (this->layer_param_.image_data_param().shuffle()) {
@@ -55,8 +131,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-        this->layer_param_.image_data_param().rand_skip();
+    unsigned int skip =
+        caffe_rng_rand() % this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
     lines_id_ = skip;
@@ -78,10 +154,12 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(top_shape);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
-      << top[0]->channels() << "," << top[0]->height() << ","
-      << top[0]->width();
+            << top[0]->channels() << "," << top[0]->height() << ","
+            << top[0]->width();
   // label
-  vector<int> label_shape(1, batch_size);
+  vector<int> label_shape(2);
+  label_shape[0] = batch_size;
+  label_shape[1] = num_labels_per_line_;
   top[1]->Reshape(label_shape);
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].label_.Reshape(label_shape);
@@ -115,7 +193,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-      new_height, new_width, is_color);
+                                    new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_img.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
@@ -127,6 +205,9 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
+  // Init the labels to 0.
+  caffe_set(batch_size * num_labels_per_line_, Dtype(0), prefetch_label);
+
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -134,7 +215,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-        new_height, new_width, is_color);
+                                      new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
@@ -144,7 +225,26 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    prefetch_label[item_id] = lines_[lines_id_].second;
+    if (num_labels_per_line_ == 1) {
+      prefetch_label[item_id] = lines_[lines_id_].second[0][0];
+    } else {
+      int label_offset = batch->label_.offset(item_id);
+      // Set the labels and ignore label values.
+      for (int v = 0; v < NUM_LABEL_LISTS; ++v) {
+        for (int l = 0; l < lines_[lines_id_].second[v].size(); ++l) {
+          int label_id = lines_[lines_id_].second[v][l];
+
+          Dtype current_value = prefetch_label[label_offset + label_id];
+          bool OK = (current_value == 0 || current_value == LABEL_VALUES[v]);
+
+          CHECK(OK) << "label " << label_id << " on line " << lines_id_
+                    << " already set (item_id: " << item_id << ")";
+
+          prefetch_label[label_offset + label_id] = LABEL_VALUES[v];
+        }
+      }
+    }
+
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
