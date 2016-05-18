@@ -1,3 +1,6 @@
+sudo: required
+dist: precise
+
 # Use a build matrix to do two builds in parallel:
 # one using CMake, and one using make.
 env:
