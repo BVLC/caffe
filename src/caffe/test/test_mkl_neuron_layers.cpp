@@ -39,7 +39,9 @@ class MKLNeuronLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MKLNeuronLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLNeuronLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLNeuronLayerTest, TestReLU) {
   typedef typename TypeParam::Dtype Dtype;

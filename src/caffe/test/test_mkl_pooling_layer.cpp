@@ -368,7 +368,9 @@ class MKLPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(MKLPoolingLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLPoolingLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLPoolingLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

@@ -40,7 +40,9 @@ namespace caffe {
     vector<Blob<Dtype>*> blob_top_vec_;
   };
 
-  TYPED_TEST_CASE(MKLBatchNormLayerTest, TestDtypesAndDevices);
+  typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+  TYPED_TEST_CASE(MKLBatchNormLayerTest, TestDtypesCPU);
 
   TYPED_TEST(MKLBatchNormLayerTest, TestForward) {
     typedef typename TypeParam::Dtype Dtype;

@@ -187,8 +187,10 @@ class MKLConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
 
-TYPED_TEST_CASE(MKLConvolutionLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(MKLConvolutionLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLConvolutionLayerTest, TestSetupMKL) {
   typedef typename TypeParam::Dtype Dtype;

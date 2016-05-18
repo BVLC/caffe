@@ -55,7 +55,9 @@ class MKLConcatLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MKLConcatLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLConcatLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLConcatLayerTest, TestSetupChannels) {
   typedef typename TypeParam::Dtype Dtype;

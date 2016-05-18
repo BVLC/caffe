@@ -49,7 +49,9 @@ class MKLEltwiseLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MKLEltwiseLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLEltwiseLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLEltwiseLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;
