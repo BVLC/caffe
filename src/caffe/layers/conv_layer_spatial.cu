@@ -875,6 +875,9 @@ bool ConvolutionLayerSpatial<float>::tune_local_size(
                                   config->global_work_size);
           }
         }
+        if (config->workItem_output[2] *
+            config->global_work_size[2] != M_)
+          break;
 
         if (config->swizzle_weights)
           z = 32;
