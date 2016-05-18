@@ -225,7 +225,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(Split, GetSplitLayer);
 
-// Get relu layer according to engine.
+// Get ReLU layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
