@@ -46,7 +46,9 @@ class MKLSplitLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MKLSplitLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLSplitLayerTest, TestDtypesCPU);
 
 TYPED_TEST(MKLSplitLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

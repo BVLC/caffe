@@ -110,7 +110,9 @@ void MKLLRNLayerTest<TypeParam>::ReferenceLRNForward(
   }
 }
 
-TYPED_TEST_CASE(MKLLRNLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLLRNLayerTest, TestDtypesCPU);
 
 
 TYPED_TEST(MKLLRNLayerTest, TestSetupAcrossChannels) {
