@@ -352,7 +352,7 @@ static void bernoulli_generate(int n, double p, int* r) {
 #ifdef _OPENMP
   int nthr = omp_get_max_threads();
   // TODO: Threshold is a function of num threads and CPU speed and constant
-  int threshold =  nthr * 768;
+  int threshold = nthr * 768;
   bool run_parallel =
     (Caffe::mode() != Caffe::GPU) &&
     (omp_in_parallel() == 0) &&
@@ -362,7 +362,7 @@ static void bernoulli_generate(int n, double p, int* r) {
 # pragma omp parallel num_threads(nthr)
   {
     const int ithr = omp_get_thread_num();
-    const int avg_amount = n / nthr;
+    const int avg_amount = (n + nthr - 1) / nthr;
     const int my_offset = ithr * avg_amount;
     const int my_amount = std::min(my_offset + avg_amount, n) - my_offset;
 #else
