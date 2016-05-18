@@ -181,7 +181,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   if (engine == BatchNormParameter_Engine_DEFAULT) {
 #ifdef USE_CUDNN
     engine = BatchNormParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
+#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = BatchNormParameter_Engine_MKL2017;
 #else
     engine = BatchNormParameter_Engine_CAFFE;
@@ -190,7 +190,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
 
   if (engine == BatchNormParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new BatchNormLayer<Dtype>(param));
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == BatchNormParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLBatchNormLayer<Dtype>(param));
 #endif
@@ -209,7 +209,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
   if (engine == SplitParameter_Engine_DEFAULT) {
 #ifdef USE_CUDNN
     engine = SplitParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
+#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = SplitParameter_Engine_MKL2017;
 #else
     engine = SplitParameter_Engine_CAFFE;
@@ -233,7 +233,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
       }
     }
 #endif
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == SplitParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLSplitLayer<Dtype>(param));
 #endif
@@ -252,7 +252,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     engine = ReLUParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = ReLUParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
+#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = ReLUParameter_Engine_MKL2017;
 #endif
   }
@@ -262,7 +262,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   } else if (engine == ReLUParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == ReLUParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLReLULayer<Dtype>(param));
 #endif
@@ -279,13 +279,13 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   ConcatParameter_Engine engine = param.concat_param().engine();
   if (engine == ConcatParameter_Engine_DEFAULT) {
     engine = ConcatParameter_Engine_CAFFE;
-#ifdef USE_MKL2017_AS_DEFAULT_ENGINE
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = ConcatParameter_Engine_MKL2017;
 #endif
   }
   if (engine == ConcatParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ConcatLayer<Dtype>(param));
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == ConcatParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLConcatLayer<Dtype>(param));
 #endif
@@ -302,13 +302,13 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   EltwiseParameter_Engine engine = param.eltwise_param().engine();
   if (engine == EltwiseParameter_Engine_DEFAULT) {
     engine = EltwiseParameter_Engine_CAFFE;
-#ifdef USE_MKL2017_AS_DEFAULT_ENGINE
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
     engine = EltwiseParameter_Engine_MKL2017;
 #endif
   }
   if (engine == EltwiseParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new EltwiseLayer<Dtype>(param));
-#ifdef MKL2017_SUPPORTED
+#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
   } else if (engine == EltwiseParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLEltwiseLayer<Dtype>(param));
 #endif

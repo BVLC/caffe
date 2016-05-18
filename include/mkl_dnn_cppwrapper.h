@@ -634,6 +634,7 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateBackward<double>(
         kernelSize, kernelStride,
         inputOffset,border_type);}
 
+#ifdef USE_MKL2017_NEW_API
 TEMPLATE_PREFIX dnnError_t dnnConcatCreate(
         dnnPrimitive_t *pConcat,
         dnnPrimitiveAttributes_t attributes,
@@ -779,5 +780,6 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<double>(
         pBatchNormalization,
         ATTRIBUTES
         dataLayout, eps); }
+#endif // #ifdef USE_MKL2017_NEW_API
 
 #endif
