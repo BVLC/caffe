@@ -12,6 +12,9 @@ void ELULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
   Dtype alpha = this->layer_param_.elu_param().alpha();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
   for (int i = 0; i < count; ++i) {
     top_data[i] = std::max(bottom_data[i], Dtype(0))
         + alpha * (exp(std::min(bottom_data[i], Dtype(0))) - Dtype(1));
@@ -29,6 +32,9 @@ void ELULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int count = bottom[0]->count();
     Dtype alpha = this->layer_param_.elu_param().alpha();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int i = 0; i < count; ++i) {
       bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
           + (alpha + top_data[i]) * (bottom_data[i] <= 0));
