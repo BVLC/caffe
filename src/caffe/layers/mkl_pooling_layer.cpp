@@ -210,8 +210,6 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // printf(" len(top_data) = %i\n", sizeof(top_data)/sizeof(Dtype));
-  const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   size_t* mask = NULL;  // suppress warnings about uninitalized variables
 
