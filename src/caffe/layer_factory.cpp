@@ -233,7 +233,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     engine = ReLUParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = ReLUParameter_Engine_CUDNN;
-#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = ReLUParameter_Engine_MKL2017;
 #endif
   }
@@ -243,7 +243,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   } else if (engine == ReLUParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#ifdef MKL2017_SUPPORTED
   } else if (engine == ReLUParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLReLULayer<Dtype>(param));
 #endif
