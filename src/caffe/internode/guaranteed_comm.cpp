@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
+#include <boost/weak_ptr.hpp>
 #include <algorithm>
 #include <deque>
 #include <string>
