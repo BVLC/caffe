@@ -157,7 +157,9 @@ struct BlobCommsImpl : BlobComms<Dtype> {
         }
       }
       all_parts.push_back(parts);
+      DLOG(INFO) << "parts[="<<i<<"]=" <<parts.size();
     }
+    DLOG(INFO) << "all_parts_size=" << all_parts.size();
     for (int i = 0; i < threads; ++i)
       all_workers[i].reset(new Worker(this, codec->packet_size()));
   }
@@ -182,6 +184,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     while (!to_send.empty()) {
       Part ret = to_send.front();
       to_send.pop_front();
+      DLOG(INFO) << "sendv["<<ret.layer_id<<"]="<<sending_version[ret.layer_id]
+        <<", cancelv["<<ret.layer_id<<"]="<< cancelled_version[ret.layer_id];
       if (sending_version[ret.layer_id] > cancelled_version[ret.layer_id]) {
         return ret;
       } else {
