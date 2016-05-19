@@ -67,14 +67,25 @@ with a free trial and [student](http://software.intel.com/en-us/intel-education-
 
 ### Intel MKL2017 (optional)
 
-Caffe can use optimized primitives that are part of MKL package since [Intel MKL 2017 Beta release]( https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305)
-Currently supported layers are: convolution, LRN , ReLU and max pooling.
+Caffe can use optimized primitives that are part of MKL package since [Intel MKL 2017 Beta Update1 release](https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305)
+Currently supported layers are: Convolution, LRN , ReLU, Pooling, Split, Concat, Batch Normalization and Eltwise operation.
 
-To make use of MKL2017 primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add `-DBLAS=mkl` to your commandline invoking cmake)
-Support for MKL2017 will be detected and compiled into the caffe. To use optimized MKL2017 primitive for a layer, set `engine: MKL2017` in the layer's parameters definition.
-Example of network accelerated by using MKL2017 is located in models/mkl2017_alexnet directory.
+To make use of MKL2017 primitives, install 'Intel MKL 2017 Beta Update1' and adjust your Makefile.config:
 
-If `USE_MKL2017_AS_DEFAULT_ENGINE := 1` is set in Makefile.config, then MKL2017 engine will be used as a default engine for all layers supported by MKL2017. (When using cmake, add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline invoking cmake)
+1. make sure `BLAS := mkl`.
+2. make sure following line is uncommented
+`COMMON_FLAGS += -DUSE_MKL2017_NEW_API`
+
+For cmake based build, to use MKL2017 primitives, here is an examplary command line(to be invoked from your created directory, where caffe is to be build):
+
+`cmake <path to CMakeLists.txt in main caffe dir> -DBLAS=mkl -DUSE_MKL2017_NEW_API=ON -DCMAKE_BUILD_TYPE=Release`
+
+Support for MKL2017 will be detected and compiled into the caffe. To use optimized MKL2017 primitive for a layer, set `engine: MKL2017` in the layer's parameters definition. Only layers with `engine` parameter set
+to `MKL2017` will be accelerated by MKL2017 (Examples are located in models/mkl2017_* directories). That way you can split execution of your layers among DEFAULT caffe engine and MKL2017.
+
+**Note:**
+If you want all layers of your model to be executed by MKL2017 (without adding `engine: MKL2017` in each layer)
+make sure `USE_MKL2017_AS_DEFAULT_ENGINE := 1` is set in Makefile.config, then MKL2017 engine will be used as a default engine for all layers supported by MKL2017. (When using cmake, add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline invoking cmake)
 
 ### OpenMP (optional)
 
