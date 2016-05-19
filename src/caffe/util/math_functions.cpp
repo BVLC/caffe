@@ -116,9 +116,31 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 
 template <typename Dtype>
 void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
-  if (X != Y) {
-    memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+  if (X == Y) return;
+
+  #ifdef _OPENMP
+
+  // TODO: Threshold is a function of num threads and CPU speed and constant
+  const int threshold = omp_get_max_threads() * 768;
+  const bool run_parallel =
+    (Caffe::mode() != Caffe::GPU) &&
+    (omp_in_parallel() == 0) &&
+    (N >= threshold);
+
+  if (run_parallel) {
+    const int block = 256*1024/sizeof(Dtype), remainder = N%block;
+    #pragma omp parallel for
+    for (int i = 0; i <= N-block; i += block)
+      memcpy(Y+i, X+i, sizeof(Dtype) * block);  // NOLINT(caffe/alt_fn)
+    if (remainder != 0)
+      memcpy(Y+N-remainder, X+N-remainder,  // NOLINT(caffe/alt_fn)
+          sizeof(Dtype) * remainder);
+    return;
   }
+
+  #endif
+
+  memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
 }
 
 template void caffe_cpu_copy<int>(const int N, const int* X, int* Y);
@@ -138,7 +160,7 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
       NO_GPU;
 #endif
     } else {
-      memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+      caffe_cpu_copy<Dtype>(N, X, Y);
     }
   }
 }
