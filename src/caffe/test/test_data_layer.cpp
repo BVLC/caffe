@@ -41,7 +41,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   // an image are the same.
   void Fill(const bool unique_pixels, DataParameter_DB backend) {
     backend_ = backend;
-    LOG(INFO) << "Using temporary dataset " << *filename_;
+    LOG(INFO) << "\nUsing temporary dataset " << *filename_;
     scoped_ptr<db::DB> db(db::GetDB(backend));
     std::cerr << "filename=" << *filename_ << std::endl;
     db->Open(*filename_, db::NEW);
@@ -389,7 +389,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
   this->TestReadCrop(TEST);
 }
-#endif  // USE_LEVELDB
+#endif  // USE_LEVELDB 
 
 #ifdef USE_LMDB
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
