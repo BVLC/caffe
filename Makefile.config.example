@@ -5,6 +5,10 @@
 # cuDNN version 4 or higher is required.
 # USE_CUDNN := 1
 
+# NCCL acceleration switch (uncomment to build with NCCL)
+# See https://github.com/NVIDIA/nccl
+# USE_NCCL := 1
+
 # CPU-only switch (uncomment to build without GPU support).
 # cuDNN version 4 or higher is required.
 # CPU_ONLY := 1
