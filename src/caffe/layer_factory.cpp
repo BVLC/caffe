@@ -76,7 +76,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 
     if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
       if (Caffe::GetDevice(param.device(), true)->CheckVendor("Intel")) {
-        engine = ConvolutionParameter_Engine_INTEL_SPATIAL;
+        // engine = ConvolutionParameter_Engine_INTEL_SPATIAL;
       }
     }
   }
