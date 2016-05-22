@@ -162,7 +162,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     DLOG(INFO) << "all_parts_size=" << all_parts.size();
     for (int i = 0; i < threads; ++i)
       all_workers[i].reset(new Worker(this, codec->packet_size()));
-  }
+  };
 
   Worker* get_worker() {
     boost::recursive_mutex::scoped_lock lock(worker_mtx);
@@ -186,7 +186,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       to_send.pop_front();
       DLOG(INFO) << "sendv["<<ret.layer_id<<"]="<<sending_version[ret.layer_id]
         <<", cancelv["<<ret.layer_id<<"]="<< cancelled_version[ret.layer_id];
-      if (sending_version[ret.layer_id] > cancelled_version[ret.layer_id]) {
+      if (sending_version.at(ret.layer_id) > cancelled_version.at(ret
+      .layer_id)) {
         return ret;
       } else {
         DLOG(INFO) << "discard send";
