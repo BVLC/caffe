@@ -1,8 +1,11 @@
 #ifndef CAFFE_GREENTEA_LIBDNN_HPP_
 #define CAFFE_GREENTEA_LIBDNN_HPP_
+
+#include <memory>
 #include <string>
 #include <vector>
 #include "caffe/device.hpp"
+#include "caffe/greentea/libdnn_tuner.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
@@ -33,8 +36,8 @@ typedef enum {
     LIBDNN_CONVOLUTION_WG_ALGO_REDUCTION     = 2
 } libdnnConvolutionWeightAlgo_t;
 
-struct libdnn_config {
-  libdnn_config() :
+struct LibDNNConfig {
+  LibDNNConfig() :
     in_shape(3, 1),
     out_shape(3, 1),
     kernel(1, 1),
@@ -54,40 +57,51 @@ struct libdnn_config {
   bool fast_unsafe_math = false;
   bool weights_backward = true;
   bool bias_backward = true;
-  libdnnConvolutionWeightAlgo_t wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_DIRECT;
+  libdnnConvolutionWeightAlgo_t wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
 };
 
 
 template<typename Dtype>
-class libdnn_conv {
+class LibDNNConv {
  public:
-  explicit libdnn_conv(libdnn_config config);
-  void forward(const Dtype* bottom_data, const Dtype* weight,
+  explicit LibDNNConv(LibDNNConfig config);
+  void Forward(const Dtype* bottom_data, const Dtype* weight,
                const Dtype* bias,
                Dtype* top_data, int_tp batch_size);
-  void backward(bool prop_down_data,
+  void Backward(bool prop_down_data, bool prop_down_weights,
                 const Dtype* top_data, const Dtype* top_diff,
                 const Dtype* weight, Dtype* weight_diff,
                 const Dtype* bias, Dtype* bias_diff,
                 const Dtype* bottom_data, Dtype* bottom_diff,
                 int_tp batch_size);
 
+  void Tune(Dtype* top_data, Dtype* top_diff,
+            Dtype* weight, Dtype* weight_diff,
+            Dtype* bias, Dtype* bias_diff,
+            Dtype* bottom_data, Dtype* bottom_diff,
+            int_tp batch_size);
+
  protected:
-  void generate_kernels();
+  void GenerateKernels();
   void compile_kernel();
   std::string generate_header();
   std::string generate_common_defs();
   std::string generate_fw_defs();
   std::string generate_bw_defs();
   std::string generate_wg_defs();
+  std::string generate_gemm_core(std::shared_ptr<LibDNNTuner> tuner,
+                                 bool dterm);
+  std::string generate_accreg_init(std::shared_ptr<LibDNNTuner> tuner,
+                                   bool dterm, bool load);
   std::string generate_fw_kernels(std::string name);
   std::string generate_bw_kernels(std::string name);
   std::string generate_wg_kernels(std::string name);
+  bool CompileKernels();
 #ifdef USE_GREENTEA
-  viennacl::ocl::program compile_kernels_opencl(viennacl::ocl::context *ctx);
+  viennacl::ocl::program CompileKernelsOpenCL(viennacl::ocl::context *ctx);
 #endif  // USE_GREETEA
 #ifdef USE_CUDA
-  nvrtcProgram compile_kernels_cuda();
+  nvrtcProgram CompileKernelsCuda();
 #endif  // USE_CUDA
   template<class T>
   void add_def(std::stringstream& ss, const char* name, T value);  // NOLINT
@@ -107,6 +121,11 @@ class libdnn_conv {
 #endif  // USE_CUDA
 
   std::string kernel_;
+
+  // Autotuners
+  std::shared_ptr<LibDNNTuner> fw_tuner_;
+  std::shared_ptr<LibDNNTuner> bw_tuner_;
+  std::shared_ptr<LibDNNTuner> wg_tuner_;
 
   // Forward GEMM sizes
   int_tp M_FW_;

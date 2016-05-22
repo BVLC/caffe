@@ -1,15 +1,16 @@
 #include <string>
-
+#include <vector>
 #include "caffe/common.hpp"
 #ifdef USE_LIBDNN
 #include "caffe/device.hpp"
 #include "caffe/greentea/libdnn.hpp"
+#include "caffe/util/benchmark.hpp"
 
 
 namespace caffe {
 
 template<typename Dtype>
-libdnn_conv<Dtype>::libdnn_conv(libdnn_config config) {
+LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
   dev_ptr_ = config.dev_ptr;
   bias_term_ = config.bias_term;
   bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
@@ -41,21 +42,174 @@ libdnn_conv<Dtype>::libdnn_conv(libdnn_config config) {
     im_out_shape_.push_back(config.out_shape[dims - spatial_dims + i]);
   }
 
-  generate_kernels();
-#ifdef USE_GREENTEA
-  if (dev_ptr_->backend() == BACKEND_OpenCL) {
-    compile_kernels_opencl(&(viennacl::ocl::get_context(dev_ptr_->id())));
+
+  fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  bw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  wg_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+
+  // Setup tuning parameters
+
+  // Work groups
+  for (int id = 0; id < 2; ++id) {
+    std::vector<int_tp> workgroup_sizes;
+    for (int_tp i = 0; i < dev_ptr_->max_workgroup_size(id); i += 4) {
+      workgroup_sizes.push_back(i);
+    }
+    fw_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
+                                     8, workgroup_sizes);
+    bw_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
+                                     8, workgroup_sizes);
+    wg_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
+                                     8, workgroup_sizes);
   }
-#endif  // USE_GREETEA
-#ifdef USE_CUDA
-  if (dev_ptr_->backend() == BACKEND_CUDA) {
-    compile_kernels_cuda();
-  }
-#endif  // USE_CUDA
+
+  // TSK
+  fw_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+  bw_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+  wg_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+
+  fw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 2, 1, 16, 1);
+  bw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 2, 1, 16, 1);
+  wg_tuner_->add_range_param<int_tp>("TSK_UNROLL", 2, 1, 16, 1);
+
+
+  // WPTM, WPTN
+  fw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+
+  fw_tuner_->add_set_param<int_tp>("VWM",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+  bw_tuner_->add_set_param<int_tp>("VWM",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+  wg_tuner_->add_set_param<int_tp>("VWM",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+
+
+  fw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+
+  fw_tuner_->add_set_param<int_tp>("VWN",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+  bw_tuner_->add_set_param<int_tp>("VWN",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+  wg_tuner_->add_set_param<int_tp>("VWN",
+                                   4, std::vector<int_tp>({1, 2, 4, 8, 16}));
+
+
+  // Constraint using TSK, TSM, RTSM and RTSN. Adapt TSK if constraint fails.
+  fw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+  bw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+  wg_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+
+  // Constraint using TSK, TSN, RTSN and RTSM. Adapt TSK if constraint fails.
+  fw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+  bw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+  wg_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+      std::vector<std::string>({"TSK"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return (args[0] * args[1]) % (args[2]) == 0;
+  });
+
+  fw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+      std::vector<std::string>({"TSK_UNROLL"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  bw_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+      std::vector<std::string>({"TSK_UNROLL"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  wg_tuner_->add_constraint<int64_t>(
+      std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+      std::vector<std::string>({"TSK_UNROLL"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+
+  fw_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTM", "VWM"}),
+                                    std::vector<std::string>({"WPTM"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  bw_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTM", "VWM"}),
+                                    std::vector<std::string>({"WPTM"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  wg_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTM", "VWM"}),
+                                    std::vector<std::string>({"WPTM"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+
+  fw_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTN", "VWN"}),
+                                    std::vector<std::string>({"WPTN"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  bw_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTN", "VWN"}),
+                                    std::vector<std::string>({"WPTN"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+  wg_tuner_->add_constraint<int64_t>(std::vector<std::string>({"WPTN", "VWN"}),
+                                    std::vector<std::string>({"WPTN"}),
+                            [](std::vector<int64_t> args) -> bool {
+    return args[0] % args[1] == 0;
+  });
+
+  // pad_A, pad_B
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_A0", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_A0", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_A0", 0, 0, 8, 1);
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_A1", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_A1", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_A1", 0, 0, 8, 1);
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_B0", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_B0", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_B0", 0, 0, 8, 1);
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_B1", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_B1", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_B1", 0, 0, 8, 1);
+
+  GenerateKernels();
+  CompileKernels();
 }
 
+
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_header() {
+std::string LibDNNConv<Dtype>::generate_header() {
   std::stringstream ss;
 
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
@@ -85,8 +239,39 @@ std::string libdnn_conv<Dtype>::generate_header() {
 
   if (std::is_same<Dtype, double>::value) {
     ss << "#define Dtype double" << std::endl;
+    ss << "#define Dtype1 double" << std::endl;
+    // double2, double4, double8, double16
+    for (int_tp i = 2; i <= 16; i*=2) {
+      ss << "#define Dtype" << i << " double" << i << std::endl;
+    }
   } else {
     ss << "#define Dtype float" << std::endl;
+    ss << "#define Dtype1 float" << std::endl;
+    // float2, float4, float8, float16
+    for (int_tp i = 2; i <= 16; i*=2) {
+      ss << "#define Dtype" << i << " float" << i << std::endl;
+    }
+  }
+
+  std::vector<std::string> elems4({"x", "y", "z", "w"});
+  std::vector<std::string> elems16({"s0", "s1", "s2", "s3",
+                                    "s4", "s5", "s6", "s7",
+                                    "s8", "s9", "sA", "sB",
+                                    "sC", "sD", "sE", "sF"});
+
+  for (int_tp i = 1; i <= 16; i*=2) {
+    for (int_tp j = 0; j < i; ++j) {
+      if (i == 1) {
+        ss << "#define VEC_" << i << "_" << j << "(X)"
+            << " X" << std::endl;
+      } else if (i < 8) {
+        ss << "#define VEC_" << i << "_" << j << "(X)"
+            << " X." << elems4[j] << std::endl;
+      } else {
+        ss << "#define VEC_" << i << "_" << j << "(X)"
+            << " X." << elems16[j] << std::endl;
+      }
+    }
   }
 
   if (sizeof(int_tp) == 8) {
@@ -135,12 +320,48 @@ std::string libdnn_conv<Dtype>::generate_header() {
     ss << "}" << std::endl;
   }
 
+  std::vector<std::string> atomic_funcs({"Add", "Sub", "Mul", "Div"});
+  std::vector<std::string> atomic_ops({"+", "-", "*", "/"});
+
+  // Atomic operations
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    // OpenCL atomics, derived from:
+    // https://streamcomputing.eu/blog/2016-02-09/atomic-operations-for-floats-in-opencl-improved/
+    for (int  i = 0; i < atomic_funcs.size(); ++i) {
+      ss << "inline void atomic" << atomic_funcs[i];
+      ss << "(volatile __global Dtype* source, const Dtype operand) {"
+         << std::endl;
+      ss << "union {" << std::endl;
+      if (std::is_same<Dtype, double>::value) {
+        ss << "unsigned long intVal;" << std::endl;
+      } else {
+        ss << "unsigned int intVal;" << std::endl;
+      }
+      ss << "Dtype floatVal;" << std::endl;
+      ss << "} next, expected, current;" << std::endl;
+      ss << "current.floatVal = *source;" << std::endl;
+      ss << "do {" << std::endl;
+      ss << "expected.floatVal = current.floatVal;" << std::endl;
+      ss << "next.floatVal = expected.floatVal "
+         << atomic_ops[i] << " operand;" << std::endl;
+      ss << "current.intVal = ";
+      if (std::is_same<Dtype, double>::value) {
+        ss << "atom_cmpxchg((volatile __global unsigned long *)";
+      } else {
+        ss << "atomic_cmpxchg((volatile __global unsigned int *)";
+      }
+      ss << "source, expected.intVal, next.intVal);" << std::endl;
+      ss << "} while (current.intVal != expected.intVal);" << std::endl;
+      ss << "}" << std::endl;
+    }
+  }
+
   return ss.str();
 }
 
 template<typename Dtype>
 template<class T>
-inline void libdnn_conv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
+inline void LibDNNConv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
                                         const char* name, T value) {
   ss << "#ifdef " << name << std::endl;
   ss << "#undef " << name << std::endl;
@@ -158,7 +379,7 @@ inline void libdnn_conv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
 
 template<typename Dtype>
 template<class T>
-inline void libdnn_conv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
+inline void LibDNNConv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
                                         const std::string name, T value) {
   add_def(ss, name.c_str(), value);
 }
@@ -166,7 +387,7 @@ inline void libdnn_conv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
 
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_fw_defs() {
+std::string LibDNNConv<Dtype>::generate_fw_defs() {
   std::stringstream ss;
 
   // Number of spatial axes
@@ -233,21 +454,33 @@ std::string libdnn_conv<Dtype>::generate_fw_defs() {
   add_def(ss, "KG", KG_FW_);
   add_def(ss, "K", K_FW_);
 
+  // Local memory padding
+  add_def(ss, "v_pad_A0", fw_tuner_->get_param<int>("lmem_pad_A0"));
+  add_def(ss, "v_pad_A1", fw_tuner_->get_param<int>("lmem_pad_A1"));
+  add_def(ss, "v_pad_B0", fw_tuner_->get_param<int>("lmem_pad_B0"));
+  add_def(ss, "v_pad_B1", fw_tuner_->get_param<int>("lmem_pad_B1"));
+
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
   // The tile-size in dimension M
-  add_def(ss, "TSM", 64);
+  add_def(ss, "TSM", fw_tuner_->get_param<int>("WPTM")
+          * fw_tuner_->get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
-  add_def(ss, "TSN", 64);
+  add_def(ss, "TSN", fw_tuner_->get_param<int>("WPTN")
+          * fw_tuner_->get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
-  add_def(ss, "TSK", 16);
+  add_def(ss, "TSK", fw_tuner_->get_param<int>("TSK"));
+  // TSK unrolling
+  add_def(ss, "TSK_UNROLL", fw_tuner_->get_param<int>("TSK_UNROLL"));
   // The work-per-thread in dimension M
-  add_def(ss, "WPTM", 4);
+  add_def(ss, "WPTM", fw_tuner_->get_param<int>("WPTM"));
+  add_def(ss, "VWM", fw_tuner_->get_param<int>("VWM"));
   // The work-per-thread in dimension N
-  add_def(ss, "WPTN", 4);
+  add_def(ss, "WPTN", fw_tuner_->get_param<int>("WPTN"));
+  add_def(ss, "VWN", fw_tuner_->get_param<int>("VWN"));
   // The reduced tile-size in dimension M
-  add_def(ss, "RTSM", "(TSM/WPTM)");
+  add_def(ss, "RTSM", fw_tuner_->get_param<int>("workgroup_size_1"));
   // The reduced tile-size in dimension N
-  add_def(ss, "RTSN", "(TSN/WPTN)");
+  add_def(ss, "RTSN", fw_tuner_->get_param<int>("workgroup_size_0"));
   // Loads-per-thread for A
   add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
   // Loads-per-thread for B
@@ -257,7 +490,7 @@ std::string libdnn_conv<Dtype>::generate_fw_defs() {
 }
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_bw_defs() {
+std::string LibDNNConv<Dtype>::generate_bw_defs() {
   std::stringstream ss;
 
   // Number of spatial axes
@@ -329,21 +562,33 @@ std::string libdnn_conv<Dtype>::generate_bw_defs() {
   add_def(ss, "KG", KG_BW_);
   add_def(ss, "K", K_BW_);
 
+  // Local memory padding
+  add_def(ss, "v_pad_A0", bw_tuner_->get_param<int>("lmem_pad_A0"));
+  add_def(ss, "v_pad_A1", bw_tuner_->get_param<int>("lmem_pad_A1"));
+  add_def(ss, "v_pad_B0", bw_tuner_->get_param<int>("lmem_pad_B0"));
+  add_def(ss, "v_pad_B1", bw_tuner_->get_param<int>("lmem_pad_B1"));
+
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
   // The tile-size in dimension M
-  add_def(ss, "TSM", 64);
+  add_def(ss, "TSM", bw_tuner_->get_param<int>("WPTM")
+          * bw_tuner_->get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
-  add_def(ss, "TSN", 64);
+  add_def(ss, "TSN", bw_tuner_->get_param<int>("WPTN")
+          * bw_tuner_->get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
-  add_def(ss, "TSK", 16);
+  add_def(ss, "TSK", bw_tuner_->get_param<int>("TSK"));
+  // TSK unrolling
+  add_def(ss, "TSK_UNROLL", bw_tuner_->get_param<int>("TSK_UNROLL"));
   // The work-per-thread in dimension M
-  add_def(ss, "WPTM", 4);
+  add_def(ss, "WPTM", bw_tuner_->get_param<int>("WPTM"));
+  add_def(ss, "VWM", bw_tuner_->get_param<int>("VWM"));
   // The work-per-thread in dimension N
-  add_def(ss, "WPTN", 4);
+  add_def(ss, "WPTN", bw_tuner_->get_param<int>("WPTN"));
+  add_def(ss, "VWN", bw_tuner_->get_param<int>("VWN"));
   // The reduced tile-size in dimension M
-  add_def(ss, "RTSM", "(TSM/WPTM)");
+  add_def(ss, "RTSM", bw_tuner_->get_param<int>("workgroup_size_1"));
   // The reduced tile-size in dimension N
-  add_def(ss, "RTSN", "(TSN/WPTN)");
+  add_def(ss, "RTSN", bw_tuner_->get_param<int>("workgroup_size_0"));
   // Loads-per-thread for A
   add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
   // Loads-per-thread for B
@@ -354,7 +599,7 @@ std::string libdnn_conv<Dtype>::generate_bw_defs() {
 
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_wg_defs() {
+std::string LibDNNConv<Dtype>::generate_wg_defs() {
   std::stringstream ss;
 
   // Number of spatial axes
@@ -429,33 +674,157 @@ std::string libdnn_conv<Dtype>::generate_wg_defs() {
   add_def(ss, "NG", NG_WG_);
   add_def(ss, "K", K_WG_);
 
+  // Local memory padding
+  add_def(ss, "v_pad_A0", wg_tuner_->get_param<int>("lmem_pad_A0"));
+  add_def(ss, "v_pad_A1", wg_tuner_->get_param<int>("lmem_pad_A1"));
+  add_def(ss, "v_pad_B0", wg_tuner_->get_param<int>("lmem_pad_B0"));
+  add_def(ss, "v_pad_B1", wg_tuner_->get_param<int>("lmem_pad_B1"));
+
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
   // The tile-size in dimension M
-  add_def(ss, "TSM", 64);
+  add_def(ss, "TSM", wg_tuner_->get_param<int>("WPTM")
+          * wg_tuner_->get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
-  add_def(ss, "TSN", 64);
+  add_def(ss, "TSN", wg_tuner_->get_param<int>("WPTN")
+          * wg_tuner_->get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
-  add_def(ss, "TSK", 16);
+  add_def(ss, "TSK", wg_tuner_->get_param<int>("TSK"));
+  // TSK unrolling
+  add_def(ss, "TSK_UNROLL", wg_tuner_->get_param<int>("TSK_UNROLL"));
   // The work-per-thread in dimension M
-  add_def(ss, "WPTM", 4);
+  add_def(ss, "WPTM", wg_tuner_->get_param<int>("WPTM"));
+  add_def(ss, "VWM", wg_tuner_->get_param<int>("VWM"));
   // The work-per-thread in dimension N
-  add_def(ss, "WPTN", 4);
+  add_def(ss, "WPTN", wg_tuner_->get_param<int>("WPTN"));
+  add_def(ss, "VWN", wg_tuner_->get_param<int>("VWN"));
   // The reduced tile-size in dimension M
-  add_def(ss, "RTSM", "(TSM/WPTM)");
+  add_def(ss, "RTSM", wg_tuner_->get_param<int>("workgroup_size_1"));
   // The reduced tile-size in dimension N
-  add_def(ss, "RTSN", "(TSN/WPTN)");
+  add_def(ss, "RTSN", wg_tuner_->get_param<int>("workgroup_size_0"));
   // Loads-per-thread for A
   add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
   // Loads-per-thread for B
   add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
+
   return ss.str();
 }
 
 
+template<typename Dtype>
+std::string LibDNNConv<Dtype>::generate_gemm_core(
+    std::shared_ptr<LibDNNTuner> tuner, bool dterm) {
+  std::stringstream ss;
+  int vwm = tuner->get_param<int>("VWM");
+  int vwn = tuner->get_param<int>("VWN");
+
+  // Loop over the values of a single tile
+  ss << "for (int_tp kt=0; kt<TSK; kt+=TSK_UNROLL) {" << std::endl;
+  ss << "#pragma unroll TSK_UNROLL" << std::endl;
+  ss << "for (int_tp ku=0; ku<TSK_UNROLL; ++ku) {" << std::endl;
+  ss << "int_tp k = kt + ku;" << std::endl;
+
+  // Cache the values of Bsub in registers
+  ss << "for (int_tp wn=0; wn<WPTN/VWN; ++wn) {" << std::endl;
+  ss << "int_tp col = VWN*(tidn + wn*RTSN);" << std::endl;
+  for (int i = 0; i < vwn; ++i) {
+    ss << "VEC_" << vwn << "_" << i << "(Breg[wn])"
+        << " = Bsub[k][col + " << i << "];" << std::endl;
+  }
+  ss << "}" << std::endl;
+
+  // Perform the computation
+  ss << "for (int_tp wm=0; wm<WPTM/VWM; ++wm) {" << std::endl;
+  ss << "int_tp row = VWM*(tidm + wm*RTSM);" << std::endl;
+  for (int i = 0; i < vwm; ++i) {
+    ss << "VEC_" << vwm << "_" << i << "(Areg[0])"
+        << " = Asub[row + " << i << "][k];" << std::endl;
+  }
+  if (dterm) {
+    for (int i = 0; i < vwm; ++i) {
+        ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) "
+            << "+= VEC_" << vwm << "_" << i << "(Areg[0]) * v_bmul;"
+            << std::endl;
+    }
+  }
+  ss << "for (int_tp wn=0; wn<WPTN/VWN; ++wn) {" << std::endl;
+  for (int n = 0; n < vwn; ++n) {
+    for (int m = 0; m < vwm; ++m) {
+      ss << "VEC_" << vwm << "_"<< m <<"(Creg[wn * VWN + " << n << "][wm])"
+         << " += VEC_" << vwm << "_" << m << "(Areg[0])"
+         << " * VEC_" << vwn << "_" << n << "(Breg[wn]);" << std::endl;
+    }
+  }
+  ss << "}" << std::endl;
+  ss << "}" << std::endl;
+
+  // Loop over a single tile
+  ss << "}" << std::endl;
+  ss << "}" << std::endl;
+
+  return ss.str();
+}
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
+std::string LibDNNConv<Dtype>::generate_accreg_init(
+    std::shared_ptr<LibDNNTuner> tuner, bool dterm, bool load) {
+  std::stringstream ss;
+
+  int vwm = tuner->get_param<int>("VWM");
+  int vwn = tuner->get_param<int>("VWN");
+
+  // Initialize the accumulation registers
+  if (load) {
+    // Load
+    if (dterm) {
+      ss << "#pragma unroll" << std::endl;
+      ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+      ss << "int_tp globalRow = offM + VWM*(tidm + (wm/VWM)*RTSM) + wm%VWM;"
+         << std::endl;
+      ss << "((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM] = Dptr[globalRow];"
+         << std::endl;
+      ss << "}" << std::endl;
+    }
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+    ss << "int_tp globalCol = offN + VWN*(tidn + (wn/VWN)*RTSN) + wn%VWN;"
+       << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+    ss << "int_tp globalRow = offM + VWM*(tidm + (wm/VWM)*RTSM) + wm%VWM;"
+       << std::endl;
+    ss << "if (globalRow < M && globalCol < N) {" << std::endl;
+    ss << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM] = "
+       << "Cptr[globalRow * N + globalCol];" << std::endl;
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+  } else {
+    // Zero init
+    if (dterm) {
+      for (int i = 0; i < vwm; ++i) {
+        ss << "#pragma unroll" << std::endl;
+        ss << "for (int_tp wm=0; wm<WPTM/VWM; ++wm) {" << std::endl;
+        ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) = 0;" << std::endl;
+        ss << "}" << std::endl;
+      }
+    }
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm=0; wm<WPTM/VWM; ++wm) {" << std::endl;
+    for (int i = 0; i < vwm; ++i) {
+      ss << "VEC_" << vwm << "_" << i << "(Creg[wn][wm]) = 0;" << std::endl;
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+  }
+  return ss.str();
+}
+
+
+template<typename Dtype>
+std::string LibDNNConv<Dtype>::generate_fw_kernels(std::string name) {
   std::stringstream ss;
 
   // Forward kernel
@@ -479,13 +848,16 @@ std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "const int_tp offM = TSM*get_group_id(1);" << std::endl;
 
   // Local tile memory
-  ss << "__local Dtype Asub[TSM][TSK];" << std::endl;
-  ss << "__local Dtype Bsub[TSK][TSN];" << std::endl;
+  ss << "__local Dtype Asub[TSM+v_pad_A0][TSK+v_pad_A1];" << std::endl;
+  ss << "__local Dtype Bsub[TSK+v_pad_B0][TSN+v_pad_B1];" << std::endl;
 
   // Register memory
-  ss << "Dtype Areg;" << std::endl;
-  ss << "Dtype Breg[WPTN];" << std::endl;
-  ss << "Dtype Creg[WPTM][WPTN];" << std::endl;
+  ss << "Dtype" << fw_tuner_->get_param<int>("VWM")
+     << " Areg[WPTM/VWM];" << std::endl;
+  ss << "Dtype" << fw_tuner_->get_param<int>("VWN")
+     << " Breg[WPTN/VWN];" << std::endl;
+  ss << "Dtype" << fw_tuner_->get_param<int>("VWM")
+     << " Creg[WPTN][WPTM/VWM];" << std::endl;
 
   // Batch and group
   if (group_ > 1) {
@@ -503,23 +875,20 @@ std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
     ss << "__global Dtype* Cptr = im_out + v_C_off * batch + group * (M * N);"
        << std::endl;
     if (bias_term_) {
-      ss << "__global const Dtype* Dptr = bias + group * (v_fout / v_g);";
+      ss << "__global const Dtype* Dptr = bias + group * (v_fout / v_g);"
+         << std::endl;
     }
   } else {
     ss << "__global const Dtype* Aptr = wg;" << std::endl;
     ss << "__global const Dtype* Bptr = im_in + v_B_off * batch;" << std::endl;
     ss << "__global Dtype* Cptr = im_out + v_C_off * batch;" << std::endl;
     if (bias_term_) {
-      ss << "__global const Dtype* Dptr = bias;";
+      ss << "__global const Dtype* Dptr = bias;" << std::endl;
     }
   }
 
   // Initialize the accumulation registers
-  ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "Creg[wm][wn] = 0;" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
+  ss << generate_accreg_init(fw_tuner_, false, false);
 
   // Loop over all tiles
   ss << "int_tp numTiles = ((K - 1)/TSK) + 1;" << std::endl;
@@ -607,26 +976,7 @@ std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
 
-  // Loop over the values of a single tile
-  ss << "for (int_tp k=0; k<TSK; k++) {" << std::endl;
-
-  // Cache the values of Bsub in registers
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp col = tidn + wn*RTSN;" << std::endl;
-  ss << "Breg[wn] = Bsub[k][col];" << std::endl;
-  ss << "}" << std::endl;
-
-  // Perform the computation
-  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
-  ss << "int_tp row = tidm + wm*RTSM;" << std::endl;
-  ss << "Areg = Asub[row][k];" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
-  ss << "Creg[wm][wn] += Areg * Breg[wn];" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
-
-  // Loop over a single tile
-  ss << "}" << std::endl;
+  ss << generate_gemm_core(fw_tuner_, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -635,19 +985,26 @@ std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "}" << std::endl;
 
   // Store the final results in C
-  ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-  ss << "int_tp globalRow = offM + tidm + wm*RTSM;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+  ss << "int_tp globalRow = offM + VWM*(tidm + (wm/VWM)*RTSM) + wm%VWM;"
+     << std::endl;
   if (bias_term_) {
     ss << "Dtype biasval = Dptr[globalRow];" << std::endl;
   }
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp globalCol = offN + tidn + wn*RTSN;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+  ss << "int_tp globalCol = offN + VWN*(tidn + (wn/VWN)*RTSN) + wn%VWN;"
+     << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   if (bias_term_) {
-    ss << "Cptr[globalRow * N + globalCol] = Creg[wm][wn] + v_bmul * biasval;"
-        << std::endl;
+    ss << "Cptr[globalRow * N + globalCol] = "
+       << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM] + v_bmul * biasval;"
+       << std::endl;
   } else {
-    ss << "Cptr[globalRow * N + globalCol] = Creg[wm][wn];" << std::endl;
+    ss << "Cptr[globalRow * N + globalCol] = "
+       << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM];"
+       << std::endl;
   }
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -661,7 +1018,7 @@ std::string libdnn_conv<Dtype>::generate_fw_kernels(std::string name) {
 
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
+std::string LibDNNConv<Dtype>::generate_wg_kernels(std::string name) {
   std::stringstream ss;
 
   // Forward kernel
@@ -686,16 +1043,20 @@ std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "const int_tp offM = TSM*get_group_id(1);" << std::endl;
 
   // Local tile memory
-  ss << "__local Dtype Asub[TSM][TSK];" << std::endl;
-  ss << "__local Dtype Bsub[TSK][TSN];" << std::endl;
+  ss << "__local Dtype Asub[TSM+v_pad_A0][TSK+v_pad_A1];" << std::endl;
+  ss << "__local Dtype Bsub[TSK+v_pad_B0][TSN+v_pad_B1];" << std::endl;
 
   // Register memory
-  ss << "Dtype Areg;" << std::endl;
-  ss << "Dtype Breg[WPTN];" << std::endl;
-  ss << "Dtype Creg[WPTM][WPTN];" << std::endl;
+  ss << "Dtype" << wg_tuner_->get_param<int>("VWM") << " Areg[WPTM/VWM];"
+     << std::endl;
+  ss << "Dtype" << wg_tuner_->get_param<int>("VWN") << " Breg[WPTN/VWN];"
+     << std::endl;
+  ss << "Dtype" << wg_tuner_->get_param<int>("VWM") << " Creg[WPTN][WPTM/VWM];"
+     << std::endl;
 
   if (bias_term_) {
-    ss << "Dtype Dreg[WPTM];" << std::endl;
+    ss << "Dtype" << wg_tuner_->get_param<int>("VWM") << " Dreg[WPTM/VWM];"
+       << std::endl;
   }
 
   // Batch and group
@@ -707,54 +1068,30 @@ std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
   }
 
   if (group_ > 1) {
-    ss << "__global const Dtype* Aptr = im_out + group * (M * K);"
-        << std::endl;
-    ss << "__global const Dtype* Bptr = im_in + v_B_off * batch "
-        << "+ group * (v_B_off / v_g);"
-        << std::endl;
-    ss << "__global Dtype* Cptr = wg + v_C_off * batch + group * (M * N);"
-        << std::endl;
+    ss << "__global const Dtype* Aptr = im_out + batch * v_A_off"
+       << " + group * (v_A_off / v_g);" << std::endl;
+    ss << "__global const Dtype* Bptr = im_in + batch * v_B_off"
+       << " + group * (v_B_off / v_g);" << std::endl;
+    ss << "__global Dtype* Cptr = wg + group * (M * N);"
+       << std::endl;
     if (bias_term_) {
-      ss << "__global Dtype* Dptr = bias + v_fout * batch "
-          << "+ group * (v_fout / v_g);"
-          << std::endl;
+      ss << "__global Dtype* Dptr = bias + group * (v_fout / v_g);"
+         << std::endl;
     }
   } else {
-    ss << "__global const Dtype* Aptr = im_out;" << std::endl;
-    ss << "__global const Dtype* Bptr = im_in + v_B_off * batch;" << std::endl;
-    ss << "__global Dtype* Cptr = wg + v_C_off * batch;" << std::endl;
+    ss << "__global const Dtype* Aptr = im_out + batch * v_A_off;"
+       << std::endl;
+    ss << "__global const Dtype* Bptr = im_in + batch * v_B_off;"
+       << std::endl;
+    ss << "__global Dtype* Cptr = wg;" << std::endl;
     if (bias_term_) {
-      ss << "__global Dtype* Dptr = bias + v_fout * batch;"
-          << std::endl;
+      ss << "__global Dtype* Dptr = bias;"
+         << std::endl;
     }
   }
 
-  if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
-    // Initialize the accumulation registers
-    // Load, add, store pattern
-    ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-    ss << "int_tp globalRow = offM + tidm + wm*RTSM;" << std::endl;
-    if (bias_term_) {
-      ss << "Dreg[wm] = Dptr[globalRow];" << std::endl;
-    }
-    ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-    ss << "int_tp globalCol = offN + tidn + wn*RTSN;" << std::endl;
-    ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-    ss << "Creg[wm][wn] = Cptr[globalRow * N + globalCol];" << std::endl;
-    ss << "}" << std::endl;
-    ss << "}" << std::endl;
-    ss << "}" << std::endl;
-  } else {
-    // Zero initialize, atomic-add or reduce-add (intermediate buffer) pattern
-    ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-    if (bias_term_) {
-      ss << "Dreg[wm] = 0;" << std::endl;
-    }
-    ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-    ss << "Creg[wm][wn] = 0;" << std::endl;
-    ss << "}" << std::endl;
-    ss << "}" << std::endl;
-  }
+  ss << generate_accreg_init(wg_tuner_, bias_term_,
+                             wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT);
 
   if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
     // Additional batch loop, keep the same accumulator for the weight gradient
@@ -848,29 +1185,7 @@ std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
 
-  // Loop over the values of a single tile
-  ss << "for (int_tp k=0; k<TSK; k++) {" << std::endl;
-
-  // Cache the values of Bsub in registers
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp col = tidn + wn*RTSN;" << std::endl;
-  ss << "Breg[wn] = Bsub[k][col];" << std::endl;
-  ss << "}" << std::endl;
-
-  // Perform the computation
-  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
-  ss << "int_tp row = tidm + wm*RTSM;" << std::endl;
-  ss << "Areg = Asub[row][k];" << std::endl;
-  if (bias_term_) {
-    ss << "Dreg[wm] += Areg * v_bmul;" << std::endl;
-  }
-  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
-  ss << "Creg[wm][wn] += Areg * Breg[wn];" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
-
-  // Loop over a single tile
-  ss << "}" << std::endl;
+  ss << generate_gemm_core(wg_tuner_, bias_term_) << std::endl;
 
   // Synchronize before loading the next tile
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -887,17 +1202,35 @@ std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
   }
 
   // Store the final results in C
-  ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-  ss << "int_tp globalRow = offM + tidm + wm*RTSM;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+  ss << "int_tp globalRow = offM + VWM*(tidm + (wm/VWM)*RTSM) + wm%VWM;"
+     << std::endl;
   if (bias_term_) {
     ss << "if (tidn == 0 && offN == 0 && globalRow < M) {" << std::endl;
-    ss << "Dptr[globalRow] = Dreg[wm];" << std::endl;
+    if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
+      ss << "Dptr[globalRow] = ((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM];"
+         << std::endl;
+    }
+    if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
+      ss << "atomicAdd(&(Dptr[globalRow]), "
+         << "((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM]);" << std::endl;
+    }
     ss << "}" << std::endl;
   }
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp globalCol = offN + tidn + wn*RTSN;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+  ss << "int_tp globalCol = offN + VWN*(tidn + (wn/VWN)*RTSN) + wn%VWN;"
+     << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  ss << "Cptr[globalRow * N + globalCol] = Creg[wm][wn];" << std::endl;
+  if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
+    ss << "Cptr[globalRow * N + globalCol] = "
+       << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM];" << std::endl;
+  }
+  if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
+    ss << "atomicAdd(&(Cptr[globalRow * N + globalCol]), "
+       << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM]);" << std::endl;
+  }
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -910,7 +1243,7 @@ std::string libdnn_conv<Dtype>::generate_wg_kernels(std::string name) {
 
 
 template<typename Dtype>
-std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
+std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   std::stringstream ss;
 
   // Backward kernel
@@ -936,13 +1269,16 @@ std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "const int_tp offM = TSM*get_group_id(1);" << std::endl;
 
   // Local tile memory
-  ss << "__local Dtype Asub[TSM][TSK];" << std::endl;
-  ss << "__local Dtype Bsub[TSK][TSN];" << std::endl;
+  ss << "__local Dtype Asub[TSM+v_pad_A0][TSK+v_pad_A1];" << std::endl;
+  ss << "__local Dtype Bsub[TSK+v_pad_B0][TSN+v_pad_B1];" << std::endl;
 
   // Register memory
-  ss << "Dtype Areg;" << std::endl;
-  ss << "Dtype Breg[WPTN];" << std::endl;
-  ss << "Dtype Creg[WPTM][WPTN];" << std::endl;
+  ss << "Dtype" << bw_tuner_->get_param<int>("VWM")
+     << " Areg[WPTM/VWM];" << std::endl;
+  ss << "Dtype" << bw_tuner_->get_param<int>("VWN")
+     << " Breg[WPTN/VWN];" << std::endl;
+  ss << "Dtype" << bw_tuner_->get_param<int>("VWM")
+     << " Creg[WPTN][WPTM/VWM];" << std::endl;
 
   // Batch and group
   if (group_ > 1) {
@@ -966,12 +1302,7 @@ std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
     ss << "__global Dtype* Cptr = im_in + v_C_off * batch;" << std::endl;
   }
 
-  // Initialize the accumulation registers
-  ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "Creg[wm][wn] = 0;" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
+  ss << generate_accreg_init(bw_tuner_, false, false);
 
   // Loop over all tiles
   ss << "int_tp numTiles = ((K - 1)/TSK) + 1;" << std::endl;
@@ -1064,26 +1395,7 @@ std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
 
-  // Loop over the values of a single tile
-  ss << "for (int_tp k=0; k<TSK; k++) {" << std::endl;
-
-  // Cache the values of Bsub in registers
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp col = tidn + wn*RTSN;" << std::endl;
-  ss << "Breg[wn] = Bsub[k][col];" << std::endl;
-  ss << "}" << std::endl;
-
-  // Perform the computation
-  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
-  ss << "int_tp row = tidm + wm*RTSM;" << std::endl;
-  ss << "Areg = Asub[row][k];" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
-  ss << "Creg[wm][wn] += Areg * Breg[wn];" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
-
-  // Loop over a single tile
-  ss << "}" << std::endl;
+  ss << generate_gemm_core(bw_tuner_, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -1092,13 +1404,17 @@ std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "}" << std::endl;
 
   // Store the final results in C
-  ss << "for (int_tp wm=0; wm<WPTM; wm++) {" << std::endl;
-  ss << "int_tp globalRow = offM + tidm + wm*RTSM;" << std::endl;
-
-  ss << "for (int_tp wn=0; wn<WPTN; wn++) {" << std::endl;
-  ss << "int_tp globalCol = offN + tidn + wn*RTSN;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+  ss << "int_tp globalRow = offM + ";
+  ss << "VWM*(tidm + (wm/VWM)*RTSM) + wm%VWM;" << std::endl;
+  ss << "#pragma unroll" << std::endl;
+  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+  ss << "int_tp globalCol = offN + ";
+  ss << "VWN*(tidn + (wn/VWN)*RTSN) + wn%VWN;" << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  ss << "Cptr[globalRow * N + globalCol] = Creg[wm][wn];" << std::endl;
+  ss << "Cptr[globalRow * N + globalCol] = ";
+  ss << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM];" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -1110,7 +1426,7 @@ std::string libdnn_conv<Dtype>::generate_bw_kernels(std::string name) {
 }
 
 template<typename Dtype>
-void libdnn_conv<Dtype>::generate_kernels() {
+void LibDNNConv<Dtype>::GenerateKernels() {
   std::stringstream ss;
 
   ss << generate_header();
@@ -1123,11 +1439,28 @@ void libdnn_conv<Dtype>::generate_kernels() {
 
   // Write complete kernel string
   kernel_ = ss.str();
+
+  // std::cout << kernel_ << std::endl;
+}
+
+template<typename Dtype>
+bool LibDNNConv<Dtype>::CompileKernels() {
+#ifdef USE_GREENTEA
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+    CompileKernelsOpenCL(&(viennacl::ocl::get_context(dev_ptr_->id())));
+  }
+#endif  // USE_GREETEA
+#ifdef USE_CUDA
+  if (dev_ptr_->backend() == BACKEND_CUDA) {
+    CompileKernelsCuda();
+  }
+#endif  // USE_CUDA
+  return true;
 }
 
 #ifdef USE_GREENTEA
 template<typename Dtype>
-viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels_opencl(
+viennacl::ocl::program LibDNNConv<Dtype>::CompileKernelsOpenCL(
     viennacl::ocl::context *ctx) {
 
   std::string build_opts = "";
@@ -1151,7 +1484,7 @@ viennacl::ocl::program libdnn_conv<Dtype>::compile_kernels_opencl(
 
 #ifdef USE_CUDA
 template<typename Dtype>
-nvrtcProgram libdnn_conv<Dtype>::compile_kernels_cuda() {
+nvrtcProgram LibDNNConv<Dtype>::CompileKernelsCuda() {
   nvrtcCreateProgram(&cuda_program_, kernel_.c_str(), NULL, 0, NULL, NULL);
   nvrtcCompileProgram(cuda_program_, 0, NULL);
 
@@ -1176,23 +1509,29 @@ nvrtcProgram libdnn_conv<Dtype>::compile_kernels_cuda() {
 #endif  // USE_CUDA
 
 template<typename Dtype>
-void libdnn_conv<Dtype>::forward(const Dtype* bottom_data,
+void LibDNNConv<Dtype>::Forward(const Dtype* bottom_data,
                                  const Dtype* weight,
                                  const Dtype* bias,
                                  Dtype* top_data,
                                  int_tp batch_size) {
+  int fw_wptn = fw_tuner_->get_param<int>("WPTN");
+  int fw_wptm = fw_tuner_->get_param<int>("WPTM");
+  int fw_wgs0 = fw_tuner_->get_param<int>("workgroup_size_0");
+  int fw_wgs1 = fw_tuner_->get_param<int>("workgroup_size_1");
+  int fw_div_N = fw_wptn * fw_wgs0;
+  int fw_div_M = fw_wptm * fw_wgs1;
+
 #ifdef USE_GREENTEA
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
     viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_forward");
-
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
 
-    kernel.local_work_size(0, 16);
-    kernel.local_work_size(1, 16);
+    kernel.local_work_size(0, fw_wgs0);
+    kernel.local_work_size(1, fw_wgs1);
     kernel.local_work_size(2, 1);
 
-    kernel.global_work_size(0, ((this->N_FW_ - 1) / 64 + 1) * 16);
-    kernel.global_work_size(1, ((this->M_FW_ - 1) / 64 + 1) * 16);
+    kernel.global_work_size(0, ((this->N_FW_ - 1) / fw_div_N + 1) * fw_wgs0);
+    kernel.global_work_size(1, ((this->M_FW_ - 1) / fw_div_M + 1) * fw_wgs1);
     kernel.global_work_size(2, batch_size * group_);
 
     // for (int i = 0; i < 3; ++i) {
@@ -1226,19 +1565,19 @@ void libdnn_conv<Dtype>::forward(const Dtype* bottom_data,
     if (bias_term_) {
       void *args[] = { &bottom_data, &weight, &bias, &top_data };
       cuLaunchKernel(kernel,
-                     (this->N_FW_ - 1) / 64 + 1,  // Grid X
-                     (this->M_FW_ - 1) / 64 + 1,  // Grid Y
-                     batch_size * group_,         // Grid Z
-                     16, 16, 1,                   // Local
-                     0, NULL, args, 0);           // Arguments
+                     (this->N_FW_ - 1) / fw_div_N + 1,  // Grid X
+                     (this->M_FW_ - 1) / fw_div_M + 1,  // Grid Y
+                     batch_size * group_,               // Grid Z
+                     fw_wgs0, fw_wgs1, 1,               // Local
+                     0, NULL, args, 0);                 // Arguments
     } else {
       void *args[] = { &bottom_data, &weight, &top_data };
       cuLaunchKernel(kernel,
-                     (this->N_FW_ - 1) / 64 + 1,  // Grid X
-                     (this->M_FW_ - 1) / 64 + 1,  // Grid Y
-                     batch_size * group_,         // Grid Z
-                     16, 16, 1,                   // Local
-                     0, NULL, args, 0);           // Arguments
+                     (this->N_FW_ - 1) / fw_div_N + 1,  // Grid X
+                     (this->M_FW_ - 1) / fw_div_M + 1,  // Grid Y
+                     batch_size * group_,               // Grid Z
+                     fw_wgs0, fw_wgs1, 1,               // Local
+                     0, NULL, args, 0);                 // Arguments
     }
     cuCtxSynchronize();
   }
@@ -1246,26 +1585,41 @@ void libdnn_conv<Dtype>::forward(const Dtype* bottom_data,
 }
 
 template<typename Dtype>
-void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
-                                  const Dtype* top_diff, const Dtype* weight,
-                                  Dtype* weight_diff, const Dtype* bias,
-                                  Dtype* bias_diff, const Dtype* bottom_data,
-                                  Dtype* bottom_diff,
-                                  int_tp batch_size) {
+void LibDNNConv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
+                                 const Dtype* top_data,
+                                 const Dtype* top_diff, const Dtype* weight,
+                                 Dtype* weight_diff, const Dtype* bias,
+                                 Dtype* bias_diff, const Dtype* bottom_data,
+                                 Dtype* bottom_diff,
+                                 int_tp batch_size) {
+  int bw_wptn = bw_tuner_->get_param<int>("WPTN");
+  int bw_wptm = bw_tuner_->get_param<int>("WPTM");
+  int bw_wgs0 = bw_tuner_->get_param<int>("workgroup_size_0");
+  int bw_wgs1 = bw_tuner_->get_param<int>("workgroup_size_1");
+  int bw_div_N = bw_wptn * bw_wgs0;
+  int bw_div_M = bw_wptm * bw_wgs1;
+
+  int wg_wptn = wg_tuner_->get_param<int>("WPTN");
+  int wg_wptm = wg_tuner_->get_param<int>("WPTM");
+  int wg_wgs0 = wg_tuner_->get_param<int>("workgroup_size_0");
+  int wg_wgs1 = wg_tuner_->get_param<int>("workgroup_size_1");
+  int wg_div_N = wg_wptn * wg_wgs0;
+  int wg_div_M = wg_wptm * wg_wgs1;
+
+
 #ifdef USE_GREENTEA
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
     // Backprop w.r.t. data
     if (prop_down_data) {
       viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_backward");
-
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
 
-      kernel.local_work_size(0, 16);
-      kernel.local_work_size(1, 16);
+      kernel.local_work_size(0, bw_wgs0);
+      kernel.local_work_size(1, bw_wgs1);
       kernel.local_work_size(2, 1);
 
-      kernel.global_work_size(0, ((this->N_BW_ - 1) / 64 + 1) * 16);
-      kernel.global_work_size(1, ((this->M_BW_ - 1) / 64 + 1) * 16);
+      kernel.global_work_size(0, ((this->N_BW_ - 1) / bw_div_N + 1) * bw_wgs0);
+      kernel.global_work_size(1, ((this->M_BW_ - 1) / bw_div_M + 1) * bw_wgs1);
       kernel.global_work_size(2, batch_size * group_);
 
       // for (int i = 0; i < 3; ++i) {
@@ -1291,21 +1645,23 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
     }
 
     // Backprop w.r.t. weights and bias
-    if (this->weights_backward_ || this->bias_backward_) {
+    if (prop_down_weights && (this->weights_backward_
+                              || this->bias_backward_)) {
       viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("conv_weights");
 
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
 
-      kernel.local_work_size(0, 16);
-      kernel.local_work_size(1, 16);
+      kernel.local_work_size(0, wg_wgs0);
+      kernel.local_work_size(1, wg_wgs1);
       kernel.local_work_size(2, 1);
 
-      kernel.global_work_size(0, ((this->N_WG_ - 1) / 64 + 1) * 16);
-      kernel.global_work_size(1, ((this->M_WG_ - 1) / 64 + 1) * 16);
+      kernel.global_work_size(0, ((this->N_WG_ - 1) / wg_div_N + 1) * wg_wgs0);
+      kernel.global_work_size(1, ((this->M_WG_ - 1) / wg_div_M + 1) * wg_wgs1);
 
       if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
         kernel.global_work_size(2, group_);
-      } else {
+      }
+      if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
         kernel.global_work_size(2, batch_size * group_);
       }
 
@@ -1343,19 +1699,19 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
       if (bias_term_) {
         void *args[] = { &top_diff, &weight, &bias, &bottom_diff };
         cuLaunchKernel(kernel,
-                       (this->N_BW_ - 1) / 64 + 1,  // Grid X
-                       (this->M_BW_ - 1) / 64 + 1,  // Grid Y
-                       batch_size * group_,         // Grid Z
-                       16, 16, 1,                   // Local
-                       0, NULL, args, 0);           // Arguments
+                       (this->N_BW_ - 1) / bw_div_N + 1,  // Grid X
+                       (this->M_BW_ - 1) / bw_div_M + 1,  // Grid Y
+                       batch_size * group_,               // Grid Z
+                       bw_wgs0, bw_wgs1, 1,               // Local
+                       0, NULL, args, 0);                 // Arguments
       } else {
         void *args[] = { &top_diff, &weight, &bottom_diff };
         cuLaunchKernel(kernel,
-                       (this->N_BW_ - 1) / 64 + 1,  // Grid X
-                       (this->M_BW_ - 1) / 64 + 1,  // Grid Y
-                       batch_size * group_,         // Grid Z
-                       16, 16, 1,                   // Local
-                       0, NULL, args, 0);           // Arguments
+                       (this->N_BW_ - 1) / bw_div_N + 1,  // Grid X
+                       (this->M_BW_ - 1) / bw_div_M + 1,  // Grid Y
+                       batch_size * group_,               // Grid Z
+                       bw_wgs0, bw_wgs1, 1,               // Local
+                       0, NULL, args, 0);                 // Arguments
       }
     }
 
@@ -1364,31 +1720,130 @@ void libdnn_conv<Dtype>::backward(bool prop_down_data, const Dtype* top_data,
       CUfunction kernel;
       cuModuleGetFunction(&kernel, cuda_module_, "conv_weights");
 
+      int gws2 = 0;
+
+      if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
+        gws2 = group_;
+      }
+      if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
+        gws2 = batch_size * group_;
+      }
+
       if (bias_term_) {
         void *args[] = { &bottom_data, &top_diff,
             &bias_diff, &weight_diff, &batch_size };
         cuLaunchKernel(kernel,
-                       (this->N_WG_ - 1) / 64 + 1,  // Grid X
-                       (this->M_WG_ - 1) / 64 + 1,  // Grid Y
-                       group_,                      // Grid Z
-                       16, 16, 1,                   // Local
-                       0, NULL, args, 0);           // Arguments
+                       (this->N_WG_ - 1) / wg_div_N + 1,  // Grid X
+                       (this->M_WG_ - 1) / wg_div_M + 1,  // Grid Y
+                       gws2,                              // Grid Z
+                       wg_wgs0, wg_wgs1, 1,               // Local
+                       0, NULL, args, 0);                 // Arguments
       } else {
         void *args[] = { &bottom_data, &top_diff,
             &weight_diff, &batch_size };
         cuLaunchKernel(kernel,
-                       (this->N_WG_ - 1) / 64 + 1,  // Grid X
-                       (this->M_WG_ - 1) / 64 + 1,  // Grid Y
-                       group_,                      // Grid Z
-                       16, 16, 1,                   // Local
-                       0, NULL, args, 0);           // Arguments
+                       (this->N_WG_ - 1) / wg_div_N + 1,  // Grid X
+                       (this->M_WG_ - 1) / wg_div_M + 1,  // Grid Y
+                       gws2,                              // Grid Z
+                       wg_wgs0, wg_wgs1, 1,               // Local
+                       0, NULL, args, 0);                 // Arguments
       }
     }
   }
 #endif  // USE_CUDA
 }
 
-INSTANTIATE_CLASS(libdnn_conv);
+template<typename Dtype>
+void LibDNNConv<Dtype>::Tune(Dtype* top_data, Dtype* top_diff,
+          Dtype* weight, Dtype* weight_diff,
+          Dtype* bias, Dtype* bias_diff,
+          Dtype* bottom_data, Dtype* bottom_diff,
+          int_tp batch_size) {
+  LibDNNConv* self = this;
+  // Autotune forward kernel
+  fw_tuner_->set_setup_routine([&]() -> bool {
+    try {
+      self->GenerateKernels();
+      return self->CompileKernels();
+    } catch(...) {
+      return false;
+    }
+  });
+  fw_tuner_->set_benchmark_routine([&]() -> double {
+    try {
+      Timer timer;
+      timer.Start();
+      self->Forward(bottom_data, weight, bias, top_data, batch_size);
+      timer.Stop();
+      // Score is 1/time
+      return 1.0 / timer.MicroSeconds();
+    } catch(...) {
+      // Failure score
+      return -1.0;
+    }
+  });
+  fw_tuner_->Tune(LIBDNN_TUNER_METHOD_ANNEALING);
+
+  // Autotune backward kernel
+  bw_tuner_->set_setup_routine([&]() -> bool {
+    try {
+      self->GenerateKernels();
+      return self->CompileKernels();
+    } catch(...) {
+      return false;
+    }
+  });
+  bw_tuner_->set_benchmark_routine([&]() -> double {
+    try {
+      Timer timer;
+      timer.Start();
+      self->Backward(true, false,
+                     top_data, top_diff,
+                     weight, weight_diff,
+                     bias, bias_diff,
+                     bottom_data, bottom_diff,
+                     batch_size);
+      timer.Stop();
+      // Score is 1/time
+      return 1.0 / timer.MicroSeconds();
+    } catch(...) {
+      // Failure score
+      return -1.0;
+    }
+  });
+  bw_tuner_->Tune(LIBDNN_TUNER_METHOD_ANNEALING);
+
+  // Autotune weight/bias error kernel
+  wg_tuner_->set_setup_routine([&]() -> bool {
+    try {
+      self->GenerateKernels();
+      return self->CompileKernels();
+    } catch(...) {
+      return false;
+    }
+  });
+  wg_tuner_->set_benchmark_routine([&]() -> double {
+    try {
+      Timer timer;
+      timer.Start();
+      self->Backward(false, true,
+                     top_data, top_diff,
+                     weight, weight_diff,
+                     bias, bias_diff,
+                     bottom_data, bottom_diff,
+                     batch_size);
+      timer.Stop();
+      // Score is 1/time
+      return 1.0 / timer.MicroSeconds();
+    } catch(...) {
+      // Failure score
+      return -1.0;
+    }
+  });
+  wg_tuner_->Tune(LIBDNN_TUNER_METHOD_ANNEALING);
+}
+
+INSTANTIATE_CLASS(LibDNNConv);
 
 }  // namespace caffe
 

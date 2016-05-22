@@ -25,6 +25,10 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual ~LibDNNConvolutionLayer();
 
+  virtual void Tune(Dtype* top_data, Dtype* top_diff,
+                    Dtype* bottom_data, Dtype* bottom_diff,
+                    int_tp batch_size);
+
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -33,7 +37,7 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 
 
  private:
-  shared_ptr<libdnn_conv<Dtype> > libdnn_;
+  shared_ptr<LibDNNConv<Dtype> > libdnn_;
 };
 #endif
 

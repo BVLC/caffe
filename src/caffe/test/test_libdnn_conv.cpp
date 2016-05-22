@@ -766,6 +766,9 @@ class LibDNNComparativeTest : public GPUDeviceTest<TypeParam> {
     caffe_set(blob_top_ref_->count(),
               (TypeParam)0.0, blob_top_ref_->mutable_cpu_data());
 
+    /*layer.Tune(this->blob_top_vec_[0]->mutable_gpu_data(), nullptr,
+               this->blob_bottom_vec_[0]->mutable_gpu_data(), nullptr,
+               batchsize);*/
 
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);

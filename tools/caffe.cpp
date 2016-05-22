@@ -17,6 +17,10 @@ namespace bp = boost::python;
 #include "caffe/device.hpp"
 #include "caffe/util/signal_handler.h"
 
+#ifdef USE_LIBDNN
+#include "caffe/layers/libdnn_conv_layer.hpp"
+#endif
+
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
@@ -438,6 +442,59 @@ int time() {
 }
 RegisterBrewFunction(time);
 
+
+int autotune() {
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
+
+  vector<int> gpus;
+  get_gpus(&gpus);
+  if (gpus.size() == 0) {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  } else {
+#ifndef CPU_ONLY
+    // Load all devices that will be used
+    Caffe::SetDevices(gpus);
+
+    ostringstream s;
+    for (int_tp i = 0; i < gpus.size(); ++i) {
+      s << (i ? ", " : "") << gpus[i];
+    }
+    LOG(INFO) << "Using GPUs " << s.str();
+    // Initialize the first device
+    Caffe::SetDevice(gpus[0]);
+    Caffe::set_mode(Caffe::GPU);
+    Caffe::set_solver_count(gpus.size());
+#endif  // !CPU_ONLY
+  }
+
+  caffe::SignalHandler signal_handler(
+        GetRequestedAction(FLAGS_sigint_effect),
+        GetRequestedAction(FLAGS_sighup_effect));
+
+  Net<float> net(FLAGS_model, caffe::TRAIN, Caffe::GetDefaultDevice());
+
+  for (int i = 0; i < net.layers().size(); ++i) {
+#ifdef USE_LIBDNN
+    shared_ptr<caffe::LibDNNConvolutionLayer<float> > layer =
+        boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<float> >
+                (net.layers()[i]);
+    if (layer.get() != nullptr) {
+      float* top_data = net.top_vecs()[i][0]->mutable_gpu_data();
+      float* top_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
+      float* bottom_data = net.top_vecs()[i][0]->mutable_gpu_data();
+      float* bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
+      int_tp batch_size = net.top_vecs()[i][0]->shape(0);
+      layer->Tune(top_data, top_diff, bottom_data, bottom_diff, batch_size);
+    }
+#endif  // USE_LIBDNN
+  }
+}
+RegisterBrewFunction(autotune);
+
+
+
+
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
@@ -450,7 +507,8 @@ int main(int argc, char** argv) {
       "  train           train or finetune a model\n"
       "  test            score a model\n"
       "  device_query    show GPU diagnostic information\n"
-      "  time            benchmark model execution time");
+      "  time            benchmark model execution time"
+      "  autotune        autotune a model");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {

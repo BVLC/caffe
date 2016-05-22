@@ -85,9 +85,8 @@ struct is_same<T, T> {
 #define GREENTEA_CLBLAST_CHECK(condition) \
     {clblast::StatusCode status = condition; \
     CHECK_EQ(\
-      static_cast<int>(status),\
-      static_cast<int>(clblast::StatusCode::kSuccess)\
-    ) << \
+      static_cast<int>(status), \
+      static_cast<int>(clblast::StatusCode::kSuccess)) << \
     "GREENTEA ERROR: CLBlast error";}
 #endif
 
