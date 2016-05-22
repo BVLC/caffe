@@ -21,12 +21,14 @@ namespace caffe {
 
 device::device()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0), list_id_(0),
-      backend_(Backend::BACKEND_CPU), memory_usage_(0), peak_memory_usage_(0) {
+      backend_(Backend::BACKEND_CPU), memory_usage_(0), peak_memory_usage_(0),
+      host_unified_(false) {
 }
 
 device::device(int id, int list_id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id), list_id_(list_id),
-      backend_(backend), memory_usage_(0), peak_memory_usage_(0) {
+      backend_(backend), memory_usage_(0), peak_memory_usage_(0),
+      host_unified_(false) {
 }
 
 void device::Init() {
@@ -43,9 +45,9 @@ void device::Init() {
     clGetDeviceInfo(ctx.devices()[0].id(),
                     CL_DEVICE_MAX_WORK_ITEM_SIZES,
                     sizeof(uint_tp), &temp[0], NULL);
-    workgroup_sizes_[0] = temp[0];
-    workgroup_sizes_[1] = temp[1];
-    workgroup_sizes_[2] = temp[2];
+    workgroup_sizes_[0] = std::min(temp[0], (uint_tp)1024);
+    workgroup_sizes_[1] = std::min(temp[1], (uint_tp)1024);
+    workgroup_sizes_[2] = std::min(temp[2], (uint_tp)1024);
     cl_bool host_unified;
     clGetDeviceInfo(ctx.devices()[0].id(),
                     CL_DEVICE_HOST_UNIFIED_MEMORY,
@@ -76,10 +78,6 @@ int device::list_id() const {
 
 int device::workgroup_size(int id) {
   return workgroup_sizes_[id % 3];
-}
-
-int device::max_workgroup_size(int id) {
-  return max_workgroup_size_;
 }
 
 int device::num_queues() {
