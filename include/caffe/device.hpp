@@ -31,7 +31,6 @@ class device {
   int list_id() const;
   int current_queue_id();
   int workgroup_size(int id);
-  int max_workgroup_size(int id);
 
 #ifdef USE_GREENTEA
   viennacl::ocl::program &program();
@@ -59,7 +58,6 @@ class device {
  private:
   int current_queue_id_;
   std::vector<int> workgroup_sizes_;
-  int max_workgroup_size_;
   int id_;
   int list_id_;
   Backend backend_;

@@ -52,7 +52,7 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
   // Work groups
   for (int id = 0; id < 2; ++id) {
     std::vector<int_tp> workgroup_sizes;
-    for (int_tp i = 0; i < dev_ptr_->max_workgroup_size(id); i += 4) {
+    for (int_tp i = 0; i < dev_ptr_->workgroup_size(id); i += 4) {
       workgroup_sizes.push_back(i);
     }
     fw_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
