@@ -296,6 +296,40 @@ class MultilinearFiller : public InterpolationFillerBase<Dtype> {
 };
 
 /**
+ * @brief Fills a Blob with coefficients for multicubic interpolation.
+ *
+ * Set type of weight_filler to 'multicubic'. Support is set to 2. See
+ * InterpolationFillerBase for a detailed explanation of how to set kernel_size,
+ * stride and pad.
+ * If you apply this to an image, this operation is equivalent to the following
+ * call in Python with Scikit.Image.
+ * \code{.py}
+ * out = skimage.transform.rescale(img, (factor_y, factor_x), mode='constant', order=3, clip=False, cval=0)
+ * \endcode
+ */
+template <typename Dtype>
+class MulticubicFiller : public InterpolationFillerBase<Dtype> {
+ public:
+  explicit MulticubicFiller(const FillerParameter& param)
+      : InterpolationFillerBase<Dtype>(param) {}
+ protected:
+  virtual Dtype f(Dtype x) {
+    const Dtype A = -0.5;
+    if (std::abs(x) <= 1) {
+      return (A + 2) * std::pow(std::abs(x), 3)
+          - (A + 3) * std::pow(std::abs(x), 2) + 1;
+    }
+    if (std::abs(x) < 2) {
+      return A * std::pow(std::abs(x), 3)
+          - 5 * A * std::pow(std::abs(x), 2)
+          + 8 * A * std::abs(x) - 4 * A;
+    }
+    return 0;
+  }
+  virtual int support() { return 2; }
+};
+
+/**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
  * Ideally this would be replaced by a factory pattern, but we will leave it
@@ -318,6 +352,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "multilinear") {
     return new MultilinearFiller<Dtype>(param);
+  } else if (type == "multicubic") {
+    return new MulticubicFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
