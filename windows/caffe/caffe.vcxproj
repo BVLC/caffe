@@ -56,6 +56,9 @@
     <PostBuildEvent>
       <Command>"$(ScriptsDir)\FixGFlagsNaming.cmd" "$(OutDir)" $(Configuration)</Command>
     </PostBuildEvent>
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);CAFFE_VERSION=1.0.0-rc3</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tools\caffe.cpp" />
