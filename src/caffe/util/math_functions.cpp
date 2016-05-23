@@ -72,10 +72,18 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
 
   // TODO: Threshold is a function of num threads and CPU speed and constant
   int threshold = omp_get_max_threads() * 768;
-  bool run_parallel =
-    (Caffe::mode() != Caffe::GPU) &&
-    (omp_in_parallel() == 0) &&
-    (N >= threshold);
+  bool run_parallel = true;
+
+  // Note: we Assume GPU's CPU path is single threaded
+  if (omp_in_parallel() == 0) {
+    // inactive parallel region may mean also batch 1,
+    // but no new threads are to be created
+    run_parallel = run_parallel && (Caffe::mode() != Caffe::GPU) &&
+                   (N >= threshold);
+  } else {
+    // If we are running active parallel region then it is CPU
+    run_parallel = run_parallel && (N >= threshold);
+  }
 
   if (run_parallel) {
     #pragma omp parallel for
@@ -131,7 +139,9 @@ template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
-    if (Caffe::mode() == Caffe::GPU) {
+    // If there are more than one openmp thread (we are in active region)
+    // then checking Caffe::mode can create additional GPU Context
+    if ((omp_in_parallel() == 0) && (Caffe::mode() == Caffe::GPU)) {
 #ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
