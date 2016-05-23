@@ -204,17 +204,27 @@ class SynchronousSync : public InternalThread
   } children_sync;
 
   virtual bool terminated() {
+    boost::mutex::scoped_lock lock(mtx);
     #ifdef USE_MPI
-      return false;
+      return terminated_;
     #else
-      boost::mutex::scoped_lock lock(mtx);
       terminated_ =
         terminated_ || (solver->GetRequestedAction() != SolverAction::NONE);
       return terminated_;
     #endif
   }
 
+  virtual void terminate() {
+    boost::mutex::scoped_lock lock(mtx);
+    terminated_ = true;
+  }
+
   virtual void InternalThreadEntry() {
+    create_timer(
+      waypoint->get_daemon(),
+      5000,
+      boost::bind(&SynchronousSync::tick, this),
+      true);
     while (!terminated()) {
       internode::poll_one(waypoint->get_daemon());
     }
@@ -272,6 +282,7 @@ class SynchronousSync : public InternalThread
     , children_sync(this) {
     waypoint->set_buffer_size(codec->packet_size());
     if (!is_root()) solver->param().clear_snapshot();
+    if (!is_root()) solver->param().clear_snapshot_after_train();
     MLOG(1) << "initialized sync node with parent: " << waypoint->parent()
       << ", and num of children " << waypoint->children().size();
 
@@ -290,8 +301,13 @@ class SynchronousSync : public InternalThread
     for (int i = 0; i < layers.size(); ++i) {
       layers[i].move_to(LayerState::updating);
     }
+    solver->set_iter(1);
     if (is_leaf()) {
-      comms_up->send_iter_size(total_iters);
+      if (is_root()) {
+        ready_params_if_root(1);
+      } else {
+        comms_up->send_iter_size(total_iters);
+      }
     }
   }
 
@@ -312,14 +328,8 @@ class SynchronousSync : public InternalThread
     if (children_iter_size.size() != waypoint->children().size()) {
       return;
     }
-    solver->set_iter(1);
-    create_timer(
-      waypoint->get_daemon(),
-      500000,
-      boost::bind(&SynchronousSync::tick, this),
-      true);
-    ready_params_if_root(1);
     if (is_root()) {
+      ready_params_if_root(1);
       LOG(INFO) << "initialized root of cluster with nodes: "
                 << waypoint->total_nodes()
                 << " and the total iter size is: " << total_iters;
@@ -559,6 +569,8 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
     DLOG(INFO) << "[proc " << waypoint->id() << "] solving";
     solver->add_callback(this);
     solver->Solve();
+    sync.terminate();
+    sync.StopInternalThread();
   }
 
   void on_start() {

@@ -7,8 +7,11 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
-# Uncomment to use mkl-dnn primitives by default for supported layers
-# USE_MKLDNN := 1
+# Uncomment to use optimized MKL2017 primitives by default for supported layers
+# USE_MKL2017_AS_DEFAULT_ENGINE := 1
+
+# Temporary: uncomment if you have MKL 2017 Beta-Update or newer
+#COMMON_FLAGS += -DUSE_MKL2017_NEW_API
 
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0

@@ -1,4 +1,4 @@
-#ifdef MKLDNN_SUPPORTED
+#ifdef MKL2017_SUPPORTED
 #include <algorithm>
 #include <vector>
 
@@ -7,7 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/layers/mkl_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -18,11 +18,11 @@ using std::max;
 namespace caffe {
 
 template <typename TypeParam>
-class MklDnnLRNLayerTest : public MultiDeviceTest<TypeParam> {
+class MKLLRNLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  MklDnnLRNLayerTest()
+  MKLLRNLayerTest()
       : epsilon_(Dtype(1e-5)),
         blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
@@ -36,7 +36,7 @@ class MklDnnLRNLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~MklDnnLRNLayerTest() { delete blob_bottom_; delete blob_top_; }
+  virtual ~MKLLRNLayerTest() { delete blob_bottom_; delete blob_top_; }
   void ReferenceLRNForward(const Blob<Dtype>& blob_bottom,
       const LayerParameter& layer_param, Blob<Dtype>* blob_top);
 
@@ -48,7 +48,7 @@ class MklDnnLRNLayerTest : public MultiDeviceTest<TypeParam> {
 };
 
 template <typename TypeParam>
-void MklDnnLRNLayerTest<TypeParam>::ReferenceLRNForward(
+void MKLLRNLayerTest<TypeParam>::ReferenceLRNForward(
     const Blob<Dtype>& blob_bottom, const LayerParameter& layer_param,
     Blob<Dtype>* blob_top) {
   typedef typename TypeParam::Dtype Dtype;
@@ -110,13 +110,15 @@ void MklDnnLRNLayerTest<TypeParam>::ReferenceLRNForward(
   }
 }
 
-TYPED_TEST_CASE(MklDnnLRNLayerTest, TestDtypesAndDevices);
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLLRNLayerTest, TestDtypesCPU);
 
 
-TYPED_TEST(MklDnnLRNLayerTest, TestSetupAcrossChannels) {
+TYPED_TEST(MKLLRNLayerTest, TestSetupAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 7);
@@ -124,10 +126,10 @@ TYPED_TEST(MklDnnLRNLayerTest, TestSetupAcrossChannels) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 #if 0
-TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannels) {
+TYPED_TEST(MKLLRNLayerTest, TestForwardAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -139,11 +141,11 @@ TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannels) {
   }
 }
 #endif
-TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
+TYPED_TEST(MKLLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_local_size(15);
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -155,10 +157,10 @@ TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   }
 }
 #if 0
-TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannels) {
+TYPED_TEST(MKLLRNLayerTest, TestGradientAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -176,11 +178,11 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannels) {
       this->blob_top_vec_);
 }
 #endif
-TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
+TYPED_TEST(MKLLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_local_size(15);
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -200,13 +202,13 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 
 
 #if 0
-TYPED_TEST(MklDnnLRNLayerTest, TestSetupWithinChannel) {
+TYPED_TEST(MKLLRNLayerTest, TestSetupWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 7);
@@ -214,13 +216,13 @@ TYPED_TEST(MklDnnLRNLayerTest, TestSetupWithinChannel) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
-TYPED_TEST(MklDnnLRNLayerTest, TestForwardWithinChannel) {
+TYPED_TEST(MKLLRNLayerTest, TestForwardWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -232,13 +234,13 @@ TYPED_TEST(MklDnnLRNLayerTest, TestForwardWithinChannel) {
   }
 }
 
-TYPED_TEST(MklDnnLRNLayerTest, TestGradientWithinChannel) {
+TYPED_TEST(MKLLRNLayerTest, TestGradientWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  MklDnnLRNLayer<Dtype> layer(layer_param);
+  MKLLRNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -250,4 +252,4 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientWithinChannel) {
 }
 #endif
 }  // namespace caffe
-#endif  // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKL2017_SUPPORTED

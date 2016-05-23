@@ -159,8 +159,6 @@ void Collection::updateCpuInformation(const Processor &processor,
 #include <omp.h>
 #include <sched.h>
 
-static const int minCoresForThreadBinding = 12;
-
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
   "OMP_MAX_ACTIVE_LEVELS", "OMP_MAX_TASK_PRIORITY", "OMP_NESTED",
@@ -176,7 +174,7 @@ static const char *openMpEnvVars[] = {
 static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
-OpenMpManager::OpenMpManager() : areBackgroundThreadsPresent(false) {
+OpenMpManager::OpenMpManager() {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
@@ -197,18 +195,14 @@ void OpenMpManager::setGpuDisabled() {
   openMpManager.isGpuEnabled = false;
 }
 
-void OpenMpManager::registerBackgroundThread() {
-  OpenMpManager &openMpManager = getInstance();
-  openMpManager.areBackgroundThreadsPresent = true;
-}
-
-void OpenMpManager::bindCurrentThreadToPrimaryCore() {
+// Ideally bind given thread to secondary logical core, if
+// only one thread exists then bind to primary one
+void OpenMpManager::bindCurrentThreadToNonPrimaryCoreIfPossible() {
   OpenMpManager &openMpManager = getInstance();
   if (openMpManager.isThreadsBindAllowed()) {
-    unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
-    if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
-      openMpManager.bindCurrentThreadToLogicalCoreCpus(0);
-    }
+    int totalNumberOfAvailableCores = CPU_COUNT(&openMpManager.currentCoreSet);
+    int logicalCoreToBindTo = totalNumberOfAvailableCores > 1 ? 1 : 0;
+    openMpManager.bindCurrentThreadToLogicalCoreCpus(logicalCoreToBindTo);
   }
 }
 
@@ -222,12 +216,6 @@ void OpenMpManager::bindOpenMpThreads() {
   #pragma omp parallel
   {
     unsigned logicalCoreId = omp_get_thread_num();
-    unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
-    if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
-      // TODO: remove this 2 when performance regression is removed
-      logicalCoreId += openMpManager.areBackgroundThreadsPresent ? 2 : 0;
-    }
-
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
   }
 }
@@ -312,15 +300,9 @@ bool OpenMpManager::isThreadsBindAllowed() {
   return !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
 }
 
+// Limit of threads to number of logical cores available
 void OpenMpManager::setOpenMpThreadNumberLimit() {
-  unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
-
-  if (totalNumberOfAvailableCores >= minCoresForThreadBinding)
-    // TODO: remove this 2 when performance regression is removed
-    omp_set_num_threads(totalNumberOfAvailableCores -
-                        (areBackgroundThreadsPresent ? 2 : 0));
-  else
-    omp_set_num_threads(totalNumberOfAvailableCores);
+  omp_set_num_threads(CPU_COUNT(&currentCoreSet));
 }
 
 void OpenMpManager::bindCurrentThreadToLogicalCoreCpu(unsigned logicalCoreId) {

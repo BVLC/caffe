@@ -68,7 +68,11 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
-  StartInternalThread();
+
+  // Only if GPU mode on then we use background threads
+  if (Caffe::mode() == Caffe::GPU) {
+    StartInternalThread();
+  }
   DLOG(INFO) << "Prefetch initialized.";
 }
 
@@ -103,10 +107,26 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
+// TODO: Make it properlly implemented/integrated with above solution
+template <typename Dtype>
+void BasePrefetchingDataLayer<Dtype>::GetBatch() {
+  try {
+      Batch<Dtype>* batch = prefetch_free_.pop();
+      load_batch(batch);
+      prefetch_full_.push(batch);
+  } catch (boost::thread_interrupted&) {
+    // Interrupted exception is expected on shutdown
+  }
+}
+
+
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-
+  // Here for CPU we do transformation
+  if (Caffe::mode() == Caffe::CPU) {
+    this->GetBatch();
+  }
   Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
@@ -121,6 +141,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
         top[1]->mutable_cpu_data());
   }
+
+  // TODO: Consider prefetch_data_array and prefetch_label_array
 
   prefetch_free_.push(batch);
 }

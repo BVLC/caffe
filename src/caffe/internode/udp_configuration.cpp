@@ -413,7 +413,7 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
     ClientIt it = clients.find(addr);
     if (it == clients.end()) {
       it = clients.insert(
-        std::make_pair(addr, new ClientEndpoint(
+        std::make_pair(addr, boost::make_shared<ClientEndpoint>(
           daemon,
           incoming_client_endpoint,
           queue.get(),

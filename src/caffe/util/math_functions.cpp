@@ -1,3 +1,11 @@
+#if USE_MKL
+#include <mkl.h>
+#endif
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
@@ -7,9 +15,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 namespace caffe {
 
@@ -277,7 +282,11 @@ void caffe_abs<double>(const int n, const double* a, double* y) {
 }
 
 unsigned int caffe_rng_rand() {
-  return (*caffe_rng())();
+#ifdef DETERMINISTIC
+    return 5153;
+#else
+    return (*caffe_rng())();
+#endif
 }
 
 template <typename Dtype>
@@ -335,18 +344,32 @@ template
 void caffe_rng_gaussian<double>(const int n, const double mu,
                                 const double sigma, double* r);
 
+#ifdef USE_MKL
+static void bernoulli_generate(int n, double p, int* r) {
+  VSLStreamStatePtr stream;
+  int seed = 17 + caffe_rng_rand() % 4096;
+  vslNewStream(&stream, VSL_BRNG_MCG31, seed);
+  viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, stream, n, r, p);
+  vslDeleteStream(&stream);
+}
+#endif
+
 template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, int* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
+#ifdef USE_MKL
+  bernoulli_generate(n, p, r);
+#else
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
       variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+#endif
 }
 
 template
@@ -361,12 +384,16 @@ void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r) {
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
+#ifdef USE_MKL
+  bernoulli_generate(n, p, reinterpret_cast<int *>(r));
+#else
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
       variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = static_cast<unsigned int>(variate_generator());
   }
+#endif
 }
 
 template

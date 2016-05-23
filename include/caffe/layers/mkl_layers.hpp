@@ -1,5 +1,5 @@
-#ifndef CAFFE_MKLDNN_LAYERS_HPP_
-#define CAFFE_MKLDNN_LAYERS_HPP_
+#ifndef CAFFE_MKL2017_LAYERS_HPP_
+#define CAFFE_MKL2017_LAYERS_HPP_
 
 #include <string>
 #include <vector>
@@ -17,12 +17,12 @@
 namespace caffe {
 
 template <typename Dtype, bool is_diff>
-struct MklDnnMemoryDescriptor : PrvMemDescr,
-    boost::enable_shared_from_this<MklDnnMemoryDescriptor<Dtype, is_diff> > {
-  MklDnnMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
+struct MKLMemoryDescriptor : PrvMemDescr,
+    boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
+  MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
           internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL),
           name("UKNOWN") {}
-  ~MklDnnMemoryDescriptor() {
+  ~MKLMemoryDescriptor() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
     dnnReleaseBuffer<Dtype>(internal_ptr);
@@ -30,7 +30,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr,
     dnnDelete<Dtype>(convert_from_int);
   }
 
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
+  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
     return this->shared_from_this();
   }
 
@@ -65,29 +65,29 @@ struct MklDnnMemoryDescriptor : PrvMemDescr,
       return dnnLayoutGetMemorySize<Dtype>(layout_int) / sizeof(Dtype);
   }
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;}
+  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
 
   // The last get_converted_prv() argument is a hack for reusing
   // in backward a conversion done already in the forward direction.
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr,
-          MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
+          MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
 };
 
 template <typename Dtype>
-struct MklDnnData : MklDnnMemoryDescriptor<Dtype, false>
+struct MKLData : MKLMemoryDescriptor<Dtype, false>
 {};
 
 template <typename Dtype>
-struct MklDnnDiff : MklDnnMemoryDescriptor<Dtype, true>
+struct MKLDiff : MKLMemoryDescriptor<Dtype, true>
 {};
 
 template <typename Dtype>
-class MklDnnConvolutionLayer : public ConvolutionLayer<Dtype> {
+class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
-  explicit MklDnnConvolutionLayer(const LayerParameter& param);
+  explicit MKLConvolutionLayer(const LayerParameter& param);
 
   virtual inline const char* type() const { return "DnnConvolution"; }
-  virtual ~MklDnnConvolutionLayer();
+  virtual ~MKLConvolutionLayer();
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -107,22 +107,22 @@ class MklDnnConvolutionLayer : public ConvolutionLayer<Dtype> {
 
  private:
   /* Fwd step */
-  shared_ptr<MklDnnData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
                                  fwd_bias_data;
   dnnPrimitive_t convolutionFwd;
 
   /* Bwd data step */
-  shared_ptr<MklDnnDiff<Dtype> > bwdd_top_diff, bwdd_bottom_diff;
-  shared_ptr<MklDnnData<Dtype> > bwdd_filter_data;
+  shared_ptr<MKLDiff<Dtype> > bwdd_top_diff, bwdd_bottom_diff;
+  shared_ptr<MKLData<Dtype> > bwdd_filter_data;
   dnnPrimitive_t convolutionBwdData;
 
   /* Bwd filter step */
-  shared_ptr<MklDnnDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
-  shared_ptr<MklDnnData<Dtype> > bwdf_bottom_data;
+  shared_ptr<MKLDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
+  shared_ptr<MKLData<Dtype> > bwdf_bottom_data;
   dnnPrimitive_t convolutionBwdFilter;
 
   /* Bwd bias step */
-  shared_ptr<MklDnnDiff<Dtype> > bwdb_top_diff, bwdb_bias_diff;
+  shared_ptr<MKLDiff<Dtype> > bwdb_top_diff, bwdb_bias_diff;
   dnnPrimitive_t convolutionBwdBias;
 
   // TODO: temp. compatibility vs. older cafe
@@ -144,15 +144,15 @@ class MklDnnConvolutionLayer : public ConvolutionLayer<Dtype> {
  */
 
 template <typename Dtype>
-class MklDnnLRNLayer : public Layer<Dtype> {
+class MKLLRNLayer : public Layer<Dtype> {
  public:
-  explicit MklDnnLRNLayer(const LayerParameter& param)
+  explicit MKLLRNLayer(const LayerParameter& param)
       : Layer<Dtype>(param), layout_usr_(NULL) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual ~MklDnnLRNLayer();
+  virtual ~MKLLRNLayer();
 
   virtual inline const char* type() const { return "DnnLRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -192,8 +192,8 @@ class MklDnnLRNLayer : public Layer<Dtype> {
   // scale_ stores the intermediate summing results
  private:
   dnnPrimitive_t lrnFwd, lrnBwd;
-  shared_ptr<MklDnnData<Dtype> > fwd_top_data;
-  shared_ptr<MklDnnDiff<Dtype> > bwd_bottom_diff;
+  shared_ptr<MKLData<Dtype> > fwd_top_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
   Dtype *lrn_buffer_;
   dnnLayout_t layout_usr_;
 };
@@ -201,16 +201,16 @@ class MklDnnLRNLayer : public Layer<Dtype> {
 
 
 template <typename Dtype>
-class MklDnnPoolingLayer : public Layer<Dtype> {
+class MKLPoolingLayer : public Layer<Dtype> {
  public:
-  explicit MklDnnPoolingLayer(const LayerParameter& param)
+  explicit MKLPoolingLayer(const LayerParameter& param)
     : Layer<Dtype>(param),
-      fwd_top_data    (new MklDnnData<Dtype>()),
-      fwd_bottom_data (new MklDnnData<Dtype>()),
-      bwd_top_diff    (new MklDnnDiff<Dtype>()),
-      bwd_bottom_diff (new MklDnnDiff<Dtype>()),
+      fwd_top_data    (new MKLData<Dtype>()),
+      fwd_bottom_data (new MKLData<Dtype>()),
+      bwd_top_diff    (new MKLDiff<Dtype>()),
+      bwd_bottom_diff (new MKLDiff<Dtype>()),
       poolingFwd(NULL), poolingBwd(NULL) {}
-  ~MklDnnPoolingLayer();
+  ~MKLPoolingLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -252,14 +252,14 @@ class MklDnnPoolingLayer : public Layer<Dtype> {
   size_t kernel_size[2],
          kernel_stride[4];
   int src_offset[2];
-  shared_ptr<MklDnnData<Dtype> > fwd_top_data, fwd_bottom_data;
-  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
+  shared_ptr<MKLData<Dtype> > fwd_top_data, fwd_bottom_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
 
   dnnPrimitive_t poolingFwd, poolingBwd;
 };
 
 template <typename Dtype>
-class MklDnnReLULayer : public NeuronLayer<Dtype> {
+class MKLReLULayer : public NeuronLayer<Dtype> {
  public:
   /**
    * @param param provides ReLUParameter relu_param,
@@ -267,11 +267,11 @@ class MklDnnReLULayer : public NeuronLayer<Dtype> {
    *   - negative_slope (\b optional, default 0).
    *     the value @f$ \nu @f$ by which negative values are multiplied.
    */
-  explicit MklDnnReLULayer(const LayerParameter& param)
+  explicit MKLReLULayer(const LayerParameter& param)
     : NeuronLayer<Dtype>(param),
-      fwd_bottom_data_ (new MklDnnData<Dtype>()),
-      bwd_top_diff_    (new MklDnnDiff<Dtype>()) {}
-  ~MklDnnReLULayer();
+      fwd_bottom_data_ (new MKLData<Dtype>()),
+      bwd_top_diff_    (new MKLDiff<Dtype>()) {}
+  ~MKLReLULayer();
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
@@ -292,10 +292,182 @@ class MklDnnReLULayer : public NeuronLayer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
  private:
-  shared_ptr<MklDnnData<Dtype> > fwd_bottom_data_;
-  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff_;
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data_;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
 
+#ifdef USE_MKL2017_NEW_API
+template <typename Dtype>
+class MKLConcatLayer : public Layer<Dtype> {
+ public:
+  explicit MKLConcatLayer(const LayerParameter& param)
+      : Layer<Dtype>(param),
+      fwd_top_data_    (new MKLData<Dtype>()),
+      bwd_top_diff_    (new MKLDiff<Dtype>()) {
+      }
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+  ~MKLConcatLayer();
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+ private:
+  dnnPrimitive_t concatFwd_;
+  dnnPrimitive_t concatBwd_;
+  shared_ptr<MKLData<Dtype> > fwd_top_data_;
+  vector<shared_ptr<MKLData<Dtype> > > fwd_bottom_data_;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
+  vector<shared_ptr<MKLDiff<Dtype> > > bwd_bottom_diff_;
+  size_t *split_channels_;
+
+  size_t width_;
+  size_t height_;
+  size_t channels_;
+  size_t num_;
+  size_t num_concats_;
+};
+
+template <typename Dtype>
+class MKLBatchNormLayer : public Layer<Dtype> {
+ public:
+  explicit MKLBatchNormLayer(const LayerParameter& param)
+      : Layer<Dtype>(param),
+        fwd_top_data    (new MKLData<Dtype>()),
+        bwd_bottom_diff (new MKLDiff<Dtype>()),
+        batchNormFwd(NULL), batchNormBwdData(NULL),
+        batchNormBwdScaleShift(NULL) {
+       }
+  virtual ~MKLBatchNormLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "MKLBatchNorm"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+//  Dtype moving_average_fraction_;
+  Dtype eps_;
+  bool use_weight_bias_;
+  bool bias_term_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+
+ private:
+  shared_ptr<MKLData<Dtype> > fwd_top_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
+  dnnPrimitive_t batchNormFwd, batchNormBwdData, batchNormBwdScaleShift;
+  Dtype *workspace_buffer_;
+  Dtype *scaleShift_buffer_;
+  dnnLayout_t layout_usr_;
+};
+
+template <typename Dtype>
+class MKLSplitLayer : public Layer<Dtype> {
+ public:
+  explicit MKLSplitLayer(const LayerParameter& param)
+      : Layer<Dtype>(param),
+        bwd_bottom_diff (new MKLDiff<Dtype>()),
+        sumPrimitive(NULL) {
+       }
+  virtual ~MKLSplitLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Split"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+ private:
+  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
+  vector<shared_ptr<MKLDiff<Dtype> > > bwd_top_diff;
+  vector<Dtype> coeffs_;
+  size_t num_tops;
+  dnnPrimitive_t sumPrimitive;
+};
+
+template <typename Dtype>
+class MKLEltwiseLayer : public Layer<Dtype> {
+ public:
+  explicit MKLEltwiseLayer(const LayerParameter& param)
+      : Layer<Dtype>(param),
+        fwd_top_data       (new MKLData<Dtype>()),
+        sumPrimitive(NULL) {
+       }
+  virtual ~MKLEltwiseLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Eltwise"; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+ private:
+  shared_ptr<MKLData<Dtype> > fwd_top_data;
+  vector<shared_ptr<MKLData<Dtype> > > fwd_bottom_data;
+
+  dnnPrimitive_t sumPrimitive;
+  dnnPrimitive_t convertPrimitive;
+
+  EltwiseParameter_EltwiseOp op_;
+  vector<Dtype> coeffs_;
+  Blob<int> max_idx_;
+  size_t num_bottoms;
+
+  bool stable_prod_grad_;
+};
+#endif  // #ifdef USE_MKL2017_NEW_API
+
 }  // namespace caffe
-#endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
+#endif  // #ifndef CAFFE_MKL2017_LAYERS_HPP_

@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
+#include <boost/weak_ptr.hpp>
 #include <algorithm>
 #include <deque>
 #include <string>
@@ -331,7 +332,7 @@ class Queue {
 };
 
 class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
-  typedef typename Waypoint::SentCallback SentCallback;
+  typedef Waypoint::SentCallback SentCallback;
 
   PacketCodec codec;
   boost::shared_ptr<Queue> send_queue;
@@ -463,7 +464,7 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
 class GuaranteedMultiWaypoint : public InternalThread
                               , public Waypoint::Handler
                               , public MultiWaypoint::Handler {
-  typedef typename Waypoint::SentCallback SentCallback;
+  typedef Waypoint::SentCallback SentCallback;
 
   PacketCodec codec;
   boost::shared_ptr<Queue> send_queue;
@@ -680,7 +681,7 @@ class ExternalClientWaypoint : public Waypoint, public boost::static_visitor<> {
 
 class ExternalMultiWaypoint : public MultiWaypoint
                             , public boost::static_visitor<> {
-  typedef typename Waypoint::SentCallback SentCallback;
+  typedef Waypoint::SentCallback SentCallback;
 
   PacketCodec codec;
   boost::shared_ptr<Queue> send_queue;

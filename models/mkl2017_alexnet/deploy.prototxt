@@ -22,7 +22,7 @@ layer {
     num_output: 96
     kernel_size: 11
     stride: 4
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -31,7 +31,7 @@ layer {
   bottom: "conv1"
   top: "conv1"
   relu_param {
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -43,7 +43,7 @@ layer {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -55,7 +55,7 @@ layer {
     pool: MAX
     kernel_size: 3
     stride: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -76,7 +76,7 @@ layer {
     pad: 2
     kernel_size: 5
     group: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -85,7 +85,7 @@ layer {
   bottom: "conv2"
   top: "conv2"
   relu_param {
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -97,7 +97,7 @@ layer {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -109,7 +109,7 @@ layer {
     pool: MAX
     kernel_size: 3
     stride: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -129,7 +129,7 @@ layer {
     num_output: 384
     pad: 1
     kernel_size: 3
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -138,7 +138,7 @@ layer {
   bottom: "conv3"
   top: "conv3"
   relu_param {
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -159,7 +159,7 @@ layer {
     pad: 1
     kernel_size: 3
     group: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -168,7 +168,7 @@ layer {
   bottom: "conv4"
   top: "conv4"
   relu_param {
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -189,7 +189,7 @@ layer {
     pad: 1
     kernel_size: 3
     group: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -198,7 +198,7 @@ layer {
   bottom: "conv5"
   top: "conv5"
   relu_param {
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
@@ -210,7 +210,7 @@ layer {
     pool: MAX
     kernel_size: 3
     stride: 2
-    engine: MKLDNN
+    engine: MKL2017
   }
 }
 layer {
