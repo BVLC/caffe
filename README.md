@@ -1,6 +1,6 @@
 # Caffe (CPM Data Layer)
 
-### File changed:
+### Files changed:
 0. data_reader.hpp
 0. data_transformer.hpp
 0. data_reader.cpp
