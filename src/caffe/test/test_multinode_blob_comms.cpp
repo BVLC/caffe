@@ -299,17 +299,12 @@ TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
     EXPECT_EQ(0, comms->currently_sending_version());
     EXPECT_EQ(0, comms->currently_sending_version(0));
     EXPECT_DEATH(comms->currently_sending_version(5), "");
-//    comms->push(0,0,0,1);
-//    EXPECT_EQ(1, comms->currently_sending_version(1));
 }
 
 
 
 TEST_F(BlobCommsTest, SendIterSize) {
   buildOne();
-//  Waypoint::SentCallback callback;
-
-
   SendIterSize(waypoint_mock, 10);
   SendIterSize(waypoint_mock, -1);
   SendIterSize(waypoint_mock, 0);
@@ -542,33 +537,34 @@ TEST_F(BlobCommsTest, pushLayers) {
      buildSendMethodExpects(2,  5, part_id, 1, &callback, 1);
 
     }
-    comms->push(0, 1);
-    callback(true);
-    callback(true);
-    callback(true);
-    comms->cancel(0, 1);
-    callback(true);
-    comms->push(1, 1);
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
-    comms->push(2, 1);
-    callback(true);
-    callback(true);
-    comms->push(3, 1);
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
+    comms->push(0, 1);  // 0b0 added to send queue and sent immediately
+    callback(true);     // 0b1 sent
+    callback(true);     // 0b2 sent
+    callback(true);     // 0b3 sent
+    comms->cancel(0, 1);// sets 'during_sending' state to false
+    callback(true);     // clears cancelled version
+    comms->push(1, 1);  // 1b0 sent
+    callback(true);     // 1b1 sent
+    callback(true);     // 1b2 sent
+    callback(true);     // 1b3 sent
+    callback(true);     // 1b4 sent
+    callback(true);     // 1b5 sent
+    comms->push(2, 1);  // just adds to queue bof 'during_sending' state
+    callback(true);     // 2b0 sent
+    callback(true);     // 2b1 sent
+    comms->push(3, 1);  // // just adds to queue bof 'during_sending' state
+    callback(true);     // 3b0 sent
+    callback(true);     // 3b1 sent
+    callback(true);     // 3b2 sent
+    callback(true);     // 3b3 sent
+    callback(true);     // 3b4 sent
+    callback(true);     // 3b5 sent
 
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
-    callback(true);
+    callback(true);     // 2b2 sent
+    callback(true);     // 2b3 sent
+    callback(true);     // 2b4 sent
+    callback(true);     // 2b5 sent
+    callback(true);     // nothing to send
 }
 }  // namespace
 }  // namespace caffe
