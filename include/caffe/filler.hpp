@@ -330,6 +330,38 @@ class MulticubicFiller : public InterpolationFillerBase<Dtype> {
 };
 
 /**
+ * @brief Fills a Blob with coefficients for Lanczos interpolation.
+ *
+ * Set type of weight_filler to 'lanczos2', 'lanczos3' or 'lanczos4'.
+ * Support is set to 2, 3 or 4, respectively. See InterpolationFillerBase for a
+ * detailed explanation of how to set kernel_size, stride and pad.
+ * If you apply this to an image, this operation is similar to the following
+ * call in Python with opencv (with different border handling and rounding
+ * errors).
+ * \code{.py}
+ * out = cv2.resize(img, (img.shape[1] * factor_x, img.shape[0] * factor_y), interpolation=cv2.INTER_LANCZOS4)
+ * \endcode
+ */
+template <typename Dtype, unsigned A>
+class LanczosFiller : public InterpolationFillerBase<Dtype> {
+ public:
+  explicit LanczosFiller(const FillerParameter& param)
+      : InterpolationFillerBase<Dtype>(param) {}
+ protected:
+  virtual Dtype f(Dtype x) {
+    if (x == 0) {
+      return 1;
+    }
+    if (std::abs(x) < A) {
+      return (A * std::sin(M_PI * x) * std::sin(M_PI * x / A))
+          / (M_PI * M_PI * x * x);
+    }
+    return 0;
+  }
+  virtual int support() { return A; }
+};
+
+/**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
  * Ideally this would be replaced by a factory pattern, but we will leave it
@@ -354,6 +386,12 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MultilinearFiller<Dtype>(param);
   } else if (type == "multicubic") {
     return new MulticubicFiller<Dtype>(param);
+  } else if (type == "lanczos2") {
+    return new LanczosFiller<Dtype, 2>(param);
+  } else if (type == "lanczos3") {
+    return new LanczosFiller<Dtype, 3>(param);
+  } else if (type == "lanczos4") {
+    return new LanczosFiller<Dtype, 4>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
