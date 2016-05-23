@@ -42,7 +42,6 @@ caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 
 # ---[ Dependencies
-set(BLAS "mkl")
 include(cmake/Dependencies.cmake)
 
 # ---[ Flags
