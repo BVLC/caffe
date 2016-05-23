@@ -116,7 +116,7 @@ class BlobAccessorTestImpl : public BlobAccessor<Dtype> {
  public:
     Blob<Dtype> dummy_blob;
     BlobAccessorTestImpl()
-  : v(boost::assign::list_of(1)(1)(1)(1)(1)(1)(1)(1).operator vector<int> ())
+  : v(boost::assign::list_of(1).operator vector<int> ())
   , dummy_blob(v) {}
 
   virtual Blob<Dtype>* get_blob(int layer, int blob_id) {
@@ -193,10 +193,10 @@ struct BlobCommsTest : public Test {
     
     prepare_const_mock(
         list_of<vector<int> >
-            (list_of<int>(1)(1)(1)(1)(1)(1))
-            (list_of<int>(2)(2)(2)(2)(2)(2))
-            (list_of<int>(3)(3)(3)(3)(3)(3))
-            (list_of<int>(4)(4)(4)(4)(4)(4))
+            (list_of<int>(1)(1)(1)(1)(1)(1)) // layer0
+            (list_of<int>(1)(1)(1)(1)(1)(1)) // layer1
+            (list_of<int>(1)(1)(1)(1)(1)(1)) // layer2
+            (list_of<int>(1)(1)(1)(1)(1)(1)) // layer3
     );
     
     keychain_mock.reset(new StrictMock<BlobKeyChainMock<float> >() );
@@ -504,8 +504,71 @@ TEST_F(BlobCommsTest, checkPriorityQueue) {
     callback(true); // sent 2v4 as 2v5 => [2:[3,2]]
     callback(true); // sent 2v3 as 2v5 => [2:[2]]
     callback(true); // sent 2v2 as 2v5 => []
-    callback(true); // nothing
+    callback(true); // nothing to send
 
+}
+TEST_F(BlobCommsTest, pushLayers) {
+  buildOne();
+  int part_id = 0;//blob_id = 0, , version = 1;
+  Waypoint::SentCallback callback;
+    {
+     InSequence dummy;
+     buildSendMethodExpects(0,  0, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  1, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  2, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  3, part_id, 1, &callback, 1);
+     EXPECT_CALL(*blob_accessor_mock, get_blob(0, 4)).Times(0);
+     EXPECT_CALL(*blob_accessor_mock, get_blob(0, 5)).Times(0);
+     buildSendMethodExpects(1,  0, part_id, 1, &callback, 1);
+     buildSendMethodExpects(1,  1, part_id, 1, &callback, 1);
+     buildSendMethodExpects(1,  2, part_id, 1, &callback, 1);
+     buildSendMethodExpects(1,  3, part_id, 1, &callback, 1);
+     buildSendMethodExpects(1,  4, part_id, 1, &callback, 1);
+     buildSendMethodExpects(1,  5, part_id, 1, &callback, 1);
+
+     buildSendMethodExpects(2,  0, part_id, 1, &callback, 1);
+     buildSendMethodExpects(2,  1, part_id, 1, &callback, 1);
+
+     buildSendMethodExpects(3,  0, part_id, 1, &callback, 1);
+     buildSendMethodExpects(3,  1, part_id, 1, &callback, 1);
+     buildSendMethodExpects(3,  2, part_id, 1, &callback, 1);
+     buildSendMethodExpects(3,  3, part_id, 1, &callback, 1);
+     buildSendMethodExpects(3,  4, part_id, 1, &callback, 1);
+     buildSendMethodExpects(3,  5, part_id, 1, &callback, 1);
+
+     buildSendMethodExpects(2,  2, part_id, 1, &callback, 1);
+     buildSendMethodExpects(2,  3, part_id, 1, &callback, 1);
+     buildSendMethodExpects(2,  4, part_id, 1, &callback, 1);
+     buildSendMethodExpects(2,  5, part_id, 1, &callback, 1);
+
+    }
+    comms->push(0, 1);
+    callback(true);
+    callback(true);
+    callback(true);
+    comms->cancel(0, 1);
+    callback(true);
+    comms->push(1, 1);
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
+    comms->push(2, 1);
+    callback(true);
+    callback(true);
+    comms->push(3, 1);
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
+
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
+    callback(true);
 }
 }  // namespace
 }  // namespace caffe

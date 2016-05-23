@@ -186,8 +186,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       to_send.pop_front();
       DLOG(INFO) << "sendv["<<ret.layer_id<<"]="<<sending_version[ret.layer_id]
         <<", cancelv["<<ret.layer_id<<"]="<< cancelled_version[ret.layer_id];
-      if (sending_version.at(ret.layer_id) > cancelled_version.at(ret
-      .layer_id)) {
+      if (sending_version.at(ret.layer_id) > cancelled_version.at(ret.layer_id))
+      {
         return ret;
       } else {
         DLOG(INFO) << "discard send";
