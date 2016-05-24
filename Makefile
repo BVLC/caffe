@@ -430,8 +430,14 @@ MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread $(COMMON_FLAGS) $(WARNINGS)
 
 CXX_HARDENING_FLAGS := -fPIE -fPIC -fno-operator-names -Wformat -Wformat-security
-LINKER_SHARED_HARDENING_FLAGS := -z noexecstack -z relro -z now
-LINKER_EXEC_HARDENING_FLAGS := $(LINKER_SHARED_HARDENING_FLAGS) -pie
+LINKER_SHARED_HARDENING_FLAGS :=
+LINKER_EXEC_HARDENING_FLAGS := -pie
+
+# GCC-specific flags, Clang does not support them.
+ifeq (,$(findstring clang++,$(CXX)))
+	LINKER_SHARED_HARDENING_FLAGS += -z noexecstack -z relro -z now
+	LINKER_EXEC_HARDENING_FLAGS += -z noexecstack -z relro -z now
+endif
 
 USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
