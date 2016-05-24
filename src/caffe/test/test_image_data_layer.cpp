@@ -252,23 +252,24 @@ TYPED_TEST(ImageDataLayerTest, TestCommaSeparated) {
   image_data_param->set_separator(sep);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_label_->num(), 1);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label_->height(), 1);
-  EXPECT_EQ(this->blob_top_label_->width(), 1);
+
+  vector<int> label_shape;
+  label_shape.push_back(1);
+
+  vector<int> data_shape;
+  data_shape.push_back(1);
+  data_shape.push_back(3);
+  data_shape.push_back(360);
+  data_shape.push_back(480);
+
+  EXPECT_EQ(this->blob_top_label_->shape(), label_shape);
   // cat.jpg
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 1);
-  EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 360);
-  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_data_->shape(), data_shape);
   EXPECT_EQ(this->blob_top_label_->cpu_data()[0], 0);
   // cat gray.jpg
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 1);
-  EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 360);
-  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_data_->shape(), data_shape);
   EXPECT_EQ(this->blob_top_label_->cpu_data()[0], 1);
 }
 
