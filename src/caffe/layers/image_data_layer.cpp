@@ -33,6 +33,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
+
+  CHECK_EQ(1, this->layer_param_.image_data_param().separator().length())
+      << "A separator must be a single character";
+  char separator = this->layer_param_.image_data_param().separator().at(0);
+
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
@@ -41,7 +46,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   size_t pos;
   int label;
   while (std::getline(infile, line)) {
-    pos = line.find_last_of(' ');
+    pos = line.find_last_of(separator);
     label = atoi(line.substr(pos + 1).c_str());
     lines_.push_back(std::make_pair(line.substr(0, pos), label));
   }

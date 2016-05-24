@@ -234,5 +234,66 @@ TYPED_TEST(ImageDataLayerTest, TestSpace) {
   EXPECT_EQ(this->blob_top_label_->cpu_data()[0], 1);
 }
 
+
+TYPED_TEST(ImageDataLayerTest, TestCommaSeparated) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  std::string sep = ",";
+  std::ofstream& output = this->stream();
+  output << EXAMPLES_SOURCE_DIR "images/cat.jpg" << sep << 0 << std::endl;
+  output << EXAMPLES_SOURCE_DIR "images/cat gray.jpg" << sep << 1 << std::endl;
+  output.close();
+
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(1);
+  image_data_param->set_source(this->filename_.c_str());
+  image_data_param->set_shuffle(false);
+  image_data_param->set_separator(sep);
+  ImageDataLayer<Dtype> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_label_->num(), 1);
+  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->height(), 1);
+  EXPECT_EQ(this->blob_top_label_->width(), 1);
+  // cat.jpg
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 1);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_label_->cpu_data()[0], 0);
+  // cat gray.jpg
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 1);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_label_->cpu_data()[0], 1);
+}
+
+TYPED_TEST(ImageDataLayerTest, TestSeparatorTooLong) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  // The following is needed to suppress the following warning:
+  // [WARNING] ::Death tests use fork(), which is unsafe particularly in a
+  //     threaded context.For this test, Google Test couldn't
+  //     detect the number of threads.
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  std::ofstream& output = this->stream();
+  output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
+  output.close();
+
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_source(this->filename_.c_str());
+  image_data_param->set_separator("TOO_LONG");
+  ImageDataLayer<Dtype> layer(param);
+
+  EXPECT_DEATH(layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_),
+               "A separator must be a single character");
+}
+
 }  // namespace caffe
 #endif  // USE_OPENCV
