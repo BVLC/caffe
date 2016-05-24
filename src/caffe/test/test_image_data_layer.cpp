@@ -31,27 +31,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     Caffe::set_random_seed(seed_);
     // Create test input file.
     MakeTempFilename(&filename_);
-    std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
-    for (int i = 0; i < 5; ++i) {
-      outfile << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i << std::endl;
-    }
-    outfile.close();
-    // Create test input file for images of distinct sizes.
-    MakeTempFilename(&filename_reshape_);
-    std::ofstream reshapefile(filename_reshape_.c_str(), std::ofstream::out);
-    LOG(INFO) << "Using temporary file " << filename_reshape_;
-    reshapefile << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
-    reshapefile << EXAMPLES_SOURCE_DIR "images/fish-bike.jpg " << 1
-                << std::endl;
-    reshapefile.close();
-    // Create test input file for images with space in names
-    MakeTempFilename(&filename_space_);
-    std::ofstream spacefile(filename_space_.c_str(), std::ofstream::out);
-    LOG(INFO) << "Using temporary file " << filename_space_;
-    spacefile << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
-    spacefile << EXAMPLES_SOURCE_DIR "images/cat gray.jpg " << 1 << std::endl;
-    spacefile.close();
   }
 
   virtual ~ImageDataLayerTest() {
@@ -59,10 +39,16 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_label_;
   }
 
+  std::ofstream& stream() {
+    if (!stream_.is_open()) {
+      stream_.open(filename_.c_str(), std::ofstream::out);
+    }
+    return stream_;
+  }
+
   int seed_;
   string filename_;
-  string filename_reshape_;
-  string filename_space_;
+  std::ofstream stream_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -73,6 +59,13 @@ TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(ImageDataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;
+
+  std::ofstream& output = this->stream();
+  for (int i = 0; i < 5; ++i) {
+    output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i << std::endl;
+  }
+  output.close();
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -99,6 +92,13 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
 
 TYPED_TEST(ImageDataLayerTest, TestResize) {
   typedef typename TypeParam::Dtype Dtype;
+
+  std::ofstream& output = this->stream();
+  for (int i = 0; i < 5; ++i) {
+    output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i << std::endl;
+  }
+  output.close();
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -127,10 +127,16 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
 
 TYPED_TEST(ImageDataLayerTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
+
+  std::ofstream& output = this->stream();
+  output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
+  output << EXAMPLES_SOURCE_DIR "images/fish-bike.jpg " << 1 << std::endl;
+  output.close();
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(1);
-  image_data_param->set_source(this->filename_reshape_.c_str());
+  image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(false);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -154,6 +160,13 @@ TYPED_TEST(ImageDataLayerTest, TestReshape) {
 
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   typedef typename TypeParam::Dtype Dtype;
+
+  std::ofstream& output = this->stream();
+  for (int i = 0; i < 5; ++i) {
+    output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i << std::endl;
+  }
+  output.close();
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -188,10 +201,16 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
 
 TYPED_TEST(ImageDataLayerTest, TestSpace) {
   typedef typename TypeParam::Dtype Dtype;
+
+  std::ofstream& output = this->stream();
+  output << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
+  output << EXAMPLES_SOURCE_DIR "images/cat gray.jpg " << 1 << std::endl;
+  output.close();
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(1);
-  image_data_param->set_source(this->filename_space_.c_str());
+  image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(false);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
