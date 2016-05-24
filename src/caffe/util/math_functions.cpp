@@ -141,7 +141,12 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
     // If there are more than one openmp thread (we are in active region)
     // then checking Caffe::mode can create additional GPU Context
-    if ((omp_in_parallel() == 0) && (Caffe::mode() == Caffe::GPU)) {
+    //
+    if (
+#ifdef _OPENMP
+        (omp_in_parallel() == 0) &&
+#endif
+        (Caffe::mode() == Caffe::GPU)) {
 #ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
