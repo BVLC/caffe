@@ -82,9 +82,9 @@ void GPUMemoryManager::allocate(void** ptr, size_t size, cudaStream_t stream) {
       }
       // Retry once
       CUDA_CHECK(cub_allocator->DeviceAllocate(ptr, size, stream));
-      // If retry succeeds we need to clean up last error
-      cudaGetLastError();
     }
+    // If retry succeeds we need to clean up last error
+    cudaGetLastError();
     break;
   default:
     CUDA_CHECK(cudaMalloc(ptr, size));
