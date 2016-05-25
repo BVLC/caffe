@@ -39,8 +39,6 @@ class BlobComms : public internode::Waypoint::Handler {
     Settings settings,
     int num_of_threads);
 
-  virtual uint32_t currently_sending_version() const = 0;
-  virtual uint32_t currently_sending_version(int layer_id) const = 0;
   virtual void push(int layer_id, uint32_t version) = 0;
   virtual void push(int layer_id, int blob_id, int part, uint32_t version) = 0;
   virtual void cancel(int layer_id, uint32_t version) = 0;

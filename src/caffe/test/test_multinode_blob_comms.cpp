@@ -178,7 +178,7 @@ template <class T> struct BlobCommsBase : public T {
   shared_ptr<BlobKeyChainMock<float> > keychain_mock;
   shared_ptr<BlobComms<float> > comms;
   BlobComms<float>::Settings settings;
-  int num_of_threads;
+  Waypoint::SentCallback callback;
 
   void prepare_const_mock(vector<vector<int> > vparts,
                           bool register_handler = true) {
@@ -228,14 +228,7 @@ template <class T> struct BlobCommsBase : public T {
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0)){}
 
   virtual void TearDown() {
-    codec_mock.reset();
-    iter_size_handler_mock1.reset();
-    iter_size_handler_mock2.reset();
-    sync_info_mock.reset();
-    blob_accessor_mock.reset();
-    keychain_mock.reset();
-    const_info_mock.reset();
-    waypoint_mock.reset();
+    comms.reset();
   }
 
     void buildSendMethodExpects(
@@ -294,7 +287,6 @@ template <class T> struct BlobCommsBase : public T {
     BlobUpdate update;
     update.set_iters(size);
     string str = update.SerializeAsString();
-    Waypoint::SentCallback callback;
     EXPECT_CALL(*waypoint_mock, async_send(BufferEq(str), update.ByteSize(), _))
             .WillOnce(SaveArg<2>(&callback));
     comms->send_iter_size(size);
@@ -324,6 +316,7 @@ TEST_P(BlobCommsParamTest, SendIterSize) {
   SendIterSize(waypoint_mock, 0);
   SendIterSize(waypoint_mock, 101);
   SendIterSize(waypoint_mock, 1);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, pushOneWithCancelledVersion) {
@@ -334,38 +327,36 @@ TEST_P(BlobCommsParamTest, pushOneWithCancelledVersion) {
       buildSendMethodExpects(layer_id, blob_id, part_id, version, NULL, times);
   comms->cancel(layer_id, version);
   comms->push(layer_id, blob_id, part_id, version);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, pushOne) {
   buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
-  Waypoint::SentCallback callback;
-
       buildSendMethodExpects(layer_id, blob_id, part_id,
                              version, &callback, times);
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, pushAnotherTwoDuringSending) {
   buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
-  Waypoint::SentCallback callback;
-
   buildSendMethodExpects(layer_id, blob_id, part_id,
                             version, &callback, times);
   comms->push(layer_id, blob_id, part_id, version);
   comms->push(layer_id, blob_id, part_id, version);
   comms->push(layer_id, blob_id, part_id, version);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, push3OneByOne) {
   buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 3;
-  Waypoint::SentCallback callback;
 
   buildSendMethodExpects(layer_id, blob_id, part_id,
                              version, &callback, times);
@@ -377,13 +368,13 @@ TEST_P(BlobCommsParamTest, push3OneByOne) {
   callback(true);
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, cancelOneWhenInQueueDuringSending3Queue) {
   buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 2;
-  Waypoint::SentCallback callback;
 
   buildSendMethodExpects(layer_id, blob_id, part_id,
                    version, &callback, times);
@@ -396,12 +387,12 @@ TEST_P(BlobCommsParamTest, cancelOneWhenInQueueDuringSending3Queue) {
   comms->cancel(layer_id, version);
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
   buildOne(GetParam());
   int blob_id = 0, part_id = 0, version = 1;
-  Waypoint::SentCallback callback;
    {
     InSequence dummy;
 
@@ -424,13 +415,12 @@ TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
   callback(true);
   callback(true);
   callback(true);
-
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, checkPriorityQueue) {
   buildOne(GetParam());
   int part_id = 0;//blob_id = 0, , version = 1;
-  Waypoint::SentCallback callback;
     {
      InSequence dummy;
      buildSendMethodExpects(2,  0, part_id, 1, &callback, 1);
@@ -495,13 +485,12 @@ TEST_P(BlobCommsParamTest, checkPriorityQueue) {
     callback(true); // sent 2v3 as 2v5 => [2:[2]]
     callback(true); // sent 2v2 as 2v5 => []
     callback(true); // nothing to send
-
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, pushLayers) {
   buildOne(GetParam());
   int part_id = 0;//blob_id = 0, , version = 1;
-  Waypoint::SentCallback callback;
     {
      InSequence dummy;
      buildSendMethodExpects(0,  0, part_id, 1, &callback, 1);
@@ -561,6 +550,7 @@ TEST_P(BlobCommsParamTest, pushLayers) {
   callback(true);     // 2b4 sent
   callback(true);     // 2b5 sent
   callback(true);     // nothing to send
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
@@ -604,6 +594,7 @@ TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
     EXPECT_CALL(*keychain_mock, unlock(layer_id));
     }
     comms->received(&dane[0], str.size(), waypoint_mock.get());
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
@@ -624,7 +615,7 @@ TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
     comms->received(&vector<char>(boost::assign::list_of(1).operator
         vector<char>
         ())[0], 3, waypoint_mock.get());
-
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
@@ -653,6 +644,7 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
         Blob<float > blob(v);
 
         comms->received(&dane[0], str.size(), waypoint_mock.get());
+  comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
@@ -688,6 +680,7 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
         EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
 
         comms->received(&dane[0], str.size(), waypoint_mock.get());
+  comms->finish_all_tasks();
 }
 TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 //    int part_id = 0;

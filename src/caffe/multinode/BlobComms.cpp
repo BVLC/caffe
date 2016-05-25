@@ -116,16 +116,17 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     }
   };
 
-  std::vector<boost::shared_ptr<Worker> > all_workers;
-  uint32_t worker;
   mutable boost::recursive_mutex worker_mtx;
   mutable boost::recursive_mutex mtx;
+  uint32_t worker;
 
   vector<uint32_t> sending_version;
   vector<uint32_t> cancelled_version;
   std::vector<std::vector<Part> > all_parts;
   std::deque<Part> to_send;
   bool during_sending;
+
+  std::vector<boost::shared_ptr<Worker> > all_workers;
 
   BlobCommsImpl(shared_ptr<BlobAccessor<Dtype> > blob_accessor,
                 shared_ptr<BlobConstInfo> const_info,
@@ -143,11 +144,11 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     , keychain(keychain)
     , settings(settings)
     , buffer(new char[codec->packet_size()])
-    , all_workers(threads)
     , worker(0)
     , sending_version(const_info->layers(), 0)
     , cancelled_version(const_info->layers(), 0)
-    , during_sending(false) {
+    , during_sending(false)
+    , all_workers(threads) {
     for (int i = 0; i < const_info->layers(); ++i) {
       std::vector<Part> parts;
       for (int j = 0; j < const_info->blobs(i); ++j) {
