@@ -658,8 +658,8 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
         comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
 
-INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_Initialization,
+INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_NumOfThreads,
                         BlobCommsParamTest,
-                        ::testing::Values(1, 2, 4));
+                        ::testing::Values(0, 1, 2, 3));
 }  // namespace
 }  // namespace caffe
