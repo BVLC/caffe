@@ -317,13 +317,6 @@ class BlobCommsTest : public BlobCommsBase<testing::Test> {};
 class BlobCommsParamTest : public BlobCommsBase<
                            testing::TestWithParam<int> > {};
 
-TEST_P(BlobCommsParamTest, CurrentlySendingVersionSizeCheck) {
-    buildOne(GetParam());
-    EXPECT_EQ(0, comms->currently_sending_version());
-    EXPECT_EQ(0, comms->currently_sending_version(0));
-    EXPECT_DEATH(comms->currently_sending_version(5), "");
-}
-
 TEST_P(BlobCommsParamTest, SendIterSize) {
   buildOne(GetParam());
   SendIterSize(waypoint_mock, 10);

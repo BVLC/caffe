@@ -254,22 +254,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     }
   }
 
-  virtual uint32_t currently_sending_version() const {
-    boost::recursive_mutex::scoped_lock lock(mtx);
-    uint32_t ret = 0;
-    for (int i = 0; i < sending_version.size(); ++i) {
-      ret = std::max(ret, sending_version[i]);
-    }
-    return ret;
-  }
-
-  virtual uint32_t currently_sending_version(int layer_id) const {
-    boost::recursive_mutex::scoped_lock lock(mtx);
-    CHECK_GE(layer_id, 0);
-    CHECK(layer_id < sending_version.size());
-    return sending_version[layer_id];
-  }
-
   void push(int layer_id, uint32_t version) {
     {
       CHECK_GE(layer_id, 0);
