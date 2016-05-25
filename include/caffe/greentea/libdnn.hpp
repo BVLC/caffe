@@ -24,17 +24,34 @@
 namespace caffe {
 
 typedef enum {
-    // Stack the batch update into one GEMM block
-    // (deterministic, 1 kernel call)
-    LIBDNN_CONVOLUTION_WG_ALGO_DIRECT        = 0,
-    // Use multiple GEMM blocks in parallel and update weights atomically
-    // (non deterministic, 1 kernel call, not supported on all devices)
-    LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC        = 1,
-    // Use multiple GEMM blocks and an intermediate buffer
-    // reduce weight updates
-    // (deterministic, >= 2 kernel calls)
-    LIBDNN_CONVOLUTION_WG_ALGO_REDUCTION     = 2
+  // Stack the batch update into one GEMM block
+  // (deterministic, 1 kernel call)
+  // Serializes the batch and may therefore under use
+  // the GPUs compute units.
+  LIBDNN_CONVOLUTION_WG_ALGO_DIRECT        = 0,
+  // Use multiple GEMM blocks in parallel and update weights atomically
+  // (non deterministic, 1 kernel call, not supported on all devices)
+  // Parallelizes the batch and has therefore higher GPU usage.
+  LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC        = 1,
+  // Use multiple GEMM blocks and an intermediate buffer
+  // to reduce weight updates
+  // (deterministic, >= 2 kernel calls)
+  // Parallelizes the batch and has therefore higher GPU usage.
+  // NOT IMPLEMENTED YET
+  LIBDNN_CONVOLUTION_WG_ALGO_REDUCTION     = 2
 } libdnnConvolutionWeightAlgo_t;
+
+typedef enum {
+  // Transform data before GEMM (load, im2col, gemm, store)
+  // This method is suitable for convolutions with similar
+  // spatial input == output sizes, but can become inefficient
+  // if input >> output (with large strides and kernels).
+  LIBDNN_CONVOLUTION_BW_ALGO_IM2COL        = 0,
+  // Transform data after GEMM (load, gemm, col2im, store)
+  // Sometimes faster than im2col method, but uses
+  // atomic operations and is not deterministic.
+  LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC = 1
+} libdnnConvolutionBackwardAlgo_t;
 
 struct LibDNNConfig {
   LibDNNConfig() :
@@ -57,7 +74,10 @@ struct LibDNNConfig {
   bool fast_unsafe_math = false;
   bool weights_backward = true;
   bool bias_backward = true;
-  libdnnConvolutionWeightAlgo_t wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
+  libdnnConvolutionWeightAlgo_t wgalgo =
+      LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
+  libdnnConvolutionBackwardAlgo_t bwalgo =
+      LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
 };
 
 
@@ -97,6 +117,7 @@ class LibDNNConv {
   std::string generate_bw_kernels(std::string name);
   std::string generate_wg_kernels(std::string name);
   bool CompileKernels();
+  void SetMemory(Dtype* memory, int_tp count, int_tp offset, Dtype value);
 #ifdef USE_GREENTEA
   viennacl::ocl::program CompileKernelsOpenCL(viennacl::ocl::context *ctx);
 #endif  // USE_GREETEA
@@ -169,6 +190,7 @@ class LibDNNConv {
   bool skip_range_check_;
   Dtype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
+  libdnnConvolutionBackwardAlgo_t bwalgo_;
 };
 
 }  // namespace caffe

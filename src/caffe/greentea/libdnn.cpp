@@ -24,6 +24,7 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
   group_ = config.group;
 
   wgalgo_ = config.wgalgo;
+  bwalgo_ = config.bwalgo;
 
   weights_backward_ = config.weights_backward;
   bias_backward_ = config.bias_backward;
@@ -227,7 +228,7 @@ std::string LibDNNConv<Dtype>::generate_header() {
     }
 
     // 64 bit integers
-    if (sizeof(int_tp) == 8) {
+    if (sizeof(int_tp) == 8 || std::is_same<Dtype, double>::value) {
       // Test/enable 64 bit atomics
       ss << "#if defined(cl_khr_int64_base_atomics)" << std::endl;
       ss << "#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable"
@@ -318,6 +319,13 @@ std::string LibDNNConv<Dtype>::generate_header() {
        << " + threadIdx.z;" << std::endl;
     ss << "return 0;" << std::endl;
     ss << "}" << std::endl;
+
+    ss << "__device__ int get_global_size(int x) {" << std::endl;
+    ss << "if (x == 0) return blockDim.x * gridDim.x;" << std::endl;
+    ss << "if (x == 1) return blockDim.y * gridDim.y;" << std::endl;
+    ss << "if (x == 2) return blockDim.z * gridDim.z;" << std::endl;
+    ss << "return 0;" << std::endl;
+    ss << "}" << std::endl;
   }
 
   std::vector<std::string> atomic_funcs({"Add", "Sub", "Mul", "Div"});
@@ -327,6 +335,9 @@ std::string LibDNNConv<Dtype>::generate_header() {
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
     // OpenCL atomics, derived from:
     // https://streamcomputing.eu/blog/2016-02-09/atomic-operations-for-floats-in-opencl-improved/
+    if (std::is_same<Dtype, double>::value) {
+      ss << "#if defined(cl_khr_int64_base_atomics)" << std::endl;
+    }
     for (int  i = 0; i < atomic_funcs.size(); ++i) {
       ss << "inline void atomic" << atomic_funcs[i];
       ss << "(volatile __global Dtype* source, const Dtype operand) {"
@@ -354,7 +365,19 @@ std::string LibDNNConv<Dtype>::generate_header() {
       ss << "} while (current.intVal != expected.intVal);" << std::endl;
       ss << "}" << std::endl;
     }
+    if (std::is_same<Dtype, double>::value) {
+      ss << "#endif" << std::endl;
+    }
   }
+
+  // Memory set
+  ss << "__kernel void fill_memory(const int_tp n, const Dtype alpha,"
+     << "__global Dtype* x, const int_tp offx) {" << std::endl;
+  ss << "for (int_tp index = get_global_id(0); index < n; "
+     << "index += get_global_size(0)) {" << std::endl;
+  ss << "x[index + offx] = alpha;" << std::endl;
+  ss << "}" << std::endl;
+  ss << "}" << std::endl;
 
   return ss.str();
 }
@@ -385,7 +408,6 @@ inline void LibDNNConv<Dtype>::add_def(std::stringstream& ss,  // NOLINT
 }
 
 
-
 template<typename Dtype>
 std::string LibDNNConv<Dtype>::generate_fw_defs() {
   std::stringstream ss;
@@ -407,10 +429,17 @@ std::string LibDNNConv<Dtype>::generate_fw_defs() {
   // Output image batch offset
   add_def(ss, "v_C_off", C_off);
 
+  int_tp imsi = 1;
+  int_tp imso = 1;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    imsi *= im_in_shape_[i];
     add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    imso *= im_out_shape_[i];
   }
+  add_def(ss, "v_imsi", imsi);
+  add_def(ss, "v_imso", imso);
+
 
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
     add_def(ss, "v_k_" + std::to_string(i), kernel_shape_[i]);
@@ -499,21 +528,31 @@ std::string LibDNNConv<Dtype>::generate_bw_defs() {
   // Groups
   add_def(ss, "v_g", group_);
 
+  int_tp A_off = fmaps_in_ * fmaps_out_;
   int_tp B_off = fmaps_out_;
   int_tp C_off = fmaps_in_;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+    A_off *= kernel_shape_[i];
     B_off *= im_out_shape_[i];
     C_off *= im_in_shape_[i];
   }
+  // Weight offset (only used for groups)
+  add_def(ss, "v_A_off", A_off);
   // Input image batch offset
   add_def(ss, "v_B_off", B_off);
   // Output image batch offset
   add_def(ss, "v_C_off", C_off);
 
+  int_tp imsi = 1;
+  int_tp imso = 1;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    imsi *= im_in_shape_[i];
     add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    imso *= im_out_shape_[i];
   }
+  add_def(ss, "v_imsi", imsi);
+  add_def(ss, "v_imso", imso);
 
   int_tp v_ks = 1;
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
@@ -522,10 +561,19 @@ std::string LibDNNConv<Dtype>::generate_bw_defs() {
   }
   add_def(ss, "v_ks", v_ks);
 
-  // Set padding to account for padding loss (backward), remove forward padding
-  for (int_tp i = 0; i < pad_.size(); ++i) {
-    add_def(ss, "v_p_" + std::to_string(i),
-            (kernel_shape_[i] - 1) * dilation_[i] - pad_[i]);
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
+    // Set padding to account for padding loss (backward),
+    // remove forward padding
+    for (int_tp i = 0; i < pad_.size(); ++i) {
+      add_def(ss, "v_p_" + std::to_string(i),
+              (kernel_shape_[i] - 1) * dilation_[i] - pad_[i]);
+    }
+  }
+
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    for (int_tp i = 0; i < pad_.size(); ++i) {
+      add_def(ss, "v_p_" + std::to_string(i), pad_[i]);
+    }
   }
 
   for (int_tp i = 0; i < stride_.size(); ++i) {
@@ -543,16 +591,32 @@ std::string LibDNNConv<Dtype>::generate_bw_defs() {
     add_def(ss, "v_bmul", bias_multiplier_);
   }
 
-  MG_BW_ = fmaps_in_;
-  M_BW_ = fmaps_in_ / group_;
-  N_BW_ = 1;
-  KG_BW_ = fmaps_out_;
-  K_BW_ = fmaps_out_ / group_;
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
+    MG_BW_ = fmaps_in_;
+    M_BW_ = fmaps_in_ / group_;
+    N_BW_ = 1;
+    KG_BW_ = fmaps_out_;
+    K_BW_ = fmaps_out_ / group_;
 
-  for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
-    K_BW_ *= kernel_shape_[i];
-    KG_BW_ *= kernel_shape_[i];
-    N_BW_ *= im_in_shape_[i];
+    for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+      K_BW_ *= kernel_shape_[i];
+      KG_BW_ *= kernel_shape_[i];
+      N_BW_ *= im_in_shape_[i];
+    }
+  }
+
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    MG_BW_ = fmaps_in_;
+    M_BW_ = fmaps_in_ / group_;
+    N_BW_ = 1;
+    KG_BW_ = fmaps_out_;
+    K_BW_ = fmaps_out_ / group_;
+
+    for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+      MG_BW_ *= kernel_shape_[i];
+      M_BW_ *= kernel_shape_[i];
+      N_BW_ *= im_out_shape_[i];
+    }
   }
 
   // GEMM definitions
@@ -623,10 +687,16 @@ std::string LibDNNConv<Dtype>::generate_wg_defs() {
   // Weights offset
   add_def(ss, "v_C_off", C_off);
 
+  int_tp imsi = 1;
+  int_tp imso = 1;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    imsi *= im_in_shape_[i];
     add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    imso *= im_out_shape_[i];
   }
+  add_def(ss, "v_imsi", imsi);
+  add_def(ss, "v_imso", imso);
 
   int_tp v_ks = 1;
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
@@ -1247,8 +1317,6 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   std::stringstream ss;
 
   // Backward kernel
-  ss << generate_bw_defs();
-
   ss << "__kernel void conv_backward(";
   ss << "__global const Dtype* im_out, ";
   ss << "__global Dtype* wg, ";
@@ -1289,13 +1357,14 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   }
 
   if (group_ > 1) {
-    ss << "__global const Dtype* Aptr = wg + group * (M * K);" << std::endl;
-    ss
-        << "__global const Dtype* Bptr = im_out + v_B_off * batch "
-        << "+ group * (v_B_off / v_g);"
-        << std::endl;
-    ss << "__global Dtype* Cptr = im_in + v_C_off * batch + group * (M * N);"
-        << std::endl;
+    ss << "__global const Dtype* Aptr = wg + group * (v_A_off / (v_g * v_g));"
+       << std::endl;
+    ss << "__global const Dtype* Bptr = im_out + v_B_off * batch "
+       << "+ group * (v_B_off / v_g);"
+       << std::endl;
+    ss << "__global Dtype* Cptr = im_in + v_C_off * batch "
+       << "+ group * (v_C_off / v_g);"
+       << std::endl;
   } else {
     ss << "__global const Dtype* Aptr = wg;" << std::endl;
     ss << "__global const Dtype* Bptr = im_out + v_B_off * batch;" << std::endl;
@@ -1316,22 +1385,35 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "int_tp col = id / TSM;" << std::endl;
   ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
 
-  // Load weights (wg) into Asub, flip fin/fout and inverse spatially
-  // Compute kidx and midx, the column and row index of the
-  // weights in the original A (weights) matrix
-  ss << "int_tp kidx = (v_ks - 1 - tiledIndex % v_ks) + (offM + row) * v_ks;"
-      << std::endl;
-  ss << "int_tp midx = tiledIndex / v_ks;" << std::endl;
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
+    // Load weights (wg) into Asub, flip fin/fout and inverse spatially
+    // Compute kidx and midx, the column and row index of the
+    // weights in the original A (weights) matrix
+    ss << "int_tp kidx = (v_ks - 1 - tiledIndex % v_ks) + (offM + row) * v_ks;"
+        << std::endl;
+    ss << "int_tp midx = tiledIndex / v_ks;" << std::endl;
+    // Check range of the spatially flipped, fin/fout inverted weights
+    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
+    // Access weights with the original (translated) weight indices
+    ss << "Asub[row][col] = Aptr[kidx + (v_fin / v_g * v_ks) * midx];"
+        << std::endl;
+    ss << "} else {" << std::endl;
+    ss << "Asub[row][col] = 0;" << std::endl;
+    ss << "}" << std::endl;
+  }
 
-  // Check range of the spatially flipped, fin/fout inverted weights
-  ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
-  // Access weights with the original (translated) weight indices
-  ss << "Asub[row][col] = Aptr[kidx + (v_fin / v_g * v_ks) * midx];"
-      << std::endl;
-  ss << "} else {" << std::endl;
-  ss << "Asub[row][col] = 0;" << std::endl;
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    // Load weights (wg) into Asub, read A transposed
+    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
+    ss << "Asub[row][col] = Aptr[tiledIndex * M + offM + row];" << std::endl;
+    ss << "} else {" << std::endl;
+    ss << "Asub[row][col] = 0;" << std::endl;
+    ss << "}" << std::endl;
+  }
+
   ss << "}" << std::endl;
-  ss << "}" << std::endl;
+
+
 
   // Load one tile of B into local memory
   ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
@@ -1342,54 +1424,66 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
 
   ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
-  // Define temporary registers
-  for (int_tp i = 0; i < num_axes_; ++i) {
-    ss << "int_tp d_iter_" << i << ";" << std::endl;
-    ss << "int_tp d_temp_" << i << ";" << std::endl;
+
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
+    // Load from B with im2col transformation
+
+    // Define temporary registers
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      ss << "int_tp d_iter_" << i << ";" << std::endl;
+      ss << "int_tp d_temp_" << i << ";" << std::endl;
+    }
+
+    // Compute in-range
+    ss << "bool in_range = true;" << std::endl;
+
+    ss << "int_tp imageIndex = offN + col;" << std::endl;
+    for (int_tp i = num_axes_ - 1; i >= 0; --i) {
+      // Compute d_iter, final tiledIndex becomes input feature map ID
+      // Scale d_iter by the dilation factor
+      ss << "d_iter_" << i << " = (tiledIndex % v_k_" << i << ") * v_d_" << i
+         << ";" << std::endl;
+      ss << "tiledIndex = tiledIndex / v_k_" << i << ";" << std::endl;
+
+      // Compute d_temp
+      // Subtract the padding from d_temp, note v_p_i can be negative
+      ss << "d_temp_" << i << " = (imageIndex % v_imsi_" << i << ")"
+         << " - v_p_" << i << ";" << std::endl;
+      ss << "imageIndex = imageIndex / v_imsi_" << i << ";" << std::endl;
+    }
+
+    ss << "int_tp d_iter_im;" << std::endl;
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      // Here, d_temp_ represents the column shift,
+      // while d_iter_ is the kernel shift
+      ss << "d_iter_im = d_temp_" << i << " + d_iter_" << i << ";" << std::endl;
+      ss << "tiledIndex = tiledIndex * v_imso_"
+         << i << " + d_iter_im / v_s_" << i << ";" << std::endl;
+      // In range: Not before or after actual image data
+      // and not between image strides
+      ss << "in_range &= d_iter_im >= 0 && d_iter_im < v_imso_"
+         << i << " * v_s_"
+         << i << " && d_iter_im % v_s_" << i << " == 0;" << std::endl;
+    }
+
+    ss << "if (in_range) {" << std::endl;
+    // tiledIndex now holds the memory offset for the input image
+    ss << "Bsub[row][col] = Bptr[tiledIndex];" << std::endl;
+    ss << "} else {" << std::endl;
+    // Out of B's image dimensions
+    ss << "Bsub[row][col] = 0;" << std::endl;
+    ss << "}" << std::endl;
   }
 
-  // Compute in-range
-  ss << "bool in_range = true;" << std::endl;
-
-  ss << "int_tp imageIndex = offN + col;" << std::endl;
-  for (int_tp i = num_axes_ - 1; i >= 0; --i) {
-    // Compute d_iter, final tiledIndex becomes input feature map ID
-    // Scale d_iter by the dilation factor
-    ss << "d_iter_" << i << " = (tiledIndex % v_k_" << i << ") * v_d_" << i
-        << ";" << std::endl;
-    ss << "tiledIndex = tiledIndex / v_k_" << i << ";" << std::endl;
-
-    // Compute d_temp
-    // Subtract the padding from d_temp, note v_p_i can be negative
-    ss << "d_temp_" << i << " = (imageIndex % v_imsi_" << i << ")" << " - v_p_"
-        << i << ";" << std::endl;
-    ss << "imageIndex = imageIndex / v_imsi_" << i << ";" << std::endl;
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+     // Load from B without transformation
+    ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * N];" << std::endl;
   }
 
-  ss << "int_tp d_iter_im;" << std::endl;
-  for (int_tp i = 0; i < num_axes_; ++i) {
-    // Here, d_temp_ represents the column shift,
-    // while d_iter_ is the kernel shift
-    ss << "d_iter_im = d_temp_" << i << " + d_iter_" << i << ";" << std::endl;
-    ss << "tiledIndex = tiledIndex * v_imso_" << i << " + d_iter_im / v_s_" << i
-        << ";" << std::endl;
-    // In range: Not before or after actual image data
-    // and not between image strides
-    ss << "in_range &= d_iter_im >= 0 && d_iter_im < v_imso_" << i << " * v_s_"
-        << i << " && d_iter_im % v_s_" << i << " == 0;" << std::endl;
-  }
-
-  ss << "if (in_range) {" << std::endl;
-  // tiledIndex now holds the memory offset for the input image
-  ss << "Bsub[row][col] = Bptr[tiledIndex];" << std::endl;
   ss << "} else {" << std::endl;
+  // Out of B's matrix dimensions
   ss << "Bsub[row][col] = 0;" << std::endl;
   ss << "}" << std::endl;
-
-  ss << "} else {" << std::endl;
-  ss << "Bsub[row][col] = 0;" << std::endl;
-  ss << "}" << std::endl;
-
   ss << "}" << std::endl;
 
   // Synchronize to make sure the tile is loaded
@@ -1412,10 +1506,61 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
   ss << "int_tp globalCol = offN + ";
   ss << "VWN*(tidn + (wn/VWN)*RTSN) + wn%VWN;" << std::endl;
-  ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  ss << "Cptr[globalRow * N + globalCol] = ";
-  ss << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM];" << std::endl;
-  ss << "}" << std::endl;
+
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
+    ss << "if (globalRow < M && globalCol < N) {" << std::endl;
+    ss << "Cptr[globalRow * N + globalCol] = ";
+    ss << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM];" << std::endl;
+    ss << "}" << std::endl;
+  }
+
+  if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    // Define temporary registers
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      ss << "int_tp d_iter_" << i << ";" << std::endl;
+      ss << "int_tp d_temp_" << i << ";" << std::endl;
+    }
+
+    // Compute in-range
+    ss << "bool in_range = true;" << std::endl;
+    ss << "int_tp tiledIndex = globalRow;" << std::endl;
+    ss << "int_tp imageIndex = globalCol;" << std::endl;
+    for (int_tp i = num_axes_ - 1; i >= 0; --i) {
+      // Compute d_iter, final tiledIndex becomes input feature map ID
+      // Scale d_iter by the dilation factor
+      ss << "d_iter_" << i << " = (tiledIndex % v_k_" << i << ") * v_d_"
+         << i << ";" << std::endl;
+      ss << "tiledIndex = tiledIndex / v_k_" << i << ";" << std::endl;
+
+      // Compute d_temp
+      // Scale d_temp by the stride
+      ss << "d_temp_" << i << " = (imageIndex % v_imso_" << i << ") * v_s_"
+         << i << ";" << std::endl;
+      ss << "imageIndex = imageIndex / v_imso_" << i << ";" << std::endl;
+    }
+
+    ss << "in_range &= tiledIndex < v_fin && globalRow < M && globalCol < N;"
+       << std::endl;
+    ss << "int_tp d_iter_im;" << std::endl;
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      // Here, d_temp_ represents the column shift,
+      // while d_iter_ is the kernel shift
+      // d_iter_im is the combined offset in the current dimension i
+      ss << "d_iter_im = d_temp_" << i << " + d_iter_" << i << " - v_p_"
+         << i << ";" << std::endl;
+      ss << "tiledIndex = tiledIndex * v_imsi_" << i << " + d_iter_im;"
+         << std::endl;
+      // In range: Not before or after actual image data
+      ss << "in_range &= d_iter_im >= 0 && d_iter_im < v_imsi_" << i
+         << ";" << std::endl;
+    }
+
+    ss << "if (in_range) {" << std::endl;
+    ss << "atomicAdd(&(Cptr[tiledIndex]), "
+       << "((Dtype*)(&(Creg[wn][wm/VWM])))[wm%VWM]);" << std::endl;
+    ss << "}" << std::endl;
+  }
+
   ss << "}" << std::endl;
   ss << "}" << std::endl;
 
@@ -1605,6 +1750,14 @@ void LibDNNConv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
   int wg_wgs1 = wg_tuner_->get_param<int>("workgroup_size_1");
   int wg_div_N = wg_wptn * wg_wgs0;
   int wg_div_M = wg_wptm * wg_wgs1;
+
+  if (prop_down_data && bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    int_tp ims = batch_size * fmaps_in_;
+    for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+      ims *= im_in_shape_[i];
+    }
+    SetMemory(bottom_diff, ims, 0, (Dtype) 0);
+  }
 
 
 #ifdef USE_GREENTEA
@@ -1842,6 +1995,45 @@ void LibDNNConv<Dtype>::Tune(Dtype* top_data, Dtype* top_diff,
   });
   wg_tuner_->Tune(LIBDNN_TUNER_METHOD_ANNEALING);
 }
+
+template<typename Dtype>
+void LibDNNConv<Dtype>::SetMemory(Dtype* memory, int_tp count,
+                             int_tp offset, Dtype value) {
+  if (dev_ptr_->backend() == BACKEND_OpenCL) {
+#ifdef USE_GREENTEA
+    viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("fill_memory");
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
+
+    int wgs = dev_ptr_->workgroup_size(0);
+
+    kernel.local_work_size(0, wgs);
+    kernel.local_work_size(1, 1);
+    kernel.local_work_size(2, 1);
+
+    kernel.global_work_size(0, ((count - 1) / wgs + 1) * wgs);
+    kernel.global_work_size(1, 1);
+    kernel.global_work_size(2, 1);
+
+    viennacl::ocl::enqueue(kernel(count, value,
+                           WrapHandle((cl_mem)memory, &ctx), offset),
+                           ctx.get_queue());
+#endif  // USE_GREENTEA
+  } else {
+#ifdef USE_CUDA
+    CUfunction kernel;
+    cuModuleGetFunction(&kernel, cuda_module_, "fill_memory");
+
+    void *args[] = { &count, &value, &memory, &offset };
+    cuLaunchKernel(kernel,
+                   (count + 512 - 1) / 512,           // Grid X
+                   1,                                 // Grid Y
+                   1,                                 // Grid Z
+                   512, 1, 1,                         // Local
+                   0, NULL, args, 0);                 // Arguments
+#endif  // USE_CUDA
+  }
+}
+
 
 INSTANTIATE_CLASS(LibDNNConv);
 
