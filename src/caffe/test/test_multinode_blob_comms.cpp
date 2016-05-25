@@ -324,7 +324,7 @@ TEST_P(BlobCommsParamTest, pushOneWithCancelledVersion) {
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 0;
 
-      buildSendMethodExpects(layer_id, blob_id, part_id, version, NULL, times);
+  buildSendMethodExpects(layer_id, blob_id, part_id, version, NULL, times);
   comms->cancel(layer_id, version);
   comms->push(layer_id, blob_id, part_id, version);
   comms->finish_all_tasks();
@@ -334,7 +334,7 @@ TEST_P(BlobCommsParamTest, pushOne) {
   buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
-      buildSendMethodExpects(layer_id, blob_id, part_id,
+  buildSendMethodExpects(layer_id, blob_id, part_id,
                              version, &callback, times);
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
@@ -417,10 +417,18 @@ TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
   callback(true);
   comms->finish_all_tasks();
 }
+TEST_P(BlobCommsParamTest, pushParamsOutOfRange) {
+    buildOne(GetParam());
+    int part_id = 0;
 
+    EXPECT_DEATH(comms->push(1, 33, part_id, 1),"");
+    EXPECT_DEATH(comms->push(1, const_info_mock->blobs(1), part_id, 1),"");
+    EXPECT_DEATH(comms->push(const_info_mock->layers(), 0, part_id, 1),"");
+    EXPECT_DEATH(comms->push(1, 0, 45, 1),"");
+}
 TEST_P(BlobCommsParamTest, checkPriorityQueue) {
   buildOne(GetParam());
-  int part_id = 0;//blob_id = 0, , version = 1;
+  int part_id = 0;
     {
      InSequence dummy;
      buildSendMethodExpects(2,  0, part_id, 1, &callback, 1);
@@ -457,11 +465,6 @@ TEST_P(BlobCommsParamTest, checkPriorityQueue) {
     comms->push(1, 1, part_id, 4);
     comms->push(1, 0, part_id, 5);
 
-    EXPECT_DEATH(comms->push(1, 33, part_id, 1),"");
-    EXPECT_DEATH(comms->push(1, const_info_mock->blobs(1), part_id, 1),"");
-    EXPECT_DEATH(comms->push(const_info_mock->layers(), 0, part_id, 1),"");
-    EXPECT_DEATH(comms->push(1, 0, 45, 1),"");
-
     callback(true); // sent 1v5 => [1:[4,3,2,1], 2:[4,3,2]]
     callback(true); // sent 1v4 as 1v5 (sending version determines arguments)
 //    =>[1:[3,2,1], 2:[4,3,2]]
@@ -488,6 +491,25 @@ TEST_P(BlobCommsParamTest, checkPriorityQueue) {
   comms->finish_all_tasks();
 }
 
+TEST_P(BlobCommsParamTest, cancelDuringReceivingPartsPushedLayer) {
+  buildOne(GetParam());
+  int part_id = 0;//blob_id = 0, , version = 1;
+    {
+     InSequence dummy;
+     buildSendMethodExpects(0,  0, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  1, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  2, part_id, 1, &callback, 1);
+     buildSendMethodExpects(0,  3, part_id, 1, &callback, 1);
+     EXPECT_CALL(*blob_accessor_mock, get_blob(0, 4)).Times(0);
+     EXPECT_CALL(*blob_accessor_mock, get_blob(0, 5)).Times(0);
+    }
+    comms->push(0, 1);  // 0b0 added to send queue and sent immediately
+    callback(true);     // 0b1 sent
+    callback(true);     // 0b2 sent
+    callback(true);     // 0b3 sent
+    comms->cancel(0, 1);// sets 'during_sending' state to false
+    callback(true);     // clears cancelled version
+}
 TEST_P(BlobCommsParamTest, pushLayers) {
   buildOne(GetParam());
   int part_id = 0;//blob_id = 0, , version = 1;
@@ -522,10 +544,10 @@ TEST_P(BlobCommsParamTest, pushLayers) {
      buildSendMethodExpects(2,  5, part_id, 1, &callback, 1);
 
     }
-    comms->push(0, 1);  // 0b0 added to send queue and sent immediately
-    callback(true);     // 0b1 sent
-    callback(true);     // 0b2 sent
-    callback(true);     // 0b3 sent
+  comms->push(0, 1);  // 0b0 added to send queue and sent immediately
+  callback(true);     // 0b1 sent
+  callback(true);     // 0b2 sent
+  callback(true);     // 0b3 sent
   comms->cancel(0, 1);// sets 'during_sending' state to false
   callback(true);     // clears cancelled version
   comms->push(1, 1);  // 1b0 sent
@@ -588,9 +610,9 @@ TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
 
     EXPECT_CALL(*keychain_mock, lock(layer_id));
     EXPECT_CALL(*codec_mock, decode(p4, _,
-                                    settings.what_received,
-                                    settings.received_incoming_multiplier,
-                               settings.received_current_multiplier));
+                            settings.what_received,
+                            settings.received_incoming_multiplier,
+                            settings.received_current_multiplier));
     EXPECT_CALL(*keychain_mock, unlock(layer_id));
     }
     comms->received(&dane[0], str.size(), waypoint_mock.get());
@@ -619,94 +641,95 @@ TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
 }
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
-        int part_id = 0;
-        buildOne(1);
-        BlobUpdate update;
+    int part_id = 0;
+    buildOne(1);
+    BlobUpdate update;
 
-        EXPECT_CALL(*waypoint_mock, id()).Times(1);
-        EXPECT_CALL(*sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
+    EXPECT_CALL(*waypoint_mock, id()).Times(1);
+    EXPECT_CALL(*sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
 
-        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+    EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
+    EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
 
-        codec_mock->encode_real(
-            &update, &blob_accessor_mock->dummy_blob,
-            settings.what_sent, part_id);
+    codec_mock->encode_real(
+        &update, &blob_accessor_mock->dummy_blob,
+        settings.what_sent, part_id);
 
-        string str = update.SerializeAsString();
-        vector<char> dane(str.begin(), str.end());
+    string str = update.SerializeAsString();
+    vector<char> dane(str.begin(), str.end());
 
-        vector<int> v(boost::assign::list_of(1).operator vector<int> ());
-        Blob<float > blob(v);
+    vector<int> v(boost::assign::list_of(1).operator vector<int> ());
+    Blob<float > blob(v);
 
-        comms->received(&dane[0], str.size(), waypoint_mock.get());
+    comms->received(&dane[0], str.size(), waypoint_mock.get());
   comms->finish_all_tasks();
 }
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
-        //int part_id = 0;
-        int iters_count = 2;
-        size_t remote_id = 0;
-        buildOne(1);
-        BlobUpdate update;
+    //int part_id = 0;
+    int iters_count = 2;
+    size_t remote_id = 0;
+    buildOne(1);
+    BlobUpdate update;
 
-        comms->register_iter_size_handler(iter_size_handler_mock1.get());
-        comms->register_iter_size_handler(iter_size_handler_mock2.get());
-        update.set_iters(iters_count);
-        update.clear_info();
+    comms->register_iter_size_handler(iter_size_handler_mock1.get());
+    comms->register_iter_size_handler(iter_size_handler_mock2.get());
+    update.set_iters(iters_count);
+    update.clear_info();
 
-        string str = update.SerializeAsString();
-        vector<char> dane(str.begin(), str.end());
-        vector<int> v(boost::assign::list_of(1).operator vector<int> ());
-        Blob<float > blob(v);
+    string str = update.SerializeAsString();
+    vector<char> dane(str.begin(), str.end());
+    vector<int> v(boost::assign::list_of(1).operator vector<int> ());
+    Blob<float > blob(v);
 
-        EXPECT_CALL(*waypoint_mock, id()).Times(1);
-        EXPECT_CALL(*iter_size_handler_mock1,
-                    received_iter_size(remote_id, iters_count)).Times(1);
-        EXPECT_CALL(*iter_size_handler_mock2,
-                    received_iter_size(remote_id, iters_count)).Times(1);
+    EXPECT_CALL(*waypoint_mock, id()).Times(1);
+    EXPECT_CALL(*iter_size_handler_mock1,
+                received_iter_size(remote_id, iters_count)).Times(1);
+    EXPECT_CALL(*iter_size_handler_mock2,
+                received_iter_size(remote_id, iters_count)).Times(1);
 //      should return from method
 //      the following not to be called
-        EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
-        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
+    EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+    EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
+    EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
 
-        comms->received(&dane[0], str.size(), waypoint_mock.get());
+    comms->received(&dane[0], str.size(), waypoint_mock.get());
   comms->finish_all_tasks();
 }
 TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 //    int part_id = 0;
-        buildOne(1);
-        BlobUpdate update;
-        update.clear_iters();
-        update.clear_info();
+    buildOne(1);
+    BlobUpdate update;
+    update.clear_iters();
+    update.clear_info();
 
-        string str = update.SerializeAsString();
-        vector<char> dane(str.begin(), str.end());
-        vector<int> v(boost::assign::list_of(1).operator vector<int> ());
-        Blob<float > blob(v);
+    string str = update.SerializeAsString();
+    vector<char> dane(str.begin(), str.end());
+    vector<int> v(boost::assign::list_of(1).operator vector<int> ());
+    Blob<float > blob(v);
 
-        EXPECT_CALL(*waypoint_mock, id()).Times(2);
+    EXPECT_CALL(*waypoint_mock, id()).Times(2);
 //      should return from method
 //      the following not to be called
-        EXPECT_CALL(*iter_size_handler_mock1, received_iter_size(_, _)).Times(0);
-        EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
-        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*iter_size_handler_mock1, received_iter_size(_, _)).Times(0);
+    EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
+    EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+    EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
+    EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
+    EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
 
-        comms->received(&dane[0], str.size(), waypoint_mock.get());        comms->received(&dane[0], str.size(), waypoint_mock.get());
+    comms->received(&dane[0], str.size(), waypoint_mock.get());        comms->received(&dane[0], str.size(), waypoint_mock.get());
+    comms->finish_all_tasks();
 }
 INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_NumOfThreads,
                         BlobCommsParamTest,
