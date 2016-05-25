@@ -698,7 +698,7 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
 }
 TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 //    int part_id = 0;
-        buildOne();
+        buildOne(1);
         BlobUpdate update;
         update.clear_iters();
         update.clear_info();
