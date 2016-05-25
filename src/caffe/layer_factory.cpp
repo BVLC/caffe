@@ -253,7 +253,7 @@ REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
 // registered in their corresponding cpp files. Do not register them here.
 template<typename Dtype>
 Blob<Dtype>* GetTopBlob(const shared_ptr<LayerParameter>& param, int pos) {
-  if (param->type() == "SparseData") {
+  if (param->type() == "SparseData" || param->type() == "MemorySparseData") {
     if (pos == 0) {
       return new SparseBlob<Dtype>();
     } else {
