@@ -125,6 +125,12 @@ class BlobAccessorTestImpl : public BlobAccessor<Dtype> {
 };
 
 template <typename Dtype>
+class IterSizeHandlerMock: public BlobComms<Dtype>::IterSizeHandler {
+public:
+    MOCK_METHOD2(received_iter_size, void(internode::RemoteId from, int iters));
+};
+
+template <typename Dtype>
 class BlobAccessorMock : public BlobAccessorTestImpl<Dtype> {
 public:
 //    typedef typename BlobEncoding::What What;
@@ -162,6 +168,8 @@ template <class T> struct BlobCommsBase : public T {
 //  shared_ptr<BlobCodec<float> > codec;
   shared_ptr<BlobCodecMock<float> > codec_mock;
   shared_ptr<WaypointMock> waypoint_mock;
+  shared_ptr<IterSizeHandlerMock<float> > iter_size_handler_mock1;
+  shared_ptr<IterSizeHandlerMock<float> > iter_size_handler_mock2;
 
   shared_ptr<BlobAccessorMock<float> > blob_accessor_mock;
   shared_ptr<BlobConstInfoMock> const_info_mock;
@@ -170,6 +178,7 @@ template <class T> struct BlobCommsBase : public T {
   shared_ptr<BlobKeyChainMock<float> > keychain_mock;
   shared_ptr<BlobComms<float> > comms;
   BlobComms<float>::Settings settings;
+  int num_of_threads;
 
   void prepare_const_mock(vector<vector<int> > vparts,
                           bool register_handler = true) {
@@ -195,6 +204,10 @@ template <class T> struct BlobCommsBase : public T {
     waypoint_mock.reset(new StrictMock<WaypointMock>());
     codec_mock.reset(new NiceMock<BlobCodecMock<float> >());
     const_info_mock.reset(new StrictMock<BlobConstInfoMock>());
+    iter_size_handler_mock1.reset(
+        new StrictMock<IterSizeHandlerMock<float> >());
+    iter_size_handler_mock2.reset(
+        new StrictMock<IterSizeHandlerMock<float> >());
 
     prepare_const_mock(
         list_of<vector<int> >
@@ -216,6 +229,8 @@ template <class T> struct BlobCommsBase : public T {
 
   virtual void TearDown() {
     codec_mock.reset();
+    iter_size_handler_mock1.reset();
+    iter_size_handler_mock2.reset();
     sync_info_mock.reset();
     blob_accessor_mock.reset();
     keychain_mock.reset();
@@ -292,7 +307,7 @@ template <class T> struct BlobCommsBase : public T {
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
 //    settings = BlobComms<float>::Settings(
 //              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0);
-      comms = BlobComms<float>::create(blob_accessor_mock,
+    comms = BlobComms<float>::create(blob_accessor_mock,
             const_info_mock, sync_info_mock, waypoint_mock, codec_mock, keychain_mock,
            settings, num_of_threads);
   }
@@ -416,6 +431,7 @@ TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
   callback(true);
   callback(true);
   callback(true);
+
 }
 
 TEST_P(BlobCommsParamTest, checkPriorityQueue) {
@@ -486,6 +502,7 @@ TEST_P(BlobCommsParamTest, checkPriorityQueue) {
     callback(true); // sent 2v3 as 2v5 => [2:[2]]
     callback(true); // sent 2v2 as 2v5 => []
     callback(true); // nothing to send
+
 }
 
 TEST_P(BlobCommsParamTest, pushLayers) {
@@ -614,6 +631,7 @@ TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
     comms->received(&vector<char>(boost::assign::list_of(1).operator
         vector<char>
         ())[0], 3, waypoint_mock.get());
+
 }
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
@@ -646,18 +664,64 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
 
 TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
         //int part_id = 0;
+        int iters_count = 2;
+        size_t remote_id = 0;
         buildOne(1);
         BlobUpdate update;
-        update.set_iters(2);
+
+        comms->register_iter_size_handler(iter_size_handler_mock1.get());
+        comms->register_iter_size_handler(iter_size_handler_mock2.get());
+        update.set_iters(iters_count);
         update.clear_info();
 
         string str = update.SerializeAsString();
         vector<char> dane(str.begin(), str.end());
         vector<int> v(boost::assign::list_of(1).operator vector<int> ());
         Blob<float > blob(v);
+
+        EXPECT_CALL(*waypoint_mock, id()).Times(1);
+        EXPECT_CALL(*iter_size_handler_mock1,
+                    received_iter_size(remote_id, iters_count)).Times(1);
+        EXPECT_CALL(*iter_size_handler_mock2,
+                    received_iter_size(remote_id, iters_count)).Times(1);
+//      should return from method
+//      the following not to be called
+        EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
+        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+
+        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
+        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
+        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
+        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+
         comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
+TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
+//    int part_id = 0;
+        buildOne();
+        BlobUpdate update;
+        update.clear_iters();
+        update.clear_info();
 
+        string str = update.SerializeAsString();
+        vector<char> dane(str.begin(), str.end());
+        vector<int> v(boost::assign::list_of(1).operator vector<int> ());
+        Blob<float > blob(v);
+
+        EXPECT_CALL(*waypoint_mock, id()).Times(1);
+//      should return from method
+//      the following not to be called
+        EXPECT_CALL(*iter_size_handler_mock1, received_iter_size(_, _)).Times(0);
+        EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
+        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+
+        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
+        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
+        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
+        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+
+        comms->received(&dane[0], str.size(), waypoint_mock.get());        comms->received(&dane[0], str.size(), waypoint_mock.get());
+}
 INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_NumOfThreads,
                         BlobCommsParamTest,
                         ::testing::Values(0, 1, 2, 3));
