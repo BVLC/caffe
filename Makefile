@@ -262,11 +262,6 @@ ifeq ($(LINUX), 1)
 	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
-	ifeq ($(shell echo | awk '{exit $(GCCVERSION) >= 4.9;}'), 1)
-		CXXFLAGS += -fstack-protector-strong
-	else
-		CXXFLAGS += -fstack-protector
-	endif
 	# boost::thread is reasonably called boost_thread (compare OS X)
 	# We will also explicitly add stdc++ to the link target.
 	LIBRARIES += boost_thread stdc++
@@ -311,6 +306,39 @@ ifdef CUSTOM_CXX
 	CXX := $(CUSTOM_CXX)
 endif
 
+# Compiler flags
+ifneq (,$(findstring icpc,$(CXX)))
+	CXX_HARDENING_FLAGS += -fstack-protector
+else ifneq (,$(findstring clang++,$(CXX)))
+	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
+else ifneq (,$(findstring g++,$(CXX)))
+	ifeq ($(shell echo | awk '{exit $(GCCVERSION) >= 4.9;}'), 1)
+		CXX_HARDENING_FLAGS += -fPIE -fstack-protector-strong
+	else
+		CXX_HARDENING_FLAGS += -fPIE -fstack-protector
+	endif	
+endif
+
+# Linker flags
+ifneq (,$(findstring clang++,$(CXX)))
+	# In Clang, -z flags are not compatible, they need to be passed to linker via -Wl.
+	LINKER_SHARED_HARDENING_FLAGS += -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now
+	LINKER_EXEC_HARDENING_FLAGS += -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now
+else
+	# GCC specific flags. ICC is compatible with them.
+	LINKER_SHARED_HARDENING_FLAGS += -z noexecstack -z relro -z now
+	LINKER_EXEC_HARDENING_FLAGS += -z noexecstack -z relro -z now
+endif
+
+# Generic flags
+CXX_HARDENING_FLAGS += -fPIC -fno-operator-names -Wformat -Wformat-security -Wall
+LINKER_EXEC_HARDENING_FLAGS += -pie
+
+# Release-only flag
+ifneq ($(DEBUG), 1)
+	CXX_HARDENING_FLAGS += -D_FORTIFY_SOURCE=2
+endif
+
 # Static linking
 ifneq (,$(findstring clang++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
@@ -330,9 +358,9 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	NVCCFLAGS += -G
 else ifneq (,$(findstring icpc,$(CXX)))
-	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2 -D_FORTIFY_SOURCE=2
+	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2
 else
-	COMMON_FLAGS += -DNDEBUG -O3 -D_FORTIFY_SOURCE=2
+	COMMON_FLAGS += -DNDEBUG -O3
 endif
 
 # cuDNN acceleration configuration.
@@ -428,16 +456,6 @@ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread $(COMMON_FLAGS) $(WARNINGS)
-
-CXX_HARDENING_FLAGS := -fPIE -fPIC -fno-operator-names -Wformat -Wformat-security
-LINKER_SHARED_HARDENING_FLAGS :=
-LINKER_EXEC_HARDENING_FLAGS := -pie
-
-# GCC-specific flags, Clang does not support them.
-ifeq (,$(findstring clang++,$(CXX)))
-	LINKER_SHARED_HARDENING_FLAGS += -z noexecstack -z relro -z now
-	LINKER_EXEC_HARDENING_FLAGS += -z noexecstack -z relro -z now
-endif
 
 USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
