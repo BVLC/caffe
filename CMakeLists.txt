@@ -46,16 +46,38 @@ include(cmake/Dependencies.cmake)
 
 # ---[ Flags
 if(UNIX OR APPLE)
-  if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") # GCC specific flags
+
+  # Linker flags.
+  if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") 
+    # GCC specific flags. ICC is compatible with them.
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -z noexecstack -z relro -z now")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z noexecstack -z relro -z now")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
-    else()
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
-    endif()
+  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") 
+    # In Clang, -z flags are not compatible, they need to be passed to linker via -Wl.
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now")
   endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fPIC -fno-operator-names -Wformat -Wformat-security -Wall")
+  
+  # Compiler flags.
+  if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") 
+    # GCC specific flags.
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector-strong")
+    else()
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector")
+    endif()
+  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") 
+    # Clang is compatbile with some of the flags.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector")
+  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" ) 
+    # Same as above, with exception that ICC compilation crashes with -fPIE option, even 
+    # though it uses -pie linker option that require -fPIE during compilation. Checksec
+    # shows that it generates correct PIE anyway if only -pie is provided.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
+  endif()
+  
+  # Generic flags.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fno-operator-names -Wformat -Wformat-security -Wall")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -D_FORTIFY_SOURCE=2")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
 endif()
