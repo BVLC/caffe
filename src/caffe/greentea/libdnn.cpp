@@ -57,11 +57,11 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
       workgroup_sizes.push_back(i);
     }
     fw_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
-                                     8, workgroup_sizes);
+                                     16, workgroup_sizes);
     bw_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
-                                     8, workgroup_sizes);
+                                     16, workgroup_sizes);
     wg_tuner_->add_set_param<int_tp>("workgroup_size_" + std::to_string(id),
-                                     8, workgroup_sizes);
+                                     16, workgroup_sizes);
   }
 
   // TSK
