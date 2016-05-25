@@ -60,8 +60,10 @@ void LibDNNConvolutionLayer<Dtype>::Reshape(
     if (std::is_same<Dtype, float>::value ||
         this->device_->CheckCapability("cl_khr_int64_base_atomics")) {
       config.wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
+      config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
     } else {
       config.wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_DIRECT;
+      config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_IM2COL;
     }
 
     LibDNNConv<Dtype>* libdnn = new LibDNNConv<Dtype>(config);
