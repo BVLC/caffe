@@ -46,6 +46,7 @@ class BlobComms : public internode::Waypoint::Handler {
 
   virtual void send_iter_size(int iter_size) = 0;
   virtual void register_iter_size_handler(IterSizeHandler* handler) = 0;
+  virtual void finish_all_tasks() = 0;
 };
 
 }  // namespace caffe
