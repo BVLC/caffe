@@ -272,6 +272,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
   void push(int layer_id, uint32_t version) {
     {
+      CHECK_GE(layer_id, 0);
+      CHECK_LT(layer_id, const_info->layers());
       boost::recursive_mutex::scoped_lock lock(mtx);
       sending_version[layer_id] = std::max(version, sending_version[layer_id]);
       to_send.insert(
@@ -290,6 +292,12 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
   void push(int layer_id, int blob_id, int part_id, uint32_t version) {
     {
+      CHECK_GE(layer_id, 0);
+      CHECK_LT(layer_id, const_info->layers());
+      CHECK_GE(blob_id, 0);
+      CHECK_LT(blob_id, const_info->blobs(layer_id));
+      CHECK_GE(part_id, 0);
+      CHECK_LT(part_id, const_info->parts(layer_id, blob_id));
       boost::recursive_mutex::scoped_lock lock(mtx);
       sending_version[layer_id] = std::max(version, sending_version[layer_id]);
       Part part = {layer_id, blob_id, part_id, version};
