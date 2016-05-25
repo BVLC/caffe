@@ -389,7 +389,6 @@ TEST_F(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
 TEST_F(BlobCommsTest, cancelLayer1WhenInQueue) {
   buildOne();
   int blob_id = 0, part_id = 0, version = 1;
-//  int times = 2;
   Waypoint::SentCallback callback;
    {
     InSequence dummy;
@@ -397,42 +396,11 @@ TEST_F(BlobCommsTest, cancelLayer1WhenInQueue) {
     buildSendMethodExpects(2, blob_id, part_id, 2, &callback, 1);
     buildSendMethodExpects(2, blob_id, part_id, 3, &callback, 1);
     buildSendMethodExpects(3, blob_id, part_id, version, &callback, 1);
-/*
-            {
-            InSequence dummy;
-        EXPECT_CALL(*keychain_mock, lock(2));
-        EXPECT_CALL(*blob_accessor_mock, get_blob(2, 0));
-        EXPECT_CALL(*keychain_mock, unlock(2));
-        EXPECT_CALL(*waypoint_mock,async_send(_, _, _))
-            .WillOnce(SaveArg<2>(&callback));
-            }
-            {
-            InSequence dummy;
-        EXPECT_CALL(*keychain_mock, lock(2));
-        EXPECT_CALL(*blob_accessor_mock, get_blob(2, 0));
-        EXPECT_CALL(*keychain_mock, unlock(2));
-        EXPECT_CALL(*waypoint_mock, async_send(_, _, _))
-            .WillOnce(SaveArg<2>(&callback));
-            }
-        {
-        InSequence dummy;
-        EXPECT_CALL(*keychain_mock, lock(3));
-        EXPECT_CALL(*blob_accessor_mock, get_blob(3, 0));
-        EXPECT_CALL(*keychain_mock, unlock(3));
-        EXPECT_CALL(*waypoint_mock, async_send(_, _, _))
-            .WillOnce(SaveArg<2>(&callback));
-        }
-*/
+
     }
     EXPECT_CALL(*keychain_mock, lock(1)).Times(0);
     EXPECT_CALL(*keychain_mock, unlock(1)).Times(0);
     EXPECT_CALL(*blob_accessor_mock, get_blob(1, _)).Times(0);
-//    EXPECT_CALL(*codec_mock, encode(BlobUpdateInfoEq(1, _, _, _), _, _, _))
-//        .Times(0);
-//    EXPECT_CALL(*waypoint_mock,
-//                async_send(BufferEq(str), update.ByteSize(), _))
-//        .WillOnce(SaveArg<2>(callback));
-
 
     comms->cancel(1, version);
     comms->push(2, blob_id, part_id, 2);
@@ -490,13 +458,7 @@ TEST_F(BlobCommsTest, checkPriorityQueue) {
     EXPECT_DEATH(comms->push(1, const_info_mock->blobs(1), part_id, 1),"");
     EXPECT_DEATH(comms->push(const_info_mock->layers(), 0, part_id, 1),"");
     EXPECT_DEATH(comms->push(1, 0, 45, 1),"");
-/*
-    comms->push(1, 33, part_id, 1);// holds 2v4
-    comms->push(1, 12, part_id, 2);
-    comms->push(1, 44, part_id, 3);
-    comms->push(1, 99, part_id, 4);
-    comms->push(1, 21, part_id, 5);
-*/
+
     callback(true); // sent 1v5 => [1:[4,3,2,1], 2:[4,3,2]]
     callback(true); // sent 1v4 as 1v5 (sending version determines arguments)
 //    =>[1:[3,2,1], 2:[4,3,2]]
@@ -670,33 +632,10 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
 
         string str = update.SerializeAsString();
         vector<char> dane(str.begin(), str.end());
-//        size_t waypoint_id = 0;
-//    size_t waypoint_id = waypoint_mock->id();
+
         vector<int> v(boost::assign::list_of(1).operator vector<int> ());
         Blob<float > blob(v);
 
-/*
-        EXPECT_CALL(*waypoint_mock, id());
-        EXPECT_CALL(*sync_info_mock,
-                    received_version(waypoint_id, layer_id, blob_id, part_id)).Times(2);
-
-        EXPECT_CALL(*sync_info_mock,
-                    received(waypoint_id, layer_id, blob_id, part_id, version)).Times(1);
-
-        EXPECT_CALL(*blob_accessor_mock, get_blob(layer_id, blob_id)).Times(1);
-        {
-            InSequence dumm;
-            const BlobUpdateInfoEqRefMatcherP4<int, int, int, int> &p4 =
-                BlobUpdateInfoEqRef(layer_id, blob_id, part_id, version);
-
-            EXPECT_CALL(*keychain_mock, lock(layer_id));
-            EXPECT_CALL(*codec_mock, decode(p4, _,
-                                            settings.what_received,
-                                            settings.received_incoming_multiplier,
-                                            settings.received_current_multiplier));
-            EXPECT_CALL(*keychain_mock, unlock(layer_id));
-        }
-*/
         comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
 TEST_F(BlobCommsTest, receiveBlobUpdateWithIters) {
@@ -706,26 +645,8 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithIters) {
         update.set_iters(2);
         update.clear_info();
 
-/*
-        EXPECT_CALL(*waypoint_mock, id()).Times(1);
-        EXPECT_CALL(*sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
-
-        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
-
-        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
-*/
-
-//        codec_mock->encode_real(
-//            &update, &blob_accessor_mock->dummy_blob,
-//            settings.what_sent, part_id);
-
         string str = update.SerializeAsString();
         vector<char> dane(str.begin(), str.end());
-//        size_t waypoint_id = 0;
-//    size_t waypoint_id = waypoint_mock->id();
         vector<int> v(boost::assign::list_of(1).operator vector<int> ());
         Blob<float > blob(v);
         comms->received(&dane[0], str.size(), waypoint_mock.get());
