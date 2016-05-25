@@ -158,7 +158,7 @@ MATCHER_P4(BlobUpdateInfoEqRef, layer_id, blob_id, part, version, "") {
           && arg.info().version() == version;
 }
 
-struct BlobCommsTest : public Test {
+template <class T> struct BlobCommsBase : public T {
 //  shared_ptr<BlobCodec<float> > codec;
   shared_ptr<BlobCodecMock<float> > codec_mock;
   shared_ptr<WaypointMock> waypoint_mock;
@@ -210,7 +210,7 @@ struct BlobCommsTest : public Test {
     sync_info_mock.reset(new StrictMock<BlobSyncInfoMock>());
   }
 
-  BlobCommsTest()
+  BlobCommsBase()
       : settings(BlobComms<float>::Settings(
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0)){}
 
@@ -292,31 +292,34 @@ struct BlobCommsTest : public Test {
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
 //    settings = BlobComms<float>::Settings(
 //              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0);
-    comms = BlobComms<float, num_of_threads!=1>::create(blob_accessor_mock,
+      comms = BlobComms<float>::create(blob_accessor_mock,
             const_info_mock, sync_info_mock, waypoint_mock, codec_mock, keychain_mock,
            settings, num_of_threads);
   }
 };
 
-TEST_F(BlobCommsTest, CurrentlySendingVersionSizeCheck) {
-    buildOne(1);
+class BlobCommsTest : public BlobCommsBase<testing::Test> {};
+class BlobCommsParamTest : public BlobCommsBase<
+                           testing::TestWithParam<int> > {};
+
+TEST_P(BlobCommsParamTest, CurrentlySendingVersionSizeCheck) {
+    buildOne(GetParam());
     EXPECT_EQ(0, comms->currently_sending_version());
     EXPECT_EQ(0, comms->currently_sending_version(0));
     EXPECT_DEATH(comms->currently_sending_version(5), "");
 }
 
-
-
-TEST_F(BlobCommsTest, SendIterSize) {
-  buildOne(1);
+TEST_P(BlobCommsParamTest, SendIterSize) {
+  buildOne(GetParam());
   SendIterSize(waypoint_mock, 10);
   SendIterSize(waypoint_mock, -1);
   SendIterSize(waypoint_mock, 0);
   SendIterSize(waypoint_mock, 101);
   SendIterSize(waypoint_mock, 1);
 }
-TEST_F(BlobCommsTest, pushOneWithCancelledVersion) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, pushOneWithCancelledVersion) {
+  buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 0;
 
@@ -324,8 +327,9 @@ TEST_F(BlobCommsTest, pushOneWithCancelledVersion) {
   comms->cancel(layer_id, version);
   comms->push(layer_id, blob_id, part_id, version);
 }
-TEST_F(BlobCommsTest, pushOne) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, pushOne) {
+  buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
   Waypoint::SentCallback callback;
@@ -335,8 +339,9 @@ TEST_F(BlobCommsTest, pushOne) {
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
 }
-TEST_F(BlobCommsTest, pushAnotherTwoDuringSending) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, pushAnotherTwoDuringSending) {
+  buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
   Waypoint::SentCallback callback;
@@ -346,10 +351,10 @@ TEST_F(BlobCommsTest, pushAnotherTwoDuringSending) {
   comms->push(layer_id, blob_id, part_id, version);
   comms->push(layer_id, blob_id, part_id, version);
   comms->push(layer_id, blob_id, part_id, version);
-
 }
-TEST_F(BlobCommsTest, push3OneByOne) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, push3OneByOne) {
+  buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 3;
   Waypoint::SentCallback callback;
@@ -364,10 +369,10 @@ TEST_F(BlobCommsTest, push3OneByOne) {
   callback(true);
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
-
 }
-TEST_F(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, cancelOneWhenInQueueDuringSending3Queue) {
+  buildOne(GetParam());
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 2;
   Waypoint::SentCallback callback;
@@ -384,8 +389,9 @@ TEST_F(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
   comms->push(layer_id, blob_id, part_id, version);
   callback(true);
 }
-TEST_F(BlobCommsTest, cancelLayer1WhenInQueue) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
+  buildOne(GetParam());
   int blob_id = 0, part_id = 0, version = 1;
   Waypoint::SentCallback callback;
    {
@@ -410,10 +416,10 @@ TEST_F(BlobCommsTest, cancelLayer1WhenInQueue) {
   callback(true);
   callback(true);
   callback(true);
-
 }
-TEST_F(BlobCommsTest, checkPriorityQueue) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, checkPriorityQueue) {
+  buildOne(GetParam());
   int part_id = 0;//blob_id = 0, , version = 1;
   Waypoint::SentCallback callback;
     {
@@ -480,10 +486,10 @@ TEST_F(BlobCommsTest, checkPriorityQueue) {
     callback(true); // sent 2v3 as 2v5 => [2:[2]]
     callback(true); // sent 2v2 as 2v5 => []
     callback(true); // nothing to send
-
 }
-TEST_F(BlobCommsTest, pushLayers) {
-  buildOne(1);
+
+TEST_P(BlobCommsParamTest, pushLayers) {
+  buildOne(GetParam());
   int part_id = 0;//blob_id = 0, , version = 1;
   Waypoint::SentCallback callback;
     {
@@ -547,9 +553,9 @@ TEST_F(BlobCommsTest, pushLayers) {
   callback(true);     // nothing to send
 }
 
-TEST_F(BlobCommsTest, receiveProperBlobUpdate) {
+TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
   int layer_id= 0, part_id = 0, blob_id = 0, version = 1;
-  buildOne(1);
+  buildOne(GetParam());
   BlobUpdate update;
   update.mutable_info()->set_layer_id(layer_id);
   update.mutable_info()->set_blob_id(blob_id);
@@ -589,7 +595,8 @@ TEST_F(BlobCommsTest, receiveProperBlobUpdate) {
     }
     comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
-TEST_F(BlobCommsTest, receiveWrongBlobUpdate) {
+
+TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
     buildOne(1);
     vector<int> v(boost::assign::list_of(1).operator vector<int> ());
     Blob<float > blob(v);
@@ -607,9 +614,9 @@ TEST_F(BlobCommsTest, receiveWrongBlobUpdate) {
     comms->received(&vector<char>(boost::assign::list_of(1).operator
         vector<char>
         ())[0], 3, waypoint_mock.get());
-
 }
-TEST_F(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
+
+TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
         int part_id = 0;
         buildOne(1);
         BlobUpdate update;
@@ -636,8 +643,9 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
 
         comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
-TEST_F(BlobCommsTest, receiveBlobUpdateWithIters) {
-        int part_id = 0;
+
+TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
+        //int part_id = 0;
         buildOne(1);
         BlobUpdate update;
         update.set_iters(2);
@@ -649,36 +657,9 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithIters) {
         Blob<float > blob(v);
         comms->received(&dane[0], str.size(), waypoint_mock.get());
 }
-TEST_F(BlobCommsTest, receiveBlobUpdateWithIters) {
-        int part_id = 0;
-        buildOne(1);
-        BlobUpdate update;
-        update.set_iters(2);
-        update.clear_info();
 
-/*
-        EXPECT_CALL(*waypoint_mock, id()).Times(1);
-        EXPECT_CALL(*sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
-
-        EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
-
-        EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-        EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-        EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
-*/
-
-//        codec_mock->encode_real(
-//            &update, &blob_accessor_mock->dummy_blob,
-//            settings.what_sent, part_id);
-
-        string str = update.SerializeAsString();
-        vector<char> dane(str.begin(), str.end());
-//        size_t waypoint_id = 0;
-//    size_t waypoint_id = waypoint_mock->id();
-        vector<int> v(boost::assign::list_of(1).operator vector<int> ());
-        Blob<float > blob(v);
-        comms->received(&dane[0], str.size(), waypoint_mock.get());
-}
+INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_Initialization,
+                        BlobCommsParamTest,
+                        ::testing::Values(1, 2, 4));
 }  // namespace
 }  // namespace caffe

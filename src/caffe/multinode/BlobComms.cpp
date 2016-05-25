@@ -436,7 +436,7 @@ shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
     return boost::make_shared<BlobCommsImpl<Dtype, false> >(blob_accessor,
       const_info, sync_info, waypoint, codec, keychain, settings, 0);
   }
-  return boost::make_shared<BlobCommsImpl<Dtype, false> >(blob_accessor,
+  return boost::make_shared<BlobCommsImpl<Dtype, true> >(blob_accessor,
       const_info, sync_info, waypoint, codec, keychain, settings, 0);
 }
 
