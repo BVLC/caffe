@@ -11,6 +11,9 @@
 #define SPEC_PREFIX template <> inline
 
 #ifdef USE_MKL2017_NEW_API
+#if (__INTEL_MKL__ < 2017) || (__INTEL_MKL_BUILD_DATE <= 20160311)
+#error to use new MKL DNN API Intel(R) MKL 2017 Beta Update 1 or higher is required
+#endif
     #define ATTRIBUTES attributes,
 #else
     typedef void* dnnPrimitiveAttributes_t;
