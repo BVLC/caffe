@@ -1,6 +1,3 @@
-// The main caffe test code. Your test cpp code should include this hpp
-// to allow a main function to be compiled into the binary.
-
 #include <vector>
 
 #include "caffe/caffe.hpp"

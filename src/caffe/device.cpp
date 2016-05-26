@@ -36,6 +36,8 @@ void device::Init() {
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
     workgroup_sizes_[0] = CAFFE_CUDA_NUM_THREADS;
+    workgroup_sizes_[1] = CAFFE_CUDA_NUM_THREADS;
+    workgroup_sizes_[2] = CAFFE_CUDA_NUM_THREADS;
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
