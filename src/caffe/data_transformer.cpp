@@ -606,7 +606,10 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
-  assert(j.joints.size() == 9 && j.joints.size() == 14 && j.isVisible.size() == 28);
+	//---------------------------------------------------------------
+	//------------ CHANGE TO THE RIGHT NUMBER OF JOINTS -------------
+	assert(j.joints.size() == 14);
+	//---------------------------------------------------------------
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
