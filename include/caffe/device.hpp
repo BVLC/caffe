@@ -65,9 +65,9 @@ class device {
   uint_tp peak_memory_usage_;
   std::vector<shared_ptr<Blob<float> > > buff_f_;
   std::vector<shared_ptr<Blob<double> > > buff_d_;
+  bool host_unified_;
 #ifdef USE_GREENTEA
   viennacl::ocl::program ocl_program_;
-  bool host_unified_;
 #endif  // USE_GREENTEA
 };
 }  // namespace caffe
