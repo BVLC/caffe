@@ -1,4 +1,6 @@
 #include <boost/pending/disjoint_sets.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <algorithm>
 #include <cfloat>
@@ -379,6 +381,15 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     batch_offset *= bottom[0]->shape()[i];
   }
 
+  uint_tp components_batch_offset = 1;
+  uint_tp components_channel_offset = bottom[2]->shape()[1] == 2 ? 1 : 0;
+  for (int_tp i = 1; i < bottom[2]->shape().size(); ++i) {
+    components_batch_offset *= bottom[2]->shape()[i];
+    if (i > 1) {
+      components_channel_offset *= bottom[2]->shape()[i];
+    }
+  }
+
   Dtype loss = 0;
 
 #pragma omp parallel for reduction(+:loss)
@@ -392,7 +403,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     Malis(&affinity_data_neg[batch_offset * batch], conn_num_dims_,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
-          bottom[2]->cpu_data() + batch_offset * batch, false,
+          bottom[2]->cpu_data() + components_batch_offset * batch, false,
           dloss_neg_.mutable_cpu_data() + batch_offset * batch, &loss_out,
           &classerr_out, &rand_index_out);
 
@@ -401,7 +412,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
-          bottom[2]->cpu_data() + batch_offset * batch, true,
+          bottom[2]->cpu_data() + components_batch_offset * batch + components_channel_offset, true,
           dloss_pos_.mutable_cpu_data() + batch_offset * batch, &loss_out,
           &classerr_out, &rand_index_out);
 
