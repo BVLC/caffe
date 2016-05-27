@@ -24,14 +24,20 @@ class PythonLayer : public Layer<Dtype> {
         && !ShareInParallel()) {
       LOG(FATAL) << "PythonLayer is not implemented in Multi-GPU training";
     }
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     self_.attr("param_str") = bp::str(
         this->layer_param_.python_param().param_str());
     self_.attr("phase") = static_cast<int>(this->phase_);
     self_.attr("setup")(bottom, top);
+    PyGILState_Release(gstate);
   }
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     self_.attr("reshape")(bottom, top);
+    PyGILState_Release(gstate);
   }
 
   virtual inline bool ShareInParallel() const {
@@ -43,11 +49,17 @@ class PythonLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     self_.attr("forward")(bottom, top);
+    PyGILState_Release(gstate);
   }
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     self_.attr("backward")(top, propagate_down, bottom);
+    PyGILState_Release(gstate);
   }
 
  private:
