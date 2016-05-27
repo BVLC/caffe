@@ -412,7 +412,8 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
-          bottom[2]->cpu_data() + components_batch_offset * batch + components_channel_offset, true,
+          bottom[2]->cpu_data() + components_batch_offset * batch
+          + components_channel_offset, true,
           dloss_pos_.mutable_cpu_data() + batch_offset * batch, &loss_out,
           &classerr_out, &rand_index_out);
 
