@@ -142,7 +142,7 @@ void GPUMemoryManager::InitMemory(const std::vector<int>& gpus, PoolMode m) {
     try {
       // Just in case someone installed 'no cleanup' arena before
       delete cub_allocator;
-      cub_allocator = new cub::CachingDeviceAllocator(2, 6, 31, (size_t) -1,
+      cub_allocator = new cub::CachingDeviceAllocator(2, 6, 22, (size_t) -1,
           false, debug_);
     } catch (...) {
     }
