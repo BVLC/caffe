@@ -43,6 +43,7 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // image
+  // cpmdata_param() contains the data stored in the prototxt file
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.cpmdata_param().batch_size();
   if (crop_size > 0) {
@@ -86,6 +87,7 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 // This function is called on prefetch thread
+// This is the function that loads the data
 template<typename Dtype>
 void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
@@ -97,6 +99,7 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   static int cnt = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
+  LOG(INFO) << "data count: " << batch->data_.count();
   CHECK(this->transformed_data_.count());
 
   // Reshape on single input batches for inputs of varying dimension.
@@ -112,6 +115,7 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         DecodeDatumNative(&datum);
       }
     }
+    LOG(INFO) << "\n\n\n\n---  DATA reshaped as: ("<<datum.channels()<<","<<datum.height()<<","<<datum.width() << "\n\n\n\n---";
     batch->data_.Reshape(1, datum.channels(),
         datum.height(), datum.width());
         this->transformed_data_.Reshape(1, datum.channels(),

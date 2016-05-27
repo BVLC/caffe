@@ -39,6 +39,9 @@ string DecodeString(const string& data, size_t idx) {
 
 template<typename Dtype>
 void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1) { //very specific to genLMDB.py
+  //TODO: change this for new data
+  //offset3 is the offset to skip the RGB data and start from the metadata
+  //offset1 is the offset to skip one row in the metadata/rgb image
   // ------------------- Dataset name ----------------------
   meta.dataset = DecodeString(data, offset3);
   // ------------------- Image Dimension -------------------
@@ -46,6 +49,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   DecodeFloats(data, offset3+offset1, &height, 1);
   DecodeFloats(data, offset3+offset1+4, &width, 1);
   meta.img_size = Size(width, height);
+  LOG(INFO) << "image size:" << width << "," << height;
   // ----------- Validation, nop, counters -----------------
   meta.isValidation = (data[offset3+2*offset1]==0 ? false : true);
   meta.numOtherPeople = (int)data[offset3+2*offset1+1];
@@ -458,6 +462,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
 
   int offset3 = 3 * offset;
   int offset1 = datum_width;
+  //TODO: change this for new data
   ReadMetaData(meta, data, offset3, offset1);
   if(param_.transform_body_joint()) // we expect to transform body joints, and not to transform hand joints
     TransformMetaJoints(meta);
