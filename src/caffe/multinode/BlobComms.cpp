@@ -405,7 +405,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     iter_size_handlers.push_back(handler);
   }
 
-  void finish_all_tasks() {}
+  void finish_all_tasks() {} // TODO: finish
 };
 
 }  // namespace
