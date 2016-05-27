@@ -27,6 +27,7 @@ Append after all the commands
   --gpu=0,1
 </pre>
 for using two GPUs.
+
 **NOTE**: each GPU runs the batchsize specified in your train_val.prototxt.  So if you go from 1 GPU to 2 GPU, your effective batchsize will double.  e.g. if your train_val.prototxt specified a batchsize of 256, if you run 2 GPUs your effective batch size is now 512.  So you need to adjust the batchsize when running multiple GPUs and/or adjust your solver params, specifically learning rate.
 
 ### Hardware Configuration Assumptions
