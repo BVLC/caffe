@@ -122,7 +122,39 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  NOT_IMPLEMENTED;
+  if (propagate_down[1]) {
+    LOG(FATAL) << this->type()
+               << " Layer cannot backpropagate to roi inputs.";
+  }
+  if (!propagate_down[0]) {
+    return;
+  }
+  const Dtype* bottom_rois = bottom[1]->cpu_data();
+  const Dtype* top_diff = top[0]->cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  caffe_set(bottom[0]->count(), Dtype(0.), bottom_diff);
+  const int* argmax_data = max_idx_.cpu_data();
+  const int num_rois = top[0]->num();
+
+  // Accumulate gradient over all ROIs
+  for (int roi_n = 0; roi_n < num_rois; ++roi_n) {
+    int roi_batch_ind = bottom_rois[roi_n * 5];
+    // Accumulate gradients over each bin in this ROI
+    for (int c = 0; c < channels_; ++c) {
+      for (int ph = 0; ph < pooled_height_; ++ph) {
+        for (int pw = 0; pw < pooled_width_; ++pw) {
+          int offset_top = ((roi_n * channels_ + c) * pooled_height_ + ph)
+              * pooled_width_ + pw;
+          int argmax_index = argmax_data[offset_top];
+          if (argmax_index >= 0) {
+            int offset_bottom = (roi_batch_ind * channels_ + c) * height_
+                * width_ + argmax_index;
+            bottom_diff[offset_bottom] += top_diff[offset_top];
+          }
+        }
+      }
+    }
+  }
 }
 
 
