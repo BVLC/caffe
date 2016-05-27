@@ -401,6 +401,10 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+
+  // NVIDIA PARAMETERS (Start with 68 because NV is 68 on an old-style phone)
+  optional DetectNetGroundTruthParameter detectnet_groundtruth_param = 6801;
+  optional DetectNetAugmentationParameter detectnet_augmentation_param = 6802;
 }
 
 // Message that stores parameters used to apply transformation
@@ -424,6 +428,79 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+}
+// Message that stores parameters used to create gridbox ground truth
+message DetectNetGroundTruthParameter {
+  // stride of gridbox with respect to image size
+  optional uint32 stride = 1 [default = 4];
+  // coverage region scale with respect to bounding box size
+  optional float scale_cvg = 2 [default = 0.5];
+  enum GridboxType {
+    GRIDBOX_MAX = 0;
+    GRIDBOX_MIN = 1;
+  }
+  // determines coverage region's maximum and minimum dimensions
+  optional GridboxType gridbox_type = 3 [default = GRIDBOX_MAX];
+  // if gridbox_type is equal to GRIDBOX_MAX, the maximum size a given coverage
+  //  region may take.
+  optional uint32 max_cvg_len = 4 [default = 50];
+  // if gridbox_type is equal to GRIDBOX_MIN, the minimum size a given coverage
+  //  region may take.
+  optional uint32 min_cvg_len = 5 [default = 50];
+  enum CoverageType {
+    RECTANGULAR = 0;
+  }
+  // shape of the coverage geometry.
+  optional CoverageType coverage_type = 7 [default = RECTANGULAR];
+  // Size that incoming images are cropped / scaled to during training / test
+  //  time. The network will only see images of this size.
+  optional uint32 image_size_x = 8 [default = 1248];
+  optional uint32 image_size_y = 9 [default = 384];
+  // coverage proportional to the size of the gridbox region overlapping the
+  // normalize object coverage by the size of the object
+  optional bool obj_norm = 11 [default = false];
+  // crop incoming bboxes such that their bounds remain inside the gridbox.
+  optional bool crop_bboxes = 12 [default = true];
+  // Integer and target index of classes to be included:
+  message ClassMapping {
+    required uint32 src = 1;
+    required uint32 dst = 2;
+  }
+  repeated ClassMapping object_class = 13;
+}
+
+// Message that stores parameters used to apply image and label augmentations
+// specific to NVDataLayer's online augmentation module
+message DetectNetAugmentationParameter {
+  // probability that a random crop of the training image will be taken at test
+  //  time. If image dimensions are less than input size and random cropping is
+  //  off, then the image will be scaled deterministically to the input size.
+  optional float crop_prob = 1 [default = 1.0];
+  // number of pixels to shift the image by. If cropping is enabled, this number
+  //  is added to the range of possible crop offset values.
+  optional uint32 shift_x = 2 [default = 0];
+  optional uint32 shift_y = 3 [default = 0];
+  // probability that the training image will be scaled at test time. 0 turns
+  //  scale augmentation off.
+  optional float scale_prob = 4 [default = 0.33];
+  // minimum and maximum scaling factor. 1.0 implies no scaling.
+  optional float scale_min = 5 [default = 0.7];
+  optional float scale_max = 6 [default = 1.0];
+  // probability that image will be flipped across the Y axis. 0 turns flip
+  //  augmentation off.
+  optional float flip_prob = 7 [default = 0.33];
+  // maximum angle in degrees (in both directions) image may be rotated. 0 turns
+  //  rotation augmentation off.
+  optional float rotation_prob = 8 [default = 0.33];
+  optional float max_rotate_degree = 9 [default = 1.0];
+  // maximum rotation of hue in degrees (in both directions). 0 turns hue
+  //  augmentation off.
+  optional float hue_rotation_prob = 10 [default = 0.33];
+  optional float hue_rotation = 11 [default = 15];
+  // maximum desaturation parameter. 1.0 may convert RGB to luminance. 0 turns
+  //  desaturation augmentation off.
+  optional float desaturation_prob = 12 [default = 0.33];
+  optional float desaturation_max = 13 [default = 0.5];
 }
 
 // Message that stores parameters shared by loss layers

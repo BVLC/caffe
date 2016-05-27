@@ -1,0 +1,21 @@
+# DetectNet solver
+net: "examples/kitti/detectnet_network.prototxt"
+test_state { stage: "val" }
+
+max_iter: 38000 # ~60 train epochs
+test_interval: 1280 # ~2 train epochs
+test_iter: 185 # 1 test epoch
+snapshot: 1280 # ~2 train epochs
+snapshot_prefix: "examples/kitti/detectnet_snapshot"
+display: 160
+
+solver_type: ADAM
+base_lr: 0.0002
+lr_policy: "step"
+stepsize: 12000
+gamma: 0.1
+momentum: 0.9
+momentum2: 0.999
+weight_decay: 1e-08
+
+solver_mode: GPU
