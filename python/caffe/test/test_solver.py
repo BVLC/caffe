@@ -21,7 +21,7 @@ class TestSolver(unittest.TestCase):
         f.close()
         self.solver = caffe.SGDSolver(f.name)
         # also make sure get_solver runs
-        caffe.get_solver(f.name)
+        caffe.get_solver_from_file(f.name)
         caffe.set_mode_cpu()
         # fill in valid labels
         self.solver.net.blobs['label'].data[...] = \
@@ -35,7 +35,7 @@ class TestSolver(unittest.TestCase):
 
     def test_solve(self):
         self.assertEqual(self.solver.iter, 0)
-        self.solver.solve()
+        self.solver.solve(None)
         self.assertEqual(self.solver.iter, 100)
 
     def test_net_memory(self):
