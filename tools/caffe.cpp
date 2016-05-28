@@ -336,6 +336,11 @@ int time() {
   // Set mode and device_id
   if (gpus.size() != 0) {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
+#ifndef CPU_ONLY
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, gpus[0]);
+    LOG(INFO) << "GPU " << gpus[0] << ": " << device_prop.name;
+#endif
     Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);
   } else {
