@@ -26,7 +26,13 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     if (workspace_fwd_sizes_[i] > workspace_limit_bytes) {
       this->Reshape(bottom, top);
     }
-    workspace.reserve(workspace_fwd_sizes_[i]);
+    // Sometimes closer to zero we might have memory info diverged from reality
+    // If try_reserve fails, it updates the info internally and we proceed with
+    // Reshape one more time
+    if (!workspace.try_reserve(workspace_fwd_sizes_[i])) {
+      this->Reshape(bottom, top);
+      workspace.reserve(workspace_fwd_sizes_[i]);
+    }
 
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
@@ -85,8 +91,15 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     }
     // To remove pressure on allocator, allocate the larger of the
     // workspaces needed for the following steps
-    workspace.reserve(std::max(workspace_bwd_filter_sizes_[i],
-        workspace_bwd_data_sizes_[i]));
+    // Sometimes closer to zero we might have memory info diverged from reality
+    // If try_reserve fails, it updates the info internally and we proceed with
+    // Reshape one more time
+    if (!workspace.try_reserve(std::max(workspace_bwd_filter_sizes_[i],
+        workspace_bwd_data_sizes_[i]))) {
+      this->Reshape(bottom, top);
+      workspace.reserve(std::max(workspace_bwd_filter_sizes_[i],
+          workspace_bwd_data_sizes_[i]));
+    }
 
     // Backward through cuDNN in parallel over groups and gradients.
     for (int g = 0; g < this->group_; g++) {
