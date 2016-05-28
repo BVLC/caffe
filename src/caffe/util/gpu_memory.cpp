@@ -14,6 +14,8 @@ static cub::CachingDeviceAllocator* cub_allocator = 0;
 vector<GPUMemoryManager::MemInfo> GPUMemoryManager::dev_info_;
 #endif
 
+#define DEV_INFO_REEVALUATION_THRESHOLD (250000000UL)
+
 GPUMemoryManager::PoolMode GPUMemoryManager::mode_ = GPUMemoryManager::NO_POOL;
 bool GPUMemoryManager::debug_ = false;
 
@@ -60,15 +62,13 @@ void GPUMemoryManager::allocate(void** ptr, size_t size, cudaStream_t stream) {
   CHECK((ptr) != NULL);
   switch (mode_) {
   case CUB_POOL:
-    if (cub_allocator->DeviceAllocate(ptr, size, stream) != cudaSuccess) {
+    // Clean Cache & Retry logic is inside now
+    CUDA_CHECK(cub_allocator->DeviceAllocate(ptr, size, stream));
+    // If there was a retry and it succeeded we get here and we need to clean up
+    // last error and update the dev info.
+    if (cudaGetLastError() != cudaSuccess) {
       int cur_device;
       CUDA_CHECK(cudaGetDevice(&cur_device));
-      // free all cached memory (for all devices), synchrionize
-      cudaDeviceSynchronize();
-      cudaThreadSynchronize();
-      cub_allocator->FreeAllCached();
-      cudaDeviceSynchronize();
-      cudaThreadSynchronize();
       // Refresh per-device saved values.
       for (int i = 0; i < dev_info_.size(); ++i) {
         // only query devices that were initialized
@@ -80,11 +80,7 @@ void GPUMemoryManager::allocate(void** ptr, size_t size, cudaStream_t stream) {
           }
         }
       }
-      // Retry once
-      CUDA_CHECK(cub_allocator->DeviceAllocate(ptr, size, stream));
     }
-    // If retry succeeds we need to clean up last error
-    cudaGetLastError();
     break;
   default:
     CUDA_CHECK(cudaMalloc(ptr, size));
@@ -175,6 +171,14 @@ void GPUMemoryManager::GetInfo(size_t* free_mem, size_t* total_mem) {
     // Assuming we only allocate via GPUMemoryManager since its constructon.
     *free_mem = dev_info_[cur_device].free_ -
         cub_allocator->cached_bytes[cur_device].live;
+    // After performing multiple allocations, the dev_info_ we maintain
+    // might diverge from the real one. It becomes critical when we get
+    // closer to zero. Re-evaluating it here.
+    if (*free_mem < DEV_INFO_REEVALUATION_THRESHOLD) {
+      update_dev_info(cur_device);
+      *free_mem = dev_info_[cur_device].free_ -
+          cub_allocator->cached_bytes[cur_device].live;
+    }
     break;
   default:
     CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
