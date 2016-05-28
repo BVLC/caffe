@@ -179,8 +179,12 @@ int train() {
       }
   }
 
+  // Read flags for list of GPUs
   vector<int> gpus;
   get_gpus(&gpus);
+  caffe::GPUMemoryManager::Arena arena(gpus);
+
+  // Set mode and device id[s]
   if (gpus.size() == 0) {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
@@ -239,9 +243,17 @@ int test() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
 
-  // Set device id and mode
+  // Read flags for list of GPUs
   vector<int> gpus;
   get_gpus(&gpus);
+  while (gpus.size() > 1) {
+    // Only use one GPU
+    LOG(INFO) << "Not using GPU #" << gpus.back() << " for single-GPU function";
+    gpus.pop_back();
+  }
+  caffe::GPUMemoryManager::Arena arena(gpus);
+
+  // Set mode and device id
   if (gpus.size() != 0) {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
 #ifndef CPU_ONLY
@@ -311,9 +323,17 @@ RegisterBrewFunction(test);
 int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
 
-  // Set device id and mode
+  // Read flags for list of GPUs
   vector<int> gpus;
   get_gpus(&gpus);
+  while (gpus.size() > 1) {
+    // Only use one GPU
+    LOG(INFO) << "Not using GPU #" << gpus.back() << " for single-GPU function";
+    gpus.pop_back();
+  }
+  caffe::GPUMemoryManager::Arena arena(gpus);
+
+  // Set mode and device_id
   if (gpus.size() != 0) {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
     Caffe::SetDevice(gpus[0]);
@@ -412,11 +432,6 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
-
-  // Initialize gpu memory arena
-  vector<int> gpus;
-  get_gpus(&gpus);
-  caffe::GPUMemoryManager::Arena arena(gpus);
 
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
