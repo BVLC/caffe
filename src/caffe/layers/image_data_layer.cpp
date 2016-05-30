@@ -46,6 +46,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     lines_.push_back(std::make_pair(line.substr(0, pos), label));
   }
 
+  CHECK(!lines_.empty()) << "File is empty";
+
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
