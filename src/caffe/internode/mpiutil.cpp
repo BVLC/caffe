@@ -1,5 +1,6 @@
 #include <glog/logging.h>
 #include <stdlib.h>
+#include <cassert>
 #include <stdexcept>
 #include <string>
 #include "caffe/internode/mpiutil.hpp"
@@ -88,7 +89,9 @@ void mpi_init(int argc, char** argv) {
   int rank = 0, size = 0, namelen = 0;
   char name[MPI_MAX_PROCESSOR_NAME];
 
-  MPI_Init(&argc, &argv);
+  int provided = 0;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  assert(provided == MPI_THREAD_FUNNELED);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Get_processor_name(name, &namelen);
