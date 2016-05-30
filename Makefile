@@ -412,6 +412,7 @@ ifeq ($(BLAS), mkl)
 	# detect support for mkl2017 primitives
 	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
 	    CXXFLAGS += -DMKL2017_SUPPORTED
+	    COMMON_FLAGS += -DUSE_MKL2017_NEW_API
 	    ifeq ($(USE_MKL2017_AS_DEFAULT_ENGINE), 1)
 		CXXFLAGS += -DUSE_MKL2017_AS_DEFAULT_ENGINE
 	    endif
