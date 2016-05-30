@@ -18,6 +18,7 @@ add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 include(ExternalProject)
+include(GNUInstallDirs)
 
 include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
