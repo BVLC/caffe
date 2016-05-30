@@ -97,8 +97,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
   }
 
-  // TODO: omp simd pragma perhaps can help
   // TODO: xbyak may help here as well
+  DataTransformer<Dtype>* my_data_transformer = this;
 
   if (has_uint8 == true) {
     const string* data_ptr = &data;
@@ -107,7 +107,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean, datum_ptr)
+                     width, data_ptr, mean, datum_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -123,13 +124,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean, datum_ptr)
+                     width, data_ptr, mean, datum_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -145,7 +147,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       }
     } else if (has_mean_values) {  // mean values
@@ -164,7 +166,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean_ptr, datum_ptr)
+                     width, data_ptr, mean_ptr, datum_ptr, \
+                     my_data_transformer, datum_channels, datum_width, \
+                     datum_height)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -180,13 +184,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
               }
             }
           }
-         dataReaderPushFreeDatum(datum_ptr);
+         my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
          }
        } else {  // do_mirror
 #ifdef _OPENMP
          #pragma omp task default(none) \
          firstprivate(transformed_data, h_off, w_off, height, \
-                      width, data_ptr, mean_ptr, datum_ptr)
+                      width, data_ptr, mean_ptr, datum_ptr, \
+                      my_data_transformer, datum_channels, datum_width, \
+                      datum_height)
 #endif
          {
          for (int c = 0; c < datum_channels; ++c) {
@@ -202,16 +208,18 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
              }
            }
          }
-         dataReaderPushFreeDatum(datum_ptr);
+         my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
          }
        }
 
       } else {  // no mean file
         if (do_mirror == false) {
-  #ifdef _OPENMP
+#ifdef _OPENMP
           #pragma omp task default(none) \
           firstprivate(transformed_data, h_off, w_off, \
-                       height, width, data_ptr, datum_ptr)
+                       height, width, data_ptr, datum_ptr, \
+                       my_data_transformer, datum_channels, datum_width, \
+                       datum_height)
 #endif
           {
           for (int c = 0; c < datum_channels; ++c) {
@@ -226,13 +234,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
               }
             }
           }
-          dataReaderPushFreeDatum(datum_ptr);
+          my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
           }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
-                     height, width, data_ptr, datum_ptr)
+                     height, width, data_ptr, datum_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -247,7 +256,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       }
     }
@@ -257,7 +266,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean)
+                     width, datum_ptr, mean, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
 {
         for (int c = 0; c < datum_channels; ++c) {
@@ -272,13 +282,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean)
+                     width, datum_ptr, mean, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -293,7 +304,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       }
 
@@ -313,7 +324,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean_ptr)
+                     width, datum_ptr, mean_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -328,13 +340,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       } else {  // do_mirror
 #ifdef _OPENMP
          #pragma omp task default(none) \
          firstprivate(transformed_data, h_off, \
-                      w_off, height, width, datum_ptr, mean_ptr)
+                      w_off, height, width, datum_ptr, mean_ptr, \
+                      my_data_transformer, datum_channels, datum_width, \
+                      datum_height)
 #endif
         {
          for (int c = 0; c < datum_channels; ++c) {
@@ -349,7 +363,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
              }
            }
          }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
        }
 
@@ -358,7 +372,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
-                     height, width, datum_ptr)
+                     height, width, datum_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -372,13 +387,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       } else {
 #ifdef _OPENMP
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
-                     height, width, datum_ptr)
+                     height, width, datum_ptr, my_data_transformer, \
+                     datum_channels, datum_width, datum_height)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -392,7 +408,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
             }
           }
         }
-       dataReaderPushFreeDatum(datum_ptr);
+       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
        }
       }
     }
