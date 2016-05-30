@@ -19,6 +19,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::Return;
+using ::testing::AtLeast;
 using ::testing::Test;
 using ::testing::StrictMock;
 using ::testing::NiceMock;
@@ -597,7 +598,8 @@ TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
 
     EXPECT_CALL(*waypoint_mock, id());
     EXPECT_CALL(*sync_info_mock,
-      received_version(waypoint_id, layer_id, blob_id, part_id)).Times(2);
+      received_version(waypoint_id, layer_id, blob_id, part_id)).Times
+      (AtLeast(1));
 
     EXPECT_CALL(*sync_info_mock,
       received(waypoint_id, layer_id, blob_id, part_id, version)).Times(1);
