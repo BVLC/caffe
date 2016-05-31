@@ -137,9 +137,8 @@ void Collection::parseInteger(unsigned *value, const char *text) const {
   *value = atol(text);
 }
 
-/* Function extracts CPU speed from model name. If unit is not set to MHz or
-   there is no unit at all, it is assumed that values below 50 are specified
-   in GHz, otherwise MHz */
+/* Function extracts CPU speed from model name. If unit is not set it is
+   assumed that values below 100 are specified in GHz, otherwise MHz */
 void Collection::extractProcessorSpeedFromModelName(const char *text) {
   text = strstr(text, "@");
   if (!text || processorSpeedMHz) {
@@ -149,10 +148,10 @@ void Collection::extractProcessorSpeedFromModelName(const char *text) {
   char *unit;
   double speed = strtod(&text[1], &unit);
 
-  if (!strcmp(unit, "MHz") || (speed >= 50)) {
-    processorSpeedMHz = speed + 0.5;
-  } else {
+  if (!strcmp(unit, "GHz") || ((speed < 100) && strcmp(unit, "MHz"))) {
     processorSpeedMHz = 1000 * speed + 0.5;
+  } else {
+    processorSpeedMHz = speed + 0.5;
   }
 }
 
