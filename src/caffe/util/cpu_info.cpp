@@ -15,6 +15,7 @@ Processor::Processor() {
 }
 
 Collection::Collection() {
+  processorSpeedMHz = 0;
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
@@ -28,6 +29,11 @@ Collection::Collection() {
 Collection &Collection::getSingleInstance() {
   static Collection collection;
   return collection;
+}
+
+unsigned Collection::getProcessorSpeedMHz() {
+  Collection &collection = getSingleInstance();
+  return collection.processorSpeedMHz;
 }
 
 unsigned Collection::getTotalNumberOfSockets() {
@@ -106,6 +112,10 @@ void Collection::parseValue(const char *fieldName, const char *valueString) {
   if (beginsWith(fieldName, "cpu cores")) {
     return parseInteger(&currentProcessor->cpuCores, valueString);
   }
+
+  if (beginsWith(fieldName, "model name")) {
+    return extractProcessorSpeedFromModelName(valueString);
+  }
 }
 
 void Collection::appendNewProcessor() {
@@ -125,6 +135,25 @@ bool Collection::beginsWith(const char *lineBuffer, const char *text) const {
 
 void Collection::parseInteger(unsigned *value, const char *text) const {
   *value = atol(text);
+}
+
+/* Function extracts CPU speed from model name. If unit is not set to MHz or
+   there is no unit at all, it is assumed that values below 50 are specified
+   in GHz, otherwise MHz */
+void Collection::extractProcessorSpeedFromModelName(const char *text) {
+  text = strstr(text, "@");
+  if (!text || processorSpeedMHz) {
+    return;
+  }
+
+  char *unit;
+  double speed = strtod(&text[1], &unit);
+
+  if (!strcmp(unit, "MHz") || (speed >= 50)) {
+    processorSpeedMHz = speed + 0.5;
+  } else {
+    processorSpeedMHz = 1000 * speed + 0.5;
+  }
 }
 
 void Collection::collectBasicCpuInformation() {
@@ -325,6 +354,9 @@ void OpenMpManager::bindCurrentThreadToLogicalCoreCpus(unsigned logicalCoreId) {
 
 void OpenMpManager::printVerboseInformation() {
   OpenMpManager &openMpManager = getInstance();
+
+  LOG(INFO) << "Processor speed [MHz]: "
+    << Collection::getProcessorSpeedMHz();
 
   LOG(INFO) << "Total number of sockets: "
     << Collection::getTotalNumberOfSockets();
