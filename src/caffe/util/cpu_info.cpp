@@ -152,7 +152,11 @@ void Collection::extractProcessorSpeedFromModelName(const char *text) {
     unit++;
   }
 
-  if (!strcmp(unit, "GHz") || ((speed < 100) && strcmp(unit, "MHz"))) {
+  bool isMHz = !strncmp(unit, "MHz", 3);
+  bool isGHz = !strncmp(unit, "GHz", 3);
+  bool isGHzPossible = (speed < 100);
+
+  if (isGHz || (isGHzPossible && !isMHz)) {
     processorSpeedMHz = 1000 * speed + 0.5;
   } else {
     processorSpeedMHz = speed + 0.5;
