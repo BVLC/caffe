@@ -266,11 +266,6 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                   << num_of_threads_;
      num_of_threads_ = 1;
   }
-#ifdef USE_MKL
-  num_mkl_local_threads_ = omp_get_max_threads() > this->num_of_threads_ ?
-                           omp_get_max_threads()/this->num_of_threads_ : 1;
-  num_incr_mkl_local_threads_ = omp_get_max_threads()%this->num_of_threads_;
-#endif
 #endif
 
   int col_buffer_mt_size = num_of_threads_ * col_buffer_.count();

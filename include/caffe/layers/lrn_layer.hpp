@@ -75,13 +75,6 @@ class LRNLayer : public Layer<Dtype> {
   int num_of_threads_;              // Number of threads to be used for
                                     // batch based parallelization eg.
                                     // min(batch,omp_get_num_threads())
-#ifdef USE_MKL
-  int num_mkl_local_threads_;       // number of threads to be used by MKL
-                                    // call when used from OpenMP threads
-  int num_incr_mkl_local_threads_;  // how many Openmp threads
-                                    // (calling MKL compute) will have increased
-                                    // (by one) number of threads
-#endif
 
   // Fields used for normalization WITHIN_CHANNEL
   shared_ptr<SplitLayer<Dtype> > split_layer_;

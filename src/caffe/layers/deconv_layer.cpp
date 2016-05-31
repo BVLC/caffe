@@ -1,9 +1,6 @@
 #include <vector>
 #ifdef _OPENMP
 #include <omp.h>
-#ifdef USE_MKL
-#include <mkl_service.h>
-#endif
 #endif
 
 #include "caffe/layers/deconv_layer.hpp"
@@ -35,17 +32,7 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 #ifdef _OPENMP
-#   pragma omp parallel num_threads(this->num_of_threads_)
-#ifdef USE_MKL
-    {
-      int save;
-      if (omp_get_thread_num() < this->num_incr_mkl_local_threads_) {
-        save = mkl_set_num_threads_local(this->num_mkl_local_threads_ + 1);
-      } else {
-        save = mkl_set_num_threads_local(this->num_mkl_local_threads_);
-      }
-#endif
-#     pragma omp for
+#   pragma omp parallel for num_threads(this->num_of_threads_)
 #endif
       for (int n = 0; n < this->num_; ++n) {
         this->backward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
@@ -55,10 +42,6 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
         }
       }
-#if defined(_OPENMP) && defined(USE_MKL)
-      mkl_set_num_threads_local(save);
-    }
-#endif
   }
 }
 
@@ -87,14 +70,6 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #endif
       {
 #ifdef _OPENMP
-#ifdef USE_MKL
-        int save;
-        if (omp_get_thread_num() < this->num_incr_mkl_local_threads_) {
-          save = mkl_set_num_threads_local(this->num_mkl_local_threads_ + 1);
-        } else {
-          save = mkl_set_num_threads_local(this->num_mkl_local_threads_);
-        }
-#endif
         #pragma omp for
 #endif
         for (int n = 0; n < this->num_; ++n) {
@@ -114,9 +89,6 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         }
 #ifdef _OPENMP
-#ifdef USE_MKL
-        mkl_set_num_threads_local(save);
-#endif
         this->sum_weight_mt(weight_diff);
 #endif
       }
