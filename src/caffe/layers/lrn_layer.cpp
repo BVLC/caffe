@@ -85,11 +85,6 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
      LOG(WARNING) << "LRN layer: omp_get_max_threads() =" << num_of_threads_;
      num_of_threads_ = 1;
   }
-#ifdef USE_MKL
-  num_mkl_local_threads_ = omp_get_max_threads() > num_of_threads_ ?
-                           omp_get_max_threads()/num_of_threads_ : 1;
-  num_incr_mkl_local_threads_ = omp_get_max_threads() % num_of_threads_;
-#endif
 #endif
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
@@ -216,18 +211,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
 #ifdef _OPENMP
-    #pragma omp parallel num_threads(this->num_of_threads_)
-    // Setting local threads is MKL specific
-#ifdef USE_MKL
-    {
-      int save;
-      if (omp_get_thread_num() < this->num_incr_mkl_local_threads_) {
-        save = mkl_set_num_threads_local(this->num_mkl_local_threads_ + 1);
-      } else {
-        save = mkl_set_num_threads_local(this->num_mkl_local_threads_);
-      }
-#endif
-#     pragma omp for
+    #pragma omp parallel for num_threads(this->num_of_threads_)
 #endif
     for (int n = 0; n < num_; ++n) {
       int tid = 0;
@@ -274,10 +258,6 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
             accum_ratio_data + accum_ratio_.offset(tid, 0));
       }
     }
-#if defined(_OPENMP) && defined(USE_MKL)
-    mkl_set_num_threads_local(save);
-  }
-#endif
 }
 
 template <typename Dtype>
