@@ -148,6 +148,10 @@ void Collection::extractProcessorSpeedFromModelName(const char *text) {
   char *unit;
   double speed = strtod(&text[1], &unit);
 
+  while (isspace(*unit)) {
+    unit++;
+  }
+
   if (!strcmp(unit, "GHz") || ((speed < 100) && strcmp(unit, "MHz"))) {
     processorSpeedMHz = 1000 * speed + 0.5;
   } else {
