@@ -6,7 +6,7 @@ title: Installation
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
+We install and run Caffe on Ubuntu 14.04, CentOS (7.0, 7.1, 7.2), and AWS.
 The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
 
 - [Prerequisites](#prerequisites)
@@ -18,10 +18,11 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 ## Prerequisites
 
 Before building Caffe make sure that the following dependencies are available on target system:
+
 * [BLAS library](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms)
-* [Intel® Math Kernel Library (Intel &reg; MKL)](https://software.intel.com/en-us/intel-mkl)
-* [Open BLAS](http://www.openblas.net)
-* [ATLAS](http://math-atlas.sourceforge.net)
+    * [Intel® Math Kernel Library (Intel &reg; MKL)](https://software.intel.com/en-us/intel-mkl)
+    * [Open BLAS](http://www.openblas.net)
+    * [ATLAS](http://math-atlas.sourceforge.net)
 * [Boost](http://www.boost.org/) >= 1.55
 * `protobuf`, `glog`, `gflags`, `hdf5`
 
@@ -30,14 +31,16 @@ For additional capabilities and acceleration the following dependencies might be
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
 * For GPU mode
-* [CUDA](https://developer.nvidia.com/cuda-zone)
-* cuDNN
+    * [CUDA](https://developer.nvidia.com/cuda-zone)
+    * cuDNN
+
 * For Pycaffe
-* `Python 2.7` or `Python 3.3+`
-* `numpy (>= 1.7)`
-* boost-provided `boost.python`
+    * `Python 2.7` or `Python 3.3+`
+    * `numpy (>= 1.7)`
+    * boost-provided `boost.python`
+
 * For Matcaffe 
-* MATLAB with the `mex` compiler.
+  * MATLAB with the `mex` compiler.
 
 ### Building for Intel® Architecture
 
