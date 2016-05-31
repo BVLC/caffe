@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <vector>
+#include <caffe/test/test_caffe_main.hpp>
 #include "caffe/internode/configuration.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -13,7 +14,13 @@ namespace {
 using ::testing::_;
 using ::testing::Return;
 
-TEST(BlobCodecTest, encode_4321_diff) {
+template <typename TypeParam>
+class BlobCodecTest : public MultiDeviceTest<TypeParam> {
+    typedef typename TypeParam::Dtype Dtype;
+};
+TYPED_TEST_CASE(BlobCodecTest, TestDtypesAndDevices);
+
+TYPED_TEST(BlobCodecTest, encode_4321_diff) {
   BlobUpdate msg;
   Blob<float> srcblob;
   vector<int> v = boost::assign::list_of(4)(3)(2)(1);
@@ -40,7 +47,7 @@ TEST(BlobCodecTest, encode_4321_diff) {
            sizeof(float)*diff.size()));
 }
 
-TEST(BlobCodecTest, encode_decode_2222_data) {
+TYPED_TEST(BlobCodecTest, encode_decode_2222_data) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -75,7 +82,7 @@ TEST(BlobCodecTest, encode_decode_2222_data) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_8width_data_) {
+TYPED_TEST(BlobCodecTest, encode_8width_data_) {
   BlobUpdate msg;
   Blob<float> srcblob;
   vector<int> v = boost::assign::list_of(1)(1)(1)(8);
@@ -98,7 +105,7 @@ TEST(BlobCodecTest, encode_8width_data_) {
           sizeof(float)*data.size()));
 }
 
-TEST(BlobCodecTest, encode_4width_diff) {
+TYPED_TEST(BlobCodecTest, encode_4width_diff) {
   BlobUpdate msg;
   Blob<float> srcblob;
   vector<int> v = boost::assign::list_of(1)(1)(1)(4);
@@ -120,7 +127,7 @@ TEST(BlobCodecTest, encode_4width_diff) {
           sizeof(float)*diff.size()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_diff) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_diff) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -150,7 +157,7 @@ TEST(BlobCodecTest, encode_decode_4width_diff) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_data) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_data) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -180,7 +187,7 @@ TEST(BlobCodecTest, encode_decode_4width_data) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -211,7 +218,7 @@ TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_data_beta_0_5) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_data_beta_0_5) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -240,7 +247,7 @@ TEST(BlobCodecTest, encode_decode_4width_data_beta_0_5) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5_beta_0_5) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5_beta_0_5) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
@@ -269,7 +276,7 @@ TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_5_beta_0_5) {
           sizeof(float)*dstblob.count()));
 }
 
-TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_beta_1) {
+TYPED_TEST(BlobCodecTest, encode_decode_4width_data_alpha_0_beta_1) {
   BlobUpdate msg;
   Blob<float> srcblob;
   Blob<float> dstblob;
