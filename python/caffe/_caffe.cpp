@@ -86,19 +86,42 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   }
 }
 
-// Net constructor for passing phase as int
-shared_ptr<Net<Dtype> > Net_Init(
-    string param_file, int phase) {
-  CheckFile(param_file);
+// Net constructor
+shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
+    const int level, const bp::object& stages,
+    const bp::object& weights) {
+  CheckFile(network_file);
 
-  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+  // Convert stages from list to vector
+  vector<string> stages_vector;
+  if (!stages.is_none()) {
+    for (int i = 0; i < len(stages); i++) {
+      stages_vector.push_back(bp::extract<string>(stages[i]));
+    }
+  }
+
+  // Initialize net
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(network_file,
+        static_cast<Phase>(phase), level, &stages_vector));
+
+  // Load weights
+  if (!weights.is_none()) {
+    std::string weights_file_str = bp::extract<std::string>(weights);
+    CheckFile(weights_file_str);
+    net->CopyTrainedLayersFrom(weights_file_str);
+  }
+
   return net;
 }
 
-// Net construct-and-load convenience constructor
+// Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
+  LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
+  LOG(WARNING) << "Use this instead (with the named \"weights\""
+    << " parameter):";
+  LOG(WARNING) << "Net('" << param_file << "', " << phase
+    << ", weights='" << pretrained_param_file << "')";
   CheckFile(param_file);
   CheckFile(pretrained_param_file);
 
@@ -266,7 +289,12 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
-    .def("__init__", bp::make_constructor(&Net_Init))
+    // Constructor
+    .def("__init__", bp::make_constructor(&Net_Init,
+          bp::default_call_policies(), (bp::arg("network_file"), "phase",
+            bp::arg("level")=0, bp::arg("stages")=bp::object(),
+            bp::arg("weights")=bp::object())))
+    // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
