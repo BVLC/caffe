@@ -116,18 +116,34 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         filter_desc_, pad_h, pad_w, stride_h, stride_w);
 
     // Have to pass full fwd/bwd cycle before taking the rest of memory
-    if (backward_passed_ctr_ > 0) {
+    if (backward_passed_ctr_ > 1) {
       // choose forward and backward algorithms + workspace(s)
       CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(Caffe::cudnn_handle(),
           bottom_descs_[i], filter_desc_, conv_descs_[i], top_descs_[i],
           CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
           workspace_limit_bytes, &fwd_algo_[i]));
+    }
+
+    CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Caffe::cudnn_handle(),
+        bottom_descs_[i], filter_desc_, conv_descs_[i], top_descs_[i],
+        fwd_algo_[i], &(workspace_fwd_sizes_[i])));
+
+    if (backward_passed_ctr_ > 1) {
       // choose backward algorithm for filter
       CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(
           Caffe::cudnn_handle(),
           bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
           CUDNN_CONVOLUTION_BWD_FILTER_SPECIFY_WORKSPACE_LIMIT,
           workspace_limit_bytes, &bwd_filter_algo_[i]));
+    }
+
+    // get workspace for backwards filter algorithm
+    CUDNN_CHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(
+        Caffe::cudnn_handle(),
+        bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
+        bwd_filter_algo_[i], &workspace_bwd_filter_sizes_[i]));
+
+    if (backward_passed_ctr_ > 1) {
       // choose backward algo for data
       CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(
           Caffe::cudnn_handle(),
@@ -136,16 +152,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
           workspace_limit_bytes, &bwd_data_algo_[i]));
     }
 
-    // get workspace size for forward algorithm
-    CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Caffe::cudnn_handle(),
-        bottom_descs_[i], filter_desc_, conv_descs_[i], top_descs_[i],
-        fwd_algo_[i], &(workspace_fwd_sizes_[i])));
-    // get workspace size for backward filter algorithm
-    CUDNN_CHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(
-        Caffe::cudnn_handle(),
-        bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
-        bwd_filter_algo_[i], &workspace_bwd_filter_sizes_[i]));
-    // get workspace size for backward data algorithm
+    // get workspace size
     CUDNN_CHECK(cudnnGetConvolutionBackwardDataWorkspaceSize(
         Caffe::cudnn_handle(),
         filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],

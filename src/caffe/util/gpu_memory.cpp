@@ -56,7 +56,8 @@ void GPUMemoryManager::destroy() {
   mode_ = NO_POOL;
 }
 
-bool GPUMemoryManager::try_allocate(void** ptr, size_t size, cudaStream_t stream) {
+bool GPUMemoryManager::try_allocate(void** ptr, size_t size,
+    cudaStream_t stream) {
   CHECK((ptr) != NULL);
   cudaError_t status = cudaSuccess, last_err = cudaSuccess;
   switch (mode_) {
