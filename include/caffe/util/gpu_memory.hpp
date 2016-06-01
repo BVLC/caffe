@@ -58,14 +58,22 @@ class GPUMemoryManager {
     }
 
     // Memory allocation/release
-    void reserve(size_t size) {
+    bool try_reserve(size_t size) {
+      bool status = true;
       if (size > size_) {
         if (ptr_) {
           GPUMemoryManager::deallocate(ptr_, stream_);
         }
-        GPUMemoryManager::allocate(&ptr_, size, stream_);
-        size_ = size;
+        status = GPUMemoryManager::try_allocate(&ptr_, size, stream_);
+        if (status) {
+          size_ = size;
+        }
       }
+      return status;
+    }
+
+    void reserve(size_t size) {
+      CHECK(try_reserve(size));
     }
 
     /*
@@ -111,8 +119,12 @@ class GPUMemoryManager {
 
  public:
   typedef void* pointer;
-  static void allocate(pointer* ptr, size_t size, cudaStream_t stream =
+  static bool try_allocate(pointer* ptr, size_t size, cudaStream_t stream =
       cudaStreamDefault);
+  static void allocate(pointer* ptr, size_t size, cudaStream_t stream =
+      cudaStreamDefault) {
+    CHECK(try_allocate(ptr, size, stream));
+  }
   static void deallocate(pointer ptr, cudaStream_t = cudaStreamDefault);
   static void GetInfo(size_t* free_mem, size_t* used_mem);
 

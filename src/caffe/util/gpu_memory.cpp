@@ -56,19 +56,21 @@ void GPUMemoryManager::destroy() {
   mode_ = NO_POOL;
 }
 
-void GPUMemoryManager::allocate(void** ptr, size_t size, cudaStream_t stream) {
+bool GPUMemoryManager::try_allocate(void** ptr, size_t size,
+    cudaStream_t stream) {
   CHECK((ptr) != NULL);
+  cudaError_t status = cudaSuccess, last_err = cudaSuccess;
   switch (mode_) {
   case CUB_POOL:
-    if (cub_allocator->DeviceAllocate(ptr, size, stream) != cudaSuccess) {
+    // Clean Cache & Retry logic is inside now
+    status = cub_allocator->DeviceAllocate(ptr, size, stream);
+    // If there was a retry and it succeeded we get good status here but
+    // we need to clean up last error...
+    last_err = cudaGetLastError();
+    // ...and update the dev info if something was wrong
+    if (status != cudaSuccess || last_err != cudaSuccess) {
       int cur_device;
       CUDA_CHECK(cudaGetDevice(&cur_device));
-      // free all cached memory (for all devices), synchrionize
-      cudaDeviceSynchronize();
-      cudaThreadSynchronize();
-      cub_allocator->FreeAllCached();
-      cudaDeviceSynchronize();
-      cudaThreadSynchronize();
       // Refresh per-device saved values.
       for (int i = 0; i < dev_info_.size(); ++i) {
         // only query devices that were initialized
@@ -80,16 +82,13 @@ void GPUMemoryManager::allocate(void** ptr, size_t size, cudaStream_t stream) {
           }
         }
       }
-      // Retry once
-      CUDA_CHECK(cub_allocator->DeviceAllocate(ptr, size, stream));
     }
-    // If retry succeeds we need to clean up last error
-    cudaGetLastError();
     break;
   default:
-    CUDA_CHECK(cudaMalloc(ptr, size));
+    status = cudaMalloc(ptr, size);
     break;
   }
+  return status == cudaSuccess;
 }
 
 void GPUMemoryManager::deallocate(void* ptr, cudaStream_t stream) {
@@ -172,7 +171,7 @@ void GPUMemoryManager::GetInfo(size_t* free_mem, size_t* total_mem) {
     CUDA_CHECK(cudaGetDevice(&cur_device));
     *total_mem = dev_info_[cur_device].total_;
     // Free memory is initial free memory minus outstanding allocations.
-    // Assuming we only allocate via GPUMemoryManager since its constructon.
+    // Assuming we only allocate via GPUMemoryManager since its construction.
     *free_mem = dev_info_[cur_device].free_ -
         cub_allocator->cached_bytes[cur_device].live;
     break;
