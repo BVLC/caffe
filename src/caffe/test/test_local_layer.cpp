@@ -78,13 +78,28 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(1);
   convolution_param->set_num_output(1);
-  convolution_param->mutable_weight_filler()->set_type("test_local");
-  convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<Dtype> > layer(
       new LocalLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  // fill the weights of the layer
+  LOG(INFO) << "Doing mutable cpu";
+  LOG(INFO) << "blobs" << layer->blobs()[0];
+  Dtype* data = layer->blobs()[0]->mutable_cpu_data();
+  LOG(INFO) << "Done Doing mutable cpu";
+  CHECK_EQ(layer->blobs()[0]->channels(), 1);
+
+  for (int n = 0; n < layer->blobs()[0]->num(); n++) {
+    for (int j = 0; j < layer->blobs()[0]->height(); j++) {
+      for (int i = 0; i < layer->blobs()[0]->width(); i++) {
+        *(data+layer->blobs()[0]->offset(n, 0, j, i)) = i;
+      }
+    }
+  }
+
+  // preform forward pass, and test output
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // After the convolution, the output should all have output values 27.1
   const Dtype* top_data = this->blob_top_->cpu_data();
