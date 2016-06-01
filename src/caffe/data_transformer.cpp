@@ -510,6 +510,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   for (int i = 0; i < img_aug.rows; ++i) {
     for (int j = 0; j < img_aug.cols; ++j) {
       Vec3b& rgb = img_aug.at<Vec3b>(i, j);
+      //offset is for skipping one channel
       transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
       transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
       transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
@@ -783,6 +784,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   int grid_x = rezX / stride;
   int grid_y = rezY / stride;
   int channelOffset = grid_y * grid_x;
+  //LOG(INFO) << "grid_x " << grid_x << " grid_y " << grid_y;
 
   // clear out transformed_label, it may remain things for last batch
   for (int g_y = 0; g_y < grid_y; g_y++){
@@ -795,7 +797,8 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   //LOG(INFO) << "label cleaned";
   
   for (int i = 0; i < np; i++){
-    //LOG(INFO) << i << meta.numOtherPeople;
+    //LOG(INFO) <<"joint " << i << " out of " << np << " num other ppl "<< meta.numOtherPeople;
+	//LOG(INFO) <<"channel offset " << channelOffset;
     Point2f center = meta.joint_self.joints[i];
     if(meta.joint_self.isVisible[i] <= 1){
       putGaussianMaps(transformed_label + i*channelOffset, center, param_.stride(), 

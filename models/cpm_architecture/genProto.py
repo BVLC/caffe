@@ -35,7 +35,13 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
         # we will later have to remove this layer from the serialization string, since this is just a placeholder
         n.data = L.Layer()
 
-    # something special before everything
+    # Slice layer slices input layer to multiple output along a given dimension
+    # axis: 1 define in which dimension to slice
+    # slice_point: 3 define the index in the selected dimension (the number of
+    # indices must be equal to the number of top blobs minus one)
+    # Considering input Nx3x1x1, by slice_point = 2
+    # top1 : Nx2x1x1
+    # top2 : Nx1x1x1
     n.image, n.center_map = L.Slice(n.data, slice_param=dict(axis=1, slice_point=3), ntop=2)
     n.pool_center_lower = L.Pooling(n.center_map, kernel_size=9, stride=8, pool=P.Pooling.AVE)
 

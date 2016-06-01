@@ -13,9 +13,9 @@ def writeLMDB(datasets, lmdb_path, validation):
 	data = []
 
 	for d in range(len(datasets)):
-		if(datasets[d] == "MPI"):
+		if(datasets[d] == "H36M"):
 			print datasets[d]
-			with open('json/MPI_annotations.json') as data_file:
+			with open('jsonDatasets/MPI_annotations.json') as data_file:
 				data_this = json.load(data_file)
 				data_this = data_this['root']
 				data = data + data_this
@@ -24,14 +24,6 @@ def writeLMDB(datasets, lmdb_path, validation):
 		elif(datasets[d] == "LEEDS"):
 			print datasets[d]
 			with open('json/LEEDS_annotations.json') as data_file:
-				data_this = json.load(data_file)
-				data_this = data_this['root']
-				data = data + data_this
-			numSample = len(data)
-			print numSample
-		elif(datasets[d] == "FLIC"):
-			datasets[d]
-			with open('json/FLIC_annotations.json') as data_file:
 				data_this = json.load(data_file)
 				data_this = data_this['root']
 				data = data + data_this
@@ -48,29 +40,28 @@ def writeLMDB(datasets, lmdb_path, validation):
 	print 'going to write %d images..' % totalWriteCount;
 	writeCount = 0
 
-	for count in range(numSample):
+	for count in range(10):#(numSample):
 		idx = random_order[count]
 		if (data[idx]['isValidation'] != 0 and validation == 1):
 			print '%d/%d skipped' % (count,idx)
 			continue
 		#print idx
 
+           # not needed for the new json
 		if "MPI" in data[idx]['dataset']:
-			path_header = '../dataset/MPI/images/'
+			path_header = '/home/denitome/MATLAB/convolutional-pose-machines-release/dataset/MPI/images/'
 		elif "LEEDS" in data[idx]['dataset']:
 			path_header = '../dataset/LEEDS/'
 		elif "FLIC" in data[idx]['dataset']:
 			path_header = '../dataset/FLIC/'
 		
 		img = cv2.imread(os.path.join(path_header, data[idx]['img_paths']))
+           # img = cv2.imread(os.path.join(data[idx]['img_paths'])) -> not needed for the new json
 		height = img.shape[0]
 		width = img.shape[1]
-		if(width < 64):
-			img = cv2.copyMakeBorder(img,0,0,0,64-width,cv2.BORDER_CONSTANT,value=(128,128,128))
-			print 'saving padded image!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-			cv2.imwrite('padded_img.jpg', img)
-			width = 64
-			# no modify on width, because we want to keep information
+
+           # same size of the image (for practical reasons) even though the
+           # amount of data is much less
 		meta_data = np.zeros(shape=(height,width,1), dtype=np.uint8)
 		#print type(img), img.shape
 		#print type(meta_data), meta_data.shape
@@ -178,4 +169,4 @@ if __name__ == "__main__":
 	#writeLMDB(['LEEDS'], 'lmdb/LEEDS_PC', 0)
 	#writeLMDB(['FLIC'], 'lmdb/FLIC', 0)
 
-	writeLMDB(['MPI', 'LEEDS'], 'lmdbTmp/MPI_LEEDS_alltrain', 0) # joint dataset
+	writeLMDB(['H36M'], 'lmdb', 0) # joint dataset

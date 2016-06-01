@@ -31,10 +31,16 @@ CPMDataLayer<Dtype>::~CPMDataLayer() {
 template <typename Dtype>
 void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  
-  // Read a data point, and use it to initialize the top blob.
+
+	// Info
+	//transformed_data_: contains the image data extracted by the data_transformed class
+	//					 it has size batch x 4 x 368 x 368 where the 4th channel is zeroed and
+	//					 the remaining 3 channels are the RGB image
+	//transformed_labels contains the labels extracted by the data_transformed class
+
+  // Read a data point, and use it to initialise the top blob.
   Datum& datum = *(reader_.full().peek());
-  LOG(INFO) << datum.height() << " " << datum.width() << " " << datum.channels();
+  LOG(INFO) << "Datum info: " << datum.channels() << "x" <<datum.height() << "x" << datum.width();
 
   bool force_color = this->layer_param_.cpmdata_param().force_encoded_color();
   if ((force_color && DecodeDatum(&datum, true)) ||
@@ -49,6 +55,7 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (crop_size > 0) {
     top[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
     for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      //the thread call the function load_batch
       this->prefetch_[i].data_.Reshape(batch_size, datum.channels(), crop_size, crop_size);
     }
     this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
@@ -115,7 +122,6 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         DecodeDatumNative(&datum);
       }
     }
-    LOG(INFO) << "\n\n\n\n---  DATA reshaped as: ("<<datum.channels()<<","<<datum.height()<<","<<datum.width() << "\n\n\n\n---";
     batch->data_.Reshape(1, datum.channels(),
         datum.height(), datum.width());
         this->transformed_data_.Reshape(1, datum.channels(),
