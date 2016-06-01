@@ -1,68 +1,65 @@
+#ifndef CPU_ONLY
 #include <algorithm>
 #include <vector>
 #include "caffe/common.hpp"
 #include "caffe/util/gpu_memory.hpp"
 
-#ifndef CPU_ONLY
 #include "cub/util_allocator.cuh"
-#endif
 
 namespace caffe {
+using std::vector;
 
-#ifndef CPU_ONLY
 static cub::CachingDeviceAllocator* cub_allocator = 0;
-vector<GPUMemoryManager::MemInfo> GPUMemoryManager::dev_info_;
-#endif
+GPUMemory::Manager GPUMemory::mgr_;
 
-GPUMemoryManager::PoolMode GPUMemoryManager::mode_ = GPUMemoryManager::NO_POOL;
-bool GPUMemoryManager::debug_ = false;
+GPUMemory::Manager::Manager(): mode_(CUDA_MALLOC), debug_(false) {}
 
-#ifdef CPU_ONLY
-void GPUMemoryManager::init(const std::vector<int>&, PoolMode, bool) {}
-void GPUMemoryManager::destroy() {}
-
-const char* GPUMemoryManager::pool_name() {
-  return "No GPU: CPU Only Memory";
-}
-#else
-
-void GPUMemoryManager::init(const std::vector<int>& gpus, PoolMode m,
-    bool debug) {
+void GPUMemory::Manager::init(const vector<int>& gpus, Mode m, bool debug) {
   bool debug_env = getenv("DEBUG_GPU_MEM") != 0;
   debug_ = debug || debug_env;
   if (gpus.size() <= 0) {
-    m = GPUMemoryManager::NO_POOL;
+    m = CUDA_MALLOC;
   }
-
   switch (m) {
-  case CUB_POOL:
-    InitMemory(gpus, m);
+  case CUB_ALLOCATOR:
+    try {
+      // Just in case someone installed 'no cleanup' arena before
+      delete cub_allocator;
+      cub_allocator = new cub::CachingDeviceAllocator(2, 6, 22, (size_t) -1,
+          false, debug_);
+    } catch (...) {
+    }
+    CHECK(cub_allocator);
+    for (int i = 0; i < gpus.size(); ++i) {
+      update_dev_info(gpus[i]);
+    }
     break;
   default:
     break;
   }
-  VLOG_IF(1, debug) << "GPUMemoryManager initialized with " << pool_name();
+  mode_ = m;
+  VLOG_IF(1, debug) << "GPUMemory::Manager initialized with " << pool_name();
 }
 
-void GPUMemoryManager::destroy() {
+void GPUMemory::Manager::destroy() {
   switch (mode_) {
-  case CUB_POOL:
+  case CUB_ALLOCATOR:
     delete cub_allocator;
     cub_allocator = NULL;
     break;
   default:
     break;
   }
-  mode_ = NO_POOL;
+  mode_ = CUDA_MALLOC;
 }
 
-bool GPUMemoryManager::try_allocate(void** ptr, size_t size, cudaStream_t stream) {
-  CHECK((ptr) != NULL);
+bool GPUMemory::Manager::try_allocate(void** ptr, size_t size, cudaStream_t s) {
+  CHECK(ptr!= NULL);
   cudaError_t status = cudaSuccess, last_err = cudaSuccess;
   switch (mode_) {
-  case CUB_POOL:
+  case CUB_ALLOCATOR:
     // Clean Cache & Retry logic is inside now
-    status = cub_allocator->DeviceAllocate(ptr, size, stream);
+    status = cub_allocator->DeviceAllocate(ptr, size, s);
     // If there was a retry and it succeeded we get good status here but
     // we need to clean up last error...
     last_err = cudaGetLastError();
@@ -90,13 +87,13 @@ bool GPUMemoryManager::try_allocate(void** ptr, size_t size, cudaStream_t stream
   return status == cudaSuccess;
 }
 
-void GPUMemoryManager::deallocate(void* ptr, cudaStream_t stream) {
+void GPUMemory::Manager::deallocate(void* ptr, cudaStream_t stream) {
   // allow for null pointer deallocation
   if (!ptr) {
     return;
   }
   switch (mode_) {
-  case CUB_POOL:
+  case CUB_ALLOCATOR:
     CUDA_CHECK(cub_allocator->DeviceFree(ptr));
     break;
   default:
@@ -105,7 +102,7 @@ void GPUMemoryManager::deallocate(void* ptr, cudaStream_t stream) {
   }
 }
 
-void GPUMemoryManager::update_dev_info(int device) {
+void GPUMemory::Manager::update_dev_info(int device) {
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
   if (device + 1 > dev_info_.size()) {
@@ -133,39 +130,19 @@ void GPUMemoryManager::update_dev_info(int device) {
   CUDA_CHECK(cudaSetDevice(initial_device));
 }
 
-void GPUMemoryManager::InitMemory(const std::vector<int>& gpus, PoolMode m) {
-  mode_ = m;
+
+const char* GPUMemory::Manager::pool_name() const {
   switch (mode_) {
-  case CUB_POOL:
-    try {
-      // Just in case someone installed 'no cleanup' arena before
-      delete cub_allocator;
-      cub_allocator = new cub::CachingDeviceAllocator(2, 6, 22, (size_t) -1,
-          false, debug_);
-    } catch (...) {
-    }
-    CHECK(cub_allocator);
-    for (int i = 0; i < gpus.size(); ++i) {
-      update_dev_info(gpus[i]);
-    }
-    break;
+  case CUB_ALLOCATOR:
+    return "Caching (CUB) GPU Allocator";
   default:
-    break;
+    return "Plain CUDA GPU Allocator";
   }
 }
 
-const char* GPUMemoryManager::pool_name() {
+void GPUMemory::Manager::GetInfo(size_t* free_mem, size_t* total_mem) {
   switch (mode_) {
-  case CUB_POOL:
-    return "CUB Pool";
-  default:
-    return "No Pool: Plain CUDA Allocator";
-  }
-}
-
-void GPUMemoryManager::GetInfo(size_t* free_mem, size_t* total_mem) {
-  switch (mode_) {
-  case CUB_POOL:
+  case CUB_ALLOCATOR:
     int cur_device;
     CUDA_CHECK(cudaGetDevice(&cur_device));
     *total_mem = dev_info_[cur_device].total_;
@@ -179,6 +156,5 @@ void GPUMemoryManager::GetInfo(size_t* free_mem, size_t* total_mem) {
     break;
   }
 }
-#endif  // CPU_ONLY
-
 }  // namespace caffe
+#endif  // CPU_ONLY

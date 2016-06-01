@@ -84,16 +84,14 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   // Allocate device buffers
   CUDA_CHECK(cudaSetDevice(device));
   buffer_device_ = device;
-  GPUMemoryManager::allocate(reinterpret_cast<void **>(&data_),
-      size_ * sizeof(Dtype));
+  GPUMemory::allocate(&data_, size_ * sizeof(Dtype));
 
   // Copy blob values
   const vector<Blob<Dtype>*>& net =
       root_solver->net()->learnable_params();
   apply_buffers(net, data_, size_, copy);
 
-  GPUMemoryManager::allocate(reinterpret_cast<void **>(&diff_),
-      size_ * sizeof(Dtype));
+  GPUMemory::allocate(&diff_, size_ * sizeof(Dtype));
   caffe_gpu_set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
@@ -108,8 +106,8 @@ GPUParams<Dtype>::~GPUParams() {
   int initial_device;
   cudaGetDevice(&initial_device);
   cudaSetDevice(buffer_device_);
-  GPUMemoryManager::deallocate(data_);
-  GPUMemoryManager::deallocate(diff_);
+  GPUMemory::deallocate(data_);
+  GPUMemory::deallocate(diff_);
   data_ = NULL;
   diff_ = NULL;
   cudaSetDevice(initial_device);
@@ -245,8 +243,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     }
     // Allocate receiving buffer on parent
     CUDA_CHECK(cudaSetDevice(peer));
-    GPUMemoryManager::allocate(reinterpret_cast<void **>(&parent_grads_),
-        size_ * sizeof(Dtype));
+    GPUMemory::allocate(&parent_grads_, size_ * sizeof(Dtype));
     CUDA_CHECK(cudaSetDevice(self));
   }
 
@@ -265,7 +262,7 @@ P2PSync<Dtype>::~P2PSync() {
     const int self = solver_->param().device_id();
     const int peer = parent_->solver_->param().device_id();
     CUDA_CHECK(cudaSetDevice(peer));
-    GPUMemoryManager::deallocate(parent_grads_);
+    GPUMemory::deallocate(parent_grads_);
     parent_grads_ = NULL;
     int access;
     cudaSetDevice(self);
