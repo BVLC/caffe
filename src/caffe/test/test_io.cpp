@@ -157,6 +157,43 @@ TEST_F(IOTest, TestReadImageToDatumResized) {
   EXPECT_EQ(datum.width(), 200);
 }
 
+TEST_F(IOTest, TestReadImageToDatumResizedMinDim) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  ReadImageToDatum(filename, 0, 0, 0, 200, 0, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 360);
+  EXPECT_EQ(datum.width(), 480);
+
+  ReadImageToDatum(filename, 0, 0, 0, 720, 0, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 720);
+  EXPECT_EQ(datum.width(), 960);
+
+  ReadImageToDatum(filename, 0, 0, 0, 648, 720, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 540);
+  EXPECT_EQ(datum.width(), 720);
+}
+
+TEST_F(IOTest, TestReadImageToDatumResizedMaxDim) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  ReadImageToDatum(filename, 0, 0, 0, 0, 500, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 360);
+  EXPECT_EQ(datum.width(), 480);
+
+  ReadImageToDatum(filename, 0, 0, 0, 0, 240, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 180);
+  EXPECT_EQ(datum.width(), 240);
+
+  ReadImageToDatum(filename, 0, 0, 0, 540, 960, &datum);
+  EXPECT_EQ(datum.channels(), 3);
+  EXPECT_EQ(datum.height(), 540);
+  EXPECT_EQ(datum.width(), 720);
+}
 
 TEST_F(IOTest, TestReadImageToDatumResizedSquare) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
@@ -209,6 +246,42 @@ TEST_F(IOTest, TestReadImageToCVMatResizedSquare) {
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 256);
   EXPECT_EQ(cv_img.cols, 256);
+}
+
+TEST_F(IOTest, TestReadImageToCVMatResizedMinDim) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  cv::Mat cv_img = ReadImageToCVMat(filename, 0, 0, 200, 0, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 360);
+  EXPECT_EQ(cv_img.cols, 480);
+
+  cv_img = ReadImageToCVMat(filename, 0, 0, 720, 0, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 720);
+  EXPECT_EQ(cv_img.cols, 960);
+
+  cv_img = ReadImageToCVMat(filename, 0, 0, 648, 720, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 540);
+  EXPECT_EQ(cv_img.cols, 720);
+}
+
+TEST_F(IOTest, TestReadImageToCVMatResizedMaxDim) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  cv::Mat cv_img = ReadImageToCVMat(filename, 0, 0, 0, 500, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 360);
+  EXPECT_EQ(cv_img.cols, 480);
+
+  cv_img = ReadImageToCVMat(filename, 0, 0, 0, 240, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 180);
+  EXPECT_EQ(cv_img.cols, 240);
+
+  cv_img = ReadImageToCVMat(filename, 0, 0, 540, 960, true);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 540);
+  EXPECT_EQ(cv_img.cols, 720);
 }
 
 TEST_F(IOTest, TestReadImageToCVMatGray) {
