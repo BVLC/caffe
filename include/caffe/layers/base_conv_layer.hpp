@@ -99,14 +99,6 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int num_of_threads_;              // Number of threads to be used for
                                     // batch based parallelization eg.
                                     // min(batch,omp_get_num_threads())
-#ifdef USE_MKL
-  int num_mkl_local_threads_;       // number of threads to be used by MKL
-                                    // call when used from OpenMP threads
-  int num_incr_mkl_local_threads_;  // how many Openmp threads
-                                    // (calling MKL compute) will have increased
-                                    // (by one) number of threads
-#endif
-
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {

@@ -499,7 +499,7 @@ USE_OPENMP ?= 1
 ifeq ($(USE_OPENMP), 1)
   DUMMY_OPENMP_BINARY := $(shell mktemp)
   DUMMY_OPENMP_FILE := $(shell mktemp).cpp
-  INTEL_OMP_DIR ?= $(shell find /opt/intel/ -readable -name libiomp5.so 2>/dev/null | grep -m 1 intel64 | xargs dirname)
+  INTEL_OMP_DIR ?= $(shell find ${MKLROOT}/.. -readable -name libiomp5.so 2>/dev/null | grep -v mic | grep -m 1 intel64 | xargs dirname)
   define OPENMP_VERIFYING_CODE
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
   endef

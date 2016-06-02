@@ -1,3 +1,4 @@
+
 ---
 title: Installation
 ---
@@ -5,91 +6,69 @@ title: Installation
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
+We install and run Caffe on Ubuntu 14.04, CentOS (7.0, 7.1, 7.2), and AWS.
 The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
 
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
 - [Hardware](#hardware)
-- Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
-Caffe has several dependencies:
+Before building Caffe make sure that the following dependencies are available on target system:
 
-* [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
-    * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
-    * 5.5, and 5.0 are compatible but considered legacy
-* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
+* [BLAS library](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms)
+    * [Intel® Math Kernel Library (Intel &reg; MKL)](https://software.intel.com/en-us/intel-mkl)
+    * [Open BLAS](http://www.openblas.net)
+    * [ATLAS](http://math-atlas.sourceforge.net)
 * [Boost](http://www.boost.org/) >= 1.55
 * `protobuf`, `glog`, `gflags`, `hdf5`
 
-Optional dependencies:
+For additional capabilities and acceleration the following dependencies might be necessary:
 
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
-* [OpenMP](http://openmp.org/wp/)
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
-* cuDNN for GPU acceleration (v3)
+* For GPU mode
+    * [CUDA](https://developer.nvidia.com/cuda-zone)
+    * cuDNN
 
-Pycaffe and Matcaffe interfaces have their own natural needs.
+* For Pycaffe
+    * `Python 2.7` or `Python 3.3+`
+    * `numpy (>= 1.7)`
+    * boost-provided `boost.python`
 
-* For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
-* For MATLAB Caffe: MATLAB with the `mex` compiler.
+* For Matcaffe 
+  * MATLAB with the `mex` compiler.
 
-**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+### Building for Intel® Architecture
 
-**CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
+This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Caffe with [Intel MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. If you don't have Intel MKL yet you can download it [free of charge](https://software.intel.com/en-us/articles/free_mkl). The following configuration changes are recommended:
 
-### CUDA and BLAS
+* Set `BLAS := mkl` in `Makefile.config`
+* If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
 
+[Intel MKL 2017 Beta Update 1](https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305) introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
+
+* At Caffe build time add `USE_MKL2017_AS_DEFAULT_ENGINE := 1` to `Makefile.config` or add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline when invoking `cmake`. All layers will use new primitives by default.
+* Set layer engine to `MKL2017` in model configuration. Only this specific layer will be accelerated with new primitives. 
+
+### Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the [NVIDIA CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. **Warning!** The 331.* CUDA driver series has a critical performance issue: do not use it.
 
-For best performance, Caffe can be accelerated by [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the `USE_CUDNN := 1` flag set in your `Makefile.config`.
+For best performance on GPU, Caffe can be accelerated by [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the `USE_CUDNN := 1` flag set in your `Makefile.config`.
 
-Caffe requires BLAS as the backend of its matrix and vector computations.
-There are several implementations of this library. The choice is yours:
+Caffe requires BLAS as the backend of its matrix and vector computations. There are several implementations of this library. The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
-* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs,
-with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
-    1. Install MKL. For now MKL can be downloaded for free. Please find here few links:
-        - https://software.intel.com/sites/campaigns/nest/
-        - https://software.intel.com/en-us/articles/free_mkl
-        - [LINUX] https://software.intel.com/en-us/node/528500
-        - [OSX] https://software.intel.com/en-us/node/528659
+* [Intel MKL](http://software.intel.com/en-us/intel-mkl): free performance library for Intel Architecture
+    1. Install Intel MKL. Free options [are available](https://software.intel.com/en-us/articles/free_mkl)
     2. Set `BLAS := mkl` in `Makefile.config`
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
-
-### Intel MKL2017 (optional)
-
-Caffe can use optimized primitives that are part of MKL package since [Intel MKL 2017 Beta Update1 release](https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305)
-Currently supported layers are: Convolution, LRN , ReLU, Pooling, Split, Concat, Batch Normalization and Eltwise operation.
-
-To make use of MKL2017 primitives, install 'Intel MKL 2017 Beta Update1' and adjust your Makefile.config:
-
-1. make sure `BLAS := mkl`.
-2. make sure following line is uncommented
-`COMMON_FLAGS += -DUSE_MKL2017_NEW_API`
-
-For cmake based build, to use MKL2017 primitives, here is an examplary command line(to be invoked from your created directory, where caffe is to be build):
-
-`cmake <path to CMakeLists.txt in main caffe dir> -DBLAS=mkl -DUSE_MKL2017_NEW_API=ON -DCMAKE_BUILD_TYPE=Release`
-
-Support for MKL2017 will be detected and compiled into the caffe. To use optimized MKL2017 primitive for a layer, set `engine: MKL2017` in the layer's parameters definition. Only layers with `engine` parameter set
-to `MKL2017` will be accelerated by MKL2017 (Examples are located in models/mkl2017_* directories). That way you can split execution of your layers among DEFAULT caffe engine and MKL2017.
-
-**Note:**
-If you want all layers of your model to be executed by MKL2017 (without adding `engine: MKL2017` in each layer)
-make sure `USE_MKL2017_AS_DEFAULT_ENGINE := 1` is set in Makefile.config, then MKL2017 engine will be used as a default engine for all layers supported by MKL2017. (When using cmake, add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline invoking cmake)
-
-### OpenMP (optional)
-
-Caffe can use OpenMP for parallel execution of CPU layers. OpenMP is supported (and delivered) by most of [compilers](http://openmp.org/wp/openmp-compilers/). To have Caffe use OpenMP uncomment USE_OPENMP := 1 Makefile.config (when using cmake, add -DUSE_OPENMP=ON to your commandline invoking cmake)
 
 ### Python and/or MATLAB Caffe (optional)
 
@@ -159,10 +138,12 @@ The basic steps are as follows:
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 ## Hardware
+### Intel Architecture
+This software supports the following hardware:
+* Intel® Xeon processor E5-xxxx v3 (codename Haswell) and Intel® Xeon processor E5-xxxx v4 (codename Broadwell)
 
-**Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
-
-**CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
+### GPU
+Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
 Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
 
