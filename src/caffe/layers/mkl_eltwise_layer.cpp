@@ -9,8 +9,7 @@ namespace caffe {
 
 template <typename Dtype>
 MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
-  if (sumPrimitive != NULL)
-    dnnDelete<Dtype>(sumPrimitive);
+  dnnDelete<Dtype>(sumPrimitive);
 }
 
 template <typename Dtype>

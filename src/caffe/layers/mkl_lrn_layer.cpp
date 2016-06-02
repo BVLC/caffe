@@ -42,15 +42,13 @@ void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   strides[2] = sizes[0]*sizes[1];
   strides[3] = sizes[0]*sizes[1]*sizes[2];
 
-  lrn_buffer_ = NULL;
   dnnError_t e;
   e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
-  // "Lazy" allocation because here we don't know
+  // Fwd, Bwd primitives and lrn_buffer_ are allocated in  "Lazy"
+  // mode, because here we don't know
   // what layout is used by neighbours.
-  lrnFwd = NULL;  // Will be allocated in a "lazy" way in first forward pass
-  lrnBwd = NULL;  // Will be allocated in a "lazy" way in first backward pass
 }
 
 template <typename Dtype>

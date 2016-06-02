@@ -8,8 +8,7 @@ namespace caffe {
 
 template <typename Dtype>
 MKLSplitLayer<Dtype>::~MKLSplitLayer() {
-  if (sumPrimitive != NULL)
-    dnnDelete<Dtype>(sumPrimitive);
+  dnnDelete<Dtype>(sumPrimitive);
 }
 
 template <typename Dtype>

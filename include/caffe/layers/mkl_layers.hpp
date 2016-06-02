@@ -86,7 +86,6 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit MKLConvolutionLayer(const LayerParameter& param);
 
-  virtual inline const char* type() const { return "DnnConvolution"; }
   virtual ~MKLConvolutionLayer();
 
  protected:
@@ -147,14 +146,18 @@ template <typename Dtype>
 class MKLLRNLayer : public Layer<Dtype> {
  public:
   explicit MKLLRNLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), layout_usr_(NULL) {}
+      : Layer<Dtype>(param),
+        lrnFwd(static_cast<dnnPrimitive_t>(NULL)),
+        lrnBwd(static_cast<dnnPrimitive_t>(NULL)),
+        lrn_buffer_(static_cast<Dtype*>(NULL)),
+        layout_usr_(static_cast<dnnLayout_t>(NULL)) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual ~MKLLRNLayer();
 
-  virtual inline const char* type() const { return "DnnLRN"; }
+  virtual inline const char* type() const { return "LRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -216,7 +219,7 @@ class MKLPoolingLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "DnnPooling"; }
+  virtual inline const char* type() const { return "Pooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
   // MAX POOL layers can output an extra top blob for the mask;
@@ -276,7 +279,7 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "DnnReLU"; }
+  virtual inline const char* type() const { return "ReLU"; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -303,13 +306,16 @@ class MKLConcatLayer : public Layer<Dtype> {
  public:
   explicit MKLConcatLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-      fwd_top_data_    (new MKLData<Dtype>()),
-      bwd_top_diff_    (new MKLDiff<Dtype>()) {
+        concatFwd_(static_cast<dnnPrimitive_t>(NULL)),
+        concatBwd_(static_cast<dnnPrimitive_t>(NULL)),
+        fwd_top_data_    (new MKLData<Dtype>()),
+        bwd_top_diff_    (new MKLDiff<Dtype>()) {
       }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
+  virtual inline const char* type() const { return "Concat"; }
   ~MKLConcatLayer();
 
  protected:
@@ -346,18 +352,22 @@ class MKLBatchNormLayer : public Layer<Dtype> {
  public:
   explicit MKLBatchNormLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-        fwd_top_data    (new MKLData<Dtype>()),
-        bwd_bottom_diff (new MKLDiff<Dtype>()),
-        batchNormFwd(NULL), batchNormBwdData(NULL),
-        batchNormBwdScaleShift(NULL) {
-       }
+        fwd_top_data(new MKLData<Dtype>()),
+        bwd_bottom_diff(new MKLDiff<Dtype>()),
+        batchNormFwd(static_cast<dnnPrimitive_t>(NULL)),
+        batchNormBwdData(static_cast<dnnPrimitive_t>(NULL)),
+        batchNormBwdScaleShift(static_cast<dnnPrimitive_t>(NULL)),
+        workspace_buffer_(static_cast<Dtype*>(NULL)),
+        scaleShift_buffer_(static_cast<Dtype*>(NULL)),
+        layout_usr_(static_cast<dnnLayout_t>(NULL)) {}
+
   virtual ~MKLBatchNormLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "MKLBatchNorm"; }
+  virtual inline const char* type() const { return "BatchNorm"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -395,8 +405,8 @@ class MKLSplitLayer : public Layer<Dtype> {
   explicit MKLSplitLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         bwd_bottom_diff (new MKLDiff<Dtype>()),
-        sumPrimitive(NULL) {
-       }
+        sumPrimitive(static_cast<dnnPrimitive_t>(NULL)) {}
+
   virtual ~MKLSplitLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -431,8 +441,8 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   explicit MKLEltwiseLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         fwd_top_data       (new MKLData<Dtype>()),
-        sumPrimitive(NULL) {
-       }
+        sumPrimitive(static_cast<dnnPrimitive_t>(NULL)) {}
+
   virtual ~MKLEltwiseLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
