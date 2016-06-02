@@ -105,7 +105,7 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Create the unrolled net.
-  unrolled_net_.reset(new Net<Dtype>(net_param));
+  unrolled_net_.reset(new Net<Dtype>(net_param, this->device_));
   unrolled_net_->set_debug_info(
       this->layer_param_.recurrent_param().debug_info());
 
