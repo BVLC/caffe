@@ -7,6 +7,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __device__ Dtype sigmoid(const Dtype x) {
   return Dtype(1) / (Dtype(1) + exp(-x));
@@ -18,11 +19,11 @@ __device__ Dtype tanh(const Dtype x) {
 }
 
 template <typename Dtype>
-__global__ void LSTMActsForward(const int nthreads, const int dim,
+__global__ void LSTMActsForward(const int_tp nthreads, const int_tp dim,
                                 const Dtype* X, Dtype* X_acts) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int x_dim = 4 * dim;
-    const int d = index % x_dim;
+    const int_tp x_dim = 4 * dim;
+    const int_tp d = index % x_dim;
     if (d < 3 * dim) {
       X_acts[index] = sigmoid(X[index]);
     } else {
@@ -32,12 +33,12 @@ __global__ void LSTMActsForward(const int nthreads, const int dim,
 }
 
 template <typename Dtype>
-__global__ void LSTMUnitForward(const int nthreads, const int dim,
+__global__ void LSTMUnitForward(const int_tp nthreads, const int_tp dim,
     const Dtype* C_prev, const Dtype* X, const Dtype* cont,
     Dtype* C, Dtype* H) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int n = index / dim;
-    const int d = index % dim;
+    const int_tp n = index / dim;
+    const int_tp d = index % dim;
     const Dtype* X_offset = X + 4 * dim * n;
     const Dtype i = X_offset[d];
     const Dtype f = X_offset[1 * dim + d];
@@ -50,36 +51,68 @@ __global__ void LSTMUnitForward(const int nthreads, const int dim,
     H[index] = o * tanh_c;
   }
 }
+#endif  // USE_CUDA
 
 template <typename Dtype>
 void LSTMUnitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const int count = top[1]->count();
+  const int_tp count = top[1]->count();
   const Dtype* C_prev = bottom[0]->gpu_data();
   const Dtype* X = bottom[1]->gpu_data();
   const Dtype* cont = bottom[2]->gpu_data();
   Dtype* X_acts = X_acts_.mutable_gpu_data();
   Dtype* C = top[0]->mutable_gpu_data();
   Dtype* H = top[1]->mutable_gpu_data();
-  const int X_count = bottom[1]->count();
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  LSTMActsForward<Dtype><<<CAFFE_GET_BLOCKS(X_count), CAFFE_CUDA_NUM_THREADS>>>(
-      X_count, hidden_dim_, X, X_acts);
-  CUDA_POST_KERNEL_CHECK;
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  LSTMUnitForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, hidden_dim_, C_prev, X_acts, cont, C, H);
-  CUDA_POST_KERNEL_CHECK;
+  const int_tp X_count = bottom[1]->count();
+  if (this->device_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    LSTMActsForward<Dtype>CUDA_KERNEL(CAFFE_GET_BLOCKS(X_count),
+                                      CAFFE_CUDA_NUM_THREADS)(
+        X_count, hidden_dim_, X, X_acts);
+    CUDA_POST_KERNEL_CHECK;
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    LSTMUnitForward<Dtype>CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                      CAFFE_CUDA_NUM_THREADS)(
+        count, hidden_dim_, C_prev, X_acts, cont, C, H);
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::kernel &oclk_lstm_acts_forward = program.get_kernel(
+        CL_KERNEL_SELECT("lstm_acts_forward"));
+    viennacl::ocl::kernel &oclk_lstm_unit_forward = program.get_kernel(
+        CL_KERNEL_SELECT("lstm_unit_forward"));
+
+    viennacl::ocl::enqueue(
+        oclk_lstm_acts_forward(X_count, hidden_dim_,
+          WrapHandle((cl_mem)X, &ctx),
+          WrapHandle((cl_mem)X_acts, &ctx)),
+        ctx.get_queue());
+    viennacl::ocl::enqueue(
+        oclk_lstm_unit_forward(count, hidden_dim_,
+          WrapHandle((cl_mem)C_prev, &ctx),
+          WrapHandle((cl_mem)X_acts, &ctx),
+          WrapHandle((cl_mem)cont, &ctx),
+          WrapHandle((cl_mem)C, &ctx),
+          WrapHandle((cl_mem)H, &ctx)),
+        ctx.get_queue());
+#endif  // USE_GREENTEA
+  }
 }
 
+#ifdef USE_CUDA
 template <typename Dtype>
-__global__ void LSTMUnitBackward(const int nthreads, const int dim,
+__global__ void LSTMUnitBackward(const int_tp nthreads, const int_tp dim,
     const Dtype* C_prev, const Dtype* X, const Dtype* C, const Dtype* H,
     const Dtype* cont, const Dtype* C_diff, const Dtype* H_diff,
     Dtype* C_prev_diff, Dtype* X_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int n = index / dim;
-    const int d = index % dim;
+    const int_tp n = index / dim;
+    const int_tp d = index % dim;
     const Dtype* X_offset = X + 4 * dim * n;
     const Dtype i = X_offset[d];
     const Dtype f = X_offset[1 * dim + d];
@@ -106,11 +139,11 @@ __global__ void LSTMUnitBackward(const int nthreads, const int dim,
 }
 
 template <typename Dtype>
-__global__ void LSTMActsBackward(const int nthreads, const int dim,
+__global__ void LSTMActsBackward(const int_tp nthreads, const int_tp dim,
     const Dtype* X_acts, const Dtype* X_acts_diff, Dtype* X_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int x_dim = 4 * dim;
-    const int d = index % x_dim;
+    const int_tp x_dim = 4 * dim;
+    const int_tp d = index % x_dim;
     const Dtype X_act = X_acts[index];
     if (d < 3 * dim) {
       X_diff[index] = X_acts_diff[index] * X_act * (Dtype(1) - X_act);
@@ -119,6 +152,7 @@ __global__ void LSTMActsBackward(const int nthreads, const int dim,
     }
   }
 }
+#endif  // USE_CUDA
 
 template <typename Dtype>
 void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -127,7 +161,7 @@ void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   CHECK(!propagate_down[2]) << "Cannot backpropagate to sequence indicators.";
   if (!propagate_down[0] && !propagate_down[1]) { return; }
 
-  const int count = top[1]->count();
+  const int_tp count = top[1]->count();
   const Dtype* C_prev = bottom[0]->gpu_data();
   const Dtype* X_acts = X_acts_.gpu_data();
   const Dtype* cont = bottom[2]->gpu_data();
@@ -137,16 +171,50 @@ void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* H_diff = top[1]->gpu_diff();
   Dtype* C_prev_diff = bottom[0]->mutable_gpu_diff();
   Dtype* X_acts_diff = X_acts_.mutable_gpu_diff();
-  LSTMUnitBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-      <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, hidden_dim_,
-      C_prev, X_acts, C, H, cont, C_diff, H_diff, C_prev_diff, X_acts_diff);
-  CUDA_POST_KERNEL_CHECK;
-  const int X_count = bottom[1]->count();
+  const int_tp X_count = bottom[1]->count();
   Dtype* X_diff = bottom[1]->mutable_gpu_diff();
-  LSTMActsBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-      <<<CAFFE_GET_BLOCKS(X_count), CAFFE_CUDA_NUM_THREADS>>>(
-      X_count, hidden_dim_, X_acts, X_acts_diff, X_diff);
-  CUDA_POST_KERNEL_CHECK;
+
+  if (this->device_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    LSTMUnitBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+        CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                    CAFFE_CUDA_NUM_THREADS)(count, hidden_dim_,
+        C_prev, X_acts, C, H, cont, C_diff, H_diff, C_prev_diff, X_acts_diff);
+    CUDA_POST_KERNEL_CHECK;
+
+    LSTMActsBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+        CUDA_KERNEL(CAFFE_GET_BLOCKS(X_count),
+                    CAFFE_CUDA_NUM_THREADS)(
+        X_count, hidden_dim_, X_acts, X_acts_diff, X_diff);
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::kernel &oclk_lstm_unit_backward = program.get_kernel(
+        CL_KERNEL_SELECT("lstm_unit_backward"));
+    viennacl::ocl::kernel &oclk_lstm_acts_backward = program.get_kernel(
+        CL_KERNEL_SELECT("lstm_acts_backward"));
+
+    viennacl::ocl::enqueue(
+        oclk_lstm_unit_backward(count, hidden_dim_,
+          WrapHandle((cl_mem)C_prev, &ctx), WrapHandle((cl_mem)X_acts, &ctx),
+          WrapHandle((cl_mem)C, &ctx), WrapHandle((cl_mem)H, &ctx),
+          WrapHandle((cl_mem)cont, &ctx), WrapHandle((cl_mem)C_diff, &ctx),
+          WrapHandle((cl_mem)H_diff, &ctx),
+          WrapHandle((cl_mem)C_prev_diff, &ctx),
+          WrapHandle((cl_mem)X_acts_diff, &ctx)),
+        ctx.get_queue());
+    viennacl::ocl::enqueue(
+        oclk_lstm_acts_backward(X_count, hidden_dim_,
+          WrapHandle((cl_mem)X_acts, &ctx),
+          WrapHandle((cl_mem)X_acts_diff, &ctx),
+          WrapHandle((cl_mem)X_diff, &ctx)),
+        ctx.get_queue());
+#endif  // USE_GREENTEA
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(LSTMUnitLayer);

@@ -97,7 +97,7 @@ TYPED_TEST(RNNLayerTest, TestForward) {
   GaussianFiller<Dtype> sequence_filler(filler_param);
   sequence_filler.Fill(&this->blob_bottom_);
   shared_ptr<RNNLayer<Dtype> > layer(new RNNLayer<Dtype>(this->layer_param_));
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   LOG(INFO) << "Calling forward for full sequence RNN";
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -112,13 +112,13 @@ TYPED_TEST(RNNLayerTest, TestForward) {
   // check that we get the same result.
   this->ReshapeBlobs(1, num);
   layer.reset(new RNNLayer<Dtype>(this->layer_param_));
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   const int bottom_count = this->blob_bottom_.count();
   const int top_count = this->blob_top_.count();
   const Dtype kEpsilon = 1e-5;
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = t > 0;
@@ -135,11 +135,11 @@ TYPED_TEST(RNNLayerTest, TestForward) {
 
   // Process the batch one timestep at a time with all cont blobs set to 0.
   // Check that we get a different result, except in the first timestep.
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer.reset(new RNNLayer<Dtype>(this->layer_param_));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = 0;
