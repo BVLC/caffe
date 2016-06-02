@@ -49,7 +49,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   DecodeFloats(data, offset3+offset1, &height, 1);
   DecodeFloats(data, offset3+offset1+4, &width, 1);
   meta.img_size = Size(width, height);
-  LOG(INFO) << "image size:" << width << "," << height;
+  //LOG(INFO) << "image size:" << width << "," << height;
   // ----------- Validation, nop, counters -----------------
   meta.isValidation = (data[offset3+2*offset1]==0 ? false : true);
   meta.numOtherPeople = (int)data[offset3+2*offset1+1];

@@ -106,7 +106,7 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   static int cnt = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
-  LOG(INFO) << "data count: " << batch->data_.count();
+  //LOG(INFO) << "data count: " << batch->data_.count();
   CHECK(this->transformed_data_.count());
 
   // Reshape on single input batches for inputs of varying dimension.
