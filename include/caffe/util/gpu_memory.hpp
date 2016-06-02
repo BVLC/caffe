@@ -5,44 +5,49 @@
 #include "caffe/common.hpp"
 #ifndef CPU_ONLY
 
+namespace cub {
+  class CachingDeviceAllocator;
+}
+
 namespace caffe {
 
 struct GPUMemory {
-  static void GetInfo(size_t* free_mem, size_t* used_mem) {
+
+  static GPUMemory& Get();
+
+  void GetInfo(size_t* free_mem, size_t* used_mem) {
     return mgr_.GetInfo(free_mem, used_mem);
   }
 
   template <class Any>
-  static void allocate(Any** ptr, size_t size,
-                       cudaStream_t s = cudaStreamDefault) {
+  void allocate(Any** ptr, size_t size, cudaStream_t s = cudaStreamDefault) {
     CHECK(try_allocate(reinterpret_cast<void **>(ptr), size, s));
   }
 
-  static void deallocate(void* ptr, cudaStream_t s = cudaStreamDefault) {
+  void deallocate(void* ptr, cudaStream_t s = cudaStreamDefault) {
     mgr_.deallocate(ptr, s);
   }
 
-  static bool try_allocate(void** ptr, size_t size, cudaStream_t stream =
-                           cudaStreamDefault) {
+  bool try_allocate(void** ptr, size_t size, cudaStream_t stream =
+                    cudaStreamDefault) {
     return mgr_.try_allocate(ptr, size, stream);
   }
 
   enum Mode {
-    CUDA_MALLOC,    // Straight CUDA malloc/free (may be expensive)
-    CUB_ALLOCATOR   // CUB caching allocator
+    CUDA_MALLOC,   // Straight CUDA malloc/free (may be expensive)
+    CUB_ALLOCATOR  // CUB caching allocator
   };
 
+ private:
   struct Manager {
     Manager();
+    ~Manager();
     void GetInfo(size_t* free_mem, size_t* used_mem);
     void deallocate(void* ptr, cudaStream_t s);
     bool try_allocate(void** ptr, size_t size, cudaStream_t);
-
     const char* pool_name() const;
     bool using_pool() const { return mode_ != CUDA_MALLOC; }
-
     void init(const std::vector<int>&, Mode, bool);
-    void destroy();
 
     Mode mode_;
     bool debug_;
@@ -58,29 +63,32 @@ struct GPUMemory {
     };
     void update_dev_info(int device);
     vector<DevInfo> dev_info_;
+    bool initialized_;
+    cub::CachingDeviceAllocator* cub_allocator_;
+
+    static unsigned int BIN_GROWTH;  ///< Geometric growth factor for bin-sizes
+    static unsigned int MIN_BIN;  ///< Minimum bin
+    static unsigned int MAX_BIN;  ///< Maximum bin
+    static size_t MAX_CACHED_BYTES;  ///< Maximum aggregate cached bytes
   };
 
-  static Manager mgr_;
-
+ public:
   struct Arena {
     Arena(const std::vector<int>& gpus, Mode m = CUB_ALLOCATOR,
           bool debug = false) {
-      mgr_.init(gpus, m, debug);
+      Get().mgr_.init(gpus, m, debug);
     }
-    ~Arena() { mgr_.destroy(); }
   };
 
-  //
   // Buffer's release() functionality depends on global pool availability
   // If pool is available, it returns memory to the pool and sets ptr to NULL
   // If pool is not available, it retains memory.
-  //
   struct Buffer {
     Buffer() : ptr_(NULL), stream_(), size_(0) {}
     Buffer(size_t size, cudaStream_t s = cudaStreamDefault) : stream_(s) {
       reserve(size);
     }
-    ~Buffer() { mgr_.deallocate(ptr_, stream_); }
+    ~Buffer() { Get().mgr_.deallocate(ptr_, stream_); }
 
     void* data() const { return ptr_; }
     size_t size() const { return size_; }
@@ -89,9 +97,9 @@ struct GPUMemory {
       bool status = true;
       if (size > size_) {
         if (ptr_) {
-          mgr_.deallocate(ptr_, stream_);
+          Get().mgr_.deallocate(ptr_, stream_);
         }
-        status = mgr_.try_allocate(&ptr_, size, stream_);
+        status = Get().mgr_.try_allocate(&ptr_, size, stream_);
         if (status) {
           size_ = size;
         }
@@ -102,8 +110,8 @@ struct GPUMemory {
     void reserve(size_t size) { CHECK(try_reserve(size)); }
 
     void release() {
-      if (mgr_.using_pool()) {
-        mgr_.deallocate(ptr_, stream_);
+      if (Get().mgr_.using_pool()) {
+        Get().mgr_.deallocate(ptr_, stream_);
         ptr_ = NULL;
         size_ = 0;
       }
@@ -115,7 +123,12 @@ struct GPUMemory {
     cudaStream_t stream_;
     size_t size_;
   };
+
+ private:
+  GPUMemory() {}
+  Manager mgr_;
 };
+
 }  // namespace caffe
 
 #endif

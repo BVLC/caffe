@@ -22,7 +22,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 
     // Test free space and force reshape if allocations have changed
     size_t workspace_limit_bytes, total_memory;
-    GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
+    gpu_mem.GetInfo(&workspace_limit_bytes, &total_memory);
     if (workspace_fwd_sizes_[i] > workspace_limit_bytes) {
       this->Reshape(bottom, top);
     }
@@ -82,7 +82,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[i]->gpu_diff();
     // Test free space and force reshape if allocations have changed
     size_t workspace_limit_bytes, total_memory;
-    GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
+    gpu_mem.GetInfo(&workspace_limit_bytes, &total_memory);
     if (workspace_bwd_filter_sizes_[i] > workspace_limit_bytes ||
         workspace_bwd_data_sizes_[i] > workspace_limit_bytes ||
         // We need to get workspace sizes for the default algos at 1st run

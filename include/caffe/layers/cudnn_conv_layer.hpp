@@ -34,7 +34,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param), handles_setup_(false),
-        backward_passed_ctr_(0) {}
+        gpu_mem(GPUMemory::Get()), backward_passed_ctr_(0) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -64,6 +64,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
+  GPUMemory& gpu_mem;
   GPUMemory::Buffer workspace;
   int backward_passed_ctr_;
 };
