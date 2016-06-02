@@ -3,10 +3,6 @@ import os
 import math
 import argparse
 import json
-with open('../caffePath.cfg') as f:
-    caffe_path = f.readlines()
-sys.path.append('%s/python' % caffe_path)
-print 'specified caffe path: %s' % caffe_path
 import caffe
 from caffe import layers as L  # pseudo module using __getattr__ magic to generate protobuf messages
 from caffe import params as P  # pseudo module using __getattr__ magic to generate protobuf messages
@@ -54,6 +50,8 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
     state = 'image' # can be image or fuse
     share_point = 0
 
+    # TODO: first and last layer of each stage must be changed to account for a larger number of inputs and outputs
+    # TODO: add functionality to replicate data layer for train and validation phases
     for l in range(0, len(layername)):
         if layername[l] == 'C':
             if state == 'image':
@@ -130,7 +128,7 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
 
 
 
-def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, stride, outCH, transform_param_in, base_lr, folder_name, label_name):
+def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, stride, outCH, transform_param_in, base_lr, folder_name, label_name, test_iter, test_interval):
     # write the net prototxt files out
     with open('%s/pose_train_test.prototxt' % dir, 'w') as f:
         print 'writing %s/pose_train_test.prototxt' % dir
@@ -143,14 +141,16 @@ def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, str
         f.write(str_to_write)
 
     with open('%s/pose_solver.prototxt' % dir, "w") as f:
-        solver_string = getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir)
+        solver_string = getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval)
         print 'writing %s/pose_solver.prototxt' % dir
         f.write('%s' % solver_string)
 
 
-def getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir):
+def getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval):
     string = 'net: "%s/%s/pose_train_test.prototxt"\n\
 # The base learning rate, momentum and the weight decay of the network.\n\
+test_iter: %d\n\
+test_intervall: %d\n\
 base_lr: %f\n\
 momentum: 0.9\n\
 weight_decay: 0.0005\n\
@@ -166,23 +166,25 @@ max_iter: 600000\n\
 snapshot: 1000\n\
 snapshot_prefix: "%s/%s/pose"\n\
 # solver mode: CPU or GPU\n\
-solver_mode: GPU\n' % (path_in_caffe, dir, base_lr, stepsize, path_in_caffe, folder_name)
+solver_mode: GPU\n' % (path_in_caffe, dir, test_iter, test_interval, base_lr, stepsize, path_in_caffe, folder_name)
     return string
 
 if __name__ == "__main__":
 
     ### Change here for different dataset
     path_in_caffe = 'models/cpm_architecture'
-    directory = 'prototxt/H36M_validation'
-    dataFolder = '%s/%s/lmdb/H36M_alltrain' % (path_in_caffe, directory)
+    directory = 'prototxt'
+    dataFolder = '%s/%s/lmdb' % (path_in_caffe, directory)
     stepsize = 136106 # stepsize to decrease learning rate. This should depend on your dataset size
+    test_iter = 1000 # TODO: change it
+    test_interval = 1000 # TODO: change it
     ###
 
     batch_size = 6
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
     base_lr = 8e-5
-    transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368, 
+    transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368, visualize=False,
                              target_dist=1.171, scale_prob=1, scale_min=0.7, scale_max=1.3,
                              max_rotate_degree=40, center_perterb_max=0, do_clahe=False)
     nCP = 3
@@ -211,4 +213,4 @@ if __name__ == "__main__":
             stride +=    [ 0 ] + [ 1 ] + [ 0 ] + [ 1 ] * 5            + [ 0 ]
 
     label_name = ['label_1st_lower', 'label_lower']
-    writePrototxts(dataFolder, directory, batch_size, stepsize, layername, kernel, stride, outCH, transform_param, base_lr, d_caffemodel, label_name)
+    writePrototxts(dataFolder, directory, batch_size, stepsize, layername, kernel, stride, outCH, transform_param, base_lr, d_caffemodel, label_name, test_iter, test_interval)

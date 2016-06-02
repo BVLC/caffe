@@ -8,6 +8,8 @@ import struct
 import caffe
 
 def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True):
+	if not os.path.exists(lmdb_path):
+		os.makedirs(lmdb_path)
 	env = lmdb.open(lmdb_path, map_size=int(1e12))
 	txn = env.begin(write=True)
 	data = []
@@ -34,18 +36,26 @@ def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True):
 	
 	isValidationArray = [data[i]['isValidation'] for i in range(numSample)];
 	if(validation == 1):
+		totalWriteCount = isValidationArray.count(1.0);
+ 	else:
 		totalWriteCount = isValidationArray.count(0.0);
-	else:
-		totalWriteCount = len(data)
+# 	if(validation == 1):
+#		totalWriteCount = isValidationArray.count(0.0);
+# 	else:
+#		totalWriteCount = len(data)
 	print 'going to write %d images..' % totalWriteCount;
 	writeCount = 0
 
 	for count in range(numSample):
 		idx = random_order[count]
-		if (data[idx]['isValidation'] != 0 and validation == 1):
+		#if (data[idx]['isValidation'] != 0 and validation == 1):
+		#	print '%d/%d skipped' % (count,idx)
+		#	continue
+
+		if (data[idx]['isValidation'] != validation):
 			print '%d/%d skipped' % (count,idx)
 			continue
-		
+
 		img = cv2.imread(data[idx]['img_paths'])
            # img = cv2.imread(os.path.join(data[idx]['img_paths'])) -> not needed for the new json
 		height = img.shape[0]
@@ -180,4 +190,6 @@ if __name__ == "__main__":
      
      # TODO: change order to have something similar to the previous dataset 
      joints = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
-     writeLMDB(['H36M'], 'lmdb', idxSetJoints = joints, validation = False)
+     writeLMDB(['H36M'], 'lmdb/train', idxSetJoints = joints, validation = False)
+     writeLMDB(['H36M'], 'lmdb/val', idxSetJoints = joints, validation = True)
+

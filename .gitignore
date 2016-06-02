@@ -60,6 +60,9 @@
 # 2. custom, and live on their own unless they're deliberated contributed
 data/*
 # models/*
+models/cpm_architecture/backups
+models/cpm_architecture/savedmodels
+models/cpm_architecture/jsonDatasets
 *.caffemodel
 *.caffemodel.h5
 *.solverstate
@@ -67,6 +70,7 @@ data/*
 *.binaryproto
 *leveldb
 *lmdb
+log.txt
 
 # build, distribute, and bins (+ python proto bindings)
 build
