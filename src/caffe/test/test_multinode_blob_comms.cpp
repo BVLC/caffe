@@ -738,6 +738,6 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_NumOfThreads,
                         BlobCommsParamTest,
                         ::testing::Values(0, 1));
-//  todo               ::testing::Values(0, 1, 2, 3));
+// TODO ::testing::Values(0, 1, 2, 3));
 }  // namespace
 }  // namespace caffe
