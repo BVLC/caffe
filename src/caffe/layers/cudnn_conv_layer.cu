@@ -24,12 +24,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     size_t workspace_limit_bytes, total_memory;
     GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
     if (workspace_fwd_sizes_[i] > workspace_limit_bytes) {
+      use_algo_seeker_ = true;
       this->Reshape(bottom, top);
     }
     // Sometimes closer to zero we might have memory info diverged from reality
     // If try_reserve fails, it updates the info internally and we proceed with
     // Reshape one more time
     if (!workspace.try_reserve(workspace_fwd_sizes_[i])) {
+      use_algo_seeker_ = true;
       this->Reshape(bottom, top);
       workspace.reserve(workspace_fwd_sizes_[i]);
     }
@@ -63,6 +65,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // NOLINT_NEXT_LINE(whitespace/operators)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
+  // Possibly use faster algorithms by allowing larger workspace.
+  use_modest_workspace_ = false;
 }
 
 template<typename Dtype>
@@ -84,9 +88,8 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     size_t workspace_limit_bytes, total_memory;
     GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
     if (workspace_bwd_filter_sizes_[i] > workspace_limit_bytes ||
-        workspace_bwd_data_sizes_[i] > workspace_limit_bytes ||
-        // We need to get workspace sizes for the default algos at 1st run
-        backward_passed_ctr_ == 0) {
+        workspace_bwd_data_sizes_[i] > workspace_limit_bytes) {
+      use_algo_seeker_ = true;
       this->Reshape(bottom, top);
     }
     // To remove pressure on allocator, allocate the larger of the
@@ -96,6 +99,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Reshape one more time
     if (!workspace.try_reserve(std::max(workspace_bwd_filter_sizes_[i],
         workspace_bwd_data_sizes_[i]))) {
+      use_algo_seeker_ = true;
       this->Reshape(bottom, top);
       workspace.reserve(std::max(workspace_bwd_filter_sizes_[i],
           workspace_bwd_data_sizes_[i]));
@@ -146,7 +150,6 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
-  ++backward_passed_ctr_;
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
