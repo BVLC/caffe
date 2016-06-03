@@ -7,8 +7,8 @@
 namespace caffe {
 
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
-  if (concatFwd_) dnnDelete<Dtype>(concatFwd_);
-  if (concatBwd_) dnnDelete<Dtype>(concatBwd_);
+  dnnDelete<Dtype>(concatFwd_);
+  dnnDelete<Dtype>(concatBwd_);
 }
 
 template <typename Dtype>

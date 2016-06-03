@@ -16,18 +16,22 @@ template <typename Dtype>
 MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
   const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param),
-        fwd_bottom_data   (new MKLData<Dtype>()),
-        fwd_top_data      (new MKLData<Dtype>()),
-        fwd_filter_data   (new MKLData<Dtype>()),
-        fwd_bias_data     (new MKLData<Dtype>()),
-        bwdd_top_diff     (new MKLDiff<Dtype>()),
-        bwdd_bottom_diff  (new MKLDiff<Dtype>()),
-        bwdd_filter_data  (new MKLData<Dtype>()),
-        bwdf_top_diff     (new MKLDiff<Dtype>()),
-        bwdf_filter_diff  (new MKLDiff<Dtype>()),
-        bwdf_bottom_data  (new MKLData<Dtype>()),
-        bwdb_top_diff     (new MKLDiff<Dtype>()),
-        bwdb_bias_diff    (new MKLDiff<Dtype>()) {}
+        fwd_bottom_data(new MKLData<Dtype>()),
+        fwd_top_data(new MKLData<Dtype>()),
+        fwd_filter_data(new MKLData<Dtype>()),
+        fwd_bias_data(new MKLData<Dtype>()),
+        convolutionFwd(NULL),
+        bwdd_top_diff(new MKLDiff<Dtype>()),
+        bwdd_bottom_diff(new MKLDiff<Dtype>()),
+        bwdd_filter_data(new MKLData<Dtype>()),
+        convolutionBwdData(static_cast<dnnPrimitive_t>(NULL)),
+        bwdf_top_diff(new MKLDiff<Dtype>()),
+        bwdf_filter_diff(new MKLDiff<Dtype>()),
+        bwdf_bottom_data(new MKLData<Dtype>()),
+        convolutionBwdFilter(static_cast<dnnPrimitive_t>(NULL)),
+        bwdb_top_diff(new MKLDiff<Dtype>()),
+        bwdb_bias_diff(new MKLDiff<Dtype>()),
+        convolutionBwdBias(static_cast<dnnPrimitive_t>(NULL)) {}
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::compute_output_shape() {
