@@ -251,10 +251,10 @@ layer {
   top: "conv6_stage1"
 }
 layer {
-  name: "conv7_stage1"
+  name: "conv7_stage1_new"
   type: "Convolution"
   bottom: "conv6_stage1"
-  top: "conv7_stage1"
+  top: "conv7_stage1_new"
   param {
     lr_mult: 5
     decay_mult: 1
@@ -264,7 +264,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -441,7 +441,7 @@ layer {
   name: "concat_stage2"
   type: "Concat"
   bottom: "conv4_stage2"
-  bottom: "conv7_stage1"
+  bottom: "conv7_stage1_new"
   bottom: "pool_center_lower"
   top: "concat_stage2"
   concat_param {
@@ -449,10 +449,10 @@ layer {
   }
 }
 layer {
-  name: "Mconv1_stage2"
+  name: "Mconv1_stage2_new"
   type: "Convolution"
   bottom: "concat_stage2"
-  top: "Mconv1_stage2"
+  top: "Mconv1_stage2_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -477,13 +477,13 @@ layer {
 layer {
   name: "Mrelu1_stage2"
   type: "ReLU"
-  bottom: "Mconv1_stage2"
-  top: "Mconv1_stage2"
+  bottom: "Mconv1_stage2_new"
+  top: "Mconv1_stage2_new"
 }
 layer {
   name: "Mconv2_stage2"
   type: "Convolution"
-  bottom: "Mconv1_stage2"
+  bottom: "Mconv1_stage2_new"
   top: "Mconv2_stage2"
   param {
     lr_mult: 1
@@ -577,10 +577,10 @@ layer {
   top: "Mconv4_stage2"
 }
 layer {
-  name: "Mconv5_stage2"
+  name: "Mconv5_stage2_new"
   type: "Convolution"
   bottom: "Mconv4_stage2"
-  top: "Mconv5_stage2"
+  top: "Mconv5_stage2_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -590,7 +590,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -638,7 +638,7 @@ layer {
   name: "concat_stage3"
   type: "Concat"
   bottom: "conv1_stage3"
-  bottom: "Mconv5_stage2"
+  bottom: "Mconv5_stage2_new"
   bottom: "pool_center_lower"
   top: "concat_stage3"
   concat_param {
@@ -646,10 +646,10 @@ layer {
   }
 }
 layer {
-  name: "Mconv1_stage3"
+  name: "Mconv1_stage3_new"
   type: "Convolution"
   bottom: "concat_stage3"
-  top: "Mconv1_stage3"
+  top: "Mconv1_stage3_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -674,13 +674,13 @@ layer {
 layer {
   name: "Mrelu1_stage3"
   type: "ReLU"
-  bottom: "Mconv1_stage3"
-  top: "Mconv1_stage3"
+  bottom: "Mconv1_stage3_new"
+  top: "Mconv1_stage3_new"
 }
 layer {
   name: "Mconv2_stage3"
   type: "Convolution"
-  bottom: "Mconv1_stage3"
+  bottom: "Mconv1_stage3_new"
   top: "Mconv2_stage3"
   param {
     lr_mult: 1
@@ -774,10 +774,10 @@ layer {
   top: "Mconv4_stage3"
 }
 layer {
-  name: "Mconv5_stage3"
+  name: "Mconv5_stage3_new"
   type: "Convolution"
   bottom: "Mconv4_stage3"
-  top: "Mconv5_stage3"
+  top: "Mconv5_stage3_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -787,7 +787,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -835,7 +835,7 @@ layer {
   name: "concat_stage4"
   type: "Concat"
   bottom: "conv1_stage4"
-  bottom: "Mconv5_stage3"
+  bottom: "Mconv5_stage3_new"
   bottom: "pool_center_lower"
   top: "concat_stage4"
   concat_param {
@@ -843,10 +843,10 @@ layer {
   }
 }
 layer {
-  name: "Mconv1_stage4"
+  name: "Mconv1_stage4_new"
   type: "Convolution"
   bottom: "concat_stage4"
-  top: "Mconv1_stage4"
+  top: "Mconv1_stage4_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -871,13 +871,13 @@ layer {
 layer {
   name: "Mrelu1_stage4"
   type: "ReLU"
-  bottom: "Mconv1_stage4"
-  top: "Mconv1_stage4"
+  bottom: "Mconv1_stage4_new"
+  top: "Mconv1_stage4_new"
 }
 layer {
   name: "Mconv2_stage4"
   type: "Convolution"
-  bottom: "Mconv1_stage4"
+  bottom: "Mconv1_stage4_new"
   top: "Mconv2_stage4"
   param {
     lr_mult: 1
@@ -971,10 +971,10 @@ layer {
   top: "Mconv4_stage4"
 }
 layer {
-  name: "Mconv5_stage4"
+  name: "Mconv5_stage4_new"
   type: "Convolution"
   bottom: "Mconv4_stage4"
-  top: "Mconv5_stage4"
+  top: "Mconv5_stage4_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -984,7 +984,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -1032,7 +1032,7 @@ layer {
   name: "concat_stage5"
   type: "Concat"
   bottom: "conv1_stage5"
-  bottom: "Mconv5_stage4"
+  bottom: "Mconv5_stage4_new"
   bottom: "pool_center_lower"
   top: "concat_stage5"
   concat_param {
@@ -1040,10 +1040,10 @@ layer {
   }
 }
 layer {
-  name: "Mconv1_stage5"
+  name: "Mconv1_stage5_new"
   type: "Convolution"
   bottom: "concat_stage5"
-  top: "Mconv1_stage5"
+  top: "Mconv1_stage5_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1068,13 +1068,13 @@ layer {
 layer {
   name: "Mrelu1_stage5"
   type: "ReLU"
-  bottom: "Mconv1_stage5"
-  top: "Mconv1_stage5"
+  bottom: "Mconv1_stage5_new"
+  top: "Mconv1_stage5_new"
 }
 layer {
   name: "Mconv2_stage5"
   type: "Convolution"
-  bottom: "Mconv1_stage5"
+  bottom: "Mconv1_stage5_new"
   top: "Mconv2_stage5"
   param {
     lr_mult: 1
@@ -1168,10 +1168,10 @@ layer {
   top: "Mconv4_stage5"
 }
 layer {
-  name: "Mconv5_stage5"
+  name: "Mconv5_stage5_new"
   type: "Convolution"
   bottom: "Mconv4_stage5"
-  top: "Mconv5_stage5"
+  top: "Mconv5_stage5_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1181,7 +1181,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {
@@ -1229,7 +1229,7 @@ layer {
   name: "concat_stage6"
   type: "Concat"
   bottom: "conv1_stage6"
-  bottom: "Mconv5_stage5"
+  bottom: "Mconv5_stage5_new"
   bottom: "pool_center_lower"
   top: "concat_stage6"
   concat_param {
@@ -1237,10 +1237,10 @@ layer {
   }
 }
 layer {
-  name: "Mconv1_stage6"
+  name: "Mconv1_stage6_new"
   type: "Convolution"
   bottom: "concat_stage6"
-  top: "Mconv1_stage6"
+  top: "Mconv1_stage6_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1265,13 +1265,13 @@ layer {
 layer {
   name: "Mrelu1_stage6"
   type: "ReLU"
-  bottom: "Mconv1_stage6"
-  top: "Mconv1_stage6"
+  bottom: "Mconv1_stage6_new"
+  top: "Mconv1_stage6_new"
 }
 layer {
   name: "Mconv2_stage6"
   type: "Convolution"
-  bottom: "Mconv1_stage6"
+  bottom: "Mconv1_stage6_new"
   top: "Mconv2_stage6"
   param {
     lr_mult: 1
@@ -1365,10 +1365,10 @@ layer {
   top: "Mconv4_stage6"
 }
 layer {
-  name: "Mconv5_stage6"
+  name: "Mconv5_stage6_new"
   type: "Convolution"
   bottom: "Mconv4_stage6"
-  top: "Mconv5_stage6"
+  top: "Mconv5_stage6_new"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1378,7 +1378,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 15
+    num_output: 18
     pad: 0
     kernel_size: 1
     weight_filler {

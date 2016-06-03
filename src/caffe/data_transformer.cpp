@@ -83,7 +83,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   // ------------------- objpos -----------------------
   DecodeFloats(data, offset3+3*offset1, &meta.objpos.x, 1);
   DecodeFloats(data, offset3+3*offset1+4, &meta.objpos.y, 1);
-  meta.objpos -= Point2f(1,1);
+  meta.objpos -= Point2f(1,1); //becuase index in Matlab starts from 1
   // ------------ scale_self, joint_self --------------
   DecodeFloats(data, offset3+4*offset1, &meta.scale_self, 1);
   meta.joint_self.joints.resize(np_in_lmdb);

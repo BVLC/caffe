@@ -141,18 +141,18 @@ def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True, samplin
 				joint_other = data[idx]['joint_others']
 				objpos_other = data[idx]['objpos_other']
 				scale_provided_other = data[idx]['scale_provided_other']
-			# (f) objpos_other_x (float), objpos_other_y (float) (nop lines)
+			# (g) objpos_other_x (float), objpos_other_y (float) (nop lines)
 			for i in range(nop):
 				objpos_binary = float2bytes(objpos_other[i])
 				for j in range(len(objpos_binary)):
 					meta_data[clidx][j] = ord(objpos_binary[j])
 				clidx = clidx + 1
-			# (g) scale_provided_other (nop floats in 1 line)
+			# (h) scale_provided_other (nop floats in 1 line)
 			scale_provided_other_binary = float2bytes(scale_provided_other)
 			for j in range(len(scale_provided_other_binary)):
 				meta_data[clidx][j] = ord(scale_provided_other_binary[j])
 			clidx = clidx + 1
-			# (h) joint_others (3*16) (float) (nop*3 lines)
+			# (j) joint_others (3*16) (float) (nop*3 lines)
 			for n in range(nop):
 				joints = np.asarray(joint_other[n]).T.tolist() # transpose to 3*16
 				for i in range(len(joints)):

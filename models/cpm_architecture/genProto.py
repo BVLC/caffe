@@ -152,8 +152,8 @@ def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, str
 def getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval):
     string = 'net: "%s/%s/pose_train_test.prototxt"\n\
 # The base learning rate, momentum and the weight decay of the network.\n\
-test_iter: %d\n\
-test_intervall: %d\n\
+#test_iter: %d\n\
+#test_intervall: %d\n\
 base_lr: %f\n\
 momentum: 0.9\n\
 weight_decay: 0.0005\n\
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     ### Change here for different dataset
     path_in_caffe = 'models/cpm_architecture'
     directory = 'prototxt'
-    dataFolder = '%s/%s/lmdb' % (path_in_caffe, directory)
+    dataFolder = '%s/lmdb/train' % (path_in_caffe)
     stepsize = 136106 # stepsize to decrease learning rate. This should depend on your dataset size
     test_iter = 1000 # TODO: change it
     test_interval = 1000 # TODO: change it
@@ -187,9 +187,12 @@ if __name__ == "__main__":
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
     base_lr = 8e-5
+    # num_parts and np_in_lmdb are two parameters that are used inside the framework to move from one
+    # dataset definition to another. Num_parts is the number of parts we want to have, while
+    # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.
     transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368, visualize=False,
                              target_dist=1.171, scale_prob=1, scale_min=0.7, scale_max=1.3,
-                             max_rotate_degree=40, center_perterb_max=0, do_clahe=False)
+                             max_rotate_degree=40, center_perterb_max=0, do_clahe=False, num_parts=17, np_in_lmdb=17)
     nCP = 3
     CH = 128
     stage = 6
