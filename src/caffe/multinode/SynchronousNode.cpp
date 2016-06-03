@@ -161,6 +161,7 @@ class SynchronousSync : public InternalThread
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<Waypoint> up_waypoint;
   shared_ptr<Waypoint> down_waypoint;
+  shared_ptr<BlobAccessor<Dtype> > blob_accessor;
   shared_ptr<BlobConstInfo> const_info;
   shared_ptr<BlobSyncInfo> up_sync;
   shared_ptr<BlobSyncInfo> down_sync;
@@ -268,6 +269,7 @@ class SynchronousSync : public InternalThread
         solver->param().multinode_param(), true))
     , up_waypoint(new UpDownWaypoint<true>(waypoint->parent()))
     , down_waypoint(new UpDownWaypoint<false>(waypoint->id()))
+    , blob_accessor(BlobInfoFactory<Dtype>::create_blob_accessor(solver))
     , const_info(BlobInfoFactory<Dtype>::create_const_info(
         solver, codec->max_elements_per_part()))
     , up_sync(BlobInfoFactory<Dtype>::create_sync_info(const_info))
@@ -276,13 +278,13 @@ class SynchronousSync : public InternalThread
     , snapshot_per_iters(solver->param().snapshot())
     , calculates(true)
     , keychain(BlobKeyChain<Dtype>::create(const_info->layers()))
-    , comms_up(BlobComms<Dtype>::create(
-        solver, const_info, up_sync, up_waypoint, codec, keychain,
+    , comms_up(BlobComms<Dtype>::create(blob_accessor,
+        const_info, up_sync, up_waypoint, codec, keychain,
         typename BlobComms<Dtype>::Settings(
           BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
         0))
-    , comms_down(BlobComms<Dtype>::create(
-        solver, const_info, down_sync, down_waypoint, codec, keychain,
+    , comms_down(BlobComms<Dtype>::create(blob_accessor,
+        const_info, down_sync, down_waypoint, codec, keychain,
         typename BlobComms<Dtype>::Settings(
           BlobEncoding::PARAMS, BlobEncoding::GRADS, 1.0, 1.0),
         0))

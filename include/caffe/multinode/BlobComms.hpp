@@ -30,7 +30,7 @@ class BlobComms : public internode::Waypoint::Handler {
   };
 
   static shared_ptr<BlobComms> create(
-    shared_ptr<Solver<Dtype> > solver,
+    shared_ptr<BlobAccessor<Dtype> > blob_accessor,
     shared_ptr<BlobConstInfo> const_info,
     shared_ptr<BlobSyncInfo> sync_info,
     shared_ptr<internode::Waypoint> waypoint,
@@ -39,8 +39,6 @@ class BlobComms : public internode::Waypoint::Handler {
     Settings settings,
     int num_of_threads);
 
-  virtual uint32_t currently_sending_version() const = 0;
-  virtual uint32_t currently_sending_version(int layer_id) const = 0;
   virtual void push(int layer_id, uint32_t version) = 0;
   virtual void push(int layer_id, int blob_id, int part, uint32_t version) = 0;
   virtual void cancel(int layer_id, uint32_t version) = 0;
@@ -48,6 +46,7 @@ class BlobComms : public internode::Waypoint::Handler {
 
   virtual void send_iter_size(int iter_size) = 0;
   virtual void register_iter_size_handler(IterSizeHandler* handler) = 0;
+  virtual void finish_all_tasks() = 0;
 };
 
 }  // namespace caffe
