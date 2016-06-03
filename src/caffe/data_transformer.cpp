@@ -103,13 +103,13 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   }
 
   // ------------ scale_self, joint_self --------------
-  LOG(INFO) << "3d joints";
+  //LOG(INFO) << "3d joints";
   meta.joint_self_3d.joints.resize(np_in_lmdb);
   for(int i=0; i<np_in_lmdb; i++){
     DecodeFloats(data, offset3+8*offset1+4*i, &meta.joint_self_3d.joints[i].x, 1);
     DecodeFloats(data, offset3+9*offset1+4*i, &meta.joint_self_3d.joints[i].y, 1);
     DecodeFloats(data, offset3+10*offset1+4*i, &meta.joint_self_3d.joints[i].z, 1);
-    LOG(INFO) << meta.joint_self_3d.joints[i].x << " " << meta.joint_self_3d.joints[i].y << " " << meta.joint_self_3d.joints[i].z;
+    //LOG(INFO) << meta.joint_self_3d.joints[i].x << " " << meta.joint_self_3d.joints[i].y << " " << meta.joint_self_3d.joints[i].z;
   }
 
   
@@ -118,29 +118,29 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   meta.objpos_other.resize(meta.numOtherPeople);
   meta.scale_other.resize(meta.numOtherPeople);
   meta.joint_others.resize(meta.numOtherPeople);
-  for(int p=0; p<meta.numOtherPeople; p++){
-    DecodeFloats(data, offset3+(8+p)*offset1, &meta.objpos_other[p].x, 1);
-    DecodeFloats(data, offset3+(8+p)*offset1+4, &meta.objpos_other[p].y, 1);
-    meta.objpos_other[p] -= Point2f(1,1);
-    DecodeFloats(data, offset3+(8+meta.numOtherPeople)*offset1+4*p, &meta.scale_other[p], 1);
-  }
-  //8 + numOtherPeople lines loaded
-  for(int p=0; p<meta.numOtherPeople; p++){
-    meta.joint_others[p].joints.resize(np_in_lmdb);
-    meta.joint_others[p].isVisible.resize(np_in_lmdb);
-    for(int i=0; i<np_in_lmdb; i++){
-      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
-      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
-      meta.joint_others[p].joints[i] -= Point2f(1,1);
-      float isVisible;
-      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+2)*offset1+4*i, &isVisible, 1);
-      meta.joint_others[p].isVisible[i] = (isVisible == 0) ? 0 : 1;
-      if(meta.joint_others[p].joints[i].x < 0 || meta.joint_others[p].joints[i].y < 0 ||
-         meta.joint_others[p].joints[i].x >= meta.img_size.width || meta.joint_others[p].joints[i].y >= meta.img_size.height){
-        meta.joint_others[p].isVisible[i] = 2; // 2 means cropped, 1 means occluded by still on image
-      }
-    }
-  }
+//  for(int p=0; p<meta.numOtherPeople; p++){
+//    DecodeFloats(data, offset3+(8+p)*offset1, &meta.objpos_other[p].x, 1);
+//    DecodeFloats(data, offset3+(8+p)*offset1+4, &meta.objpos_other[p].y, 1);
+//    meta.objpos_other[p] -= Point2f(1,1);
+//    DecodeFloats(data, offset3+(8+meta.numOtherPeople)*offset1+4*p, &meta.scale_other[p], 1);
+//  }
+//  //8 + numOtherPeople lines loaded
+//  for(int p=0; p<meta.numOtherPeople; p++){
+//    meta.joint_others[p].joints.resize(np_in_lmdb);
+//    meta.joint_others[p].isVisible.resize(np_in_lmdb);
+//    for(int i=0; i<np_in_lmdb; i++){
+//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
+//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
+//      meta.joint_others[p].joints[i] -= Point2f(1,1);
+//      float isVisible;
+//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+2)*offset1+4*i, &isVisible, 1);
+//      meta.joint_others[p].isVisible[i] = (isVisible == 0) ? 0 : 1;
+//      if(meta.joint_others[p].joints[i].x < 0 || meta.joint_others[p].joints[i].y < 0 ||
+//         meta.joint_others[p].joints[i].x >= meta.img_size.width || meta.joint_others[p].joints[i].y >= meta.img_size.height){
+//        meta.joint_others[p].isVisible[i] = 2; // 2 means cropped, 1 means occluded by still on image
+//      }
+//    }
+//  }
 }
 
 template<typename Dtype>
@@ -477,7 +477,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   //TODO: change this for new data
   ReadMetaData(meta, data, offset3, offset1);
   if(param_.transform_body_joint()) // we expect to transform body joints, and not to transform hand joints
-    TransformMetaJoints(meta);
+    TransformMetaJoints(meta);	//This is skipped since we have defined no transform_body_joint
 
   //visualize original
   if(0 && param_.visualize()) 
@@ -485,23 +485,27 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
 
   //Start transforming
   Mat img_aug = Mat::zeros(crop_y, crop_x, CV_8UC3);
-  Mat img_temp, img_temp2, img_temp3; //size determined by scale
+  //Mat img_temp, img_temp2, img_temp3; //size determined by scale
+  Mat img_temp; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
-    as.scale = augmentation_scale(img, img_temp, meta);
-    //LOG(INFO) << meta.joint_self.joints.size();
+	//as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
+	as.scale = 1.0;
+	//LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
-    as.degree = augmentation_rotate(img_temp, img_temp2, meta);
+    //as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
+	as.degree = 0.0;
+	//LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[0];
+//    if(0 && param_.visualize())
+//      visualize(img_temp2, meta, as);
+    // TODO: to be fixed. Crop the image with the right size in order to have all joints inside the cropped image
+    as.crop = augmentation_croppad(img, img_temp, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
-      visualize(img_temp2, meta, as);
-    as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
-    //LOG(INFO) << meta.joint_self.joints.size();
-    //LOG(INFO) << meta.joint_self.joints[0];
-    if(0 && param_.visualize()) 
-      visualize(img_temp3, meta, as);
-    as.flip = augmentation_flip(img_temp3, img_aug, meta);
+      visualize(img_temp, meta, as);
+    as.flip = augmentation_flip(img_temp, img_aug, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(param_.visualize()) 
@@ -510,7 +514,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   else {
     img_aug = img.clone();
     as.scale = 1;
-    as.crop = Size();
+    as.crop = Size(); //This is 368x368
     as.flip = 0;
     as.degree = 0;
   }
@@ -529,7 +533,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
-  
+
+  // generate data for the 4th dimension (heat map for the center of the person)
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
   //LOG(INFO) << "image transformation done!";
   generateLabelMap(transformed_label, img_aug, meta);
@@ -587,7 +592,7 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
   float x_offset = int((dice_x - 0.5) * 2 * param_.center_perterb_max());
   float y_offset = int((dice_y - 0.5) * 2 * param_.center_perterb_max());
 
-  //LOG(INFO) << "Size of img_temp is " << img_temp.cols << " " << img_temp.rows;
+  LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
   //LOG(INFO) << "ROI is " << x_offset << " " << y_offset << " " << min(800, img_temp.cols) << " " << min(256, img_temp.rows);
   Point2i center = meta.objpos + Point2f(x_offset, y_offset);
   int offset_left = -(center.x - (crop_x/2));
@@ -624,56 +629,57 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
+	// TODO: change it if we want to use this
 	//---------------------------------------------------------------
 	//------------ CHANGE TO THE RIGHT NUMBER OF JOINTS -------------
-	assert(j.joints.size() == 14);
+	assert(j.joints.size() == 17);
 	//---------------------------------------------------------------
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
   //     L arms: 15(wrist), 14(elbow), 13(shoulder)
-  if(np == 9){
-    int right[4] = {1,2,3,7};
-    int left[4] = {4,5,6,8};
-    for(int i=0; i<4; i++){
-      int ri = right[i] - 1;
-      int li = left[i] - 1;
-      Point2f temp = j.joints[ri];
-      j.joints[ri] = j.joints[li];
-      j.joints[li] = temp;
-      int temp_v = j.isVisible[ri];
-      j.isVisible[ri] = j.isVisible[li];
-      j.isVisible[li] = temp_v;
-    }
-  }
-  else if(np == 14){
-    int right[6] = {3,4,5,9,10,11}; //1-index
-    int left[6] = {6,7,8,12,13,14}; //1-index
-    for(int i=0; i<6; i++){
-      int ri = right[i] - 1;
-      int li = left[i] - 1;
-      Point2f temp = j.joints[ri];
-      j.joints[ri] = j.joints[li];
-      j.joints[li] = temp;
-      int temp_v = j.isVisible[ri];
-      j.isVisible[ri] = j.isVisible[li];
-      j.isVisible[li] = temp_v;
-    }
-  }
-  else if(np == 28){
-    int right[11] = {3,4,5,9,10,11,18,19,20,24,25}; //1-index
-    int left[11] = {6,7,8,12,13,14,21,22,23,26,27}; //1-index
-    for(int i=0; i<11; i++){
-      int ri = right[i] - 1;
-      int li = left[i] - 1;
-      Point2f temp = j.joints[ri];
-      j.joints[ri] = j.joints[li];
-      j.joints[li] = temp;
-      int temp_v = j.isVisible[ri];
-      j.isVisible[ri] = j.isVisible[li];
-      j.isVisible[li] = temp_v;
-    }
-  }
+//  if(np == 9){
+//    int right[4] = {1,2,3,7};
+//    int left[4] = {4,5,6,8};
+//    for(int i=0; i<4; i++){
+//      int ri = right[i] - 1;
+//      int li = left[i] - 1;
+//      Point2f temp = j.joints[ri];
+//      j.joints[ri] = j.joints[li];
+//      j.joints[li] = temp;
+//      int temp_v = j.isVisible[ri];
+//      j.isVisible[ri] = j.isVisible[li];
+//      j.isVisible[li] = temp_v;
+//    }
+//  }
+//  else if(np == 14){
+//    int right[6] = {3,4,5,9,10,11}; //1-index
+//    int left[6] = {6,7,8,12,13,14}; //1-index
+//    for(int i=0; i<6; i++){
+//      int ri = right[i] - 1;
+//      int li = left[i] - 1;
+//      Point2f temp = j.joints[ri];
+//      j.joints[ri] = j.joints[li];
+//      j.joints[li] = temp;
+//      int temp_v = j.isVisible[ri];
+//      j.isVisible[ri] = j.isVisible[li];
+//      j.isVisible[li] = temp_v;
+//    }
+//  }
+//  else if(np == 28){
+//    int right[11] = {3,4,5,9,10,11,18,19,20,24,25}; //1-index
+//    int left[11] = {6,7,8,12,13,14,21,22,23,26,27}; //1-index
+//    for(int i=0; i<11; i++){
+//      int ri = right[i] - 1;
+//      int li = left[i] - 1;
+//      Point2f temp = j.joints[ri];
+//      j.joints[ri] = j.joints[li];
+//      j.joints[li] = temp;
+//      int temp_v = j.isVisible[ri];
+//      j.isVisible[ri] = j.isVisible[li];
+//      j.isVisible[li] = temp_v;
+//    }
+//  }
 }
 
 template<typename Dtype>
@@ -807,7 +813,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     }
   }
   //LOG(INFO) << "label cleaned";
-  
+  // generate heatmaps for each of the joints (np is the number of parts)
   for (int i = 0; i < np; i++){
     //LOG(INFO) <<"joint " << i << " out of " << np << " num other ppl "<< meta.numOtherPeople;
 	//LOG(INFO) <<"channel offset " << channelOffset;
@@ -815,11 +821,13 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     if(meta.joint_self.isVisible[i] <= 1){
       putGaussianMaps(transformed_label + i*channelOffset, center, param_.stride(), 
                       grid_x, grid_y, param_.sigma()); //self
+      // it starts from np+1 becuase the element in position np is the heat-map with all the joints
       putGaussianMaps(transformed_label + (i+np+1)*channelOffset, center, param_.stride(), 
                       grid_x, grid_y, param_.sigma()); //self
     }
     //LOG(INFO) << "label put for" << i;
-    //plot others
+
+    //plot others; THIS IS SKIPPED SINCE WE ONLY HAVE ONE PERSON PER FRAME
     for(int j = 0; j < meta.numOtherPeople; j++){ //for every other person
       Point2f center = meta.joint_others[j].joints[i];
       if(meta.joint_others[j].isVisible[i] <= 1){
@@ -829,7 +837,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     }
   }
   
-  //put background channel
+  //create the heat-maps with all the joints
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
       float maximum = 0;

@@ -6,7 +6,7 @@ layer {
   transform_param {
     stride: 8
     max_rotate_degree: 40
-    visualize: false
+    visualize: true
     crop_size_x: 368
     crop_size_y: 368
     scale_prob: 1
@@ -17,6 +17,7 @@ layer {
     do_clahe: false
     num_parts: 17
     np_in_lmdb: 17
+    transform_body_joint: false
   }
   cpmdata_param {
     source: "models/cpm_architecture/lmdb/tmp/train"
