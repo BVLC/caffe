@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/caffe.hpp"
@@ -357,10 +358,7 @@ class SynchronousSync : public InternalThread
     }
   }
 
-  //****************************************************************************
   // This part is called from Comm thread only
-  //****************************************************************************
-
   void push_all_params_down(uint32_t version) {
     CHECK(main_thread_id == boost::this_thread::get_id());
     CHECK(is_root());
@@ -400,10 +398,9 @@ class SynchronousSync : public InternalThread
                                  int blob_id,
                                  int part,
                                  uint32_t version) {
-
     CHECK(main_thread_id == boost::this_thread::get_id());
-    CDLOG(INFO) << "part (" << layer_id << ", " << blob_id << ", " << part << ")"
-            << " is in ready with version " << version;
+    CDLOG(INFO) << "part (" << layer_id << ", " << blob_id << ", " << part
+      << ")" << " is in ready with version " << version;
     keychain->lock(layer_id);
     if ((blob_id == 0) && (part == 0)) {
       vector<int> param_ids =
@@ -436,21 +433,10 @@ class SynchronousSync : public InternalThread
     CVLOG(2) << "net parameters are synced with version: " << version;
   }
 
-  //****************************************************************************
   // Everything below is called from Solver thread only
-  //****************************************************************************
-
   void apply_updates(int layer_id, uint32_t version) {
     CHECK(boost::this_thread::get_id() == solver_thread_id);
     keychain->lock(layer_id);
-    //for (int i = 0; i < const_info->blobs(layer_id); ++i) {
-      //Blob<Dtype>* dest =
-        //solver->net()->layers()[layer_id]->blobs()[i].get();
-      //Blob<Dtype>* src =
-        //solver->net()->layers()[layer_id]->blobs()[i].get();
-      //caffe_cpu_axpby(src->count(), Dtype(1.0), src->cpu_diff(),  
-                                    //Dtype(1.0), dest->mutable_cpu_diff());
-    //}
 
     vector<int> param_ids =
       solver->net()->get_layer_learnable_param_ids(layer_id);
@@ -488,7 +474,7 @@ class SynchronousSync : public InternalThread
     for (int i = 0; i < to_update.size(); ++i)
       apply_updates(to_update[i].first, to_update[i].second);
   }
-  
+
   void set_solver_thread() {
     solver_thread_id = boost::this_thread::get_id();
   }

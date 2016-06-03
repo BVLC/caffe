@@ -1,5 +1,4 @@
 PROJECT := caffe
-CXXFLAGS += -Wno-unused-local-typedefs
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
@@ -337,6 +336,11 @@ LINKER_EXEC_HARDENING_FLAGS += -pie
 # Release-only flag
 ifneq ($(DEBUG), 1)
 	CXX_HARDENING_FLAGS += -D_FORTIFY_SOURCE=2
+endif
+
+# Disable unused-local-typedefs warning for g++
+ifneq (,$(findstring g++,$(CXX)))
+	CXXFLAGS += -Wno-unused-local-typedefs
 endif
 
 # Static linking

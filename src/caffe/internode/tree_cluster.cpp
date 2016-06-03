@@ -89,7 +89,7 @@ class MpiTreeClient : public TreeWaypoint {
     set_recv();
   }
 
-  bool is_ready(MpiRequest& request) {
+  bool is_ready(const MpiRequest& request) {
       boost::recursive_mutex::scoped_lock lock(mtx);
       int flag = 0;
       MPI_Status status;

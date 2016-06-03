@@ -498,24 +498,38 @@ void getFileName(char *file_name, bool use_gpu, const char *name, int id) {
   snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
 }
 
-void saveToFile(bool use_gpu, const char *name, int id,
+bool saveToFile(bool use_gpu, const char *name, int id,
     const real_t *data, unsigned count) {
   char file_name[FILENAME_MAX];
   getFileName(file_name, use_gpu, name, id);
 
   FILE *file = fopen(file_name, "w+b");
-  fwrite(data, sizeof(data[0]), count, file);
+  if (!file) {
+    return false;
+  }
+
+  size_t bytesToWrite = count * sizeof(data[0]);
+  size_t bytesWritten = fwrite(data, 1, bytesToWrite, file);
   fclose(file);
+
+  return bytesWritten == bytesToWrite;
 }
 
-void loadFromFile(bool use_gpu, const char *name, int id,
+bool loadFromFile(bool use_gpu, const char *name, int id,
     real_t *data, unsigned count) {
   char file_name[FILENAME_MAX];
   getFileName(file_name, use_gpu, name, id);
 
   FILE *file = fopen(file_name, "rb");
-  fread(data, sizeof(data[0]), count, file);
+  if (!file) {
+    return false;
+  }
+
+  size_t bytesToRead = count * sizeof(data[0]);
+  size_t bytesRead = fread(data, 1, bytesToRead, file);
   fclose(file);
+
+  return bytesRead == bytesToRead;
 }
 
 int collect() {

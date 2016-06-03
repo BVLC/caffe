@@ -3,9 +3,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include <caffe/test/test_caffe_main.hpp>
 #include "caffe/internode/configuration.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
+#include "caffe/test/test_caffe_main.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
