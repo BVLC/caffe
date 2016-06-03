@@ -33,7 +33,7 @@ struct Part {
 
 template <typename Dtype, bool UseThreads>
 struct BlobCommsImpl : BlobComms<Dtype> {
-  const shared_ptr<Solver<Dtype> > solver;
+  const shared_ptr<BlobAccessor<Dtype> > blob_accessor;
   const shared_ptr<BlobConstInfo> const_info;
   const shared_ptr<BlobSyncInfo> sync_info;
   const shared_ptr<internode::Waypoint> waypoint;
@@ -116,10 +116,9 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     }
   };
 
-  std::vector<boost::shared_ptr<Worker> > all_workers;
-  uint32_t worker;
   mutable boost::recursive_mutex worker_mtx;
   mutable boost::recursive_mutex mtx;
+  uint32_t worker;
 
   vector<uint32_t> sending_version;
   vector<uint32_t> cancelled_version;
@@ -127,7 +126,9 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   std::deque<Part> to_send;
   bool during_sending;
 
-  BlobCommsImpl(shared_ptr<Solver<Dtype> > solver,
+  std::vector<boost::shared_ptr<Worker> > all_workers;
+
+  BlobCommsImpl(shared_ptr<BlobAccessor<Dtype> > blob_accessor,
                 shared_ptr<BlobConstInfo> const_info,
                 shared_ptr<BlobSyncInfo> sync_info,
                 shared_ptr<internode::Waypoint> waypoint,
@@ -135,7 +136,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
                 shared_ptr<BlobKeyChain<Dtype> > keychain,
                 typename BlobComms<Dtype>::Settings settings,
                 uint32_t threads)
-    : solver(solver)
+    : blob_accessor(blob_accessor)
     , const_info(const_info)
     , sync_info(sync_info)
     , waypoint(waypoint)
@@ -143,11 +144,11 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     , keychain(keychain)
     , settings(settings)
     , buffer(new char[codec->packet_size()])
-    , all_workers(threads)
     , worker(0)
     , sending_version(const_info->layers(), 0)
     , cancelled_version(const_info->layers(), 0)
-    , during_sending(false) {
+    , during_sending(false)
+    , all_workers(threads) {
     for (int i = 0; i < const_info->layers(); ++i) {
       std::vector<Part> parts;
       for (int j = 0; j < const_info->blobs(i); ++j) {
@@ -157,7 +158,9 @@ struct BlobCommsImpl : BlobComms<Dtype> {
         }
       }
       all_parts.push_back(parts);
+      DLOG(INFO) << "parts[=" << i << "]=" << parts.size();
     }
+    DLOG(INFO) << "all_parts_size=" << all_parts.size();
     for (int i = 0; i < threads; ++i)
       all_workers[i].reset(new Worker(this, codec->packet_size()));
   }
@@ -170,15 +173,11 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   }
 
   Blob<Dtype>* get_blob(int layer_id, int blob_id) {
-    CHECK_GE(layer_id, 0);
-    CHECK_GE(blob_id, 0);
-    CHECK(layer_id < solver->net()->layers().size());
-    CHECK(blob_id < solver->net()->layers()[layer_id]->blobs().size());
-    return solver->net()->layers()[layer_id]->blobs()[blob_id].get();
+    return blob_accessor->get_blob(layer_id, blob_id);
   }
   template <typename PartInfo>
   Blob<Dtype>* get_blob(const PartInfo& item) {
-    return get_blob(item.layer_id, item.blob_id);
+    return blob_accessor->get_blob(item.layer_id, item.blob_id);
   }
 
   boost::optional<Part> get_next_part_to_send() {
@@ -186,7 +185,12 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     while (!to_send.empty()) {
       Part ret = to_send.front();
       to_send.pop_front();
-      if (sending_version[ret.layer_id] > cancelled_version[ret.layer_id]) {
+      DLOG(INFO) << "sendv[" << ret.layer_id
+                 << "]=" << sending_version[ret.layer_id]
+                 << ", cancelv[" << ret.layer_id << "]="
+                 << cancelled_version[ret.layer_id];
+      if (sending_version.at(ret.layer_id) >
+          cancelled_version.at(ret.layer_id)) {
         return ret;
       } else {
         DLOG(INFO) << "discard send";
@@ -253,24 +257,10 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     }
   }
 
-  virtual uint32_t currently_sending_version() const {
-    boost::recursive_mutex::scoped_lock lock(mtx);
-    uint32_t ret = 0;
-    for (int i = 0; i < sending_version.size(); ++i) {
-      ret = std::max(ret, sending_version[i]);
-    }
-    return ret;
-  }
-
-  virtual uint32_t currently_sending_version(int layer_id) const {
-    boost::recursive_mutex::scoped_lock lock(mtx);
-    CHECK_GE(layer_id, 0);
-    CHECK(layer_id < sending_version.size());
-    return sending_version[layer_id];
-  }
-
   void push(int layer_id, uint32_t version) {
     {
+      CHECK_GE(layer_id, 0);
+      CHECK_LT(layer_id, const_info->layers());
       boost::recursive_mutex::scoped_lock lock(mtx);
       sending_version[layer_id] = std::max(version, sending_version[layer_id]);
       to_send.insert(
@@ -289,6 +279,12 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
   void push(int layer_id, int blob_id, int part_id, uint32_t version) {
     {
+      CHECK_GE(layer_id, 0);
+      CHECK_LT(layer_id, const_info->layers());
+      CHECK_GE(blob_id, 0);
+      CHECK_LT(blob_id, const_info->blobs(layer_id));
+      CHECK_GE(part_id, 0);
+      CHECK_LT(part_id, const_info->parts(layer_id, blob_id));
       boost::recursive_mutex::scoped_lock lock(mtx);
       sending_version[layer_id] = std::max(version, sending_version[layer_id]);
       Part part = {layer_id, blob_id, part_id, version};
@@ -408,13 +404,15 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     boost::recursive_mutex::scoped_lock lock(mtx);
     iter_size_handlers.push_back(handler);
   }
+
+  void finish_all_tasks() {}  // TODO: finish
 };
 
 }  // namespace
 
 template <typename Dtype>
 shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
-    shared_ptr<Solver<Dtype> > solver,
+    shared_ptr<BlobAccessor<Dtype> > blob_accessor,
     shared_ptr<BlobConstInfo> const_info,
     shared_ptr<BlobSyncInfo> sync_info,
     shared_ptr<internode::Waypoint> waypoint,
@@ -424,11 +422,12 @@ shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
     int num_of_threads) {
 
   if (num_of_threads < 2) {
-    return boost::make_shared<BlobCommsImpl<Dtype, false> >(
-        solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
+    return boost::make_shared<BlobCommsImpl<Dtype, false> >(blob_accessor,
+      const_info, sync_info, waypoint, codec, keychain, settings, 0);
   }
-  return boost::make_shared<BlobCommsImpl<Dtype, false> >(
-      solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
+  return boost::make_shared<BlobCommsImpl<Dtype, true> >(blob_accessor,
+      const_info, sync_info, waypoint, codec, keychain, settings,
+      num_of_threads);
 }
 
 template <typename Dtype>

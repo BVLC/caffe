@@ -93,6 +93,7 @@ struct SynchronousParamSyncingImpl
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
+  shared_ptr<BlobAccessor<Dtype> > blob_accessor;
   shared_ptr<BlobConstInfo> const_info;
   shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<Dtype> > keychain;
@@ -112,13 +113,14 @@ struct SynchronousParamSyncingImpl
     , codec(BlobCodec<Dtype>::create_codec(
         solver->param().multinode_param(), true))
     , waypoint(internode::configure_client(comm, address, codec->packet_size()))
+    , blob_accessor(BlobInfoFactory<Dtype>::create_blob_accessor(solver))
     , const_info(BlobInfoFactory<Dtype>::create_const_info(
         solver, codec->max_elements_per_part()))
     , sync_info(BlobInfoFactory<Dtype>::create_sync_info(const_info))
     , keychain(BlobKeyChain<Dtype>::create_empty(const_info->layers()))
     , comms(
-        BlobComms<Dtype>::create(
-          solver, const_info, sync_info, waypoint, codec, keychain,
+        BlobComms<Dtype>::create(blob_accessor,
+          const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
           num_of_threads))
