@@ -7,7 +7,7 @@ import os.path
 import struct
 import caffe
 
-def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True):
+def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True, samplingRate = 1):
 	if not os.path.exists(lmdb_path):
 		os.makedirs(lmdb_path)
 	env = lmdb.open(lmdb_path, map_size=int(1e12))
@@ -31,10 +31,12 @@ def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True):
 				data = data + data_this
 			numSample = len(data)
 			print numSample
-	
+
+	newIdx = range(0, numSample, samplingRate)	
+	numSample = len(newIdx)
 	random_order = np.random.permutation(numSample).tolist()
 	
-	isValidationArray = [data[i]['isValidation'] for i in range(numSample)];
+	isValidationArray = [data[i]['isValidation'] for i in newIdx];
 	if(validation == 1):
 		totalWriteCount = isValidationArray.count(1.0);
  	else:
@@ -47,7 +49,7 @@ def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True):
 	writeCount = 0
 
 	for count in range(numSample):
-		idx = random_order[count]
+		idx = newIdx[random_order[count]]
 		#if (data[idx]['isValidation'] != 0 and validation == 1):
 		#	print '%d/%d skipped' % (count,idx)
 		#	continue
@@ -190,6 +192,8 @@ if __name__ == "__main__":
      
      # TODO: change order to have something similar to the previous dataset 
      joints = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
-     writeLMDB(['H36M'], 'lmdb/train', idxSetJoints = joints, validation = False)
-     writeLMDB(['H36M'], 'lmdb/val', idxSetJoints = joints, validation = True)
+     s = 10
+     print "Generating train and val lmdb databases sampling every %d frames" % s
+     writeLMDB(['H36M'], 'lmdb/train', idxSetJoints = joints, validation = False, samplingRate = s)
+     writeLMDB(['H36M'], 'lmdb/val', idxSetJoints = joints, validation = True, samplingRate = s)
 
