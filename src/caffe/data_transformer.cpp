@@ -99,9 +99,20 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
        meta.joint_self.joints[i].x >= meta.img_size.width || meta.joint_self.joints[i].y >= meta.img_size.height){
       meta.joint_self.isVisible[i] = 2; // 2 means cropped, 0 means occluded by still on image
     }
-    //LOG(INFO) << meta.joint_self.joints[i].x << " " << meta.joint_self.joints[i].y << " " << meta.joint_self.isVisible[i];
+    LOG(INFO) << meta.joint_self.joints[i].x << " " << meta.joint_self.joints[i].y << " " << meta.joint_self.isVisible[i];
   }
+
+  // ------------ scale_self, joint_self --------------
+  meta.joint_self_3d.joints.resize(np_in_lmdb);
+  for(int i=0; i<np_in_lmdb; i++){
+    DecodeFloats(data, offset3+8*offset1+4*i, &meta.joint_self_3d.joints[i].x, 1);
+    DecodeFloats(data, offset3+9*offset1+4*i, &meta.joint_self_3d.joints[i].y, 1);
+    DecodeFloats(data, offset3+10*offset1+4*i, &meta.joint_self_3d.joints[i].z, 1);
+    LOG(INFO) << meta.joint_self_3d.joints[i].x << " " << meta.joint_self_3d.joints[i].y << " " << meta.joint_self_3d.joints[i].z;
+  }
+
   
+  // THIS SHOULD BE SKIPPED: WE HAVE ONLY ONE PERSON PER FRAME
   //others (7 lines loaded)
   meta.objpos_other.resize(meta.numOtherPeople);
   meta.scale_other.resize(meta.numOtherPeople);

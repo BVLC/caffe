@@ -16,7 +16,7 @@ layer {
     center_perterb_max: 0
     do_clahe: false
     num_parts: 17
-    np_in_lmdb: 18
+    np_in_lmdb: 17
   }
   cpmdata_param {
     source: "models/cpm_architecture/lmdb/train"

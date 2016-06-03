@@ -142,6 +142,10 @@ class DataTransformer {
     vector<int> isVisible;
   };
 
+  struct Joints3d {
+    vector<Point3f> joints;
+  };
+
   struct MetaData {
     string dataset;
     Size img_size;
@@ -154,7 +158,8 @@ class DataTransformer {
     int epoch;
     Point2f objpos; //objpos_x(float), objpos_y (float)
     float scale_self;
-    Joints joint_self; //(3*16)
+    Joints joint_self; //(3*17)
+    Joints3d joint_self_3d; //(3*17)
 
     vector<Point2f> objpos_other; //length is numOtherPeople
     vector<float> scale_other; //length is numOtherPeople
