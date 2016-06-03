@@ -193,7 +193,12 @@ template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
-void caffe_gpu_scal(const int N, const Dtype alpha, Dtype *X);
+void caffe_gpu_scal(const int N, const Dtype alpha, Dtype* X);
+
+#ifndef CPU_ONLY
+template <typename Dtype>
+void caffe_gpu_scal(const int N, const Dtype alpha, Dtype* X, cudaStream_t str);
+#endif
 
 template <typename Dtype>
 void caffe_gpu_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);

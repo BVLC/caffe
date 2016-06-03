@@ -4,15 +4,19 @@
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
-/* NVIDA Cuda */
+/* NVIDIA Cuda */
 #cmakedefine HAVE_CUDA
 
-/* NVIDA cuDNN */
+/* NVIDIA cuDNN */
 #cmakedefine HAVE_CUDNN
 #cmakedefine USE_CUDNN
  
-/* NVIDA cuDNN */
+/* NVIDIA cuDNN */
 #cmakedefine CPU_ONLY
+if(NCCL_FOUND)
+#cmakedefine USE_NCCL
+endif()
+
 
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}

@@ -10,7 +10,7 @@ endif()
 project(Caffe C CXX)
 
 # ---[ Caffe version
-set(CAFFE_TARGET_VERSION "0.15.1")
+set(CAFFE_TARGET_VERSION "0.15.2")
 set(CAFFE_TARGET_SOVERSION "0.15")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
@@ -28,6 +28,21 @@ include(cmake/ConfigGen.cmake)
 # ---[ Options
 caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
 caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
+
+# USE_NCCL: Build Caffe with NCCL Library support
+# Regular ON/OFF option doesn't work here because we need to recognize 3 states:
+# 1. User didn't set USE_NCCL option =>
+#   1.1 If CPU_ONLY is ON we do nothing.
+#   1.2 If CPU_ONLY is OFF we *quietly* try to find it and use if found; do nothing otherwise.
+# 2. User explicitly set USE_NCCL=ON option =>
+#   1.1 If CPU_ONLY is ON we do nothing (it's higher priority).
+#   2.1 If CPU_ONLY is OFF we try to find it with *required* option, thus CMake fails if not found. 
+# 3. User explicitly set USE_NCCL=OFF option => we do nothing.
+SET(USE_NCCL)
+if(DEFINED USE_NCCL)
+  STRING(TOUPPER "${USE_NCCL}" USE_NCCL)
+endif()
+
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
 set(python_version "2" CACHE STRING "Specify which Python version to use")
