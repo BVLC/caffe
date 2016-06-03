@@ -505,6 +505,7 @@ bool saveToFile(bool use_gpu, const char *name, int id,
 
   FILE *file = fopen(file_name, "w+b");
   if (!file) {
+    LOG(ERROR) << "Failed to create file '" << file_name << "'.";
     return false;
   }
 
@@ -512,7 +513,12 @@ bool saveToFile(bool use_gpu, const char *name, int id,
   size_t bytesWritten = fwrite(data, 1, bytesToWrite, file);
   fclose(file);
 
-  return bytesWritten == bytesToWrite;
+  if (bytesWritten != bytesToWrite) {
+    LOG(ERROR) << "Failed to write data to '" << file_name << "' file.";
+    return false;
+  }
+
+  return true;
 }
 
 bool loadFromFile(bool use_gpu, const char *name, int id,
@@ -522,6 +528,7 @@ bool loadFromFile(bool use_gpu, const char *name, int id,
 
   FILE *file = fopen(file_name, "rb");
   if (!file) {
+    LOG(ERROR) << "Failed to open file '" << file_name << "' for read.";
     return false;
   }
 
@@ -529,7 +536,12 @@ bool loadFromFile(bool use_gpu, const char *name, int id,
   size_t bytesRead = fread(data, 1, bytesToRead, file);
   fclose(file);
 
-  return bytesRead == bytesToRead;
+  if (bytesRead == bytesToRead) {
+    LOG(ERROR) << "Failed to read data from '" << file_name << "' file.";
+    return false;
+  }
+
+  return true;
 }
 
 int collect() {
