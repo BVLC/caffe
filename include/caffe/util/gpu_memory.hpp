@@ -12,24 +12,23 @@ namespace cub {
 namespace caffe {
 
 struct GPUMemory {
-
-  static GPUMemory& Get();
-
-  void GetInfo(size_t* free_mem, size_t* used_mem) {
+  static void GetInfo(size_t* free_mem, size_t* used_mem) {
     return mgr_.GetInfo(free_mem, used_mem);
   }
 
   template <class Any>
-  void allocate(Any** ptr, size_t size, cudaStream_t s = cudaStreamDefault) {
-    CHECK(try_allocate(reinterpret_cast<void **>(ptr), size, s));
+  static void allocate(Any** ptr, size_t size,
+      cudaStream_t stream = cudaStreamDefault) {
+    CHECK(try_allocate(reinterpret_cast<void**>(ptr), size, stream));
   }
 
-  void deallocate(void* ptr, cudaStream_t s = cudaStreamDefault) {
-    mgr_.deallocate(ptr, s);
+  static void deallocate(void* ptr,
+      cudaStream_t stream = cudaStreamDefault) {
+    mgr_.deallocate(ptr, stream);
   }
 
-  bool try_allocate(void** ptr, size_t size, cudaStream_t stream =
-                    cudaStreamDefault) {
+  static bool try_allocate(void** ptr, size_t size,
+      cudaStream_t stream = cudaStreamDefault) {
     return mgr_.try_allocate(ptr, size, stream);
   }
 
@@ -38,12 +37,66 @@ struct GPUMemory {
     CUB_ALLOCATOR  // CUB caching allocator
   };
 
+  // Scope initializes global Memory Manager for a given scope.
+  // It's instantiated in test(), train() and time() Caffe brewing functions
+  // as well as in unit tests main().
+  struct Scope {
+    Scope(const std::vector<int>& gpus, Mode m = CUB_ALLOCATOR,
+          bool debug = false) {
+      mgr_.init(gpus, m, debug);
+    }
+  };
+
+  // Workspace's release() functionality depends on global pool availability
+  // If pool is available, it returns memory to the pool and sets ptr to NULL
+  // If pool is not available, it retains memory.
+  struct Workspace {
+    Workspace() : ptr_(NULL), stream_(), size_(0) {}
+    Workspace(size_t size, cudaStream_t s = cudaStreamDefault) : stream_(s) {
+      reserve(size);
+    }
+    ~Workspace() { mgr_.deallocate(ptr_, stream_); }
+
+    void* data() const { return ptr_; }
+    size_t size() const { return size_; }
+
+    bool try_reserve(size_t size) {
+      bool status = true;
+      if (size > size_) {
+        if (ptr_) {
+          mgr_.deallocate(ptr_, stream_);
+        }
+        status = mgr_.try_allocate(&ptr_, size, stream_);
+        if (status) {
+          size_ = size;
+        }
+      }
+      return status;
+    }
+
+    void reserve(size_t size) { CHECK(try_reserve(size)); }
+
+    void release() {
+      if (mgr_.using_pool()) {
+        mgr_.deallocate(ptr_, stream_);
+        ptr_ = NULL;
+        size_ = 0;
+      }
+      // otherwise (no pool) - we retain memory in the buffer
+    }
+
+   private:
+    void* ptr_;
+    cudaStream_t stream_;
+    size_t size_;
+  };
+
  private:
   struct Manager {
     Manager();
     ~Manager();
     void GetInfo(size_t* free_mem, size_t* used_mem);
-    void deallocate(void* ptr, cudaStream_t s);
+    void deallocate(void* ptr, cudaStream_t stream);
     bool try_allocate(void** ptr, size_t size, cudaStream_t);
     const char* pool_name() const;
     bool using_pool() const { return mode_ != CUDA_MALLOC; }
@@ -72,61 +125,7 @@ struct GPUMemory {
     static size_t MAX_CACHED_BYTES;  ///< Maximum aggregate cached bytes
   };
 
- public:
-  struct Arena {
-    Arena(const std::vector<int>& gpus, Mode m = CUB_ALLOCATOR,
-          bool debug = false) {
-      Get().mgr_.init(gpus, m, debug);
-    }
-  };
-
-  // Buffer's release() functionality depends on global pool availability
-  // If pool is available, it returns memory to the pool and sets ptr to NULL
-  // If pool is not available, it retains memory.
-  struct Buffer {
-    Buffer() : ptr_(NULL), stream_(), size_(0) {}
-    Buffer(size_t size, cudaStream_t s = cudaStreamDefault) : stream_(s) {
-      reserve(size);
-    }
-    ~Buffer() { Get().mgr_.deallocate(ptr_, stream_); }
-
-    void* data() const { return ptr_; }
-    size_t size() const { return size_; }
-
-    bool try_reserve(size_t size) {
-      bool status = true;
-      if (size > size_) {
-        if (ptr_) {
-          Get().mgr_.deallocate(ptr_, stream_);
-        }
-        status = Get().mgr_.try_allocate(&ptr_, size, stream_);
-        if (status) {
-          size_ = size;
-        }
-      }
-      return status;
-    }
-
-    void reserve(size_t size) { CHECK(try_reserve(size)); }
-
-    void release() {
-      if (Get().mgr_.using_pool()) {
-        Get().mgr_.deallocate(ptr_, stream_);
-        ptr_ = NULL;
-        size_ = 0;
-      }
-      // otherwise (no pool) - we retain memory in the buffer
-    }
-
-   private:
-    void* ptr_;
-    cudaStream_t stream_;
-    size_t size_;
-  };
-
- private:
-  GPUMemory() {}
-  Manager mgr_;
+  static Manager mgr_;
 };
 
 }  // namespace caffe

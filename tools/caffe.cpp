@@ -183,7 +183,7 @@ int train() {
   vector<int> gpus;
   get_gpus(&gpus);
 #ifndef CPU_ONLY
-  caffe::GPUMemory::Arena arena(gpus);
+  caffe::GPUMemory::Scope gpu_memory_scope(gpus);
 #endif
   // Set mode and device id[s]
   if (gpus.size() == 0) {
@@ -253,7 +253,7 @@ int test() {
     gpus.pop_back();
   }
 #ifndef CPU_ONLY
-  caffe::GPUMemory::Arena arena(gpus);
+  caffe::GPUMemory::Scope gpu_memory_scope(gpus);
 #endif
 
   // Set mode and device id
@@ -334,7 +334,7 @@ int time() {
     LOG(INFO) << "Not using GPU #" << gpus.back() << " for single-GPU function";
     gpus.pop_back();
   }
-  caffe::GPUMemory::Arena arena(gpus);
+  caffe::GPUMemory::Scope gpu_memory_scope(gpus);
 #endif
   // Set mode and device_id
   if (gpus.size() != 0) {

@@ -14,11 +14,7 @@ unsigned int GPUMemory::Manager::MIN_BIN = 6;
 unsigned int GPUMemory::Manager::MAX_BIN = 22;
 size_t GPUMemory::Manager::MAX_CACHED_BYTES = (size_t) -1;
 
-
-GPUMemory& GPUMemory::Get() {
-  static GPUMemory memory;
-  return memory;
-}
+GPUMemory::Manager GPUMemory::mgr_;
 
 GPUMemory::Manager::Manager()
   : mode_(CUDA_MALLOC), debug_(false), initialized_(false),
@@ -67,7 +63,7 @@ GPUMemory::Manager::~Manager() {
 
 bool GPUMemory::Manager::try_allocate(void** ptr, size_t size,
     cudaStream_t stream) {
-  CHECK(initialized_) << "Create Arena to initialize Memory Manager";
+  CHECK(initialized_) << "Create GPUMemory::Scope to initialize Memory Manager";
   CHECK_NOTNULL(ptr);
   cudaError_t status = cudaSuccess, last_err = cudaSuccess;
   switch (mode_) {
