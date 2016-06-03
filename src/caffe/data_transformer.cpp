@@ -99,7 +99,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
        meta.joint_self.joints[i].x >= meta.img_size.width || meta.joint_self.joints[i].y >= meta.img_size.height){
       meta.joint_self.isVisible[i] = 2; // 2 means cropped, 0 means occluded by still on image
     }
-    LOG(INFO) << meta.joint_self.joints[i].x << " " << meta.joint_self.joints[i].y << " " << meta.joint_self.isVisible[i];
+    //LOG(INFO) << meta.joint_self.joints[i].x << " " << meta.joint_self.joints[i].y << " " << meta.joint_self.isVisible[i];
   }
 
   // ------------ scale_self, joint_self --------------
@@ -592,7 +592,7 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
   float x_offset = int((dice_x - 0.5) * 2 * param_.center_perterb_max());
   float y_offset = int((dice_y - 0.5) * 2 * param_.center_perterb_max());
 
-  LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
+  //LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
   //LOG(INFO) << "ROI is " << x_offset << " " << y_offset << " " << min(800, img_temp.cols) << " " << min(256, img_temp.rows);
   Point2i center = meta.objpos + Point2f(x_offset, y_offset);
   int offset_left = -(center.x - (crop_x/2));
