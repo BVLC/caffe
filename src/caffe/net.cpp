@@ -273,6 +273,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   ShareWeights();
+
+  // invert param_layer_indices_ to give map of
+  // (level_id, local param_id) -> global param_id
+  for (int i = 0; i < param_layer_indices_.size(); ++i) {
+    layer_index_params_[param_layer_indices_[i]] = i;
+  }
+
   debug_info_ = param.debug_info();
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
@@ -589,6 +596,35 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
+
+      // reduce gradients as soon as they are ready
+      if (Caffe::solver_count() > 1) {
+#ifndef CPU_ONLY
+        CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+#endif
+        for (int j = 0; j < layers_[i]->blobs().size(); ++j) {
+          int param_id = layer_index_params_[make_pair(i, j)];
+
+          // check if we need to synchronize after reduction
+          bool need_sync = false;
+          // If param has been split, update owner and sync
+          if (param_owners_[param_id] >= 0) {
+            param_id = param_owners_[param_id];
+            need_sync = true;
+          }
+
+          for (int k = 0; k < solver_->callbacks().size(); ++k) {
+            solver_->callbacks()[k]->allreduce(param_id);
+          }
+
+          // perform synchronization if needed
+          if (need_sync) {
+            for (int k = 0; k < solver_->callbacks().size(); ++k) {
+              solver_->callbacks()[k]->syncCommStream();
+            }
+          }
+        }
+      }
     }
   }
 }

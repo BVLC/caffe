@@ -6,6 +6,7 @@
 
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -76,9 +77,14 @@ class Solver {
 
   // Invoked at specific points during an iteration
   class Callback {
+   public:
+    virtual void allreduce(int param_id) = 0;
+    virtual void syncCommStream() = 0;
+
    protected:
     virtual void on_start() = 0;
-    virtual void on_gradients_ready() = 0;
+    virtual void allreduce() = 0;
+    virtual void soft_barrier() = 0;
 
     template <typename T>
     friend class Solver;
@@ -128,6 +134,10 @@ class Solver {
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;
+
+  // Timing information
+  Timer iteration_timer_;
+  float iterations_last_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

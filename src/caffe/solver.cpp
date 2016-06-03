@@ -28,14 +28,14 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
-      requested_early_exit_(false) {
+      requested_early_exit_(false), iteration_timer_(), iterations_last_() {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
-      requested_early_exit_(false) {
+      requested_early_exit_(false), iteration_timer_(), iterations_last_() {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -197,22 +197,34 @@ void Solver<Dtype>::Step(int iters) {
   int average_loss = this->param_.average_loss();
   losses_.clear();
   smoothed_loss_ = 0;
+  iteration_timer_.Start();
+
+  for (int i = 0; i < callbacks_.size(); ++i) {
+    // we need to sync all threads before starting, otherwise some cuda init,
+    // malloc or other cuda stuff could interlock with in-loop cuda GPU sync
+    // called in on_start.
+    callbacks_[i]->soft_barrier();
+    // Initial bcast of parameters
+    callbacks_[i]->on_start();
+  }
+
+  net_->SetSolver(this);
 
   while (iter_ < stop_iter) {
     // zero-init the params
     net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
-        && (iter_ > 0 || param_.test_initialization())
-        && Caffe::root_solver()) {
-      TestAll();
+        && (iter_ > 0 || param_.test_initialization())) {
+      if (Caffe::root_solver()) {
+        TestAll();
+      }
       if (requested_early_exit_) {
         // Break out of the while loop because stop was requested while testing.
         break;
       }
-    }
-
-    for (int i = 0; i < callbacks_.size(); ++i) {
-      callbacks_[i]->on_start();
+      for (int i = 0; i < callbacks_.size(); ++i) {
+        callbacks_[i]->soft_barrier();
+      }
     }
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
@@ -225,8 +237,13 @@ void Solver<Dtype>::Step(int iters) {
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
+      float lapse = iteration_timer_.Seconds();
+      float per_s = (iter_ - iterations_last_) / (lapse ? lapse : 1);
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
-          << ", loss = " << smoothed_loss_;
+          << " (" << per_s << " iter/s, " << lapse << "s/"
+          << param_.display() <<" iter), loss = " << smoothed_loss_;
+      iteration_timer_.Start();
+      iterations_last_ = iter_;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -247,9 +264,17 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
+#ifndef CPU_ONLY
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+#endif
     for (int i = 0; i < callbacks_.size(); ++i) {
-      callbacks_[i]->on_gradients_ready();
+      callbacks_[i]->allreduce();
     }
+    // Make sure all gradient exchanges have finished in per-level scheme
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->syncCommStream();
+    }
+
     ApplyUpdate();
 
     // Increment the internal iter_ counter -- its value should always indicate
