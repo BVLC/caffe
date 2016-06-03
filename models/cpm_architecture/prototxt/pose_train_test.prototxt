@@ -19,7 +19,7 @@ layer {
     np_in_lmdb: 17
   }
   cpmdata_param {
-    source: "models/cpm_architecture/lmdb/train"
+    source: "models/cpm_architecture/lmdb/tmp/train"
     batch_size: 6
     backend: LMDB
   }

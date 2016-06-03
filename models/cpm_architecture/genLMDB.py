@@ -124,7 +124,7 @@ def writeLMDB(datasets, lmdb_path, idxSetJoints = [], validation = True, samplin
 			joints3d_curr_frame = [0] * len(idxSetJoints)
 			for i in range(len(idxSetJoints)):
 				joints3d_curr_frame[i] = data[idx]['joint_self_3d'][idxSetJoints[i]]
-		joints3d = np.asarray(joints_curr_frame).T.tolist() # transpose to 3*#joints
+		joints3d = np.asarray(joints3d_curr_frame).T.tolist() # transpose to 3*#joints
 		for i in range(len(joints3d)):
 			row_binary = float2bytes(joints3d[i])
 			for j in range(len(row_binary)):

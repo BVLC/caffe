@@ -103,6 +103,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   }
 
   // ------------ scale_self, joint_self --------------
+  LOG(INFO) << "3d joints";
   meta.joint_self_3d.joints.resize(np_in_lmdb);
   for(int i=0; i<np_in_lmdb; i++){
     DecodeFloats(data, offset3+8*offset1+4*i, &meta.joint_self_3d.joints[i].x, 1);
