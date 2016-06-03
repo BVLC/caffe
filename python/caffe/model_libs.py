@@ -582,7 +582,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         use_objectness=False, normalizations=[], use_batchnorm=True,
         min_sizes=[], max_sizes=[], prior_variance = [0.1],
         aspect_ratios=[], share_location=True, flip=True, clip=True,
-        inter_layer_depth=0, kernel_size=1, pad=0, conf_postfix='', loc_postfix=''):
+        inter_layer_depth=[], kernel_size=1, pad=0, conf_postfix='', loc_postfix=''):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
     if normalizations:
@@ -592,6 +592,8 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
     net_layers = net.keys()
     assert data_layer in net_layers, "data_layer is not in net's layers"
+    if inter_layer_depth:
+        assert len(from_layers) == len(inter_layer_depth), "from_layers and inter_layer_depth should have same length"
 
     num = len(from_layers)
     priorbox_layers = []
@@ -610,11 +612,12 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
                 from_layer = norm_name
 
         # Add intermediate layers.
-        if inter_layer_depth > 0:
-            inter_name = "{}_inter".format(from_layer)
-            ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True,
-                num_output=inter_layer_depth, kernel_size=3, pad=1, stride=1)
-            from_layer = inter_name
+        if inter_layer_depth:
+            if inter_layer_depth[i] > 0:
+                inter_name = "{}_inter".format(from_layer)
+                ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True,
+                      num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1)
+                from_layer = inter_name
 
         # Estimate number of priors per location given provided parameters.
         aspect_ratio = []
@@ -622,12 +625,15 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             aspect_ratio = aspect_ratios[i]
             if type(aspect_ratio) is not list:
                 aspect_ratio = [aspect_ratio]
+        min_size = min_sizes[i]
+        if type(min_size) is not list:
+            min_size = [min_size]
         if max_sizes and max_sizes[i]:
-            num_priors_per_location = 2 + len(aspect_ratio)
+            num_priors_per_location = (2 + len(aspect_ratio)) * len(min_size)
         else:
-            num_priors_per_location = 1 + len(aspect_ratio)
+            num_priors_per_location = (1 + len(aspect_ratio)) * len(min_size)
         if flip:
-            num_priors_per_location += len(aspect_ratio)
+            num_priors_per_location += len(aspect_ratio) * len(min_size)
 
         # Create location prediction layer.
         name = "{}_mbox_loc{}".format(from_layer, loc_postfix)
@@ -657,17 +663,17 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         name = "{}_mbox_priorbox".format(from_layer)
         if max_sizes and max_sizes[i]:
             if aspect_ratio:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size, max_size=max_sizes[i],
                     aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
             else:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size, max_size=max_sizes[i],
                     clip=clip, variance=prior_variance)
         else:
             if aspect_ratio:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i],
+                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
                     aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
             else:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i],
+                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
                     clip=clip, variance=prior_variance)
         priorbox_layers.append(net[name])
 
