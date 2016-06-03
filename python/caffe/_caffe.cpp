@@ -127,6 +127,15 @@ void Net_Save(const Net<Dtype>& net, string filename) {
   WriteProtoToBinaryFile(net_param, filename.c_str());
 }
 
+
+void Net_SaveHDF5(const Net<Dtype>& net, string filename) {
+  net.ToHDF5(filename);
+}
+
+void Net_LoadHDF5(Net<Dtype>* net, string filename) {
+  net->CopyTrainedLayersFromHDF5(filename.c_str());
+}
+
 void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
@@ -355,7 +364,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_layer_input_arrays", &Net_SetLayerInputArrays,
         bp::with_custodian_and_ward<1, 3,
         bp::with_custodian_and_ward<1, 4> > ())
-    .def("save", &Net_Save);
+    .def("save", &Net_Save)
+    .def("save_hdf5", &Net_SaveHDF5)
+    .def("load_hdf5", &Net_LoadHDF5);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
