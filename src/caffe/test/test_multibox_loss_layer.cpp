@@ -253,8 +253,8 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
 
     // 4) Fill prior bboxes.
     PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
-    prior_box_param->set_min_size(5);
-    prior_box_param->set_max_size(10);
+    prior_box_param->add_min_size(5);
+    prior_box_param->add_max_size(10);
     prior_box_param->add_aspect_ratio(3.);
     prior_box_param->set_flip(true);
 
