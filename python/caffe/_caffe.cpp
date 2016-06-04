@@ -18,6 +18,7 @@
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
+#include "caffe/util/gpu_memory.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -51,9 +52,25 @@ namespace caffe {
 typedef float Dtype;
 const int NPY_DTYPE = NPY_FLOAT32;
 
+#ifndef CPU_ONLY
+shared_ptr<GPUMemory::Scope> gpu_memory_scope;
+#endif
+
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
-void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+void set_mode_gpu() {
+  Caffe::set_mode(Caffe::GPU);
+#ifndef CPU_ONLY
+  vector<int> gpus;
+  int count = 0;
+  CUDA_CHECK(cudaGetDeviceCount(&count));
+  for (int i = 0; i < count; ++i) {
+    gpus.push_back(i);
+  }
+  CHECK_GT(gpus.size(), 0);
+  gpu_memory_scope.reset(new GPUMemory::Scope(gpus));
+#endif
+}
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
