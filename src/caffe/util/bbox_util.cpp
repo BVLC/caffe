@@ -52,6 +52,13 @@ NormalizedBBox UnitBBox() {
   return unit_bbox;
 }
 
+bool IsCrossBoundaryBBox(const NormalizedBBox& bbox) {
+  return bbox.xmin() < 0 || bbox.xmin() > 1 ||
+      bbox.ymin() < 0 || bbox.ymin() > 1 ||
+      bbox.xmax() < 0 || bbox.xmax() > 1 ||
+      bbox.ymax() < 0 || bbox.ymax() > 1;
+}
+
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox) {
   if (bbox2.xmin() > bbox1.xmax() || bbox2.xmax() < bbox1.xmin() ||
@@ -346,6 +353,7 @@ void DecodeBBoxes(
 void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
     const vector<NormalizedBBox>& pred_bboxes, const int label,
     const MatchType match_type, const float overlap_threshold,
+    const bool ignore_cross_boundary_bbox,
     vector<int>* match_indices, vector<float>* match_overlaps) {
   int num_pred = pred_bboxes.size();
   match_indices->clear();
@@ -377,6 +385,10 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
   // Store the positive overlap between predictions and ground truth.
   map<int, map<int, float> > overlaps;
   for (int i = 0; i < num_pred; ++i) {
+    if (ignore_cross_boundary_bbox && IsCrossBoundaryBBox(pred_bboxes[i])) {
+      (*match_indices)[i] = -2;
+      continue;
+    }
     for (int j = 0; j < num_gt; ++j) {
       float overlap = JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]);
       if (overlap > 1e-6) {
@@ -400,7 +412,7 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
          it != overlaps.end(); ++it) {
       int i = it->first;
       if ((*match_indices)[i] != -1) {
-        // The prediction already have matched ground truth.
+        // The prediction already has matched ground truth or is ignored.
         continue;
       }
       for (int p = 0; p < gt_pool.size(); ++p) {
@@ -441,7 +453,7 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
            it != overlaps.end(); ++it) {
         int i = it->first;
         if ((*match_indices)[i] != -1) {
-          // The prediction already have matched ground truth.
+          // The prediction already has matched ground truth or is ignored.
           continue;
         }
         int max_gt_idx = -1;

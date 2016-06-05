@@ -51,6 +51,9 @@ bool SortScorePairDescend(const pair<float, T>& pair1,
 // Generate unit bbox [0, 0, 1, 1]
 NormalizedBBox UnitBBox();
 
+// Check if a bbox is cross boundary or not.
+bool IsCrossBoundaryBBox(const NormalizedBBox& bbox);
+
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox);
@@ -107,6 +110,7 @@ void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
 void MatchBBox(const vector<NormalizedBBox>& gt,
     const vector<NormalizedBBox>& pred_bboxes, const int label,
     const MatchType match_type, const float overlap_threshold,
+    const bool ignore_cross_boundary_bbox,
     vector<int>* match_indices, vector<float>* match_overlaps);
 
 // Retrieve bounding box ground truth from gt_data.

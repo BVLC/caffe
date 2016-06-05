@@ -47,6 +47,8 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(num_classes_, 1);
     }
   }
+  ignore_cross_boundary_bbox_ =
+      multibox_loss_param.ignore_cross_boundary_bbox();
 
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -206,8 +208,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                      code_type_, encode_variance_in_target_,
                      all_loc_preds[i][label], &loc_bboxes);
         MatchBBox(gt_bboxes, loc_bboxes, label, match_type_,
-                  overlap_threshold_, &match_indices[label],
-                  &match_overlaps[label]);
+                  overlap_threshold_, ignore_cross_boundary_bbox_,
+                  &match_indices[label], &match_overlaps[label]);
       }
     } else {
       // Use prior bboxes to match against all ground truth.
@@ -215,7 +217,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<float> temp_match_overlaps;
       const int label = -1;
       MatchBBox(gt_bboxes, prior_bboxes, label, match_type_, overlap_threshold_,
-                &temp_match_indices, &temp_match_overlaps);
+                ignore_cross_boundary_bbox_, &temp_match_indices,
+                &temp_match_overlaps);
       if (share_location_) {
         match_indices[label] = temp_match_indices;
         match_overlaps[label] = temp_match_overlaps;
@@ -234,7 +237,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           match_indices[c].resize(temp_match_indices.size(), -1);
           match_overlaps[c] = temp_match_overlaps;
           for (int m = 0; m < temp_match_indices.size(); ++m) {
-            if (temp_match_indices[m] != -1) {
+            if (temp_match_indices[m] > -1) {
               const int gt_idx = temp_match_indices[m];
               CHECK_LT(gt_idx, gt_labels.size());
               if (c == gt_labels[gt_idx]) {
@@ -252,7 +255,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // Get positive indices.
       int num_pos = 0;
       for (int m = 0; m < match_indices[label].size(); ++m) {
-        if (match_indices[label][m] != -1) {
+        if (match_indices[label][m] > -1) {
           ++num_pos;
         }
       }
@@ -300,7 +303,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         CHECK(all_loc_preds[i].find(label) != all_loc_preds[i].end());
         const vector<NormalizedBBox>& loc_pred = all_loc_preds[i][label];
         for (int j = 0; j < match_index.size(); ++j) {
-          if (match_index[j] == -1) {
+          if (match_index[j] <= -1) {
             continue;
           }
           // Store location prediction.
@@ -379,7 +382,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                match_indices.begin(); it != match_indices.end(); ++it) {
             const vector<int>& match_index = it->second;
             CHECK_EQ(match_index.size(), num_priors_);
-            if (match_index[j] == -1) {
+            if (match_index[j] <= -1) {
               continue;
             }
             const int gt_label = map_object_to_agnostic_ ?
@@ -492,7 +495,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           const int label = share_location_ ? 0 : it->first;
           const vector<int>& match_index = it->second;
           for (int j = 0; j < match_index.size(); ++j) {
-            if (match_index[j] == -1) {
+            if (match_index[j] <= -1) {
               continue;
             }
             // Copy the diff to the right place.
@@ -536,7 +539,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                  match_indices.begin(); it != match_indices.end(); ++it) {
               const vector<int>& match_index = it->second;
               CHECK_EQ(match_index.size(), num_priors_);
-              if (match_index[j] == -1) {
+              if (match_index[j] <= -1) {
                 continue;
               }
               // Copy the diff to the right place.
