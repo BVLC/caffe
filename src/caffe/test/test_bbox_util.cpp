@@ -527,7 +527,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOneBipartite) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -558,7 +558,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllBipartite) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -593,7 +593,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -624,7 +624,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -657,7 +657,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);

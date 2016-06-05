@@ -226,6 +226,7 @@ background_label_id=0
 train_on_diff_gt = True
 normalization_mode = P.Loss.VALID
 code_type = P.PriorBox.CENTER_SIZE
+ignore_cross_boundary_bbox = True
 neg_pos_ratio = 3.
 loc_weight = (neg_pos_ratio + 1.) / 4.
 multibox_loss_param = {
@@ -243,6 +244,7 @@ multibox_loss_param = {
     'neg_pos_ratio': neg_pos_ratio,
     'neg_overlap': 0.5,
     'code_type': code_type,
+    'ignore_cross_boundary_bbox': ignore_cross_boundary_bbox,
     }
 loss_param = {
     'normalization': normalization_mode,

@@ -1278,6 +1278,9 @@ message MultiBoxLossParameter {
   // If true, map all object classes to agnostic class. It is useful for learning
   // objectness detector.
   optional bool map_object_to_agnostic = 17 [default = false];
+  // If true, ignore cross boundary bbox during matching.
+  // Cross boundary bbox is a bbox who is outside of the image region.
+  optional bool ignore_cross_boundary_bbox = 18 [ default = true];
 }
 
 message MVNParameter {
