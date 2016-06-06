@@ -2,6 +2,8 @@
 
 #include "caffe/layers/memory_sparse_data_layer.hpp"
 
+#include <iostream>
+
 namespace caffe {
 
 template <typename Dtype>
@@ -11,14 +13,17 @@ void MemorySparseDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bo
   channels_ = this->layer_param_.memory_data_param().channels();
   height_ = this->layer_param_.memory_data_param().height();
   width_ = this->layer_param_.memory_data_param().width();
+  size_ = channels_ * height_ * width_;
+  CHECK_GT(batch_size_ * size_, 0) <<
+    "batch_size, channels, height, and width must be specified and"
+    " positive in memory_data_param";
   vector<int> label_shape(1, batch_size_);
   if (SparseBlob<Dtype>* sparseBlob = dynamic_cast<SparseBlob<Dtype>*>(top[0]))
     {
-      std::cerr << "batch_size_=" << batch_size_ << " / channels_=" << channels_ << " / height_=" << height_ << " / width_=" << width_ << std::endl;
       sparseBlob->Reshape(batch_size_, channels_, height_, width_);
-      std::cerr << "label_shape=" << label_shape[0] << " / " << label_shape[1] << std::endl;
       top[1]->Reshape(label_shape);
     } else {
+    std::cerr << "\nFatal error: The top blob in the memory sparse data layer is not sparse\n";
     LOG(FATAL)<< "The top blob in the memory sparse data layer is not sparse\n";
   }
   added_data_.Reshape(batch_size_, channels_, height_, width_);
@@ -83,6 +88,10 @@ void MemorySparseDataLayer<Dtype>::Reset(Dtype* data, int *indices, int *ptr, Dt
   nnz_ = nnz;
   n_ = n;
   pos_ = 0;
+  data_pos_ = 0;
+  indices_pos_ = 0;
+  ptr_pos_ = 0;
+  nnz_pos_ = 0;
 }
 
 template <typename Dtype>
@@ -97,24 +106,28 @@ void MemorySparseDataLayer<Dtype>::set_batch_size(int new_size) {
 template <typename Dtype>
 void MemorySparseDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  std::cerr << "Forward_cpu\n";
   CHECK(data_) << "MemorySparseDataLayer needs to be initalized by calling Reset";
+  int nnz = 0;
   if (SparseBlob<Dtype>* sparseBlob = dynamic_cast<SparseBlob<Dtype>*>(top[0]))
     {
+      nnz = ptr_[pos_+batch_size_];
       sparseBlob->Reshape(batch_size_, channels_, height_, width_);
-      sparseBlob->set_cpu_data(data_, indices_, ptr_, nnz_);
+      sparseBlob->set_cpu_data(data_,indices_,ptr_+ptr_pos_,nnz - nnz_pos_);
     } else {
     LOG(FATAL) << "The top blob in the memory sparse data layer is not sparse";
     }
  
   DLOG(INFO) << "Prefetch sparse copied (forward)";
-  if (this->output_labels_) {
-    top[1]->Reshape(batch_size_, 1, 1, 1);
-    top[1]->set_cpu_data(labels_);
-  }
+  top[1]->Reshape(batch_size_, 1, 1, 1);
+  top[1]->set_cpu_data(labels_+pos_);
+  pos_ = (pos_ + batch_size_) % n_;
+  data_pos_ = (data_pos_ + nnz-nnz_pos_) % nnz_;
+  indices_pos_ = (indices_pos_ + nnz-nnz_pos_) % nnz_;
+  ptr_pos_ = (ptr_pos_ + batch_size_) % n_;
+  nnz_pos_ = nnz;
 
-  /*if (pos_ == 0) // XXX: not sure we need this.
-    has_new_data_ = false;*/
+  if (ptr_pos_ == 0)
+    has_new_data_ = false;
 }
 
 INSTANTIATE_CLASS(MemorySparseDataLayer);

@@ -52,6 +52,10 @@ protected:
   int nnz_;
   int n_;
   size_t pos_;
+  size_t data_pos_;
+  size_t indices_pos_;
+  size_t ptr_pos_;
+  size_t nnz_pos_;
   SparseBlob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
