@@ -245,7 +245,8 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     }
     // Allocate receiving buffer on parent
     CUDA_CHECK(cudaSetDevice(peer));
-    CUDA_CHECK(cudaMalloc(&parent_grads_, size_ * sizeof(Dtype)));
+    GPUMemory::allocate(reinterpret_cast<void**>(&parent_grads_),
+        size_ * sizeof(Dtype));
     CUDA_CHECK(cudaSetDevice(self));
   }
 
@@ -258,22 +259,22 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
 template<typename Dtype>
 P2PSync<Dtype>::~P2PSync() {
 #ifndef CPU_ONLY
-  int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
-  const int self = solver_->param().device_id();
-  CUDA_CHECK(cudaSetDevice(self));
-
   if (parent_) {
-    CUDA_CHECK(cudaFree(parent_grads_));
+    int initial_device;
+    CUDA_CHECK(cudaGetDevice(&initial_device));
+    const int self = solver_->param().device_id();
     const int peer = parent_->solver_->param().device_id();
+    CUDA_CHECK(cudaSetDevice(peer));
+    GPUMemory::deallocate(parent_grads_);
+    parent_grads_ = NULL;
     int access;
+    cudaSetDevice(self);
     CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
     if (access) {
       CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
     }
+    CUDA_CHECK(cudaSetDevice(initial_device));
   }
-
-  CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
 }
 
