@@ -347,7 +347,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -355,7 +355,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
 
   variance_encoded_in_target = true;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), -0.9, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 1.1, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 1.3, eps);
@@ -385,7 +385,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -397,7 +397,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
   bbox.set_ymax(log(3./2) * 5);
   variance_encoded_in_target = false;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -432,7 +432,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -0.1, eps);
@@ -443,7 +443,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   variance_encoded_in_target = true;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -1, eps);
@@ -485,7 +485,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   float eps = 1e-5;
   for (int i = 1; i < 5; ++i) {
@@ -504,7 +504,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
     bboxes[i].set_ymax(log(3./2) * 5);
   }
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0 + (i - 1) * 0.1, eps);
@@ -1438,7 +1438,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -0.1, eps);
@@ -1451,7 +1452,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
   variance_encoded_in_target = true;
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -1, eps);
@@ -1492,7 +1494,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
-                  bbox_data);
+                  false, bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1511,7 +1513,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
-                  bbox_data);
+                  false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1558,7 +1560,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
-                  bbox_data);
+                  false, bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1583,7 +1585,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
-                  bbox_data);
+                  false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1633,7 +1635,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
@@ -1651,7 +1654,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
   }
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);

@@ -89,7 +89,7 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          Dtype* bbox_data) {
+          const bool clip_bbox, Dtype* bbox_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int i = index % 4;
     const int c = (index / 4) % num_loc_classes;
@@ -160,8 +160,33 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
           bbox_data[index] = decode_bbox_center_y + decode_bbox_height / 2.;
           break;
       }
+    } else if (code_type == PriorBoxParameter_CodeType_CORNER_SIZE) {
+      const Dtype p_xmin = prior_data[pi];
+      const Dtype p_ymin = prior_data[pi + 1];
+      const Dtype p_xmax = prior_data[pi + 2];
+      const Dtype p_ymax = prior_data[pi + 3];
+      const Dtype prior_width = p_xmax - p_xmin;
+      const Dtype prior_height = p_ymax - p_ymin;
+      Dtype p_size;
+      if (i == 0 || i == 2) {
+        p_size = prior_width;
+      } else {
+        p_size = prior_height;
+      }
+      if (variance_encoded_in_target) {
+        // variance is encoded in target, we simply need to add the offset
+        // predictions.
+        bbox_data[index] = prior_data[pi + i] + loc_data[index] * p_size;
+      } else {
+        // variance is encoded in bbox, we need to scale the offset accordingly.
+        bbox_data[index] =
+          prior_data[pi + i] + loc_data[index] * prior_data[vi + i] * p_size;
+      }
     } else {
       // Unknown code type.
+    }
+    if (clip_bbox) {
+      bbox_data[index] = max(min(bbox_data[index], Dtype(1.)), Dtype(0.));
     }
   }
 }
@@ -172,12 +197,12 @@ void DecodeBBoxesGPU(const int nthreads,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          Dtype* bbox_data) {
+          const bool clip_bbox, Dtype* bbox_data) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   DecodeBBoxesKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
       CAFFE_CUDA_NUM_THREADS>>>(nthreads, loc_data, prior_data, code_type,
       variance_encoded_in_target, num_priors, share_location, num_loc_classes,
-      background_label_id, bbox_data);
+      background_label_id, clip_bbox, bbox_data);
   CUDA_POST_KERNEL_CHECK;
 }
 
@@ -186,13 +211,13 @@ template void DecodeBBoxesGPU(const int nthreads,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          float* bbox_data);
+          const bool clip_bbox, float* bbox_data);
 template void DecodeBBoxesGPU(const int nthreads,
           const double* loc_data, const double* prior_data,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          double* bbox_data);
+          const bool clip_bbox, double* bbox_data);
 
 template <typename Dtype>
 __global__ void PermuteDataKernel(const int nthreads,

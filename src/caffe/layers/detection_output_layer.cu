@@ -30,7 +30,7 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   const int loc_count = bbox_preds.count();
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
-      num_loc_classes_, background_label_id_, bbox_data);
+      num_loc_classes_, background_label_id_, true, bbox_data);
   if (!share_location_) {
     Blob<Dtype> bbox_permute;
     bbox_permute.ReshapeLike(*(bottom[0]));

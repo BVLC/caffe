@@ -1280,7 +1280,10 @@ message MultiBoxLossParameter {
   optional bool map_object_to_agnostic = 17 [default = false];
   // If true, ignore cross boundary bbox during matching.
   // Cross boundary bbox is a bbox who is outside of the image region.
-  optional bool ignore_cross_boundary_bbox = 18 [ default = true];
+  optional bool ignore_cross_boundary_bbox = 18 [default = true];
+  // If true, only backpropagate on corners which are inside of the image
+  // region when encode_type is CORNER or CORNER_SIZE.
+  optional bool bp_inside = 19 [default = false];
 }
 
 message MVNParameter {
@@ -1361,6 +1364,7 @@ message PriorBoxParameter {
   enum CodeType {
     CORNER = 1;
     CENTER_SIZE = 2;
+    CORNER_SIZE = 3;
   }
   // Minimum box size (in pixels). Required!
   repeated float min_size = 1;

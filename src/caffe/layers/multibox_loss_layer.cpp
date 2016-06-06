@@ -49,6 +49,9 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   ignore_cross_boundary_bbox_ =
       multibox_loss_param.ignore_cross_boundary_bbox();
+  bp_inside_ = multibox_loss_param.bp_inside() &&
+      (code_type_ == PriorBoxParameter_CodeType_CORNER ||
+       code_type_ == PriorBoxParameter_CodeType_CORNER_SIZE);
 
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -205,7 +208,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // Decode the prediction into bbox first.
         vector<NormalizedBBox> loc_bboxes;
         DecodeBBoxes(prior_bboxes, prior_variances,
-                     code_type_, encode_variance_in_target_,
+                     code_type_, encode_variance_in_target_, false,
                      all_loc_preds[i][label], &loc_bboxes);
         MatchBBox(gt_bboxes, loc_bboxes, label, match_type_,
                   overlap_threshold_, ignore_cross_boundary_bbox_,
@@ -306,12 +309,6 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           if (match_index[j] <= -1) {
             continue;
           }
-          // Store location prediction.
-          CHECK_LT(j, loc_pred.size());
-          loc_pred_data[count * 4] = loc_pred[j].xmin();
-          loc_pred_data[count * 4 + 1] = loc_pred[j].ymin();
-          loc_pred_data[count * 4 + 2] = loc_pred[j].xmax();
-          loc_pred_data[count * 4 + 3] = loc_pred[j].ymax();
           // Store encoded ground truth.
           const int gt_idx = match_index[j];
           CHECK(all_gt_bboxes.find(i) != all_gt_bboxes.end());
@@ -325,6 +322,35 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           loc_gt_data[count * 4 + 1] = gt_encode.ymin();
           loc_gt_data[count * 4 + 2] = gt_encode.xmax();
           loc_gt_data[count * 4 + 3] = gt_encode.ymax();
+          // Store location prediction.
+          CHECK_LT(j, loc_pred.size());
+          if (bp_inside_) {
+            NormalizedBBox match_bbox = prior_bboxes[j];
+            if (!use_prior_for_matching_) {
+              DecodeBBox(prior_bboxes[j], prior_variances[j], code_type_,
+                         encode_variance_in_target_, false, loc_pred[j],
+                         &match_bbox);
+            }
+            // When a dimension of match_bbox is outside of image region, use
+            // gt_encode to simulate zero gradient.
+            loc_pred_data[count * 4] =
+                (match_bbox.xmin() < 0 || match_bbox.xmin() > 1) ?
+                gt_encode.xmin() : loc_pred[j].xmin();
+            loc_pred_data[count * 4 + 1] =
+                (match_bbox.ymin() < 0 || match_bbox.ymin() > 1) ?
+                gt_encode.ymin() : loc_pred[j].ymin();
+            loc_pred_data[count * 4 + 2] =
+                (match_bbox.xmax() < 0 || match_bbox.xmax() > 1) ?
+                gt_encode.xmax() : loc_pred[j].xmax();
+            loc_pred_data[count * 4 + 3] =
+                (match_bbox.ymax() < 0 || match_bbox.ymax() > 1) ?
+                gt_encode.ymax() : loc_pred[j].ymax();
+          } else {
+            loc_pred_data[count * 4] = loc_pred[j].xmin();
+            loc_pred_data[count * 4 + 1] = loc_pred[j].ymin();
+            loc_pred_data[count * 4 + 2] = loc_pred[j].xmax();
+            loc_pred_data[count * 4 + 3] = loc_pred[j].ymax();
+          }
           if (encode_variance_in_target_) {
             for (int k = 0; k < 4; ++k) {
               CHECK_GT(prior_variances[j][k], 0);
