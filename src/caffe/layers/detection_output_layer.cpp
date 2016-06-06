@@ -190,7 +190,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         LOG(FATAL) << "Could not find location predictions for label " << label;
       }
       DecodeBBoxes(prior_bboxes, prior_variances,
-                   code_type_, variance_encoded_in_target_,
+                   code_type_, variance_encoded_in_target_, true,
                    all_loc_preds[i][label], &(decode_bboxes[label]));
     }
     all_decode_bboxes.push_back(decode_bboxes);

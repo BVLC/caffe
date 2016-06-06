@@ -261,6 +261,31 @@ void EncodeBBox(
       encode_bbox->set_ymax(
           log(bbox_height / prior_height) / prior_variance[3]);
     }
+  } else if (code_type == PriorBoxParameter_CodeType_CORNER_SIZE) {
+    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
+    CHECK_GT(prior_width, 0);
+    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
+    CHECK_GT(prior_height, 0);
+    if (encode_variance_in_target) {
+      encode_bbox->set_xmin((bbox.xmin() - prior_bbox.xmin()) / prior_width);
+      encode_bbox->set_ymin((bbox.ymin() - prior_bbox.ymin()) / prior_height);
+      encode_bbox->set_xmax((bbox.xmax() - prior_bbox.xmax()) / prior_width);
+      encode_bbox->set_ymax((bbox.ymax() - prior_bbox.ymax()) / prior_height);
+    } else {
+      // Encode variance in bbox.
+      CHECK_EQ(prior_variance.size(), 4);
+      for (int i = 0; i < prior_variance.size(); ++i) {
+        CHECK_GT(prior_variance[i], 0);
+      }
+      encode_bbox->set_xmin(
+          (bbox.xmin() - prior_bbox.xmin()) / prior_width / prior_variance[0]);
+      encode_bbox->set_ymin(
+          (bbox.ymin() - prior_bbox.ymin()) / prior_height / prior_variance[1]);
+      encode_bbox->set_xmax(
+          (bbox.xmax() - prior_bbox.xmax()) / prior_width / prior_variance[2]);
+      encode_bbox->set_ymax(
+          (bbox.ymax() - prior_bbox.ymax()) / prior_height / prior_variance[3]);
+    }
   } else {
     LOG(FATAL) << "Unknown LocLossType.";
   }
@@ -269,7 +294,8 @@ void EncodeBBox(
 void DecodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const NormalizedBBox& bbox, NormalizedBBox* decode_bbox) {
+    const bool clip_bbox, const NormalizedBBox& bbox,
+    NormalizedBBox* decode_bbox) {
   if (code_type == PriorBoxParameter_CodeType_CORNER) {
     if (variance_encoded_in_target) {
       // variance is encoded in target, we simply need to add the offset
@@ -322,18 +348,44 @@ void DecodeBBox(
     decode_bbox->set_ymin(decode_bbox_center_y - decode_bbox_height / 2.);
     decode_bbox->set_xmax(decode_bbox_center_x + decode_bbox_width / 2.);
     decode_bbox->set_ymax(decode_bbox_center_y + decode_bbox_height / 2.);
+  } else if (code_type == PriorBoxParameter_CodeType_CORNER_SIZE) {
+    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
+    CHECK_GT(prior_width, 0);
+    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
+    CHECK_GT(prior_height, 0);
+    if (variance_encoded_in_target) {
+      // variance is encoded in target, we simply need to add the offset
+      // predictions.
+      decode_bbox->set_xmin(prior_bbox.xmin() + bbox.xmin() * prior_width);
+      decode_bbox->set_ymin(prior_bbox.ymin() + bbox.ymin() * prior_height);
+      decode_bbox->set_xmax(prior_bbox.xmax() + bbox.xmax() * prior_width);
+      decode_bbox->set_ymax(prior_bbox.ymax() + bbox.ymax() * prior_height);
+    } else {
+      // variance is encoded in bbox, we need to scale the offset accordingly.
+      decode_bbox->set_xmin(
+          prior_bbox.xmin() + prior_variance[0] * bbox.xmin() * prior_width);
+      decode_bbox->set_ymin(
+          prior_bbox.ymin() + prior_variance[1] * bbox.ymin() * prior_height);
+      decode_bbox->set_xmax(
+          prior_bbox.xmax() + prior_variance[2] * bbox.xmax() * prior_width);
+      decode_bbox->set_ymax(
+          prior_bbox.ymax() + prior_variance[3] * bbox.ymax() * prior_height);
+    }
   } else {
     LOG(FATAL) << "Unknown LocLossType.";
   }
   float bbox_size = BBoxSize(*decode_bbox);
   decode_bbox->set_size(bbox_size);
+  if (clip_bbox) {
+    ClipBBox(*decode_bbox, decode_bbox);
+  }
 }
 
 void DecodeBBoxes(
     const vector<NormalizedBBox>& prior_bboxes,
     const vector<vector<float> >& prior_variances,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const vector<NormalizedBBox>& bboxes,
+    const bool clip_bbox, const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes) {
   CHECK_EQ(prior_bboxes.size(), prior_variances.size());
   CHECK_EQ(prior_bboxes.size(), bboxes.size());
@@ -345,7 +397,7 @@ void DecodeBBoxes(
   for (int i = 0; i < num_bboxes; ++i) {
     NormalizedBBox decode_bbox;
     DecodeBBox(prior_bboxes[i], prior_variances[i], code_type,
-               variance_encoded_in_target, bboxes[i], &decode_bbox);
+               variance_encoded_in_target, clip_bbox, bboxes[i], &decode_bbox);
     decode_bboxes->push_back(decode_bbox);
   }
 }
