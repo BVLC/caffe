@@ -49,8 +49,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   int batch_size_, channels_, height_, width_, size_;
-  Dtype* data_;
-  Dtype* labels_;
+  Blob<Dtype> data_;
+  Blob<Dtype> labels_;
   int n_;
   size_t pos_;
   Blob<Dtype> added_data_;
