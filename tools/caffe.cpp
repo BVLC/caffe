@@ -498,24 +498,50 @@ void getFileName(char *file_name, bool use_gpu, const char *name, int id) {
   snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
 }
 
-void saveToFile(bool use_gpu, const char *name, int id,
+bool saveToFile(bool use_gpu, const char *name, int id,
     const real_t *data, unsigned count) {
   char file_name[FILENAME_MAX];
   getFileName(file_name, use_gpu, name, id);
 
   FILE *file = fopen(file_name, "w+b");
-  fwrite(data, sizeof(data[0]), count, file);
+  if (!file) {
+    LOG(ERROR) << "Failed to create file '" << file_name << "'.";
+    return false;
+  }
+
+  size_t bytesToWrite = count * sizeof(data[0]);
+  size_t bytesWritten = fwrite(data, 1, bytesToWrite, file);
   fclose(file);
+
+  if (bytesWritten != bytesToWrite) {
+    LOG(ERROR) << "Failed to write data to '" << file_name << "' file.";
+    return false;
+  }
+
+  return true;
 }
 
-void loadFromFile(bool use_gpu, const char *name, int id,
+bool loadFromFile(bool use_gpu, const char *name, int id,
     real_t *data, unsigned count) {
   char file_name[FILENAME_MAX];
   getFileName(file_name, use_gpu, name, id);
 
   FILE *file = fopen(file_name, "rb");
-  fread(data, sizeof(data[0]), count, file);
+  if (!file) {
+    LOG(ERROR) << "Failed to open file '" << file_name << "' for read.";
+    return false;
+  }
+
+  size_t bytesToRead = count * sizeof(data[0]);
+  size_t bytesRead = fread(data, 1, bytesToRead, file);
   fclose(file);
+
+  if (bytesRead == bytesToRead) {
+    LOG(ERROR) << "Failed to read data from '" << file_name << "' file.";
+    return false;
+  }
+
+  return true;
 }
 
 int collect() {
