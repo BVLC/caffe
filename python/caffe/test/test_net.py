@@ -79,3 +79,17 @@ class TestNet(unittest.TestCase):
             for i in range(len(self.net.params[name])):
                 self.assertEqual(abs(self.net.params[name][i].data
                     - net2.params[name][i].data).sum(), 0)
+
+    def test_save_hdf5(self):
+        f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+        f.close()
+        self.net.save_hdf5(f.name)
+        net_file = simple_net_file(self.num_output)
+        net2 = caffe.Net(net_file, caffe.TRAIN)
+        net2.load_hdf5(f.name)
+        os.remove(net_file)
+        os.remove(f.name)
+        for name in self.net.params:
+            for i in range(len(self.net.params[name])):
+                self.assertEqual(abs(self.net.params[name][i].data
+                    - net2.params[name][i].data).sum(), 0)

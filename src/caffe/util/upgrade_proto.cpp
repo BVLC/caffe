@@ -13,7 +13,79 @@
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
-  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param);
+  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param)
+      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param);
+}
+
+bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
+  bool success = true;
+  if (NetNeedsV0ToV1Upgrade(*param)) {
+    // NetParameter was specified using the old style (V0LayerParameter); try to
+    // upgrade it.
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "V0LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV0Net(original_param, param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "V0LayerParameter";
+    }
+    LOG(WARNING) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
+        << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
+        << "weights upgrade this and any other net protos to the new format.";
+  }
+  // NetParameter uses old style data transformation fields; try to upgrade it.
+  if (NetNeedsDataUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "transformation parameters: " << param_file;
+    UpgradeNetDataTransformation(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "data transformation parameters.";
+    LOG(WARNING) << "Note that future Caffe releases will only support "
+                 << "transform_param messages for transformation fields.";
+  }
+  if (NetNeedsV1ToV2Upgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "V1LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV1Net(original_param, param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "V1LayerParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "V1LayerParameter";
+    }
+  }
+  // NetParameter uses old style input fields; try to upgrade it.
+  if (NetNeedsInputUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "input fields: " << param_file;
+    UpgradeNetInput(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "input fields.";
+    LOG(WARNING) << "Note that future Caffe releases will only support "
+                 << "input layers and not input fields.";
+  }
+  return success;
+}
+
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+}
+
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param) {
+  CHECK(ReadProtoFromBinaryFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
 }
 
 bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
@@ -583,60 +655,15 @@ void UpgradeNetDataTransformation(NetParameter* net_param) {
   }
 }
 
-bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
-  bool success = true;
-  if (NetNeedsV0ToV1Upgrade(*param)) {
-    // NetParameter was specified using the old style (V0LayerParameter); try to
-    // upgrade it.
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "V0LayerParameter: " << param_file;
-    NetParameter original_param(*param);
-    if (!UpgradeV0Net(original_param, param)) {
-      success = false;
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-          << "V0NetParameter to NetParameter (see above); continuing anyway.";
-    } else {
-      LOG(INFO) << "Successfully upgraded file specified using deprecated "
-                << "V0LayerParameter";
-    }
-    LOG(WARNING) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
-        << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
-        << "weights upgrade this and any other net protos to the new format.";
-  }
-  // NetParameter uses old style data transformation fields; try to upgrade it.
-  if (NetNeedsDataUpgrade(*param)) {
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "transformation parameters: " << param_file;
-    UpgradeNetDataTransformation(param);
-    LOG(INFO) << "Successfully upgraded file specified using deprecated "
-              << "data transformation parameters.";
-    LOG(WARNING) << "Note that future Caffe releases will only support "
-                 << "transform_param messages for transformation fields.";
-  }
-  if (NetNeedsV1ToV2Upgrade(*param)) {
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "V1LayerParameter: " << param_file;
-    NetParameter original_param(*param);
-    if (!UpgradeV1Net(original_param, param)) {
-      success = false;
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-                 << "V1LayerParameter (see above); continuing anyway.";
-    } else {
-      LOG(INFO) << "Successfully upgraded file specified using deprecated "
-                << "V1LayerParameter";
-    }
-  }
-  return success;
-}
-
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
-  bool is_fully_compatible = true;
   if (v1_net_param.layer_size() > 0) {
-    LOG(ERROR) << "Input NetParameter to be upgraded already specifies 'layer' "
-               << "fields; these will be ignored for the upgrade.";
-    is_fully_compatible = false;
+    LOG(FATAL) << "Refusing to upgrade inconsistent NetParameter input; "
+        << "the definition includes both 'layer' and 'layers' fields. "
+        << "The current format defines 'layer' fields with string type like "
+        << "layer { type: 'Layer' ... } and not layers { type: LAYER ... }. "
+        << "Manually switch the definition to 'layer' format to continue.";
   }
+  bool is_fully_compatible = true;
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
   net_param->clear_layer();
@@ -923,18 +950,119 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   }
 }
 
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
-  UpgradeNetAsNeeded(param_file, param);
+bool NetNeedsInputUpgrade(const NetParameter& net_param) {
+  return net_param.input_size() > 0;
 }
 
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
-                                      NetParameter* param) {
-  CHECK(ReadProtoFromBinaryFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
-  UpgradeNetAsNeeded(param_file, param);
+void UpgradeNetInput(NetParameter* net_param) {
+  // Collect inputs and convert to Input layer definitions.
+  // If the NetParameter holds an input alone, without shape/dim, then
+  // it's a legacy caffemodel and simply stripping the input field is enough.
+  bool has_shape = net_param->input_shape_size() > 0;
+  bool has_dim = net_param->input_dim_size() > 0;
+  if (has_shape || has_dim) {
+    LayerParameter* layer_param = net_param->add_layer();
+    layer_param->set_name("input");
+    layer_param->set_type("Input");
+    InputParameter* input_param = layer_param->mutable_input_param();
+    // Convert input fields into a layer.
+    for (int i = 0; i < net_param->input_size(); ++i) {
+      layer_param->add_top(net_param->input(i));
+      if (has_shape) {
+        input_param->add_shape()->CopyFrom(net_param->input_shape(i));
+      } else {
+        // Turn legacy input dimensions into shape.
+        BlobShape* shape = input_param->add_shape();
+        int first_dim = i*4;
+        int last_dim = first_dim + 4;
+        for (int j = first_dim; j < last_dim; j++) {
+          shape->add_dim(net_param->input_dim(j));
+        }
+      }
+    }
+    // Swap input layer to beginning of net to satisfy layer dependencies.
+    for (int i = net_param->layer_size() - 1; i > 0; --i) {
+      net_param->mutable_layer(i-1)->Swap(net_param->mutable_layer(i));
+    }
+  }
+  // Clear inputs.
+  net_param->clear_input();
+  net_param->clear_input_shape();
+  net_param->clear_input_dim();
+}
+
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
+}
+
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+    case SolverParameter_SolverType_SGD:
+      type = "SGD";
+      break;
+    case SolverParameter_SolverType_NESTEROV:
+      type = "Nesterov";
+      break;
+    case SolverParameter_SolverType_ADAGRAD:
+      type = "AdaGrad";
+      break;
+    case SolverParameter_SolverType_RMSPROP:
+      type = "RMSProp";
+      break;
+    case SolverParameter_SolverType_ADADELTA:
+      type = "AdaDelta";
+      break;
+    case SolverParameter_SolverType_ADAM:
+      type = "Adam";
+      break;
+    default:
+      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+    }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR) << "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+                   << "'type' field (string) for a solver's type.";
+    }
+  }
+  return success;
+}
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse SolverParameter file: " << param_file;
+  UpgradeSolverAsNeeded(param_file, param);
 }
 
 }  // namespace caffe

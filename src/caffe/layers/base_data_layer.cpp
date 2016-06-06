@@ -1,10 +1,13 @@
 #include <boost/thread.hpp>
-#include <string>
 #include <vector>
 
-#include "caffe/data_layers.hpp"
-#include "caffe/net.hpp"
-#include "caffe/util/io.hpp"
+#include "caffe/blob.hpp"
+#include "caffe/data_transformer.hpp"
+#include "caffe/internal_thread.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/layers/base_data_layer.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
 

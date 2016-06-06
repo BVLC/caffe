@@ -1,9 +1,7 @@
 #include <vector>
 
-#include "caffe/common.hpp"
-#include "caffe/layer.hpp"
+#include "caffe/layers/im2col_layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -89,6 +87,20 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+  // Setup dilation dimensions (dilation_).
+  dilation_.Reshape(dim_blob_shape);
+  int* dilation_data = dilation_.mutable_cpu_data();
+  const int num_dilation_dims = conv_param.dilation_size();
+  CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
+        num_dilation_dims == num_spatial_axes_)
+      << "dilation must be specified once, or once per spatial dimension "
+      << "(dilation specified " << num_dilation_dims << " times; "
+      << num_spatial_axes_ << " spatial dims).";
+  const int kDefaultDilation = 1;
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
+                       conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
+  }
 }
 
 template <typename Dtype>
@@ -98,10 +110,12 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const int* kernel_shape_data = kernel_shape_.cpu_data();
   const int* stride_data = stride_.cpu_data();
   const int* pad_data = pad_.cpu_data();
+  const int* dilation_data = dilation_.cpu_data();
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape[channel_axis_] *= kernel_shape_data[i];
     const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
-    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+    const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
   }
@@ -124,6 +138,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DCHECK_EQ(kernel_shape_.count(), num_spatial_axes_);
     DCHECK_EQ(pad_.count(), num_spatial_axes_);
     DCHECK_EQ(stride_.count(), num_spatial_axes_);
+    DCHECK_EQ(dilation_.count(), num_spatial_axes_);
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       im2col_cpu(bottom_data + n * bottom_dim_, channels_,
           bottom[0]->shape(channel_axis_ + 1),
@@ -131,13 +146,14 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1],
           top_data + n * top_dim_);
     } else {
       im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          top_data + n * top_dim_);
+          dilation_.cpu_data(), top_data + n * top_dim_);
     }
   }
 }
@@ -155,13 +171,14 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1],
           bottom_diff + n * bottom_dim_);
     } else {
       col2im_nd_cpu(top_diff + n * top_dim_, num_spatial_axes_,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          bottom_diff + n * bottom_dim_);
+          dilation_.cpu_data(), bottom_diff + n * bottom_dim_);
     }
   }
 }
