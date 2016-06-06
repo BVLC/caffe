@@ -64,7 +64,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
-  GPUMemoryManager::Buffer workspace;
+  GPUMemory::Workspace workspace;
   int backward_passed_ctr_;
 };
 #endif

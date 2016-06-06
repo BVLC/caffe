@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFE_TEST_CUDA_PROP, device);
   cout << "Current device name: " << CAFFE_TEST_CUDA_PROP.name << endl;
-  caffe::GPUMemoryManager::Arena arena(devices);
+  caffe::GPUMemory::Scope gpu_memory_scope(devices);
 
 #endif
   // invoke the test.
