@@ -20,6 +20,9 @@ using namespace std;
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+int kImageSize = 368;
+int kOffset = 50;
+
 namespace caffe {
 
 template<typename Dtype>
@@ -35,6 +38,33 @@ string DecodeString(const string& data, size_t idx) {
     i++;
   }
   return result;
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::findCroppingCoordinates(MetaData& metadata, int offset, int & offset_x, int & offset_y){
+    float max_x = -1; float max_y = -1;
+    for (int i=0; i<metadata.joint_self.joints.size(); i++){
+        if (max_x < abs(metadata.joint_self.joints[i].x - metadata.objpos.x)){
+            max_x = abs(metadata.joint_self.joints[i].x - metadata.objpos.x);
+        }
+        if (max_y < abs(metadata.joint_self.joints[i].y - metadata.objpos.y)){
+            max_y = abs(metadata.joint_self.joints[i].y - metadata.objpos.y);
+        }
+    }
+    offset_x = max_x + offset;
+    offset_y = max_y + offset;
+    if ((metadata.objpos.x + offset_x) > metadata.img_size.width){
+        offset_x = metadata.img_size.width - metadata.objpos.x;
+    }
+    if ((metadata.objpos.x - offset_x) < 0){
+        offset_x = metadata.objpos.x;
+    }
+    if ((metadata.objpos.y + offset_y) > metadata.img_size.height){
+        offset_y = metadata.img_size.height - metadata.objpos.y;
+    }
+    if ((metadata.objpos.y - offset_y) < 0){
+        offset_y = metadata.objpos.y;
+    }
 }
 
 template<typename Dtype>
@@ -584,47 +614,87 @@ bool DataTransformer<Dtype>::onPlane(Point p, Size img_size) {
 
 template<typename Dtype>
 Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, MetaData& meta) {
-  float dice_x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
-  float dice_y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
-  int crop_x = param_.crop_size_x();
-  int crop_y = param_.crop_size_y();
+//  float dice_x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
+//  float dice_y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
+//  int crop_x = param_.crop_size_x();
+//  int crop_y = param_.crop_size_y();
+//
+//  float x_offset = int((dice_x - 0.5) * 2 * param_.center_perterb_max());
+//  float y_offset = int((dice_y - 0.5) * 2 * param_.center_perterb_max());
+//
+//  //LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
+//  //LOG(INFO) << "ROI is " << x_offset << " " << y_offset << " " << min(800, img_temp.cols) << " " << min(256, img_temp.rows);
+//  Point2i center = meta.objpos + Point2f(x_offset, y_offset);
+//  int offset_left = -(center.x - (crop_x/2));
+//  int offset_up = -(center.y - (crop_y/2));
+//  // int to_pad_right = max(center.x + (crop_x - crop_x/2) - img_src.cols, 0);
+//  // int to_pad_down = max(center.y + (crop_y - crop_y/2) - img_src.rows, 0);
+//
+//  img_dst = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
+//  for(int i=0;i<crop_y;i++){
+//    for(int j=0;j<crop_x;j++){ //i,j on cropped
+//      int coord_x_on_img = center.x - crop_x/2 + j;
+//      int coord_y_on_img = center.y - crop_y/2 + i;
+//      if(onPlane(Point(coord_x_on_img, coord_y_on_img), Size(img_src.cols, img_src.rows))){
+//        img_dst.at<Vec3b>(i,j) = img_src.at<Vec3b>(coord_y_on_img, coord_x_on_img);
+//      }
+//    }
+//  }
+//
+//  //modify meta data
+//  Point2f offset(offset_left, offset_up);
+//  meta.objpos += offset;
+//  for(int i=0; i<np; i++){
+//    meta.joint_self.joints[i] += offset;
+//  }
+//  for(int p=0; p<meta.numOtherPeople; p++){
+//    meta.objpos_other[p] += offset;
+//    for(int i=0; i<np; i++){
+//      meta.joint_others[p].joints[i] += offset;
+//    }
+//  }
+//
+//	return Size(x_offset, y_offset);
 
-  float x_offset = int((dice_x - 0.5) * 2 * param_.center_perterb_max());
-  float y_offset = int((dice_y - 0.5) * 2 * param_.center_perterb_max());
+	// NEW CODE
+  int offset_x, offset_y;
+  findCroppingCoordinates(meta, kOffset, offset_x, offset_y);
 
-  //LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
-  //LOG(INFO) << "ROI is " << x_offset << " " << y_offset << " " << min(800, img_temp.cols) << " " << min(256, img_temp.rows);
-  Point2i center = meta.objpos + Point2f(x_offset, y_offset);
-  int offset_left = -(center.x - (crop_x/2));
-  int offset_up = -(center.y - (crop_y/2));
-  // int to_pad_right = max(center.x + (crop_x - crop_x/2) - img_src.cols, 0);
-  // int to_pad_down = max(center.y + (crop_y - crop_y/2) - img_src.rows, 0);
-  
-  img_dst = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
+  // Crop image in such a way that all the joints lie inside the cropped region
+  int crop_x = 2*offset_x + 1;
+  int crop_y = 2*offset_y + 1;
+  //TODO: check the fact we are adding 128 on each channel
+  Mat img_tmp = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
   for(int i=0;i<crop_y;i++){
-    for(int j=0;j<crop_x;j++){ //i,j on cropped
-      int coord_x_on_img = center.x - crop_x/2 + j;
-      int coord_y_on_img = center.y - crop_y/2 + i;
-      if(onPlane(Point(coord_x_on_img, coord_y_on_img), Size(img_src.cols, img_src.rows))){
-        img_dst.at<Vec3b>(i,j) = img_src.at<Vec3b>(coord_y_on_img, coord_x_on_img);
-      }
-    }
+	  for(int j=0;j<crop_x;j++){ //i,j on cropped
+		  int coord_x_on_img = meta.objpos.x - offset_x + j;
+		  int coord_y_on_img = meta.objpos.y - offset_y + i;
+		  img_tmp.at<Vec3b>(i,j) = img_src.at<Vec3b>(coord_y_on_img, coord_x_on_img);
+	  }
   }
 
-  //modify meta data
+  //update all joint coordinates
+  int offset_left = -(meta.objpos.x - (crop_x/2));
+  int offset_up = -(meta.objpos.y - (crop_y/2));
   Point2f offset(offset_left, offset_up);
   meta.objpos += offset;
   for(int i=0; i<np; i++){
-    meta.joint_self.joints[i] += offset;
-  }
-  for(int p=0; p<meta.numOtherPeople; p++){
-    meta.objpos_other[p] += offset;
-    for(int i=0; i<np; i++){
-      meta.joint_others[p].joints[i] += offset;
-    }
+	  meta.joint_self.joints[i] += offset;
   }
 
-  return Size(x_offset, y_offset);
+  //reshape image to 368 x 368
+  resize(img_tmp, img_dst, cvSize(kImageSize, kImageSize));
+  double fx = (double)kImageSize/img_tmp.cols;
+  double fy = (double)kImageSize/img_tmp.rows;
+  meta.objpos.x *= fx;
+  meta.objpos.y *= fy;
+  for(int i=0; i<np; i++){
+	  meta.joint_self.joints[i].x *= fx;
+	  meta.joint_self.joints[i].y *= fy;
+  }
+
+  // TODO: should we return (0,0)?
+  return Size(kImageSize, kImageSize);
 }
 
 template<typename Dtype>

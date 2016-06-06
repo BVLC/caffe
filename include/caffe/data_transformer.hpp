@@ -4,6 +4,7 @@
 #include <vector>
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
 using namespace cv;
 
 #include "caffe/blob.hpp"
@@ -203,6 +204,8 @@ class DataTransformer {
   void clahe(Mat& img, int, int);
   void putGaussianMaps(Dtype* entry, Point2f center, int stride, int grid_x, int grid_y, float sigma);
   void dumpEverything(Dtype* transformed_data, Dtype* transformed_label, MetaData);
+  // New method: find coordiates in such a way that all joints lie inside the cropped image
+  void findCroppingCoordinates(MetaData& metadata, int offset, int & offset_x, int & offset_y);
 
   // Tranformation parameters
   TransformationParameter param_;
