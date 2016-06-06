@@ -53,6 +53,11 @@ void DataTransformer<Dtype>::findCroppingCoordinates(MetaData& metadata, int off
     }
     offset_x = max_x + offset;
     offset_y = max_y + offset;
+    if (offset_x > offset_y){
+    	offset_y = offset_x;
+    }else{
+    	offset_x = offset_y;
+    }
     if ((metadata.objpos.x + offset_x) > metadata.img_size.width){
         offset_x = metadata.img_size.width - metadata.objpos.x;
     }
