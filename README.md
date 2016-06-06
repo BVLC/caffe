@@ -202,7 +202,6 @@ Please cite SSD in your publications if it helps your research:
 2. [Preparation](#preparation)
 3. [Train/Eval](#traineval)
 4. [Models](#models)
-4. [Contact](#contact)
 
 ### Installation
 1. Get the code. We will call the directory that you cloned Caffe into `$CAFFE_ROOT`
@@ -292,9 +291,3 @@ We currently add support for MSCOCO.
 2. Models trained on MSCOCO trainval35k: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_coco_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_coco_SSD_500x500.tar.gz)
 
 3. Models trained on ILSVRC2015 trainval1: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_ilsvrc15_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_ilsvrc15_SSD_500x500.tar.gz) (46.4 mAP on val2)
-
-### Contact
-Please direct all comments and report all bugs to:
-
-    Wei Liu
-    wliu@cs.unc.edu
