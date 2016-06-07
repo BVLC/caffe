@@ -46,7 +46,7 @@ class LSTMLayerTest : public MultiDeviceTest<TypeParam> {
   void ReshapeBlobs(int num_timesteps, int num_instances) {
     blob_bottom_.Reshape(num_timesteps, num_instances, 3, 2);
     blob_bottom_static_.Reshape(num_instances, 2, 3, 4);
-    vector<int> shape(2);
+    vector<int_tp> shape(2);
     shape[0] = num_timesteps;
     shape[1] = num_instances;
     blob_bottom_cont_.Reshape(shape);
@@ -93,7 +93,7 @@ TYPED_TEST(LSTMLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;
   LSTMLayer<Dtype> layer(this->layer_param_);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  vector<int> expected_top_shape = this->blob_bottom_.shape();
+  vector<int_tp> expected_top_shape = this->blob_bottom_.shape();
   expected_top_shape.resize(3);
   expected_top_shape[2] = this->num_output_;
   EXPECT_TRUE(this->blob_top_.shape() == expected_top_shape);
