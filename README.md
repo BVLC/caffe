@@ -283,7 +283,7 @@ Please cite SSD in your publications if it helps your research:
 4. Check out `examples/ssd_detect.ipynb` on how to detect objects using a SSD model.
 
 5. To train on other dataset, please refer to data/OTHERDATASET for more details.
-We currently add support for MSCOCO.
+We currently add support for MSCOCO and ILSVRC2016.
 
 ### Models
 1. Models trained on VOC0712: [SSD300](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_500x500.tar.gz)
