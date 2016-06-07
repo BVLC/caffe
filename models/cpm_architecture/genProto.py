@@ -65,6 +65,9 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
             if ((stage == 1 and conv_counter == 7) or
                 (stage > 1 and state != 'image' and (conv_counter in [1, 5]))):
                 conv_name = '%s_new' % conv_name
+            else:
+                # Set learning rate multiplier to 0 for all layers but the new one
+                lr_m = 0
             n.tops[conv_name] = L.Convolution(n.tops[last_layer], kernel_size=kernel[l],
                                                   num_output=outCH[l], pad=int(math.floor(kernel[l]/2)),
                                                   param=[dict(lr_mult=lr_m, decay_mult=1), dict(lr_mult=lr_m*2, decay_mult=0)],
@@ -164,9 +167,9 @@ stepsize: %d\n\
 # Display every 100 iterations\n\
 display: 50\n\
 # The maximum number of iterations\n\
-max_iter: 600000\n\
+max_iter: 700000\n\
 # snapshot intermediate results\n\
-snapshot: 1000\n\
+snapshot: 5000\n\
 snapshot_prefix: "%s/%s/pose"\n\
 # solver mode: CPU or GPU\n\
 solver_mode: GPU\n' % (path_in_caffe, dir, test_iter, test_interval, base_lr, stepsize, path_in_caffe, folder_name)
@@ -178,15 +181,16 @@ if __name__ == "__main__":
     path_in_caffe = 'models/cpm_architecture'
     directory = 'prototxt'
     dataFolder = '%s/lmdb/train' % (path_in_caffe)
-    stepsize = 136106 # stepsize to decrease learning rate. This should depend on your dataset size
-    test_iter = 1000 # TODO: change it
-    test_interval = 1000 # TODO: change it
+    stepsize = 100000 # stepsize to decrease learning rate. This should depend on your dataset size
+    test_iter = 80000
+    test_interval = 5000
     ###
 
     batch_size = 6
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
-    base_lr = 8e-5
+    # base_lr = 8e-5
+    base_lr = 8e-4
     # num_parts and np_in_lmdb are two parameters that are used inside the framework to move from one
     # dataset definition to another. Num_parts is the number of parts we want to have, while
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.

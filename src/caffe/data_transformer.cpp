@@ -547,7 +547,11 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       visualize(img_aug, meta, as);
   }
   else {
-    img_aug = img.clone();
+	// do the same things with test images if they are not in the same format
+	if ((img.rows != kImageSize) || (img.cols != kImageSize))
+		augmentation_croppad(img, img_aug, meta);
+	else
+		img_aug = img.clone();
     as.scale = 1;
     as.crop = Size(); //This is 368x368
     as.flip = 0;
