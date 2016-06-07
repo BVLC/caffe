@@ -101,13 +101,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       {return dnnAllocateBuffer_F64(pPtr, layout);}
 
   TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer(
-          void *ptr);
+          void* ptr);
   SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
-          void *ptr)
-      {return dnnReleaseBuffer_F32(ptr);}
+          void* ptr) {
+    dnnError_t status = dnnReleaseBuffer_F32(ptr);
+    return status; 
+  }
   SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
-          void *ptr)
-      {return dnnReleaseBuffer_F64(ptr);}
+          void* ptr) {
+    dnnError_t status = dnnReleaseBuffer_F64(ptr);
+    return status; 
+  }
 
   TEMPLATE_PREFIX dnnError_t dnnLayoutDelete(
           dnnLayout_t& layout);

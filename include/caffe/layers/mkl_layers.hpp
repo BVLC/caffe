@@ -205,6 +205,9 @@ class MKLPoolingLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "Pooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
@@ -270,6 +273,12 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
 
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "ReLU"; }
 
  protected:
@@ -291,6 +300,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
+  vector<size_t> sizes_;
+  vector<size_t> strides_;
 };
 
 template <typename Dtype>
@@ -410,6 +421,9 @@ class MKLSplitLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
@@ -429,6 +443,8 @@ class MKLSplitLayer : public Layer<Dtype> {
   vector<shared_ptr<MKLDiff<Dtype> > > bwd_top_diff;
   vector<Dtype> coeffs_;
   size_t num_tops;
+  vector<size_t> sizes_src_;
+  vector<size_t> strides_src_;
   dnnPrimitive_t sumPrimitive;
 };
 
@@ -445,6 +461,9 @@ class MKLEltwiseLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Eltwise"; }
   virtual inline int MinBottomBlobs() const { return 2; }
@@ -472,6 +491,8 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   vector<Dtype> coeffs_;
   Blob<int> max_idx_;
   size_t num_bottoms;
+  int channels_, num_;
+  int height_, width_;
 
   bool stable_prod_grad_;
 };

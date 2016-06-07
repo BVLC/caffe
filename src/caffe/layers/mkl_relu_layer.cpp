@@ -49,32 +49,72 @@ MKLReLULayer<Dtype>::~MKLReLULayer() {
 }
 
 template <typename Dtype>
-void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLReLULayer<Dtype>::Init(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-//  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
+
   size_t dim = bottom[0]->shape().size();
-  size_t sizes[dim], strides[dim];
+  this->sizes_.resize(dim);
+  this->strides_.resize(dim);
   for (size_t d = 0; d < dim; ++d) {
-      sizes[d] = bottom[0]->shape()[dim - 1 - d];
-      strides[d] = (d == 0) ? 1 : strides[d-1]*sizes[d-1];
+      this->sizes_[d] = bottom[0]->shape()[dim - 1 - d];
+      this->strides_[d] = (d == 0) ? 1 : this->strides_[d-1]*this->sizes_[d-1];
   }
 
   // Names are for debugging only
-  fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
-  bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
-  bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+  this->fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  this->fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
+  this->bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
+  this->bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
-  fwd_bottom_data_->create_user_layout(dim, sizes, strides);
-  fwd_top_data_   ->create_user_layout(dim, sizes, strides);
-  bwd_bottom_diff_->create_user_layout(dim, sizes, strides);
-  bwd_top_diff_   ->create_user_layout(dim, sizes, strides);
+  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
+  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
+  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
+  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
-  reluFwd_ = NULL;  // Will be allocated in a "lazy" way in first forward pass
-  reluBwd_ = NULL;  // Will be allocated in a "lazy" way in first backward pass
+  dnnDelete<Dtype>(reluFwd_); // Will be allocated in a "lazy" way in first forward pass
+  dnnDelete<Dtype>(reluBwd_); // Will be allocated in a "lazy" way in first backward pass
 }
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+//  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
+    Init(bottom,top); 
+}
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  NeuronLayer<Dtype>::Reshape(bottom,top);
+
+  // Here I check for sizes whther to destroy primitives
+  size_t dim = bottom[0]->shape().size();
+
+  // If dimensions of blobs are the same as they were then
+  // do not really destroy primitives
+  if (dim == this->sizes_.size()) {
+    //.. check for strides and size dims if they corresspond each other
+
+    // TODO: speedup comparison?
+    bool is_match = true;
+    for (size_t d = 0; d < dim; ++d) {
+        is_match = is_match && (this->sizes_[d] == bottom[0]->shape()[dim - 1 - d]);
+        is_match = is_match && (this->strides_[d] == ((d == 0) ? 1 : this->strides_[d-1]*this->sizes_[d-1]));
+    }
+
+    // If no new modification was done to layout sizes,
+    // strides realtivly to previous iteration then no primitives recreation is needed
+    if (is_match) {
+      return;
+    }
+  }
+
+  Init(bottom,top);
+}
+
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

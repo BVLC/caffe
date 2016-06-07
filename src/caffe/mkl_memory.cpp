@@ -49,18 +49,7 @@ namespace caffe {
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
   int status;
-  if (this->convert_from_int) {
-    DLOG(INFO) << "convert_from_int layout already created, recreating for"
-           << this->name;
-    status = dnnDelete<Dtype>(this->convert_from_int);
-    CHECK_EQ(status, E_SUCCESS);
-  }
-  if (this->convert_to_int) {
-    DLOG(INFO) << "convert_to_int layout already created, recreating for"
-           << this->name;
-    status = dnnDelete<Dtype>(this->convert_to_int);
-    CHECK_EQ(status, E_SUCCESS);
-  }
+  this->remove_conversions();
   if (layout_int
       && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
     CHECK(layout_usr);
@@ -78,6 +67,23 @@ void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
 }
 
 template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_conversions() {
+  int status;
+  if (this->convert_from_int) {
+    DLOG(INFO) << "convert_from_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_from_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+  if (this->convert_to_int) {
+    DLOG(INFO) << "convert_to_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_to_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+}
+
+template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
     const dnnPrimitive_t primitive, dnnResourceType_t type) {
   int status;
@@ -85,6 +91,12 @@ void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
     DLOG(INFO) << "Internal layout already created, recreating for"
            << this->name;
     status = dnnLayoutDelete<Dtype>(this->layout_int);
+    CHECK_EQ(status, E_SUCCESS);
+
+    // with layout invalidated we should also remove Allocation
+    // as next layout may declare diffrent sizes of allocation
+    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+    this->internal_ptr = NULL;
     CHECK_EQ(status, E_SUCCESS);
   }
   status = dnnLayoutCreateFromPrimitive<Dtype>(
@@ -99,7 +111,10 @@ void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
 
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
-    size_t dimension, const size_t size[], const size_t strides[]) {
+    size_t dimension,
+    const size_t size[],
+    const size_t strides[],
+    bool create_conversion_if_possible) {
   int status;
   if (this->layout_usr) {
     DLOG(INFO) << "User layout already created, recreating for"
@@ -113,8 +128,18 @@ void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
   CHECK_EQ(status, E_SUCCESS) << "Failed dnnLayoutCreate with status "
       << status << " for buffer: " << this->name << "\n";
 
-  if (this->layout_int)
-    this->create_conversions();
+  // If conversion creation is to happen
+  // then if only we have internal layout already in place
+  // we can proceed with conversion creation. 
+  // Otherwise we make sure that existing conversions are deleted
+  // as with new layout creation they are being instantly invalidated
+  if (create_conversion_if_possible) {
+    if (this->layout_int) {
+      this->create_conversions();
+    }
+  } else {
+    this->remove_conversions();
+  }
 }
 
 template <typename Dtype>
@@ -137,6 +162,11 @@ void MKLMemoryDescriptorBase<Dtype>::create_layouts(
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr) {
   CHECK(cpu_ptr);
+  // When no conversion is available then 
+  // recreate them if layouts are available
+  if (this-> convert_from_int == NULL) {
+    this->create_conversions();    
+  }
   CHECK(this->convert_from_int);
   int status;
   void *convert_resources[dnnResourceNumber];

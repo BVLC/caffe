@@ -55,8 +55,10 @@ MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
 }
 
 template <typename Dtype>
-void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void MKLPoolingLayer<Dtype>::Init(
+      const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) 
+{
   PoolingParameter pool_param = this->layer_param_.pooling_param();
 
   channels_ = bottom[0]->channels();
@@ -127,7 +129,7 @@ void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   pooled_height_ = static_cast<int>(ceil(static_cast<float>(
       bottom[0]->height() + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
   pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      bottom[0]->height() + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
+      bottom[0]->width() + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
   if (pad_h_ || pad_w_) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
@@ -139,6 +141,24 @@ void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     CHECK_LT((pooled_height_ - 1) * stride_h_, bottom[0]->height() + pad_h_);
     CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->height() + pad_w_);
+  }
+
+  top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
+      pooled_width_);
+  if (top.size() > 1) {
+    (reinterpret_cast<Blob<size_t>* > (top[1]) )->Reshape(bottom[0]->num(),
+            channels_, pooled_height_, pooled_width_);
+  }
+  // If max/min/avg pooling, we will initialize the vector index part.
+  if (top.size() == 1) {
+    max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
+            pooled_width_);
+  }
+  // If stochastic pooling, we will initialize the random index part.
+  if (this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_STOCHASTIC) {
+    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
+      pooled_width_);
   }
 
   size_t dim = 4;
@@ -180,13 +200,20 @@ void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
 
-  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides);
-  fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides);
-  bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides);
-  bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides);
+  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides,false);
+  fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides,false);
+  bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides,false);
+  bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides,false);
   // Primitives will be allocated during the first fwd pass
-  poolingFwd = NULL;
-  poolingBwd = NULL;
+  dnnDelete<Dtype>(poolingFwd);
+  dnnDelete<Dtype>(poolingBwd);
+}
+
+template <typename Dtype>
+void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) 
+{
+  Init(bottom,top);
 }
 
 template <typename Dtype>
@@ -195,77 +222,17 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
 
-  bool shape_changed = true;
   if (channels_ == bottom[0]->channels() &&
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width() &&
-      num_ == bottom[0]->num())
-    shape_changed = false;
-
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
-  num_ = bottom[0]->num();
-
-  if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
-  }
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
-  if (pad_h_ || pad_w_) {
-    // If we have padding, ensure that the last pooling starts strictly
-    // inside the image (instead of at the padding); otherwise clip the last.
-    if ((pooled_height_ - 1) * stride_h_ >= height_ + pad_h_) {
-      --pooled_height_;
-    }
-    if ((pooled_width_ - 1) * stride_w_ >= width_ + pad_w_) {
-      --pooled_width_;
-    }
-    CHECK_LT((pooled_height_ - 1) * stride_h_, height_ + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
-  }
-  top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
-  if (top.size() > 1) {
-    (reinterpret_cast<Blob<size_t>* > (top[1]) )->Reshape(bottom[0]->num(),
-            channels_, pooled_height_, pooled_width_);
-  }
-  // If max/min/avg pooling, we will initialize the vector index part.
-  if (top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-            pooled_width_);
-  }
-  // If stochastic pooling, we will initialize the random index part.
-  if (this->layer_param_.pooling_param().pool() ==
-      PoolingParameter_PoolMethod_STOCHASTIC) {
-    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
+      num_ == bottom[0]->num()) {
+    return;
   }
 
-  if (shape_changed) {
-    // Recreate MKL layout
-    size_t dim = 4;
-    size_t src_sizes[4], src_strides[4];
+  Init(bottom,top);
 
-    src_sizes[0] = bottom[0]->width();
-    src_sizes[1] = bottom[0]->height();
-    src_sizes[2] = bottom[0]->channels();
-    src_sizes[3] = bottom[0]->num();
-
-    src_strides[0] = 1;
-    src_strides[1] = src_sizes[0];
-    src_strides[2] = src_sizes[0]*src_sizes[1];
-    src_strides[3] = src_sizes[0]*src_sizes[1]*src_sizes[2];
-
-    fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides);
-  }
 }
 
-// TODO(Yangqing): Is there a faster way to do pooling in the channel-first
-// case?
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {

@@ -96,7 +96,8 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   void create_internal_layout(const dnnPrimitive_t primitive,
                               dnnResourceType_t type);
   void create_user_layout(size_t dimension, const size_t size[],
-                          const size_t strides[]);
+                          const size_t strides[],
+                          bool create_conversion_if_possible = true);
   void create_layouts(
     const dnnPrimitive_t primitive, dnnResourceType_t type,
     size_t dimension, const size_t size[], const size_t strides[]);
@@ -112,6 +113,8 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   virtual void convert_to_prv(void* cpu_ptr);
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
+ protected:
+  void remove_conversions();
  protected:
   Dtype* internal_ptr;
 };
