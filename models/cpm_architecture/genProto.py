@@ -65,6 +65,7 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
             if ((stage == 1 and conv_counter == 7) or
                 (stage > 1 and state != 'image' and (conv_counter in [1, 5]))):
                 conv_name = '%s_new' % conv_name
+                #lr_m = 20
             else:
                 # Set learning rate multiplier to 0 for all layers but the new one
                 lr_m = 0
@@ -134,7 +135,7 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
 
 
 
-def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, stride, outCH, transform_param_in, base_lr, folder_name, label_name, test_iter, test_interval):
+def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, stride, outCH, transform_param_in, base_lr, folder_name, label_name, test_iter, test_interval, maxiter):
     # write the net prototxt files out
     with open('%s/pose_train_test.prototxt' % dir, 'w') as f:
         print 'writing %s/pose_train_test.prototxt' % dir
@@ -147,12 +148,12 @@ def writePrototxts(dataFolder, dir, batch_size, stepsize, layername, kernel, str
         f.write(str_to_write)
 
     with open('%s/pose_solver.prototxt' % dir, "w") as f:
-        solver_string = getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval)
+        solver_string = getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval, maxiter)
         print 'writing %s/pose_solver.prototxt' % dir
         f.write('%s' % solver_string)
 
 
-def getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval):
+def getSolverPrototxt(path_in_caffe, base_lr, folder_name, stepsize, dir, test_iter, test_interval, maxiter):
     string = 'net: "%s/%s/pose_train_test.prototxt"\n\
 # The base learning rate, momentum and the weight decay of the network.\n\
 #test_iter: %d\n\
@@ -165,14 +166,14 @@ lr_policy: "step"\n\
 gamma: 0.333\n\
 stepsize: %d\n\
 # Display every 100 iterations\n\
-display: 50\n\
+display: 5\n\
 # The maximum number of iterations\n\
-max_iter: 700000\n\
+max_iter: %d\n\
 # snapshot intermediate results\n\
 snapshot: 5000\n\
 snapshot_prefix: "%s/%s/pose"\n\
 # solver mode: CPU or GPU\n\
-solver_mode: GPU\n' % (path_in_caffe, dir, test_iter, test_interval, base_lr, stepsize, path_in_caffe, folder_name)
+solver_mode: GPU\n' % (path_in_caffe, dir, test_iter, test_interval, base_lr, stepsize, maxiter, path_in_caffe, folder_name)
     return string
 
 if __name__ == "__main__":
@@ -182,15 +183,20 @@ if __name__ == "__main__":
     directory = 'prototxt'
     dataFolder = '%s/lmdb/train' % (path_in_caffe)
     stepsize = 100000 # stepsize to decrease learning rate. This should depend on your dataset size
-    test_iter = 80000
     test_interval = 5000
-    ###
-
     batch_size = 6
+    numEpochs = 6
+    trainSize = 115327
+    testSize = 40649
+    ###
+   
+    maxiter = (int)(trainSize/batch_size*numEpochs)
+    test_iter = (int)(testSize/batch_size*numEpochs)
+
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
     # base_lr = 8e-5
-    base_lr = 8e-4
+    base_lr = 1e-5
     # num_parts and np_in_lmdb are two parameters that are used inside the framework to move from one
     # dataset definition to another. Num_parts is the number of parts we want to have, while
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.
@@ -224,4 +230,4 @@ if __name__ == "__main__":
             stride +=    [ 0 ] + [ 1 ] + [ 0 ] + [ 1 ] * 5            + [ 0 ]
 
     label_name = ['label_1st_lower', 'label_lower']
-    writePrototxts(dataFolder, directory, batch_size, stepsize, layername, kernel, stride, outCH, transform_param, base_lr, d_caffemodel, label_name, test_iter, test_interval)
+    writePrototxts(dataFolder, directory, batch_size, stepsize, layername, kernel, stride, outCH, transform_param, base_lr, d_caffemodel, label_name, test_iter, test_interval, maxiter)

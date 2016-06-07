@@ -70,7 +70,7 @@ models/cpm_architecture/jsonDatasets
 *.binaryproto
 *leveldb
 *lmdb
-log.txt
+*.txt
 *.prototxt
 
 # build, distribute, and bins (+ python proto bindings)
