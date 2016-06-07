@@ -562,9 +562,13 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     for (int j = 0; j < img_aug.cols; ++j) {
       Vec3b& rgb = img_aug.at<Vec3b>(i, j);
       //offset is for skipping one channel
-      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
-      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
-      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
+//      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
+//      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
+//      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
+//      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
+      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0])/256.0;
+      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1])/256.0;
+      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2])/256.0;
       transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
@@ -669,7 +673,7 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
   int crop_x = 2*offset_x + 1;
   int crop_y = 2*offset_y + 1;
   //TODO: check the fact we are adding 128 on each channel
-  Mat img_tmp = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
+  Mat img_tmp = Mat::zeros(crop_y, crop_x, CV_8UC3);// + Scalar(128,128,128);
   for(int i=0;i<crop_y;i++){
 	  for(int j=0;j<crop_x;j++){ //i,j on cropped
 		  int coord_x_on_img = meta.objpos.x - offset_x + j;

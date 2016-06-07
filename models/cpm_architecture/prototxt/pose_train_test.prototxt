@@ -6,7 +6,7 @@ layer {
   transform_param {
     stride: 8
     max_rotate_degree: 40
-    visualize: false
+    visualize: true
     crop_size_x: 368
     crop_size_y: 368
     scale_prob: 1

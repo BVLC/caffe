@@ -10,15 +10,16 @@ import os
 
 caffe.set_mode_cpu()
 caffe.set_device(1)
-def_file = '/home/denitome/MATLAB/convolutional-pose-machines-release/model/_trained_MPI/pose_deploy_centerMap.prototxt'
-model_file = '/home/denitome/MATLAB/convolutional-pose-machines-release/model/_trained_MPI/pose_iter_985000_addLEEDS.caffemodel'
+home_dir = os.path.expanduser('~')
+def_file = '%s/MATLAB/convolutional-pose-machines-release/model/_trained_MPI/pose_deploy_centerMap.prototxt' % home_dir
+model_file = '%s/MATLAB/convolutional-pose-machines-release/model/_trained_MPI/pose_iter_985000_addLEEDS.caffemodel' % home_dir
 if ((not os.path.isfile(def_file)) or (not os.path.isfile(model_file))):
     print 'ERROR'
 
 net1 = caffe.Net(def_file, model_file , caffe.TEST)
 layer_names1 = list(net1._layer_names)
 
-def_file = '/home/denitome/Libraries/caffe_cpm/models/cpm_architecture/prototxt/pose_deploy.prototxt'
+def_file = '%s/Libraries/caffe_cpm/models/cpm_architecture/prototxt/pose_deploy.prototxt' % home_dir
 if (not os.path.isfile(def_file)):
     print 'ERROR' 
 

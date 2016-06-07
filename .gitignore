@@ -71,6 +71,7 @@ models/cpm_architecture/jsonDatasets
 *leveldb
 *lmdb
 log.txt
+*.prototxt
 
 # build, distribute, and bins (+ python proto bindings)
 build
