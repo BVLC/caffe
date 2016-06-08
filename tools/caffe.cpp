@@ -354,16 +354,35 @@ int time() {
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 
-  // Do a clean forward and backward pass, so that memory allocation are done
+  // Do a number of clean forward and backward pass,
+  // so that memory allocation are done,
   // and future iterations will be more stable.
-  LOG(INFO) << "Performing Forward";
+  Timer forward_timer;
+  Timer backward_timer;
+  double forward_time = 0.0;
+  double backward_time = 0.0;
+  const int kInitIterations = 5;
+  LOG(INFO) << "Initialization for " << kInitIterations << " iterations.";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
+  LOG(INFO) << "Performing Forward";
   float initial_loss;
-  caffe_net.Forward(&initial_loss);
+  forward_timer.Start();
+  for (int j = 0; j < kInitIterations; ++j) {
+    caffe_net.Forward(&initial_loss);
+  }
+  forward_time += forward_timer.MicroSeconds();
   LOG(INFO) << "Initial loss: " << initial_loss;
   LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
+  backward_timer.Start();
+  for (int j = 0; j < kInitIterations; ++j) {
+    caffe_net.Backward();
+  }
+  backward_time += backward_timer.MicroSeconds();
+  LOG(INFO) << "Average Initialization Forward pass: " << forward_time /
+    1000 / kInitIterations << " ms.";
+  LOG(INFO) << "Average Initialization Backward pass: " << backward_time /
+    1000 / kInitIterations << " ms.";
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
@@ -374,13 +393,11 @@ int time() {
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;
   total_timer.Start();
-  Timer forward_timer;
-  Timer backward_timer;
   Timer timer;
   std::vector<double> forward_time_per_layer(layers.size(), 0.0);
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
-  double forward_time = 0.0;
-  double backward_time = 0.0;
+  forward_time = 0.0;
+  backward_time = 0.0;
   for (int j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
     iter_timer.Start();

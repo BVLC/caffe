@@ -34,7 +34,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param), handles_setup_(false),
-        backward_passed_ctr_(0) {}
+        use_algo_seeker_(true), use_modest_workspace_(true) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -65,7 +65,24 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
   GPUMemory::Workspace workspace;
-  int backward_passed_ctr_;
+
+ private:
+  bool use_algo_seeker_;
+  bool use_modest_workspace_;
+  void FindExConvAlgo(const vector<Blob<Dtype>*>& bottom,
+                      const vector<Blob<Dtype>*>& top,
+                      const size_t workspace_bytes);
+  void GetConvAlgo(const vector<Blob<Dtype>*>& bottom,
+                   const vector<Blob<Dtype>*>& top,
+                   const size_t workspace_bytes);
+
+  vector<cudnnTensorDescriptor_t>      cached_bottom_descs_;
+  vector<cudnnConvolutionDescriptor_t> cached_conv_descs_;
+  bool IsBottomDescChanged(const vector<Blob<Dtype>*>& bottom);
+  bool IsConvDescChanged(const vector<Blob<Dtype>*>& bottom);
+
+  bool use_reshape_;
+  bool initialized_cached_descs_;
 };
 #endif
 
