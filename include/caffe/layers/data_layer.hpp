@@ -33,7 +33,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void load_batch(Batch<Dtype>* batch);
 
   DataReader reader_;
-  ThreadPool pool_;
+  shared_ptr<ThreadPool> pool_;
 };
 
 }  // namespace caffe
