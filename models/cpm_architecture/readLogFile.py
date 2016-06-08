@@ -58,7 +58,24 @@ def parse_line(regex_obj, data, line, loss_iter, iteration):
         data['stage'].append(stage)
     return data
 
-def plotData(train, test):
+def combine_data(train, test, new_train, new_test):
+    last_iter = train['iteration'][-1]+ 1
+    for i in range(len(new_train['iteration'])):
+        train['iteration'].append(last_iter + new_train['iteration'][i])
+        train['loss_iter'].append(new_train['loss_iter'][i])
+        train['loss_stage'].append(new_train['loss_stage'][i])
+        train['stage'].append(new_train['stage'][i])
+    if (len(test['iteration']) > 0):
+        last_iter = test['iteration'][-1] + 1
+        for i in range(len(new_test)):
+            test['iteration'].append(last_iter + new_test['iteration'][i])
+            test['loss_iter'].append(new_test['loss_iter'][i])
+            test['loss_stage'].append(new_test['loss_stage'][i])
+            test['stage'].append(new_test['stage'][i])
+    return train, test
+    
+
+def plotData(train, test, nstages):
     x = []
     y = []
     count = 0
@@ -73,7 +90,8 @@ def plotData(train, test):
     plt.grid()
     plt.xlabel('NUM ITERATIONS')
     plt.ylabel('LOSS')
-    plt.title('Overall loss on all stages', fontweight='bold')
+    subtitle = 'Overall loss on all stages (min = %.4f; iter = %d)' % (min(y), x[y.index(min(y))])
+    plt.title(subtitle, fontweight='bold')
     plt.legend(loc='upper right')
     
     # plot loss per each stage
@@ -94,17 +112,25 @@ def plotData(train, test):
     plt.grid()
     plt.xlabel('NUM ITERATIONS')
     plt.ylabel('LOSS')
-    plt.title('Loss per stage', fontweight='bold')
+    min_val_stages = [min(y[idx_s]) for idx_s in range(nstages)]
+    idx_min_stage = min_val_stages.index(min(min_val_stages)) + 1
+    subtitle = 'Loss per stage (min = %0.4f; stage = %d)' % (min(min_val_stages), idx_min_stage)
+    plt.title(subtitle, fontweight='bold')
     plt.legend(loc='upper right')
-    main_title = 'Training with\nbase_lr:%f; stage_1 lr_mul:%d; stage_n:lr_mul %d' % (1e-5, 5, 1)
+    main_title = 'Training with\nbase_lr = %f; stage_1_lr_mul = %d; stage_n_lr_mul = %d' % (1e-5, 5, 1)
     plt.suptitle(main_title, size=14, fontweight='bold')
     plt.show()       
     
 
 def main():
-    filename = 'prototxt/log_tmp.txt'
-    train, test = parse_log(filename)
-    plotData(train, test)
+    filename = ['prototxt/log_tmp.txt','prototxt/log_tmp.txt']
+    nstages = 6
+    train, test = parse_log(filename[0])
+    if (len(filename) > 1):
+        for i in range(1,len(filename)):
+            curr_tr, curr_ts = parse_log(filename[i])
+            train, test = combine_data(train, test, curr_tr, curr_ts)
+    plotData(train, test, nstages)
 
 if __name__ == '__main__':
     main()
