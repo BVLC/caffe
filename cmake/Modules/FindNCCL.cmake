@@ -6,17 +6,20 @@
 # The following are set after configuration is done:
 #  NCCL_FOUND
 #  NCCL_INCLUDE_DIR
-#  NCCL_LIBRARIES
+#  NCCL_LIBRARY
 
-find_path(NCCL_INCLUDE_DIR NAMES nccl.h PATHS ${NCCL_ROOT_DIR})
+find_path(NCCL_INCLUDE_DIR NAMES nccl.h
+    PATHS ${NCCL_ROOT_DIR}/include
+    )
 
-find_library(NCCL_LIBRARIES NAMES nccl PATHS ${NCCL_ROOT_DIR})
+find_library(NCCL_LIBRARY NAMES nccl
+    PATHS ${NCCL_ROOT_DIR}/lib ${NCCL_ROOT_DIR}/lib64)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(NCCL DEFAULT_MSG NCCL_INCLUDE_DIR NCCL_LIBRARIES)
+find_package_handle_standard_args(NCCL DEFAULT_MSG NCCL_INCLUDE_DIR NCCL_LIBRARY)
 
 if(NCCL_FOUND)
-  message(STATUS "Found NCCL (include: ${NCCL_INCLUDE_DIR}, library: ${NCCL_LIBRARIES})")
-  mark_as_advanced(NCCL_INCLUDE_DIR NCCL_LIBRARIES)
+  message(STATUS "Found NCCL (include: ${NCCL_INCLUDE_DIR}, library: ${NCCL_LIBRARY})")
+  mark_as_advanced(NCCL_INCLUDE_DIR NCCL_LIBRARY)
 endif()
 
