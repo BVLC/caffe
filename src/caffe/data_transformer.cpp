@@ -126,6 +126,132 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 }
 
+// do_mirror, h_off, w_off require that random values be passed in,
+// because the random draws should have been taken in deterministic order
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformPtrInt(Datum* datum,
+                                             Dtype* transformed_data,
+                                             int rand1, int rand2, int rand3,
+                                             BlockingQueue<Datum*>* free_) {
+  const string& data = datum->data();
+  const int datum_channels = datum->channels();
+  const int datum_height = datum->height();
+  const int datum_width = datum->width();
+
+  const int crop_size = param_.crop_size();
+  const Dtype scale = param_.scale();
+  const bool do_mirror = param_.mirror() && (rand1%2);
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_uint8 = data.size() > 0;
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  CHECK_GT(datum_channels, 0);
+  CHECK_GE(datum_height, crop_size);
+  CHECK_GE(datum_width, crop_size);
+
+  Dtype* mean = NULL;
+  if (has_mean_file) {
+    CHECK_EQ(datum_channels, data_mean_.channels());
+    CHECK_EQ(datum_height, data_mean_.height());
+    CHECK_EQ(datum_width, data_mean_.width());
+    mean = data_mean_.mutable_cpu_data();
+  }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << datum_channels;
+    if (datum_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < datum_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+
+  int height = datum_height;
+  int width = datum_width;
+
+  int h_off = 0;
+  int w_off = 0;
+  if (crop_size) {
+    height = crop_size;
+    width = crop_size;
+    // We only do random crop when we do training.
+    if (phase_ == TRAIN) {
+      h_off = rand2 % (datum_height - crop_size + 1);
+      w_off = rand3 % (datum_width - crop_size + 1);
+    } else {
+      h_off = (datum_height - crop_size) / 2;
+      w_off = (datum_width - crop_size) / 2;
+    }
+  }
+
+  Dtype datum_element;
+  int top_index, data_index;
+  for (int c = 0; c < datum_channels; ++c) {
+    for (int h = 0; h < height; ++h) {
+      for (int w = 0; w < width; ++w) {
+        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
+        if (do_mirror) {
+          top_index = (c * height + h) * width + (width - 1 - w);
+        } else {
+          top_index = (c * height + h) * width + w;
+        }
+        if (has_uint8) {
+          datum_element =
+            static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+        } else {
+          datum_element = datum->float_data(data_index);
+        }
+        if (has_mean_file) {
+          transformed_data[top_index] =
+            (datum_element - mean[data_index]) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_data[top_index] =
+              (datum_element - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = datum_element * scale;
+          }
+        }
+      }
+    }
+  }
+  free_->push(datum);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformPtrEntry(Datum* datum,
+                                               Dtype* transformed_ptr,
+                                               int rand1, int rand2, int rand3,
+                                               BlockingQueue<Datum*>* free_) {
+  // If datum is encoded, decoded and transform the cv::image.
+  if (datum->encoded()) {
+#ifdef USE_OPENCV
+    CHECK(!(param_.force_color() && param_.force_gray()))
+        << "cannot set both force_color and force_gray";
+    cv::Mat cv_img;
+    if (param_.force_color() || param_.force_gray()) {
+    // If force_color then decode in color otherwise decode in gray.
+      cv_img = DecodeDatumToCVMat(*datum, param_.force_color());
+    } else {
+      cv_img = DecodeDatumToCVMatNative(*datum);
+    }
+    // Transform the cv::image into blob.
+    TransformPtr(cv_img, transformed_ptr, rand1, rand2, rand3);
+    free_->push(datum);
+    return;
+#else
+    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
+  } else {
+    if (param_.force_color() || param_.force_gray()) {
+      LOG(ERROR) << "force_color and force_gray only for encoded datum";
+    }
+  }
+
+  TransformPtrInt(datum, transformed_ptr,
+                  rand1, rand2, rand3, free_);
+}
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
@@ -323,6 +449,97 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 }
+
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformPtr(const cv::Mat& cv_img,
+                                          Dtype* transformed_ptr,
+                                          int rand1, int rand2, int rand3
+    ) {
+  const int crop_size = param_.crop_size();
+  const int img_channels = cv_img.channels();
+  const int img_height = cv_img.rows;
+  const int img_width = cv_img.cols;
+
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+
+  const Dtype scale = param_.scale();
+  const bool do_mirror = param_.mirror() && (rand1%2);
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  CHECK_GT(img_channels, 0);
+  CHECK_GE(img_height, crop_size);
+  CHECK_GE(img_width, crop_size);
+
+  Dtype* mean = NULL;
+  if (has_mean_file) {
+    CHECK_EQ(img_channels, data_mean_.channels());
+    CHECK_EQ(img_height, data_mean_.height());
+    CHECK_EQ(img_width, data_mean_.width());
+    mean = data_mean_.mutable_cpu_data();
+  }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << img_channels;
+    if (img_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < img_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+
+  int h_off = 0;
+  int w_off = 0;
+  int height = img_height;
+  int width = img_width;
+  cv::Mat cv_cropped_img = cv_img;
+  if (crop_size) {
+      height = width = crop_size;
+    // We only do random crop when we do training.
+    if (phase_ == TRAIN) {
+      h_off = rand2 % (img_height - crop_size + 1);
+      w_off = rand3 % (img_width - crop_size + 1);
+    } else {
+      h_off = (img_height - crop_size) / 2;
+      w_off = (img_width - crop_size) / 2;
+    }
+    cv::Rect roi(w_off, h_off, crop_size, crop_size);
+    cv_cropped_img = cv_img(roi);
+  }
+
+  CHECK(cv_cropped_img.data);
+
+  int top_index;
+  for (int h = 0; h < height; ++h) {
+    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+    int img_index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < img_channels; ++c) {
+        if (do_mirror) {
+          top_index = (c * height + h) * width + (width - 1 - w);
+        } else {
+          top_index = (c * height + h) * width + w;
+        }
+        // int top_index = (c * height + h) * width + w;
+        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        if (has_mean_file) {
+          int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
+          transformed_ptr[top_index] =
+            (pixel - mean[mean_index]) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_ptr[top_index] =
+              (pixel - mean_values_[c]) * scale;
+          } else {
+            transformed_ptr[top_index] = pixel * scale;
+          }
+        }
+      }
+    }
+  }
+}
+
 #endif  // USE_OPENCV
 
 template<typename Dtype>
@@ -537,6 +754,7 @@ int DataTransformer<Dtype>::Rand(int n) {
   CHECK_GT(n, 0);
   caffe::rng_t* rng =
       static_cast<caffe::rng_t*>(rng_->generator());
+  // this doesn't actually produce a uniform distribution
   return ((*rng)() % n);
 }
 

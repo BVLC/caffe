@@ -6,6 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
 
@@ -26,6 +27,16 @@ class DataTransformer {
   void InitRand();
 
   /**
+   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
+   *
+   * @param n
+   *    The upperbound (exclusive) value of the random number.
+   * @return
+   *    A uniformly random integer value from ({0, 1, ..., n-1}).
+   */
+  virtual int Rand(int n);
+
+  /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data.
    *
@@ -36,6 +47,26 @@ class DataTransformer {
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to the data.
+   *
+   * @param datum
+   *    Datum containing the data to be transformed.
+   * @param rand1
+   *    Random value (0,RAND_MAX+1]
+   * @param rand2
+   *    Random value (0,RAND_MAX+1]
+   * @param rand3
+   *    Random value (0,RAND_MAX+1]
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used. See data_layer.cpp for an example.
+   */
+    void TransformPtrEntry(Datum* datum, Dtype* transformed_ptr,
+                           int rand1, int rand2, int rand3,
+                           BlockingQueue<Datum*>* free);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -75,6 +106,25 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to a cv::Mat
+   *
+   * @param cv_img
+   *    cv::Mat containing the data to be transformed.
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used. See image_data_layer.cpp for an example.
+   * @param rand1
+   *    Random value (0,RAND_MAX+1]
+   * @param rand2
+   *    Random value (0,RAND_MAX+1]
+   * @param rand3
+   *    Random value (0,RAND_MAX+1]
+   */
+  void TransformPtr(const cv::Mat& cv_img, Dtype* transformed_ptr,
+                    int rand1, int rand2, int rand3);
 #endif  // USE_OPENCV
 
   /**
@@ -128,20 +178,12 @@ class DataTransformer {
 #endif  // USE_OPENCV
 
  protected:
-   /**
-   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
-   *
-   * @param n
-   *    The upperbound (exclusive) value of the random number.
-   * @return
-   *    A uniformly random integer value from ({0, 1, ..., n-1}).
-   */
-  virtual int Rand(int n);
-
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
-
+  void TransformPtrInt(Datum* datum, Dtype* transformed_data,
+                       int rand1, int rand2, int rand3,
+                       BlockingQueue<Datum*>* free);
 
   shared_ptr<Caffe::RNG> rng_;
   Phase phase_;

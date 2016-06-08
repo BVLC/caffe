@@ -14,7 +14,7 @@ namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
-    reader_(param) {
+    reader_(param), pool_(3) {
 }
 
 template <typename Dtype>
@@ -57,7 +57,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
-  double trans_time = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
@@ -80,28 +79,44 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    timer.Start();
-    // get a datum
-    Datum& datum = *(reader_.full().pop("Waiting for data"));
-    read_time += timer.MicroSeconds();
-    timer.Start();
-    // Apply data transformations (mirror, scale, crop...)
-    int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    // Copy label.
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
-    }
-    trans_time += timer.MicroSeconds();
+      timer.Start();
+      // Get a datum
+      Datum* datum = (reader_.full().pop("Waiting for data"));
+      read_time += timer.MicroSeconds();
+      // Copy label.
+      if (this->output_labels_) {
+          top_label[item_id] = datum->label();
+      }
 
-    reader_.free().push(const_cast<Datum*>(&datum));
+      // Get data offset for this datum to hand off to transform thread
+      int offset = batch->data_.offset(item_id);
+      this->transformed_data_.set_cpu_data(top_data + offset);
+      Dtype* ptr = this->transformed_data_.mutable_cpu_data();
+
+      // Precalculate the necessary random draws so that they are
+      // drawn deterministically
+      int rand1 = 0, rand2 = 0, rand3 = 0;
+      if (this->transform_param_.mirror()) {
+         rand1 = this->data_transformer_->Rand(RAND_MAX)+1;
+      }
+      if (this->phase_ == TRAIN && this->transform_param_.crop_size()) {
+         rand2 = this->data_transformer_->Rand(RAND_MAX)+1;
+         rand3 = this->data_transformer_->Rand(RAND_MAX)+1;
+      }
+
+      pool_.runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
+                                this->data_transformer_.get(), datum, ptr,
+                                rand1, rand2, rand3, &(reader_.free())));
   }
   timer.Stop();
+
+  // Need to make sure we have completed all work before returning or
+  // completing timimg
+  pool_.waitWorkComplete();
   batch_timer.Stop();
+
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
