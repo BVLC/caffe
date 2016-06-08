@@ -273,7 +273,10 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   explicit MKLReLULayer(const LayerParameter& param)
     : NeuronLayer<Dtype>(param),
       fwd_bottom_data_ (new MKLData<Dtype>()),
-      bwd_top_diff_    (new MKLDiff<Dtype>()) {}
+      bwd_top_diff_    (new MKLDiff<Dtype>()),
+      reluFwd_(NULL),
+      reluBwd_(NULL) {}
+
   ~MKLReLULayer();
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
