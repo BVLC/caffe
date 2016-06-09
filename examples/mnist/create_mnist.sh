@@ -4,7 +4,15 @@
 
 EXAMPLE=examples/mnist
 DATA=data/mnist
-BUILD=build/examples/mnist
+
+# Check if CAFFE_BIN is set
+if [ -z ${CAFFE_BIN+x} ];
+# if unset
+then
+  BUILD=build/examples/mnist
+else
+  BUILD=$CAFFE_BIN
+fi
 
 BACKEND="lmdb"
 

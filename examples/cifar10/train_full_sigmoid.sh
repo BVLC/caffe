@@ -1,11 +1,9 @@
 #!/usr/bin/env sh
 
-# Check if CAFFE_BIN is unset
-if [ -z ${CAFFE_BIN+x} ];
+# Check if TOOLS is unset
+if [ -z ${TOOLS+x} ];
 then
 TOOLS=./build/tools
-else
-TOOLS=$CAFFE_BIN
 fi
 
 $TOOLS/caffe train \

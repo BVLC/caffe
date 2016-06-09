@@ -4,7 +4,13 @@
 
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
-TOOLS=build/tools
+
+# Check if TOOLS is unset
+if [ -z ${TOOLS+x} ];
+then
+TOOLS=./build/tools
+fi
+
 
 $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
   $DATA/imagenet_mean.binaryproto
