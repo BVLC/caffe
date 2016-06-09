@@ -14,7 +14,38 @@ namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
-    reader_(param), pool_(3) {
+    reader_(param) {
+    // Check user override in param file
+    if (this->layer_param_.data_param().threads() == 0) {
+#ifndef CPU_ONLY
+        // In GPU mode, default to # CPU cores / # GPUs
+        if (Caffe::mode() == Caffe::GPU) {
+            int cuda_devices;
+            unsigned int cpu_count;
+            unsigned int prefetch_threads;
+            cpu_count = boost::thread::hardware_concurrency();
+            CUDA_CHECK(cudaGetDeviceCount(&cuda_devices));
+            CHECK_GE(cuda_devices, 1) << "No CUDA devices found";
+            DLOG(INFO) << "CPU threads: " << cpu_count
+                       << " GPU devices visible: " << cuda_devices;
+            prefetch_threads = cpu_count > cuda_devices ?
+                cpu_count / cuda_devices + (cpu_count % cuda_devices != 0) : 1;
+            DLOG(INFO) << "Data processing threads: " << prefetch_threads;
+            pool_.reset(new ThreadPool(prefetch_threads));
+        } else {
+            // In CPU mode, 1 thread seems to be enough
+            DLOG(INFO) << "Data processing threads: 1";
+            pool_.reset(new ThreadPool(1));
+        }
+#else
+        DLOG(INFO) << "Data processing threads: 1";
+        pool_.reset(new ThreadPool(1));
+#endif
+    } else {
+        DLOG(INFO) << "Data processing threads: "
+                   << this->layer_param_.data_param().threads();
+        pool_.reset(new ThreadPool(this->layer_param_.data_param().threads()));
+    }
 }
 
 template <typename Dtype>
@@ -104,7 +135,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
          rand3 = this->data_transformer_->Rand(RAND_MAX)+1;
       }
 
-      pool_.runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
+      pool_->runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
                                 this->data_transformer_.get(), datum, ptr,
                                 rand1, rand2, rand3, &(reader_.free())));
   }
@@ -112,7 +143,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   // Need to make sure we have completed all work before returning or
   // completing timimg
-  pool_.waitWorkComplete();
+  pool_->waitWorkComplete();
   batch_timer.Stop();
 
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";

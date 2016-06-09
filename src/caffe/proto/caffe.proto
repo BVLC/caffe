@@ -748,6 +748,9 @@ message DataParameter {
   // Prefetch queue (Number of batches to prefetch to host memory, increase if
   // data access bandwidth varies).
   optional uint32 prefetch = 10 [default = 4];
+  // Number of processing threads.  0 means use defaults. 1 thread for CPU or
+  // cpu logical cores / number of GPUs
+  optional uint32 threads  = 11 [default = 0];
 }
 
 message DropoutParameter {
