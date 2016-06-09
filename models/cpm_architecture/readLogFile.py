@@ -7,6 +7,7 @@ Created on Tue Jun  7 11:32:59 2016
 
 import re
 import matplotlib.pyplot as plt
+from mpldatacursor import datacursor
 
 def parse_log(path_to_log):
     """Parse log file"""
@@ -75,7 +76,7 @@ def combine_data(train, test, new_train, new_test):
     return train, test
     
 
-def plotData(train, test, nstages):
+def plotData(train, test, nstages, main_title):
     x = []
     y = []
     count = 0
@@ -117,20 +118,28 @@ def plotData(train, test, nstages):
     subtitle = 'Loss per stage (min = %0.4f; stage = %d)' % (min(min_val_stages), idx_min_stage)
     plt.title(subtitle, fontweight='bold')
     plt.legend(loc='upper right')
-    main_title = 'Training with\nbase_lr = %f; stage_1_lr_mul = %d; stage_n_lr_mul = %d' % (1e-5, 5, 1)
     plt.suptitle(main_title, size=14, fontweight='bold')
+    datacursor(bbox=None, display='single', formatter="Iter:{x:.0f}\nLoss:{y:.2f}".format)
     plt.show()       
     
 
 def main():
-    filename = ['prototxt/log_tmp.txt','prototxt/log_tmp.txt']
+    #filename = ['prototxt/caffemodel/trial_1/log.txt','prototxt/log.txt']
+    #filename = ['prototxt/caffemodel/trial_2/log.txt','prototxt/log.txt']
+    filename = ['prototxt/log.txt']
+    base_lr = 5e-5
+    st1_lrm = 1
+    stn_lrm = 1
     nstages = 6
     train, test = parse_log(filename[0])
+    print 'Num iterations file = %d' % (train['iteration'][-1])
     if (len(filename) > 1):
         for i in range(1,len(filename)):
             curr_tr, curr_ts = parse_log(filename[i])
+            print 'Num iterations file = %d' % (curr_tr['iteration'][-1])
             train, test = combine_data(train, test, curr_tr, curr_ts)
-    plotData(train, test, nstages)
+    main_title = 'Training with:\nbase_lr = %f; stage_1_lr_mul = %d; stage_n_lr_mul = %d\nFinetuning: trial_2; Iter = 10000  ' % (base_lr, st1_lrm, stn_lrm)
+    plotData(train, test, nstages, main_title)
 
 if __name__ == '__main__':
     main()

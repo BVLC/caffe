@@ -534,13 +534,13 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     //LOG(INFO) << meta.joint_self.joints[0];
 //    if(0 && param_.visualize())
 //      visualize(img_temp2, meta, as);
-    // TODO: to be fixed. Crop the image with the right size in order to have all joints inside the cropped image
-    as.crop = augmentation_croppad(img, img_temp, meta);
+    as.crop = augmentation_croppad(img, img_aug, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
       visualize(img_temp, meta, as);
-    as.flip = augmentation_flip(img_temp, img_aug, meta);
+    //as.flip = augmentation_flip(img_temp, img_aug, meta);
+    as.flip = 0;
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(param_.visualize()) 
@@ -712,57 +712,49 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
-	// TODO: change it if we want to use this
-	//---------------------------------------------------------------
-	//------------ CHANGE TO THE RIGHT NUMBER OF JOINTS -------------
+	//H36M dataset
+	// 1: Hips 2: RightUpLeg 3: RightLeg 4: RightFoot 5: LeftUpLeg 6: LeftLeg 7: LeftFoot 8: Spine1 9:
+	// Neck 10: Head 11: Site 12: LeftArm 13: LeftForeArm 14: LeftHand 15: RightArm 16: RightForeArm 17: RightHand
 	assert(j.joints.size() == 17);
-	//---------------------------------------------------------------
-  //MPII R leg: 0(ankle), 1(knee), 2(hip)
-  //     L leg: 5(ankle), 4(knee), 3(hip)
-  //     R arms: 10(wrist), 11(elbow), 12(shoulder)
-  //     L arms: 15(wrist), 14(elbow), 13(shoulder)
-//  if(np == 9){
-//    int right[4] = {1,2,3,7};
-//    int left[4] = {4,5,6,8};
-//    for(int i=0; i<4; i++){
-//      int ri = right[i] - 1;
-//      int li = left[i] - 1;
-//      Point2f temp = j.joints[ri];
-//      j.joints[ri] = j.joints[li];
-//      j.joints[li] = temp;
-//      int temp_v = j.isVisible[ri];
-//      j.isVisible[ri] = j.isVisible[li];
-//      j.isVisible[li] = temp_v;
-//    }
-//  }
-//  else if(np == 14){
-//    int right[6] = {3,4,5,9,10,11}; //1-index
-//    int left[6] = {6,7,8,12,13,14}; //1-index
-//    for(int i=0; i<6; i++){
-//      int ri = right[i] - 1;
-//      int li = left[i] - 1;
-//      Point2f temp = j.joints[ri];
-//      j.joints[ri] = j.joints[li];
-//      j.joints[li] = temp;
-//      int temp_v = j.isVisible[ri];
-//      j.isVisible[ri] = j.isVisible[li];
-//      j.isVisible[li] = temp_v;
-//    }
-//  }
-//  else if(np == 28){
-//    int right[11] = {3,4,5,9,10,11,18,19,20,24,25}; //1-index
-//    int left[11] = {6,7,8,12,13,14,21,22,23,26,27}; //1-index
-//    for(int i=0; i<11; i++){
-//      int ri = right[i] - 1;
-//      int li = left[i] - 1;
-//      Point2f temp = j.joints[ri];
-//      j.joints[ri] = j.joints[li];
-//      j.joints[li] = temp;
-//      int temp_v = j.isVisible[ri];
-//      j.isVisible[ri] = j.isVisible[li];
-//      j.isVisible[li] = temp_v;
-//    }
-//  }
+
+	if (np == 17){
+		int kNumSpecular = 6;
+		int right[kNumSpecular] = {2,3,4,15,16,17};
+		int left[kNumSpecular] = {5,6,7,12,13,14};
+		for(int i=0;i<kNumSpecular;i++){
+			// Indices are expressed in Matlab (it starts from 1)
+			int ri = right[i] - 1;
+			int li = left[i] - 1;
+			Point2f tmp = j.joints[ri];
+			j.joints[ri] = j.joints[li];
+			j.joints[li] = tmp;
+			Point3f tmp3 = j.joints[ri];
+			j.joints[ri] = j.joints[li];
+			j.joints[li] = tmp3;
+		}
+	}
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::swapLeftRight3D(Joints3d& j) {
+	//H36M dataset
+	// 1: Hips 2: RightUpLeg 3: RightLeg 4: RightFoot 5: LeftUpLeg 6: LeftLeg 7: LeftFoot 8: Spine1 9:
+	// Neck 10: Head 11: Site 12: LeftArm 13: LeftForeArm 14: LeftHand 15: RightArm 16: RightForeArm 17: RightHand
+	assert(j.joints.size() == 17);
+
+	if (np == 17){
+		int kNumSpecular = 6;
+		int right[kNumSpecular] = {2,3,4,15,16,17};
+		int left[kNumSpecular] = {5,6,7,12,13,14};
+		for(int i=0;i<kNumSpecular;i++){
+			// Indices are expressed in Matlab (it starts from 1)
+			int ri = right[i] - 1;
+			int li = left[i] - 1;
+			Point3f tmp = j.joints[ri];
+			j.joints[ri] = j.joints[li];
+			j.joints[li] = tmp;
+		}
+	}
 }
 
 template<typename Dtype>
@@ -788,17 +780,19 @@ bool DataTransformer<Dtype>::augmentation_flip(Mat& img_src, Mat& img_aug, MetaD
     for(int i=0; i<np; i++){
       meta.joint_self.joints[i].x = w - 1 - meta.joint_self.joints[i].x;
     }
-    if(param_.transform_body_joint())
-      swapLeftRight(meta.joint_self);
+    //if(param_.transform_body_joint())
+    // This is important becuase when you flip the image, the joints on the right become the one one the left and viceversa
+    swapLeftRight(meta.joint_self);
+    swapLeftRight3D(meta.joint_self_3d);
 
-    for(int p=0; p<meta.numOtherPeople; p++){
-      meta.objpos_other[p].x = w - 1 - meta.objpos_other[p].x;
-      for(int i=0; i<np; i++){
-        meta.joint_others[p].joints[i].x = w - 1 - meta.joint_others[p].joints[i].x;
-      }
-      if(param_.transform_body_joint())
-        swapLeftRight(meta.joint_others[p]);
-    }
+//    for(int p=0; p<meta.numOtherPeople; p++){
+//      meta.objpos_other[p].x = w - 1 - meta.objpos_other[p].x;
+//      for(int i=0; i<np; i++){
+//        meta.joint_others[p].joints[i].x = w - 1 - meta.joint_others[p].joints[i].x;
+//      }
+//      if(param_.transform_body_joint())
+//        swapLeftRight(meta.joint_others[p]);
+//    }
   }
   else {
     img_aug = img_src.clone();

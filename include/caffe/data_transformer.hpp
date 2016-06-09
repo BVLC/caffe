@@ -177,6 +177,7 @@ class DataTransformer {
   void RotatePoint(Point2f& p, Mat R);
   bool onPlane(Point p, Size img_size);
   void swapLeftRight(Joints& j);
+  void swapLeftRight3D(Joints3d& j);
   void SetAugTable(int numData);
 
   int np_in_lmdb;
