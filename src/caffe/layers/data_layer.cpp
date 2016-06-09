@@ -3,6 +3,7 @@
 #endif  // USE_OPENCV
 #include <stdint.h>
 
+#include <string>
 #include <vector>
 
 #include "caffe/data_transformer.hpp"
@@ -58,7 +59,10 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   // Read a data point, and use it to initialize the top blob.
-  Datum& datum = *(reader_.full().peek());
+  string& str = *(reader_.full().peek());
+  // Parse this data point so we can use the datum to infer things
+  Datum datum;
+  datum.ParseFromString(str);
 
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
@@ -95,7 +99,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  Datum& datum = *(reader_.full().peek());
+  string& str = *(reader_.full().peek());
+  Datum datum;
+  datum.ParseFromString(str);
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
@@ -112,11 +118,12 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
       timer.Start();
       // Get a datum
-      Datum* datum = (reader_.full().pop("Waiting for data"));
+      string* str = (reader_.full().pop("Waiting for data"));
       read_time += timer.MicroSeconds();
       // Copy label.
+      Dtype* label_ptr = NULL;
       if (this->output_labels_) {
-          top_label[item_id] = datum->label();
+          label_ptr = &top_label[item_id];
       }
 
       // Get data offset for this datum to hand off to transform thread
@@ -136,8 +143,10 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
 
       pool_->runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
-                                this->data_transformer_.get(), datum, ptr,
-                                rand1, rand2, rand3, &(reader_.free())));
+                                this->data_transformer_.get(), str, ptr,
+                                rand1, rand2, rand3,
+                                this->output_labels_, label_ptr,
+                                &(reader_.free())));
   }
   timer.Stop();
 

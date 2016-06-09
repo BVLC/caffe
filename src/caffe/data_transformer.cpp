@@ -131,8 +131,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 void DataTransformer<Dtype>::TransformPtrInt(Datum* datum,
                                              Dtype* transformed_data,
-                                             int rand1, int rand2, int rand3,
-                                             BlockingQueue<Datum*>* free_) {
+                                             int rand1, int rand2, int rand3) {
   const string& data = datum->data();
   const int datum_channels = datum->channels();
   const int datum_height = datum->height();
@@ -216,29 +215,38 @@ void DataTransformer<Dtype>::TransformPtrInt(Datum* datum,
       }
     }
   }
-  free_->push(datum);
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::TransformPtrEntry(Datum* datum,
+void DataTransformer<Dtype>::TransformPtrEntry(string* str,
                                                Dtype* transformed_ptr,
                                                int rand1, int rand2, int rand3,
-                                               BlockingQueue<Datum*>* free_) {
+                                               bool output_labels, Dtype *label,
+                                               BlockingQueue<string*>* free_) {
+  // Parse a datum from the string
+  Datum datum;
+  datum.ParseFromString(*str);
+  free_->push(str);
+
+  // Get label from datum if needed
+  if (output_labels) {
+    *label = datum.label();
+  }
+
   // If datum is encoded, decoded and transform the cv::image.
-  if (datum->encoded()) {
+  if (datum.encoded()) {
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
     // If force_color then decode in color otherwise decode in gray.
-      cv_img = DecodeDatumToCVMat(*datum, param_.force_color());
+      cv_img = DecodeDatumToCVMat(datum, param_.force_color());
     } else {
-      cv_img = DecodeDatumToCVMatNative(*datum);
+      cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
     TransformPtr(cv_img, transformed_ptr, rand1, rand2, rand3);
-    free_->push(datum);
     return;
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
@@ -249,8 +257,8 @@ void DataTransformer<Dtype>::TransformPtrEntry(Datum* datum,
     }
   }
 
-  TransformPtrInt(datum, transformed_ptr,
-                  rand1, rand2, rand3, free_);
+  TransformPtrInt(&datum, transformed_ptr,
+                  rand1, rand2, rand3);
 }
 
 template<typename Dtype>
