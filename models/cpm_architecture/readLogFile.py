@@ -7,11 +7,14 @@ Created on Tue Jun  7 11:32:59 2016
 
 import re
 import matplotlib.pyplot as plt
+import stat
 from mpldatacursor import datacursor
 
 def parse_log(path_to_log):
     """Parse log file"""
 
+    regex_base_lr = re.compile('base_lr: ([\.\deE+-]+)')
+    regex_stepsize = re.compile('stepsize: (\d+)')
     regex_iteration = re.compile('Iteration (\d+)')
     regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
@@ -20,12 +23,23 @@ def parse_log(path_to_log):
 
     # Pick out lines of interest
     iteration = -1
+    base_lr = -1
+    stepsize = -1
     train_data = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
     test_data = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
 
     with open(path_to_log) as f:
         
         for line in f:
+            if base_lr == -1:
+                base_lr_match = regex_base_lr.search(line)
+                if base_lr_match:
+                    base_lr = float(base_lr_match.group(1))
+            if stepsize == -1:
+                stepsize_match = regex_stepsize.search(line)
+                if stepsize_match:
+                    stepsize = int(stepsize_match.group(1))
+            
             iteration_match = regex_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
@@ -35,15 +49,11 @@ def parse_log(path_to_log):
             regex_loss_match = regex_loss.search(line)
             if regex_loss_match:
                 loss_value = float(regex_loss_match.group(1))
-                
-            #learning_rate_match = regex_learning_rate.search(line)
-            #if learning_rate_match:
-            #    learning_rate = float(learning_rate_match.group(1))
 
             train_data = parse_line(regex_train_output, train_data, line, loss_value, iteration)
             test_data = parse_line(regex_test_output, test_data, line, loss_value, iteration)
 
-    return train_data, test_data
+    return train_data, test_data, base_lr, stepsize
 
 
 def parse_line(regex_obj, data, line, loss_iter, iteration):
@@ -74,9 +84,24 @@ def combine_data(train, test, new_train, new_test):
             test['loss_stage'].append(new_test['loss_stage'][i])
             test['stage'].append(new_test['stage'][i])
     return train, test
+
+def smoothed_data(x, y, batch_size):
+    smoothed_x = []
+    smoothed_y = []
+    smoothed_x.append(x[0])
+    smoothed_y.append(y[0])
+    for i in range(int(len(x)/batch_size)):
+        curr_batch = y[i*batch_size:(i+1)*batch_size]
+        smoothed_x.append(x[(i+1)*batch_size])
+        smoothed_y.append(mean(curr_batch))
+    # Consider elements left
+    smoothed_x.append(x[-1])
+    smoothed_y.append(mean(y[i*batch_size:]))
+    return smoothed_x, smoothed_y
+    
     
 
-def plotData(train, test, nstages, main_title):
+def plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size = 5):
     x = []
     y = []
     count = 0
@@ -87,11 +112,14 @@ def plotData(train, test, nstages, main_title):
         count += 1
     plt.clf()
     plt.subplot(211)
+    subtitle = 'Overall loss on all stages (min = %.4f; iter = %d)' % (min(y), x[y.index(min(y))])
     plt.semilogy(x,y,'r-', linewidth=2.0, label='Train')
+    if avg_line:
+        x, y = smoothed_data(x, y, avg_batch_size)
+        plt.semilogy(x,y,'b--', linewidth=2.0, label='Smoothed')
     plt.grid()
     plt.xlabel('NUM ITERATIONS')
     plt.ylabel('LOSS')
-    subtitle = 'Overall loss on all stages (min = %.4f; iter = %d)' % (min(y), x[y.index(min(y))])
     plt.title(subtitle, fontweight='bold')
     plt.legend(loc='upper right')
     
@@ -127,19 +155,17 @@ def main():
     #filename = ['prototxt/caffemodel/trial_1/log.txt','prototxt/log.txt']
     #filename = ['prototxt/caffemodel/trial_2/log.txt','prototxt/log.txt']
     filename = ['prototxt/log.txt']
-    base_lr = 5e-5
-    st1_lrm = 1
     stn_lrm = 1
     nstages = 6
-    train, test = parse_log(filename[0])
+    train, test, base_lr, stepsize = parse_log(filename[0])
     print 'Num iterations file = %d' % (train['iteration'][-1])
     if (len(filename) > 1):
         for i in range(1,len(filename)):
             curr_tr, curr_ts = parse_log(filename[i])
             print 'Num iterations file = %d' % (curr_tr['iteration'][-1])
             train, test = combine_data(train, test, curr_tr, curr_ts)
-    main_title = 'Training with:\nbase_lr = %f; stage_1_lr_mul = %d; stage_n_lr_mul = %d\nFinetuning: trial_2; Iter = 10000  ' % (base_lr, st1_lrm, stn_lrm)
-    plotData(train, test, nstages, main_title)
+    main_title = 'Training with:\nbase_lr = %f; stepsize = %d; lr_mul = %d\nFinetuning: trial_1; Iter = 5000 ' % (base_lr, stepsize, stn_lrm)
+    plotData(train, test, nstages, main_title, avg_line = True, avg_batch_size = 200)
 
 if __name__ == '__main__':
     main()

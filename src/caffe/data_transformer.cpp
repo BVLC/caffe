@@ -707,7 +707,8 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
   }
 
   // TODO: should we return (0,0)?
-  return Size(kImageSize, kImageSize);
+  // return Size(kImageSize, kImageSize);
+  return Size(0, 0);
 }
 
 template<typename Dtype>
@@ -719,8 +720,8 @@ void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
 
 	if (np == 17){
 		int kNumSpecular = 6;
-		int right[kNumSpecular] = {2,3,4,15,16,17};
-		int left[kNumSpecular] = {5,6,7,12,13,14};
+		int right[6] = {2,3,4,15,16,17};
+		int left[6] = {5,6,7,12,13,14};
 		for(int i=0;i<kNumSpecular;i++){
 			// Indices are expressed in Matlab (it starts from 1)
 			int ri = right[i] - 1;
@@ -728,9 +729,6 @@ void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
 			Point2f tmp = j.joints[ri];
 			j.joints[ri] = j.joints[li];
 			j.joints[li] = tmp;
-			Point3f tmp3 = j.joints[ri];
-			j.joints[ri] = j.joints[li];
-			j.joints[li] = tmp3;
 		}
 	}
 }
@@ -744,8 +742,8 @@ void DataTransformer<Dtype>::swapLeftRight3D(Joints3d& j) {
 
 	if (np == 17){
 		int kNumSpecular = 6;
-		int right[kNumSpecular] = {2,3,4,15,16,17};
-		int left[kNumSpecular] = {5,6,7,12,13,14};
+		int right[6] = {2,3,4,15,16,17};
+		int left[6] = {5,6,7,12,13,14};
 		for(int i=0;i<kNumSpecular;i++){
 			// Indices are expressed in Matlab (it starts from 1)
 			int ri = right[i] - 1;
@@ -784,15 +782,6 @@ bool DataTransformer<Dtype>::augmentation_flip(Mat& img_src, Mat& img_aug, MetaD
     // This is important becuase when you flip the image, the joints on the right become the one one the left and viceversa
     swapLeftRight(meta.joint_self);
     swapLeftRight3D(meta.joint_self_3d);
-
-//    for(int p=0; p<meta.numOtherPeople; p++){
-//      meta.objpos_other[p].x = w - 1 - meta.objpos_other[p].x;
-//      for(int i=0; i<np; i++){
-//        meta.joint_others[p].joints[i].x = w - 1 - meta.joint_others[p].joints[i].x;
-//      }
-//      if(param_.transform_body_joint())
-//        swapLeftRight(meta.joint_others[p]);
-//    }
   }
   else {
     img_aug = img_src.clone();
