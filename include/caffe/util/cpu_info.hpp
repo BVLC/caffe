@@ -17,6 +17,7 @@ struct Processor {
   unsigned siblings;
   unsigned coreId;
   unsigned cpuCores;
+  unsigned speedMHz;
 
   Processor();
 };
@@ -30,7 +31,6 @@ class Collection {
   static const Processor &getProcessor(unsigned processorId);
 
  private:
-  unsigned processorSpeedMHz;
   unsigned totalNumberOfSockets;
   unsigned totalNumberOfCpuCores;
   std::vector<Processor> processors;
@@ -47,8 +47,8 @@ class Collection {
   void parseValue(const char *fieldName, const char *valueString);
   void appendNewProcessor();
   bool beginsWith(const char *lineBuffer, const char *text) const;
-  void parseInteger(unsigned *value, const char *text) const;
-  void extractProcessorSpeedFromModelName(const char *text);
+  unsigned parseInteger(const char *text) const;
+  unsigned extractSpeedFromModelName(const char *text) const;
 
   void collectBasicCpuInformation();
   void updateCpuInformation(const Processor &processor,

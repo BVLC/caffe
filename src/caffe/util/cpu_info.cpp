@@ -12,10 +12,10 @@ Processor::Processor() {
   siblings = 0;
   coreId = 0;
   cpuCores = 0;
+  speedMHz = 0;
 }
 
 Collection::Collection() {
-  processorSpeedMHz = 0;
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
@@ -33,7 +33,7 @@ Collection &Collection::getSingleInstance() {
 
 unsigned Collection::getProcessorSpeedMHz() {
   Collection &collection = getSingleInstance();
-  return collection.processorSpeedMHz;
+  return collection.processors.size() ? collection.processors[0].speedMHz : 0;
 }
 
 unsigned Collection::getTotalNumberOfSockets() {
@@ -94,27 +94,27 @@ void Collection::parseValue(const char *fieldName, const char *valueString) {
   }
 
   if (beginsWith(fieldName, "processor")) {
-    return parseInteger(&currentProcessor->processor, valueString);
+    currentProcessor->processor = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "physical id")) {
-    return parseInteger(&currentProcessor->physicalId, valueString);
+    currentProcessor->physicalId = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "siblings")) {
-    return parseInteger(&currentProcessor->siblings, valueString);
+    currentProcessor->siblings = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "core id")) {
-    return parseInteger(&currentProcessor->coreId, valueString);
+    currentProcessor->coreId = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "cpu cores")) {
-    return parseInteger(&currentProcessor->cpuCores, valueString);
+    currentProcessor->cpuCores = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "model name")) {
-    return extractProcessorSpeedFromModelName(valueString);
+    currentProcessor->speedMHz = extractSpeedFromModelName(valueString);
   }
 }
 
@@ -133,16 +133,16 @@ bool Collection::beginsWith(const char *lineBuffer, const char *text) const {
   return true;
 }
 
-void Collection::parseInteger(unsigned *value, const char *text) const {
-  *value = atol(text);
+unsigned Collection::parseInteger(const char *text) const {
+  return atol(text);
 }
 
 /* Function extracts CPU speed from model name. If unit is not set it is
    assumed that values below 100 are specified in GHz, otherwise MHz */
-void Collection::extractProcessorSpeedFromModelName(const char *text) {
+unsigned Collection::extractSpeedFromModelName(const char *text) const {
   text = strstr(text, "@");
-  if (!text || processorSpeedMHz) {
-    return;
+  if (!text) {
+    return 0;
   }
 
   char *unit;
@@ -157,9 +157,9 @@ void Collection::extractProcessorSpeedFromModelName(const char *text) {
   bool isGHzPossible = (speed < 100);
 
   if (isGHz || (isGHzPossible && !isMHz)) {
-    processorSpeedMHz = 1000 * speed + 0.5;
+    return 1000 * speed + 0.5;
   } else {
-    processorSpeedMHz = speed + 0.5;
+    return speed + 0.5;
   }
 }
 
