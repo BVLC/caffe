@@ -152,9 +152,9 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
     }
 
     if (fwd_top_data->convert_from_int) {
-      top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
+      top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
       eltwise_res[dnnResourceDst] =
-        reinterpret_cast<void*>(const_cast<Dtype*>(fwd_top_data->internal_ptr));
+        reinterpret_cast<void*>(const_cast<Dtype*>(fwd_top_data->prv_ptr()));
     } else {
       eltwise_res[dnnResourceDst] =
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));

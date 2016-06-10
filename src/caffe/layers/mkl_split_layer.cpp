@@ -139,10 +139,10 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 
   if (bwd_bottom_diff->convert_from_int) {
-    bottom[0]->set_prv_diff(bwd_bottom_diff->internal_ptr,
+    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(),
         bwd_bottom_diff, false);
     sum_res[dnnResourceDst] =
-        reinterpret_cast<void*>(bwd_bottom_diff->internal_ptr);
+        reinterpret_cast<void*>(bwd_bottom_diff->prv_ptr());
   } else {
     sum_res[dnnResourceDst] =
         reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());

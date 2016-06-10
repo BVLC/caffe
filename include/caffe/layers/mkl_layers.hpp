@@ -20,12 +20,12 @@ template <typename Dtype, bool is_diff>
 struct MKLMemoryDescriptor : PrvMemDescr,
     boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
   MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
-          internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL),
+          internal_ptr_(NULL), convert_to_int(NULL), convert_from_int(NULL),
           name("UKNOWN") {}
   ~MKLMemoryDescriptor() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
-    dnnReleaseBuffer<Dtype>(internal_ptr);
+    dnnReleaseBuffer<Dtype>(internal_ptr_);
     dnnDelete<Dtype>(convert_to_int);
     dnnDelete<Dtype>(convert_from_int);
   }
@@ -36,10 +36,26 @@ struct MKLMemoryDescriptor : PrvMemDescr,
 
   dnnLayout_t layout_usr;
   dnnLayout_t layout_int;
-  Dtype* internal_ptr;
+  Dtype* internal_ptr_;
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
   std::string name;  // for debugging purposes
+  void allocate() {
+    if (internal_ptr_ == NULL) {
+      int status = dnnAllocateBuffer<Dtype>(
+        reinterpret_cast<void **>(&internal_ptr_), layout_int);
+      CHECK_EQ(status, 0)
+        << "Failed internal_ptr_ memory allocation with status "
+        << status << "\n";
+
+      caffe_set(prv_count(), Dtype(0), internal_ptr_);
+    }
+  }
+  Dtype* prv_ptr() {
+    if (internal_ptr_ == NULL)
+        allocate();
+    return internal_ptr_;
+  }
   void create_conversions() {
     if (layout_int
         && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
@@ -52,13 +68,6 @@ struct MKLMemoryDescriptor : PrvMemDescr,
               layout_usr);
       CHECK_EQ(status, 0) << "Failed creation convert_from_int with status "
               << status << "\n";
-      status = dnnAllocateBuffer<Dtype>(
-              reinterpret_cast<void **>(&internal_ptr), layout_int);
-      CHECK_EQ(status, 0)
-              << "Failed internal_ptr memory allocation with status "
-              << status << "\n";
-
-      caffe_set(prv_count(), Dtype(0), internal_ptr);
     }
   }
   virtual size_t prv_count() {

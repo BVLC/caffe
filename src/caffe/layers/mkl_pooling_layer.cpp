@@ -306,9 +306,9 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   pooling_res[dnnResourceSrc] = bottom_data;
   if (fwd_top_data->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
+    top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
     pooling_res[dnnResourceDst] =reinterpret_cast<void *>(
-            const_cast<Dtype*>(fwd_top_data->internal_ptr));
+            const_cast<Dtype*>(fwd_top_data->prv_ptr()));
   } else {
     pooling_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
@@ -343,10 +343,10 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           true);
 
   if (bwd_bottom_diff->convert_from_int) {
-    bottom[0]->set_prv_diff(bwd_bottom_diff->internal_ptr, bwd_bottom_diff,
+    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(), bwd_bottom_diff,
             false);
     pooling_res[dnnResourceDiffSrc] =
-            reinterpret_cast<void *>(bwd_bottom_diff->internal_ptr);
+            reinterpret_cast<void *>(bwd_bottom_diff->prv_ptr());
   } else {
     pooling_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }

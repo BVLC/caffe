@@ -164,9 +164,9 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
   }
 
   if (fwd_top_data_->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data_->internal_ptr, fwd_top_data_, false);
+    top[0]->set_prv_data(fwd_top_data_->prv_ptr(), fwd_top_data_, false);
     concat_res[dnnResourceDst] =
-      reinterpret_cast<void*>(fwd_top_data_->internal_ptr);
+      reinterpret_cast<void*>(fwd_top_data_->prv_ptr());
   } else {
     concat_res[dnnResourceDst] =
       reinterpret_cast<void*>(top[0]->mutable_cpu_data());
@@ -195,10 +195,10 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   for (size_t i = 0; i < num_concats_; ++i) {
     if (bwd_bottom_diff_[i]->convert_from_int) {
-      bottom[i]->set_prv_diff(bwd_bottom_diff_[i]->internal_ptr,
+      bottom[i]->set_prv_diff(bwd_bottom_diff_[i]->prv_ptr(),
         bwd_bottom_diff_[i], false);
       concat_res[dnnResourceMultipleDst + i] =
-        reinterpret_cast<void*>(bwd_bottom_diff_[i]->internal_ptr);
+        reinterpret_cast<void*>(bwd_bottom_diff_[i]->prv_ptr());
     } else {
       concat_res[dnnResourceMultipleDst + i] = bottom[i]->mutable_cpu_diff();
     }
