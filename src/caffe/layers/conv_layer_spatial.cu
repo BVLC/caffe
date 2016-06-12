@@ -22,7 +22,7 @@ namespace caffe {
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
 
-// #define dbg
+//  #define dbg
 #ifdef dbg
 #define dbgPrint(x) (x)
 #else
@@ -571,6 +571,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
 
       if (err != CL_SUCCESS)
         return err;
+      viennacl::backend::finish();
     }
   }
 
@@ -661,13 +662,16 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   double k_h = kernel_h_;
   double k_z = channels_;
   double totalFlops = ((k_w*k_h*k_z -1)*2)*(out_w*out_h*out_z)*num_;
-  std::cout << "Estimated Gflops:" << ((totalFlops/1000)/1000)/1000
+  std::cout << "Kernel: " << config->kernelName << std::endl;
+  std::cout << "\tEstimated Gflops:" << ((totalFlops/1000)/1000)/1000
   << std::endl;
-  std::cout << "Estimated GFLOPS/S: " <<
+  std::cout << "\tEstimated GFLOPS/S: " <<
   (((totalFlops/1000)/1000)/1000)*(1000.0/elapsedTime) << std::endl;
+#if 0
   std::cout << "Estimated utilization: " <<
   ((((totalFlops/1000)/1000)/1000)*(1000.0/elapsedTime))/880.0
   << std::endl;
+#endif
 #endif
   return elapsedTime;
 }
@@ -676,68 +680,42 @@ template<>
 bool ConvolutionLayerSpatial<float>::verify_result(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp index,
-    int_tp numImages, kernelConfig* config) {
+    int_tp numImages, const Blob<float> &verify_blob, kernelConfig* config) {
 
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  viennacl::ocl::program & program = ctx.get_program(verification_kernel);
-  viennacl::ocl::kernel &kernel = program.get_kernel(verification_kernel);
-  cl_int err = 0;
   uint_tp verificationFail = 0;
 
-  viennacl::ocl::handle<cl_mem> verifcationResult = ctx.create_memory(
-      CL_MEM_USE_HOST_PTR, sizeof(uint_tp), &verificationFail);
+  if (config->verified)
+    return true;
+  else if (config->tested)
+    return false;
 
-  kernelConfig tempConfig;
-  tempConfig.batched_execute = false;
+  config->executionTime = timed_convolve(bottom, top, index, numImages,
+                                         config);
+  const float *verify_data = verify_blob.cpu_data();
+  const float *data = top[index]->cpu_data();
 
   for (int_tp n = 0; n < numImages; ++n) {
     for (int_tp g = 0; g < group_; ++g) {
-      cl_uint argIdx = 0;
-      bias_offset_ = M_ * g;
-      int_tp image_offset = n * this->bottom_dim_
-          + width_ * height_ * (channels_ / group_) * g;
       int_tp output_image_offset = n * this->top_dim_
           + output_w_ * output_h_ * M_ * g;
-      int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
-          * g;
-
-      if (pad_w_ > 0 || pad_h_ > 0) {
-        pad_image(image_offset, &tempConfig, num_);
-        image_offset = 0;
-        kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-      } else {
-        kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-      }
-      kernel.arg(argIdx++, image_offset);
-      kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-      kernel.arg(argIdx++, kernel_offset);
-      kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
-      kernel.arg(argIdx++, bias_offset_);
-      kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-      kernel.arg(argIdx++, output_image_offset);
-      kernel.arg(argIdx, verifcationResult);
-
-      size_t global_work_sizeB[3] = { (size_t) output_w_, (size_t) output_h_,
-          (size_t) M_ };
-      err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                   kernel.handle().get(), 3,
-                                   NULL,
-                                   global_work_sizeB, NULL, 0, NULL, NULL);
-
-      viennacl::backend::finish();
-      clEnqueueMapBuffer(ctx.get_queue().handle().get(), verifcationResult,
-                         true,
-                         CL_MAP_READ,
-                         0, sizeof(uint_tp), 0, NULL, NULL, NULL);
-
+      for(int out_ch = 0; out_ch < M_ && !verificationFail; out_ch++)
+        for(int h = 0; h < output_h_ && !verificationFail; h++)
+          for(int w = 0; w < output_w_; w++) {
+            size_t offset = output_image_offset + out_ch * output_w_ * output_h_
+                            + h * output_w_ + w;
+            if (fabs(data[offset] - verify_data[offset]) >
+                       0.1 * fabs(verify_data[offset])) {
+              dbgPrint(printf("test verification failed @ out_ch %d h \
+                                %d w %d got %G expected %G\n",
+                               out_ch, h, w, data[offset], verify_data[offset]));
+              verificationFail = 1;
+              break;
+            }
+          }
       if (verificationFail)
-        return false;
-
-      if (err != CL_SUCCESS)
         return false;
     }
   }
-  viennacl::backend::finish();
   return true;
 }
 
@@ -773,7 +751,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << kernelDef.c_str() << " -D convolve_simd16=U"
                 << kernelUKey.c_str() << "_SIMD16";
 
-  const int_tp in_buffer_size = output_block_height + 2;
+  const int_tp in_buffer_size = output_block_height + kernel_h_;
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
           output_block_width : output_width % output_block_width;
@@ -851,9 +829,10 @@ bool ConvolutionLayerSpatial<float>::tune_local_size(
   int_tp skip = 0;
   Timer timer;
   timer.initted();
+  bool allFailed = true;
   for (int_tp z = 0; z <= 16; z++) {
     for (int_tp y = 0; y <= 16; y++) {
-      for (int_tp x = 0; x <= 16; x++) {
+      for (int_tp x = 1; x <= 16; x++) {
         timer.Start();
         skip = 0;
 
@@ -896,7 +875,9 @@ bool ConvolutionLayerSpatial<float>::tune_local_size(
           break;
         }
         timer.Stop();
+        allFailed = false;
         float elapsedTime = timer.MilliSeconds();
+
         if (elapsedTime < fastestTime) {
           fastestTime = elapsedTime;
           localSize[0] = config->local_work_size[0];
@@ -905,6 +886,12 @@ bool ConvolutionLayerSpatial<float>::tune_local_size(
         }
       }
     }
+  }
+  if (allFailed) {
+    // 1,1,1 is never a good local size and no need to test at all.
+    dbgPrint(std::cout << "Can't find good local size for "
+                       << config->kernelName << std::endl);
+    return false;
   }
 
   dbgPrint(std::cout << "Best local size[" << localSize[0] << "][" <<
@@ -945,7 +932,8 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
 
 template<>
 void ConvolutionLayerSpatial<float>::setup_convolution(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    const Blob<float> &verify_blob) {
   // Generates static key_
   generate_key();
   // Initializes unique kernel ID
@@ -978,9 +966,14 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       if (num_ > 1)
         create_convolution_kernel(bottom, top, 3, 4, y, z);
     }
-
   for (int_tp x = 0; x < kernelQueue.size(); x++)
-    tune_local_size(bottom, top, kernelQueue[x]);
+    if (tune_local_size(bottom, top, kernelQueue[x]))
+      kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
+                                                     num_, kernelQueue[x]);
+    else {
+      kernelQueue[x]->verified = false;
+      kernelQueue[x]->tested = false;
+    }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
@@ -1001,47 +994,43 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         }
       }
       // Test fastest kernel
-      timed_convolve(bottom, top, bottom_index_, num_,
-                     kernelQueue[fastestKernel]);
       bool verified = verify_result(bottom, top, bottom_index_, num_,
-                                    kernelQueue[fastestKernel]);
+                                    verify_blob, kernelQueue[fastestKernel]);
       if (verified == true) {
         kernelQueue[fastestKernel]->verified = true;
         kernel_index_ = fastestKernel;
         break;
       } else {
         kernelQueue[fastestKernel]->tested = true;
-        dbgPrint(std::cout << "Kernel " << fastestKernel <<
-            " failed verification" << std::endl);
+        dbgPrint(std::cout << "Kernel "
+                           << kernelQueue[fastestKernel]->kernelName
+                           << " failed verification" << std::endl);
         failures++;
       }
     }
-  #ifdef dbg
-    float convolve_time = timed_convolve(bottom, top, bottom_index_, num_,
-        kernelQueue[kernel_index_]);
-  #else
-    timed_convolve(bottom, top, bottom_index_, num_,
-                   kernelQueue[kernel_index_]);
-  #endif
-    dbgPrint(std::cout << "Convolution Time:" << convolve_time << std::endl);
+
     verification = verify_result(bottom, top, bottom_index_, num_,
-                                      kernelQueue[kernel_index_]);
+                                 verify_blob, kernelQueue[kernel_index_]);
   }
-  if (verification) {
-    dbgPrint(std::cout << "Kernel passed verification:" << verify_result(
-            bottom, top, bottom_index_, num_, kernelQueue[kernel_index_]) <<
-        std::endl);
-  } else {
-    std::cout << "Verification of kernel was not successful,"
-              << "fallback to basic kernel" << std::endl;
+  if (verification)
+    dbgPrint(std::cout << "Kernel <" << kernelQueue[kernel_index_]->kernelName
+                       << "> passed verification" << std::endl);
+  else {
+    dbgPrint(std::cout << "Verification was not successful, fallback to basic kernel"
+              << std::endl);
     create_basic_kernel(bottom, top, 1, 1, 1);
     kernel_index_ = kernelQueue.size() - 1;
+    verification = verify_result(bottom, top, bottom_index_, num_,
+                                 verify_blob, kernelQueue[kernel_index_]);
+    CHECK_EQ(verification, true) << "Basic kernel failed verification."
+                                 << std::endl;
   }
+
+  dbgPrint(std::cout << "Convolution Time:"
+                     << kernelQueue[kernel_index_]->executionTime << std::endl);
 
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (x != kernel_index_)
-      // Caffe::cl_state().release_program
-      // (kernelQueue[x]->kernelName.c_str());
       viennacl::ocl::current_context().delete_program(
           kernelQueue[x]->kernelName);
   }
@@ -1062,7 +1051,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
               << "will tune again for next running" << std::endl;
     return;
   }
-
 
   string outputFile;
   outputFile = CACHE_DIRECTORY + key_;
@@ -1102,14 +1090,26 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
     top_offset = M_ * N_;
 
     bias_ = NULL;
-
     bias_offset_ = 0;
 
     if (bias_term_)
       bias_ = this->blobs_[1]->gpu_data();
 
     if (!tuned_) {
-      setup_convolution(bottom, top);
+      Blob<float> verify_blob;
+      verify_blob.ReshapeLike(*top[i]);
+      float* verify_data = verify_blob.mutable_cpu_data();
+      const float *weight_cpu_data = this->blobs_[0]->cpu_data();
+      const float* bottom_cpu_data = bottom[i]->cpu_data();
+      for (int_tp n = 0; n < this->num_; ++n) {
+        this->forward_cpu_gemm(bottom_cpu_data + n * this->bottom_dim_, weight_cpu_data,
+            verify_data + n * this->top_dim_);
+        if (this->bias_term_) {
+          const float* bias = this->blobs_[1]->cpu_data();
+          this->forward_cpu_bias(verify_data + n * this->top_dim_, bias);
+        }
+      }
+      setup_convolution(bottom, top, verify_blob);
       CHECK_EQ(tuned_, true) << "Spatial convolution auto-tuning failed.";
     }
 
@@ -1269,7 +1269,7 @@ template<>
 bool ConvolutionLayerSpatial<double>::verify_result(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp index,
-    int_tp numImages, kernelConfig* config) {
+    int_tp numImages, const Blob<double> &verify_blob, kernelConfig* config) {
   NOT_IMPLEMENTED;
   return false;
 }
@@ -1327,7 +1327,7 @@ float ConvolutionLayerSpatial<double>::timed_convolve(
 
 template<>
 void ConvolutionLayerSpatial<double>::setup_convolution(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top, const Blob<double> &verify_blob) {
   NOT_IMPLEMENTED;
 }
 
