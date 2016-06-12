@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -64,9 +65,10 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-    void TransformPtrEntry(Datum* datum, Dtype* transformed_ptr,
+    void TransformPtrEntry(string* str, Dtype* transformed_ptr,
                            int rand1, int rand2, int rand3,
-                           BlockingQueue<Datum*>* free);
+                           bool output_labels, Dtype *label,
+                           BlockingQueue<string*>* free);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -182,8 +184,7 @@ class DataTransformer {
   // Tranformation parameters
   TransformationParameter param_;
   void TransformPtrInt(Datum* datum, Dtype* transformed_data,
-                       int rand1, int rand2, int rand3,
-                       BlockingQueue<Datum*>* free);
+                       int rand1, int rand2, int rand3);
 
   shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
