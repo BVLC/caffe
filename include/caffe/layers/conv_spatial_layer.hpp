@@ -134,7 +134,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                        int_tp blockHeight,
                                        int_tp blockDepth);
   virtual void setup_convolution(const vector<Blob<Dtype>*>& bottom,
-                                 const vector<Blob<Dtype>*>& top);
+                                 const vector<Blob<Dtype>*>& top,
+                                 const Blob<Dtype> &verify_blob);
   virtual void create_convolution_kernel(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top,
                                          int_tp kernelType,
@@ -166,7 +167,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                kernelConfig* config);
   virtual bool verify_result(const vector<Blob<Dtype>*>& bottom,
                              const vector<Blob<Dtype>*>& top, int_tp index,
-                             int_tp numImages,
+                             int_tp numImages, const Blob<Dtype> &verify_blob,
                              kernelConfig* config);
   virtual bool tune_local_size(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top, kernelConfig*);

@@ -165,9 +165,6 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-
     if (this->layer_param_.mvn_param().normalize_variance()) {
       greentea_gpu_mul<Dtype>(this->device_->id(), temp_.count(),
                               (cl_mem) top_data, 0, (cl_mem) top_diff, 0,
