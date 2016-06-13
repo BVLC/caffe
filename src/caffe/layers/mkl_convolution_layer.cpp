@@ -372,7 +372,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
         if (1) {
           DLOG(INFO) << "reusing fwd               "
                   << converted_in_fwd->name << " == " << this->name;
-          return converted_in_fwd->internal_ptr_;
+          return converted_in_fwd->internal_ptr;
         } else {
           DLOG(INFO) << "layout doesn't match      "
                   << converted_in_fwd->name << " != " << this->name;
@@ -382,25 +382,25 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       DLOG(INFO) << "convert      => priv                                => "
                  << this->name;
 
-      if (internal_ptr_ == NULL)
+      if (internal_ptr == NULL)
         allocate();
       convert_resources[dnnResourceFrom] =
               is_diff ?
                 reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
               : reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
       convert_resources[dnnResourceTo] =
-              reinterpret_cast<void *>(this->internal_ptr_);
+              reinterpret_cast<void *>(this->internal_ptr);
 
       status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
       if (set_prv_ptr) {
         if (is_diff)
-          blob->set_prv_diff(this->internal_ptr_, get_shared_ptr(), true);
+          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
         else
-          blob->set_prv_data(this->internal_ptr_, get_shared_ptr(), true);
+          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
       }
-      return this->internal_ptr_;
+      return this->internal_ptr;
     } else {
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
@@ -423,7 +423,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           if (1) {
             DLOG(INFO) << "reusing fwd               "
                     << converted_in_fwd->name << " == " << this->name;
-            return converted_in_fwd->internal_ptr_;
+            return converted_in_fwd->internal_ptr;
           } else {
             DLOG(INFO) << "layout doesn't match      "
                     << converted_in_fwd->name << " != " << this->name;
@@ -442,26 +442,26 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           DLOG(INFO) << "!!!! Failed creation convert_padding with status "
                   << status << "\n";
 
-          if (internal_ptr_ == NULL)
+          if (internal_ptr == NULL)
             allocate();
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
           convert_resources[dnnResourceTo] =
-            reinterpret_cast<void*>(this->internal_ptr_);
+            reinterpret_cast<void*>(this->internal_ptr);
 
           status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
-          if (internal_ptr_ == NULL)
+          if (internal_ptr == NULL)
             allocate();
 
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
           convert_resources[dnnResourceTo] =
-                  reinterpret_cast<void *>(this->internal_ptr_);
+                  reinterpret_cast<void *>(this->internal_ptr);
           status = dnnExecute<Dtype>(convert_padding, convert_resources);
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
           dnnDelete<Dtype>(convert_padding);
@@ -469,11 +469,11 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
         if (set_prv_ptr) {
           if (is_diff)
-            blob->set_prv_diff(this->internal_ptr_, get_shared_ptr(), true);
+            blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
           else
-            blob->set_prv_data(this->internal_ptr_, get_shared_ptr(), true);
+            blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
         }
-        return this->internal_ptr_;
+        return this->internal_ptr;
       } else if (current_descr.get() != this) {
         DLOG(INFO) << "layout OK                 "
                 << current_descr->name << " == " << this->name;
