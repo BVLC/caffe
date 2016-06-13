@@ -17,6 +17,7 @@
 /* OpenCl kernels */
 #cmakedefine USE_GREENTEA
 #cmakedefine VIENNACL_WITH_OPENCL
+#cmakedefine USE_LIBDNN
 
 /* clBLAS */
 #cmakedefine HAVE_CLBLAS
@@ -38,11 +39,5 @@
 
 /* Matlab */
 #cmakedefine HAVE_MATLAB
-
-/* IO libraries */
-#cmakedefine USE_OPENCV
-#cmakedefine USE_LEVELDB
-#cmakedefine USE_LMDB
-#cmakedefine ALLOW_LMDB_NOLOCK
 
 #endif  // CAFFE_CONFIG_HPP_

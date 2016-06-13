@@ -53,8 +53,7 @@ TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
                                           (const char **)&kernel_program,
                                           &kernel_program_size, &err);
 
-      cl_int ret_val = clBuildProgram(program, 0, NULL,
-                                      options.c_str(), NULL, NULL);
+      clBuildProgram(program, 0, NULL, options.c_str(), NULL, NULL);
 
       cl_build_status build_status;
       clGetProgramBuildInfo(program, ctx.devices()[0].id(),

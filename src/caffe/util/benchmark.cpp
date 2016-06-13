@@ -191,7 +191,6 @@ void Timer::Init() {
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
-        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
         start_gpu_cl_ = 0;
         stop_gpu_cl_ = 0;
       }

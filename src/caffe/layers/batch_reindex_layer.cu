@@ -27,7 +27,6 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (top[0]->count() == 0) {
     return;
   }
-  int_tp threads = top[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -117,8 +116,6 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
     }
     c_data[mapping[i].first] += 1;
   }
-
-  int_tp threads = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
