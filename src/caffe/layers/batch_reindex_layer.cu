@@ -27,8 +27,8 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (top[0]->count() == 0) {
     return;
   }
-
   if (this->device_->backend() == BACKEND_CUDA) {
+    int_tp threads = top[0]->count();
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
     BRForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads),
@@ -119,6 +119,7 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
+    int_tp threads = bottom[0]->count();
     // NOLINT_NEXT_LINE(whitespace/operators)
     BRBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads),
                                   CAFFE_CUDA_NUM_THREADS) (

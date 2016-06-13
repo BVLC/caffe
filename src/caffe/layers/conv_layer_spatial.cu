@@ -698,16 +698,16 @@ bool ConvolutionLayerSpatial<float>::verify_result(
     for (int_tp g = 0; g < group_; ++g) {
       int_tp output_image_offset = n * this->top_dim_
           + output_w_ * output_h_ * M_ * g;
-      for(int out_ch = 0; out_ch < M_ && !verificationFail; out_ch++)
-        for(int h = 0; h < output_h_ && !verificationFail; h++)
-          for(int w = 0; w < output_w_; w++) {
+      for (int out_ch = 0; out_ch < M_ && !verificationFail; out_ch++)
+        for (int h = 0; h < output_h_ && !verificationFail; h++)
+          for (int w = 0; w < output_w_; w++) {
             size_t offset = output_image_offset + out_ch * output_w_ * output_h_
                             + h * output_w_ + w;
             if (fabs(data[offset] - verify_data[offset]) >
                        0.1 * fabs(verify_data[offset])) {
-              dbgPrint(printf("test verification failed @ out_ch %d h \
-                                %d w %d got %G expected %G\n",
-                               out_ch, h, w, data[offset], verify_data[offset]));
+              dbgPrint(printf("test verification failed @ out_ch %d h " +
+                              "%d w %d got %G expected %G\n",
+                      out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
               break;
             }
@@ -967,10 +967,10 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         create_convolution_kernel(bottom, top, 3, 4, y, z);
     }
   for (int_tp x = 0; x < kernelQueue.size(); x++)
-    if (tune_local_size(bottom, top, kernelQueue[x]))
+    if (tune_local_size(bottom, top, kernelQueue[x])) {
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
                                                      num_, kernelQueue[x]);
-    else {
+    } else {
       kernelQueue[x]->verified = false;
       kernelQueue[x]->tested = false;
     }
@@ -1012,12 +1012,12 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     verification = verify_result(bottom, top, bottom_index_, num_,
                                  verify_blob, kernelQueue[kernel_index_]);
   }
-  if (verification)
+  if (verification) {
     dbgPrint(std::cout << "Kernel <" << kernelQueue[kernel_index_]->kernelName
                        << "> passed verification" << std::endl);
-  else {
-    dbgPrint(std::cout << "Verification was not successful, fallback to basic kernel"
-              << std::endl);
+  } else {
+    dbgPrint(std::cout << "Verification was not successful, "
+                       << "fallback to basic kernel" << std::endl);
     create_basic_kernel(bottom, top, 1, 1, 1);
     kernel_index_ = kernelQueue.size() - 1;
     verification = verify_result(bottom, top, bottom_index_, num_,
@@ -1102,8 +1102,8 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
       const float *weight_cpu_data = this->blobs_[0]->cpu_data();
       const float* bottom_cpu_data = bottom[i]->cpu_data();
       for (int_tp n = 0; n < this->num_; ++n) {
-        this->forward_cpu_gemm(bottom_cpu_data + n * this->bottom_dim_, weight_cpu_data,
-            verify_data + n * this->top_dim_);
+        this->forward_cpu_gemm(bottom_cpu_data + n * this->bottom_dim_,
+                     weight_cpu_data, verify_data + n * this->top_dim_);
         if (this->bias_term_) {
           const float* bias = this->blobs_[1]->cpu_data();
           this->forward_cpu_bias(verify_data + n * this->top_dim_, bias);
@@ -1327,7 +1327,8 @@ float ConvolutionLayerSpatial<double>::timed_convolve(
 
 template<>
 void ConvolutionLayerSpatial<double>::setup_convolution(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top, const Blob<double> &verify_blob) {
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
+    const Blob<double> &verify_blob) {
   NOT_IMPLEMENTED;
 }
 

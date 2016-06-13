@@ -319,6 +319,10 @@ ifeq ($(USE_LIBDNN), 1)
 	COMMON_FLAGS += -DUSE_LIBDNN
 endif
 
+ifeq ($(USE_INTEL_SPATIAL), 1)
+	COMMON_FLAGS += -DUSE_INTEL_SPATIAL
+endif
+
 ifeq ($(USE_CUDA), 1)
 	COMMON_FLAGS += -DUSE_CUDA
 endif
