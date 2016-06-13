@@ -636,14 +636,18 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
       in[reg] = inputs[in_addr];    // read 16 elements
       in_addr += (_IW + IWPAD);// move to next row down
     }
-#define WEIGHT_PREF 5
-    float w[WEIGHT_PREF];
+
+// PREF could be 4 or 8, could not be other values.
+#define WEIGHT_PREF 8
+    union {
+      float w[WEIGHT_PREF];
+      uint8 ui8;
+    } weight_buf;
     int_tp w_idx=0;
 
-    LOOP(WEIGHT_PREF, w_idx,  // LOOP is a macro that unrolls the loop.
-        {
-          w[w_idx] = weights[weight_addr]; weight_addr += SIMD_SIZE;
-        });
+    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
+    uint_tp orig_weight_addr = weight_addr;
+    weight_addr += SIMD_SIZE * WEIGHT_PREF;
 
     int_tp kr = 0;  // kr = Kernel Row
     LOOP(KERNEL, kr,// LOOP is a macro that unrolls the loop.
@@ -654,17 +658,20 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                 for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
                   for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
                     float input = intel_sub_group_shuffle( in[br * K_STRIDE + kr], bc * K_STRIDE + kc);
-                    out[br * OUT_BLOCK_WIDTH + bc] = mad(w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
+                    out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
                   }
                 }
-                w[w_idx % WEIGHT_PREF] = weights[weight_addr];
-                weight_addr += SIMD_SIZE;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
+                // We assume KERNEL_W is equal to KERNEL_H here.
+                if ((w_idx + 1) % WEIGHT_PREF == 0 && ((w_idx + 1) < (KERNEL * KERNEL - WEIGHT_PREF))) {
+                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
+                  weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
+                } else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                  weight_buf.w[0] = weights[weight_addr];
                 ++w_idx;
               });
         });
+    weight_addr = orig_weight_addr + KERNEL * KERNEL * SIMD_SIZE;
 
-    // We advanced weight_addr too far in last 5 loop iterations
-    weight_addr -= WEIGHT_PREF * SIMD_SIZE;
   }
 
 #ifdef IMAGE_AS_OUTPUT
