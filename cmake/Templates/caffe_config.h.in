@@ -18,6 +18,7 @@
 #cmakedefine USE_GREENTEA
 #cmakedefine VIENNACL_WITH_OPENCL
 #cmakedefine USE_LIBDNN
+#cmakedefine USE_INTEL_SPATIAL
 
 /* clBLAS */
 #cmakedefine HAVE_CLBLAS

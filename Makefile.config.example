@@ -14,6 +14,9 @@ USE_GREENTEA := 1
 # Enable the Greentea-LibDNN convolution backend
 # USE_LIBDNN := 1
 
+# Enable the Intel spatial convolutions
+# USE_INTEL_SPATIAL := 1
+
 # Folder of the ViennaCL header-only library
 VIENNACL_DIR = ../ViennaCL
 
