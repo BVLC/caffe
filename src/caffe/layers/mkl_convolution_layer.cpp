@@ -382,8 +382,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       DLOG(INFO) << "convert      => priv                                => "
                  << this->name;
 
-      if (internal_ptr == NULL)
-        allocate();
+      allocate();
       convert_resources[dnnResourceFrom] =
               is_diff ?
                 reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
@@ -442,8 +441,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           DLOG(INFO) << "!!!! Failed creation convert_padding with status "
                   << status << "\n";
 
-          if (internal_ptr == NULL)
-            allocate();
+          allocate();
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
@@ -454,8 +452,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
-          if (internal_ptr == NULL)
-            allocate();
+          allocate();
 
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
