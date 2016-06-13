@@ -20,8 +20,8 @@ template <typename Dtype, bool is_diff>
 struct MKLMemoryDescriptor : PrvMemDescr,
     boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
   MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
-          internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL),
-          name("UKNOWN") {}
+          convert_to_int(NULL), convert_from_int(NULL), name("UKNOWN"),
+          internal_ptr(NULL) {}
   ~MKLMemoryDescriptor() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
@@ -36,10 +36,25 @@ struct MKLMemoryDescriptor : PrvMemDescr,
 
   dnnLayout_t layout_usr;
   dnnLayout_t layout_int;
-  Dtype* internal_ptr;
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
   std::string name;  // for debugging purposes
+  void allocate() {
+    if (internal_ptr == NULL) {
+      int status = dnnAllocateBuffer<Dtype>(
+        reinterpret_cast<void **>(&internal_ptr), layout_int);
+      CHECK_EQ(status, 0)
+        << "Failed internal_ptr memory allocation with status "
+        << status << "\n";
+
+      caffe_set(prv_count(), Dtype(0), internal_ptr);
+    }
+  }
+  Dtype* prv_ptr() {
+    if (internal_ptr == NULL)
+        allocate();
+    return internal_ptr;
+  }
   void create_conversions() {
     if (layout_int
         && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
@@ -52,13 +67,6 @@ struct MKLMemoryDescriptor : PrvMemDescr,
               layout_usr);
       CHECK_EQ(status, 0) << "Failed creation convert_from_int with status "
               << status << "\n";
-      status = dnnAllocateBuffer<Dtype>(
-              reinterpret_cast<void **>(&internal_ptr), layout_int);
-      CHECK_EQ(status, 0)
-              << "Failed internal_ptr memory allocation with status "
-              << status << "\n";
-
-      caffe_set(prv_count(), Dtype(0), internal_ptr);
     }
   }
   virtual size_t prv_count() {
@@ -71,6 +79,8 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   // in backward a conversion done already in the forward direction.
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr,
           MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
+ private:
+  Dtype* internal_ptr;
 };
 
 template <typename Dtype>
