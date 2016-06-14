@@ -202,7 +202,7 @@ if __name__ == "__main__":
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.
     transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368, visualize=False,
                              target_dist=1, scale_prob=0.7, scale_min=0.7, scale_max=1.3,
-                             max_rotate_degree=40, center_perterb_max=0, do_clahe=False, 
+                             max_rotate_degree=15, center_perterb_max=0, do_clahe=False, 
                              num_parts=17, np_in_lmdb=17, transform_body_joint=False)
     nCP = 3
     CH = 128

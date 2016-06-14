@@ -521,20 +521,16 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   //Start transforming
   Mat img_aug = Mat::zeros(crop_y, crop_x, CV_8UC3);
   //Mat img_temp, img_temp2, img_temp3; //size determined by scale
-  Mat img_temp; //size determined by scale
+  Mat img_temp, img_temp2; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
 	as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
 	//as.scale = 1.0;
-	//LOG(INFO) << meta.joint_self.joints.size();
-    //LOG(INFO) << meta.joint_self.joints[0];
-    //as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
-	as.degree = 0.0;
-	//LOG(INFO) << meta.joint_self.joints.size();
-    //LOG(INFO) << meta.joint_self.joints[0];
+    as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
+	//as.degree = 0.0;
 //    if(0 && param_.visualize())
 //      visualize(img_temp2, meta, as);
-    as.crop = augmentation_croppad(img_temp, img_aug, meta);
+    as.crop = augmentation_croppad(img_temp2, img_aug, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
@@ -830,12 +826,12 @@ float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, Me
   for(int i=0; i<np; i++){
     RotatePoint(meta.joint_self.joints[i], R);
   }
-  for(int p=0; p<meta.numOtherPeople; p++){
-    RotatePoint(meta.objpos_other[p], R);
-    for(int i=0; i<np; i++){
-      RotatePoint(meta.joint_others[p].joints[i], R);
-    }
-  }
+//  for(int p=0; p<meta.numOtherPeople; p++){
+//    RotatePoint(meta.objpos_other[p], R);
+//    for(int i=0; i<np; i++){
+//      RotatePoint(meta.joint_others[p].joints[i], R);
+//    }
+//  }
   return degree;
 }
 
