@@ -524,8 +524,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   Mat img_temp; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
-	//as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
-	as.scale = 1.0;
+	as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
+	//as.scale = 1.0;
 	//LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     //as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
@@ -534,7 +534,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     //LOG(INFO) << meta.joint_self.joints[0];
 //    if(0 && param_.visualize())
 //      visualize(img_temp2, meta, as);
-    as.crop = augmentation_croppad(img, img_aug, meta);
+    as.crop = augmentation_croppad(img_temp, img_aug, meta);
     //LOG(INFO) << meta.joint_self.joints.size();
     //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
@@ -592,7 +592,6 @@ template<typename Dtype>
 float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, MetaData& meta) {
   float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
   float scale_multiplier;
-  //float scale = (param_.scale_max() - param_.scale_min()) * dice + param_.scale_min(); //linear shear into [scale_min, scale_max]
   if(dice > param_.scale_prob()) {
     img_temp = img_src.clone();
     scale_multiplier = 1;
@@ -609,12 +608,12 @@ float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, Me
   for(int i=0; i<np; i++){
     meta.joint_self.joints[i] *= scale;
   }
-  for(int p=0; p<meta.numOtherPeople; p++){
-    meta.objpos_other[p] *= scale;
-    for(int i=0; i<np; i++){
-      meta.joint_others[p].joints[i] *= scale;
-    }
-  }
+//  for(int p=0; p<meta.numOtherPeople; p++){
+//    meta.objpos_other[p] *= scale;
+//    for(int i=0; i<np; i++){
+//      meta.joint_others[p].joints[i] *= scale;
+//    }
+//  }
   return scale_multiplier;
 }
 

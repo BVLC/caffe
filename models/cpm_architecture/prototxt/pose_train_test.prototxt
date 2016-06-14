@@ -6,13 +6,13 @@ layer {
   transform_param {
     stride: 8
     max_rotate_degree: 40
-    visualize: false
+    visualize: true
     crop_size_x: 368
     crop_size_y: 368
-    scale_prob: 1
+    scale_prob: 0.7
     scale_min: 0.7
     scale_max: 1.3
-    target_dist: 1.171
+    target_dist: 1
     center_perterb_max: 0
     do_clahe: false
     num_parts: 17
@@ -20,7 +20,7 @@ layer {
     transform_body_joint: false
   }
   cpmdata_param {
-    source: "models/cpm_architecture/lmdb/train"
+    source: "models/cpm_architecture/lmdb/val_tmp"
     batch_size: 8
     backend: LMDB
   }
