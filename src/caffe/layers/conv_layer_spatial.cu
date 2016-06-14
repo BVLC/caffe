@@ -705,7 +705,7 @@ bool ConvolutionLayerSpatial<float>::verify_result(
                             + h * output_w_ + w;
             if (fabs(data[offset] - verify_data[offset]) >
                        0.1 * fabs(verify_data[offset])) {
-              dbgPrint(printf("test verification failed @ out_ch %d h " +
+              dbgPrint(printf("test verification failed @ out_ch %d h "
                               "%d w %d got %G expected %G\n",
                       out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
@@ -971,8 +971,9 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
                                                      num_, kernelQueue[x]);
     } else {
+      // skip those kernels without a good local size.
       kernelQueue[x]->verified = false;
-      kernelQueue[x]->tested = false;
+      kernelQueue[x]->tested = true;
     }
 
   for (int_tp x = 0; x < kernelQueue.size(); x++)
@@ -993,12 +994,14 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
           fastestTime = kernelQueue[x]->executionTime;
         }
       }
+      if (fastestKernel < 0) break;
       // Test fastest kernel
       bool verified = verify_result(bottom, top, bottom_index_, num_,
                                     verify_blob, kernelQueue[fastestKernel]);
       if (verified == true) {
         kernelQueue[fastestKernel]->verified = true;
         kernel_index_ = fastestKernel;
+        verification = true;
         break;
       } else {
         kernelQueue[fastestKernel]->tested = true;
@@ -1008,9 +1011,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         failures++;
       }
     }
-
-    verification = verify_result(bottom, top, bottom_index_, num_,
-                                 verify_blob, kernelQueue[kernel_index_]);
   }
   if (verification) {
     dbgPrint(std::cout << "Kernel <" << kernelQueue[kernel_index_]->kernelName
@@ -1098,15 +1098,16 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
     if (!tuned_) {
       Blob<float> verify_blob;
       verify_blob.ReshapeLike(*top[i]);
-      float* verify_data = verify_blob.mutable_cpu_data();
-      const float *weight_cpu_data = this->blobs_[0]->cpu_data();
-      const float* bottom_cpu_data = bottom[i]->cpu_data();
+      float *verify_data = verify_blob.mutable_gpu_data();
+      const float *weight_gpu_data = this->blobs_[0]->gpu_data();
+      const float *bottom_gpu_data = bottom[i]->gpu_data();
       for (int_tp n = 0; n < this->num_; ++n) {
-        this->forward_cpu_gemm(bottom_cpu_data + n * this->bottom_dim_,
-                     weight_cpu_data, verify_data + n * this->top_dim_);
+        this->forward_gpu_gemm(bottom_gpu_data, n * this->bottom_dim_,
+                               weight_gpu_data, verify_data,
+                               n * this->top_dim_);
         if (this->bias_term_) {
-          const float* bias = this->blobs_[1]->cpu_data();
-          this->forward_cpu_bias(verify_data + n * this->top_dim_, bias);
+          const float* bias = this->blobs_[1]->gpu_data();
+          this->forward_gpu_bias(verify_data, n * this->top_dim_, bias);
         }
       }
       setup_convolution(bottom, top, verify_blob);
