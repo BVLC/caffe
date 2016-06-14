@@ -54,6 +54,9 @@ This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon 
 * At Caffe build time add `USE_MKL2017_AS_DEFAULT_ENGINE := 1` to `Makefile.config` or add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline when invoking `cmake`. All layers will use new primitives by default.
 * Set layer engine to `MKL2017` in model configuration. Only this specific layer will be accelerated with new primitives. 
 
+#### Recommendations
+* For Better performance please disable Hyperthreading on your platoform.
+
 ### Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the [NVIDIA CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. **Warning!** The 331.* CUDA driver series has a critical performance issue: do not use it.
