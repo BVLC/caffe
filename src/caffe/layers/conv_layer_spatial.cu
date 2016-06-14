@@ -705,7 +705,7 @@ bool ConvolutionLayerSpatial<float>::verify_result(
                             + h * output_w_ + w;
             if (fabs(data[offset] - verify_data[offset]) >
                        0.1 * fabs(verify_data[offset])) {
-              dbgPrint(printf("test verification failed @ out_ch %d h " +
+              dbgPrint(printf("test verification failed @ out_ch %d h "
                               "%d w %d got %G expected %G\n",
                       out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
