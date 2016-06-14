@@ -44,6 +44,10 @@ static LossParameter_NormalizationMode kNormalizationModes[] = {
   LossParameter_NormalizationMode_FULL,
   LossParameter_NormalizationMode_VALID,
   LossParameter_NormalizationMode_NONE};
+static MultiBoxLossParameter_MiningType kMiningType[] = {
+  MultiBoxLossParameter_MiningType_NONE,
+  MultiBoxLossParameter_MiningType_MAX_NEGATIVE,
+  MultiBoxLossParameter_MiningType_HARD_EXAMPLE};
 
 template <typename TypeParam>
 class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
@@ -300,15 +304,16 @@ TYPED_TEST(MultiBoxLossLayerTest, TestSetUp) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
-        for (int m = 0; m < 2; ++m) {
-          bool do_neg_mining = kBoolChoices[m];
-          if (!share_location && do_neg_mining) {
+        for (int m = 0; m < 3; ++m) {
+          MiningType mining_type = kMiningType[m];
+          if (!share_location &&
+              mining_type != MultiBoxLossParameter_MiningType_NONE) {
             continue;
           }
           multibox_loss_param->set_share_location(share_location);
           multibox_loss_param->set_match_type(match_type);
           multibox_loss_param->set_use_prior_for_matching(use_prior);
-          multibox_loss_param->set_do_neg_mining(do_neg_mining);
+          multibox_loss_param->set_mining_type(mining_type);
           MultiBoxLossLayer<Dtype> layer(layer_param);
           layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
         }
@@ -339,16 +344,23 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
             loss_param->set_normalization(normalize);
             for (int u = 0; u < 2; ++u) {
               bool use_difficult_gt = kBoolChoices[u];
-              multibox_loss_param->set_loc_loss_type(loc_loss_type);
-              multibox_loss_param->set_share_location(share_location);
-              multibox_loss_param->set_match_type(match_type);
-              multibox_loss_param->set_use_prior_for_matching(use_prior);
-              multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
-              multibox_loss_param->set_do_neg_mining(false);
-              MultiBoxLossLayer<Dtype> layer(layer_param);
-              GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-              checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                              this->blob_top_vec_, 0);
+              for (int m = 0; m < 3; ++m) {
+                MiningType mining_type = kMiningType[m];
+                if (!share_location &&
+                    mining_type != MultiBoxLossParameter_MiningType_NONE) {
+                  continue;
+                }
+                multibox_loss_param->set_loc_loss_type(loc_loss_type);
+                multibox_loss_param->set_share_location(share_location);
+                multibox_loss_param->set_match_type(match_type);
+                multibox_loss_param->set_use_prior_for_matching(use_prior);
+                multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
+                multibox_loss_param->set_mining_type(mining_type);
+                MultiBoxLossLayer<Dtype> layer(layer_param);
+                GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+                checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                                this->blob_top_vec_, 0);
+              }
             }
           }
         }
@@ -380,9 +392,10 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
             loss_param->set_normalization(normalize);
             for (int u = 0; u < 2; ++u) {
               bool use_difficult_gt = kBoolChoices[u];
-              for (int m = 0; m < 2; ++m) {
-                bool do_neg_mining = kBoolChoices[m];
-                if (!share_location && do_neg_mining) {
+              for (int m = 0; m < 3; ++m) {
+                MiningType mining_type = kMiningType[m];
+                if (!share_location &&
+                    mining_type != MultiBoxLossParameter_MiningType_NONE) {
                   continue;
                 }
                 multibox_loss_param->set_conf_loss_type(conf_loss_type);
@@ -391,7 +404,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
                 multibox_loss_param->set_use_prior_for_matching(use_prior);
                 multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
                 multibox_loss_param->set_background_label_id(0);
-                multibox_loss_param->set_do_neg_mining(do_neg_mining);
+                multibox_loss_param->set_mining_type(mining_type);
                 MultiBoxLossLayer<Dtype> layer(layer_param);
                 GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
                 checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

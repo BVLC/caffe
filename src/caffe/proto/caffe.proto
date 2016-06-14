@@ -1265,7 +1265,8 @@ message MultiBoxLossParameter {
   // If true, also consider difficult ground truth.
   optional bool use_difficult_gt = 10 [default = true];
   // If true, perform negative mining.
-  optional bool do_neg_mining = 11 [default = true];
+  // DEPRECATED: use mining_type instead.
+  optional bool do_neg_mining = 11;
   // The negative/positive ratio.
   optional float neg_pos_ratio = 12 [default = 3.0];
   // The negative overlap upperbound for the unmatched predictions.
@@ -1284,6 +1285,19 @@ message MultiBoxLossParameter {
   // If true, only backpropagate on corners which are inside of the image
   // region when encode_type is CORNER or CORNER_SIZE.
   optional bool bp_inside = 19 [default = false];
+  // Mining type during training.
+  //   NONE : use all negatives.
+  //   MAX_NEGATIVE : select negatives based on the score.
+  //   HARD_EXAMPLE : select hard examples based on "Training Region-based Object Detectors with Online Hard Example Mining", Shrivastava et.al.
+  enum MiningType {
+    NONE = 0;
+    MAX_NEGATIVE = 1;
+    HARD_EXAMPLE = 2;
+  }
+  optional MiningType mining_type = 20 [default = MAX_NEGATIVE];
+  // Parameters used for non maximum suppression durig hard example mining.
+  optional NonMaximumSuppressionParameter nms_param = 21;
+  optional int32 sample_size = 22 [default = 64];
 }
 
 message MVNParameter {

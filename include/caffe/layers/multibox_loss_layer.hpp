@@ -75,6 +75,7 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   // confidence loss.
   Blob<Dtype> conf_loss_;
 
+  MultiBoxLossParameter multibox_loss_param_;
   int num_classes_;
   bool share_location_;
   MatchType match_type_;
@@ -90,6 +91,7 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   bool map_object_to_agnostic_;
   bool ignore_cross_boundary_bbox_;
   bool bp_inside_;
+  MiningType mining_type_;
 
   int loc_classes_;
   int num_gt_;
