@@ -952,7 +952,7 @@ TEST_F(CPUBBoxUtilTest, TestGetConfidenceScores) {
   }
 }
 
-TEST_F(CPUBBoxUtilTest, TestGetMaxConfidenceScores) {
+TEST_F(CPUBBoxUtilTest, TestComputeConfLoss) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_classes = 2;
@@ -969,54 +969,142 @@ TEST_F(CPUBBoxUtilTest, TestGetMaxConfidenceScores) {
     }
   }
 
-  vector<vector<float> > max_conf_scores;
+  vector<vector<float> > all_conf_loss;
   ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  -1, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
-  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.)), eps);
-  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.2)), eps);
-  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(exp(-0.5)/(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
 
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
-  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.1)), eps);
-  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.3)), eps);
-  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(1./(1.+exp(-0.4))) + log(exp(-0.5)/(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
 
   loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
+  EXPECT_EQ(all_conf_loss.size(), num);
   for (int i = 0; i < num; ++i) {
-    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
-    for (int j = 0; j < num_preds_per_class; ++j) {
-      EXPECT_NEAR(max_conf_scores[i][j], 1./(1+exp(-0.1)), eps);
-    }
-  }
-
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, loss_type, &max_conf_scores);
-
-  EXPECT_EQ(max_conf_scores.size(), num);
-  for (int i = 0; i < num; ++i) {
-    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
     int sign = i % 2 ? 1 : -1;
     for (int j = 0; j < num_preds_per_class; ++j) {
       if (sign == 1) {
-        EXPECT_NEAR(max_conf_scores[i][j], 1/(1+exp(-0.1)), eps);
+        EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
       } else {
-        EXPECT_NEAR(max_conf_scores[i][j], exp(-0.1)/(1+exp(-0.1)), eps);
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+      }
+    }
+  }
+}
+
+TEST_F(CPUBBoxUtilTest, TestComputeConfLossMatch) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<float> conf_blob(num, dim, 1, 1);
+  float* conf_data = conf_blob.mutable_cpu_data();
+  vector<map<int, vector<int> > > all_match_indices;
+  map<int, vector<NormalizedBBox> > all_gt_bboxes;
+  for (int i = 0; i < num; ++i) {
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = sign * idx * 0.1;
+      }
+    }
+    map<int, vector<int> > match_indices;
+    vector<int> indices(num_preds_per_class, -1);
+    match_indices[-1] = indices;
+    if (i == 1) {
+      NormalizedBBox gt_bbox;
+      gt_bbox.set_label(1);
+      all_gt_bboxes[i].push_back(gt_bbox);
+      // The first prior in second image is matched to a gt bbox of label 1.
+      match_indices[-1][0] = 0;
+    }
+    all_match_indices.push_back(match_indices);
+  }
+
+  vector<vector<float> > all_conf_loss;
+  ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  -1, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
+
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
+
+  loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      if (sign == 1) {
+        if (j == 0) {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+        } else {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
+        }
+      } else {
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
       }
     }
   }

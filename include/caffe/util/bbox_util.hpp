@@ -25,6 +25,7 @@ typedef PriorBoxParameter_CodeType CodeType;
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef MultiBoxLossParameter_LocLossType LocLossType;
 typedef MultiBoxLossParameter_ConfLossType ConfLossType;
+typedef MultiBoxLossParameter_MiningType MiningType;
 
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
@@ -113,6 +114,50 @@ void MatchBBox(const vector<NormalizedBBox>& gt,
     const bool ignore_cross_boundary_bbox,
     vector<int>* match_indices, vector<float>* match_overlaps);
 
+// Find matches between prediction bboxes and ground truth bboxes.
+//    all_loc_preds: stores the location prediction, where each item contains
+//      location prediction for an image.
+//    all_gt_bboxes: stores ground truth bboxes for the batch.
+//    prior_bboxes: stores all the prior bboxes in the format of NormalizedBBox.
+//    prior_variances: stores all the variances needed by prior bboxes.
+//    multibox_loss_param: stores the parameters for MultiBoxLossLayer.
+//    all_match_overlaps: stores jaccard overlaps between predictions and gt.
+//    all_match_indices: stores mapping between predictions and ground truth.
+void FindMatches(const vector<LabelBBox>& all_loc_preds,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      const vector<NormalizedBBox>& prior_bboxes,
+      const vector<vector<float> >& prior_variances,
+      const MultiBoxLossParameter& multibox_loss_param,
+      vector<map<int, vector<float> > >* all_match_overlaps,
+      vector<map<int, vector<int> > >* all_match_indices);
+
+// Count the number of matches from the match indices.
+int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
+                    const int num);
+
+// Mine the hard examples from the batch.
+//    conf_data: stores the confidence prediction.
+//    all_loc_preds: stores the location prediction, where each item contains
+//      location prediction for an image.
+//    all_gt_bboxes: stores ground truth bboxes for the batch.
+//    prior_bboxes: stores all the prior bboxes in the format of NormalizedBBox.
+//    prior_variances: stores all the variances needed by prior bboxes.
+//    all_match_overlaps: stores jaccard overlap between predictions and gt.
+//    multibox_loss_param: stores the parameters for MultiBoxLossLayer.
+//    all_match_indices: stores mapping between predictions and ground truth.
+//    all_loc_loss: stores the confidence loss per location for each image.
+template <typename Dtype>
+void MineHardExamples(const Dtype* conf_data,
+    const vector<LabelBBox>& all_loc_preds,
+    const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+    const vector<NormalizedBBox>& prior_bboxes,
+    const vector<vector<float> >& prior_variances,
+    const vector<map<int, vector<float> > >& all_match_overlaps,
+    const MultiBoxLossParameter& multibox_loss_param,
+    int* num_matches, int* num_negs,
+    vector<map<int, vector<int> > >* all_match_indices,
+    vector<vector<int> >* all_neg_indices);
+
 // Retrieve bounding box ground truth from gt_data.
 //    gt_data: 1 x 1 x num_gt x 7 blob.
 //    num_gt: the number of ground truth.
@@ -144,6 +189,39 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
       const int num_preds_per_class, const int num_loc_classes,
       const bool share_location, vector<LabelBBox>* loc_preds);
 
+// Encode the localization prediction and ground truth for each matched prior.
+//    all_loc_preds: stores the location prediction, where each item contains
+//      location prediction for an image.
+//    all_gt_bboxes: stores ground truth bboxes for the batch.
+//    all_match_indices: stores mapping between predictions and ground truth.
+//    prior_bboxes: stores all the prior bboxes in the format of NormalizedBBox.
+//    prior_variances: stores all the variances needed by prior bboxes.
+//    multibox_loss_param: stores the parameters for MultiBoxLossLayer.
+//    loc_pred_data: stores the location prediction results.
+//    loc_gt_data: stores the encoded location ground truth.
+template <typename Dtype>
+void EncodeLocPrediction(const vector<LabelBBox>& all_loc_preds,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const vector<NormalizedBBox>& prior_bboxes,
+      const vector<vector<float> >& prior_variances,
+      const MultiBoxLossParameter& multibox_loss_param,
+      Dtype* loc_pred_data, Dtype* loc_gt_data);
+
+// Compute the localization loss per matched prior.
+//    loc_pred: stores the location prediction results.
+//    loc_gt: stores the encoded location ground truth.
+//    all_match_indices: stores mapping between predictions and ground truth.
+//    num: number of images in the batch.
+//    num_priors: total number of priors.
+//    loc_loss_type: type of localization loss, Smooth_L1 or L2.
+//    all_loc_loss: stores the localization loss for all priors in a batch.
+template <typename Dtype>
+void ComputeLocLoss(const Blob<Dtype>& loc_pred, const Blob<Dtype>& loc_gt,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const int num, const int num_priors, const LocLossType loc_loss_type,
+      vector<vector<float> >* all_loc_loss);
+
 // Get confidence predictions from conf_data.
 //    conf_data: num x num_preds_per_class * num_classes blob.
 //    num: the number of images.
@@ -156,20 +234,57 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_scores);
 
-// Get max confidence scores for each prior from conf_data.
+// Compute the confidence loss for each prior from conf_data.
 //    conf_data: num x num_preds_per_class * num_classes blob.
 //    num: the number of images.
 //    num_preds_per_class: number of predictions per class.
 //    num_classes: number of classes.
 //    background_label_id: it is used to skip selecting max scores from
 //      background class.
-//    loss_type: compute the probability according to the loss type.
-//    all_max_scores: stores the max confidence per location for each image.
+//    loss_type: compute the confidence loss according to the loss type.
+//    all_match_indices: stores mapping between predictions and ground truth.
+//    all_gt_bboxes: stores ground truth bboxes from the batch.
+//    all_conf_loss: stores the confidence loss per location for each image.
 template <typename Dtype>
-void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
+void ComputeConfLoss(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       const int background_label_id, const ConfLossType loss_type,
-      vector<vector<float> >* all_max_scores);
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      vector<vector<float> >* all_conf_loss);
+
+// Compute the negative confidence loss for each prior from conf_data.
+//    conf_data: num x num_preds_per_class * num_classes blob.
+//    num: the number of images.
+//    num_preds_per_class: number of predictions per class.
+//    num_classes: number of classes.
+//    background_label_id: it is used to skip selecting max scores from
+//      background class.
+//    loss_type: compute the confidence loss according to the loss type.
+//    all_conf_loss: stores the confidence loss per location for each image.
+template <typename Dtype>
+void ComputeConfLoss(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const ConfLossType loss_type,
+      vector<vector<float> >* all_conf_loss);
+
+// Encode the confidence predictions and ground truth for each matched prior.
+//    conf_data: num x num_priors * num_classes blob.
+//    num: number of images.
+//    num_priors: number of priors (predictions) per image.
+//    multibox_loss_param: stores the parameters for MultiBoxLossLayer.
+//    all_match_indices: stores mapping between predictions and ground truth.
+//    all_neg_indices: stores the indices for negative samples.
+//    all_gt_bboxes: stores ground truth bboxes for the batch.
+//    conf_pred_data: stores the confidence prediction results.
+//    conf_gt_data: stores the confidence ground truth.
+template <typename Dtype>
+void EncodeConfPrediction(const Dtype* conf_data, const int num,
+      const int num_priors, const MultiBoxLossParameter& multibox_loss_param,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const vector<vector<int> >& all_neg_indices,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      Dtype* conf_pred_data, Dtype* conf_gt_data);
 
 // Get prior bounding boxes from prior_data.
 //    prior_data: 1 x 2 x num_priors * 4 x 1 blob.
