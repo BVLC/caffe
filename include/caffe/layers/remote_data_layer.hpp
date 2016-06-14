@@ -48,7 +48,9 @@ class RemoteDataLayer : public BaseDataLayer<Dtype> {
   struct RemoteDataQueue;
  private:
   shared_ptr<RemoteDataQueue> queue;
-  Blob<Dtype>* transform_blob;
+  shared_ptr<Blob<Dtype> > transform_blob;
+  shared_ptr<Blob<Dtype> > label_blob;
+  vector<Blob<Dtype>*> aux_blobs;
 };
 
 }  // namespace caffe
