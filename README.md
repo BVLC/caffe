@@ -21,41 +21,7 @@ Framework development discussions and thorough bug reports are collected on [Iss
 Happy brewing!
 
 # Intel Caffe
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Xeon
-servers.
-
-## Performance Results
-Time measures are average Forward-Backward as stated by caffe time. The speedup factor is
-calculated as (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure).
-
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
-|------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            493 |          1163 |         1260 |              20 |
-| bvlc-caffe-master |           3990 |          6917 |         7307 |             270 |
-|    speedup factor |           x8.1 |          x5.9 |         x5.8 |           x13.5 |
-
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, OpenBLAS 0.2.14, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
-|------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |           4066 |          2780 |         4011 |              45 |
-| bvlc-caffe-master |          12992 |         25613 |        68415 |             494 |
-|    speedup factor |           x3.1 |          x9.2 |        x17.1 |           x11.0 |
-
-Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
-The speedup factor highly depends on the amount of running caffe threads, system load and CPU
-temperature.
-
-A following models are used to perform above performance tests:
-```
-./build/tools/caffe time --model=models/bvlc_alexnet/train_val.prototxt -iterations 1000
-./build/tools/caffe time --model=models/bvlc_googlenet/train_val.prototxt -iterations 1000
-./build/tools/caffe time --model=models/bvlc_reference_caffenet/train_val.prototxt -iterations 1000
-./build/tools/caffe time --model=examples/cifar10/cifar10_full_sigmoid_train_test_bn.prototxt -iterations 10000
-```
-For lower amount of iterations (e.g. 10 times lower) to obtain relible results, all samples
-for about 15 seconds since test startup should be ignored when calculating average time.
-
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW+)
 
 ## Building
 Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
