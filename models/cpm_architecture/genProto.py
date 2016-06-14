@@ -68,7 +68,7 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
                 lr_m = 1 # changed -> it used to be 5 for stage 1 and 1 for stage n
             else:
                 # Set learning rate multiplier to 0 for all layers but the new one
-                lr_m = 1e-3 # 0
+                lr_m = 0 # 1e-3 (best res so far)
             n.tops[conv_name] = L.Convolution(n.tops[last_layer], kernel_size=kernel[l],
                                                   num_output=outCH[l], pad=int(math.floor(kernel[l]/2)),
                                                   param=[dict(lr_mult=lr_m, decay_mult=1), dict(lr_mult=lr_m*2, decay_mult=0)],
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.
     transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368, visualize=False,
                              target_dist=1, scale_prob=0.7, scale_min=0.7, scale_max=1.3,
-                             max_rotate_degree=15, center_perterb_max=0, do_clahe=False, 
+                             max_rotate_degree=10, center_perterb_max=0, do_clahe=False, 
                              num_parts=17, np_in_lmdb=17, transform_body_joint=False)
     nCP = 3
     CH = 128

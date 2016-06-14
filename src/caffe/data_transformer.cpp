@@ -521,24 +521,22 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   //Start transforming
   Mat img_aug = Mat::zeros(crop_y, crop_x, CV_8UC3);
   //Mat img_temp, img_temp2, img_temp3; //size determined by scale
-  Mat img_temp, img_temp2; //size determined by scale
+  Mat img_temp, img_temp2, img_temp3; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
 	as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
 	//as.scale = 1.0;
+    if(0 && param_.visualize())
+      visualize(img_temp, meta, as);
     as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
 	//as.degree = 0.0;
-//    if(0 && param_.visualize())
-//      visualize(img_temp2, meta, as);
-    as.crop = augmentation_croppad(img_temp2, img_aug, meta);
-    //LOG(INFO) << meta.joint_self.joints.size();
-    //LOG(INFO) << meta.joint_self.joints[0];
-    if(0 && param_.visualize()) 
-      visualize(img_temp, meta, as);
-    //as.flip = augmentation_flip(img_temp, img_aug, meta);
-    as.flip = 0;
-    //LOG(INFO) << meta.joint_self.joints.size();
-    //LOG(INFO) << meta.joint_self.joints[0];
+    if(0 && param_.visualize())
+      visualize(img_temp2, meta, as);
+    as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
+    if(1 && param_.visualize())
+      visualize(img_temp3, meta, as);
+    as.flip = augmentation_flip(img_temp3, img_aug, meta);
+    //as.flip = 0;
     if(param_.visualize()) 
       visualize(img_aug, meta, as);
   }
@@ -562,14 +560,14 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     for (int j = 0; j < img_aug.cols; ++j) {
       Vec3b& rgb = img_aug.at<Vec3b>(i, j);
       //offset is for skipping one channel
-//      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
-//      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
-//      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
-//      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
-      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0])/256.0;
-      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1])/256.0;
-      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2])/256.0;
+      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
+      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
+      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
       transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
+//      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0])/256.0;
+//      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1])/256.0;
+//      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2])/256.0;
+//      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
 
@@ -604,12 +602,6 @@ float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, Me
   for(int i=0; i<np; i++){
     meta.joint_self.joints[i] *= scale;
   }
-//  for(int p=0; p<meta.numOtherPeople; p++){
-//    meta.objpos_other[p] *= scale;
-//    for(int i=0; i<np; i++){
-//      meta.joint_others[p].joints[i] *= scale;
-//    }
-//  }
   return scale_multiplier;
 }
 
@@ -622,57 +614,14 @@ bool DataTransformer<Dtype>::onPlane(Point p, Size img_size) {
 
 template<typename Dtype>
 Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, MetaData& meta) {
-//  float dice_x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
-//  float dice_y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); //[0,1]
-//  int crop_x = param_.crop_size_x();
-//  int crop_y = param_.crop_size_y();
-//
-//  float x_offset = int((dice_x - 0.5) * 2 * param_.center_perterb_max());
-//  float y_offset = int((dice_y - 0.5) * 2 * param_.center_perterb_max());
-//
-//  //LOG(INFO) << "Size of input img is " << img_src.cols << " " << img_src.rows;
-//  //LOG(INFO) << "ROI is " << x_offset << " " << y_offset << " " << min(800, img_temp.cols) << " " << min(256, img_temp.rows);
-//  Point2i center = meta.objpos + Point2f(x_offset, y_offset);
-//  int offset_left = -(center.x - (crop_x/2));
-//  int offset_up = -(center.y - (crop_y/2));
-//  // int to_pad_right = max(center.x + (crop_x - crop_x/2) - img_src.cols, 0);
-//  // int to_pad_down = max(center.y + (crop_y - crop_y/2) - img_src.rows, 0);
-//
-//  img_dst = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
-//  for(int i=0;i<crop_y;i++){
-//    for(int j=0;j<crop_x;j++){ //i,j on cropped
-//      int coord_x_on_img = center.x - crop_x/2 + j;
-//      int coord_y_on_img = center.y - crop_y/2 + i;
-//      if(onPlane(Point(coord_x_on_img, coord_y_on_img), Size(img_src.cols, img_src.rows))){
-//        img_dst.at<Vec3b>(i,j) = img_src.at<Vec3b>(coord_y_on_img, coord_x_on_img);
-//      }
-//    }
-//  }
-//
-//  //modify meta data
-//  Point2f offset(offset_left, offset_up);
-//  meta.objpos += offset;
-//  for(int i=0; i<np; i++){
-//    meta.joint_self.joints[i] += offset;
-//  }
-//  for(int p=0; p<meta.numOtherPeople; p++){
-//    meta.objpos_other[p] += offset;
-//    for(int i=0; i<np; i++){
-//      meta.joint_others[p].joints[i] += offset;
-//    }
-//  }
-//
-//	return Size(x_offset, y_offset);
-
-	// NEW CODE
   int offset_x, offset_y;
   findCroppingCoordinates(meta, kOffset, offset_x, offset_y);
 
   // Crop image in such a way that all the joints lie inside the cropped region
   int crop_x = 2*offset_x + 1;
   int crop_y = 2*offset_y + 1;
-  //TODO: check the fact we are adding 128 on each channel
-  Mat img_tmp = Mat::zeros(crop_y, crop_x, CV_8UC3);// + Scalar(128,128,128);
+
+  Mat img_tmp = Mat::zeros(crop_y, crop_x, CV_8UC3) + Scalar(128,128,128);
   for(int i=0;i<crop_y;i++){
 	  for(int j=0;j<crop_x;j++){ //i,j on cropped
 		  int coord_x_on_img = meta.objpos.x - offset_x + j;
@@ -701,8 +650,6 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 	  meta.joint_self.joints[i].y *= fy;
   }
 
-  // TODO: should we return (0,0)?
-  // return Size(kImageSize, kImageSize);
   return Size(0, 0);
 }
 
@@ -826,12 +773,6 @@ float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, Me
   for(int i=0; i<np; i++){
     RotatePoint(meta.joint_self.joints[i], R);
   }
-//  for(int p=0; p<meta.numOtherPeople; p++){
-//    RotatePoint(meta.objpos_other[p], R);
-//    for(int i=0; i<np; i++){
-//      RotatePoint(meta.joint_others[p].joints[i], R);
-//    }
-//  }
   return degree;
 }
 
@@ -994,6 +935,10 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   //     rgb_vis_lower = rgb_aug;
   //   }
   // }
+	int offset_x, offset_y;
+	findCroppingCoordinates(meta, kOffset, offset_x, offset_y);
+
+
   Mat img_vis = img.clone();
   static int counter = 0;
 
@@ -1044,34 +989,15 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
         else
           circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,200,200), -1);
       }
+    }else{
+    	circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
     }
   }
   
-  line(img_vis, meta.objpos+Point2f(-368/2,-368/2), meta.objpos+Point2f(368/2,-368/2), CV_RGB(0,255,0), 2);
-  line(img_vis, meta.objpos+Point2f(368/2,-368/2), meta.objpos+Point2f(368/2,368/2), CV_RGB(0,255,0), 2);
-  line(img_vis, meta.objpos+Point2f(368/2,368/2), meta.objpos+Point2f(-368/2,368/2), CV_RGB(0,255,0), 2);
-  line(img_vis, meta.objpos+Point2f(-368/2,368/2), meta.objpos+Point2f(-368/2,-368/2), CV_RGB(0,255,0), 2);
-
-  for(int p=0;p<meta.numOtherPeople;p++){
-    rectangle(img_vis, meta.objpos_other[p]-Point2f(3,3), meta.objpos_other[p]+Point2f(3,3), CV_RGB(0,255,255), CV_FILLED);
-    for(int i=0;i<np;i++){
-      // if(meta.joint_others[p].isVisible[i])
-      //   circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,0,255), -1);
-      // else
-      //   circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,255,255), -1);
-      
-      //MPII R leg: 0(ankle), 1(knee), 2(hip)
-      //     L leg: 5(ankle), 4(knee), 3(hip)
-      //     R arms: 10(wrist), 11(elbow), 12(shoulder)
-      //     L arms: 13(wrist), 14(elbow), 15(shoulder)
-      //if(i==0 || i==1 || i==2 || i==10 || i==11 || i==12)
-      circle(img_vis, meta.joint_others[p].joints[i], 2, CV_RGB(0,0,0), -1);
-      //else if(i==5 || i==4 || i==3 || i==13 || i==14 || i==15)
-        //circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,255,255), -1);
-      //else
-        //circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(255,255,0), -1);
-    }
-  }
+  line(img_vis, meta.objpos+Point2f(-offset_x,-offset_y), meta.objpos+Point2f(offset_x,-offset_y), CV_RGB(0,255,0), 2);
+  line(img_vis, meta.objpos+Point2f(offset_x,-offset_y), meta.objpos+Point2f(offset_x,offset_y), CV_RGB(0,255,0), 2);
+  line(img_vis, meta.objpos+Point2f(offset_x,offset_y), meta.objpos+Point2f(-offset_x,offset_y), CV_RGB(0,255,0), 2);
+  line(img_vis, meta.objpos+Point2f(-offset_x,offset_y), meta.objpos+Point2f(-offset_x,-offset_y), CV_RGB(0,255,0), 2);
   
   // draw text
   if(phase_ == TRAIN){

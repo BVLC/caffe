@@ -63,6 +63,7 @@ data/*
 models/cpm_architecture/backups
 models/cpm_architecture/savedmodels
 models/cpm_architecture/jsonDatasets
+models/cpm_architecture/prototxt/caffemodel/trial_*
 *.caffemodel
 *.caffemodel.h5
 *.solverstate

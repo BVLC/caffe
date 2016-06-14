@@ -5,7 +5,7 @@ layer {
   top: "label"
   transform_param {
     stride: 8
-    max_rotate_degree: 20
+    max_rotate_degree: 15
     visualize: true
     crop_size_x: 368
     crop_size_y: 368
