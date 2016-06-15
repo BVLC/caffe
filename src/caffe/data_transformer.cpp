@@ -21,7 +21,7 @@ using namespace std;
 #include "caffe/util/rng.hpp"
 
 int kImageSize = 368;
-int kOffset = 75;
+int kOffset = 25;
 
 namespace caffe {
 
@@ -502,23 +502,23 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   Mat img_temp, img_temp2, img_temp3; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
-	  LOG(INFO) << "aug scale - INPUT" << img.rows <<" x "<<img.cols;
-	as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
-	//LOG(INFO) << "aug scale - OUTPUT" << img_temp.rows <<" x "<<img_temp.cols;
-	//as.scale = 1.0;
-    if(0 && param_.visualize())
-      visualize(img_temp, meta, as);
-    as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
-    //LOG(INFO) << "aug rotate - OUTPUT" << img_temp2.rows <<" x "<<img_temp2.cols;
+	//LOG(INFO) << "aug rot - INPUT " << img.rows <<" x "<<img.cols;
+	as.degree = augmentation_rotate(img, img_temp, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
+    //LOG(INFO) << "aug rotate - OUTPUT " << img_temp.rows <<" x "<<img_temp.cols;
 	//as.degree = 0.0;
-    if(0 && param_.visualize())
-      visualize(img_temp2, meta, as);
+    if(1 && param_.visualize())
+      visualize(img_temp, meta, as);
+    as.scale = augmentation_scale(img_temp, img_temp2, meta);  //change the scale by multiplying everything by a scale factor
+	//LOG(INFO) << "aug scale - OUTPUT " << img_temp2.rows <<" x "<<img_temp2.cols;
+	//as.scale = 1.0;
+    if(1 && param_.visualize())
+	  visualize(img_temp2, meta, as);
     as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
-    //LOG(INFO) << "aug crop - OUTPUT" << img_temp3.rows <<" x "<<img_temp3.cols;
-    if(0 && param_.visualize())
+    //LOG(INFO) << "aug crop - OUTPUT " << img_temp3.rows <<" x "<<img_temp3.cols;
+    if(1 && param_.visualize())
       visualize(img_temp3, meta, as);
     as.flip = augmentation_flip(img_temp3, img_aug, meta);
-    //LOG(INFO) << "aug flip - OUTPUT" << img_aug.rows <<" x "<<img_aug.cols;
+    //LOG(INFO) << "aug flip - OUTPUT " << img_aug.rows <<" x "<<img_aug.cols;
     //as.flip = 0;
     if(param_.visualize()) 
       visualize(img_aug, meta, as);
@@ -579,6 +579,7 @@ float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, Me
   }
   float scale_abs = param_.target_dist()/meta.scale_self;
   float scale = scale_abs * scale_multiplier;
+  //Size() returns (0,0) which is interpreted as "compute the new size knowing the scale"
   resize(img_src, img_temp, Size(), scale, scale, INTER_CUBIC);
   //modify meta data
   meta.objpos *= scale;
@@ -598,7 +599,9 @@ bool DataTransformer<Dtype>::onPlane(Point p, Size img_size) {
 template<typename Dtype>
 Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, MetaData& meta) {
   int offset_x, offset_y;
-  findCroppingCoordinates(meta, kOffset, offset_x, offset_y);
+  MetaData tmp = meta;
+  tmp.img_size = img_src.size();
+  findCroppingCoordinates(tmp, kOffset, offset_x, offset_y);
 
   // Crop image in such a way that all the joints lie inside the cropped region
   int crop_x = 2*offset_x + 1;
@@ -918,7 +921,9 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   //   }
   // }
 	int offset_x, offset_y;
-	findCroppingCoordinates(meta, kOffset, offset_x, offset_y);
+	MetaData tmp = meta;
+	tmp.img_size = img.size();
+	findCroppingCoordinates(tmp, kOffset, offset_x, offset_y);
 
 
   Mat img_vis = img.clone();
@@ -976,6 +981,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
     }
   }
   
+  //LOG(INFO) << "offset x:"<<offset_x<<"; offset y:"<<offset_y;
   line(img_vis, meta.objpos+Point2f(-offset_x,-offset_y), meta.objpos+Point2f(offset_x,-offset_y), CV_RGB(0,255,0), 2);
   line(img_vis, meta.objpos+Point2f(offset_x,-offset_y), meta.objpos+Point2f(offset_x,offset_y), CV_RGB(0,255,0), 2);
   line(img_vis, meta.objpos+Point2f(offset_x,offset_y), meta.objpos+Point2f(-offset_x,offset_y), CV_RGB(0,255,0), 2);

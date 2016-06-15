@@ -2,7 +2,7 @@ net: "models/cpm_architecture/prototxt/pose_train_test.prototxt"
 # The base learning rate, momentum and the weight decay of the network.
 #test_iter: 30486
 #test_intervall: 5000
-base_lr: 0.000100
+base_lr: 0.000080
 momentum: 0.9
 weight_decay: 0.0005
 # The learning rate policy

@@ -196,7 +196,7 @@ if __name__ == "__main__":
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
     # base_lr = 1e-5 (8e-5)
-    base_lr = 5e-5 #1e-4
+    base_lr = 8e-5 #1e-4
     # num_parts and np_in_lmdb are two parameters that are used inside the framework to move from one
     # dataset definition to another. Num_parts is the number of parts we want to have, while
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.

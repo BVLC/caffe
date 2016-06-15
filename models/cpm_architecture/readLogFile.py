@@ -90,6 +90,7 @@ def smoothed_data(x, y, batch_size):
     smoothed_y = []
     smoothed_x.append(x[0])
     smoothed_y.append(y[0])
+    i = 0
     for i in range(int(len(x)/batch_size)):
         curr_batch = y[i*batch_size:(i+1)*batch_size]
         smoothed_x.append(x[(i+1)*batch_size])
