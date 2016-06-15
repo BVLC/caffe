@@ -12,7 +12,7 @@ from caffe import layers as L
 PASS_THROUGH_LAYERS = ['AbsVal', 'BatchNorm', 'Bias', 'BNLL', 'Dropout',
                        'Eltwise', 'ELU', 'Log', 'LRN', 'Exp', 'MVN', 'Power',
                        'ReLU', 'PReLU', 'Scale', 'Sigmoid', 'Split', 'TanH',
-                       'Threshold']
+                       'Threshold', 'Concat']
 
 
 def conv_params(fn):
@@ -76,6 +76,7 @@ def coord_map(fn):
         axis -= 1  # -1 for last non-coordinate dim.
         return axis, 1, - offset
     else:
+        print("Error: Encountered an unfamiliar layer: " + fn.type_name)
         raise UndefinedMapException
 
 
