@@ -21,7 +21,7 @@ using namespace std;
 #include "caffe/util/rng.hpp"
 
 int kImageSize = 368;
-int kOffset = 50;
+int kOffset = 75;
 
 namespace caffe {
 
@@ -42,6 +42,8 @@ string DecodeString(const string& data, size_t idx) {
 
 template<typename Dtype>
 void DataTransformer<Dtype>::findCroppingCoordinates(MetaData& metadata, int offset, int & offset_x, int & offset_y){
+	//using opencv convention
+	//x horizontal axis (width), y vertical axis (height)
     float max_x = -1; float max_y = -1;
     for (int i=0; i<metadata.joint_self.joints.size(); i++){
         if (max_x < abs(metadata.joint_self.joints[i].x - metadata.objpos.x)){
@@ -147,35 +149,11 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
     //LOG(INFO) << meta.joint_self_3d.joints[i].x << " " << meta.joint_self_3d.joints[i].y << " " << meta.joint_self_3d.joints[i].z;
   }
 
-  
-  // THIS SHOULD BE SKIPPED: WE HAVE ONLY ONE PERSON PER FRAME
   //others (7 lines loaded)
   meta.objpos_other.resize(meta.numOtherPeople);
   meta.scale_other.resize(meta.numOtherPeople);
   meta.joint_others.resize(meta.numOtherPeople);
-//  for(int p=0; p<meta.numOtherPeople; p++){
-//    DecodeFloats(data, offset3+(8+p)*offset1, &meta.objpos_other[p].x, 1);
-//    DecodeFloats(data, offset3+(8+p)*offset1+4, &meta.objpos_other[p].y, 1);
-//    meta.objpos_other[p] -= Point2f(1,1);
-//    DecodeFloats(data, offset3+(8+meta.numOtherPeople)*offset1+4*p, &meta.scale_other[p], 1);
-//  }
-//  //8 + numOtherPeople lines loaded
-//  for(int p=0; p<meta.numOtherPeople; p++){
-//    meta.joint_others[p].joints.resize(np_in_lmdb);
-//    meta.joint_others[p].isVisible.resize(np_in_lmdb);
-//    for(int i=0; i<np_in_lmdb; i++){
-//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
-//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
-//      meta.joint_others[p].joints[i] -= Point2f(1,1);
-//      float isVisible;
-//      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+2)*offset1+4*i, &isVisible, 1);
-//      meta.joint_others[p].isVisible[i] = (isVisible == 0) ? 0 : 1;
-//      if(meta.joint_others[p].joints[i].x < 0 || meta.joint_others[p].joints[i].y < 0 ||
-//         meta.joint_others[p].joints[i].x >= meta.img_size.width || meta.joint_others[p].joints[i].y >= meta.img_size.height){
-//        meta.joint_others[p].isVisible[i] = 2; // 2 means cropped, 1 means occluded by still on image
-//      }
-//    }
-//  }
+
 }
 
 template<typename Dtype>
@@ -524,18 +502,23 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   Mat img_temp, img_temp2, img_temp3; //size determined by scale
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
+	  LOG(INFO) << "aug scale - INPUT" << img.rows <<" x "<<img.cols;
 	as.scale = augmentation_scale(img, img_temp, meta);  //change the scale by multiplying everything by a scale factor
+	//LOG(INFO) << "aug scale - OUTPUT" << img_temp.rows <<" x "<<img_temp.cols;
 	//as.scale = 1.0;
     if(0 && param_.visualize())
       visualize(img_temp, meta, as);
     as.degree = augmentation_rotate(img_temp, img_temp2, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
+    //LOG(INFO) << "aug rotate - OUTPUT" << img_temp2.rows <<" x "<<img_temp2.cols;
 	//as.degree = 0.0;
     if(0 && param_.visualize())
       visualize(img_temp2, meta, as);
     as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
-    if(1 && param_.visualize())
+    //LOG(INFO) << "aug crop - OUTPUT" << img_temp3.rows <<" x "<<img_temp3.cols;
+    if(0 && param_.visualize())
       visualize(img_temp3, meta, as);
     as.flip = augmentation_flip(img_temp3, img_aug, meta);
+    //LOG(INFO) << "aug flip - OUTPUT" << img_aug.rows <<" x "<<img_aug.cols;
     //as.flip = 0;
     if(param_.visualize()) 
       visualize(img_aug, meta, as);
@@ -744,7 +727,6 @@ void DataTransformer<Dtype>::RotatePoint(Point2f& p, Mat R){
 
 template<typename Dtype>
 float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, MetaData& meta) {
-  
   float degree;
   if(param_.aug_way() == "rand"){
     float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);

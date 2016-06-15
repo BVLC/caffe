@@ -152,9 +152,8 @@ def plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size 
     
 
 def main():
-    #filename = ['prototxt/caffemodel/trial_1/log.txt']
-    filename = ['prototxt/caffemodel/trial_3/log.txt']
-    #filename = ['prototxt/log.txt']
+    #filename = ['prototxt/caffemodel/trial_3/log.txt']
+    filename = ['prototxt/log.txt']
     stn_lrm = 1
     nstages = 6
     train, test, base_lr, stepsize = parse_log(filename[0])
@@ -165,7 +164,7 @@ def main():
             print 'Num iterations file = %d' % (curr_tr['iteration'][-1])
             train, test = combine_data(train, test, curr_tr, curr_ts)
     main_title = 'Training with:\nbase_lr = %f; stepsize = %d; lr_mul = %d\nFinetuning: trial_1; Iter = 5000 ' % (base_lr, stepsize, stn_lrm)
-    plotData(train, test, nstages, main_title, avg_line = True, avg_batch_size = 200)
+    plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size = 200)
 
 if __name__ == '__main__':
     main()
