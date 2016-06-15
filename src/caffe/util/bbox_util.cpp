@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -657,6 +658,17 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
   return num_matches;
 }
 
+inline bool IsEligibleMining(const MiningType mining_type, const int match_idx,
+                             const int match_overlap, const int neg_overlap) {
+  if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
+    return match_idx == -1 && match_overlap < neg_overlap;
+  } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 template <typename Dtype>
 void MineHardExamples(const Dtype* conf_data,
     const vector<LabelBBox>& all_loc_preds,
@@ -681,8 +693,12 @@ void MineHardExamples(const Dtype* conf_data,
   const int num_classes = multibox_loss_param.num_classes();
   CHECK_GE(num_classes, 1) << "num_classes should not be less than 1.";
   const int background_label_id = multibox_loss_param.background_label_id();
+  const bool use_prior_for_nms = multibox_loss_param.use_prior_for_nms();
   const ConfLossType conf_loss_type = multibox_loss_param.conf_loss_type();
   const MiningType mining_type = multibox_loss_param.mining_type();
+  if (mining_type == MultiBoxLossParameter_MiningType_NONE) {
+    return;
+  }
   const LocLossType loc_loss_type = multibox_loss_param.loc_loss_type();
   const float neg_pos_ratio = multibox_loss_param.neg_pos_ratio();
   const float neg_overlap = multibox_loss_param.neg_overlap();
@@ -702,9 +718,9 @@ void MineHardExamples(const Dtype* conf_data,
   ComputeConfLoss(conf_data, num, num_priors, num_classes,
                   background_label_id, conf_loss_type,
                   *all_match_indices, all_gt_bboxes, &all_conf_loss);
-  // Compute localization losses based on matching results.
   vector<vector<float> > all_loc_loss;
   if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
+    // Compute localization losses based on matching results.
     Blob<Dtype> loc_pred, loc_gt;
     if (*num_matches != 0) {
       vector<int> loc_shape(2, 1);
@@ -719,110 +735,109 @@ void MineHardExamples(const Dtype* conf_data,
     }
     ComputeLocLoss(loc_pred, loc_gt, *all_match_indices, num,
                    num_priors, loc_loss_type, &all_loc_loss);
+  } else {
+    // No localization loss.
+    for (int i = 0; i < num; ++i) {
+      vector<float> loc_loss(num_priors, 0.f);
+      all_loc_loss.push_back(loc_loss);
+    }
   }
   for (int i = 0; i < num; ++i) {
     map<int, vector<int> >& match_indices = (*all_match_indices)[i];
     const map<int, vector<float> >& match_overlaps = all_match_overlaps[i];
+    // loc + conf loss.
     const vector<float>& conf_loss = all_conf_loss[i];
+    const vector<float>& loc_loss = all_loc_loss[i];
+    vector<float> loss;
+    std::transform(conf_loss.begin(), conf_loss.end(), loc_loss.begin(),
+                   std::back_inserter(loss), std::plus<float>());
+    // Pick negatives or hard examples based on loss.
+    set<int> sel_indices;
     vector<int> neg_indices;
-    if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
-      // Pick negatives based on scores.
-      // Record matching statistics.
-      for (map<int, vector<int> >::iterator it = match_indices.begin();
-           it != match_indices.end(); ++it) {
-        const int label = it->first;
-        // Get positive indices.
+    for (map<int, vector<int> >::iterator it = match_indices.begin();
+         it != match_indices.end(); ++it) {
+      const int label = it->first;
+      int num_sel = 0;
+      // Get potential indices and loss pairs.
+      vector<pair<float, int> > loss_indices;
+      for (int m = 0; m < match_indices[label].size(); ++m) {
+        if (IsEligibleMining(mining_type, match_indices[label][m],
+            match_overlaps.find(label)->second[m], neg_overlap)) {
+          loss_indices.push_back(std::make_pair(loss[m], m));
+          ++num_sel;
+        }
+      }
+      if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
         int num_pos = 0;
         for (int m = 0; m < match_indices[label].size(); ++m) {
           if (match_indices[label][m] > -1) {
             ++num_pos;
           }
         }
-        int num_neg = 0;
-        vector<pair<float, int> > loss_indices;
-        for (int m = 0; m < match_indices[label].size(); ++m) {
-          if (match_indices[label][m] == -1 &&
-              match_overlaps.find(label)->second[m] < neg_overlap) {
-            loss_indices.push_back(std::make_pair(conf_loss[m], m));
-            ++num_neg;
+        num_sel = std::min(static_cast<int>(num_pos * neg_pos_ratio), num_sel);
+      } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
+        CHECK_GT(sample_size, 0);
+        num_sel = std::min(sample_size, num_sel);
+      }
+      // Select samples.
+      if (has_nms_param && nms_threshold > 0) {
+        // Do nms before selecting samples.
+        vector<float> sel_loss;
+        vector<NormalizedBBox> sel_bboxes;
+        if (use_prior_for_nms) {
+          for (int m = 0; m < match_indices[label].size(); ++m) {
+            if (IsEligibleMining(mining_type, match_indices[label][m],
+                match_overlaps.find(label)->second[m], neg_overlap)) {
+              sel_loss.push_back(loss[m]);
+              sel_bboxes.push_back(prior_bboxes[m]);
+            }
           }
-        }
-        num_neg = std::min(static_cast<int>(num_pos * neg_pos_ratio), num_neg);
-        if (has_nms_param && nms_threshold > 0) {
-          // Pick top negatives after nms.
+        } else {
           // Decode the prediction into bbox first.
           vector<NormalizedBBox> loc_bboxes;
           bool clip_bbox = false;
           DecodeBBoxes(prior_bboxes, prior_variances,
                        code_type, encode_variance_in_target, clip_bbox,
                        all_loc_preds[i].find(label)->second, &loc_bboxes);
-          // Get negative bboxes and their loss.
-          vector<float> neg_scores;
-          vector<NormalizedBBox> neg_bboxes;
           for (int m = 0; m < match_indices[label].size(); ++m) {
-            if (match_indices[label][m] == -1 &&
-                match_overlaps.find(label)->second[m] < neg_overlap) {
-              neg_scores.push_back(conf_loss[m]);
-              neg_bboxes.push_back(loc_bboxes[m]);
+            if (IsEligibleMining(mining_type, match_indices[label][m],
+                match_overlaps.find(label)->second[m], neg_overlap)) {
+              sel_loss.push_back(loss[m]);
+              sel_bboxes.push_back(loc_bboxes[m]);
             }
           }
-          // Do non-maximum suppression based on the loss.
-          map<int, map<int, float> > overlaps;
-          vector<int> indices;
-          bool reuse_overlaps = false;
-          ApplyNMS(neg_bboxes, neg_scores, nms_threshold, top_k, reuse_overlaps,
-                   &overlaps, &indices);
-          num_neg = std::min(static_cast<int>(indices.size()), num_neg);
-          for (int n = 0; n < num_neg; ++n) {
-            neg_indices.push_back(loss_indices[indices[n]].second);
-          }
-        } else {
-          // Pick top num_neg negatives.
-          std::sort(loss_indices.begin(), loss_indices.end(),
-                    SortScorePairDescend<int>);
-          for (int n = 0; n < num_neg; ++n) {
-            neg_indices.push_back(loss_indices[n].second);
-          }
         }
-        *num_negs += num_neg;
-      }
-    } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
-      // loc + conf loss.
-      const vector<float>& loc_loss = all_loc_loss[i];
-      vector<float> loss;
-      std::transform(loc_loss.begin(), loc_loss.end(), conf_loss.begin(),
-                     std::back_inserter(loss), std::plus<float>());
-      for (map<int, vector<int> >::iterator it = match_indices.begin();
-           it != match_indices.end(); ++it) {
-        const int label = it->first;
-        // Decode the prediction into bbox first.
-        vector<NormalizedBBox> loc_bboxes;
-        bool clip_bbox = false;
-        DecodeBBoxes(prior_bboxes, prior_variances,
-                     code_type, encode_variance_in_target, clip_bbox,
-                     all_loc_preds[i].find(label)->second, &loc_bboxes);
         // Do non-maximum suppression based on the loss.
-        map<int, map<int, float> > overlaps;
-        vector<int> indices;
-        bool reuse_overlaps = false;
-        ApplyNMS(loc_bboxes, loss, nms_threshold, top_k, reuse_overlaps,
-                 &overlaps, &indices);
-        // Only keep top k nms results if necessary.
-        if (sample_size > -1 && sample_size < indices.size()) {
-          indices.resize(sample_size);
+        vector<int> nms_indices;
+        ApplyNMS(sel_bboxes, sel_loss, nms_threshold, top_k, &nms_indices);
+        if (nms_indices.size() < num_sel) {
+          LOG(INFO) << "not enough sample after nms.";
         }
-        // Update the match_indices and select neg_indices.
-        for (int m = 0; m < match_indices[label].size(); ++m) {
-          if (match_indices[label][m] > -1) {
-            if (std::find(indices.begin(), indices.end(), m) == indices.end()) {
-              match_indices[label][m] = -1;
-              *num_matches -= 1;
-            }
-          } else if (match_indices[label][m] == -1) {
-            if (std::find(indices.begin(), indices.end(), m) != indices.end()) {
-              neg_indices.push_back(m);
-              *num_negs += 1;
-            }
+        // Pick top example indices after nms.
+        num_sel = std::min(static_cast<int>(nms_indices.size()), num_sel);
+        for (int n = 0; n < num_sel; ++n) {
+          sel_indices.insert(loss_indices[nms_indices[n]].second);
+        }
+      } else {
+        // Pick top example indices based on loss.
+        std::sort(loss_indices.begin(), loss_indices.end(),
+                  SortScorePairDescend<int>);
+        for (int n = 0; n < num_sel; ++n) {
+          sel_indices.insert(loss_indices[n].second);
+        }
+      }
+      // Update the match_indices and select neg_indices.
+      for (int m = 0; m < match_indices[label].size(); ++m) {
+        if (match_indices[label][m] > -1) {
+          if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE &&
+              sel_indices.find(m) == sel_indices.end()) {
+            match_indices[label][m] = -1;
+            *num_matches -= 1;
+          }
+        } else if (match_indices[label][m] == -1) {
+          if (sel_indices.find(m) != sel_indices.end()) {
+            neg_indices.push_back(m);
+            *num_negs += 1;
           }
         }
       }
@@ -1385,7 +1400,8 @@ void EncodeConfPrediction(const Dtype* conf_data, const int num,
               conf_gt_data[count] = background_label_id;
               break;
             case MultiBoxLossParameter_ConfLossType_LOGISTIC:
-              if (background_label_id >= 0 && background_label_id < num_classes) {
+              if (background_label_id >= 0 &&
+                  background_label_id < num_classes) {
                 conf_gt_data[count * num_classes + background_label_id] = 1;
               }
               break;
@@ -1577,6 +1593,13 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       }
     }
   }
+}
+
+void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
+      const float threshold, const int top_k, vector<int>* indices) {
+  bool reuse_overlap = false;
+  map<int, map<int, float> > overlaps;
+  ApplyNMS(bboxes, scores, threshold, top_k, reuse_overlap, &overlaps, indices);
 }
 
 void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
