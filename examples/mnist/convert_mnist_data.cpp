@@ -90,16 +90,16 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     batch = new leveldb::WriteBatch();
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << db_path;
-    CHECK_EQ(mkdir(db_path, 0744), 0)
+    ASSERT_EQ(mkdir(db_path, 0744), 0)
         << "mkdir " << db_path << "failed";
-    CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
-    CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
+    ASSERT_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
+    ASSERT_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
         << "mdb_env_set_mapsize failed";
-    CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
+    ASSERT_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";
-    CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
+    ASSERT_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
         << "mdb_txn_begin failed";
-    CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
+    ASSERT_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
         << "mdb_open failed. Does the lmdb already exist? ";
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
