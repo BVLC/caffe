@@ -1298,6 +1298,7 @@ message MultiBoxLossParameter {
   // Parameters used for non maximum suppression durig hard example mining.
   optional NonMaximumSuppressionParameter nms_param = 21;
   optional int32 sample_size = 22 [default = 64];
+  optional bool use_prior_for_nms = 23 [default = false];
 }
 
 message MVNParameter {
