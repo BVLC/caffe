@@ -41,8 +41,9 @@ int ParamServer<Dtype>::RouteMsg()
 {
   if (this->poll_items_[ps_sock_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = ps_router_->RecvMsg(true);
-
-    this->ScheduleMsg(m);
+    
+    // only 1 work thread on parameter server
+    this->Enqueue(0, m);
   }
 
   for (int i = 0; i < this->nthreads_; i++) {

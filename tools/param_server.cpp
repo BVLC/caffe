@@ -12,7 +12,7 @@ DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
 DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
-DEFINE_string(request_file, "examples/cifar10/ps.prototxt", "the location of the model request configuration file");
+DEFINE_string(request, "models/bvlc_alexnet/ps.prototxt", "the location of the model request configuration file");
 
 int main(int argc, char** argv)
 {
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
   NodeEnv::set_model_server(model_server_addr);
   NodeEnv::set_id_server(id_server_addr);
-  NodeEnv::set_request_file(FLAGS_request_file);
+  NodeEnv::set_request_file(FLAGS_request);
   NodeEnv::set_node_role(PARAM_SERVER);
  
   LOG(INFO) << "node id: " << NodeEnv::Instance()->ID();

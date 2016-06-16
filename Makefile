@@ -339,6 +339,8 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+
+
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
@@ -375,6 +377,16 @@ else
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
+
+USE_OPENMP ?= 1
+ifeq ($(USE_OPENMP), 1)
+	# OMP
+	# COMMON_FLAGS += -D_OPENMP
+	COMMON_FLAGS += -fopenmp
+	ifeq ($(BLAS), mkl)
+		LIBRARIES += iomp5
+	endif
+endif
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 

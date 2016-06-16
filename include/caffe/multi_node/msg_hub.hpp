@@ -64,8 +64,6 @@ public:
   // scheduling incoming & out-going message
   virtual int RouteMsg() = 0;
   
-  // use the internal threads to process message
-  int ScheduleMsg(shared_ptr<Msg> m);
 
 protected:
   virtual int SetUpPoll();
@@ -85,8 +83,10 @@ protected:
 protected:
   // total number of threads
   int nthreads_;
+
   // number of threads used as workers
   int nworkers_;
+  
   vector<shared_ptr<WorkerThread<Dtype> > > threads_;
 
   // pair sockets to communicate with the work threads

@@ -7,7 +7,13 @@
 DEFINE_string(id_server_req, "tcp://*:1955", "the zmq REQ addr of the id / layer-map server");
 DEFINE_string(model_server, "tcp://*:1957", "the address of zmq model server");
 
-DEFINE_string(solver, "examples/cifar10/cifar10_full_solver.prototxt", "location of solver");
+DEFINE_string(solver, "models/bvlc_alexnet/solver.prototxt", "location of solver");
+
+DEFINE_string(weights, "", 
+                "Optional; the pretrained weights to initialize finetuning");
+
+
+DEFINE_int32(workers, 0, "number of convolutional workers in fc server");
 
 using namespace caffe;
 
@@ -49,7 +55,11 @@ void model_server_thread()
   shared_ptr<SkServer> mserver(new SkServer());
   mserver->Bind(FLAGS_model_server);
   
-  ModelMap<float> lmap(FLAGS_solver);
+  ModelMap<float> lmap(FLAGS_solver, FLAGS_workers);
+
+  if (FLAGS_weights.size() > 0) {
+    lmap.CopyTrainedLayersFrom(FLAGS_weights);
+  }
   
   while (true) {
     shared_ptr<Msg> m = mserver->RecvMsg(true);
@@ -65,7 +75,7 @@ void model_server_thread()
           mserver->SendMsg( reply[i] );
         }
         
-        //clear the message after send
+        // clear the message after send
         lmap.ClearMsg();
       }
 
@@ -80,6 +90,8 @@ int main(int argc, char** argv)
 {
   google::InstallFailureSignalHandler();
   gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  CHECK_GT(FLAGS_workers, 0) << "Number of convolutional workers should be larger than 0";
   
   boost::thread id_thrd(&rep_server_thread);
   boost::thread model_thrd(&model_server_thread);

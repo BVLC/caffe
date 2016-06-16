@@ -22,7 +22,10 @@ void ModelMap<Dtype>::BuildNetGraph()
   int nlayers = net_param_.layer_size();
 
   requests_.resize(nlayers);
+  request_filled_.resize(nlayers);
+  request_parsed_.resize(nlayers);
   layers_filled_.resize(nlayers);
+  layer_inputs_.resize(nlayers);
   sub_solver_layers_.resize(nlayers);
   net_forward_graph_.resize(nlayers);
   net_backward_graph_.resize(nlayers);
@@ -30,15 +33,17 @@ void ModelMap<Dtype>::BuildNetGraph()
   sub_output_blobs_.resize(nlayers);
   sub_forward_graph_.resize(nlayers);
   sub_backward_graph_.resize(nlayers);
+  route_nodes_.resize(nlayers);
   
-  sub_skip_graph_.resize(nlayers);
-  sub_skip_blobs_.resize(nlayers);
   sub_solver_layer_names_.resize(nlayers);
 
   for (int i = 0; i < nlayers; i++) {
     layer_params_.push_back(net_param_.layer(i));
     layer_name_idx_[net_param_.layer(i).name()] = i;
     layers_filled_[i] = false;
+    layer_inputs_[i] = 0;
+    request_filled_[i] = false;
+    request_parsed_[i] = false;
   }
   
   map<string, int> top_blob_to_layer;
@@ -117,6 +122,15 @@ void ModelMap<Dtype>::AddLayers(NetParameter *pnet, int node_idx)
     if (layer_param.type() == "Data") {
       layer_param.set_type(string("AsyncData"));
     }
+
+    // FC model parallel by splitting the output size
+    if (layer_param.has_inner_product_param()) {
+      int num_output = layer_param.inner_product_param().num_output();
+      int num_splits = requests_[node_idx].size();
+
+      CHECK_EQ(num_output % num_splits, 0);
+      layer_param.mutable_inner_product_param()->set_num_output(num_output / num_splits);
+    }
     
     pnet->add_layer()->CopyFrom(layer_param);
   }
@@ -150,6 +164,9 @@ void ModelMap<Dtype>::AddSolver(RouteInfo *proute, int node_idx)
   AddInputs(new_solver.mutable_net_param(), node_idx);
 
   proute->mutable_solver_param()->CopyFrom(new_solver);
+  
+  // set number of workers
+  proute->set_num_workers(num_workers_);
 }
 
 template <typename Dtype>
@@ -158,23 +175,14 @@ void ModelMap<Dtype>::AddRoutes(RouteInfo *proute, int node_idx)
   for (int i = 0; i < sub_forward_graph_[node_idx].size(); i++) {
     int fwd_idx = sub_forward_graph_[node_idx][i];
     for (int j = 0; j < requests_[fwd_idx].size(); j++) {
-      proute->add_bcast_nodes()->CopyFrom(requests_[fwd_idx][j]->node_info());
+      proute->add_bcast_nodes()->CopyFrom(route_nodes_[fwd_idx][j]);
     }
   }
   
   for (int i = 0; i < sub_backward_graph_[node_idx].size(); i++) {
     int bwd_id = sub_backward_graph_[node_idx][i];
     for (int j = 0; j < requests_[bwd_id].size(); j++) {
-      proute->add_prev_nodes()->CopyFrom(requests_[bwd_id][j]->node_info());
-    }
-  }
-  
-  // add skip nodes
-  for (int i = 0; i < sub_skip_graph_[node_idx].size(); i++) {
-    int skip_id = sub_skip_graph_[node_idx][i];
-    for (int j = 0; j < requests_[skip_id].size(); j++) {
-      proute->add_fwrd_nodes()->CopyFrom(requests_[skip_id][j]->node_info());
-      proute->add_fwrd_blob(sub_skip_blobs_[node_idx][i]);
+      proute->add_prev_nodes()->CopyFrom(route_nodes_[bwd_id][j]);
     }
   }
 }
@@ -194,18 +202,36 @@ void ModelMap<Dtype>::PrepareFCMsg()
       m->set_dst(requests_[node_idx][j]->node_info().node_id());
       
       RouteInfo rt;
+      rt.mutable_node_info()->CopyFrom(requests_[node_idx][j]->node_info());
+
       AddSolver(&rt, node_idx);
       AddRoutes(&rt, node_idx);
       
-      // add gateway node
-      rt.mutable_gateway_node()->CopyFrom(fc_gateway_->node_info());
+      // rt.mutable_solver_param()->set_base_lr(0.05);
+
+      NetParameter *pnet = rt.mutable_solver_param()->mutable_net_param();
+      for (int k = 0; k < pnet->input_shape_size(); k++) {
+        int n = pnet->input_shape(k).dim(0);
+        pnet->mutable_input_shape(k)->set_dim(0, n);
+      }
+
+      // add gateway nodes
+      for (int k = 0; k < fc_gateways_.size(); k++) {
+        int gw_id = fc_gateways_[k];
+        for (int l = 0; l < route_nodes_[gw_id].size(); l++) {
+          rt.add_gateway_nodes()->CopyFrom(route_nodes_[gw_id][l]);
+        }
+      }
 
       string rt_str;
       rt.SerializeToString(&rt_str);
       m->AppendData(rt_str.data(), rt_str.length());
       
+      int num_splits = requests_[node_idx].size();
       // Copy parameters should behind add rout info
-      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(), sub_solver_layer_names_[node_idx], m);
+      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(), 
+                                              sub_solver_layer_names_[node_idx], 
+                                              m, j, num_splits);
      
       replies_.push_back(m);
     }
@@ -257,12 +283,16 @@ void ModelMap<Dtype>::PrepareTestMsg()
     // add ps nodes
     for (int j = 0; j < ps_nodes_.size(); j++) {
       int ps_idx = ps_nodes_[j];
-      rt.add_ps_nodes()->CopyFrom(requests_[ps_idx][0]->node_info());
+      for (int k = 0; k < route_nodes_[ps_idx].size(); k++) {
+        rt.add_ps_nodes()->CopyFrom(route_nodes_[ps_idx][k]);
+      }
     }
     
     for (int j = 0; j < fc_nodes_.size(); j++) {
       int fc_idx = fc_nodes_[i];
-      rt.add_fc_nodes()->CopyFrom(requests_[fc_idx][0]->node_info());
+      for (int k = 0; k < route_nodes_[fc_idx].size(); k++) {
+        rt.add_fc_nodes()->CopyFrom(route_nodes_[fc_idx][k]);
+      }
     }
    
     rt.mutable_solver_param()->CopyFrom(test_solver_);
@@ -293,11 +323,26 @@ void ModelMap<Dtype>::PrepareConvMsg()
     // add ps nodes
     for (int j = 0; j < ps_nodes_.size(); j++) {
       int ps_idx = ps_nodes_[j];
-      rt.add_ps_nodes()->CopyFrom(requests_[ps_idx][0]->node_info());
+      for (int k = 0; k < route_nodes_[ps_idx].size(); k++) {
+        rt.add_ps_nodes()->CopyFrom(route_nodes_[ps_idx][k]);
+      }
     }
 
-    // add gateway node
-    rt.mutable_gateway_node()->CopyFrom(fc_gateway_->node_info());
+    // add gateway nodes
+    for (int j = 0; j < fc_gateways_.size(); j++) {
+      int gw_id = fc_gateways_[j];
+      for (int k = 0; k < route_nodes_[gw_id].size(); k++) {
+        rt.add_gateway_nodes()->CopyFrom(route_nodes_[gw_id][k]);
+      }
+    }
+
+    // add fwd blobs and nodes
+    for (int j = 0; j < conv_fwd_nodes_.size(); j++) {
+      int fwd_id = conv_fwd_nodes_[j];
+      for (int k = 0; k < route_nodes_[fwd_id].size(); k++) {
+        rt.add_fwrd_nodes()->CopyFrom(route_nodes_[fwd_id][k]);
+      }
+    }
 
     // add conv solver
     rt.mutable_solver_param()->CopyFrom(conv_solver_);
@@ -344,74 +389,40 @@ void ModelMap<Dtype>::PrintRouteInfo()
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::FilterGatewayForwards(int gateway_idx)
-{  
-  // remove the blobs that are the same as inputs
-  vector<int> clear_fwd_nodes;
-  vector<string> clear_fwd_blobs;
-  
-  for (int i = 0; i < gateway_fwd_nodes_.size(); i++) {
-    if (gateway_fwd_nodes_[i] != gateway_idx) {
-      clear_fwd_nodes.push_back(gateway_fwd_nodes_[i]);
-      clear_fwd_blobs.push_back(gateway_fwd_blobs_[i]);
-    }
-  }
-  
-  gateway_fwd_nodes_.clear();
-  gateway_fwd_blobs_.clear();
-
-  for (int i = 0; i < clear_fwd_nodes.size(); i++) {
-    gateway_fwd_nodes_.push_back(clear_fwd_nodes[i]);
-    gateway_fwd_blobs_.push_back(clear_fwd_blobs[i]);
-
-    sub_skip_graph_[gateway_idx].push_back(clear_fwd_nodes[i]);
-    sub_skip_blobs_[gateway_idx].push_back(clear_fwd_blobs[i]);
-  }
-}
-
-template <typename Dtype>
 void ModelMap<Dtype>::PrepareConvSolver()
 {
   if (!(status_ == WAIT_FC_GATEWAY || status_ == INITED)) {
     return;
   }
 
-  // if a node isn't a FC node, then it is a conv. node
-  map<int, bool> fc_node_map;
-
-  for (int i = 0; i < fc_nodes_.size(); i++) {
-    int fc_idx = fc_nodes_[i];
-    for (int j = 0; j < sub_solver_layers_[fc_idx].size(); j++) {
-      fc_node_map[sub_solver_layers_[fc_idx][j]] = true;
-    }
-  }
-
-  // add conv. layers in BFS order
-  vector<int> bfs_vec;
-  int bfs_idx = 0;
-  bfs_vec.push_back(0);
-
   conv_solver_.CopyFrom(clear_solver_);
 
-  while (bfs_idx < bfs_vec.size()) {
-    int layer_idx = bfs_vec[bfs_idx];
-    LayerParameter layer_param = layer_params_[layer_idx];
+  // add all the layers in PS solvers
+  for (int i = 0; i < request_parsed_.size(); i++) {
+    if (!request_parsed_[i]) {
+      continue;
+    }
     
-    // remove sync data layer
-    if (layer_param.type() == "Data") {
-      layer_param.set_type(string("AsyncData"));
+    CHECK_GT(requests_[i].size(), 0);
+    CHECK_GT(route_nodes_[i].size(), 0);
+
+    // check the request is PS or FC
+    if (requests_[i][0]->node_info().node_role() != PARAM_SERVER) {
+      continue;
     }
 
-    conv_solver_.mutable_net_param()->add_layer()->CopyFrom(layer_param);
-
-    for (int i = 0; i < net_forward_graph_[layer_idx].size(); i++) {
-      int next_idx = net_forward_graph_[layer_idx][i];
-      // if the node isn't FC node, then add it as conv node
-      if (fc_node_map.find(next_idx) == fc_node_map.end()) {
-        bfs_vec.push_back(next_idx);
+    // add the layers in the ps
+    for (int j = 0; j < route_nodes_[i][0].layers_size(); j++) {
+      int layer_idx = FindLayer(route_nodes_[i][0].layers(j));
+      LayerParameter layer_param = layer_params_[layer_idx];
+    
+      // remove sync data layer
+      if (layer_param.type() == "Data") {
+        layer_param.set_type(string("AsyncData"));
       }
+
+      conv_solver_.mutable_net_param()->add_layer()->CopyFrom(layer_param);
     }
-    bfs_idx++;
   }
 }
 
@@ -439,7 +450,15 @@ int ModelMap<Dtype>::PrepareRoutes()
   for (int i = 0; i < ps_nodes_.size(); i++) {
     ParseInputOutput(ps_nodes_[i]);
   }
-
+  
+  // FC nodes that need blobs from conv. nodes
+  vector<int> fwd_nodes;
+  // the corresponding name of blob
+  vector<vector<string> > fwd_blobs;
+  fwd_blobs.resize(fc_nodes_.size());
+  //
+  map<int, int> node_id_map;
+  
   //generate forward map and backward map for fc nodes
   map<string, int> nearest_top_blob_idx;
   for (int i = 0; i < fc_nodes_.size(); i++) {
@@ -452,9 +471,17 @@ int ModelMap<Dtype>::PrepareRoutes()
         sub_backward_graph_[node_idx].push_back(iter->second);
         sub_forward_graph_[iter->second].push_back(node_idx);
       } else {
-        // the gateway should be responsible for forwarding missing inputs
-        gateway_fwd_nodes_.push_back(node_idx);
-        gateway_fwd_blobs_.push_back(input_blob);
+        // unknown blobs are added as inputs
+        map<int, int>::iterator id_iter = node_id_map.find(node_idx);
+        if (id_iter != node_id_map.end()) {
+          int node_offset = id_iter->second;
+          fwd_blobs[node_offset].push_back(input_blob);
+        } else {
+          int node_offset = fwd_nodes.size();
+          node_id_map[node_idx] = node_offset;
+          fwd_nodes.push_back(node_idx);
+          fwd_blobs[node_offset].push_back(input_blob);
+        }
       }
     }
 
@@ -463,25 +490,35 @@ int ModelMap<Dtype>::PrepareRoutes()
       nearest_top_blob_idx[output_blob] = node_idx;
     }
   }
-
   
-  vector<int> root_fc;
-  for (int i = 0; i < fc_nodes_.size(); i++) {
-    int node_idx = fc_nodes_[i];
+  // filter gateway nodes and fwd nodes
+  for (int i = 0; i < fwd_nodes.size(); i++) {
+    int node_idx = fwd_nodes[i]; 
+    
+    for (int j = 0; j < route_nodes_[node_idx].size(); j++) {
+      for (int k = 0; k < fwd_blobs[i].size(); k++) {
+        route_nodes_[node_idx][j].add_input_blobs(fwd_blobs[i][k]);
+      }
+    }
+
     if (sub_backward_graph_[node_idx].size() <= 0) {
-      root_fc.push_back(node_idx);
+      fc_gateways_.push_back(node_idx);
+    } else {
+      conv_fwd_nodes_.push_back(node_idx);
     }
   }
 
-  CHECK_GT(root_fc.size(), 0) << "ERROR: no root fc nodes are found";
+  CHECK_GT(fc_gateways_.size(), 0) << "ERROR: no root fc nodes are found";
   
-  /// choose one node as gateway node to conv. clients
-  fc_gateway_ = requests_[root_fc[0]][0];
-  FilterGatewayForwards(root_fc[0]);
-  fc_gateway_->mutable_node_info()->set_node_role(FC_GATEWAY);
-  
-  LOG(INFO) << "Gateway node ip: " << fc_gateway_->node_info().ip() 
-      << ", node id: " << fc_gateway_->node_info().node_id();
+  // set as gateway nodes
+  for (int i = 0; i < fc_gateways_.size(); i++) {
+    int gw_id = fc_gateways_[i];
+    for (int j = 0; j < requests_[gw_id].size(); j++) {
+      requests_[gw_id][j]->mutable_node_info()->set_node_role(FC_GATEWAY);
+      LOG(INFO) << "Gateway node ip: " << requests_[gw_id][j]->node_info().ip() 
+        << ", node id: " << requests_[gw_id][j]->node_info().node_id();
+    }
+  }
 
   status_ = INITED;
  
@@ -491,10 +528,20 @@ int ModelMap<Dtype>::PrepareRoutes()
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
+void ModelMap<Dtype>::ParseRequest(int start_idx)
 {
-  int start_idx = FindLayer(rq->start_layer());
+  if (request_parsed_[start_idx]) {
+    return;
+  }
+
+  LOG(INFO) << "inputs: " << layer_inputs_[start_idx] 
+    << ", bottom size: " << layer_params_[start_idx].bottom_size();
   
+  if (layer_inputs_[start_idx] < layer_params_[start_idx].bottom_size()) {
+    return;
+  }
+
+  shared_ptr<ModelRequest> rq = requests_[start_idx][0];
   map<int, bool> end_layer_map;
   for (int i = 0; i < rq->end_layers_size(); i++) {
     int l = FindLayer(rq->end_layers(i));
@@ -504,27 +551,7 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
     // add end layers
     end_layer_map[l] = true;
   }
-  
 
-  // add and check whether the request is valid or not
-  if (requests_[start_idx].size() <= 0) {
-    requests_[start_idx].push_back(rq);
-  } else {
-    CHECK_GE(rq->num_splits(), requests_[start_idx].size())
-      << "Too many request at layer: " << std::endl 
-      << layer_params_[start_idx].DebugString();
-    CHECK_EQ(rq->num_splits(), requests_[start_idx][0]->num_splits())
-      << "un-match splittings found in layer:" << std::endl
-      << layer_params_[start_idx].DebugString();
-    
-    requests_[start_idx].push_back(rq);
-  }
-  
-  // need to wait for more requests
-  if (rq->num_splits() > requests_[start_idx].size()) {
-    return;
-  }
-  
   // we have got all the reqeusts for a sub-solver
   // init subnet using constrained BFS to the graph
   // sub layers are added in BFS order
@@ -541,7 +568,8 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
     visited[iter->first] = true;
   }
   int bfs_idx = 0;
-
+  
+  // store all the backwarding layers
   map<int, bool> backward_layers;
   // add all the layers from backward to forward
   while (bfs_idx < bfs_vec.size()) {
@@ -566,40 +594,95 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
   bfs_vec.clear();
   bfs_vec.push_back(start_idx);
   bfs_idx = 0;
-  
-  // clear all the layers in the request
-  for (int i = 0; i < requests_[start_idx].size(); i++) {
-    requests_[start_idx][i]->mutable_node_info()->clear_layers();
-  }
 
   while (bfs_idx < bfs_vec.size()) {
     int layer_idx = bfs_vec[bfs_idx];
-    CHECK(!layers_filled_[layer_idx]) 
-      << "layer is filled by multiple nodes: " << layer_idx
+
+    CHECK(!layers_filled_[layer_idx]) << "layer: " << layer_idx
+      << " is filled by multiple nodes "
       << std::endl << layer_params_[layer_idx].DebugString();
     
     layers_filled_[layer_idx] = true;
+    
     sub_solver_layers_[start_idx].push_back(layer_idx);
     const string& layer_name = layer_params_[layer_idx].name();
     sub_solver_layer_names_[start_idx].push_back(layer_name);
-    
-    // add the layer to request
+
+    // add the layer to RouteNode
+    route_nodes_[start_idx].resize(requests_[start_idx].size());
     for (int i = 0; i < requests_[start_idx].size(); i++) {
-      requests_[start_idx][i]->mutable_node_info()->add_layers(layer_name);
+      NodeInfo *pnode = route_nodes_[start_idx][i].mutable_node_info();
+      pnode->CopyFrom(requests_[start_idx][i]->node_info());
+      route_nodes_[start_idx][i].add_layers(layer_name);
     }
 
     // if the current layer is not end layer, put its child to the bfs vector
-    if (end_layer_map.find(layer_idx) == end_layer_map.end()) {
-      for (int i = 0; i < net_forward_graph_[layer_idx].size(); i++) {
-        int next_layer = net_forward_graph_[layer_idx][i];
-        // if the layer is in the backwarding layers
-        if (backward_layers.find(next_layer) != backward_layers.end()) {
-          bfs_vec.push_back(next_layer);
-        }
+    for (int i = 0; i < net_forward_graph_[layer_idx].size(); i++) {
+      int next_layer = net_forward_graph_[layer_idx][i];
+    
+      layer_inputs_[next_layer]++;
+      int num_inputs = layer_params_[next_layer].bottom_size();
+      if (layer_inputs_[next_layer] < num_inputs) {
+        continue;
+      }
+      
+      // if the layer is the last layer specified by the request file
+      if (end_layer_map.find(layer_idx) != end_layer_map.end()) {
+        continue;
+      }
+
+      // if the layer is in the backwarding layers
+      if (backward_layers.find(next_layer) != backward_layers.end()) {
+        bfs_vec.push_back(next_layer);
       }
     }
 
     bfs_idx++;
+  }
+
+  request_parsed_[start_idx] = true;
+}
+
+template <typename Dtype>
+void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
+{
+  int start_idx = FindLayer(rq->start_layer());
+  
+  int sub_model_position = rq->node_info().position();
+  // num splits means we split the layer into how many parts
+  CHECK_GT(rq->num_splits(), sub_model_position);
+
+  // add and check whether the request is valid or not
+  if (requests_[start_idx].size() <= 0) {
+    requests_[start_idx].resize(rq->num_splits());
+    requests_[start_idx][sub_model_position] = rq;
+  } else {
+    CHECK_EQ(rq->num_splits(), requests_[start_idx].size())
+      << "un-match splittings found in layer:" << std::endl
+      << layer_params_[start_idx].DebugString();
+    
+    CHECK(requests_[start_idx][sub_model_position] == NULL)
+      << "overlapped model requests:" << std::endl
+      << requests_[start_idx][sub_model_position]->DebugString() << std::endl
+      << rq->DebugString();
+
+    requests_[start_idx][sub_model_position] = rq;
+  }
+  
+  // need to wait for more requests
+  for (int i = 0; i < requests_[start_idx].size(); i++) {
+    if (requests_[start_idx][i] == NULL) {
+      return;
+    }
+  }
+  
+  request_filled_[start_idx] = true;
+  
+  // requests are stored in the index of the start layer
+  for (int i = 0; i < request_filled_.size(); i++) {
+    if (request_filled_[i]) {
+      ParseRequest(i);
+    }
   }
 }
 

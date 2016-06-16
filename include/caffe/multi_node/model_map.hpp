@@ -21,14 +21,14 @@ class ModelMap
 {
 
 public:
-  ModelMap(const string full_solver) {
+  ModelMap(const string full_solver, int nworkers) {
     ReadProtoFromTextFileOrDie(full_solver, &solver_param_);
     
     // init test solver
     // test node should run in the same machine with model server
     test_solver_.CopyFrom(solver_param_);
 
-    //clear test net in the solver param
+    // clear test net in the solver param
     solver_param_.clear_test_net();
     solver_param_.clear_test_net_param();
     solver_param_.clear_test_iter();
@@ -58,18 +58,25 @@ public:
     Caffe::set_root_solver(true);
     psolver_ = SolverRegistry<Dtype>::CreateSolver(solver_param_);
 
-    //init net parameter
+    // init net parameter
     net_ = psolver_->net();
 
     InitTrainNetParam(net_param);
 
     status_ = WAIT_REQUESTS;
 
+    num_workers_ = nworkers;
+
     LOG(INFO) << "Model map inited";
   }
 
   ~ModelMap() {
     delete psolver_;
+  }
+  
+  // Copying weights from a trained file
+  void CopyTrainedLayersFrom(const string& file_name) {
+    psolver_->net()->CopyTrainedLayersFrom(file_name);
   }
 
   int GetModel(shared_ptr<Msg> m);
@@ -101,6 +108,9 @@ protected:
     clear_solver_.clear_net_param();
     clear_solver_.clear_net();
 
+    // force sub solvers to use random seed
+    clear_solver_.set_random_seed(-1);
+
     // generate clean net without any layers
     NetParameter clear_net;
     clear_net.CopyFrom(net_param_);
@@ -128,7 +138,7 @@ protected:
   bool CheckIntegrity();
   
   // remove the gateway's input from its forwarding list
-  void FilterGatewayForwards(int gateway_idx);
+  // void FilterGatewayForwards(int gateway_idx);
 
   // prepare messages containing models and routing infomation
   int PrepareRoutes();
@@ -163,6 +173,9 @@ protected:
   void AddRoutes(RouteInfo *proute, int node_idx);
   
   void AddSolver(RouteInfo *proute, int node_idx);
+  
+  // parse a request with start layer start_idx
+  void ParseRequest(int start_idx);
 
 
 protected:
@@ -196,6 +209,9 @@ protected:
 
   //
   vector<bool> layers_filled_;
+  
+  /// number of inputs of the layer
+  vector<int> layer_inputs_;
 
   // map of layer names
   map<string, int> layer_name_idx_;
@@ -211,12 +227,6 @@ protected:
 
   // sub net backward graph
   vector<vector<int> > sub_backward_graph_;
-
-  // some blobs are not used by a node, it only need to forward the blobs
-  vector<vector<int> > sub_skip_graph_;
-
-  // the name of blobs that need to be forwarded
-  vector<vector<string> > sub_skip_blobs_;
  
   // layers in a sub graph (sorted in BFS)
   vector<vector<int> > sub_solver_layers_;
@@ -231,11 +241,8 @@ protected:
   
   vector<vector<string> > sub_output_blobs_;
 
-  // name of blobs that need to be forwarded to other nodes
-  vector<string> gateway_fwd_blobs_;
-
   // 
-  vector<int> gateway_fwd_nodes_;
+  vector<int> conv_fwd_nodes_;
 
   // indices to parameter server nodes
   vector<int> ps_nodes_;
@@ -243,13 +250,22 @@ protected:
   // indices to FC nodes
   vector<int> fc_nodes_;
 
-  shared_ptr<ModelRequest> fc_gateway_;
-
+  vector<int> fc_gateways_;
+  
   // output nodes
   vector<int> output_nodes_;
+  
+  // store all the route nodes
+  vector<vector<RouteNode> > route_nodes_;
 
   // store the model requests in a 2D vector
   vector<vector<shared_ptr<ModelRequest> > > requests_;
+  
+  // whether the requests of this layer is full filled
+  vector<bool> request_filled_;
+  
+  // whether the request is parsed
+  vector<bool> request_parsed_;
   
   // store the conv client request from data parallel cliens
   vector<shared_ptr<ModelRequest> > conv_requests_;
@@ -260,6 +276,9 @@ protected:
   // the generated message for FC layers
   vector<shared_ptr<Msg> > replies_;
   
+  int fc_batch_size_;
+
+  int num_workers_;
 
 DISABLE_COPY_AND_ASSIGN(ModelMap);
 };

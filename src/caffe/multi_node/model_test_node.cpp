@@ -74,14 +74,14 @@ int TestClient<Dtype>::RouteMsg()
   for (int i = 0; i < ps_socks_.size(); i++, poll_idx++) {
     if (this->poll_items_[poll_idx].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = ps_socks_[i]->RecvMsg(true);
-      this->ScheduleMsg(m);
+      this->Enqueue(0, m);
     }
   }
 
   for (int i = 0; i < fc_socks_.size(); i++, poll_idx++) {
     if (this->poll_items_[poll_idx].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = fc_socks_[i]->RecvMsg(true);
-      this->ScheduleMsg(m);
+      this->Enqueue(0, m);
     }
   }
 

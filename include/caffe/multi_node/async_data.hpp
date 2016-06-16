@@ -27,6 +27,10 @@ public:
       full_ = AsyncReader::Instance()->GetFull(queue_index_);
       free_ = AsyncReader::Instance()->GetFree(queue_index_);
     }
+  
+  
+  // disable sharing data layer in different solvers
+  virtual inline bool ShareInParallel() const { return false; }
 
   virtual ~AsyncDataLayer();
 

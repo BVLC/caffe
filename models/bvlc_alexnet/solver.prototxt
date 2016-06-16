@@ -11,4 +11,4 @@ momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
 snapshot_prefix: "models/bvlc_alexnet/caffe_alexnet_train"
-solver_mode: GPU
+solver_mode: CPU

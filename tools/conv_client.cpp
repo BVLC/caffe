@@ -10,7 +10,7 @@
 using boost::unordered_map;
 using namespace caffe;
 
-DEFINE_int32(client_threads, 2, "number of convolution client threads");
+DEFINE_int32(threads, 1, "number of convolution client threads");
 
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
@@ -40,8 +40,9 @@ int main(int argc, char** argv)
   NodeEnv::set_model_request(rq);
 
   LOG(INFO) << "conv node id: " << NodeEnv::Instance()->ID();
-
-  shared_ptr<ConvClient<float> > client(new ConvClient<float>(FLAGS_client_threads));
+  
+  // total threads equals worker thread + 1 parameter thread
+  shared_ptr<ConvClient<float> > client(new ConvClient<float>(FLAGS_threads + 1));
 
   client->Init();
   client->Poll();

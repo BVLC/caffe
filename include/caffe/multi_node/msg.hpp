@@ -17,8 +17,9 @@ using std::vector;
 using std::string;
 using std::map;
 
-const int REQ_SERVER_ID = 2;
-const int ROOT_THREAD_ID = 1;
+const int REQ_SERVER_ID = 3;
+const int ROOT_THREAD_ID = 2;
+const int WORKER_BCAST = 1;
 const int INVALID_ID = -1;
 
 /// overlapping computation and communication 
@@ -42,17 +43,20 @@ public:
     set_clock(m->clock());
     set_type(m->type());
     set_conv_id(m->conv_id());
+    set_data_offset(m->data_offset());
+    set_is_partial(m->is_partial());
   }
 
-  Msg(Msg *p) {        
+  Msg(Msg *p) {
     set_src(p->src());
     set_dst(p->dst());
     set_msg_id(p->msg_id());
     set_clock(p->clock());
     set_type(p->type());
     set_conv_id(p->conv_id());
+    set_data_offset(p->data_offset());
+    set_is_partial(p->is_partial());
   }
-
 
   virtual ~Msg() {
     for (int i = 0; i < zmsg_vec_.size(); i++) {
@@ -100,6 +104,22 @@ public:
   MsgType type() const {
     return header_.type();
   }
+  
+  inline int data_offset() const {
+    return header_.data_offset();
+  }
+
+  inline void set_data_offset(int offset) {
+    header_.set_data_offset(offset);
+  }
+  
+  inline bool is_partial() const {
+    return header_.is_partial();
+  }
+
+  inline void set_is_partial(bool val) {
+    header_.set_is_partial(val);
+  }
 
   int num_blobs() {
     return header_.blobs_size();
@@ -115,24 +135,22 @@ public:
     header_.add_blobs()->CopyFrom(b);
   }
 
-  int AppendZmsg(zmq_msg_t *zmsg)
-  {
+  int AppendZmsg(zmq_msg_t *zmsg) {
     zmsg_vec_.push_back(zmsg);
 
     return zmsg_vec_.size() - 1;
   }
   
-  int64_t conv_id() {
+  int conv_id() {
     return header_.conv_id();
   }
 
-  void set_conv_id(int64_t id) {
+  void set_conv_id(int id) {
     header_.set_conv_id(id);
   }
 
   //return the data index
-  int AppendData(const void *p, int len)
-  {
+  int AppendData(const void *p, int len) {
     zmq_msg_t *m = new zmq_msg_t;
     zmq_msg_init_size(m, len);
 
@@ -143,29 +161,24 @@ public:
   }
   
   int MergeMsg(shared_ptr<Msg> m);
-  shared_ptr<Msg> ExtractMsg(const string blob_name);
+
+  shared_ptr<Msg> ExtractMsg(const string& blob_name);
 
   //clear messages without releasing the content
-  void ClearMsg()
-  {
-    header_.Clear();
+  void ClearMsg() {
+    header_.clear_blobs();
     zmsg_vec_.clear();
   }
   
-  void PrintHeader()
-  {
+  void PrintHeader() {
     LOG(INFO) << "message header: " << std::endl << header_.DebugString();
   }
 
-
-  void SerializeHeader(string& str)
-  {
+  void SerializeHeader(string& str) {
     header_.SerializeToString(&str);
   }
 
-
-  void ParseHeader(string& str)
-  {
+  void ParseHeader(string& str) {
     header_.ParseFromString(str);
 
     //init the blob name map
@@ -190,13 +203,31 @@ public:
     return blob_name_index_[blob_name];
   }
 
-  void *ZmsgData(int i)
-  {
+  vector<int> blob_msg_indices(const string& blob_name) {
+    vector<int> msg_indices;
+    int blob_idx = blob_index_by_name(blob_name);
+
+    if (blob_idx < 0) {
+      return msg_indices;
+    }
+    
+    const BlobInfo& bi = blob_info(blob_idx);
+    for (int i = 0; i < bi.msg_index_size(); i++) {
+      msg_indices.push_back(bi.msg_index(i));
+    }
+
+    return msg_indices;
+  }
+
+  void *ZmsgData(int i) {
     CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is " << zmsg_vec_.size() << " index is " << i;
     return zmq_msg_data(zmsg_vec_[i]);
   }
 
   void AddNewBlob(const string& blob_name, const void *data, int sz);
+  
+  // add new blob with shape
+  void AddNewBlob(const string& blob_name, const void *data, int sz, const vector<int>& shape);
   
   void CopyBlob(const string& blob_name, void *data, int sz);
   
@@ -207,25 +238,20 @@ public:
   /// Allocate a new blob if the blob doen't exist
   void AppendBlob(const string& blob_name, const void *data, int sz);
 
-  int ZmsgSize(int i) 
-  {
+  int ZmsgSize(int i) {
     CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is " << zmsg_vec_.size() << " index is " << i;
     return zmq_msg_size(zmsg_vec_[i]);
   }
-  
 
-  zmq_msg_t *GetZmsg(int i)
-  {
+  zmq_msg_t *GetZmsg(int i) {
     CHECK(i < zmsg_vec_.size()) << "Getting index " << i << " from a vector with size of: " << zmsg_vec_.size();
     
     return zmsg_vec_[i];
   }
 
-  int ZmsgCnt()
-  {
+  int ZmsgCnt() {
     return zmsg_vec_.size();
   }
-
 
 protected:
   MsgHeader header_;

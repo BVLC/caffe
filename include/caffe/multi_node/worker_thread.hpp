@@ -6,6 +6,7 @@
 #include "caffe/multi_node/msg.hpp"
 #include "caffe/multi_node/sk_server.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
@@ -22,6 +23,8 @@ public:
   WorkerThread() {
     worker_id_ = -1;
     queue_size_ = 0;
+    num_workers_ = 0;
+    omp_threads_ = -1;
   }
 
   virtual ~WorkerThread() {
@@ -31,11 +34,18 @@ public:
   void SetWorkerId(int id) { worker_id_ = id; }
   int GetWorkerId() { return worker_id_; }
 
+  void SetWorkerNum(int nworkers) { num_workers_ = nworkers; }
+  int GetWorkerNum() { return num_workers_; }
+
   void SetClientAddr(const string& addr) { client_addr_ = addr; }
   void SetPriorAddr(const string& addr) { prior_addr_ = addr; }
   
   int SendMsg(shared_ptr<Msg> msg) {
     return sk_client_->SendMsg(msg);
+  }
+  
+  void SetOMPThreads(int nthreads) {
+    omp_threads_ = nthreads;
   }
 
   shared_ptr<Msg> RecvMsg(bool blocked) {
@@ -96,7 +106,7 @@ public:
 protected:
   inline void Dequeue() { queue_size_--; }
   
-  virtual Solver<Dtype> *NewSolver(Solver<Dtype> *proot, const SolverParameter& solver_param) {
+  Solver<Dtype> *NewSolver(Solver<Dtype> *proot, const SolverParameter& solver_param) {
     boost::mutex::scoped_lock lock(new_solver_mutex_);
     const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
 
@@ -114,13 +124,22 @@ protected:
       new_params[i]->ShareData(*root_params[i]);
     }
 
+    LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers";
+    
     return new_solver;
   }
 
-  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) = 0;
+  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
+    Caffe::set_root_solver(false);
+    SGDSolver<Dtype> *proot = (SGDSolver<Dtype> *)root_solver;
+
+    return new WorkerSolver<Dtype>(solver_param, proot);
+  }
 
 protected:
   int worker_id_;
+  int num_workers_;
+
   /// in-process communication addr with routing thread
   string client_addr_;
   shared_ptr<SkSock> sk_client_;
@@ -137,6 +156,9 @@ protected:
 
   // rough count of the queue's length
   boost::atomic_int queue_size_;
+  
+  // number of OpenMP threads it has
+  int omp_threads_;
 
 protected:
   // serialize creating new solver within a process

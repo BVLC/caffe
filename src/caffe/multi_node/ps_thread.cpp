@@ -30,7 +30,7 @@ void PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
 
 
 template <typename Dtype>
-void PSThread<Dtype>::SendParam(int dst, int clock)
+void PSThread<Dtype>::SendParam(shared_ptr<Net<Dtype> > net, int dst, int clock)
 {
   shared_ptr<Msg> r(new Msg());
   r->set_type(PUT_PARAM);
@@ -38,7 +38,7 @@ void PSThread<Dtype>::SendParam(int dst, int clock)
   r->set_src(NodeEnv::Instance()->ID());
   r->set_clock(clock);
 
-  shared_ptr<Net<Dtype> > net = ps_solver_->net();
+  // shared_ptr<Net<Dtype> > net = ps_solver_->net();
   ParamHelper<Dtype>::CopyParamDataToMsg(net, net->layer_names(), r);
   
   this->SendMsg(r);
@@ -51,7 +51,7 @@ void PSThread<Dtype>::SendUpdates()
   if (staleness_ < 0) {
     for (int i = 0; i < client_ids_.size(); i++) {
       if (client_need_update_[i]) {
-        SendParam(client_ids_[i], client_clocks_[i]);
+        SendParam(ps_solver_->net(), client_ids_[i], client_clocks_[i]);
         // mark we are waiting for clients to join
         client_need_update_[i] = false;
       }
@@ -59,20 +59,32 @@ void PSThread<Dtype>::SendUpdates()
   } else {
     int clock_bound = MinClock() + staleness_;
     
+    int num_updates = 0;
+    ps_solver_->net()->ClearParamDiffs();
+
     // update parameters from clients
     for (int i = 0; i < client_msgs_.size(); i++) {
       if (client_msgs_[i] != NULL && client_clocks_[i] <= clock_bound) {
-        ParamHelper<Dtype>::CopyParamDiffFromMsg(ps_solver_->net(), client_msgs_[i]);
-        ps_solver_->CommitGradient();
+        ParamHelper<Dtype>::AddDiffFromMsg(ps_solver_->net(), client_msgs_[i]);
         client_msgs_[i].reset();
+        num_updates++;
         iter_++;
       }
+    }
+    
+    if (num_updates > 0) {
+      ParamHelper<Dtype>::ScalDiff(ps_solver_->net(), (Dtype)(1.0 / (Dtype)num_updates));
+      #if 0
+      LOG(INFO) << "iter: " << iter_;
+      ParamHelper<Dtype>::PrintDiff(ps_solver_->net());
+      #endif
+      ps_solver_->CommitGradient();
     }
 
     // send the parameters to clients
     for (int i = 0; i < client_ids_.size(); i++) {
       if (client_need_update_[i] && client_clocks_[i] <= clock_bound) {
-        SendParam(client_ids_[i], client_clocks_[i]);
+        SendParam(ps_solver_->net(), client_ids_[i], client_clocks_[i]);
         // mark we are waiting for clients to join
         client_need_update_[i] = false;
       }
@@ -119,17 +131,43 @@ void PSThread<Dtype>::RegisterNode(shared_ptr<Msg> m)
   // push back a null msg for init
   shared_ptr<Msg> null_msg;
   client_msgs_.push_back(null_msg);
-
-  SendUpdates();
+  
+  // wait for all the conv. clients
+  LOG(INFO) << "total workers: " << num_workers_ << ", current workers: " << client_ids_.size();
+  if (client_ids_.size() >= num_workers_) {
+    SendUpdates();
+  }
 }
 
 template <typename Dtype>
 void PSThread<Dtype>::Run()
 {
-  Caffe::set_root_solver(false);
+  Caffe::set_root_solver(true);
   // use root solver as ps solver
   ps_solver_ = (SGDSolver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
-  Caffe::set_root_solver(true);
+  
+  SolverParameter param;
+  param.CopyFrom(NodeEnv::Instance()->SolverParam());
+  // disable displayer in pseudo solver
+  param.set_display(0);
+  pseudo_solver_ = new SGDSolver<Dtype>(param);
+
+  // init square blobs
+  const vector<shared_ptr<Layer<Dtype> > >& layer_vec = ps_solver_->net()->layers();
+  sqr_blobs_.resize(layer_vec.size());
+  eye_blobs_.resize(layer_vec.size());
+  
+  for (int i = 0; i < layer_vec.size(); i++) {
+    if (layer_vec[i]->blobs().size() > 0) {
+      sqr_blobs_[i].reset(new Blob<Dtype>(layer_vec[i]->blobs()[0]->shape()));
+      caffe_set(sqr_blobs_[i]->count(), (Dtype)0, sqr_blobs_[i]->mutable_cpu_diff());
+      caffe_set(sqr_blobs_[i]->count(), (Dtype)0, sqr_blobs_[i]->mutable_cpu_data());
+      
+      eye_blobs_[i].reset(new Blob<Dtype>(layer_vec[i]->blobs()[0]->shape()));
+      caffe_set(eye_blobs_[i]->count(), (Dtype)1.0, eye_blobs_[i]->mutable_cpu_diff());
+      caffe_set(eye_blobs_[i]->count(), (Dtype)1.0, eye_blobs_[i]->mutable_cpu_data());
+    }
+  }
   
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);
@@ -139,7 +177,7 @@ void PSThread<Dtype>::Run()
     } else if (m->type() == REGISTER_NODE) {
       RegisterNode(m);
     } else if (m->type() == GET_PARAM) {
-      SendParam(m->src(), MinClock());
+      SendParam(ps_solver_->net(), m->src(), MinClock());
     } else {
       LOG(ERROR) << "Cannot deal with message type: " << m->type() 
         << " from: " << m->src();

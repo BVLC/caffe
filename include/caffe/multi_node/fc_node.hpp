@@ -14,8 +14,9 @@ class FcNode : public MsgHub<Dtype>
 {
 
 public:
-  FcNode (int nthreads, int nworkers) 
-      : MsgHub<Dtype>(nthreads, nworkers)
+  FcNode (int nthreads, int nworkers, int omp_param_threads = 0) 
+      : MsgHub<Dtype>(nthreads, nworkers),
+      work_loads_(nworkers, 0)
   {
     node_id_ = NodeEnv::Instance()->ID();
 
@@ -35,6 +36,8 @@ public:
     num_next_hops_ = 0;
     param_thread_index_ = nthreads - 1;
     back_sock_index_ = nthreads;
+
+    omp_param_threads_ = omp_param_threads;
   }
 
 
@@ -48,6 +51,8 @@ protected:
   
   /// send out the msg processed by threads
   virtual int SendOutMsg(shared_ptr<Msg> m);
+
+  virtual void ProcessFwdMsg(shared_ptr<Msg> m);
   
   /// Set up the connections and init the routing table 
   int InitRoute();
@@ -64,6 +69,9 @@ protected:
   }
 
   void PrepareInputData(shared_ptr<Msg> m);
+  
+  // schedule the message to worker threads
+  int ScheduleMsg(shared_ptr<Msg> m);
 
 protected:
   // broadcast blobs to downstream nodes
@@ -75,10 +83,19 @@ protected:
   /// back sock index in the poll table
   int back_sock_index_;
   int num_next_hops_;
+
+  vector<int> prev_ids_;
+  int num_prev_hops_;
   
   /// use hash map as a routing table
   /// map from node id to the sock index
   unordered_map<int, shared_ptr<SkSock> > node_to_sock_;
+
+  /// a thread handles a client
+  unordered_map<int, int> src_to_thread_;
+
+  /// number of conv. clients a thread handles
+  vector<int> work_loads_;
   
   /// the dealer socks used to connect upstream nodes
   vector<shared_ptr<SkSock> > vec_dealer_;
@@ -86,6 +103,9 @@ protected:
   /// NodeID, fetched from ID server
   int node_id_;
   
+  // map msg id to a vector of partial message
+  unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > > msg_id_to_buf_;
+ 
   // use hash map to store message
   unordered_map<int64_t, shared_ptr<Msg> > id_to_msg_;
   
@@ -93,6 +113,9 @@ protected:
 
   //
   int param_thread_index_;
+  
+  // number of omp threads for param thread
+  int omp_param_threads_;
 };
 
 
@@ -101,55 +124,29 @@ template <typename Dtype>
 class FcGateway : public FcNode<Dtype>
 {
 public:
-  FcGateway(int nthreads)
-      : FcNode<Dtype>(nthreads, nthreads - 1)
+  FcGateway(int nthreads, int omp_param_threads = 0)
+      : FcNode<Dtype>(nthreads, nthreads - 1, omp_param_threads)
   {
-    gateway_addr_ = "tcp://*:";
-    gateway_addr_ += boost::lexical_cast<string>(GATEWAY_PORT);
-    sock_server_.reset(new SkServer());
-    sock_server_->Bind(gateway_addr_);
-
-    msg_id_ = 0;
-    server_sock_index_ = nthreads + 1;
+    /////
   }
 
 public:
-  virtual int Init();
-
-  virtual int RouteMsg();
-
   virtual int SendOutMsg(shared_ptr<Msg> m);
+  
+  virtual int RouteMsg() {
+    return FcNode<Dtype>::RouteMsg();
+  }
 
 protected:
   virtual int SetUpPoll();
-
-  void DemuxMsg(shared_ptr<Msg> m);
-
-protected:
-  string gateway_addr_;
-
-  shared_ptr<SkServer> sock_server_;
-  
-  //position of server sock
-  int server_sock_index_;
-
-  //increasing message id by 1 at a time
-  int64_t msg_id_;
-  
-  // sockets to forward blobs
-  vector<shared_ptr<SkSock> > fwrd_socks_;
-  
-  // map a forward blob to a list of ids
-  unordered_map<string, shared_ptr<vector<int> > > fwrd_blob_name_to_ids_;
-
 };
 
 template <typename Dtype>
 class FcClient : public FcNode<Dtype>
 {
 public:
-  FcClient(int nthreads)
-      : FcNode<Dtype>(nthreads, nthreads - 1)
+  FcClient(int nthreads, int omp_param_threads = 0)
+      : FcNode<Dtype>(nthreads, nthreads - 1, omp_param_threads)
   {
     sub_sock_index_ = nthreads + 1;
   }

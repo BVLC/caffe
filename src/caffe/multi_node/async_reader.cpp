@@ -19,6 +19,7 @@ int AsyncReader::RegisterLayer(const LayerParameter& param)
 
   if (iter == index_map_.end()) {
     index = AddBlockQueue(param);
+    index_map_[key] = index;
   } else {
     index = iter->second;
   }

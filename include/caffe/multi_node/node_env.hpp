@@ -29,7 +29,6 @@ using boost::unordered_map;
 
 namespace caffe {
 
-const int GATEWAY_PORT = 1935;
 const int TRAIN_NOTIFY_INTERVAL = 100;
 
 class NodeEnv {
@@ -47,21 +46,42 @@ public:
 
   ///
   const SolverParameter& SolverParam() { return solver_param_; }
+  
+  SolverParameter* mutable_SolverParam() { return &solver_param_; }
 
   /// For connection with upstream nodes
   const vector<string>& sub_addrs() { return sub_addrs_; }
   const vector<string>& prev_router_addrs() { return prev_router_addrs_; }
   const vector<int>& prev_node_ids() { return prev_node_ids_; }
   
+  int batch_size() {
+    const NetParameter& net_param = solver_param_.net_param();
+    if (net_param.input_shape_size() <= 0) {
+      return -1;
+    } else {
+      // TODO: add a formal dim here
+      return net_param.input_shape(0).dim(0);
+    }
+  }
+  
+  bool is_fc_gateway() {
+    return node_info_.node_role() == FC_GATEWAY;
+  }
+  
+  int node_position() { return node_info_.position(); }
+
   /// We broadcast blobs to downstream nodes
   const vector<string>& bcast_addrs() { return bcast_addrs_; }
   
   /// for forwarding some blobs
   const vector<string>& forward_addrs() { return fwrd_addrs_; }
   const vector<int>& forward_ids() { return fwrd_ids_; }
-  
-  /// name of blobs that need to be forwarded
-  const vector<string>& forward_blobs() { return fwrd_blobs_; }
+   /// name of blobs that need to be forwarded
+  const vector<vector<string> >& forward_blobs() { return fwrd_blobs_; }
+ 
+  const vector<string>& gateway_addrs() { return gateway_addrs_; }
+  const vector<int>& gateway_ids() { return gateway_ids_; }
+  const vector<vector<string> >& gateway_blobs() { return gateway_blobs_; }
   
   // for parameter server nodes
   const vector<string>& ps_addrs() { return ps_addrs_; }
@@ -78,6 +98,8 @@ public:
 
   const vector<int>& fc_ids() { return fc_ids_; }
 
+  int num_workers() { return num_workers_; }
+
   shared_ptr<Msg> model_server_msg() { return model_server_msg_; }
 
   string pub_addr() {
@@ -86,18 +108,6 @@ public:
     
     return addr;
   }
-  
-  bool is_fc_gateway() {
-    if (!rt_info_.has_gateway_node()) {
-      return false;
-    }
-
-    if (rt_info_.gateway_node().node_id() == node_id_) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
   string router_addr() {
     string addr = "tcp://*:";
@@ -105,11 +115,7 @@ public:
 
     return addr;
   }
-  
-  const string& fc_gateway_addr() {
-    return fc_gateway_addr_;
-  }
-  
+
   int get_staleness() {
     if (model_request_.node_info().has_staleness()) {
       return model_request_.node_info().staleness();
@@ -117,6 +123,8 @@ public:
       return 0;
     }
   }
+  
+  int num_splits() { return model_request_.num_splits(); }
 
   void *FindSolver(int64_t msg_id) {
     boost::mutex::scoped_lock lock(id_map_mutex_);
@@ -128,7 +136,6 @@ public:
       return iter->second;
     }
   }
-
 
   void PutSolver(int64_t msg_id, void *solver) {
     boost::mutex::scoped_lock lock(id_map_mutex_);
@@ -311,6 +318,7 @@ protected:
 private:
   NodeEnv() {
     node_id_ = INVALID_ID;
+    num_workers_ = 0;
   }
 
 
@@ -346,7 +354,7 @@ protected:
   vector<string> bcast_addrs_;
 
   // the name of blobs that need to be forwarded
-  vector<string> fwrd_blobs_;
+  vector<vector<string> > fwrd_blobs_;
 
   // addresses for the blobs that need to be forwared
   vector<string> fwrd_addrs_;
@@ -363,6 +371,13 @@ protected:
   // the ZMQ addresses of all the FC nodes
   vector<string> fc_addrs_;
   
+  // address of gateway nodes
+  vector<string> gateway_addrs_;
+
+  vector<int> gateway_ids_;
+
+  vector<vector<string> > gateway_blobs_;
+
   // the node id of FC nodes
   vector<int> fc_ids_;
   
@@ -370,8 +385,7 @@ protected:
 
   map<int, int> ps_id_to_layers_id_;
 
-  // FC gateway
-  string fc_gateway_addr_;
+  NodeInfo node_info_;
 
   // number of input blobs
   int num_input_blobs_;
@@ -382,6 +396,10 @@ protected:
   
   //available solvers
   vector<void *> free_solver_;
+  
+  shared_ptr<SkSock> sk_id_req_;
+
+  int num_workers_;
 
 private:
   //For Singleton pattern

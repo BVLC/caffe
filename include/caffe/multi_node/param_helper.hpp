@@ -4,6 +4,7 @@
 
 #include "caffe/multi_node/msg.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/sgd_solvers.hpp"
 #include <map>
 #include <string>
 
@@ -49,6 +50,57 @@ public:
     }
   }
   
+  static void AddDiffFromNet(const shared_ptr<Net<Dtype> > dst_net, const shared_ptr<Net<Dtype> > src_net, int layer_id) {
+    vector<shared_ptr<Blob<Dtype> > >& dst_blobs = dst_net->layers()[layer_id]->blobs();
+    vector<shared_ptr<Blob<Dtype> > >& src_blobs = src_net->layers()[layer_id]->blobs();
+
+    CHECK_EQ(dst_blobs.size(), src_blobs.size());
+    
+    for (int i = 0; i < src_blobs.size(); i++) {
+      CHECK_EQ(src_blobs[i]->count(), dst_blobs[i]->count());
+      caffe_axpy<Dtype>(src_blobs[i]->count(), 1.0, src_blobs[i]->cpu_diff(), dst_blobs[i]->mutable_cpu_diff());
+    }
+  }
+
+  static void ScalDiff(const shared_ptr<Net<Dtype> > net, Dtype factor, int layer_id) {
+    vector<shared_ptr<Blob<Dtype> > >& layer_blobs = net->layers()[layer_id]->blobs();
+
+    for (int i = 0; i < layer_blobs.size(); i++) {
+      caffe_scal(layer_blobs[i]->count(), factor, layer_blobs[i]->mutable_cpu_diff());
+    }
+  }
+  
+  static void ClearDiff(const shared_ptr<Net<Dtype> > net, int layer_id) {
+    vector<shared_ptr<Blob<Dtype> > >& layer_blobs = net->layers()[layer_id]->blobs();
+    for (int i = 0; i < layer_blobs.size(); i++) {
+      memset(layer_blobs[i]->mutable_cpu_diff(), 0, sizeof(Dtype) * layer_blobs[i]->count());
+    }
+  }
+
+  static void PrintDiff(const shared_ptr<Net<Dtype> > net) {
+    const vector<Blob<Dtype>*>& params = net->learnable_params();
+
+    for (int i = 0; i < params.size(); i++) {
+      LOG(INFO) << "param: " << i <<  ", diff[0]: " << params[i]->cpu_diff()[0];
+    }
+  }
+  
+  static void PrintParam(const shared_ptr<Net<Dtype> > net) {
+    const vector<Blob<Dtype>*>& params = net->learnable_params();
+
+    for (int i = 0; i < params.size(); i++) {
+      LOG(INFO) << "param: " << i <<  ", data[0]: " << params[i]->cpu_data()[0];
+    }
+  }
+  
+  static void ScalDiff(const shared_ptr<Net<Dtype> > net, Dtype factor) {
+    const vector<Blob<Dtype>*>& params = net->learnable_params();
+
+    for (int i = 0; i < params.size(); i++) {
+      caffe_scal(params[i]->count(), factor, params[i]->mutable_cpu_diff());
+    }
+  }
+
   static void CopyDiffFromNet(const shared_ptr<Net<Dtype> > dst_net, const shared_ptr<Net<Dtype> > src_net) {
     const vector<Blob<Dtype>*>& src_params = src_net->learnable_params();
     const vector<Blob<Dtype>*>& dst_params = dst_net->learnable_params();
@@ -57,7 +109,8 @@ public:
 
     for (int i = 0; i < src_params.size(); i++) {
       CHECK_EQ(src_params[i]->count(), dst_params[i]->count());
-      memcpy(dst_params[i]->mutable_cpu_diff(), src_params[i]->cpu_diff(), dst_params[i]->count() * sizeof(Dtype));
+      // memcpy(dst_params[i]->mutable_cpu_diff(), src_params[i]->cpu_diff(), dst_params[i]->count() * sizeof(Dtype));
+      BlasCopy(dst_params[i]->count(), src_params[i]->cpu_diff(), dst_params[i]->mutable_cpu_diff());
     }
   }
 
@@ -89,15 +142,26 @@ public:
 
   /// Copy layer parameters to a message
   static int CopyParamDataToMsg(shared_ptr<Net<Dtype> > net, const vector<string>& layer_names, shared_ptr<Msg> m) {
-    return CopyParamToMsg(net, layer_names, m, COPY_DATA);
+    return CopyParamToMsg(net, layer_names, m, COPY_DATA, 0, 1);
+  }
+  
+  static int CopyParamDataToMsg(shared_ptr<Net<Dtype> > net, 
+                                  const vector<string>& layer_names, 
+                                  shared_ptr<Msg> m, 
+                                  int pos, int num_splits) {
+    return CopyParamToMsg(net, layer_names, m, COPY_DATA, pos, num_splits);
   }
 
   /// Copy layer parameter diff to a message
   static int CopyParamDiffToMsg(shared_ptr<Net<Dtype> > net, const vector<string>& layer_names, shared_ptr<Msg> m) {
-    return CopyParamToMsg(net, layer_names, m, COPY_DIFF);
+    return CopyParamToMsg(net, layer_names, m, COPY_DIFF, 0, 1);
   }
   
-  static int CopyParamToMsg(shared_ptr<Net<Dtype> > net, const vector<string>& layer_names, shared_ptr<Msg> m, Action act) {
+  static int CopyParamToMsg(shared_ptr<Net<Dtype> > net, 
+                              const vector<string>& layer_names, 
+                              shared_ptr<Msg> m, 
+                              Action act,
+                              int pos, int num_splits) {
     int blobs_copied = 0;
     for (int i = 0; i < layer_names.size(); i++) {
       const string& layer_name = layer_names[i];
@@ -107,10 +171,14 @@ public:
       blobs_copied += l->blobs().size();
       for (int j = 0; j < l->blobs().size(); j++) {
         shared_ptr<Blob<Dtype> > pblob = l->blobs()[j];
+        
+        int segment_len = pblob->count() / num_splits;
+        int offset = pos * segment_len;
+
         if (act == COPY_DIFF) {
-          m->AppendBlob(layer_name, pblob->cpu_diff(), pblob->count() * sizeof(Dtype));
+          m->AppendBlob(layer_name, pblob->cpu_diff() + offset, segment_len * sizeof(Dtype));
         } else if (act == COPY_DATA) {
-          m->AppendBlob(layer_name, pblob->cpu_data(), pblob->count() * sizeof(Dtype));
+          m->AppendBlob(layer_name, pblob->cpu_data() + offset, segment_len * sizeof(Dtype));
         } else {
           LOG(ERROR) << "unknown action: " << act;
         }
@@ -143,9 +211,11 @@ public:
         CHECK_EQ(pblob->count() * sizeof(Dtype), m->ZmsgSize(m_idx));
         
         if (act == COPY_DIFF) {
-          memcpy(pblob->mutable_cpu_diff(), m->ZmsgData(m_idx), pblob->count() * sizeof(Dtype)); 
+          // memcpy(pblob->mutable_cpu_diff(), m->ZmsgData(m_idx), pblob->count() * sizeof(Dtype)); 
+          BlasCopy(pblob->count(), (Dtype *)m->ZmsgData(m_idx), pblob->mutable_cpu_diff());
         } else if (act == COPY_DATA) {
-          memcpy(pblob->mutable_cpu_data(), m->ZmsgData(m_idx), pblob->count() * sizeof(Dtype));
+          // memcpy(pblob->mutable_cpu_data(), m->ZmsgData(m_idx), pblob->count() * sizeof(Dtype));
+          BlasCopy(pblob->count(), (Dtype *)m->ZmsgData(m_idx), pblob->mutable_cpu_data());
         } else {
           LOG(ERROR) << "unknown action: " << act;
         }
@@ -156,17 +226,50 @@ public:
   }
 
   /// copy parameters from a message
-  static int CopyParamDataFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
+  static int CopyParamDataFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) 
+  {
     return CopyParamFromMsg(net, m, COPY_DATA);
   }
   
+  
+  static void CopyHistoryFromSolver(SGDSolver<Dtype> *dst_solver, SGDSolver<Dtype> *src_solver) {
+    const vector<shared_ptr<Blob<Dtype> > >& src_hist = src_solver->history();
+    const vector<shared_ptr<Blob<Dtype> > >& dst_hist = dst_solver->history();
+
+    CHECK_EQ(src_hist.size(), dst_hist.size());
+
+    for (int i = 0; i < src_hist.size(); i++) {
+      shared_ptr<Blob<Dtype> > src_blob = src_hist[i];
+      shared_ptr<Blob<Dtype> > dst_blob = dst_hist[i];
+
+      CHECK_EQ(src_blob->count(), dst_blob->count());
+
+      BlasCopy(src_blob->count(), src_blob->cpu_data(), dst_blob->mutable_cpu_data());
+    }
+  }
+
+  static void CopyDataFromNet(const shared_ptr<Net<Dtype> > dst_net, const shared_ptr<Net<Dtype> > src_net) {
+    const vector<Blob<Dtype>*>& src_params = src_net->learnable_params();
+    const vector<Blob<Dtype>*>& dst_params = dst_net->learnable_params();
+
+    CHECK_EQ(src_params.size(), dst_params.size());
+
+    for (int i = 0; i < src_params.size(); i++) {
+      CHECK_EQ(src_params[i]->count(), dst_params[i]->count());
+      // memcpy(dst_params[i]->mutable_cpu_diff(), src_params[i]->cpu_diff(), dst_params[i]->count() * sizeof(Dtype));
+      BlasCopy(dst_params[i]->count(), src_params[i]->cpu_data(), dst_params[i]->mutable_cpu_data());
+    }
+  }
+
   /// copy diff from a message
-  static int CopyParamDiffFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
+  static int CopyParamDiffFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) 
+  {
     return CopyParamFromMsg(net, m, COPY_DIFF);
   }
 
   /// forward: net get input blob data from message
-  static void CopyInputDataFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
+  static void CopyInputDataFromMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) 
+  {
     for (int i = 0; i < net->num_inputs(); i++) {
       int blob_index = net->input_blob_indices()[i];
       const string& blob_name = net->blob_names()[blob_index];
@@ -176,6 +279,164 @@ public:
     }
   }
   
+  static int blob_stride(Blob<Dtype>* pblob)
+  {
+    // TODO: fixed with N * C * H * W
+    return pblob->count(1);
+  }
+
+  
+  static void CopyBlobFromMsg(Blob<Dtype>* pblob, const string& blob_name,
+                                                shared_ptr<Msg> m,
+                                                Action act)
+  {
+    vector<int> msg_indices = m->blob_msg_indices(blob_name);
+    
+    vector<Dtype *> msg_data;
+    for (int i = 0; i < msg_indices.size(); i++) {
+      Dtype *pdata = (Dtype *)m->ZmsgData(msg_indices[i]);
+      msg_data.push_back(pdata);
+    }
+    int stride = blob_stride(pblob);
+
+    CHECK_EQ(stride % msg_data.size(), 0);
+    int segment_len = stride / msg_data.size();
+
+    int msg_size = m->ZmsgSize(msg_indices[0]);
+    msg_size /= sizeof(Dtype);
+    CHECK_EQ(msg_size * msg_data.size(), pblob->count());
+
+    int segment_offset = 0;
+    Dtype *pblob_data = NULL;
+    if (act == COPY_DATA) {
+      pblob_data = pblob->mutable_cpu_data();
+    } else if (act == COPY_DIFF) {
+      pblob_data = pblob->mutable_cpu_diff();
+    }
+
+    CHECK(pblob_data != NULL);
+
+    while (segment_offset < msg_size) {
+      for (int i = 0; i < msg_data.size(); i++) {
+        BlasCopy(segment_len, msg_data[i] + segment_offset, pblob_data);
+        pblob_data += segment_len;
+      }
+      segment_offset += segment_len;
+    }
+  }
+  
+  // the blobs in "to" should be larger than "from"
+  static void CopyBlobData(const vector<Blob<Dtype>*>& src_vec, const vector<Blob<Dtype>*>& dst_vec, int offset)
+  {
+    CHECK_EQ(src_vec.size(), dst_vec.size());
+
+    for (int i = 0; i < src_vec.size(); i++) {
+      Blob<Dtype>* src_blob = src_vec[i];
+      Blob<Dtype>* dst_blob = dst_vec[i];
+
+      int src_cnt = src_blob->count();
+      int dst_cnt = dst_blob->count();
+      
+      if (src_cnt <= dst_cnt) {
+        CHECK_EQ(dst_cnt % src_cnt, 0);
+        CHECK_GT(dst_cnt, src_cnt * offset);
+
+        Dtype *pdst = dst_blob->mutable_cpu_data() + src_cnt * offset;
+
+        BlasCopy(src_cnt, src_blob->cpu_data(), pdst);
+      } else {
+        CHECK_EQ(src_cnt % dst_cnt, 0);
+        CHECK_GT(src_cnt, dst_cnt * offset);
+
+        const Dtype *psrc = src_blob->cpu_data() + dst_cnt * offset;
+        BlasCopy(dst_cnt, psrc, dst_blob->mutable_cpu_data());
+      }
+    }
+  }
+
+  static void CopyBlobDiff(const vector<Blob<Dtype>*>& src_vec, const vector<Blob<Dtype>*>& dst_vec, int offset)
+  {
+    CHECK_EQ(src_vec.size(), dst_vec.size());
+
+    for (int i = 0; i < src_vec.size(); i++) {
+      Blob<Dtype>* src_blob = src_vec[i];
+      Blob<Dtype>* dst_blob = dst_vec[i];
+
+      int src_cnt = src_blob->count();
+      int dst_cnt = dst_blob->count();
+      
+      if (src_cnt <= dst_cnt) {
+        CHECK_EQ(dst_cnt % src_cnt, 0);
+        CHECK_GT(dst_cnt, src_cnt * offset);
+
+        Dtype *pdst = dst_blob->mutable_cpu_diff() + src_cnt * offset;
+
+        BlasCopy(src_cnt, src_blob->cpu_diff(), pdst);
+      } else {
+        CHECK_EQ(src_cnt % dst_cnt, 0);
+        CHECK_GT(src_cnt, dst_cnt * offset);
+
+        const Dtype *psrc = src_blob->cpu_diff() + dst_cnt * offset;
+        BlasCopy(dst_cnt, psrc, dst_blob->mutable_cpu_diff());
+      }
+    }
+  }
+
+
+  static void CopyBlobDataFromMsg(Blob<Dtype>* pblob, const string& blob_name, 
+                                 shared_ptr<Msg> m) 
+  {
+    CopyBlobFromMsg(pblob, blob_name, m, COPY_DATA);
+  }
+  
+
+  static void CopyBlobDiffFromMsg(Blob<Dtype>* pblob, const string& blob_name, 
+                                 shared_ptr<Msg> m)
+  {
+    CopyBlobFromMsg(pblob, blob_name, m, COPY_DIFF);
+  }
+
+  static void CopyBlobDataToMsg(shared_ptr<Net<Dtype> > net, const vector<string>& blob_names, 
+                          shared_ptr<Msg> m, int pos = 0, int num_splits = 1) 
+  {
+    for (int i = 0; i < blob_names.size(); i++) {
+      const string& bname = blob_names[i];
+      shared_ptr<Blob<Dtype> > pblob = net->blob_by_name(bname);
+      
+      CHECK(pblob != NULL);
+      CHECK_EQ(pblob->count() % num_splits, 0);
+      
+      int segment_len = pblob->count() / num_splits;
+      int offset = pos * segment_len;
+
+      m->AddNewBlob(bname, pblob->cpu_data() + offset, segment_len * sizeof(Dtype), pblob->shape());
+    }
+  }
+  
+  static void CopyBlobDataToMsg(vector<shared_ptr<Net<Dtype> > >& nets, const vector<string>& blob_names, shared_ptr<Msg> m) {
+    if (nets.size() <= 0) {
+      return;
+    }
+
+    for (int i = 0; i < blob_names.size(); i++) {
+      const string& bname = blob_names[i];
+      
+      shared_ptr<Blob<Dtype> > pblob = nets[0]->blob_by_name(bname);
+      int blob_cnt = pblob->count();
+
+      Dtype *p = (Dtype *)m->AllocBlob(bname, blob_cnt * sizeof(Dtype) * nets.size());
+
+      for (int j = 0; j < nets.size(); j++) {
+        shared_ptr<Blob<Dtype> > src_blob = nets[j]->blob_by_name(bname);
+
+        CHECK(src_blob != NULL);
+        
+        BlasCopy(src_blob->count(), src_blob->cpu_data(), p);
+        p += src_blob->count();
+      }
+    }
+  }
+
   /// forward: net copy output blob data to a message
   static void CopyOutputDataToMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
     for (int i = 0; i < net->num_outputs(); i++) {
@@ -183,18 +444,74 @@ public:
       const string& blob_name = net->blob_names()[blob_index];
       Blob<Dtype>* pblob = net->output_blobs()[i];
 
-      m->AddNewBlob(blob_name, pblob->cpu_data(), pblob->count() * sizeof(Dtype));
+      m->AddNewBlob(blob_name, pblob->cpu_data(), pblob->count() * sizeof(Dtype), pblob->shape());
     }
   }
   
+  static void CopyOutputDataToMsg(vector<shared_ptr<Net<Dtype> > >& nets, shared_ptr<Msg> m) {
+    if (nets.size() <= 0) {
+      return;
+    }
+
+    int output_num = nets[0]->num_outputs();
+
+    for (int i = 0; i < output_num; i++) {
+      int blob_index = nets[0]->output_blob_indices()[i];
+      const string& blob_name = nets[0]->blob_names()[blob_index];
+      Blob<Dtype>* pblob = nets[0]->output_blobs()[i];
+
+      int blob_cnt = pblob->count();
+
+      Dtype *pmsg = (Dtype *)m->AllocBlob(blob_name, blob_cnt * sizeof(Dtype) * nets.size());
+      Dtype *p = pmsg;
+      
+      for (int j = 0; j < nets.size(); j++) {
+        Blob<Dtype>* src_blob = nets[j]->output_blobs()[i];
+        BlasCopy(src_blob->count(), src_blob->cpu_data(), p);
+        p += src_blob->count();
+      }
+      
+      /*
+      // for debug only
+      Dtype sum = 0;
+      for (int i = 0; i < blob_cnt * nets.size(); i++) {
+        sum += pmsg[i];
+      }
+      LOG(INFO) << "data sum: " << sum;
+      */
+    }
+  }
+
   /// backward: net copy input blob diffs to message
-  static void CopyInputDiffToMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
+  static void CopyInputDiffToMsg(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m, 
+                                  int pos = 0, int num_splits = 1) {
     for (int i = 0; i < net->num_inputs(); i++) {
       int blob_index = net->input_blob_indices()[i];
       const string& blob_name = net->blob_names()[blob_index];
       Blob<Dtype>* pblob = net->input_blobs()[i];
 
-      m->AddNewBlob(blob_name, pblob->cpu_diff(), pblob->count() * sizeof(Dtype));
+      int blob_sz = pblob->count() * sizeof(Dtype) / num_splits;
+      int stride = blob_stride(pblob);
+      
+      CHECK_EQ(stride % num_splits, 0);
+      
+      int nimg = pblob->count() / stride;
+      int segment_len = stride / num_splits;
+      int offset = pos * segment_len;
+      
+      Dtype *pmsg_data = (Dtype *)m->AllocBlob(blob_name, blob_sz);
+      const Dtype *pblob_diff = pblob->cpu_diff();
+      
+      if (offset != 0) {
+        for (int j = 0; j < nimg; j++) {
+          const Dtype *psrc = pblob_diff + offset;
+          BlasCopy(segment_len, psrc, pmsg_data);
+          pmsg_data += segment_len;
+          pblob_diff += segment_len;
+        }
+      } else {
+        BlasCopy(pblob->count(), pblob_diff, pmsg_data);
+      }
     }
   }
 
@@ -210,6 +527,48 @@ public:
       }
     }
   }
+  
+  static void CopyOutputDiffFromMsg(vector<shared_ptr<Net<Dtype> > >& nets, shared_ptr<Msg> m) {
+    CHECK_GT(nets.size(), 0);
+
+    for (int i = 0; i < m->num_blobs(); i++) {
+      const BlobInfo& bi = m->blob_info(i);
+      const string& blob_name = bi.blob_name();
+      shared_ptr<Blob<Dtype> > pblob = nets[0]->blob_by_name(blob_name);
+      
+      if (pblob == NULL) {
+        continue;
+      }
+
+      int blob_cnt = pblob->count();
+      int blob_sz = blob_cnt * sizeof(Dtype);
+      
+      CHECK_EQ(bi.msg_index_size(), 1) << "Couldn't support partial blobs";
+      int msg_idx = bi.msg_index(0);
+      int msg_sz = m->ZmsgSize(msg_idx);
+
+      CHECK_EQ(blob_sz * nets.size(), msg_sz);
+      Dtype *p = (Dtype *)m->ZmsgData(msg_idx);
+      
+      for (int j = 0; j < nets.size(); j++) {
+        shared_ptr<Blob<Dtype> > dst_blob = nets[j]->blob_by_name(blob_name);
+        BlasCopy(blob_cnt, p, dst_blob->mutable_cpu_diff());
+        
+        p+= blob_cnt;
+      }
+      
+      #if 0
+      // for debug only
+      p = (Dtype *)m->ZmsgData(msg_idx);
+      
+      int sum = 0;
+      for (int i = 0; i < blob_cnt * nets.size(); i++) {
+        sum += p[i];
+      }
+      LOG(INFO) << "diff sum: " << sum;
+      #endif
+    }
+  }
 
   static int LayerSize(const shared_ptr<Layer<Dtype> > l) {
     int sz = 0;
@@ -219,6 +578,8 @@ public:
 
     return sz;
   }
+  
+  static void BlasCopy(const int N, const Dtype* X, Dtype* Y);
 
 private:
   ParamHelper() { }

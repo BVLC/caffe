@@ -21,12 +21,26 @@ public:
   ConvClient(int nthreads)
     : MsgHub<Dtype>(nthreads, nthreads - 1)
   {
-    fc_client_.reset(new SkSock(ZMQ_DEALER));
+    fc_gateway_addrs_ = NodeEnv::Instance()->gateway_addrs();
+    fc_gateway_ids_ = NodeEnv::Instance()->gateway_ids();
     
+    fc_clients_.resize(fc_gateway_addrs_.size());
     int client_id = NodeEnv::Instance()->ID();
-    fc_client_->SetId(client_id);
     
-    fc_gateway_addr_ = NodeEnv::Instance()->fc_gateway_addr();
+    for (int i = 0; i < fc_clients_.size(); i++) {
+      fc_clients_[i].reset(new SkSock(ZMQ_DEALER));
+      fc_clients_[i]->SetId(client_id);
+    }
+    gateway_num_ = fc_clients_.size();
+
+    fc_fwd_addrs_ = NodeEnv::Instance()->forward_addrs();
+    fc_fwd_ids_ = NodeEnv::Instance()->forward_ids();
+
+    fwd_socks_.resize(fc_fwd_ids_.size());
+    for (int i = 0; i < fwd_socks_.size(); i++) {
+      fwd_socks_[i].reset(new SkSock(ZMQ_DEALER));
+      fwd_socks_[i]->SetId(client_id);
+    }
 
     // init parameter server addresses
     ps_addrs_ = NodeEnv::Instance()->ps_addrs();
@@ -41,7 +55,7 @@ public:
     }
     
     fc_sock_index_ = nthreads;
-    ps_sock_index_ = nthreads + 1;
+    ps_sock_index_ = nthreads + gateway_num_;
     ps_thread_index_ = nthreads - 1;
   }
 
@@ -55,13 +69,26 @@ public:
 protected:
   virtual int SetUpPoll();
   
+  // send out the message to FC layer gateways
+  void SendOutMsg(shared_ptr<Msg> m);
 
 protected:
   /// socket used to communicate Fully Connected layers
-  shared_ptr<SkSock> fc_client_;
+  vector<shared_ptr<SkSock> > fc_clients_;
   
   /// zmq addr of Fully Connected Layers gateway
-  string fc_gateway_addr_;
+  vector<string> fc_gateway_addrs_;
+
+  vector<int> fc_gateway_ids_;
+
+  vector<int> fc_fwd_ids_;
+  
+  vector<string> fc_fwd_addrs_;
+
+  vector<shared_ptr<SkSock> > fwd_socks_;
+  
+  // number of gateways we have
+  int gateway_num_;
   
   /// zmq addr of Parameter Server
   vector<string> ps_addrs_;
@@ -75,8 +102,8 @@ protected:
   /// socket used to communicate parameter server
   vector<shared_ptr<SkSock> > ps_clients_;
 
-  // map ps node id to sock
-  unordered_map<int, shared_ptr<SkSock> > ps_node_to_sock_;
+  // map node id to sock
+  unordered_map<int, shared_ptr<SkSock> > node_to_sock_;
 
   /// the location of fc socket in zmq polling table
   int fc_sock_index_;

@@ -1,0 +1,14 @@
+
+# fc node 2
+
+start_layer : "fc7"
+end_layer : "loss"
+num_splits : 1
+
+node_info {
+    router_port : 1004
+    pub_port : 1005
+    position : 0
+}
+
+

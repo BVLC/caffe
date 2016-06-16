@@ -69,11 +69,16 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
+  
+  if (Caffe::root_solver()) {
+    LOG(WARNING) << "skip reading data in AsyncData layer with root solvers";
+    return;
+  }
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  Datum& datum = *(full_->peek());
+  Datum& datum = *(full_->pop("Waiting for data"));
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
@@ -87,7 +92,17 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
+  
+  // process the first datum
+  this->transformed_data_.set_cpu_data(top_data);
+  this->data_transformer_->Transform(datum, &(this->transformed_data_));
+  // Copy label.
+  if (this->output_labels_) {
+    top_label[0] = datum.label();
+  }
+  free_->push(const_cast<Datum*>(&datum));
+
+  for (int item_id = 1; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a datum
     Datum& datum = *(full_->pop("Waiting for data"));
