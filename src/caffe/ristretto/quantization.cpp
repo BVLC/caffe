@@ -363,6 +363,7 @@ void Quantization::Quantize2PowerOf2Weights(){
   delete caffe_net;
 
   // Write prototxt file of quantized net
+  param.release_state();
   WriteProtoToTextFile(param, model_quantized_);
 
   // Write summary of floating point analysis to log
