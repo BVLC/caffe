@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: compact_bilinear_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -403,6 +403,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional CompactBilinearParameter compact_bilinear_param=147;
 }
 
 // Message that stores parameters used to apply transformation
@@ -539,6 +540,18 @@ message BiasParameter {
   // Default is the zero (0) initialization, resulting in the BiasLayer
   // initially performing the identity operation.
   optional FillerParameter filler = 3;
+}
+
+message CompactBilinearParameter {
+        // compact bilinear pooling output number of channels
+        // two inputs are of size N*C1*H*W and N*C2*H*W, the output has size
+        // N*num_output*1(H)*(W), depending on whether do sum pooling.
+        optional uint32 num_output = 1;
+
+        // by default, do sum pooling over spatial locations.
+        // In the case of caring spatio location, such as semantic segmentation,
+        // one might don't want to be pooled spatially.
+        optional bool sum_pool = 2 [default = true];
 }
 
 message ContrastiveLossParameter {
