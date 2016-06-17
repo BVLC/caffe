@@ -235,7 +235,7 @@ class UdpClient : public Waypoint {
     start_receive();
   }
 
-  ~UdpClient() {
+  virtual ~UdpClient() {
     socket->cancel();
   }
 
