@@ -98,11 +98,11 @@ int main(int argc, char** argv) {
   if (count % 10000 != 0) {
     LOG(INFO) << "Processed " << count << " files.";
   }
-  
+
   if (count == 0) {
     LOG(FATAL) << "Division by zero 'count' value possible.";
   }
-  
+
   for (int i = 0; i < sum_blob.data_size(); ++i) {
     sum_blob.set_data(i, sum_blob.data(i) / count);
   }
