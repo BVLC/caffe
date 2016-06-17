@@ -193,6 +193,10 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       // Avoid seeking for an algorithm in subsequent iterations
       use_algo_seeker_ = false;
     }
+    // FindEx was introduced in cudnn v5.
+    // If cudnn is older than v5, use Get no matter what the
+    // value of cudnn_convolution_algo_seeker is.
+#if CUDNN_VERSION_MIN(5, 0, 0)
     switch (this->layer_param_.convolution_param().
             cudnn_convolution_algo_seeker()) {
       case ConvolutionParameter_CuDNNConvolutionAlgorithmSeeker_GET:
@@ -205,6 +209,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         LOG(ERROR) << "Wrong value for cudnn_convolution_algo_seeker";
         return;
     }
+#else
+    this->GetConvAlgo(bottom, top, workspace_bytes);
+#endif
   }
 
   // At this point, the algorithms and their workspace are set.
@@ -263,6 +270,7 @@ void CuDNNConvolutionLayer<Dtype>::GetConvAlgo(
   }
 }
 
+#if CUDNN_VERSION_MIN(5, 0, 0)
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
     const vector<Blob<Dtype>*>& bottom,
@@ -349,6 +357,7 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
   GPUMemory::deallocate(tmp_weights);
   workspace.release();
 }
+#endif
 
 // Checked if there is a difference between the corresponding descriptors in
 // cached_bottom_descs_ and bottom_descs_.
