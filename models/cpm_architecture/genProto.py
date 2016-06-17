@@ -68,7 +68,7 @@ def setLayers(data_source, batch_size, layername, kernel, stride, outCH, label_n
                 lr_m = 1 # changed -> it used to be 5 for stage 1 and 1 for stage n
             else:
                 # Set learning rate multiplier to 0 for all layers but the new one
-                lr_m = 0 # 1e-3 (best res so far)
+                lr_m = 1e-3 # 1e-3 (best res so far)
             n.tops[conv_name] = L.Convolution(n.tops[last_layer], kernel_size=kernel[l],
                                                   num_output=outCH[l], pad=int(math.floor(kernel[l]/2)),
                                                   param=[dict(lr_mult=lr_m, decay_mult=1), dict(lr_mult=lr_m*2, decay_mult=0)],
@@ -182,10 +182,10 @@ if __name__ == "__main__":
     path_in_caffe = 'models/cpm_architecture'
     directory = 'prototxt'
     dataFolder = '%s/lmdb/train' % (path_in_caffe)
-    stepsize = 15000 # stepsize to decrease learning rate. This should depend on your dataset size
+    stepsize = 45000 # stepsize to decrease learning rate. This should depend on your dataset size
     test_interval = 5000
     batch_size = 8
-    numEpochs = 6
+    numEpochs = 12
     trainSize = 115327
     testSize = 40649
     ###
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     d_caffemodel = '%s/caffemodel' % directory # the place you want to store your caffemodel
     # should be higher due to random initialisation (8e-5)
     # base_lr = 1e-5 (8e-5)
-    base_lr = 8e-5 #1e-4
+    base_lr = 1e-4 #8e-5
     # num_parts and np_in_lmdb are two parameters that are used inside the framework to move from one
     # dataset definition to another. Num_parts is the number of parts we want to have, while
     # np_in_lmdb is the number of joints saved in lmdb format using the dataset whole set of joints.
