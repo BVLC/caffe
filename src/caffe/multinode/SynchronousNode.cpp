@@ -80,7 +80,7 @@ struct LayerState {
     int ret = 0;
     while ((state != calculating) || (version != wait_for_version)) {
       boost::system_time timeout
-        = boost::get_system_time() + boost::posix_time::milliseconds(1000);
+        = boost::get_system_time() + boost::posix_time::milliseconds(10);
       cond.timed_wait(lock, timeout);
       ++ret;
       if (handler->terminated()) {
