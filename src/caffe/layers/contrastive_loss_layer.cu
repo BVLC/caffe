@@ -110,15 +110,6 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
   const bool legacy_version = this->layer_param_.contrastive_loss_param()
       .legacy_version();
 
-#ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
-    viennacl::ocl::kernel &oclk_cll = program.get_kernel(
-        legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
-            CL_KERNEL_SELECT("cll_backward"));
-#endif
-
   for (int_tp i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const int_tp count = bottom[0]->count();
@@ -142,6 +133,12 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+            this->device_->id());
+        viennacl::ocl::program &program = this->device_->program();
+        viennacl::ocl::kernel &oclk_cll = program.get_kernel(
+            legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
+                CL_KERNEL_SELECT("cll_backward"));
         viennacl::ocl::enqueue(
             oclk_cll(
                 count, channels, margin, alpha,
