@@ -659,7 +659,7 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
 }
 
 inline bool IsEligibleMining(const MiningType mining_type, const int match_idx,
-                             const int match_overlap, const int neg_overlap) {
+                             const float match_overlap, const float neg_overlap) {
   if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
     return match_idx == -1 && match_overlap < neg_overlap;
   } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
@@ -811,7 +811,7 @@ void MineHardExamples(const Dtype* conf_data,
         vector<int> nms_indices;
         ApplyNMS(sel_bboxes, sel_loss, nms_threshold, top_k, &nms_indices);
         if (nms_indices.size() < num_sel) {
-          LOG(INFO) << "not enough sample after nms.";
+          LOG(INFO) << "not enough sample after nms: " << nms_indices.size();
         }
         // Pick top example indices after nms.
         num_sel = std::min(static_cast<int>(nms_indices.size()), num_sel);
