@@ -10,6 +10,13 @@
 namespace caffe {
 
 template<typename Dtype>
+CompactBilinearLayer<Dtype>::CompactBilinearLayer(const LayerParameter& param) : Layer<Dtype>(param) {
+    fft_cfg_noinv = NULL;
+    fft_cfg_inverse = NULL;
+    buf_float = NULL;
+}
+
+template<typename Dtype>
 void CompactBilinearLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         const vector<Blob<Dtype>*>& top) {
     // read in the parameters
@@ -97,10 +104,15 @@ void CompactBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 CompactBilinearLayer<Dtype>::~CompactBilinearLayer() {
     // free the spaces
-    kiss_fftr_free(fft_cfg_noinv);
-    kiss_fftr_free(fft_cfg_inverse);
-
-    free(buf_float);
+    if (fft_cfg_noinv) {
+        kiss_fftr_free(fft_cfg_noinv);
+    }
+    if (fft_cfg_inverse) {
+        kiss_fftr_free(fft_cfg_inverse);
+    }
+    if (buf_float) {
+        free(buf_float);
+    }
     // TODO: don't know how to call GPU clean functions from here.
     /*
      CHECK_EQ(cufftDestroy(plan_noinv_batch), CUFFT_SUCCESS);

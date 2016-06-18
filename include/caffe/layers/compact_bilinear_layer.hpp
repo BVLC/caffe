@@ -46,9 +46,7 @@ struct CaffeComplex {
 template<typename Dtype>
 class CompactBilinearLayer: public Layer<Dtype> {
  public:
-    explicit CompactBilinearLayer(const LayerParameter& param) :
-            Layer<Dtype>(param) {
-    }
+    CompactBilinearLayer(const LayerParameter& param);
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
             const vector<Blob<Dtype>*>& top);
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
