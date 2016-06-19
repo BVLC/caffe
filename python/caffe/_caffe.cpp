@@ -308,6 +308,27 @@ void Solve_NoGIL(Solver<Dtype>& solver, const char* resume_file) {
 }
 
 
+template<typename Dtype>
+class PythonCallback: public Solver<Dtype>::Callback {
+ protected:
+  bp::object on_start_, on_gradients_ready_;
+
+ public:
+  PythonCallback(bp::object on_start, bp::object on_gradients_ready)
+    : on_start_(on_start), on_gradients_ready_(on_gradients_ready) { }
+  virtual void on_gradients_ready() {
+    on_gradients_ready_();
+  }
+  virtual void on_start() {
+    on_start_();
+  }
+};
+template<typename Dtype>
+void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
+  bp::object on_gradients_ready) {
+  solver->add_callback(new PythonCallback<Dtype>(on_start, on_gradients_ready));
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -411,6 +432,7 @@ BOOST_PYTHON_MODULE(_caffe) {
                                    &Solver<Dtype>::UpdateSolverParams)
     .def("step", &Step_NoGIL)
     .def("solve", &Solve_NoGIL)
+    .def("add_callback", &Solver_add_callback<Dtype>)
     .def("restore", &Solver<Dtype>::Restore)
     .def("snapshot", &Solver<Dtype>::Snapshot);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
