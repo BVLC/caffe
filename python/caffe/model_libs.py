@@ -28,37 +28,60 @@ def UnpackVariable(var, num):
     return ret
 
 def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
-    kernel_size, pad, stride, use_scale=True, eps=0.001, conv_prefix='', conv_postfix='',
-    bn_prefix='', bn_postfix='_bn', scale_prefix='', scale_postfix='_scale',
-    bias_prefix='', bias_postfix='_bias'):
+    kernel_size, pad, stride, use_scale=True, lr_mult=1,
+    eps=0.001, moving_average_fraction=0.95, use_global_stats=False,
+    conv_prefix='', conv_postfix='', bn_prefix='', bn_postfix='_bn',
+    scale_prefix='', scale_postfix='_scale', bias_prefix='', bias_postfix='_bias'):
   if use_bn:
     # parameters for convolution layer with batchnorm.
     kwargs = {
-        'param': [dict(lr_mult=1, decay_mult=1)],
+        'param': [dict(lr_mult=lr_mult, decay_mult=1)],
         'weight_filler': dict(type='gaussian', std=0.01),
         'bias_term': False,
         }
     # parameters for batchnorm layer.
     bn_kwargs = {
-        'param': [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)],
+        'param': [
+            dict(lr_mult=0, decay_mult=0),
+            dict(lr_mult=0, decay_mult=0),
+            dict(lr_mult=0, decay_mult=0)],
         'eps': eps,
+        'moving_average_fraction': moving_average_fraction,
         }
+    bn_lr_mult = lr_mult
+    if use_global_stats:
+      # only specify if use_global_stats is explicitly provided;
+      # otherwise, use_global_stats_ = this->phase_ == TEST;
+      bn_kwargs = {
+          'param': [
+              dict(lr_mult=0, decay_mult=0),
+              dict(lr_mult=0, decay_mult=0),
+              dict(lr_mult=0, decay_mult=0)],
+          'eps': eps,
+          'use_global_stats': use_global_stats,
+          }
+      # not updating scale/bias parameters
+      bn_lr_mult = 0
     # parameters for scale bias layer after batchnorm.
     if use_scale:
       sb_kwargs = {
           'bias_term': True,
-          'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=1, decay_mult=0)],
+          'param': [
+              dict(lr_mult=bn_lr_mult, decay_mult=0),
+              dict(lr_mult=bn_lr_mult, decay_mult=0)],
           'filler': dict(type='constant', value=1.0),
           'bias_filler': dict(type='constant', value=0.0),
           }
     else:
       bias_kwargs = {
-          'param': [dict(lr_mult=1, decay_mult=0)],
+          'param': [dict(lr_mult=bn_lr_mult, decay_mult=0)],
           'filler': dict(type='constant', value=0.0),
           }
   else:
     kwargs = {
-        'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+        'param': [
+            dict(lr_mult=lr_mult, decay_mult=1),
+            dict(lr_mult=2 * lr_mult, decay_mult=0)],
         'weight_filler': dict(type='xavier'),
         'bias_filler': dict(type='constant', value=0)
         }
@@ -308,9 +331,63 @@ def VGGNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
     return net
 
 
-def ResNet152Body(net, from_layer, use_pool5=True):
+def ResNet101Body(net, from_layer, use_pool5=True):
+    conv_prefix = ''
+    conv_postfix = ''
+    bn_prefix = 'bn_'
+    bn_postfix = ''
+    scale_prefix = 'scale_'
+    scale_postfix = ''
     ConvBNLayer(net, from_layer, 'conv1', use_bn=True, use_relu=True,
-        num_output=64, kernel_size=7, pad=3, stride=2)
+        num_output=64, kernel_size=7, pad=3, stride=2,
+        conv_prefix=conv_prefix, conv_postfix=conv_postfix,
+        bn_prefix=bn_prefix, bn_postfix=bn_postfix,
+        scale_prefix=scale_prefix, scale_postfix=scale_postfix)
+
+    net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2)
+
+    ResBody(net, 'pool1', '2a', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=True)
+    ResBody(net, 'res2a', '2b', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=False)
+    ResBody(net, 'res2b', '2c', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=False)
+
+    ResBody(net, 'res2c', '3a', out2a=128, out2b=128, out2c=512, stride=2, use_branch1=True)
+
+    from_layer = 'res3a'
+    for i in xrange(1, 4):
+      block_name = '3b{}'.format(i)
+      ResBody(net, from_layer, block_name, out2a=128, out2b=128, out2c=512, stride=1, use_branch1=False)
+      from_layer = 'res{}'.format(block_name)
+
+    ResBody(net, from_layer, '4a', out2a=256, out2b=256, out2c=1024, stride=2, use_branch1=True)
+
+    from_layer = 'res4a'
+    for i in xrange(1, 23):
+      block_name = '4b{}'.format(i)
+      ResBody(net, from_layer, block_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=False)
+      from_layer = 'res{}'.format(block_name)
+
+    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=2, use_branch1=True)
+    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False)
+    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False)
+
+    if use_pool5:
+      net.pool5 = L.Pooling(net.res5c, pool=P.Pooling.AVE, global_pooling=True)
+
+    return net
+
+
+def ResNet152Body(net, from_layer, use_pool5=True):
+    conv_prefix = ''
+    conv_postfix = ''
+    bn_prefix = 'bn_'
+    bn_postfix = ''
+    scale_prefix = 'scale_'
+    scale_postfix = ''
+    ConvBNLayer(net, from_layer, 'conv1', use_bn=True, use_relu=True,
+        num_output=64, kernel_size=7, pad=3, stride=2,
+        conv_prefix=conv_prefix, conv_postfix=conv_postfix,
+        bn_prefix=bn_prefix, bn_postfix=bn_postfix,
+        scale_prefix=scale_prefix, scale_postfix=scale_postfix)
 
     net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2)
 
@@ -579,8 +656,8 @@ def InceptionV3Body(net, from_layer, output_pred=False):
   return net
 
 def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
-        use_objectness=False, normalizations=[], use_batchnorm=True,
-        min_sizes=[], max_sizes=[], prior_variance = [0.1],
+        use_objectness=False, normalizations=[], use_batchnorm=True, lr_mult=1,
+        use_scale=True, min_sizes=[], max_sizes=[], prior_variance = [0.1],
         aspect_ratios=[], share_location=True, flip=True, clip=True,
         inter_layer_depth=[], kernel_size=1, pad=0, conf_postfix='', loc_postfix=''):
     assert num_classes, "must provide num_classes"
@@ -615,7 +692,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         if inter_layer_depth:
             if inter_layer_depth[i] > 0:
                 inter_name = "{}_inter".format(from_layer)
-                ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True,
+                ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True, lr_mult=lr_mult,
                       num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1)
                 from_layer = inter_name
 
@@ -640,7 +717,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         num_loc_output = num_priors_per_location * 4;
         if not share_location:
             num_loc_output *= num_classes
-        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
+        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
             num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
@@ -651,7 +728,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         # Create confidence prediction layer.
         name = "{}_mbox_conf{}".format(from_layer, conf_postfix)
         num_conf_output = num_priors_per_location * num_classes;
-        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
+        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
             num_output=num_conf_output, kernel_size=kernel_size, pad=pad, stride=1)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
@@ -681,7 +758,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         if use_objectness:
             name = "{}_mbox_objectness".format(from_layer)
             num_obj_output = num_priors_per_location * 2;
-            ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
+            ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
                 num_output=num_obj_output, kernel_size=kernel_size, pad=pad, stride=1)
             permute_name = "{}_perm".format(name)
             net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
