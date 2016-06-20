@@ -13,6 +13,7 @@ import caffe
 import cv2
 import json
 import numpy as np
+from scipy.stats import multivariate_normal
 import matplotlib.pyplot as plt
 
 # general settings
@@ -74,47 +75,32 @@ def visualiseImage(image, bbox, center, joints):
     cv2.imshow('Selected image',img)
     cv2.imshow('Cropped image',img_croppad)
     cv2.waitKey()
-
-def tmpFunction(x,y):
-    center = [183,183]
-    d2 = np.power((x-center[1]),2) + np.power((y-center[0]),2)
-    exponent = d2/2.0/sigma/sigma
-    if exponent > 4.6052:
-        return 0.0
-    exponent = d2/2.0/sigma/sigma
-    if np.exp(-exponent) > 1:
-        return 1
-    else:
-        return np.exp(-exponent)
-        
-def generateGaussian(hmap, pos):
-    for gx in range(inputSizeNN):
-        for gy in range(inputSizeNN):
-            d2 = np.power((gx-pos[1]),2) + np.power((gy-pos[0]),2)
-            exponent = d2/2.0/sigma/sigma
-            if exponent > 4.6052:
-                continue
-            hmap[gx,gy] += np.exp(-exponent)
-            if hmap[gx,gy] > 1:
-                hmap[gx,gy] = 1
-    #np.fromfunction(tmpFunction, (inputSizeNN,inputSizeNN))
+       
+def generateGaussian(pos, mean, Sigma):
+    rv = multivariate_normal([mean[1],mean[0]], Sigma)
+    tmp = rv.pdf(pos)
+    hmap = np.multiply(tmp, np.sqrt(np.power(2*np.pi,2)*np.linalg.det(Sigma)))
     return hmap
 
 def generateHeatMaps(center, joints):
     num_joints = len(joints_idx)
     heatMaps = np.zeros((inputSizeNN,inputSizeNN,num_joints+1))
+    sigma_sq = np.power(sigma,2)
+    Sigma = [[sigma_sq,0],[0,sigma_sq]]
     
+    x, y = np.mgrid[0:368, 0:368]
+    pos = np.dstack((x, y))
+    
+    # heatmaps representing the position of the joints
     for i in range(num_joints):
-        heatMaps[:,:,i] = generateGaussian(heatMaps[:,:,i], joints[i])
-    for i in range(num_joints):
-        heatMaps[:,:,-1] = np.sum([heatMaps[:,:,-1], heatMaps[:,:,i]], axis=2)
+        heatMaps[:,:,i] = generateGaussian(pos, joints[i], Sigma)
+        heatMaps[:,:,-1] = np.sum([heatMaps[:,:,-1], heatMaps[:,:,i]], axis=0)
     cv2.imshow('hm',heatMaps[:,:,-1])
     
-#    res = np.random.multivariate_normal(mean, cov, (368,368))
-#    res[:,:,0] = np.divide(np.subtract(res[:,:,0], np.min(res[:,:,0])),np.max(res[:,:,0])-np.min(res[:,:,0]))
-#    cv2.imshow('hm',res[:,:,0])
-    
-    return heatMaps
+    # heatmap to be added to the RGB image
+    center = generateGaussian(pos, center, Sigma)
+    return heatMaps, center
+
 
 def runCaffeOnModel(data, model_dir, idx):
     iterNumber = getIter(model_dir)
