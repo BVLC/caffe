@@ -31,6 +31,23 @@ namespace caffe {
 */
 template <typename Dtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+  // In iteration 0, use a small amount of memory in order to leave
+  // most of memory for allocating layer blobs.
+  // NOLINT_NEXT_LINE(build/storage_class)
+  const static size_t INITIAL_WORKSPACE_SIZE;
+  // Use 95% of available memory.
+  // Using all of memory may result in failure of workspace.reserve.
+  // NOLINT_NEXT_LINE(build/storage_class)
+  const static float MAX_WORKSPACE_RATIO;
+  // We update it on second Fwd/Bwd pass and we allocate it *once*
+  // when we start third pass. We might recompute it later if demand grows
+  // and/or we suddenly need to get extra memory for other needs.
+  static size_t WORKSPACE_SIZE;
+  // This is the workspace used by all Convolution layers one after another.
+  // We carry it global to prevent unnecessary allocations/deallocations
+  // because they hurt performance.
+  static GPUMemory::Workspace WORKSPACE;
+
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param), handles_setup_(false),
@@ -64,7 +81,6 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
-  GPUMemory::Workspace workspace;
 
  private:
   bool use_algo_seeker_;
@@ -85,7 +101,25 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 
   bool use_reshape_;
   bool initialized_cached_descs_;
+
+  void UpdateWorkspaceDemand(int size);
+
+  // This is current *demand*: it might be not yet allocated.
 };
+
+template<typename Dtype>
+size_t CuDNNConvolutionLayer<Dtype>::WORKSPACE_SIZE = 0UL;
+
+template<typename Dtype>
+const size_t CuDNNConvolutionLayer<Dtype>::INITIAL_WORKSPACE_SIZE =
+    4*1024*1024;
+
+template<typename Dtype>
+GPUMemory::Workspace CuDNNConvolutionLayer<Dtype>::WORKSPACE;
+
+template<typename Dtype>
+const float CuDNNConvolutionLayer<Dtype>::MAX_WORKSPACE_RATIO = 0.95F;
+
 #endif
 
 }  // namespace caffe

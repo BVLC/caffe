@@ -357,6 +357,7 @@ int time() {
   // Do a number of clean forward and backward pass,
   // so that memory allocation are done,
   // and future iterations will be more stable.
+  Timer init_timer;
   Timer forward_timer;
   Timer backward_timer;
   double forward_time = 0.0;
@@ -365,30 +366,28 @@ int time() {
   LOG(INFO) << "Initialization for " << kInitIterations << " iterations.";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  LOG(INFO) << "Performing Forward";
-  float initial_loss;
-  forward_timer.Start();
-  for (int j = 0; j < kInitIterations; ++j) {
-    caffe_net.Forward(&initial_loss);
-  }
-  forward_time += forward_timer.MicroSeconds();
-  LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward";
-  backward_timer.Start();
-  for (int j = 0; j < kInitIterations; ++j) {
-    caffe_net.Backward();
-  }
-  backward_time += backward_timer.MicroSeconds();
-  LOG(INFO) << "Average Initialization Forward pass: " << forward_time /
-    1000 / kInitIterations << " ms.";
-  LOG(INFO) << "Average Initialization Backward pass: " << backward_time /
-    1000 / kInitIterations << " ms.";
-
+  LOG(INFO) << "Performing initial Forward/Backward";
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
   const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
+  float initial_loss = 0.F;
+  init_timer.Start();
+  for (int j = 0; j < kInitIterations; ++j) {
+    for (int i = 0; i < layers.size(); ++i) {
+      initial_loss += layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+    }
+    for (int i = layers.size() - 1; i >= 0; --i) {
+      layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
+                          bottom_vecs[i]);
+    }
+  }
+  double init_time = init_timer.MilliSeconds();
+  LOG(INFO) << "Initial Forward/Backward complete, loss: " << initial_loss;
+  LOG(INFO) << "Average Initialization Forward/Backward pass: " << init_time /
+      kInitIterations << " ms.";
+
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;

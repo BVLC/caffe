@@ -20,20 +20,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
 
-    // Test free space and force reshape if allocations have changed
-    size_t workspace_limit_bytes, total_memory;
-    GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
-    if (workspace_fwd_sizes_[i] > workspace_limit_bytes) {
-      use_algo_seeker_ = true;
-      this->Reshape(bottom, top);
-    }
     // Sometimes closer to zero we might have memory info diverged from reality
     // If try_reserve fails, it updates the info internally and we proceed with
     // Reshape one more time
-    if (!workspace.try_reserve(workspace_fwd_sizes_[i])) {
+    // Note: if WORKSPACE_SIZE is already allocated next line does nothing.
+    if (!WORKSPACE.try_reserve(WORKSPACE_SIZE)) {
       use_algo_seeker_ = true;
       this->Reshape(bottom, top);
-      workspace.reserve(workspace_fwd_sizes_[i]);
+      WORKSPACE.reserve(WORKSPACE_SIZE);
     }
 
     // Forward through cuDNN in parallel over groups.
@@ -44,7 +38,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
           bottom_descs_[i], bottom_data + bottom_offset_ * g,
           filter_desc_, weight + this->weight_offset_ * g,
           conv_descs_[i],
-          fwd_algo_[i], workspace.data(), workspace.size(),
+          fwd_algo_[i], WORKSPACE.data(), WORKSPACE.size(),
           cudnn::dataType<Dtype>::zero,
           top_descs_[i], top_data + top_offset_ * g));
 
@@ -59,14 +53,11 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
       }
     }
 
-    workspace.release();
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
-  // Possibly use faster algorithms by allowing larger workspace.
-  use_modest_workspace_ = false;
 }
 
 template<typename Dtype>
@@ -84,25 +75,15 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
-    // Test free space and force reshape if allocations have changed
-    size_t workspace_limit_bytes, total_memory;
-    GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
-    if (workspace_bwd_filter_sizes_[i] > workspace_limit_bytes ||
-        workspace_bwd_data_sizes_[i] > workspace_limit_bytes) {
-      use_algo_seeker_ = true;
-      this->Reshape(bottom, top);
-    }
-    // To remove pressure on allocator, allocate the larger of the
-    // workspaces needed for the following steps
+
     // Sometimes closer to zero we might have memory info diverged from reality
     // If try_reserve fails, it updates the info internally and we proceed with
-    // Reshape one more time
-    if (!workspace.try_reserve(std::max(workspace_bwd_filter_sizes_[i],
-        workspace_bwd_data_sizes_[i]))) {
+    // Reshape one more time.
+    // Note: if WORKSPACE_SIZE is already allocated next line does nothing.
+    if (!WORKSPACE.try_reserve(WORKSPACE_SIZE)) {
       use_algo_seeker_ = true;
       this->Reshape(bottom, top);
-      workspace.reserve(std::max(workspace_bwd_filter_sizes_[i],
-          workspace_bwd_data_sizes_[i]));
+      WORKSPACE.reserve(WORKSPACE_SIZE);
     }
 
     // Backward through cuDNN in parallel over groups and gradients.
@@ -123,7 +104,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             bottom_descs_[i], bottom_data + bottom_offset_ * g,
             top_descs_[i], top_diff + top_offset_ * g,
             conv_descs_[i],
-            bwd_filter_algo_[i], workspace.data(), workspace.size(),
+            bwd_filter_algo_[i], WORKSPACE.data(), WORKSPACE.size(),
             cudnn::dataType<Dtype>::one,
             filter_desc_, weight_diff + this->weight_offset_ * g));
       }
@@ -138,18 +119,19 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             filter_desc_, weight + this->weight_offset_ * g,
             top_descs_[i], top_diff + top_offset_ * g,
             conv_descs_[i],
-            bwd_data_algo_[i], workspace.data(), workspace.size(),
+            bwd_data_algo_[i], WORKSPACE.data(), WORKSPACE.size(),
             cudnn::dataType<Dtype>::zero,
             bottom_descs_[i], bottom_diff + bottom_offset_ * g));
       }
     }
 
-    workspace.release();
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
+  // Possibly use faster algorithms by allowing larger workspace.
+  use_modest_workspace_ = false;
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
