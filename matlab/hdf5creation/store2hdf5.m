@@ -1,4 +1,4 @@
-function [curr_dat_sz, curr_lab_sz] = store2hdf5(filename, data, labels, create, startloc, chunksz)  
+function [curr_dat_sz, curr_lab_sz] = store2hdf5(filename, data, labels, create, startloc, chunksz,datDims,labDims)  
   % *data* is W*H*C*N matrix of images should be normalized (e.g. to lie between 0 and 1) beforehand
   % *label* is D*N matrix of labels (D labels per sample) 
   % *create* [0/1] specifies whether to create file newly or to append to previously created file, useful to store information in batches when a dataset is too big to be held in memory  (default: 1)
@@ -6,13 +6,26 @@ function [curr_dat_sz, curr_lab_sz] = store2hdf5(filename, data, labels, create,
   % if create=1 (create mode), startloc.data=[1 1 1 1], and startloc.lab=[1 1]; 
   % if create=0 (append mode), startloc.data=[1 1 1 K+1], and startloc.lab = [1 K+1]; where K is the current number of samples stored in the HDF
   % chunksz (used only in create mode), specifies number of samples to be stored per chunk (see HDF5 documentation on chunking) for creating HDF5 files with unbounded maximum size - TLDR; higher chunk sizes allow faster read-write operations 
-
+  if ~exist('datDims','var')
+      datDims = ndims(data);
+  end
+  if ~exist('labDims','var')
+      labDims = ndims(labels);
+  end
   % verify that format is right
   dat_dims=size(data);
   lab_dims=size(labels);
+  % Add missing singletong dimensions
+  if numel(dat_dims) < datDims
+      dat_dims(end+1:datDims) = 1;
+  end
+  if numel(lab_dims) < labDims
+      lab_dims(end+1:labDims) = 1;
+  end
+  
   num_samples=dat_dims(end);
 
-  assert(lab_dims(end)==num_samples, 'Number of samples should be matched between data and labels');
+  assert(lab_dims(end)==num_samples, ['Number of samples should be matched between data and labels (' num2str(lab_dims(end)) ' vs. ' num2str(num_samples) ')']);
 
   if ~exist('create','var')
     create=true;
@@ -47,8 +60,8 @@ function [curr_dat_sz, curr_lab_sz] = store2hdf5(filename, data, labels, create,
   end
 
   if ~isempty(data)
-    h5write(filename, '/data', single(data), startloc.dat, size(data));
-    h5write(filename, '/label', single(labels), startloc.lab, size(labels));  
+    h5write(filename, '/data', single(data), startloc.dat, dat_dims);
+    h5write(filename, '/label', single(labels), startloc.lab, lab_dims);  
   end
 
   if nargout
