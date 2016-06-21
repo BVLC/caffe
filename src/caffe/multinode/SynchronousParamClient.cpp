@@ -202,8 +202,7 @@ SynchronousParamClient<Dtype>::SynchronousParamClient(
         boost::shared_ptr<Solver<Dtype> > solver,
         string param_server_addr,
         int num_of_threads)
-    : solver_(boost::make_shared<MultiSolver<Dtype> >(
-        solver, (Caffe::mode() != Caffe::GPU)))
+    : solver_(boost::make_shared<MultiSolver<Dtype> >(solver))
     , sync(new SynchronousParamSyncingImpl<Dtype>(
         solver, param_server_addr, num_of_threads)) {
   solver->param().set_disabled_update(true);
