@@ -90,6 +90,8 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   use_reshape_ = true;
   // When true, cached bottom and conv descriptors need to be set.
   initialized_cached_descs_ = false;
+  // In case of reusing it
+  WORKSPACE.release();
 }
 
 template <typename Dtype>
@@ -179,17 +181,15 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     if (use_modest_workspace_) {
       // In iteration 0, use a small amount of memory in order to leave
       // most of memory for allocating layer blobs.
-      // TODO: Read 8*1024*1024 from a data member variable.
-      workspace_bytes = 8*1024*1024;
+      workspace_bytes = INITIAL_WORKSPACE_SIZE;
     } else {
-      // Use 90% of available memory.
+      // Use 95% of available memory.
       // Using all of memory may result in failure of workspace.reserve.
-      // TODO: Since 90% of memory might be too large, we can allocate
+      // TODO: Since 95% of memory might be too large, we can allocate
       //       exactly how much FindEx needs by taking the maximum
       //       workspace among all algorithms (requires an initial call
       //       to FindEx with workspace size 0).
-      // TODO: Read 0.9 from a data member variable.
-      workspace_bytes = workspace_limit_bytes * 0.9;
+      workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
       // Avoid seeking for an algorithm in subsequent iterations
       use_algo_seeker_ = false;
     }
@@ -233,8 +233,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     CUDNN_CHECK(cudnnGetConvolutionBackwardDataWorkspaceSize(
         Caffe::cudnn_handle(),
         filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
-        bwd_data_algo_[i], &workspace_bwd_data_sizes_[i]) );
+        bwd_data_algo_[i], &workspace_bwd_data_sizes_[i]));
   }
+  UpdateWorkspaceDemand(bottom.size());  // update WORKSPACE_SIZE
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
@@ -292,11 +293,7 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
   void *tmp_weights;
   const int tmp_weights_size = sizeof(Dtype) * weight_offset_;
   GPUMemory::allocate(&tmp_weights, tmp_weights_size);
-
-  // TODO: Try reducing workspace_bytes if it fails.
-  //      In case, workspace_bytes is 90% of available memory,
-  //      reduce it to 75%; if it fails again, reduce it to 50% and so on.
-  workspace.reserve(workspace_bytes);
+  WORKSPACE.reserve(workspace_bytes);
 
   for (int i = 0; i < bottom.size(); i++) {
     // Find forward algorithm
@@ -312,8 +309,8 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
                   kRequestAlgoCount,
                   &fwd_algo_count,
                   fwd_results,
-                  workspace.data(),
-                  workspace.size()));
+                  WORKSPACE.data(),
+                  WORKSPACE.size()));
     fwd_algo_[i] = fwd_results[0].algo;
     workspace_fwd_sizes_[i] = fwd_results[0].memory;
 
@@ -332,8 +329,8 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
                     kRequestAlgoCount,
                     &filter_algo_count,
                     bwd_filter_results,
-                    workspace.data(),
-                    workspace.size()));
+                    WORKSPACE.data(),
+                    WORKSPACE.size()));
       bwd_filter_algo_[i] = bwd_filter_results[0].algo;
       workspace_bwd_filter_sizes_[i] = bwd_filter_results[0].memory;
 
@@ -350,15 +347,14 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
                     kRequestAlgoCount,
                     &data_algo_count,
                     bwd_data_results,
-                    workspace.data(),
-                    workspace.size()));
+                    WORKSPACE.data(),
+                    WORKSPACE.size()));
 
       bwd_data_algo_[i] = bwd_data_results[0].algo;
       workspace_bwd_data_sizes_[i] = bwd_data_results[0].memory;
     }
   }
   GPUMemory::deallocate(tmp_weights);
-  workspace.release();
 }
 #endif
 
@@ -454,7 +450,24 @@ bool CuDNNConvolutionLayer<Dtype>::IsConvDescChanged(
 }
 
 template <typename Dtype>
+void CuDNNConvolutionLayer<Dtype>::UpdateWorkspaceDemand(int size) {
+  // Updating the maximum WORKSPACE_SIZE
+  for (int i = 0; i < size; ++i) {
+    if (workspace_fwd_sizes_[i] > WORKSPACE_SIZE) {
+      WORKSPACE_SIZE = workspace_fwd_sizes_[i];
+    }
+    if (workspace_bwd_filter_sizes_[i] > WORKSPACE_SIZE) {
+      WORKSPACE_SIZE = workspace_bwd_filter_sizes_[i];
+    }
+    if (workspace_bwd_data_sizes_[i] > WORKSPACE_SIZE) {
+      WORKSPACE_SIZE = workspace_bwd_data_sizes_[i];
+    }
+  }
+}
+
+template <typename Dtype>
 CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
+  WORKSPACE.release();
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 

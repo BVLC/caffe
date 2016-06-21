@@ -19,7 +19,9 @@ struct GPUMemory {
   template <class Any>
   static void allocate(Any** ptr, size_t size,
       cudaStream_t stream = cudaStreamDefault) {
-    CHECK(try_allocate(reinterpret_cast<void**>(ptr), size, stream));
+    if (!try_allocate(reinterpret_cast<void**>(ptr), size, stream)) {
+      LOG(FATAL) << "Out of memory: failed to allocate " << size << " bytes";
+    }
   }
 
   static void deallocate(void* ptr,
@@ -74,7 +76,11 @@ struct GPUMemory {
       return status;
     }
 
-    void reserve(size_t size) { CHECK(try_reserve(size)); }
+    void reserve(size_t size) {
+      if (!try_reserve(size)) {
+        LOG(FATAL) << "Out of memory: failed to allocate " << size << " bytes";
+      }
+    }
 
     void release() {
       if (mgr_.using_pool()) {
