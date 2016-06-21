@@ -22,14 +22,22 @@ struct Processor {
   Processor();
 };
 
-class CpuInfo {
+class CpuInfoInterface {
+ public:
+  virtual ~CpuInfoInterface() {}
+  virtual const char *getFirstLine() = 0;
+  virtual const char *getNextLine() = 0;
+
+};
+
+class CpuInfo : public CpuInfoInterface {
  public:
   CpuInfo();
   CpuInfo(const char *content);
-  ~CpuInfo();
+  virtual ~CpuInfo();
 
-  const char *getFirstLine();
-  const char *getNextLine();
+  virtual const char *getFirstLine();
+  virtual const char *getNextLine();
 
  private:
   const char *fileContentBegin;
@@ -50,13 +58,13 @@ class Collection {
   static const Processor &getProcessor(unsigned processorId);
 
  private:
-  CpuInfo &cpuInfo;
+  CpuInfoInterface &cpuInfo;
   unsigned totalNumberOfSockets;
   unsigned totalNumberOfCpuCores;
   std::vector<Processor> processors;
   Processor *currentProcessor;
 
-  Collection(CpuInfo &cpuInfo);
+  Collection(CpuInfoInterface &cpuInfo);
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
   static Collection &getSingleInstance();

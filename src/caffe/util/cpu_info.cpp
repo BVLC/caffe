@@ -78,7 +78,7 @@ const char *CpuInfo::getNextLine() {
   return savedCurrentLine;
 }
 
-Collection::Collection(CpuInfo &cpuInfo) : cpuInfo(cpuInfo) {
+Collection::Collection(CpuInfoInterface &cpuInfo) : cpuInfo(cpuInfo) {
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
