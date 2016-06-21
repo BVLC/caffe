@@ -32,7 +32,10 @@ void RemoteDataLayer<Dtype>::prepare(const vector<Blob<Dtype>*>& bottom,
     }
     CHECK_EQ(bottom.size(), 0);
   } else {
-    queue->get("Remote data layer prefetch queue empty", top);
+    CHECK(aux_blobs.size() == top.size());
+    aux_blobs[1] = top[1];
+    queue->get("Remote data layer prefetch queue empty", aux_blobs);
+    this->data_transformer_->Transform(transform_blob.get(), top[0]);
   }
 
   CHECK(bottom.empty());
@@ -379,7 +382,10 @@ RemoteDataLayer<Dtype>::RemoteDataLayer(const LayerParameter& param)
   : BaseDataLayer<Dtype>(param)
   , queue(ReaderKeeper<Dtype>::instance()
       .get_queue(param))
-  , transform_blob(new Blob<Dtype>()) {
+  , transform_blob(new Blob<Dtype>())
+  , label_blob(new Blob<Dtype>()) {
+  aux_blobs.push_back(transform_blob.get());
+  aux_blobs.push_back(label_blob.get());
 }
 
 template <typename Dtype>
@@ -391,12 +397,10 @@ RemoteDataLayer<Dtype>::~RemoteDataLayer() {
 template <typename Dtype>
 void RemoteDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
-  transform_blob->ReshapeLike(*top[0]);
-  queue->get("Remote data layer prefetch queue empty", top);
-  caffe_copy(transform_blob->count(),
-             top[0]->cpu_data(),
-             transform_blob->mutable_cpu_data());
-  this->data_transformer_->Transform(transform_blob, top[0]);
+  CHECK(aux_blobs.size() == top.size());
+  aux_blobs[1] = top[1];
+  queue->get("Remote data layer prefetch queue empty", aux_blobs);
+  this->data_transformer_->Transform(transform_blob.get(), top[0]);
 }
 
 template <typename Dtype>

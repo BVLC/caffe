@@ -382,6 +382,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       DLOG(INFO) << "convert      => priv                                => "
                  << this->name;
 
+      allocate();
       convert_resources[dnnResourceFrom] =
               is_diff ?
                 reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
@@ -440,6 +441,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           DLOG(INFO) << "!!!! Failed creation convert_padding with status "
                   << status << "\n";
 
+          allocate();
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
@@ -450,6 +452,8 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
+          allocate();
+
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
@@ -521,9 +525,9 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   }
 
   if (fwd_top_data->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
+    top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
     res_convolutionFwd[dnnResourceDst] =
-            reinterpret_cast<void *>(fwd_top_data->internal_ptr);
+            reinterpret_cast<void *>(fwd_top_data->prv_ptr());
   } else {
     res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
   }
@@ -571,10 +575,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
 
     if (bwdd_bottom_diff->convert_from_int) {
-      bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, bwdd_bottom_diff,
+      bottom[0]->set_prv_diff(bwdd_bottom_diff->prv_ptr(), bwdd_bottom_diff,
               false);
       res_convolutionBwdData[dnnResourceDiffSrc] =
-              reinterpret_cast<void *>(bwdd_bottom_diff->internal_ptr);
+              reinterpret_cast<void *>(bwdd_bottom_diff->prv_ptr());
     } else {
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
@@ -595,10 +599,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
             fwd_bottom_data.get());
 
     if (bwdf_filter_diff->convert_from_int) {
-      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr,
+      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->prv_ptr(),
               bwdf_filter_diff, false);
       res_convolutionBwdFilter[dnnResourceDiffFilter] =
-              reinterpret_cast<void *>(bwdf_filter_diff->internal_ptr);
+              reinterpret_cast<void *>(bwdf_filter_diff->prv_ptr());
     } else {
       res_convolutionBwdFilter[dnnResourceDiffFilter] =
               this->blobs_[0]->mutable_cpu_diff();
@@ -614,10 +618,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
             bwdb_top_diff->get_converted_prv(top[0], true);
 
     if (bwdb_bias_diff->convert_from_int) {
-      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr,
+      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->prv_ptr(),
               bwdb_bias_diff, false);
       res_convolutionBwdBias[dnnResourceDiffBias] =
-              bwdb_bias_diff->internal_ptr;
+              bwdb_bias_diff->prv_ptr();
     } else {
       res_convolutionBwdBias[dnnResourceDiffBias] =
               reinterpret_cast<void *>(this->blobs_[1]->mutable_cpu_diff());

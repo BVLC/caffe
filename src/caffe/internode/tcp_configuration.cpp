@@ -200,7 +200,7 @@ class SingleClient : public boost::enable_shared_from_this<SingleClient>
       , queue(new SendQueue(socket)) {
   }
 
-  ~SingleClient() {
+  virtual ~SingleClient() {
     socket->cancel();
     LOG(INFO) << "client " << address() << " destroyed";
   }
