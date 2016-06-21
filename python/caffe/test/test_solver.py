@@ -38,6 +38,11 @@ class TestSolver(unittest.TestCase):
         self.solver.solve()
         self.assertEqual(self.solver.iter, 100)
 
+    def test_set_iter(self):
+        self.assertEqual(self.solver.iter, 0)
+        self.solver.set_iter(50)
+        self.assertEqual(self.solver.iter, 50)
+
     def test_net_memory(self):
         """Check that nets survive after the solver is destroyed."""
 
