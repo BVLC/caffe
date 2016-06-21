@@ -123,10 +123,10 @@ void Net_LoadHDF5(Net<Dtype>* net, string filename) {
 }
 
 void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
-    bp::object labels_obj) {
+    bp::object labels_obj, int blob = 0) {
   // check that this network has an input MemoryDataLayer
   shared_ptr<MemoryDataLayer<Dtype> > md_layer =
-    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[blob]);
   if (!md_layer) {
     throw std::runtime_error("set_input_arrays may only be called if the"
         " first layer is a MemoryDataLayer");
