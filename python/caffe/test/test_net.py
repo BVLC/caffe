@@ -60,6 +60,13 @@ class TestNet(unittest.TestCase):
         for bl in blobs:
             total += bl.data.sum() + bl.diff.sum()
 
+    def test_layer_dict(self):
+        layer_dict = self.net.layer_dict
+        self.assertEqual(list(layer_dict.keys()), list(self.net._layer_names))
+        for i, name in enumerate(self.net._layer_names):
+            self.assertEqual(layer_dict[name].type,
+                             self.net.layers[i].type)
+
     def test_forward_backward(self):
         self.net.forward()
         self.net.backward()
