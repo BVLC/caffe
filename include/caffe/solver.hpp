@@ -73,6 +73,7 @@ class Solver {
     return test_nets_;
   }
   int iter() { return iter_; }
+  void set_iter(int iter) { iter_ = iter; }
 
   // Invoked at specific points during an iteration
   class Callback {
