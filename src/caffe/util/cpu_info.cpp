@@ -1,5 +1,7 @@
+#include <fstream>
 #include <glog/logging.h>
 #include <set>
+#include <string>
 #include <vector>
 #include "caffe/util/cpu_info.hpp"
 
@@ -13,6 +15,67 @@ Processor::Processor() {
   coreId = 0;
   cpuCores = 0;
   speedMHz = 0;
+}
+
+CpuInfo::CpuInfo() {
+  loadContentFromFile("/proc/cpuinfo");
+}
+
+CpuInfo::CpuInfo(const char *content) {
+  loadContent(content);
+}
+
+void CpuInfo::loadContentFromFile(const char *fileName) {
+  std::ifstream file(fileName);
+  std::string content(
+    (std::istreambuf_iterator<char>(file)),
+    (std::istreambuf_iterator<char>()));
+
+  loadContent(content.c_str());
+}
+
+void CpuInfo::loadContent(const char *content) {
+  size_t contentLength = strlen(content);
+  char *contentCopy = new char[contentLength + 1];
+  strcpy(contentCopy, content);
+
+  parseLines(contentCopy);
+
+  fileContentBegin = contentCopy;
+  fileContentEnd = &contentCopy[contentLength];
+  currentLine = NULL;
+}
+
+CpuInfo::~CpuInfo() {
+  delete [] fileContentBegin;
+}
+
+void CpuInfo::parseLines(char *content) {
+  for(; *content; content++) {
+    if(*content == '\n') {
+      *content = '\0';
+    }
+  }
+}
+
+const char *CpuInfo::getFirstLine() {
+  currentLine = fileContentBegin;
+  return getNextLine();
+}
+
+const char *CpuInfo::getNextLine() {
+  if(!currentLine) {
+    return NULL;
+  }
+
+  const char *savedCurrentLine = currentLine;
+  while(*(currentLine++));
+
+  if(currentLine >= fileContentEnd) {
+    currentLine = NULL;
+  }
+
+  return savedCurrentLine;
 }
 
 Collection::Collection() {

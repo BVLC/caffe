@@ -22,6 +22,25 @@ struct Processor {
   Processor();
 };
 
+class CpuInfo {
+ public:
+  CpuInfo();
+  CpuInfo(const char *content);
+  ~CpuInfo();
+
+  const char *getFirstLine();
+  const char *getNextLine();
+
+ private:
+  const char *fileContentBegin;
+  const char *fileContentEnd;
+  const char *currentLine;
+
+  void loadContentFromFile(const char *fileName);
+  void loadContent(const char *content);
+  void parseLines(char *content);
+};
+
 class Collection {
  public:
   static unsigned getProcessorSpeedMHz();
