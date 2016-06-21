@@ -50,19 +50,19 @@ class Collection {
   static const Processor &getProcessor(unsigned processorId);
 
  private:
+  CpuInfo &cpuInfo;
   unsigned totalNumberOfSockets;
   unsigned totalNumberOfCpuCores;
   std::vector<Processor> processors;
   Processor *currentProcessor;
 
-  Collection();
+  Collection(CpuInfo &cpuInfo);
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
   static Collection &getSingleInstance();
 
-  void parseCpuFile(const char *fileName);
-  void parseCpuFileContent(FILE *file);
-  void parseCpuFileLine(const char *lineBuffer);
+  void parseCpuInfo();
+  void parseCpuInfoLine(const char *cpuInfoLine);
   void parseValue(const char *fieldName, const char *valueString);
   void appendNewProcessor();
   bool beginsWith(const char *lineBuffer, const char *text) const;

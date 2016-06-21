@@ -78,19 +78,20 @@ const char *CpuInfo::getNextLine() {
   return savedCurrentLine;
 }
 
-Collection::Collection() {
+Collection::Collection(CpuInfo &cpuInfo) : cpuInfo(cpuInfo) {
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
 
   processors.reserve(96);
 
-  parseCpuFile("/proc/cpuinfo");
+  parseCpuInfo();
   collectBasicCpuInformation();
 }
 
 Collection &Collection::getSingleInstance() {
-  static Collection collection;
+  static CpuInfo cpuInfo;
+  static Collection collection(cpuInfo);
   return collection;
 }
 
@@ -119,35 +120,20 @@ const Processor &Collection::getProcessor(unsigned processorId) {
   return collection.processors[processorId];
 }
 
-void Collection::parseCpuFile(const char *fileName) {
-  FILE *file = fopen(fileName, "rb");
-  if (!file) {
-    return;
-  }
-
-  parseCpuFileContent(file);
-
-  fclose(file);
-}
-
-void Collection::parseCpuFileContent(FILE *file) {
-  while (!feof(file)) {
-    char lineBuffer[1024];
-    if (!fgets(lineBuffer, sizeof(lineBuffer), file)) {
-      break;
-    }
-
-    parseCpuFileLine(lineBuffer);
+void Collection::parseCpuInfo() {
+  const char *cpuInfoLine = cpuInfo.getFirstLine();
+  for(; cpuInfoLine; cpuInfoLine = cpuInfo.getNextLine()) {
+    parseCpuInfoLine(cpuInfoLine);
   }
 }
 
-void Collection::parseCpuFileLine(const char *lineBuffer) {
-  int delimiterPosition = strcspn(lineBuffer, ":");
+void Collection::parseCpuInfoLine(const char *cpuInfoLine) {
+  int delimiterPosition = strcspn(cpuInfoLine, ":");
 
-  if (lineBuffer[delimiterPosition] == '\0') {
+  if (cpuInfoLine[delimiterPosition] == '\0') {
     currentProcessor = NULL;
   } else {
-    parseValue(lineBuffer, &lineBuffer[delimiterPosition + 2]);
+    parseValue(cpuInfoLine, &cpuInfoLine[delimiterPosition + 2]);
   }
 }
 
