@@ -340,6 +340,91 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 }
 
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+
+  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+
+  // Free MKL primitives
+  dnnDelete<Dtype>(convolutionFwd);
+  dnnDelete<Dtype>(convolutionBwdData);
+
+  // Reinit layer params
+  this->width_ = bottom[0]->width();
+  this->height_ = bottom[0]->height();
+  this->num_ = bottom[0]->num();
+
+  this->bottom_shape_ = &bottom[0]->shape();
+  compute_output_shape();
+  int status;
+  size_t n, g;
+  size_t ic, oc;
+  size_t dimension = 4;
+
+  g  = this->group_;
+  n  = this->num_;
+  ic = this->channels_;
+
+  oc = this->num_output_;
+
+  size_t bdata_sizes[4] = {this->width_, this->height_, ic, n};
+
+  size_t fdata_sizes[4] = {this->kernel_w_, this->kernel_h_, ic/g, oc};
+
+  size_t tdata_sizes[4] = {this->width_out_, this->height_out_, oc, n};
+
+  size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
+  int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
+
+  // Recreate MKL primitives
+  if (this->bias_term_) {
+    status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
+      &convolutionFwd,
+      NULL,
+      dnnAlgorithmConvolutionDirect,
+      g,
+      dimension,
+      bdata_sizes,
+      tdata_sizes,
+      fdata_sizes,
+      convolutionStrides,
+      inputOffset,
+      dnnBorderZeros);
+  } else {
+    status = dnnGroupsConvolutionCreateForward<Dtype>(
+      &convolutionFwd,
+      NULL,
+      dnnAlgorithmConvolutionDirect,
+      g,
+      dimension,
+      bdata_sizes,
+      tdata_sizes,
+      fdata_sizes,
+      convolutionStrides,
+      inputOffset,
+      dnnBorderZeros);
+  }
+  CHECK_EQ(status, 0)
+          << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
+          << status << "\n";
+
+  status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
+    &convolutionBwdData,
+    NULL,
+    dnnAlgorithmConvolutionDirect,
+    g,
+    dimension,
+    bdata_sizes,
+    tdata_sizes,
+    fdata_sizes,
+    convolutionStrides,
+    inputOffset,
+    dnnBorderZeros);
+  CHECK_EQ(status, 0)
+          << "Failed dnnConvolutionCreateBackwardData with status "
+          << status << "\n";
+}
 template <typename Dtype, bool is_diff>
 void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
         void* cpu_ptr) {

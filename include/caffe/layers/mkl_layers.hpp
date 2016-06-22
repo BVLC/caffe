@@ -114,6 +114,8 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
                           const vector<Blob<Dtype>*>& top);
   virtual void compute_output_shape();
 
+  void Reshape(const vector<Blob<Dtype>*>& bottom, 
+          const vector<Blob<Dtype>*>& top);
  private:
   /* Fwd step */
   shared_ptr<MKLData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
