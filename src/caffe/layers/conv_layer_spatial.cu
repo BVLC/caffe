@@ -669,7 +669,9 @@ bool ConvolutionLayerSpatial<float>::verify_result(
             size_t offset = output_image_offset + out_ch * output_w_ * output_h_
                             + h * output_w_ + w;
             if (fabs(data[offset] - verify_data[offset]) >
-                       0.1 * fabs(verify_data[offset])) {
+                       0.1 * fabs(verify_data[offset]) &&
+                !(fabs(verify_data[offset]) < 1.e-3
+                  && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
               dbgPrint(printf("test verification failed @ out_ch %d h "
                               "%d w %d got %G expected %G\n",
                       out_ch, h, w, data[offset], verify_data[offset]));
@@ -716,7 +718,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << kernelDef.c_str() << " -D convolve_simd16=U"
                 << kernelUKey.c_str() << "_SIMD16";
 
-  const int_tp in_buffer_size = output_block_height + kernel_h_ - 1;
+  const int_tp in_buffer_size = (output_block_height - 1) * stride_h_ + kernel_h_;
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
           output_block_width : output_width % output_block_width;
@@ -910,24 +912,51 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     M_ % 16 == 0) {
     /* IDLF kernel is using Intel specific extension which make
        them intel only. */
-    if (kernel_w_ + 4 <= 16) {
+    bool gotValidConfig = false;
+
+    if (kernel_w_ + (4 - 1) * stride_w_ < 16) {
       create_convolution_kernel(bottom, top, 2, 4, 4, 1);
       create_convolution_kernel(bottom, top, 2, 4, 5, 1);
       create_convolution_kernel(bottom, top, 2, 4, 6, 1);
       create_convolution_kernel(bottom, top, 2, 4, 7, 1);
+      create_convolution_kernel(bottom, top, 2, 4, 8, 1);
+      gotValidConfig = true;
     }
-    if (kernel_w_ + 8 <= 16) {
+    if (kernel_w_ + (8 - 1) * stride_w_ < 16) {
       create_convolution_kernel(bottom, top, 2, 8, 2, 1);
       create_convolution_kernel(bottom, top, 2, 8, 3, 1);
-      create_convolution_kernel(bottom, top, 2, 8, 4, 1);
+      //create_convolution_kernel(bottom, top, 2, 8, 4, 1);
+      //create_convolution_kernel(bottom, top, 2, 8, 5, 1);
+      //create_convolution_kernel(bottom, top, 2, 8, 6, 1);
+      gotValidConfig = true;
     }
-    if (kernel_w_ + 6 <= 16) {
+    if (kernel_w_ + (6 - 1) * stride_w_ < 16) {
       create_convolution_kernel(bottom, top, 2, 6, 4, 1);
       create_convolution_kernel(bottom, top, 2, 6, 5, 1);
+      //create_convolution_kernel(bottom, top, 2, 6, 6, 1);
+      gotValidConfig = true;
     }
-    if (kernel_w_ + 5 <= 16) {
+
+    if (kernel_w_ + (5 - 1) * stride_w_ < 16) {
+      create_convolution_kernel(bottom, top, 2, 5, 4, 1);
       create_convolution_kernel(bottom, top, 2, 5, 5, 1);
       create_convolution_kernel(bottom, top, 2, 5, 6, 1);
+      gotValidConfig = true;
+    }
+
+    if (!gotValidConfig && kernel_w_ + (2 - 1) * stride_w_ < 16) {
+      create_convolution_kernel(bottom, top, 2, 2, 1, 1);
+      create_convolution_kernel(bottom, top, 2, 2, 2, 1);
+      create_convolution_kernel(bottom, top, 2, 2, 3, 1);
+      create_convolution_kernel(bottom, top, 2, 2, 4, 1);
+      create_convolution_kernel(bottom, top, 2, 2, 5, 1);
+      create_convolution_kernel(bottom, top, 2, 2, 6, 1);
+      gotValidConfig = true;
+    }
+
+    if (!gotValidConfig && kernel_w_ < 16) {
+      create_convolution_kernel(bottom, top, 2, 1, 1, 1);
+      create_convolution_kernel(bottom, top, 2, 1, 2, 1);
     }
   }
   for (int_tp y = 1; y < 4; y += 1)
