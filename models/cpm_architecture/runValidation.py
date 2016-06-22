@@ -20,10 +20,13 @@ import matplotlib.pyplot as plt
 samplingRate = 5
 offset = 25
 inputSizeNN = 368
+outputSizeNN = 46
 joints_idx = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
 sigma = 7
 stride = 8
-verbose = True
+verbose = False
+iter_notification = 25
+device_id = 0
 
 def filterJoints(joints_orig):
     joints = [0] * len(joints_idx)
@@ -95,17 +98,26 @@ def generateHeatMaps(center, joints):
     for i in range(num_joints):
         heatMaps[:,:,i] = generateGaussian(pos, joints[i], Sigma)
         heatMaps[:,:,-1] = np.sum([heatMaps[:,:,-1], heatMaps[:,:,i]], axis=0)
-    cv2.imshow('hm',heatMaps[:,:,-1])
     
     # heatmap to be added to the RGB image
-    center = generateGaussian(pos, center, Sigma)
-    return heatMaps, center
+    center_hm = np.zeros((inputSizeNN,inputSizeNN,1))
+    center_hm[:,:,0] = generateGaussian(pos, center, Sigma)
+    return heatMaps, center_hm
 
 
-def runCaffeOnModel(data, model_dir, idx):
+def runCaffeOnModel(data, model_dir, def_file, idx):
+    layer_names = ['conv7_stage1_new', 'Mconv5_stage2_new', 'Mconv5_stage3_new',
+               'Mconv5_stage4_new', 'Mconv5_stage5_new', 'Mconv5_stage6_new']
+    loss_stage = np.zeros(len(layer_names))
+    
     iterNumber = getIter(model_dir)
-    print '\n\nEvaluating iteration %d\n\n' % iterNumber
-    for i in range(len(idx)):
+    print '-------------------------------'
+    print '  Evaluating iteration: %d' % iterNumber
+    print '-------------------------------'
+    # TODO: change it back
+    for i in range(2):#len(idx)):
+        if (np.mod(i,iter_notification) == 0):
+            print 'Iteration %d out of %d' % (i, len(idx))
         fno = idx[i]
         if (not data[fno]['isValidation']):
 			continue
@@ -131,29 +143,69 @@ def runCaffeOnModel(data, model_dir, idx):
             del joints[j][2]
         
         # visualize data
-        if (verbose):
-            visualiseImage(img, bbox, map(int, curr_data['objpos']), joints)
+#        if (verbose):
+#            visualiseImage(img, bbox, map(int, curr_data['objpos']), joints)
         
         # resize image and update joint positions
         resizedImage = cv2.resize(img_croppad, (inputSizeNN,inputSizeNN))
-        fx = inputSizeNN/img_croppad.shape[1]
-        fy = inputSizeNN/img_croppad.shape[0]
+        fx = float(inputSizeNN)/img_croppad.shape[1]
+        fy = float(inputSizeNN)/img_croppad.shape[0]
+        assert(fx != 0)
+        assert(fy != 0)
+        
         center = map(int, np.multiply(center, [fx,fy]))
         for j in range(len(joints)):
             joints[j] = map(int, np.multiply(joints[j], [fx,fy]))
-        
         if (verbose):
             tmp = resizedImage.copy()
             for j in range(len(joints)):
-                cv2.circle(resizedImage, (joints[j][0], joints[j][1]), 3, (0, 255, 255), -1)
-            cv2.circle(resizedImage, (center[0], center[1]), 3, (255, 255, 255), -1)
-            cv2.imshow('final res', tmp)
-            cv2.waitKey()
+                cv2.circle(tmp, (joints[j][0], joints[j][1]), 3, (0, 255, 255), -1)
+            cv2.circle(tmp, (center[0], center[1]), 3, (255, 255, 255), -1)
+            plt.imshow(cv2.cvtColor(tmp, cv2.COLOR_BGR2RGB))
+            plt.waitforbuttonpress()
         
-        heatMaps = generateHeatMaps(center, joints)
-        # TODO: check both same type (uint8 or float) - heatmaps and nn's output
-        # TODO: convert the image from w x h x c into c h w x h using img4ch = np.transpose(img4ch, (2, 0, 1))
-        print '1'
+        labels, center = generateHeatMaps(center, joints)
+        
+        if (verbose):
+            for j in range(len(joints) + 1):
+                plt.imshow(labels[:,:,j])
+                plt.waitforbuttonpress()
+                
+        
+        img4ch = np.concatenate((resizedImage, center), axis=2)
+        img4ch = np.transpose(img4ch, (2, 0, 1))
+        
+        net = caffe.Net(def_file, model_dir, caffe.TEST)
+        #net.blobs['data'].reshape(*img4ch.shape)
+        net.blobs['data'].data[...] = img4ch
+        net.forward()
+    
+        for l in range(len(layer_names)):
+            heatMaps = net.blobs.get(layer_names[l]).data
+            num_channels = heatMaps.shape[1]
+            heatMaps = np.reshape(heatMaps,(num_channels,outputSizeNN,outputSizeNN))
+            heatMaps = np.transpose(heatMaps, (1, 2, 0))
+            
+            # reshape the labels
+            loss = 0
+            for i in range(num_channels):
+                curr_heatMap = cv2.resize(heatMaps[:,:,i],(inputSizeNN,inputSizeNN))
+                
+                diff = np.subtract(curr_heatMap, labels[:,:,i])
+                dot = np.power(diff, 2)
+                loss += np.sum(dot)/(inputSizeNN*inputSizeNN)
+            loss_stage[l] += loss
+        
+    val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
+    
+    for l in range(len(layer_names)):
+        val['iteration'].append(iterNumber)
+        val['loss_iter'].append(np.sum(loss_stage))
+        val['loss_stage'].append(loss_stage[l])
+        val['stage'].append(l+1)
+        
+    # TODO: check why result from Matlab is different from this one (close to 1 vs 0.02)
+    return val
     
 def combine_data(val, new_val):
     for i in range(len(new_val['iteration'])):
@@ -169,10 +221,12 @@ def getIter(item):
     return int(iter_match.group(1))
 
 def getLossOnValidationSet(json_file, models):
+    prototxt = models + 'pose_deploy.prototxt'
     files = [f for f in os.listdir(models) if f.endswith('.caffemodel')]
     files = sorted(files, key=getIter)
     val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
     
+    print 'Loading json file with annotations...'
     with open(json_file) as data_file:
         data_this = json.load(data_file)
         data_this = data_this['root']
@@ -182,22 +236,27 @@ def getLossOnValidationSet(json_file, models):
     print 'overall data %d' % len(data)
     idx = range(0, numSample, samplingRate)
     
-    for i in range(len(files)):
+    # TODO: change it back
+    for i in range(2):#len(files)):
         model_dir = '%s/%s' % (models, files[i])
-        new_val = runCaffeOnModel(data, model_dir, idx)
+        new_val = runCaffeOnModel(data, model_dir, prototxt, idx)
         val = combine_data(val, new_val)
     return val
 
 def main():
+    caffe.set_mode_cpu()
+    caffe.set_device(device_id)
+    
     caffe_dir = os.environ.get('CAFFE_HOME_CPM')
     #lmdb_dir = '%s/models/cpm_architecture/lmdb/val_small' % caffe_dir
-    json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations.json' % caffe_dir
+    #json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations.json' % caffe_dir
+    json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations_test.json' % caffe_dir
     caffe_models_dir = '%s/models/cpm_architecture/prototxt/caffemodel/trial_1/' % caffe_dir
     
     loss = getLossOnValidationSet(json_file, caffe_models_dir)
-    
+    return loss
     # TODO: save file ro be read by the readLofFile.py script
     
 
 if __name__ == '__main__':
-    main()
+    loss = main()
