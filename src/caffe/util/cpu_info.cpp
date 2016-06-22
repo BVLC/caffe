@@ -61,7 +61,7 @@ void CpuInfo::parseLines(char *content) {
 }
 
 const char *CpuInfo::getFirstLine() {
-  currentLine = fileContentBegin;
+  currentLine = fileContentBegin < fileContentEnd ? fileContentBegin : NULL;
   return getNextLine();
 }
 
