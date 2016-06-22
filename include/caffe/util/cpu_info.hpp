@@ -27,13 +27,12 @@ class CpuInfoInterface {
   virtual ~CpuInfoInterface() {}
   virtual const char *getFirstLine() = 0;
   virtual const char *getNextLine() = 0;
-
 };
 
 class CpuInfo : public CpuInfoInterface {
  public:
   CpuInfo();
-  CpuInfo(const char *content);
+  explicit CpuInfo(const char *content);
   virtual ~CpuInfo();
 
   virtual const char *getFirstLine();
@@ -64,7 +63,7 @@ class Collection {
   std::vector<Processor> processors;
   Processor *currentProcessor;
 
-  Collection(CpuInfoInterface &cpuInfo);
+  explicit Collection(CpuInfoInterface *cpuInfo);
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
   static Collection &getSingleInstance();

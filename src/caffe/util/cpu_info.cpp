@@ -1,8 +1,10 @@
-#include <fstream>
 #include <glog/logging.h>
+
+#include <fstream>
 #include <set>
 #include <string>
 #include <vector>
+
 #include "caffe/util/cpu_info.hpp"
 
 namespace caffe {
@@ -37,7 +39,7 @@ void CpuInfo::loadContentFromFile(const char *fileName) {
 void CpuInfo::loadContent(const char *content) {
   size_t contentLength = strlen(content);
   char *contentCopy = new char[contentLength + 1];
-  strcpy(contentCopy, content);
+  snprintf(contentCopy, contentLength + 1, "%s", content);
 
   parseLines(contentCopy);
 
@@ -51,8 +53,8 @@ CpuInfo::~CpuInfo() {
 }
 
 void CpuInfo::parseLines(char *content) {
-  for(; *content; content++) {
-    if(*content == '\n') {
+  for (; *content; content++) {
+    if (*content == '\n') {
       *content = '\0';
     }
   }
@@ -64,21 +66,22 @@ const char *CpuInfo::getFirstLine() {
 }
 
 const char *CpuInfo::getNextLine() {
-  if(!currentLine) {
+  if (!currentLine) {
     return NULL;
   }
 
   const char *savedCurrentLine = currentLine;
-  while(*(currentLine++));
+  while (*(currentLine++)) {
+  }
 
-  if(currentLine >= fileContentEnd) {
+  if (currentLine >= fileContentEnd) {
     currentLine = NULL;
   }
 
   return savedCurrentLine;
 }
 
-Collection::Collection(CpuInfoInterface &cpuInfo) : cpuInfo(cpuInfo) {
+Collection::Collection(CpuInfoInterface *cpuInfo) : cpuInfo(*cpuInfo) {
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
@@ -91,7 +94,7 @@ Collection::Collection(CpuInfoInterface &cpuInfo) : cpuInfo(cpuInfo) {
 
 Collection &Collection::getSingleInstance() {
   static CpuInfo cpuInfo;
-  static Collection collection(cpuInfo);
+  static Collection collection(&cpuInfo);
   return collection;
 }
 
@@ -122,7 +125,7 @@ const Processor &Collection::getProcessor(unsigned processorId) {
 
 void Collection::parseCpuInfo() {
   const char *cpuInfoLine = cpuInfo.getFirstLine();
-  for(; cpuInfoLine; cpuInfoLine = cpuInfo.getNextLine()) {
+  for (; cpuInfoLine; cpuInfoLine = cpuInfo.getNextLine()) {
     parseCpuInfoLine(cpuInfoLine);
   }
 }
