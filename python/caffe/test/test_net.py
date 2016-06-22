@@ -64,7 +64,7 @@ class TestNet(unittest.TestCase):
         self.net.backward()
 
     def test_inputs_outputs(self):
-        self.assertEqual(self.net.inputs, [])
+        self.assertEqual(self.net.inputs, ['data', 'label'])
         self.assertEqual(self.net.outputs, ['loss'])
 
     def test_save_and_read(self):
