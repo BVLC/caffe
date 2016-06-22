@@ -261,7 +261,8 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   if (engine == ConcatParameter_Engine_DEFAULT) {
     engine = ConcatParameter_Engine_CAFFE;
 #if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
-    engine = ConcatParameter_Engine_MKL2017;
+    if (param.concat_param().axis() == 1)
+      engine = ConcatParameter_Engine_MKL2017;
 #endif
   }
   if (engine == ConcatParameter_Engine_CAFFE) {
