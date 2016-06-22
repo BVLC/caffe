@@ -74,6 +74,13 @@ def combine_data(train, test, new_train, new_test, merge):
         last_iter = train['iteration'][-1]+ 1
     else:
         last_iter = merge
+        iter_idx = train['iteration'].index(merge)
+        for i in range(iter_idx,len(train['iteration'])):
+            del train['iteration'][-1]
+            del train['loss_iter'][-1]
+            del train['loss_stage'][-1]
+            del train['stage'][-1]
+            
     if (new_train['iteration'][0] > 0):
         last_iter = 0
         
@@ -161,11 +168,11 @@ def plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size 
 def main():
     #filename = ['prototxt/caffemodel/trial_3/log.txt']
     #filename = ['prototxt/caffemodel/trial_3/log.txt','prototxt/log.txt']
-    filename = ['prototxt/log.txt']
+    filename = ['prototxt/log1.txt','prototxt/log.txt']
     stn_lrm = 1
     nstages = 6
-    #merge = [5000]
-    merge = [0]
+    merge = [50000]
+    #merge = [0]
     train, test, base_lr, stepsize = parse_log(filename[0])
     print 'Num iterations file = %d' % (train['iteration'][-1])
     if (len(filename) > 1):
@@ -174,7 +181,7 @@ def main():
             print 'Num iterations file = %d' % (curr_tr['iteration'][-1])
             train, test = combine_data(train, test, curr_tr, curr_ts, merge[i-1])
     main_title = 'Training with:\nbase_lr = %f; stepsize = %d; lr_mul = %d\nFinetuning: trial_2; Iter = %d ' % (base_lr, stepsize, stn_lrm, merge[0])
-    plotData(train, test, nstages, main_title, avg_line = True, avg_batch_size = 200)
+    plotData(train, test, nstages, main_title, avg_line = True, avg_batch_size = 500)
 
 if __name__ == '__main__':
     main()
