@@ -202,8 +202,29 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   }
-}
 
+  // Recreate MKL layout
+  size_t dim = 4;
+  size_t src_sizes[4], src_strides[4];
+
+  src_sizes[0] = bottom[0]->width();
+  src_sizes[1] = bottom[0]->height();
+  src_sizes[2] = bottom[0]->channels();
+  src_sizes[3] = bottom[0]->num();
+
+  src_strides[0] = 1;
+  src_strides[1] = src_sizes[0];
+  src_strides[2] = src_sizes[0]*src_sizes[1];
+  src_strides[3] = src_sizes[0]*src_sizes[1]*src_sizes[2];
+  
+  dnnError_t e;
+  e = dnnLayoutDelete<Dtype>(fwd_bottom_data->layout_usr);
+  CHECK_EQ(e, E_SUCCESS);
+
+  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, src_sizes,
+          src_strides);
+  CHECK_EQ(e, E_SUCCESS);
+}
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
