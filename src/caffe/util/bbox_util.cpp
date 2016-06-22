@@ -659,7 +659,7 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
 }
 
 inline bool IsEligibleMining(const MiningType mining_type, const int match_idx,
-                             const float match_overlap, const float neg_overlap) {
+    const float match_overlap, const float neg_overlap) {
   if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
     return match_idx == -1 && match_overlap < neg_overlap;
   } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
@@ -955,22 +955,23 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
   if (share_location) {
     CHECK_EQ(num_loc_classes, 1);
   }
+  loc_preds->resize(num);
   for (int i = 0; i < num; ++i) {
-    LabelBBox label_bbox;
+    LabelBBox& label_bbox = (*loc_preds)[i];
     for (int p = 0; p < num_preds_per_class; ++p) {
       int start_idx = p * num_loc_classes * 4;
       for (int c = 0; c < num_loc_classes; ++c) {
         int label = share_location ? -1 : c;
-        NormalizedBBox bbox;
-        bbox.set_xmin(loc_data[start_idx + c * 4]);
-        bbox.set_ymin(loc_data[start_idx + c * 4 + 1]);
-        bbox.set_xmax(loc_data[start_idx + c * 4 + 2]);
-        bbox.set_ymax(loc_data[start_idx + c * 4 + 3]);
-        label_bbox[label].push_back(bbox);
+        if (label_bbox.find(label) == label_bbox.end()) {
+          label_bbox[label].resize(num_preds_per_class);
+        }
+        label_bbox[label][p].set_xmin(loc_data[start_idx + c * 4]);
+        label_bbox[label][p].set_ymin(loc_data[start_idx + c * 4 + 1]);
+        label_bbox[label][p].set_xmax(loc_data[start_idx + c * 4 + 2]);
+        label_bbox[label][p].set_ymax(loc_data[start_idx + c * 4 + 3]);
       }
     }
     loc_data += num_preds_per_class * num_loc_classes * 4;
-    loc_preds->push_back(label_bbox);
   }
 }
 
@@ -1153,8 +1154,9 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_preds) {
   conf_preds->clear();
+  conf_preds->resize(num);
   for (int i = 0; i < num; ++i) {
-    map<int, vector<float> > label_scores;
+    map<int, vector<float> >& label_scores = (*conf_preds)[i];
     for (int p = 0; p < num_preds_per_class; ++p) {
       int start_idx = p * num_classes;
       for (int c = 0; c < num_classes; ++c) {
@@ -1162,7 +1164,6 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
       }
     }
     conf_data += num_preds_per_class * num_classes;
-    conf_preds->push_back(label_scores);
   }
 }
 
@@ -1173,6 +1174,39 @@ template void GetConfidenceScores(const float* conf_data, const int num,
 template void GetConfidenceScores(const double* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_preds);
+
+template <typename Dtype>
+void GetConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const bool class_major, vector<map<int, vector<float> > >* conf_preds) {
+  conf_preds->clear();
+  conf_preds->resize(num);
+  for (int i = 0; i < num; ++i) {
+    map<int, vector<float> >& label_scores = (*conf_preds)[i];
+    if (class_major) {
+      for (int c = 0; c < num_classes; ++c) {
+        label_scores[c].assign(conf_data, conf_data + num_preds_per_class);
+        conf_data += num_preds_per_class;
+      }
+    } else {
+      for (int p = 0; p < num_preds_per_class; ++p) {
+        int start_idx = p * num_classes;
+        for (int c = 0; c < num_classes; ++c) {
+          label_scores[c].push_back(conf_data[start_idx + c]);
+        }
+      }
+      conf_data += num_preds_per_class * num_classes;
+    }
+  }
+}
+
+// Explicit initialization.
+template void GetConfidenceScores(const float* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const bool class_major, vector<map<int, vector<float> > >* conf_preds);
+template void GetConfidenceScores(const double* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const bool class_major, vector<map<int, vector<float> > >* conf_preds);
 
 template <typename Dtype>
 void ComputeConfLoss(const Dtype* conf_data, const int num,
@@ -1520,6 +1554,25 @@ void GetTopKScoreIndex(const vector<float>& scores, const vector<int>& indices,
   }
 }
 
+void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
+      const int top_k, vector<pair<float, int> >* score_index_vec) {
+  // Generate index score pairs.
+  for (int i = 0; i < scores.size(); ++i) {
+    if (scores[i] > threshold) {
+      score_index_vec->push_back(std::make_pair(scores[i], i));
+    }
+  }
+
+  // Sort the score pair according to the scores in descending order
+  std::stable_sort(score_index_vec->begin(), score_index_vec->end(),
+                   SortScorePairDescend<int>);
+
+  // Keep top_k scores if needed.
+  if (top_k > -1 && top_k < score_index_vec->size()) {
+    score_index_vec->resize(top_k);
+  }
+}
+
 void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, const bool reuse_overlaps,
       map<int, map<int, float> >* overlaps, vector<int>* indices) {
@@ -1623,6 +1676,47 @@ void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
       } else {
         ++it;
       }
+    }
+  }
+}
+
+inline int clamp(const int v, const int a, const int b) {
+  return v < a ? a : v > b ? b : v;
+}
+
+void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
+      const vector<float>& scores, const float score_threshold,
+      const float nms_threshold, const float eta, const int top_k,
+      vector<int>* indices) {
+  // Sanity check.
+  CHECK_EQ(bboxes.size(), scores.size())
+      << "bboxes and scores have different size.";
+
+  // Get top_k scores (with corresponding indices).
+  vector<pair<float, int> > score_index_vec;
+  GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
+
+  // Do nms.
+  float adaptive_threshold = nms_threshold;
+  indices->clear();
+  while (score_index_vec.size() != 0) {
+    const int idx = score_index_vec.front().second;
+    bool keep = true;
+    for (int k = 0; k < indices->size(); ++k) {
+      if (keep) {
+        const int kept_idx = (*indices)[k];
+        float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
+        keep = overlap <= adaptive_threshold;
+      } else {
+        break;
+      }
+    }
+    if (keep) {
+      indices->push_back(idx);
+    }
+    score_index_vec.erase(score_index_vec.begin());
+    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+      adaptive_threshold *= eta;
     }
   }
 }

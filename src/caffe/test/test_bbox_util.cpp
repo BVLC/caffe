@@ -1291,6 +1291,74 @@ TEST_F(CPUBBoxUtilTest, TestApplyNMS) {
   }
 }
 
+TEST_F(CPUBBoxUtilTest, TestApplyNMSFast) {
+  vector<NormalizedBBox> bboxes;
+  vector<float> scores;
+  float score_threshold = 0.;
+  float nms_threshold = 0.3;
+  float eta = 1.;
+  int top_k = -1;
+  vector<int> indices;
+
+  // Fill in bboxes and confidences.
+  NormalizedBBox bbox;
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.8);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.7);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.0);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.2);
+  bboxes.push_back(bbox);
+  scores.push_back(0.4);
+
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.2);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.4);
+  bboxes.push_back(bbox);
+  scores.push_back(0.5);
+
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+
+  EXPECT_EQ(indices.size(), 3);
+  EXPECT_EQ(indices[0], 0);
+  EXPECT_EQ(indices[1], 3);
+  EXPECT_EQ(indices[2], 2);
+
+  top_k = 2;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
+
+  top_k = 3;
+  nms_threshold = 0.2;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
+
+  top_k = -1;
+  score_threshold = 0.5;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
+}
+
 TEST_F(CPUBBoxUtilTest, TestCumSum) {
   vector<pair<float, int> > pairs;
   vector<int> cumsum;
