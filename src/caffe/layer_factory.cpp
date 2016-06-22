@@ -136,12 +136,13 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   LRNParameter_Engine engine = param.lrn_param().engine();
 
   if (engine == LRNParameter_Engine_DEFAULT) {
+    engine = LRNParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = LRNParameter_Engine_CUDNN;
 #elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
-    engine = LRNParameter_Engine_MKL2017;
-#else
-    engine = LRNParameter_Engine_CAFFE;
+    if (param.lrn_param().norm_region()
+            == LRNParameter_NormRegion_ACROSS_CHANNELS)
+      engine = LRNParameter_Engine_MKL2017;
 #endif
   }
 
