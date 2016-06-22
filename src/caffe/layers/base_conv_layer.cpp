@@ -8,8 +8,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_im2col.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -367,43 +365,19 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
                                                    const int_tp output_off,
                                                    bool skip_im2col) {
   const Dtype* col_buff = input;
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    if (!is_1x1_) {
+  if (!is_1x1_) {
       if (!skip_im2col) {
-        conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
+          conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
       }
       col_buff = col_buffer()->gpu_data();
-    }
-    for (int_tp g = 0; g < group_; ++g) {
+  }
+  for (int_tp g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
           CblasNoTrans, CblasNoTrans, conv_out_channels_ / group_,
           conv_out_spatial_dim_, kernel_dim_, (Dtype) 1.,
           weights + weight_offset_ * g,
           col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 0.,
           output + output_off + output_offset_ * g);
-    }
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    if (!is_1x1_) {
-      if (!skip_im2col) {
-        greentea_conv_im2col_gpu(input, input_off,
-                                 col_buffer()->mutable_gpu_data(), 0);
-      }
-      col_buff = col_buffer()->gpu_data();
-    }
-    for (int_tp g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
-                               CblasNoTrans, conv_out_channels_ / group_,
-                               conv_out_spatial_dim_, kernel_dim_,
-                               (Dtype) 1., (cl_mem) weights, weight_offset_ * g,
-                               (cl_mem) col_buff,
-                               (is_1x1_ ? input_off : 0) + col_offset_ * g,
-                               (Dtype) 0., (cl_mem) output,
-                               output_off + output_offset_ * g);
-    }
-#endif  // USE_GREENTEA
   }
 }
 
@@ -411,22 +385,10 @@ template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
                                                    const int_tp output_off,
                                                    const Dtype* bias) {
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-                          out_spatial_dim_, 1, (Dtype) 1., bias,
-                          bias_multiplier_.gpu_data(), (Dtype) 1.,
-                          output + output_off);
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
-                             CblasNoTrans, num_output_, out_spatial_dim_, 1,
-                             (Dtype) 1., (cl_mem) bias, 0,
-                             (cl_mem) (bias_multiplier_.gpu_data()), 0,
-                             (Dtype) 1., (cl_mem) output, output_off);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+                        out_spatial_dim_, 1, (Dtype) 1., bias,
+                        bias_multiplier_.gpu_data(), (Dtype) 1.,
+                        output + output_off);
 }
 
 template<typename Dtype>
@@ -439,34 +401,15 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
   if (is_1x1_) {
     col_buff = input;
   }
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    for (int_tp g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(
-          CblasTrans, CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
-          conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
-          output + output_off + output_offset_ * g, (Dtype) 0.,
-          col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g);
-    }
-    if (!is_1x1_) {
-      conv_col2im_gpu(col_buff, input + input_off);
-    }
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    for (int_tp g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_->id(), CblasTrans,
-                               CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
-                               conv_out_channels_ / group_, (Dtype) 1.,
-                               (cl_mem) weights, weight_offset_ * g,
-                               (cl_mem) output, output_off + output_offset_ * g,
-                               (Dtype) 0., (cl_mem) col_buff,
-                               (is_1x1_ ? input_off : 0) + col_offset_ * g);
-    }
-    if (!is_1x1_) {
-      greentea_conv_col2im_gpu(col_buff, 0, input, input_off);
-    }
-#endif  // USE_GREENTEA
+  for (int_tp g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(
+        CblasTrans, CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
+        conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
+        output + output_off + output_offset_ * g, (Dtype) 0.,
+        col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g);
+  }
+  if (!is_1x1_) {
+    conv_col2im_gpu(col_buff, input + input_off);
   }
 }
 
@@ -477,39 +420,17 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
                                                   const int_tp output_off,
                                                   Dtype* weights) {
   const Dtype* col_buff = input;
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    if (!is_1x1_) {
+  if (!is_1x1_) {
       conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
       col_buff = col_buffer()->gpu_data();
-    }
-    for (int_tp g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(
-          CblasNoTrans, CblasTrans, conv_out_channels_ / group_, kernel_dim_,
-          conv_out_spatial_dim_, (Dtype) 1.,
-          output + output_off + output_offset_ * g,
-          col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
-          weights + weight_offset_ * g);
-    }
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    if (!is_1x1_) {
-      greentea_conv_im2col_gpu(input, input_off,
-                               col_buffer()->mutable_gpu_data(), 0);
-      col_buff = col_buffer()->gpu_data();
-    }
-    for (int_tp g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
-                               CblasTrans, conv_out_channels_ / group_,
-                               kernel_dim_, conv_out_spatial_dim_, (Dtype) 1.,
-                               (cl_mem) output, output_off + output_offset_ * g,
-                               (cl_mem) col_buff,
-                               (is_1x1_ ? input_off : 0) + col_offset_ * g,
-                               (Dtype) 1., (cl_mem) weights,
-                               weight_offset_ * g);
-    }
-#endif  // USE_GREENTEA
+  }
+  for (int_tp g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(
+        CblasNoTrans, CblasTrans, conv_out_channels_ / group_, kernel_dim_,
+        conv_out_spatial_dim_, (Dtype) 1.,
+        output + output_off + output_offset_ * g,
+        col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
+        weights + weight_offset_ * g);
   }
 }
 
@@ -517,20 +438,9 @@ template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
                                                     const Dtype* input,
                                                     const int_tp input_off) {
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
-                          input + input_off, bias_multiplier_.gpu_data(), 1.,
-                          bias);
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemv<Dtype>(this->device_->id(), CblasNoTrans,
-                             num_output_, out_spatial_dim_, 1., (cl_mem) input,
-                             input_off, (cl_mem) (bias_multiplier_.gpu_data()),
-                             0, 1., (cl_mem) bias, 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
+                        input + input_off, bias_multiplier_.gpu_data(), 1.,
+                        bias);
 }
 
 template<typename Dtype>

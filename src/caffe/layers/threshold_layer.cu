@@ -4,7 +4,7 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
+#include "caffe/util/math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -42,10 +42,14 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     viennacl::ocl::kernel &oclk_threshold = program.get_kernel(
         CL_KERNEL_SELECT("threshold"));
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
     viennacl::ocl::enqueue(
         oclk_threshold(count, threshold_,
-                       WrapHandle((cl_mem) bottom_data, &ctx),
-                       WrapHandle((cl_mem) top_data, &ctx)),
+                       WrapHandle(buf_bottom.memobj, &ctx),
+                       WrapHandle(buf_top.memobj, &ctx)),
         ctx.get_queue());
     ctx.get_queue().finish();
 #endif  // USE_GREENTEA

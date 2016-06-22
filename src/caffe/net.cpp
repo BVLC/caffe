@@ -984,18 +984,8 @@ void Net<Dtype>::ClearParamDiffs() {
       break;
     case Caffe::GPU:
 #ifndef CPU_ONLY
-      if (device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
       caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
                     blob->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-          greentea_gpu_set(device_->id(),
-                           blob->count(), static_cast<Dtype>(0),
-                           (cl_mem)(blob->mutable_gpu_diff()), 0);
-#endif  // USE_GREENTEA
-      }
 #else
         NO_GPU;
 #endif

@@ -27,6 +27,10 @@ namespace caffe {
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
+#ifdef USE_GREENTEA
+ClState Caffe::cl_state_;
+#endif
+
 // Pointer to the global instance of Caffe
 static Caffe* global_instance_;
 static std::atomic<bool> first(true);

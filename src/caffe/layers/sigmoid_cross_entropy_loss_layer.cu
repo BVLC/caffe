@@ -5,7 +5,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -25,32 +24,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
     const Dtype* target = bottom[1]->gpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-    if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      // First, compute the diff
-      caffe_copy(count, sigmoid_output_data, bottom_diff);
-      caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
-      // Scale down gradient
-      const Dtype loss_weight = top[0]->cpu_diff()[0];
-      caffe_gpu_scal(count, loss_weight / num, bottom_diff);
-#endif  // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_->id());
-
-      // First, compute the diff
-      greentea_copy<Dtype>(count, (cl_mem)sigmoid_output_data, 0,
-                           (cl_mem)bottom_diff, 0, &ctx);
-      greentea_gpu_axpy<Dtype>(this->device_->id(), count,
-                               Dtype(-1), (cl_mem)target, 0,
-                               (cl_mem)bottom_diff, 0);
-      // Scale down gradient
-      const Dtype loss_weight = top[0]->cpu_diff()[0];
-      greentea_gpu_scal(this->device_->id(), count, loss_weight / num,
-                        (cl_mem)bottom_diff, 0);
-#endif  // USE_GREENTEA
-    }
+    // First, compute the diff
+    caffe_copy(count, sigmoid_output_data, bottom_diff);
+    caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
+    // Scale down gradient
+    const Dtype loss_weight = top[0]->cpu_diff()[0];
+    caffe_gpu_scal(count, loss_weight / num, bottom_diff);
   }
 }
 

@@ -137,19 +137,8 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
-                       net_params[param_id]->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-        greentea_gpu_scal(this->device_->id(),
-                          net_params[param_id]->count(), accum_normalization,
-                          (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
-                          0);
-#endif  // USE_GREENTEA
-      }
+      caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
+                     net_params[param_id]->mutable_gpu_diff());
 #else
       NO_GPU;
 #endif
@@ -191,55 +180,25 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        if (local_decay) {
-          if (regularization_type == "L2") {
-            // add weight decay
-            caffe_gpu_axpy(net_params[param_id]->count(),
-                local_decay,
-                net_params[param_id]->gpu_data(),
-                net_params[param_id]->mutable_gpu_diff());
-          } else if (regularization_type == "L1") {
-            caffe_gpu_sign(net_params[param_id]->count(),
-                net_params[param_id]->gpu_data(),
-                temp_[param_id]->mutable_gpu_data());
-            caffe_gpu_axpy(net_params[param_id]->count(),
-                local_decay,
-                temp_[param_id]->gpu_data(),
-                net_params[param_id]->mutable_gpu_diff());
-          } else {
-            LOG(FATAL)<< "Unknown regularization type: "
-                << regularization_type;
-          }
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_gpu_axpy(net_params[param_id]->count(),
+                         local_decay,
+                         net_params[param_id]->gpu_data(),
+                         net_params[param_id]->mutable_gpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_gpu_sign(net_params[param_id]->count(),
+                         net_params[param_id]->gpu_data(),
+                         temp_[param_id]->mutable_gpu_data());
+          caffe_gpu_axpy(net_params[param_id]->count(),
+                         local_decay,
+                         temp_[param_id]->gpu_data(),
+                         net_params[param_id]->mutable_gpu_diff());
+        } else {
+          LOG(FATAL)<< "Unknown regularization type: "
+              << regularization_type;
         }
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-        if (local_decay) {
-          if (regularization_type == "L2") {
-            // add weight decay
-            greentea_gpu_axpy<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                local_decay,
-                (cl_mem)(net_params[param_id]->gpu_data()), 0,
-                (cl_mem)(net_params[param_id]->mutable_gpu_diff()), 0);
-          } else if (regularization_type == "L1") {
-            greentea_gpu_sign<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                (cl_mem)(net_params[param_id]->gpu_data()), 0,
-                (cl_mem)(temp_[param_id]->mutable_gpu_data()), 0);
-            greentea_gpu_axpy<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                local_decay,
-                (cl_mem)(temp_[param_id]->gpu_data()), 0,
-                (cl_mem)(net_params[param_id]->mutable_gpu_diff()), 0);
-          } else {
-            LOG(FATAL)<< "Unknown regularization type: "
-                << regularization_type;
-          }
-        }
-#endif  // USE_GREENTEA
       }
 #else
       NO_GPU;

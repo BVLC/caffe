@@ -16,8 +16,6 @@ class GemmTest : public ::testing::Test {};
 TYPED_TEST_CASE(GemmTest, TestDtypes);
 
 TYPED_TEST(GemmTest, TestGemmCPUGPU) {
-  device *dc = Caffe::GetDefaultDevice();
-
   Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDevice());
   Blob<TypeParam> B(1, 1, 3, 4, Caffe::GetDefaultDevice());
   Blob<TypeParam> C(1, 1, 2, 4, Caffe::GetDefaultDevice());
@@ -36,21 +34,8 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
-      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc->id(), CblasNoTrans, CblasNoTrans,
-                                 2, 4, 3, 1.,
-                                 (cl_mem)(A.gpu_data()), 0,
-                                 (cl_mem)(B.gpu_data()), 0, 0.,
-                                 (cl_mem)(C.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+    A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -65,20 +50,8 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
   caffe_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
       A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-  greentea_gpu_gemm<TypeParam>(dc->id(), CblasTrans, CblasNoTrans,
-                               2, 4, 3, 1.,
-                               (cl_mem)(A.gpu_data()), 0,
-                               (cl_mem)(B.gpu_data()), 0,
-                               0., (cl_mem)(C.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -93,20 +66,8 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
-      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-  greentea_gpu_gemm<TypeParam>(dc->id(), CblasTrans, CblasTrans,
-                               2, 4, 3, 1.,
-                               (cl_mem)(A.gpu_data()), 0,
-                               (cl_mem)(B.gpu_data()), 0, 0.,
-                               (cl_mem)(C.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+    A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -121,20 +82,8 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
-      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc->id(), CblasNoTrans, CblasTrans,
-                                 2, 4, 3, 1.,
-                                 (cl_mem)(A.gpu_data()), 0,
-                                 (cl_mem)(B.gpu_data()), 0, 0.,
-                                 (cl_mem)(C.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+    A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -143,8 +92,6 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 
 
 TYPED_TEST(GemmTest, TestGemvCPUGPU) {
-  device *dc = Caffe::GetDefaultDevice();
-
   Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDevice());
   Blob<TypeParam> x(1, 1, 1, 3, Caffe::GetDefaultDevice());
   Blob<TypeParam> y(1, 1, 1, 2, Caffe::GetDefaultDevice());
@@ -162,20 +109,8 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
     EXPECT_EQ(y.cpu_data()[i], result_2[i]);
   }
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
-      x.gpu_data(), 0., y.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemv<TypeParam>(dc->id(), CblasNoTrans,
-                                 2, 3, 1.,
-                                 (cl_mem)(A.gpu_data()), 0,
-                                 (cl_mem)(x.gpu_data()), 0, 0.,
-                                 (cl_mem)(y.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
+    x.gpu_data(), 0., y.mutable_gpu_data());
 
   for (int_tp i = 0; i < 2; ++i) {
     EXPECT_EQ(y.cpu_data()[i], result_2[i]);
@@ -189,20 +124,8 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
     EXPECT_EQ(x.cpu_data()[i], result_3[i]);
   }
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
-      y.gpu_data(), 0., x.mutable_gpu_data());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemv<TypeParam>(dc->id(), CblasTrans,
-                                 2, 3, 1.,
-                                 (cl_mem)(A.gpu_data()), 0,
-                                 (cl_mem)(y.gpu_data()), 0, 0.,
-                                 (cl_mem)(x.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
+    y.gpu_data(), 0., x.mutable_gpu_data());
 
   for (int_tp i = 0; i < 3; ++i) {
     EXPECT_EQ(x.cpu_data()[i], result_3[i]);

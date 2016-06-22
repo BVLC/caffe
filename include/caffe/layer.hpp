@@ -521,35 +521,16 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     case Caffe::GPU:
       Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
-      if (device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-          if (!this->loss(top_id)) {
-            continue;
-          }
-          const int_tp count = top[top_id]->count();
-          const Dtype* data = top[top_id]->gpu_data();
-          const Dtype* loss_weights = top[top_id]->gpu_diff();
-          Dtype blob_loss = 0;
-          caffe_gpu_dot(count, data, loss_weights, &blob_loss);
-          loss += blob_loss;
+      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+        if (!this->loss(top_id)) {
+          continue;
         }
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-        for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-          if (!this->loss(top_id)) {
-            continue;
-          }
-          const int_tp count = top[top_id]->count();
-          cl_mem data = (cl_mem) (top[top_id]->gpu_data());
-          cl_mem loss_weights = (cl_mem) (top[top_id]->gpu_diff());
-          Dtype blob_loss = 0;
-          greentea_gpu_dot(this->device_->id(), count, data, 0,
-                           loss_weights, 0, &blob_loss);
-          loss += blob_loss;
-        }
-#endif  // USE_GREENTEA
+        const int_tp count = top[top_id]->count();
+        const Dtype* data = top[top_id]->gpu_data();
+        const Dtype* loss_weights = top[top_id]->gpu_diff();
+        Dtype blob_loss = 0;
+        caffe_gpu_dot(count, data, loss_weights, &blob_loss);
+        loss += blob_loss;
       }
 #endif
       break;

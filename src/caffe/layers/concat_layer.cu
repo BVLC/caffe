@@ -5,7 +5,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -63,11 +62,15 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
       viennacl::ocl::kernel &oclk_concat = program.get_kernel(
           CL_KERNEL_SELECT("concat"));
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
       viennacl::ocl::enqueue(
-          oclk_concat(nthreads, WrapHandle((cl_mem) bottom_data, &ctx),
+          oclk_concat(nthreads, WrapHandle(buf_bottom.memobj, &ctx),
                       kForward ? 1 : 0, num_concats_, concat_input_size_,
                       top_concat_axis, bottom_concat_axis, offset_concat_axis,
-                      WrapHandle((cl_mem) top_data, &ctx)),
+                      WrapHandle(buf_top.memobj, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }
@@ -109,11 +112,15 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
         viennacl::ocl::kernel &oclk_concat = program.get_kernel(
             CL_KERNEL_SELECT("concat"));
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+        ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
         viennacl::ocl::enqueue(
-            oclk_concat(nthreads, WrapHandle((cl_mem) top_diff, &ctx),
+            oclk_concat(nthreads, WrapHandle(buf_top.memobj, &ctx),
                         kForward ? 1 : 0, num_concats_, concat_input_size_,
                         top_concat_axis, bottom_concat_axis, offset_concat_axis,
-                        WrapHandle((cl_mem) bottom_diff, &ctx)),
+                        WrapHandle(buf_bottom.memobj, &ctx)),
             ctx.get_queue());
 #endif  // USE_GREENTEA
       }

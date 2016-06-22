@@ -7,7 +7,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -46,10 +45,15 @@ void BiasLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = this->device_->program();
     viennacl::ocl::kernel &oclk_bias_forward = program.get_kernel(
         CL_KERNEL_SELECT("bias_forward"));
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+    ClMemOff<Dtype> buf_bias = clState.get_buffer_mem(bias_data);
+
     viennacl::ocl::enqueue(
-        oclk_bias_forward(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                          WrapHandle((cl_mem) bias_data, &ctx), bias_dim_,
-                          inner_dim_, WrapHandle((cl_mem) top_data, &ctx)),
+        oclk_bias_forward(count, WrapHandle(buf_bottom.memobj, &ctx),
+                          WrapHandle(buf_bias.memobj, &ctx), bias_dim_,
+                          inner_dim_, WrapHandle(buf_top.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -59,9 +63,7 @@ template<typename Dtype>
 void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                     const vector<bool>& propagate_down,
                                     const vector<Blob<Dtype>*>& bottom) {
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    if (propagate_down[0] && bottom[0] != top[0]) {
+  if (propagate_down[0] && bottom[0] != top[0]) {
       const Dtype* top_diff = top[0]->gpu_diff();
       Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
       caffe_copy(bottom[0]->count(), top_diff, bottom_diff);
@@ -82,39 +84,6 @@ void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         accum = true;
       }
     }
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-
-    if (propagate_down[0] && bottom[0] != top[0]) {
-      const Dtype* top_diff = top[0]->gpu_diff();
-      Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-      greentea_copy<Dtype>(bottom[0]->count(), (cl_mem) top_diff, 0,
-                           (cl_mem) bottom_diff, 0, &ctx);
-    }
-    // in-place, we don't need to do anything with the data diff
-    const bool bias_param = (bottom.size() == 1);
-    if ((!bias_param && propagate_down[1])
-        || (bias_param && this->param_propagate_down_[0])) {
-      const Dtype* top_diff = top[0]->gpu_diff();
-      Dtype* bias_diff = (bias_param ? this->blobs_[0].get() : bottom[1])
-          ->mutable_gpu_diff();
-      bool accum = bias_param;
-
-      int_tp top_diff_off = 0;
-      for (int_tp n = 0; n < outer_dim_; ++n) {
-        greentea_gpu_gemv(this->device_->id(), CblasNoTrans, bias_dim_,
-                          inner_dim_, Dtype(1), (cl_mem) top_diff, top_diff_off,
-                          (cl_mem) (bias_multiplier_.gpu_data()), 0,
-                          Dtype(accum), (cl_mem) bias_diff, 0);
-        top_diff_off += dim_;
-        accum = true;
-      }
-    }
-#endif  // USE_GREENTEA
-  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BiasLayer);

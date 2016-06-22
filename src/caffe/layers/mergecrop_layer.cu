@@ -6,7 +6,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -248,19 +247,26 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom_a = clState.get_buffer_mem(bottom_data_a);
+    ClMemOff<Dtype> buf_bottom_b = clState.get_buffer_mem(bottom_data_b);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+    ClMemOff<int> buf_shape_a = clState.get_buffer_mem(shape_a_.gpu_data());
+    ClMemOff<int> buf_shape_b = clState.get_buffer_mem(shape_b_.gpu_data());
+
     switch (op_) {
       case MergeCropParameter_MergeOp_STACK: {
         viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
             CL_KERNEL_SELECT("merge_copy_forward_stack"));
         viennacl::ocl::enqueue(
             oclk_copy_forward(count, spatial_dims,
-                              WrapHandle((cl_mem) bottom_data_a, &ctx),
+                              WrapHandle(buf_bottom_a.memobj, &ctx),
                               forward_[0],
-                              WrapHandle((cl_mem) bottom_data_b, &ctx),
-                              forward_[1], WrapHandle((cl_mem) top_data, &ctx),
+                              WrapHandle(buf_bottom_b.memobj, &ctx),
+                              forward_[1], WrapHandle(buf_top.memobj, &ctx),
                               num, channels_a, channels_b,
-                              WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                              WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+                              WrapHandle(buf_shape_a.memobj, &ctx),
+                              WrapHandle(buf_shape_b.memobj, &ctx)),
             ctx.get_queue());
       }
       break;
@@ -269,13 +275,13 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             CL_KERNEL_SELECT("merge_copy_forward_add"));
         viennacl::ocl::enqueue(
             oclk_copy_forward(count, spatial_dims,
-                              WrapHandle((cl_mem) bottom_data_a, &ctx),
+                              WrapHandle(buf_bottom_a.memobj, &ctx),
                               forward_[0],
-                              WrapHandle((cl_mem) bottom_data_b, &ctx),
-                              forward_[1], WrapHandle((cl_mem) top_data, &ctx),
+                              WrapHandle(buf_bottom_b.memobj, &ctx),
+                              forward_[1], WrapHandle(buf_top.memobj, &ctx),
                               num, channels_a,
-                              WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                              WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+                              WrapHandle(buf_shape_a.memobj, &ctx),
+                              WrapHandle(buf_shape_b.memobj, &ctx)),
             ctx.get_queue());
       }
       break;
@@ -335,18 +341,25 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom_a = clState.get_buffer_mem(bottom_diff_a);
+    ClMemOff<Dtype> buf_bottom_b = clState.get_buffer_mem(bottom_diff_b);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+    ClMemOff<int> buf_shape_a = clState.get_buffer_mem(shape_a_.gpu_data());
+    ClMemOff<int> buf_shape_b = clState.get_buffer_mem(shape_b_.gpu_data());
+
     switch (op_) {
       case MergeCropParameter_MergeOp_STACK: {
         viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
             CL_KERNEL_SELECT("merge_copy_backward_stack"));
         viennacl::ocl::enqueue(
             oclk_copy_backward(
-                count, spatial_dims, WrapHandle((cl_mem) bottom_diff_a, &ctx),
-                backward_[0], WrapHandle((cl_mem) bottom_diff_b, &ctx),
-                backward_[1], WrapHandle((cl_mem) top_diff, &ctx), num,
+                count, spatial_dims, WrapHandle(buf_bottom_a.memobj, &ctx),
+                backward_[0], WrapHandle(buf_bottom_b.memobj, &ctx),
+                backward_[1], WrapHandle(buf_top.memobj, &ctx), num,
                 channels_a, channels_b,
-                WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+                WrapHandle(buf_shape_a.memobj, &ctx),
+                WrapHandle(buf_shape_b.memobj, &ctx)),
             ctx.get_queue());
       }
       break;
@@ -355,16 +368,15 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             CL_KERNEL_SELECT("merge_copy_backward_add"));
         viennacl::ocl::enqueue(
             oclk_copy_backward(
-                count, spatial_dims, WrapHandle((cl_mem) bottom_diff_a, &ctx),
-                backward_[0], WrapHandle((cl_mem) bottom_diff_b, &ctx),
-                backward_[1], WrapHandle((cl_mem) top_diff, &ctx), num,
-                channels_a, WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+                count, spatial_dims, WrapHandle(buf_bottom_a.memobj, &ctx),
+                backward_[0], WrapHandle(buf_bottom_b.memobj, &ctx),
+                backward_[1], WrapHandle(buf_top.memobj, &ctx), num,
+                channels_a, WrapHandle(buf_shape_a.memobj, &ctx),
+                WrapHandle(buf_shape_b.memobj, &ctx)),
             ctx.get_queue());
       }
       break;
     }
-
     ctx.get_queue().finish();
 #endif  // USE_GREENTEA
   }

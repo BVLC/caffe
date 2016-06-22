@@ -105,6 +105,8 @@ inline int_tp CAFFE_GET_BLOCKS(const int_tp N) {
 
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
+#include "caffe/util/cl_state.hpp"
+
 #define OCL_CHECK(condition) \
   do { \
     cl_int error = (condition); \

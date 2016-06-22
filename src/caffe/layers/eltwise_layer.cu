@@ -6,7 +6,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -87,50 +86,52 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = this->device_->program();
 
     switch (op_) {
-      case EltwiseParameter_EltwiseOp_PROD: {
-        greentea_gpu_mul<Dtype>(this->device_->id(),
-                                count, (cl_mem)(bottom[0]->gpu_data()), 0,
-                                (cl_mem)(bottom[1]->gpu_data()), 0,
-            (cl_mem)top_data, 0);
+      case EltwiseParameter_EltwiseOp_PROD:
+        caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
+                      top_data);
         for (int_tp i = 2; i < bottom.size(); ++i) {
-          greentea_gpu_mul<Dtype>(this->device_->id(),
-                                  count, (cl_mem)top_data, 0,
-                                  (cl_mem)(bottom[i]->gpu_data()), 0,
-                                  (cl_mem)top_data, 0);
+          caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
         }
-      }
-      break;
-      case EltwiseParameter_EltwiseOp_SUM: {
-        greentea_gpu_set<Dtype>(this->device_->id(), count, 0,
-                                (cl_mem)top_data, 0);
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        caffe_gpu_set(count, Dtype(0.), top_data);
+        // TODO(shelhamer) does cuBLAS optimize to sum for coeff = 1?
         for (int_tp i = 0; i < bottom.size(); ++i) {
-          greentea_gpu_axpy<Dtype>(this->device_->id(),
-                                   count, coeffs_[i],
-                                   (cl_mem)(bottom[i]->gpu_data()),
-                                   0, (cl_mem)top_data, 0);
+          caffe_gpu_axpy(count, coeffs_[i], bottom[i]->gpu_data(), top_data);
         }
-      }
-      break;
+        break;
       case EltwiseParameter_EltwiseOp_MAX: {
         mask = max_idx_.mutable_gpu_data();
 
         viennacl::ocl::kernel &oclk_max_forward = program.get_kernel(
             CL_KERNEL_SELECT("eltwise_max_forward"));
 
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom0 =
+            clState.get_buffer_mem(bottom[0]->gpu_data());
+        ClMemOff<Dtype> buf_bottom1 =
+            clState.get_buffer_mem(bottom[1]->gpu_data());
+        ClMemOff<Dtype> buf_top =
+            clState.get_buffer_mem(top_data);
+        ClMemOff<int_tp> buf_mask =
+            clState.get_buffer_mem(mask);
+
         viennacl::ocl::enqueue(
             oclk_max_forward(count,
-                WrapHandle((cl_mem)(bottom[0]->gpu_data()), &ctx),
-                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), (int_tp)0,
-                WrapHandle((cl_mem)top_data, &ctx),
-                WrapHandle((cl_mem)mask, &ctx)),
+                WrapHandle(buf_bottom0.memobj, &ctx),
+                WrapHandle(buf_bottom1.memobj, &ctx), (int_tp)0,
+                WrapHandle(buf_top.memobj, &ctx),
+                WrapHandle(buf_mask.memobj, &ctx)),
             ctx.get_queue());
 
         for (int_tp i = 2; i < bottom.size(); ++i) {
+          ClMemOff<Dtype> buf_bottomi =
+              clState.get_buffer_mem(bottom[i]->gpu_data());
           viennacl::ocl::enqueue(
-              oclk_max_forward(count, WrapHandle((cl_mem)(top_data), &ctx),
-                  WrapHandle((cl_mem)(bottom[i]->gpu_data()), &ctx), i-1,
-                  WrapHandle((cl_mem)top_data, &ctx),
-                  WrapHandle((cl_mem)mask, &ctx)),
+              oclk_max_forward(count, WrapHandle(buf_top.memobj, &ctx),
+                  WrapHandle(buf_bottomi.memobj, &ctx), i-1,
+                  WrapHandle(buf_top.memobj, &ctx),
+                  WrapHandle(buf_mask.memobj, &ctx)),
               ctx.get_queue());
         }
       }
@@ -225,7 +226,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         const Dtype* bottom_data = bottom[i]->gpu_data();
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
         switch (op_) {
-          case EltwiseParameter_EltwiseOp_PROD: {
+          case EltwiseParameter_EltwiseOp_PROD:
             if (stable_prod_grad_) {
               bool initialized = false;
               for (int_tp j = 0; j < bottom.size(); ++j) {
@@ -233,51 +234,43 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                   continue;
                 }
                 if (!initialized) {
-                  greentea_copy<Dtype>(count,
-                      (cl_mem)(bottom[j]->gpu_data()), 0,
-                      (cl_mem)(bottom_diff), 0, &ctx);
+                  caffe_copy(count, bottom[j]->gpu_data(), bottom_diff);
                   initialized = true;
                 } else {
-                  greentea_gpu_mul<Dtype>(this->device_->id(), count,
-                      (cl_mem)bottom[j]->gpu_data(), 0,
-                      (cl_mem)bottom_diff, 0,
-                      (cl_mem)bottom_diff, 0);
+                  caffe_gpu_mul(count, bottom[j]->gpu_data(), bottom_diff,
+                                bottom_diff);
                 }
               }
             } else {
-              greentea_gpu_div<Dtype>(this->device_->id(),
-                                      count, (cl_mem)top_data, 0,
-                  (cl_mem)bottom_data, 0, (cl_mem)bottom_diff, 0);
+              caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
             }
-            greentea_gpu_mul<Dtype>(this->device_->id(),
-                                    count, (cl_mem)bottom_diff, 0,
-                (cl_mem)top_diff, 0, (cl_mem)bottom_diff, 0);
-          }
-          break;
-          case EltwiseParameter_EltwiseOp_SUM: {
+            caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
+            break;
+          case EltwiseParameter_EltwiseOp_SUM:
             if (coeffs_[i] == Dtype(1.)) {
-              greentea_copy<Dtype>(count, (cl_mem)top_diff,
-                                   0, (cl_mem)bottom_diff, 0, &ctx);
+              caffe_copy(count, top_diff, bottom_diff);
             } else {
-              greentea_gpu_scale<Dtype>(this->device_->id(),
-                  count, coeffs_[i], (cl_mem)top_diff,
-                  0, (cl_mem)bottom_diff, 0);
+              caffe_gpu_scale(count, coeffs_[i], top_diff, bottom_diff);
             }
-          }
-          break;
+            break;
           case EltwiseParameter_EltwiseOp_MAX: {
             mask = max_idx_.gpu_data();
+
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+            ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+            ClMemOff<int_tp> buf_mask = clState.get_buffer_mem(mask);
 
             viennacl::ocl::kernel &oclk_max_backward = program.get_kernel(
                 CL_KERNEL_SELECT("eltwise_max_backward"));
 
             viennacl::ocl::enqueue(
-                oclk_max_backward(count, WrapHandle((cl_mem)top_diff, &ctx), i,
-                    WrapHandle((cl_mem)mask, &ctx),
-                    WrapHandle((cl_mem)bottom_diff, &ctx)),
+                oclk_max_backward(count, WrapHandle(buf_top.memobj, &ctx), i,
+                    WrapHandle(buf_mask.memobj, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx)),
                 ctx.get_queue());
-          }
-          break;
+            }
+            break;
           default: {
             LOG(FATAL)<< "Unknown elementwise operation.";
           }

@@ -7,7 +7,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif  // USE_GREENTEA
 
 namespace caffe {
@@ -914,65 +913,86 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             }
             viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
                 CL_KERNEL_SELECT("max_pool_forward_sk"));
+
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+            ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+            ClMemOff<Dtype> buf_top_data = clState.get_buffer_mem(top_data);
+
             viennacl::ocl::enqueue(
                 oclk_max_pool_forward(count,
-                    WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx),
                     bottom[0]->shape(0), channels_, height_, width_,
                     pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, ext_kernel_h, ext_kernel_w,
                     stride_h_, stride_w_, dilation_h_, dilation_w_,
                     pad_h_, pad_w_,
-                    WrapHandle((cl_mem) top_data, &ctx),
+                    WrapHandle(buf_top_data.memobj, &ctx),
                     mask == NULL ? 0 : 1,
-                    WrapHandle((cl_mem) mask, &ctx),
-                    WrapHandle((cl_mem) top_mask, &ctx)),
+                    WrapHandle(buf_mask.memobj, &ctx),
+                    WrapHandle(buf_top_mask.memobj, &ctx)),
                 ctx.get_queue());
           }
           break;
           case PoolingParameter_PoolMethod_AVE: {
             viennacl::ocl::kernel &oclk_ave_pool_forward = program.get_kernel(
                 CL_KERNEL_SELECT("ave_pool_forward_sk"));
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+            ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
             viennacl::ocl::enqueue(
                 oclk_ave_pool_forward(count,
-                    WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx),
                     bottom[0]->shape(0), channels_,
                     height_, width_, pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, ext_kernel_h, ext_kernel_w,
                     stride_h_, stride_w_, dilation_h_, dilation_w_,
-                    pad_h_, pad_w_, WrapHandle((cl_mem)top_data, &ctx)),
+                    pad_h_, pad_w_, WrapHandle(buf_top.memobj, &ctx)),
                 ctx.get_queue());
           }
           break;
           case PoolingParameter_PoolMethod_STOCHASTIC: {
             if (this->phase_ == caffe::TRAIN) {
               // We need to create the random index as well.
-              greentea_gpu_rng_uniform(this->device_->id(), count,
-                  Dtype(0), Dtype(1),
-                  (cl_mem)(rand_idx_.mutable_gpu_data()), 0);
+              caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+                                    rand_idx_.mutable_gpu_data());
 
               viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
                   CL_KERNEL_SELECT("sto_pool_forward_train_sk"));
+
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+              ClMemOff<Dtype> buf_rand =
+                  clState.get_buffer_mem(rand_idx_.mutable_gpu_data());
+
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
-                      WrapHandle((cl_mem)bottom_data, &ctx),
+                      WrapHandle(buf_bottom.memobj, &ctx),
                       bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, dilation_h_, dilation_w_,
-                      WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()), &ctx),
-                      WrapHandle((cl_mem)(top_data), &ctx)),
+                      WrapHandle(buf_rand.memobj, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx)),
                   ctx.get_queue());
             } else {
               viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
                   CL_KERNEL_SELECT("sto_pool_forward_test_sk"));
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
-                      WrapHandle((cl_mem)bottom_data, &ctx),
+                      WrapHandle(buf_bottom.memobj, &ctx),
                       bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, dilation_h_, dilation_w_,
-                      WrapHandle((cl_mem)top_data, &ctx)),
+                      WrapHandle(buf_top.memobj, &ctx)),
                   ctx.get_queue());
             }
           }
@@ -992,61 +1012,80 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             }
             viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
                 CL_KERNEL_SELECT("max_pool_forward"));
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+            ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+            ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+            ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+
             viennacl::ocl::enqueue(
                 oclk_max_pool_forward(count,
-                    WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx),
                     bottom[0]->shape(0), channels_, height_, width_,
                     pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
-                    WrapHandle((cl_mem) top_data, &ctx),
+                    WrapHandle(buf_top.memobj, &ctx),
                     mask == NULL ? 0 : 1,
-                    WrapHandle((cl_mem) mask, &ctx),
-                    WrapHandle((cl_mem) top_mask, &ctx)),
+                    WrapHandle(buf_mask.memobj, &ctx),
+                    WrapHandle(buf_top_mask.memobj, &ctx)),
                 ctx.get_queue());
           }
           break;
           case PoolingParameter_PoolMethod_AVE: {
             viennacl::ocl::kernel &oclk_ave_pool_forward = program.get_kernel(
                 CL_KERNEL_SELECT("ave_pool_forward"));
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+            ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
             viennacl::ocl::enqueue(
                 oclk_ave_pool_forward(count,
-                    WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx),
                     bottom[0]->shape(0), channels_,
                     height_, width_, pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
-                    WrapHandle((cl_mem)top_data, &ctx)),
+                    WrapHandle(buf_top.memobj, &ctx)),
                 ctx.get_queue());
           }
           break;
           case PoolingParameter_PoolMethod_STOCHASTIC: {
             if (this->phase_ == caffe::TRAIN) {
               // We need to create the random index as well.
-              greentea_gpu_rng_uniform(this->device_->id(), count,
-                  Dtype(0), Dtype(1),
-                  (cl_mem)(rand_idx_.mutable_gpu_data()), 0);
+              caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+                rand_idx_.mutable_gpu_data());
+
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+              ClMemOff<Dtype> buf_rand =
+                  clState.get_buffer_mem(rand_idx_.mutable_gpu_data());
 
               viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
                   CL_KERNEL_SELECT("sto_pool_forward_train"));
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
-                      WrapHandle((cl_mem)bottom_data, &ctx),
+                      WrapHandle(buf_bottom.memobj, &ctx),
                       bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_,
                       kernel_h_, kernel_w_,
                       stride_h_, stride_w_,
-                      WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()), &ctx),
-                      WrapHandle((cl_mem)top_data, &ctx)),
+                      WrapHandle(buf_rand.memobj, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx)),
                   ctx.get_queue());
             } else {
               viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
                   CL_KERNEL_SELECT("sto_pool_forward_test"));
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
-                      WrapHandle((cl_mem)bottom_data, &ctx),
+                      WrapHandle(buf_bottom.memobj, &ctx),
                       bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_,
                       pooled_width_, kernel_h_, kernel_w_,
-                      stride_h_, stride_w_, WrapHandle((cl_mem)top_data, &ctx)),
+                      stride_h_, stride_w_, WrapHandle(buf_top.memobj, &ctx)),
                   ctx.get_queue());
             }
           }
@@ -1066,21 +1105,38 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           }
           viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("max_pool_forward_nd"));
+          ClState& clState = Caffe::cl_state();
+          ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+          ClMemOff<int> buf_size = clState.get_buffer_mem(size_.gpu_data());
+          ClMemOff<int> buf_pooled =
+              clState.get_buffer_mem(pooled_size_.gpu_data());
+          ClMemOff<int> buf_kernel =
+              clState.get_buffer_mem(kernel_shape_.gpu_data());
+          ClMemOff<int> buf_ext_kernel =
+              clState.get_buffer_mem(ext_kernel_shape_.gpu_data());
+          ClMemOff<int> buf_stride = clState.get_buffer_mem(stride_.gpu_data());
+          ClMemOff<int> buf_dilation =
+              clState.get_buffer_mem(dilation_.gpu_data());
+          ClMemOff<int> buf_pad = clState.get_buffer_mem(pad_.gpu_data());
+          ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+          ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+          ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+
           viennacl::ocl::enqueue(
               oclk_max_pool_forward(count, num_spatial_axes_,
-                  WrapHandle((cl_mem)bottom_data, &ctx),
+                  WrapHandle(buf_bottom.memobj, &ctx),
                   channels_,
-                  WrapHandle((cl_mem)(size_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(pooled_size_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(kernel_shape_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(ext_kernel_shape_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(stride_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(dilation_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)(pad_.gpu_data()), &ctx),
-                  WrapHandle((cl_mem)top_data, &ctx),
+                  WrapHandle(buf_size.memobj, &ctx),
+                  WrapHandle(buf_pooled.memobj, &ctx),
+                  WrapHandle(buf_kernel.memobj, &ctx),
+                  WrapHandle(buf_ext_kernel.memobj, &ctx),
+                  WrapHandle(buf_stride.memobj, &ctx),
+                  WrapHandle(buf_dilation.memobj, &ctx),
+                  WrapHandle(buf_pad.memobj, &ctx),
+                  WrapHandle(buf_top.memobj, &ctx),
                   mask == NULL ? 0 : 1,
-                  WrapHandle((cl_mem)mask, &ctx),
-                  WrapHandle((cl_mem)top_mask, &ctx)),
+                  WrapHandle(buf_mask.memobj, &ctx),
+                  WrapHandle(buf_top_mask.memobj, &ctx)),
               ctx.get_queue());
         }
         break;
@@ -1218,8 +1274,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           this->device_->id());
       viennacl::ocl::program &program = this->device_->program();
 
-      greentea_gpu_set(this->device_->id(), count, Dtype(0.),
-          (cl_mem) bottom_diff, 0);
+      caffe_gpu_set(count, Dtype(0.), bottom_diff);
 
       if (num_spatial_axes_ == 2) {
         int_tp kernel_h_ = kernel_shape_.cpu_data()[0];
@@ -1248,18 +1303,25 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::kernel &oclk_max_pool_backward =
               program.get_kernel(
                   CL_KERNEL_SELECT("max_pool_backward_sk"));
+
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+              ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+              ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
               viennacl::ocl::enqueue(
                   oclk_max_pool_backward(count,
-                      WrapHandle((cl_mem) top_diff, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx),
                       mask == NULL ? 0 : 1,
-                      WrapHandle((cl_mem) mask, &ctx),
-                      WrapHandle((cl_mem) top_mask, &ctx),
+                      WrapHandle(buf_mask.memobj, &ctx),
+                      WrapHandle(buf_top_mask.memobj, &ctx),
                       top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, dilation_h_, dilation_w_,
                       pad_h_, pad_w_,
-                      WrapHandle((cl_mem) bottom_diff, &ctx)),
+                      WrapHandle(buf_bottom.memobj, &ctx)),
                   ctx.get_queue());
             }
             break;
@@ -1278,17 +1340,23 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::kernel &oclk_max_pool_backward =
               program.get_kernel(
                   CL_KERNEL_SELECT("max_pool_backward"));
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+              ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+              ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
               viennacl::ocl::enqueue(
                   oclk_max_pool_backward(count,
-                      WrapHandle((cl_mem) top_diff, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx),
                       mask == NULL ? 0 : 1,
-                      WrapHandle((cl_mem) mask, &ctx),
-                      WrapHandle((cl_mem) top_mask, &ctx),
+                      WrapHandle(buf_mask.memobj, &ctx),
+                      WrapHandle(buf_top_mask.memobj, &ctx),
                       top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_, pad_h_,
                       pad_w_,
-                      WrapHandle((cl_mem) bottom_diff, &ctx)),
+                      WrapHandle(buf_bottom.memobj, &ctx)),
                   ctx.get_queue());
             }
             break;
@@ -1296,14 +1364,18 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::kernel &oclk_ave_pool_backward =
               program.get_kernel(
                   CL_KERNEL_SELECT("ave_pool_backward"));
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
               viennacl::ocl::enqueue(
                   oclk_ave_pool_backward(count,
-                      WrapHandle((cl_mem) top_diff, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx),
                       top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_, pad_h_,
                       pad_w_,
-                      WrapHandle((cl_mem) bottom_diff, &ctx)),
+                      WrapHandle(buf_bottom.memobj, &ctx)),
                   ctx.get_queue());
             }
             break;
@@ -1311,14 +1383,20 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::kernel &oclk_sto_pool_backward =
               program.get_kernel(
                   CL_KERNEL_SELECT("sto_pool_backward"));
+              ClState& clState = Caffe::cl_state();
+              ClMemOff<Dtype> buf_rand =
+                  clState.get_buffer_mem(rand_idx_.gpu_data());
+              ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+              ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
               viennacl::ocl::enqueue(
                   oclk_sto_pool_backward(
-                      count, WrapHandle((cl_mem) (rand_idx_.gpu_data()), &ctx),
-                      WrapHandle((cl_mem) top_diff, &ctx), top[0]->shape(0),
+                      count, WrapHandle(buf_rand.memobj, &ctx),
+                      WrapHandle(buf_top.memobj, &ctx), top[0]->shape(0),
                       channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_,
-                      WrapHandle((cl_mem) bottom_diff, &ctx)),
+                      WrapHandle(buf_bottom.memobj, &ctx)),
                   ctx.get_queue());
             }
             break;
@@ -1337,20 +1415,38 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             }
             viennacl::ocl::kernel &oclk_max_pool_backward = program.get_kernel(
                 CL_KERNEL_SELECT("max_pool_backward_nd"));
+            ClState& clState = Caffe::cl_state();
+            ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+            ClMemOff<int> buf_mask = clState.get_buffer_mem(mask);
+            ClMemOff<Dtype> buf_top_mask = clState.get_buffer_mem(top_mask);
+            ClMemOff<int> buf_size = clState.get_buffer_mem(size_.gpu_data());
+            ClMemOff<int> buf_pooled =
+                clState.get_buffer_mem(pooled_size_.gpu_data());
+            ClMemOff<int> buf_kernel =
+                clState.get_buffer_mem(kernel_shape_.gpu_data());
+            ClMemOff<int> buf_ext_kernel =
+                clState.get_buffer_mem(ext_kernel_shape_.gpu_data());
+            ClMemOff<int> buf_stride =
+                clState.get_buffer_mem(stride_.gpu_data());
+            ClMemOff<int> buf_dilation =
+                clState.get_buffer_mem(dilation_.gpu_data());
+            ClMemOff<int> buf_pad = clState.get_buffer_mem(pad_.gpu_data());
+            ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
             viennacl::ocl::enqueue(
                 oclk_max_pool_backward(
                     count, num_spatial_axes_,
-                    WrapHandle((cl_mem) top_diff, &ctx),
-                    mask == NULL ? 0 : 1, WrapHandle((cl_mem) mask, &ctx),
-                    WrapHandle((cl_mem) top_mask, &ctx), channels_,
-                    WrapHandle((cl_mem) (size_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (pooled_size_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (kernel_shape_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (ext_kernel_shape_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (stride_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (dilation_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) (pad_.gpu_data()), &ctx),
-                    WrapHandle((cl_mem) bottom_diff, &ctx)),
+                    WrapHandle(buf_top.memobj, &ctx),
+                    mask == NULL ? 0 : 1, WrapHandle(buf_mask.memobj, &ctx),
+                    WrapHandle(buf_top_mask.memobj, &ctx), channels_,
+                    WrapHandle(buf_size.memobj, &ctx),
+                    WrapHandle(buf_pooled.memobj, &ctx),
+                    WrapHandle(buf_kernel.memobj, &ctx),
+                    WrapHandle(buf_ext_kernel.memobj, &ctx),
+                    WrapHandle(buf_stride.memobj, &ctx),
+                    WrapHandle(buf_dilation.memobj, &ctx),
+                    WrapHandle(buf_pad.memobj, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx)),
                 ctx.get_queue());
           }
           break;

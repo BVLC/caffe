@@ -87,18 +87,26 @@ void LSTMUnitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_lstm_unit_forward = program.get_kernel(
         CL_KERNEL_SELECT("lstm_unit_forward"));
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_X = clState.get_buffer_mem(X);
+    ClMemOff<Dtype> buf_X_acts = clState.get_buffer_mem(X_acts);
+    ClMemOff<Dtype> buf_C_prev = clState.get_buffer_mem(C_prev);
+    ClMemOff<Dtype> buf_cont = clState.get_buffer_mem(cont);
+    ClMemOff<Dtype> buf_C = clState.get_buffer_mem(C);
+    ClMemOff<Dtype> buf_H = clState.get_buffer_mem(H);
+
     viennacl::ocl::enqueue(
         oclk_lstm_acts_forward(X_count, hidden_dim_,
-          WrapHandle((cl_mem)X, &ctx),
-          WrapHandle((cl_mem)X_acts, &ctx)),
+          WrapHandle(buf_X.memobj, &ctx),
+          WrapHandle(buf_X_acts.memobj, &ctx)),
         ctx.get_queue());
     viennacl::ocl::enqueue(
         oclk_lstm_unit_forward(count, hidden_dim_,
-          WrapHandle((cl_mem)C_prev, &ctx),
-          WrapHandle((cl_mem)X_acts, &ctx),
-          WrapHandle((cl_mem)cont, &ctx),
-          WrapHandle((cl_mem)C, &ctx),
-          WrapHandle((cl_mem)H, &ctx)),
+          WrapHandle(buf_C_prev.memobj, &ctx),
+          WrapHandle(buf_X_acts.memobj, &ctx),
+          WrapHandle(buf_cont.memobj, &ctx),
+          WrapHandle(buf_C.memobj, &ctx),
+          WrapHandle(buf_H.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -198,20 +206,36 @@ void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::kernel &oclk_lstm_acts_backward = program.get_kernel(
         CL_KERNEL_SELECT("lstm_acts_backward"));
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_X_acts = clState.get_buffer_mem(X_acts);
+    ClMemOff<Dtype> buf_C_prev = clState.get_buffer_mem(C_prev);
+    ClMemOff<Dtype> buf_cont = clState.get_buffer_mem(cont);
+    ClMemOff<Dtype> buf_C = clState.get_buffer_mem(C);
+    ClMemOff<Dtype> buf_H = clState.get_buffer_mem(H);
+    ClMemOff<Dtype> buf_C_diff = clState.get_buffer_mem(C_diff);
+    ClMemOff<Dtype> buf_H_diff = clState.get_buffer_mem(H_diff);
+    ClMemOff<Dtype> buf_C_prev_diff = clState.get_buffer_mem(C_prev_diff);
+    ClMemOff<Dtype> buf_X_acts_diff = clState.get_buffer_mem(X_acts_diff);
+    ClMemOff<Dtype> buf_X_diff = clState.get_buffer_mem(X_diff);
+
+
     viennacl::ocl::enqueue(
         oclk_lstm_unit_backward(count, hidden_dim_,
-          WrapHandle((cl_mem)C_prev, &ctx), WrapHandle((cl_mem)X_acts, &ctx),
-          WrapHandle((cl_mem)C, &ctx), WrapHandle((cl_mem)H, &ctx),
-          WrapHandle((cl_mem)cont, &ctx), WrapHandle((cl_mem)C_diff, &ctx),
-          WrapHandle((cl_mem)H_diff, &ctx),
-          WrapHandle((cl_mem)C_prev_diff, &ctx),
-          WrapHandle((cl_mem)X_acts_diff, &ctx)),
+          WrapHandle(buf_C_prev.memobj, &ctx),
+          WrapHandle(buf_X_acts.memobj, &ctx),
+          WrapHandle(buf_C.memobj, &ctx),
+          WrapHandle(buf_H.memobj, &ctx),
+          WrapHandle(buf_cont.memobj, &ctx),
+          WrapHandle(buf_C_diff.memobj, &ctx),
+          WrapHandle(buf_H_diff.memobj, &ctx),
+          WrapHandle(buf_C_prev_diff.memobj, &ctx),
+          WrapHandle(buf_X_acts_diff.memobj, &ctx)),
         ctx.get_queue());
     viennacl::ocl::enqueue(
         oclk_lstm_acts_backward(X_count, hidden_dim_,
-          WrapHandle((cl_mem)X_acts, &ctx),
-          WrapHandle((cl_mem)X_acts_diff, &ctx),
-          WrapHandle((cl_mem)X_diff, &ctx)),
+          WrapHandle(buf_X_acts.memobj, &ctx),
+          WrapHandle(buf_X_acts_diff.memobj, &ctx),
+          WrapHandle(buf_X_diff.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }

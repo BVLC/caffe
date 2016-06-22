@@ -10,13 +10,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
-#ifdef USE_CUDA
 #include "caffe/util/math_functions.hpp"
-#endif
-
-#ifdef USE_GREENTEA
-#include "caffe/greentea/greentea_math_functions.hpp"
-#endif
 
 const int_tp kMaxBlobAxes = 32;
 

@@ -6,7 +6,7 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
+#include "caffe/util/math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -79,24 +79,28 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    caffe_copy(count, bottom_data, bottom_memory_.mutable_gpu_data());
+  }
 
-    if (top[0] == bottom[0]) {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0,
-                           (cl_mem) (bottom_memory_.mutable_gpu_data()), 0,
-                           &ctx);
-    }
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+      this->device_->id());
+  viennacl::ocl::program &program = this->device_->program();
+  viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
+      CL_KERNEL_SELECT("prelu_forward"));
 
-    viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
-        CL_KERNEL_SELECT("prelu_forward"));
-    viennacl::ocl::enqueue(
-        oclk_prelu(count, channels, dim, WrapHandle((cl_mem) bottom_data, &ctx),
-                   WrapHandle((cl_mem) top_data, &ctx),
-                   WrapHandle((cl_mem) slope_data, &ctx), div_factor),
-        ctx.get_queue());
+  ClState& clState = Caffe::cl_state();
+  ClMemOff<Dtype> buf_slope = clState.get_buffer_mem(slope_data);
+  ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+  ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
 
+  viennacl::ocl::enqueue(
+      oclk_prelu(count, channels, dim, WrapHandle(buf_bottom.memobj, &ctx),
+                 WrapHandle(buf_top.memobj, &ctx),
+                 WrapHandle(buf_slope.memobj, &ctx), div_factor),
+      ctx.get_queue());
 #endif  // USE_GREENTEA
   }
 }
@@ -176,26 +180,28 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
           CL_KERNEL_SELECT("prelu_param_backward"));
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_backward_buff =
+          clState.get_buffer_mem(backward_buff_.mutable_gpu_diff());
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
       viennacl::ocl::enqueue(
           oclk_prelu(cdim, bottom[0]->num(), top[0]->offset(1),
-                     WrapHandle((cl_mem)top_diff, &ctx),
-              WrapHandle((cl_mem) bottom_data, &ctx),
-              WrapHandle((cl_mem) (backward_buff_.mutable_gpu_diff()), &ctx)),
+                     WrapHandle(buf_top.memobj, &ctx),
+              WrapHandle(buf_bottom.memobj, &ctx),
+              WrapHandle(buf_backward_buff.memobj, &ctx)),
           ctx.get_queue());
 
       if (channel_shared_) {
         Dtype dsum;
-        greentea_gpu_dot<Dtype>(this->device_->id(), channels * dim,
-                                (cl_mem) (backward_buff_.gpu_diff()), 0,
-                                (cl_mem) (multiplier_.gpu_data()), 0, &dsum);
-        greentea_gpu_add_scalar<Dtype>(this->device_->id(),
-                                       this->blobs_[0]->count(), Dtype(dsum),
-                                       (cl_mem) slope_diff, 0);
+        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
+         multiplier_.gpu_data(), &dsum);
+        caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
       } else {
-        greentea_gpu_gemv<Dtype>(this->device_->id(), CblasNoTrans, channels,
-                                 dim, 1., (cl_mem) (backward_buff_.gpu_diff()),
-                                 0, (cl_mem) (multiplier_.gpu_data()), 0, 1.,
-                                 (cl_mem) slope_diff, 0);
+        caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
+          backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
+          slope_diff);
       }
     }
     // Propagate to bottom
@@ -205,11 +211,18 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       int_tp div_factor = channel_shared_ ? channels : 1;
       viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
           CL_KERNEL_SELECT("prelu_backward"));
+
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_slope = clState.get_buffer_mem(slope_data);
+      ClMemOff<Dtype> buf_bottom_data = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_bottom_diff = clState.get_buffer_mem(bottom_diff);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
       viennacl::ocl::enqueue(
-          oclk_prelu(count, channels, dim, WrapHandle((cl_mem) top_diff, &ctx),
-                     WrapHandle((cl_mem) bottom_data, &ctx),
-                     WrapHandle((cl_mem) bottom_diff, &ctx),
-                     WrapHandle((cl_mem) slope_data, &ctx), div_factor),
+          oclk_prelu(count, channels, dim, WrapHandle(buf_top.memobj, &ctx),
+                     WrapHandle(buf_bottom_data.memobj, &ctx),
+                     WrapHandle(buf_bottom_diff.memobj, &ctx),
+                     WrapHandle(buf_slope.memobj, &ctx), div_factor),
           ctx.get_queue());
     }
 #endif  // USE_GREENTEA

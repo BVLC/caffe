@@ -46,20 +46,27 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
+
     if (this->phase_ == TRAIN) {
-      cl_mem mask = (cl_mem) (rand_vec_.mutable_gpu_data());
-      greentea_gpu_rng_uniform(this->device_->id(), count, mask, 0);
+      uint_tp* mask =
+          static_cast<uint_tp*>(rand_vec_.mutable_gpu_data());
+      caffe_gpu_rng_uniform(count, reinterpret_cast<uint_tpc*> (mask));
       // set thresholds
       viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
           CL_KERNEL_SELECT("dropout_forward"));
+
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<unsigned int> buf_mask = clState.get_buffer_mem(mask);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
       viennacl::ocl::enqueue(
-          oclk_dropout(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                       WrapHandle(mask, &ctx), uint_thres_, scale_,
-                       WrapHandle((cl_mem) top_data, &ctx)),
+          oclk_dropout(count, WrapHandle(buf_bottom.memobj, &ctx),
+                       WrapHandle(buf_mask.memobj, &ctx), uint_thres_, scale_,
+                       WrapHandle(buf_top.memobj, &ctx)),
           ctx.get_queue());
     } else {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
-                           &ctx);
+      caffe_copy(count, bottom_data, top_data);
     }
 #endif  // USE_GREENTEA
   }
@@ -107,18 +114,24 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::program &program = this->device_->program();
 
       if (this->phase_ == TRAIN) {
-        cl_mem mask = (cl_mem) (rand_vec_.gpu_data());
+        const uint_tp* mask = static_cast<const uint_tp*>(rand_vec_
+            .gpu_data());
         const int_tp count = bottom[0]->count();
         viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
             CL_KERNEL_SELECT("dropout_backward"));
+
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+        ClMemOff<unsigned int> buf_mask = clState.get_buffer_mem(mask);
+        ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
         viennacl::ocl::enqueue(
-            oclk_dropout(count, WrapHandle((cl_mem) top_diff, &ctx),
-                         WrapHandle(mask, &ctx), uint_thres_, scale_,
-                         WrapHandle((cl_mem) bottom_diff, &ctx)),
+            oclk_dropout(count, WrapHandle(buf_top.memobj, &ctx),
+                         WrapHandle(buf_mask.memobj, &ctx), uint_thres_, scale_,
+                         WrapHandle(buf_bottom.memobj, &ctx)),
             ctx.get_queue());
       } else {
-        greentea_copy<Dtype>(top[0]->count(), (cl_mem) top_diff, 0,
-                             (cl_mem) bottom_diff, 0, &ctx);
+        caffe_copy(top[0]->count(), top_diff, bottom_diff);
       }
 #endif  // USE_GREENTEA
     }

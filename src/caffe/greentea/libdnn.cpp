@@ -1685,18 +1685,24 @@ void LibDNNConv<Dtype>::Forward(const Dtype* bottom_data,
     //           << kernel.global_work_size(i) << std::endl;
     // }
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_weight = clState.get_buffer_mem(weight);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+    ClMemOff<Dtype> buf_bias = clState.get_buffer_mem(bias);
+
     if (bias_term_) {
       viennacl::ocl::enqueue(
-          kernel(WrapHandle((cl_mem)bottom_data, &ctx),
-                 WrapHandle((cl_mem)weight, &ctx),
-                 WrapHandle((cl_mem)bias, &ctx),
-                 WrapHandle((cl_mem)top_data, &ctx)),
+          kernel(WrapHandle(buf_bottom.memobj, &ctx),
+                 WrapHandle(buf_weight.memobj, &ctx),
+                 WrapHandle(buf_bias.memobj, &ctx),
+                 WrapHandle(buf_top.memobj, &ctx)),
           ctx.get_queue());
     } else {
       viennacl::ocl::enqueue(
-          kernel(WrapHandle((cl_mem)bottom_data, &ctx),
-                 WrapHandle((cl_mem)weight, &ctx),
-                 WrapHandle((cl_mem)top_data, &ctx)),
+          kernel(WrapHandle(buf_bottom.memobj, &ctx),
+                 WrapHandle(buf_weight.memobj, &ctx),
+                 WrapHandle(buf_top.memobj, &ctx)),
           ctx.get_queue());
     }
   }
@@ -1781,18 +1787,24 @@ void LibDNNConv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
       //           << kernel.global_work_size(i) << std::endl;
       // }
 
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_weight = clState.get_buffer_mem(weight);
+      ClMemOff<Dtype> buf_bias = clState.get_buffer_mem(bias);
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
       if (bias_term_) {
         viennacl::ocl::enqueue(
-            kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                   WrapHandle((cl_mem) weight, &ctx),
-                   WrapHandle((cl_mem) bias, &ctx),
-                   WrapHandle((cl_mem) bottom_diff, &ctx)),
+            kernel(WrapHandle(buf_top.memobj, &ctx),
+                   WrapHandle(buf_weight.memobj, &ctx),
+                   WrapHandle(buf_bias.memobj, &ctx),
+                   WrapHandle(buf_bottom.memobj, &ctx)),
             ctx.get_queue());
       } else {
         viennacl::ocl::enqueue(
-            kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                   WrapHandle((cl_mem) weight, &ctx),
-                   WrapHandle((cl_mem) bottom_diff, &ctx)),
+            kernel(WrapHandle(buf_top.memobj, &ctx),
+                   WrapHandle(buf_weight.memobj, &ctx),
+                   WrapHandle(buf_bottom.memobj, &ctx)),
             ctx.get_queue());
       }
     }
@@ -1824,18 +1836,24 @@ void LibDNNConv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
       //           << kernel.global_work_size(i) << std::endl;
       // }
 
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_bias = clState.get_buffer_mem(bias_diff);
+      ClMemOff<Dtype> buf_weight = clState.get_buffer_mem(weight_diff);
+
       if (bias_term_) {
         viennacl::ocl::enqueue(
-            kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                   WrapHandle((cl_mem) top_diff, &ctx),
-                   WrapHandle((cl_mem) bias_diff, &ctx),
-                   WrapHandle((cl_mem) weight_diff, &ctx), batch_size),
+            kernel(WrapHandle(buf_bottom.memobj, &ctx),
+                   WrapHandle(buf_top.memobj, &ctx),
+                   WrapHandle(buf_bias.memobj, &ctx),
+                   WrapHandle(buf_weight.memobj, &ctx), batch_size),
             ctx.get_queue());
       } else {
         viennacl::ocl::enqueue(
-            kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                   WrapHandle((cl_mem) top_diff, &ctx),
-                   WrapHandle((cl_mem) weight_diff, &ctx), batch_size),
+            kernel(WrapHandle(buf_bottom.memobj, &ctx),
+                   WrapHandle(buf_top.memobj, &ctx),
+                   WrapHandle(buf_weight.memobj, &ctx), batch_size),
             ctx.get_queue());
       }
     }
@@ -2014,8 +2032,11 @@ void LibDNNConv<Dtype>::SetMemory(Dtype* memory, int_tp count,
     kernel.global_work_size(1, 1);
     kernel.global_work_size(2, 1);
 
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_memory = clState.get_buffer_mem(memory);
+
     viennacl::ocl::enqueue(kernel(count, value,
-                           WrapHandle((cl_mem)memory, &ctx), offset),
+                           WrapHandle(buf_memory.memobj, &ctx), offset),
                            ctx.get_queue());
 #endif  // USE_GREENTEA
   } else {
