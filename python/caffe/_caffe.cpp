@@ -51,6 +51,8 @@ const int NPY_DTYPE = NPY_FLOAT32;
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
 
+void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
+
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
 // later if the input files are disturbed before they are actually used, but
@@ -283,6 +285,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("set_random_seed", &set_random_seed);
   bp::def("set_device", &Caffe::SetDevice);
 
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
