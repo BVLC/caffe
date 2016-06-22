@@ -343,7 +343,6 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 
   // Free MKL primitives
