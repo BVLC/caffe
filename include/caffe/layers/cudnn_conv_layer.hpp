@@ -87,8 +87,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   bool use_modest_workspace_;
 #if CUDNN_VERSION_MIN(5, 0, 0)
   void FindExConvAlgo(const vector<Blob<Dtype>*>& bottom,
-                      const vector<Blob<Dtype>*>& top,
-                      const size_t workspace_bytes);
+                      const vector<Blob<Dtype>*>& top);
 #endif
   void GetConvAlgo(const vector<Blob<Dtype>*>& bottom,
                    const vector<Blob<Dtype>*>& top,

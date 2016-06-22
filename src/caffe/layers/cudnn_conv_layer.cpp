@@ -190,6 +190,13 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       //       workspace among all algorithms (requires an initial call
       //       to FindEx with workspace size 0).
       workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
+      // Sometimes closer to zero we might have memory info diverged from
+      // reality. If try_reserve fails, it updates the info internally and
+      // we have to re-evaluate the workspace size.
+      if (!WORKSPACE.try_reserve(workspace_bytes)) {
+        GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
+        workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
+      }
       // Avoid seeking for an algorithm in subsequent iterations
       use_algo_seeker_ = false;
     }
@@ -203,7 +210,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         this->GetConvAlgo(bottom, top, workspace_bytes);
         break;
       case ConvolutionParameter_CuDNNConvolutionAlgorithmSeeker_FINDEX:
-        this->FindExConvAlgo(bottom, top, workspace_bytes);
+        WORKSPACE.reserve(workspace_bytes);
+        this->FindExConvAlgo(bottom, top);
         break;
       default:
         LOG(ERROR) << "Wrong value for cudnn_convolution_algo_seeker";
@@ -275,8 +283,7 @@ void CuDNNConvolutionLayer<Dtype>::GetConvAlgo(
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
     const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top,
-    const size_t workspace_bytes) {
+    const vector<Blob<Dtype>*>& top) {
 
   // Number of algorithms we want to consider
   // Since we only consider one algorithm (the fastest), set this to 1
@@ -293,7 +300,6 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
   void *tmp_weights;
   const int tmp_weights_size = sizeof(Dtype) * weight_offset_;
   GPUMemory::allocate(&tmp_weights, tmp_weights_size);
-  WORKSPACE.reserve(workspace_bytes);
 
   for (int i = 0; i < bottom.size(); i++) {
     // Find forward algorithm
@@ -463,6 +469,12 @@ void CuDNNConvolutionLayer<Dtype>::UpdateWorkspaceDemand(int size) {
       WORKSPACE_SIZE = workspace_bwd_data_sizes_[i];
     }
   }
+  // We might grab too much before calling Get/FindEx.
+  // Reserve the only amount needed.
+  if (WORKSPACE_SIZE < WORKSPACE.size()) {
+    WORKSPACE.release();
+    WORKSPACE.reserve(WORKSPACE_SIZE);
+  }  // else: reserve in Fwd/Bwd calls
 }
 
 template <typename Dtype>
