@@ -36,20 +36,23 @@ TEST(CpuInfo, testCpuInfoForSingleLineInput) {
   EXPECT_STREQ(cpuInfo.getNextLine(), NULL);
 }
 
-TEST(CpuInfo, testCpuInfoForTwoLineInput) {
-  CpuInfo cpuInfo("First line\nSecond line");
+TEST(CpuInfo, testCpuInfoForMultiLineInput) {
+  CpuInfo cpuInfo("First line\nSecond line\nThird line");
   EXPECT_STREQ(cpuInfo.getFirstLine(), "First line");
   EXPECT_STREQ(cpuInfo.getNextLine(), "Second line");
+  EXPECT_STREQ(cpuInfo.getNextLine(), "Third line");
   EXPECT_STREQ(cpuInfo.getNextLine(), NULL);
   EXPECT_STREQ(cpuInfo.getNextLine(), NULL);
 }
 
-TEST(CpuInfo, testCpuInfoForMultiLineInput) {
-  CpuInfo cpuInfo("First line\nSecond line\n\nFourth line");
-  EXPECT_STREQ(cpuInfo.getFirstLine(), "First line");
+TEST(CpuInfo, testCpuInfoForEmptyLinesInput) {
+  CpuInfo cpuInfo("\nSecond line\nThird line\n\nFifth line\n\n");
+  EXPECT_STREQ(cpuInfo.getFirstLine(), "");
   EXPECT_STREQ(cpuInfo.getNextLine(), "Second line");
+  EXPECT_STREQ(cpuInfo.getNextLine(), "Third line");
   EXPECT_STREQ(cpuInfo.getNextLine(), "");
-  EXPECT_STREQ(cpuInfo.getNextLine(), "Fourth line");
+  EXPECT_STREQ(cpuInfo.getNextLine(), "Fifth line");
+  EXPECT_STREQ(cpuInfo.getNextLine(), "");
   EXPECT_STREQ(cpuInfo.getNextLine(), NULL);
   EXPECT_STREQ(cpuInfo.getNextLine(), NULL);
 }
