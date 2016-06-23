@@ -520,11 +520,27 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                   }
                 }
                 // We assume KERNEL_W is equal to KERNEL_H here.
-                if ((w_idx + 1) % WEIGHT_PREF == 0 && ((w_idx + 1) < (KERNEL * KERNEL - WEIGHT_PREF))) {
+                if ((w_idx + 1) % WEIGHT_PREF == 0
+                    #if KERNEL*KERNEL % 8 != 0
+                    && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
+                    #endif
+                    ) {
                   weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                   weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
-                } else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                }
+              #if KERNEL*KERNEL % 8 == 0
+                // need to do nothing
+              #else
+                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                #if KERNEL*KERNEL % 8 == 1
                   weight_buf.w[0] = weights[weight_addr];
+                #elif KERNEL*KERNEL % 4 == 0
+                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
+                #else
+                // should never be here if kernel_w equal to kernel_h. just in case.
+                #error unsupported kernel size.
+                #endif
+              #endif
                 ++w_idx;
               });
         });
@@ -697,11 +713,27 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                   }
                 }
                 // We assume KERNEL_W is equal to KERNEL_H here.
-                if ((w_idx + 1) % WEIGHT_PREF == 0 && ((w_idx + 1) < (KERNEL * KERNEL - WEIGHT_PREF))) {
+                if ((w_idx + 1) % WEIGHT_PREF == 0
+                #if KERNEL*KERNEL % 8 != 0
+                && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
+                #endif
+                    ) {
                   weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                   weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
-                } else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                }
+              #if KERNEL*KERNEL % 8 == 0
+                // need to do nothing
+              #else
+                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                #if KERNEL*KERNEL % 8 == 1
                   weight_buf.w[0] = weights[weight_addr];
+                #elif KERNEL*KERNEL % 4 == 0
+                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
+                #else
+                // should never be here if kernel_w equal to kernel_h. just in case.
+                #error unsupported kernel size.
+                #endif
+              #endif
                 ++w_idx;
               });
         });
