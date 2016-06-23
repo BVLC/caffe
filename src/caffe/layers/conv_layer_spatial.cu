@@ -608,6 +608,8 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   timer.initted();
   timer.Start();
   cl_int err;
+  dbgPrint(std::cout << "Bechmarking kernel: " << config->kernelName
+           << std::endl);
   if (config->batched_execute)
     err = batched_convolve(bottom, top, index, num_, config);
   else
@@ -627,7 +629,6 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   double k_h = kernel_h_;
   double k_z = channels_;
   double totalFlops = ((k_w*k_h*k_z -1)*2)*(out_w*out_h*out_z)*num_;
-  std::cout << "Kernel: " << config->kernelName << std::endl;
   std::cout << "\tEstimated Gflops:" << ((totalFlops/1000)/1000)/1000
   << std::endl;
   std::cout << "\tEstimated GFLOPS/S: " <<
@@ -915,15 +916,21 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     int kernelCnt = 0;
     for(uint32_t width = 14; width > 0; width--) {
       int candidate = 0;
+      if (width > output_w_)
+        continue;
       for(uint32_t height = 14; height > 0; height--) {
-        if (height * width > 32) continue;
+        if (height * width > 32 || height > output_h_)
+          continue;
         int tile_x = kernel_w_ + (width - 1) * stride_w_;
         int tile_y = kernel_h_ + (height - 1) * stride_h_;
+        int tile_y_stride = 64 / tile_x;
+
         if (tile_x % 4 != 0 && tile_x <= 16) {
           create_convolution_kernel(bottom, top, 2, width, height, 1);
           candidate++;
         }
-        else if (tile_x % 4 == 0 && (tile_y * tile_x/4 <= 16 * 4)) {
+        else if (tile_x % 4 == 0 &&
+                 ((tile_y + tile_y_stride - 1) / tile_y_stride < 4)) {
           create_convolution_kernel(bottom, top, 2, width, height, 1);
           candidate++;
         }
@@ -934,12 +941,13 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       if (kernelCnt >= 12 && width == 2)
         break;
     }
+  } else {
+    for (int_tp y = 1; y < 4; y += 1)
+      for (int_tp z = 1; z < 16 && z < M_; z += 1) {
+        if (4 * y * z > 32) continue;
+        create_convolution_kernel(bottom, top, 1, 4, y, z);
+      }
   }
-  for (int_tp y = 1; y < 4; y += 1)
-    for (int_tp z = 1; z < 16 && z < M_; z += 1) {
-      if (4 * y * z > 32) continue;
-      create_convolution_kernel(bottom, top, 1, 4, y, z);
-    }
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     if (tune_local_size(bottom, top, kernelQueue[x])) {
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
@@ -949,10 +957,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       kernelQueue[x]->verified = false;
       kernelQueue[x]->tested = true;
     }
-
-  for (int_tp x = 0; x < kernelQueue.size(); x++)
-    kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
-                                                   num_, kernelQueue[x]);
 
   int_tp failures = 0;
   bool verification = false;
