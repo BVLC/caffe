@@ -309,7 +309,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
   this->iter_ = state.iter();
   if (state.has_learned_net()) {
     NetParameter net_param;
-    ReadNetParamsFromBinaryFileOrDie(state.learned_net().c_str(), &net_param);
+    ReadNetParamsFromBinaryFile(state.learned_net().c_str(), &net_param);
     this->net_->CopyTrainedLayersFrom(net_param);
   }
   this->current_step_ = state.current_step();

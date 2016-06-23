@@ -26,11 +26,7 @@ int main(int argc, char** argv) {
 
   NetParameter net_param;
   string input_filename(argv[1]);
-  if (!ReadProtoFromBinaryFile(input_filename, &net_param)) {
-    LOG(ERROR) << "Failed to parse input binary file as NetParameter: "
-               << input_filename;
-    return 2;
-  }
+  ReadProtoFromBinaryFile(input_filename, &net_param);
   bool need_upgrade = NetNeedsUpgrade(net_param);
   bool success = true;
   if (need_upgrade) {

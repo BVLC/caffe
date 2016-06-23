@@ -26,11 +26,7 @@ int main(int argc, char** argv) {
 
   SolverParameter solver_param;
   string input_filename(argv[1]);
-  if (!ReadProtoFromTextFile(input_filename, &solver_param)) {
-    LOG(ERROR) << "Failed to parse input text file as SolverParameter: "
-               << input_filename;
-    return 2;
-  }
+  ReadProtoFromTextFile(input_filename, &solver_param);
   bool need_upgrade = SolverNeedsTypeUpgrade(solver_param);
   bool success = true;
   if (need_upgrade) {

@@ -119,7 +119,7 @@ std::vector<Prediction> Classifier::Classify(const cv::Mat& img, int N) {
 /* Load the mean file in binaryproto format. */
 void Classifier::SetMean(const string& mean_file) {
   BlobProto blob_proto;
-  ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+  ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
 
   /* Convert from BlobProto to Blob<float> */
   Blob<float> mean_blob;

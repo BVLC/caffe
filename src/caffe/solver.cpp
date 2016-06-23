@@ -37,7 +37,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
   SolverParameter param;
-  ReadSolverParamsFromTextFileOrDie(param_file, &param);
+  ReadSolverParamsFromTextFile(param_file, &param);
   Init(param);
 }
 
@@ -80,7 +80,7 @@ void Solver<Dtype>::InitTrainNet() {
   } else if (param_.has_train_net()) {
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating training net from train_net file: " << param_.train_net();
-    ReadNetParamsFromTextFileOrDie(param_.train_net(), &net_param);
+    ReadNetParamsFromTextFile(param_.train_net(), &net_param);
   }
   if (param_.has_net_param()) {
     LOG_IF(INFO, Caffe::root_solver())
@@ -90,7 +90,7 @@ void Solver<Dtype>::InitTrainNet() {
   if (param_.has_net()) {
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating training net from net file: " << param_.net();
-    ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
+    ReadNetParamsFromTextFile(param_.net(), &net_param);
   }
   // Set the correct NetState.  We start with the solver defaults (lowest
   // precedence); then, merge in any NetState specified by the net_param itself;
@@ -149,7 +149,7 @@ void Solver<Dtype>::InitTestNets() {
   }
   for (int i = 0; i < num_test_net_files; ++i, ++test_net_id) {
       sources[test_net_id] = "test_net file: " + param_.test_net(i);
-      ReadNetParamsFromTextFileOrDie(param_.test_net(i),
+      ReadNetParamsFromTextFile(param_.test_net(i),
           &net_params[test_net_id]);
   }
   const int remaining_test_nets = param_.test_iter_size() - test_net_id;
@@ -162,7 +162,7 @@ void Solver<Dtype>::InitTestNets() {
   if (has_net_file) {
     for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
       sources[test_net_id] = "net file: " + param_.net();
-      ReadNetParamsFromTextFileOrDie(param_.net(), &net_params[test_net_id]);
+      ReadNetParamsFromTextFile(param_.net(), &net_params[test_net_id]);
     }
   }
   test_nets_.resize(num_test_net_instances);

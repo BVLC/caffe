@@ -31,7 +31,7 @@ template <typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase, const Net* root_net)
     : root_net_(root_net) {
   NetParameter param;
-  ReadNetParamsFromTextFileOrDie(param_file, &param);
+  ReadNetParamsFromTextFile(param_file, &param);
   param.mutable_state()->set_phase(phase);
   Init(param);
 }
@@ -789,7 +789,7 @@ template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
     const string trained_filename) {
   NetParameter param;
-  ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
+  ReadNetParamsFromBinaryFile(trained_filename, &param);
   CopyTrainedLayersFrom(param);
 }
 
