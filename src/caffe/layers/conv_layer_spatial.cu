@@ -910,53 +910,29 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   const viennacl::ocl::device &device = ctx.current_device();
   if (device.vendor().find("Intel") != std::string::npos &&
     M_ % 16 == 0) {
-    /* IDLF kernel is using Intel specific extension which make
+    /* IDLF kernels are using Intel specific extension which make
        them intel only. */
-    bool gotValidConfig = false;
-
-    if (kernel_w_ + (4 - 1) * stride_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 4, 4, 1);
-      create_convolution_kernel(bottom, top, 2, 4, 5, 1);
-      create_convolution_kernel(bottom, top, 2, 4, 6, 1);
-      create_convolution_kernel(bottom, top, 2, 4, 7, 1);
-      create_convolution_kernel(bottom, top, 2, 4, 8, 1);
-      gotValidConfig = true;
-    }
-    if (kernel_w_ + (8 - 1) * stride_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 8, 2, 1);
-      create_convolution_kernel(bottom, top, 2, 8, 3, 1);
-      //create_convolution_kernel(bottom, top, 2, 8, 4, 1);
-      //create_convolution_kernel(bottom, top, 2, 8, 5, 1);
-      //create_convolution_kernel(bottom, top, 2, 8, 6, 1);
-      gotValidConfig = true;
-    }
-    if (kernel_w_ + (6 - 1) * stride_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 6, 4, 1);
-      create_convolution_kernel(bottom, top, 2, 6, 5, 1);
-      //create_convolution_kernel(bottom, top, 2, 6, 6, 1);
-      gotValidConfig = true;
-    }
-
-    if (kernel_w_ + (5 - 1) * stride_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 5, 4, 1);
-      create_convolution_kernel(bottom, top, 2, 5, 5, 1);
-      create_convolution_kernel(bottom, top, 2, 5, 6, 1);
-      gotValidConfig = true;
-    }
-
-    if (!gotValidConfig && kernel_w_ + (2 - 1) * stride_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 2, 1, 1);
-      create_convolution_kernel(bottom, top, 2, 2, 2, 1);
-      create_convolution_kernel(bottom, top, 2, 2, 3, 1);
-      create_convolution_kernel(bottom, top, 2, 2, 4, 1);
-      create_convolution_kernel(bottom, top, 2, 2, 5, 1);
-      create_convolution_kernel(bottom, top, 2, 2, 6, 1);
-      gotValidConfig = true;
-    }
-
-    if (!gotValidConfig && kernel_w_ < 16) {
-      create_convolution_kernel(bottom, top, 2, 1, 1, 1);
-      create_convolution_kernel(bottom, top, 2, 1, 2, 1);
+    int kernelCnt = 0;
+    for(uint32_t width = 14; width > 0; width--) {
+      int candidate = 0;
+      for(uint32_t height = 14; height > 0; height--) {
+        if (height * width > 32) continue;
+        int tile_x = kernel_w_ + (width - 1) * stride_w_;
+        int tile_y = kernel_h_ + (height - 1) * stride_h_;
+        if (tile_x % 4 != 0 && tile_x <= 16) {
+          create_convolution_kernel(bottom, top, 2, width, height, 1);
+          candidate++;
+        }
+        else if (tile_x % 4 == 0 && (tile_y * tile_x/4 <= 16 * 4)) {
+          create_convolution_kernel(bottom, top, 2, width, height, 1);
+          candidate++;
+        }
+        if (candidate >= 4 && height == 2)
+          break;
+      }
+      kernelCnt += candidate;
+      if (kernelCnt >= 12 && width == 2)
+        break;
     }
   }
   for (int_tp y = 1; y < 4; y += 1)
