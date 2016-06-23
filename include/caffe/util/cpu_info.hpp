@@ -48,13 +48,25 @@ class CpuInfo : public CpuInfoInterface {
   void parseLines(char *content);
 };
 
-class Collection {
+class CollectionInterface {
  public:
-  static unsigned getProcessorSpeedMHz();
-  static unsigned getTotalNumberOfSockets();
-  static unsigned getTotalNumberOfCpuCores();
-  static unsigned getNumberOfProcessors();
-  static const Processor &getProcessor(unsigned processorId);
+  virtual ~CollectionInterface() {}
+  virtual unsigned getProcessorSpeedMHz() = 0;
+  virtual unsigned getTotalNumberOfSockets() = 0;
+  virtual unsigned getTotalNumberOfCpuCores() = 0;
+  virtual unsigned getNumberOfProcessors() = 0;
+  virtual const Processor &getProcessor(unsigned processorId) = 0;
+};
+
+class Collection : public CollectionInterface {
+ public:
+  explicit Collection(CpuInfoInterface *cpuInfo);
+
+  virtual unsigned getProcessorSpeedMHz();
+  virtual unsigned getTotalNumberOfSockets();
+  virtual unsigned getTotalNumberOfCpuCores();
+  virtual unsigned getNumberOfProcessors();
+  virtual const Processor &getProcessor(unsigned processorId);
 
  private:
   CpuInfoInterface &cpuInfo;
@@ -63,11 +75,10 @@ class Collection {
   std::vector<Processor> processors;
   Processor *currentProcessor;
 
-  explicit Collection(CpuInfoInterface *cpuInfo);
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
-  static Collection &getSingleInstance();
 
+  void initialize();
   void parseCpuInfo();
   void parseCpuInfoLine(const char *cpuInfoLine);
   void parseValue(const char *fieldName, const char *valueString);
@@ -93,13 +104,17 @@ class OpenMpManager {
   static void bindOpenMpThreads();
   static void printVerboseInformation();
 
+  static unsigned getProcessorSpeedMHz();
+
  private:
+  Collection &collection;
+
   bool isGpuEnabled;
   bool isAnyOpenMpEnvVarSpecified;
   cpu_set_t currentCpuSet;
   cpu_set_t currentCoreSet;
 
-  OpenMpManager();
+  explicit OpenMpManager(Collection *collection);
   OpenMpManager(const OpenMpManager &openMpManager);
   OpenMpManager &operator =(const OpenMpManager &openMpManager);
   static OpenMpManager &getInstance();

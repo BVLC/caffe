@@ -92,35 +92,24 @@ Collection::Collection(CpuInfoInterface *cpuInfo) : cpuInfo(*cpuInfo) {
   collectBasicCpuInformation();
 }
 
-Collection &Collection::getSingleInstance() {
-  static CpuInfo cpuInfo;
-  static Collection collection(&cpuInfo);
-  return collection;
-}
-
 unsigned Collection::getProcessorSpeedMHz() {
-  Collection &collection = getSingleInstance();
-  return collection.processors.size() ? collection.processors[0].speedMHz : 0;
+  return processors.size() ? processors[0].speedMHz : 0;
 }
 
 unsigned Collection::getTotalNumberOfSockets() {
-  Collection &collection = getSingleInstance();
-  return collection.totalNumberOfSockets;
+  return totalNumberOfSockets;
 }
 
 unsigned Collection::getTotalNumberOfCpuCores() {
-  Collection &collection = getSingleInstance();
-  return collection.totalNumberOfCpuCores;
+  return totalNumberOfCpuCores;
 }
 
 unsigned Collection::getNumberOfProcessors() {
-  Collection &collection = getSingleInstance();
-  return collection.processors.size();
+  return processors.size();
 }
 
 const Processor &Collection::getProcessor(unsigned processorId) {
-  Collection &collection = getSingleInstance();
-  return collection.processors[processorId];
+  return processors[processorId];
 }
 
 void Collection::parseCpuInfo() {
@@ -262,14 +251,16 @@ static const char *openMpEnvVars[] = {
 static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
-OpenMpManager::OpenMpManager() {
+OpenMpManager::OpenMpManager(Collection *collection) : collection(*collection) {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
 }
 
 OpenMpManager &OpenMpManager::getInstance() {
-  static OpenMpManager openMpManager;
+  static CpuInfo cpuInfo;
+  static Collection collection(&cpuInfo);
+  static OpenMpManager openMpManager(&collection);
   return openMpManager;
 }
 
@@ -325,7 +316,7 @@ void OpenMpManager::getCurrentCpuSet() {
 
 void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
   CPU_ZERO(defaultCpuSet);
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     CPU_SET(processorId, defaultCpuSet);
   }
@@ -337,8 +328,8 @@ void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
    available. */
 
 void OpenMpManager::getCurrentCoreSet() {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
-  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
   cpu_set_t usedCoreSet;
   CPU_ZERO(&usedCoreSet);
@@ -356,8 +347,8 @@ void OpenMpManager::getCurrentCoreSet() {
 }
 
 void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
-  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
   int processorId = physicalCoreId % totalNumberOfCpuCores;
   while (processorId < numberOfProcessors) {
@@ -370,7 +361,7 @@ void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
 }
 
 unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
 
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     if (CPU_ISSET(processorId, &currentCoreSet)) {
@@ -415,16 +406,16 @@ void OpenMpManager::printVerboseInformation() {
   OpenMpManager &openMpManager = getInstance();
 
   LOG(INFO) << "Processor speed [MHz]: "
-    << Collection::getProcessorSpeedMHz();
+    << openMpManager.collection.getProcessorSpeedMHz();
 
   LOG(INFO) << "Total number of sockets: "
-    << Collection::getTotalNumberOfSockets();
+    << openMpManager.collection.getTotalNumberOfSockets();
 
   LOG(INFO) << "Total number of CPU cores: "
-    << Collection::getTotalNumberOfCpuCores();
+    << openMpManager.collection.getTotalNumberOfCpuCores();
 
   LOG(INFO) << "Total number of processors: "
-    << Collection::getNumberOfProcessors();
+    << openMpManager.collection.getNumberOfProcessors();
 
   LOG(INFO) << "GPU is used: "
     << (openMpManager.isGpuEnabled ? "yes" : "no");
@@ -437,6 +428,11 @@ void OpenMpManager::printVerboseInformation() {
 
   LOG(INFO) << "Number of OpenMP threads: "
     << omp_get_max_threads();
+}
+
+unsigned OpenMpManager::getProcessorSpeedMHz() {
+  OpenMpManager &openMpManager = getInstance();
+  return openMpManager.collection.getProcessorSpeedMHz();
 }
 
 #endif  // _OPENMP
