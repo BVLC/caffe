@@ -72,7 +72,7 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   #ifdef _OPENMP
 
   int nthr = omp_get_max_threads();
-  int threshold = nthr * caffe::cpu::Collection::getProcessorSpeedMHz() / 3;
+  int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   bool run_parallel = true;
 
   // Note: we Assume GPU's CPU path is single threaded
@@ -131,7 +131,7 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   #ifdef _OPENMP
 
   int nthr = omp_get_max_threads();
-  int threshold = nthr * caffe::cpu::Collection::getProcessorSpeedMHz() / 3;
+  int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
     (Caffe::mode() != Caffe::GPU) &&
     (omp_in_parallel() == 0) &&
@@ -389,7 +389,7 @@ static void bernoulli_generate(int n, double p, int* r) {
 
 #ifdef _OPENMP
   int nthr = omp_get_max_threads();
-  int threshold = nthr * caffe::cpu::Collection::getProcessorSpeedMHz() / 3;
+  int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   bool run_parallel =
     (Caffe::mode() != Caffe::GPU) &&
     (omp_in_parallel() == 0) &&

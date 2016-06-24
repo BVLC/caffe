@@ -1,6 +1,10 @@
 #include <glog/logging.h>
+
+#include <fstream>
 #include <set>
+#include <string>
 #include <vector>
+
 #include "caffe/util/cpu_info.hpp"
 
 namespace caffe {
@@ -12,79 +16,116 @@ Processor::Processor() {
   siblings = 0;
   coreId = 0;
   cpuCores = 0;
+  speedMHz = 0;
 }
 
-Collection::Collection() {
-  processorSpeedMHz = 0;
+CpuInfo::CpuInfo() {
+  loadContentFromFile("/proc/cpuinfo");
+}
+
+CpuInfo::CpuInfo(const char *content) {
+  loadContent(content);
+}
+
+void CpuInfo::loadContentFromFile(const char *fileName) {
+  std::ifstream file(fileName);
+  std::string content(
+    (std::istreambuf_iterator<char>(file)),
+    (std::istreambuf_iterator<char>()));
+
+  loadContent(content.c_str());
+}
+
+void CpuInfo::loadContent(const char *content) {
+  size_t contentLength = strlen(content);
+  char *contentCopy = new char[contentLength + 1];
+  snprintf(contentCopy, contentLength + 1, "%s", content);
+
+  parseLines(contentCopy);
+
+  fileContentBegin = contentCopy;
+  fileContentEnd = &contentCopy[contentLength];
+  currentLine = NULL;
+}
+
+CpuInfo::~CpuInfo() {
+  delete [] fileContentBegin;
+}
+
+void CpuInfo::parseLines(char *content) {
+  for (; *content; content++) {
+    if (*content == '\n') {
+      *content = '\0';
+    }
+  }
+}
+
+const char *CpuInfo::getFirstLine() {
+  currentLine = fileContentBegin < fileContentEnd ? fileContentBegin : NULL;
+  return getNextLine();
+}
+
+const char *CpuInfo::getNextLine() {
+  if (!currentLine) {
+    return NULL;
+  }
+
+  const char *savedCurrentLine = currentLine;
+  while (*(currentLine++)) {
+  }
+
+  if (currentLine >= fileContentEnd) {
+    currentLine = NULL;
+  }
+
+  return savedCurrentLine;
+}
+
+Collection::Collection(CpuInfoInterface *cpuInfo) : cpuInfo(*cpuInfo) {
   totalNumberOfSockets = 0;
   totalNumberOfCpuCores = 0;
   currentProcessor = NULL;
 
   processors.reserve(96);
 
-  parseCpuFile("/proc/cpuinfo");
+  parseCpuInfo();
   collectBasicCpuInformation();
 }
 
-Collection &Collection::getSingleInstance() {
-  static Collection collection;
-  return collection;
-}
-
 unsigned Collection::getProcessorSpeedMHz() {
-  Collection &collection = getSingleInstance();
-  return collection.processorSpeedMHz;
+  return processors.size() ? processors[0].speedMHz : 0;
 }
 
 unsigned Collection::getTotalNumberOfSockets() {
-  Collection &collection = getSingleInstance();
-  return collection.totalNumberOfSockets;
+  return totalNumberOfSockets;
 }
 
 unsigned Collection::getTotalNumberOfCpuCores() {
-  Collection &collection = getSingleInstance();
-  return collection.totalNumberOfCpuCores;
+  return totalNumberOfCpuCores;
 }
 
 unsigned Collection::getNumberOfProcessors() {
-  Collection &collection = getSingleInstance();
-  return collection.processors.size();
+  return processors.size();
 }
 
 const Processor &Collection::getProcessor(unsigned processorId) {
-  Collection &collection = getSingleInstance();
-  return collection.processors[processorId];
+  return processors[processorId];
 }
 
-void Collection::parseCpuFile(const char *fileName) {
-  FILE *file = fopen(fileName, "rb");
-  if (!file) {
-    return;
-  }
-
-  parseCpuFileContent(file);
-
-  fclose(file);
-}
-
-void Collection::parseCpuFileContent(FILE *file) {
-  while (!feof(file)) {
-    char lineBuffer[1024];
-    if (!fgets(lineBuffer, sizeof(lineBuffer), file)) {
-      break;
-    }
-
-    parseCpuFileLine(lineBuffer);
+void Collection::parseCpuInfo() {
+  const char *cpuInfoLine = cpuInfo.getFirstLine();
+  for (; cpuInfoLine; cpuInfoLine = cpuInfo.getNextLine()) {
+    parseCpuInfoLine(cpuInfoLine);
   }
 }
 
-void Collection::parseCpuFileLine(const char *lineBuffer) {
-  int delimiterPosition = strcspn(lineBuffer, ":");
+void Collection::parseCpuInfoLine(const char *cpuInfoLine) {
+  int delimiterPosition = strcspn(cpuInfoLine, ":");
 
-  if (lineBuffer[delimiterPosition] == '\0') {
+  if (cpuInfoLine[delimiterPosition] == '\0') {
     currentProcessor = NULL;
   } else {
-    parseValue(lineBuffer, &lineBuffer[delimiterPosition + 2]);
+    parseValue(cpuInfoLine, &cpuInfoLine[delimiterPosition + 2]);
   }
 }
 
@@ -94,27 +135,27 @@ void Collection::parseValue(const char *fieldName, const char *valueString) {
   }
 
   if (beginsWith(fieldName, "processor")) {
-    return parseInteger(&currentProcessor->processor, valueString);
+    currentProcessor->processor = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "physical id")) {
-    return parseInteger(&currentProcessor->physicalId, valueString);
+    currentProcessor->physicalId = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "siblings")) {
-    return parseInteger(&currentProcessor->siblings, valueString);
+    currentProcessor->siblings = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "core id")) {
-    return parseInteger(&currentProcessor->coreId, valueString);
+    currentProcessor->coreId = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "cpu cores")) {
-    return parseInteger(&currentProcessor->cpuCores, valueString);
+    currentProcessor->cpuCores = parseInteger(valueString);
   }
 
   if (beginsWith(fieldName, "model name")) {
-    return extractProcessorSpeedFromModelName(valueString);
+    currentProcessor->speedMHz = extractSpeedFromModelName(valueString);
   }
 }
 
@@ -133,16 +174,16 @@ bool Collection::beginsWith(const char *lineBuffer, const char *text) const {
   return true;
 }
 
-void Collection::parseInteger(unsigned *value, const char *text) const {
-  *value = atol(text);
+unsigned Collection::parseInteger(const char *text) const {
+  return atol(text);
 }
 
 /* Function extracts CPU speed from model name. If unit is not set it is
    assumed that values below 100 are specified in GHz, otherwise MHz */
-void Collection::extractProcessorSpeedFromModelName(const char *text) {
+unsigned Collection::extractSpeedFromModelName(const char *text) const {
   text = strstr(text, "@");
-  if (!text || processorSpeedMHz) {
-    return;
+  if (!text) {
+    return 0;
   }
 
   char *unit;
@@ -157,9 +198,9 @@ void Collection::extractProcessorSpeedFromModelName(const char *text) {
   bool isGHzPossible = (speed < 100);
 
   if (isGHz || (isGHzPossible && !isMHz)) {
-    processorSpeedMHz = 1000 * speed + 0.5;
+    return 1000 * speed + 0.5;
   } else {
-    processorSpeedMHz = speed + 0.5;
+    return speed + 0.5;
   }
 }
 
@@ -210,14 +251,16 @@ static const char *openMpEnvVars[] = {
 static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
-OpenMpManager::OpenMpManager() {
+OpenMpManager::OpenMpManager(Collection *collection) : collection(*collection) {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
 }
 
 OpenMpManager &OpenMpManager::getInstance() {
-  static OpenMpManager openMpManager;
+  static CpuInfo cpuInfo;
+  static Collection collection(&cpuInfo);
+  static OpenMpManager openMpManager(&collection);
   return openMpManager;
 }
 
@@ -273,7 +316,7 @@ void OpenMpManager::getCurrentCpuSet() {
 
 void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
   CPU_ZERO(defaultCpuSet);
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     CPU_SET(processorId, defaultCpuSet);
   }
@@ -285,8 +328,8 @@ void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
    available. */
 
 void OpenMpManager::getCurrentCoreSet() {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
-  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
   cpu_set_t usedCoreSet;
   CPU_ZERO(&usedCoreSet);
@@ -304,8 +347,8 @@ void OpenMpManager::getCurrentCoreSet() {
 }
 
 void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
-  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
   int processorId = physicalCoreId % totalNumberOfCpuCores;
   while (processorId < numberOfProcessors) {
@@ -318,7 +361,7 @@ void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
 }
 
 unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
-  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
 
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     if (CPU_ISSET(processorId, &currentCoreSet)) {
@@ -363,16 +406,16 @@ void OpenMpManager::printVerboseInformation() {
   OpenMpManager &openMpManager = getInstance();
 
   LOG(INFO) << "Processor speed [MHz]: "
-    << Collection::getProcessorSpeedMHz();
+    << openMpManager.collection.getProcessorSpeedMHz();
 
   LOG(INFO) << "Total number of sockets: "
-    << Collection::getTotalNumberOfSockets();
+    << openMpManager.collection.getTotalNumberOfSockets();
 
   LOG(INFO) << "Total number of CPU cores: "
-    << Collection::getTotalNumberOfCpuCores();
+    << openMpManager.collection.getTotalNumberOfCpuCores();
 
   LOG(INFO) << "Total number of processors: "
-    << Collection::getNumberOfProcessors();
+    << openMpManager.collection.getNumberOfProcessors();
 
   LOG(INFO) << "GPU is used: "
     << (openMpManager.isGpuEnabled ? "yes" : "no");
@@ -385,6 +428,11 @@ void OpenMpManager::printVerboseInformation() {
 
   LOG(INFO) << "Number of OpenMP threads: "
     << omp_get_max_threads();
+}
+
+unsigned OpenMpManager::getProcessorSpeedMHz() {
+  OpenMpManager &openMpManager = getInstance();
+  return openMpManager.collection.getProcessorSpeedMHz();
 }
 
 #endif  // _OPENMP
