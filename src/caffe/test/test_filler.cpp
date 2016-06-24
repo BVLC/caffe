@@ -185,8 +185,7 @@ TYPED_TEST(PositiveUnitballStaticFillerTest, TestFill) {
   std::vector<TypeParam> data_0, data_1;
   data_0.resize(count);
   data_1.resize(count);
-  //caffe_copy(count, data, &data_0.front());
-  caffe_gpu_memcpy(count, data, &data_0.front());
+  caffe_copy(count, data, &data_0.front());
 
   this->filler_->Fill(this->blob_.get());
   caffe_copy(count, data, &data_1.front());
