@@ -355,7 +355,6 @@ class XavierStaticFiller : public Filler<Dtype> {
          << "Sparsity not supported by this Filler.";
   }
 
-
  private:
   std::vector<Dtype> xavier_static_filler_data_;
   bool xavier_static_filler_flag_;

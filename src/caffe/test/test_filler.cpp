@@ -73,10 +73,9 @@ class UniformStaticFillerTest : public ::testing::Test {
     filler_param_.set_min(1.);
     filler_param_.set_max(2.);
     filler_.reset(new UniformStaticFiller<Dtype>(filler_param_));
-    filler_->Fill(blob_);
+    filler_->Fill(blob_.get());
   }
-  virtual ~UniformStaticFillerTest() { delete blob_; }
-  Blob<Dtype>* const blob_;
+  shared_ptr<Blob<Dtype> > const blob_;
   FillerParameter filler_param_;
   shared_ptr<UniformStaticFiller<Dtype> > filler_;
 };
@@ -100,7 +99,7 @@ TYPED_TEST(UniformStaticFillerTest, TestFill) {
     EXPECT_LE(data[i], this->filler_param_.max());
   }
 
-  this->filler_->Fill(this->blob_);
+  this->filler_->Fill(this->blob_.get());
   caffe_copy(count, data, &data_1.front());
   for (int i = 0; i < count; ++i) {
     // We do not use EXPECT_FLOAT_EQ because the data must match
@@ -153,10 +152,9 @@ class PositiveUnitballStaticFillerTest : public ::testing::Test {
       : blob_(new Blob<Dtype>(2, 3, 4, 5)),
         filler_param_() {
     filler_.reset(new PositiveUnitballStaticFiller<Dtype>(filler_param_));
-    filler_->Fill(blob_);
+    filler_->Fill(blob_.get());
   }
-  virtual ~PositiveUnitballStaticFillerTest() { delete blob_; }
-  Blob<Dtype>* const blob_;
+  shared_ptr<Blob<Dtype> > const blob_;
   FillerParameter filler_param_;
   shared_ptr<PositiveUnitballStaticFiller<Dtype> > filler_;
 };
@@ -187,9 +185,10 @@ TYPED_TEST(PositiveUnitballStaticFillerTest, TestFill) {
   std::vector<TypeParam> data_0, data_1;
   data_0.resize(count);
   data_1.resize(count);
-  caffe_copy(count, data, &data_0.front());
+  //caffe_copy(count, data, &data_0.front());
+  caffe_gpu_memcpy(count, data, &data_0.front());
 
-  this->filler_->Fill(this->blob_);
+  this->filler_->Fill(this->blob_.get());
   caffe_copy(count, data, &data_1.front());
   for (int i = 0; i < count; ++i) {
     // We do not use EXPECT_FLOAT_EQ because the data must match
@@ -248,10 +247,9 @@ class GaussianStaticFillerTest : public ::testing::Test {
     filler_param_.set_mean(10.);
     filler_param_.set_std(0.1);
     filler_.reset(new GaussianStaticFiller<Dtype>(filler_param_));
-    filler_->Fill(blob_);
+    filler_->Fill(blob_.get());
   }
-  virtual ~GaussianStaticFillerTest() { delete blob_; }
-  Blob<Dtype>* const blob_;
+  shared_ptr<Blob<Dtype> > const blob_;
   FillerParameter filler_param_;
   shared_ptr<GaussianStaticFiller<Dtype> > filler_;
 };
@@ -286,7 +284,7 @@ TYPED_TEST(GaussianStaticFillerTest, TestFill) {
   data_1.resize(count);
   caffe_copy(count, data, &data_0.front());
 
-  this->filler_->Fill(this->blob_);
+  this->filler_->Fill(this->blob_.get());
   caffe_copy(count, data, &data_1.front());
   for (int i = 0; i < count; ++i) {
     // We do not use EXPECT_FLOAT_EQ because the data must match
@@ -355,7 +353,7 @@ class XavierStaticFillerTest : public ::testing::Test {
       Dtype n) {
     this->filler_param_.set_variance_norm(variance_norm);
     this->filler_.reset(new XavierStaticFiller<Dtype>(this->filler_param_));
-    this->filler_->Fill(blob_);
+    this->filler_->Fill(blob_.get());
     EXPECT_TRUE(this->blob_);
     const int count = this->blob_->count();
     const Dtype* data = this->blob_->cpu_data();
@@ -381,7 +379,7 @@ class XavierStaticFillerTest : public ::testing::Test {
     data_1.resize(count);
     caffe_copy(count, data, &data_0.front());
 
-    this->filler_->Fill(this->blob_);
+    this->filler_->Fill(this->blob_.get());
     caffe_copy(count, data, &data_1.front());
     for (int i = 0; i < count; ++i) {
       // We do not use EXPECT_FLOAT_EQ because the data must match
@@ -389,8 +387,7 @@ class XavierStaticFillerTest : public ::testing::Test {
       EXPECT_EQ(data_0[i], data_1[i]);
     }
   }
-  virtual ~XavierStaticFillerTest() { delete blob_; }
-  Blob<Dtype>* const blob_;
+  shared_ptr<Blob<Dtype> > const blob_;
   FillerParameter filler_param_;
   shared_ptr<XavierStaticFiller<Dtype> > filler_;
 };
@@ -470,8 +467,8 @@ class MSRAStaticFillerTest : public ::testing::Test {
       Dtype n) {
     this->filler_param_.set_variance_norm(variance_norm);
     this->filler_.reset(new MSRAStaticFiller<Dtype>(this->filler_param_));
-    this->filler_->Fill(blob_);
-    EXPECT_TRUE(this->blob_);
+    this->filler_->Fill(blob_.get());
+    EXPECT_TRUE(this->blob_.get());
     const int count = this->blob_->count();
     const Dtype* data = this->blob_->cpu_data();
     Dtype mean = 0.;
@@ -496,7 +493,7 @@ class MSRAStaticFillerTest : public ::testing::Test {
     data_1.resize(count);
     caffe_copy(count, data, &data_0.front());
 
-    this->filler_->Fill(this->blob_);
+    this->filler_->Fill(this->blob_.get());
     caffe_copy(count, data, &data_1.front());
     for (int i = 0; i < count; ++i) {
       // We do not use EXPECT_FLOAT_EQ because the data must match
@@ -504,8 +501,7 @@ class MSRAStaticFillerTest : public ::testing::Test {
       EXPECT_EQ(data_0[i], data_1[i]);
     }
   }
-  virtual ~MSRAStaticFillerTest() { delete blob_; }
-  Blob<Dtype>* const blob_;
+  shared_ptr<Blob<Dtype> > const blob_;
   FillerParameter filler_param_;
   shared_ptr<MSRAStaticFiller<Dtype> > filler_;
 };

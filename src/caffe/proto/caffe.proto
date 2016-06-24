@@ -41,7 +41,16 @@ message Datum {
 }
 
 message FillerParameter {
-  // The filler type.
+  // The filler type. Can be one of the following:
+  // constant, gaussian, positive_unitball, uniform, xavier,
+  // msra, bilinear, or their static versions:
+  // gaussianstatic, positive_unitballstatic, uniformstatic, 
+  // xavierstatic, msrastatic, bilinearstatic
+  // In the static version the random number generator is only
+  // called once, and subsequent calls to fill blob, will write
+  // the same random numbers as in the first call. This is done
+  // to save time in cases where having same random numbers does
+  // not make a difference.
   optional string type = 1 [default = 'constant'];
   optional float value = 2 [default = 0]; // the value in constant filler
   optional float min = 3 [default = 0]; // the min value in uniform filler
