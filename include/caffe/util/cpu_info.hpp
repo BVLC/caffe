@@ -78,7 +78,6 @@ class Collection : public CollectionInterface {
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
 
-  void initialize();
   void parseCpuInfo();
   void parseCpuInfoLine(const char *cpuInfoLine);
   void parseValue(const char *fieldName, const char *valueString);
