@@ -307,7 +307,7 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top,
-    int_tp swizzled_factor){
+    int_tp swizzled_factor) {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
@@ -324,8 +324,8 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
   oclk_copy_weight.arg(argIdx++, channels);
   oclk_copy_weight.arg(argIdx++, this->num_output_);
   oclk_copy_weight.arg(argIdx++, swizzled_factor);
-  const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_ * channels
-      * kernel_w_ * kernel_h_), 1, 1 };
+  const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_
+      * channels * kernel_w_ * kernel_h_), 1, 1 };
 
   OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                        oclk_copy_weight.handle().get(), 3, NULL,
@@ -693,7 +693,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << kernelDef.c_str() << " -D convolve_simd16=U"
                 << kernelUKey.c_str() << "_SIMD16";
 
-  const int_tp in_buffer_size = (output_block_height - 1) * stride_h_ + kernel_h_;
+  const int_tp in_buffer_size = (output_block_height - 1) * stride_h_
+                                 + kernel_h_;
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
           output_block_width : output_width % output_block_width;
@@ -888,11 +889,11 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
     int kernelCnt = 0;
-    for(uint32_t width = 14; width > 0; width--) {
+    for (uint32_t width = 14; width > 0; width--) {
       int candidate = 0;
       if (width > output_w_)
         continue;
-      for(uint32_t height = 14; height > 0; height--) {
+      for (uint32_t height = 14; height > 0; height--) {
         if (height * width > 32 || height > output_h_)
           continue;
         int tile_x = kernel_w_ + (width - 1) * stride_w_;
@@ -902,8 +903,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         if (tile_x % 4 != 0 && tile_x <= 16) {
           create_convolution_kernel(bottom, top, 2, width, height, 1);
           candidate++;
-        }
-        else if (tile_x % 4 == 0 &&
+        } else if ((tile_x % 4 == 0) &&
                  ((tile_y + tile_y_stride - 1) / tile_y_stride < 4)) {
           create_convolution_kernel(bottom, top, 2, width, height, 1);
           candidate++;
