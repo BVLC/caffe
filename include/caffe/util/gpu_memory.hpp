@@ -18,20 +18,22 @@ struct GPUMemory {
 
   template <class Any>
   static void allocate(Any** ptr, size_t size,
+      int device = INVALID_DEVICE,
       cudaStream_t stream = cudaStreamDefault) {
-    if (!try_allocate(reinterpret_cast<void**>(ptr), size, stream)) {
-      LOG(FATAL) << "Out of memory: failed to allocate " << size << " bytes";
+    if (!try_allocate(reinterpret_cast<void**>(ptr), size, device, stream)) {
+      LOG(FATAL) << "Out of memory: failed to allocate " << size
+          << " bytes on device " << device;
     }
   }
 
-  static void deallocate(void* ptr,
+  static void deallocate(void* ptr, int device = INVALID_DEVICE,
       cudaStream_t stream = cudaStreamDefault) {
-    mgr_.deallocate(ptr, stream);
+    mgr_.deallocate(ptr, device, stream);
   }
 
-  static bool try_allocate(void** ptr, size_t size,
+  static bool try_allocate(void** ptr, size_t size, int device = INVALID_DEVICE,
       cudaStream_t stream = cudaStreamDefault) {
-    return mgr_.try_allocate(ptr, size, stream);
+    return mgr_.try_allocate(ptr, size, device, stream);
   }
 
   enum Mode {
@@ -52,23 +54,32 @@ struct GPUMemory {
   // Workspace's release() functionality depends on global pool availability
   // If pool is available, it returns memory to the pool and sets ptr to NULL
   // If pool is not available, it retains memory.
+  // This is single GPU workspace. See MultiWorkspace for multi-GPU support.
   struct Workspace {
-    Workspace() : ptr_(NULL), stream_(), size_(0) {}
-    Workspace(size_t size, cudaStream_t s = cudaStreamDefault) : stream_(s) {
-      reserve(size);
+    Workspace()
+      : ptr_(NULL), size_(0), device_(INVALID_DEVICE),
+        stream_(cudaStreamDefault) {}
+    Workspace(size_t size, int device = INVALID_DEVICE,
+        cudaStream_t s = cudaStreamDefault)
+      : ptr_(NULL), size_(0), device_(device), stream_(s) {
+      reserve(size, device);
     }
-    ~Workspace() { mgr_.deallocate(ptr_, stream_); }
+    ~Workspace() { mgr_.deallocate(ptr_, device_, stream_); }
 
     void* data() const { return ptr_; }
     size_t size() const { return size_; }
+    int device() const { return device_; }
 
-    bool try_reserve(size_t size) {
+    bool try_reserve(size_t size, int device = INVALID_DEVICE) {
       bool status = true;
       if (size > size_) {
-        if (ptr_) {
-          mgr_.deallocate(ptr_, stream_);
+        if (ptr_ != NULL) {
+          mgr_.deallocate(ptr_, device_, stream_);
         }
-        status = mgr_.try_allocate(&ptr_, size, stream_);
+        if (device != INVALID_DEVICE) {
+          device_ = device;  // switch from default to specific one
+        }
+        status = mgr_.try_allocate(&ptr_, size, device_, stream_);
         if (status) {
           size_ = size;
         }
@@ -76,15 +87,16 @@ struct GPUMemory {
       return status;
     }
 
-    void reserve(size_t size) {
-      if (!try_reserve(size)) {
-        LOG(FATAL) << "Out of memory: failed to allocate " << size << " bytes";
+    void reserve(size_t size, int device = INVALID_DEVICE) {
+      if (!try_reserve(size, device)) {
+        LOG(FATAL) << "Out of memory: failed to allocate " << size
+            << " bytes on device " << device;
       }
     }
 
     void release() {
-      if (mgr_.using_pool()) {
-        mgr_.deallocate(ptr_, stream_);
+      if (mgr_.using_pool() && ptr_ != NULL) {
+        mgr_.deallocate(ptr_, device_, stream_);
         ptr_ = NULL;
         size_ = 0;
       }
@@ -93,8 +105,37 @@ struct GPUMemory {
 
    private:
     void* ptr_;
-    cudaStream_t stream_;
     size_t size_;
+    int device_;
+    cudaStream_t stream_;
+
+    DISABLE_COPY_AND_ASSIGN(Workspace);
+  };
+
+  // This implementation maintains workspaces on per-GPU basis.
+  struct MultiWorkspace {
+    bool try_reserve(size_t size) {
+      return current_workspace()->try_reserve(size);
+    }
+    void reserve(size_t size) {
+      current_workspace()->reserve(size);
+    }
+    void release() {
+      current_workspace()->release();
+    }
+    void* data() const {
+      return current_workspace()->data();
+    }
+    size_t size() const {
+      return current_workspace()->size();
+    }
+    int device() const {
+      return current_workspace()->device();
+    }
+
+   private:
+    shared_ptr<Workspace> current_workspace() const;
+    mutable vector<shared_ptr<Workspace> > ws_;
   };
 
  private:
@@ -102,8 +143,8 @@ struct GPUMemory {
     Manager();
     ~Manager();
     void GetInfo(size_t* free_mem, size_t* used_mem);
-    void deallocate(void* ptr, cudaStream_t stream);
-    bool try_allocate(void** ptr, size_t size, cudaStream_t);
+    void deallocate(void* ptr, int device, cudaStream_t stream);
+    bool try_allocate(void** ptr, size_t size, int device, cudaStream_t);
     const char* pool_name() const;
     bool using_pool() const { return mode_ != CUDA_MALLOC; }
     void init(const std::vector<int>&, Mode, bool);
@@ -125,11 +166,13 @@ struct GPUMemory {
     bool initialized_;
     cub::CachingDeviceAllocator* cub_allocator_;
 
-    static unsigned int BIN_GROWTH;  ///< Geometric growth factor for bin-sizes
-    static unsigned int MIN_BIN;  ///< Minimum bin
-    static unsigned int MAX_BIN;  ///< Maximum bin
-    static size_t MAX_CACHED_BYTES;  ///< Maximum aggregate cached bytes
+    static const unsigned int BIN_GROWTH;  ///< Geometric growth factor
+    static const unsigned int MIN_BIN;  ///< Minimum bin
+    static const unsigned int MAX_BIN;  ///< Maximum bin
+    static const size_t MAX_CACHED_BYTES;  ///< Maximum aggregate cached bytes
   };
+
+  static const int INVALID_DEVICE;  ///< Default is invalid: CUB takes care
 
   static Manager mgr_;
 };

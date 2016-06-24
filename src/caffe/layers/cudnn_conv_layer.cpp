@@ -90,8 +90,6 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   use_reshape_ = true;
   // When true, cached bottom and conv descriptors need to be set.
   initialized_cached_descs_ = false;
-  // In case of reusing it
-  WORKSPACE.release();
 }
 
 template <typename Dtype>

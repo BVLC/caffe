@@ -9,10 +9,12 @@
 namespace caffe {
 using std::vector;
 
-unsigned int GPUMemory::Manager::BIN_GROWTH = 2;
-unsigned int GPUMemory::Manager::MIN_BIN = 6;
-unsigned int GPUMemory::Manager::MAX_BIN = 22;
-size_t GPUMemory::Manager::MAX_CACHED_BYTES = (size_t) -1;
+const int GPUMemory::INVALID_DEVICE =
+    cub::CachingDeviceAllocator::INVALID_DEVICE_ORDINAL;
+const unsigned int GPUMemory::Manager::BIN_GROWTH = 2;
+const unsigned int GPUMemory::Manager::MIN_BIN = 6;
+const unsigned int GPUMemory::Manager::MAX_BIN = 22;
+const size_t GPUMemory::Manager::MAX_CACHED_BYTES = (size_t) -1;
 
 GPUMemory::Manager GPUMemory::mgr_;
 
@@ -61,7 +63,7 @@ GPUMemory::Manager::~Manager() {
   }
 }
 
-bool GPUMemory::Manager::try_allocate(void** ptr, size_t size,
+bool GPUMemory::Manager::try_allocate(void** ptr, size_t size, int device,
     cudaStream_t stream) {
   CHECK(initialized_) << "Create GPUMemory::Scope to initialize Memory Manager";
   CHECK_NOTNULL(ptr);
@@ -69,22 +71,32 @@ bool GPUMemory::Manager::try_allocate(void** ptr, size_t size,
   switch (mode_) {
   case CUB_ALLOCATOR:
     // Clean Cache & Retry logic is inside now
-    status = cub_allocator_->DeviceAllocate(ptr, size, stream);
+    status = cub_allocator_->DeviceAllocate(device, ptr, size, stream);
     // If there was a retry and it succeeded we get good status here but
     // we need to clean up last error...
     last_err = cudaGetLastError();
     // ...and update the dev info if something was wrong
     if (status != cudaSuccess || last_err != cudaSuccess) {
-      int cur_device;
-      CUDA_CHECK(cudaGetDevice(&cur_device));
-      // Refresh per-device saved values.
-      for (int i = 0; i < dev_info_.size(); ++i) {
+      // If we know what particular device failed we update its info only
+      if (device > INVALID_DEVICE && device < dev_info_.size()) {
         // only query devices that were initialized
-        if (dev_info_[i].total_) {
-          update_dev_info(i);
-          // record which device caused cache flush
-          if (i == cur_device) {
-            dev_info_[i].flush_count_++;
+        if (dev_info_[device].total_) {
+          update_dev_info(device);
+          dev_info_[device].flush_count_++;
+        }
+      } else {
+        // Update them all otherwise
+        int cur_device;
+        CUDA_CHECK(cudaGetDevice(&cur_device));
+        // Refresh per-device saved values.
+        for (int i = 0; i < dev_info_.size(); ++i) {
+          // only query devices that were initialized
+          if (dev_info_[i].total_) {
+            update_dev_info(i);
+            // record which device caused cache flush
+            if (i == cur_device) {
+              dev_info_[i].flush_count_++;
+            }
           }
         }
       }
@@ -97,14 +109,15 @@ bool GPUMemory::Manager::try_allocate(void** ptr, size_t size,
   return status == cudaSuccess;
 }
 
-void GPUMemory::Manager::deallocate(void* ptr, cudaStream_t stream) {
+void GPUMemory::Manager::deallocate(void* ptr, int device,
+    cudaStream_t stream) {
   // allow for null pointer deallocation
   if (!ptr) {
     return;
   }
   switch (mode_) {
   case CUB_ALLOCATOR:
-    CUDA_CHECK(cub_allocator_->DeviceFree(ptr));
+    CUDA_CHECK(cub_allocator_->DeviceFree(device, ptr));
     break;
   default:
     CUDA_CHECK(cudaFree(ptr));
@@ -163,6 +176,20 @@ void GPUMemory::Manager::GetInfo(size_t* free_mem, size_t* total_mem) {
     CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
     break;
   }
+}
+
+shared_ptr<GPUMemory::Workspace>
+GPUMemory::MultiWorkspace::current_workspace() const {
+  int current_device;
+  CUDA_CHECK(cudaGetDevice(&current_device));
+  if (current_device + 1 > ws_.size()) {
+    ws_.resize(current_device + 1);
+  }
+  if (!ws_[current_device]) {  // In case if --gpu=1,0
+    ws_[current_device].reset(
+        new GPUMemory::Workspace(0, current_device));
+  }
+  return ws_[current_device];
 }
 
 }  // namespace caffe
