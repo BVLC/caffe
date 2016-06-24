@@ -41,6 +41,10 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+  if (param_.has_resize_param()) {
+    CHECK_GT(param_.resize_param().height(), 0);
+    CHECK_GT(param_.resize_param().width(), 0);
+  }
 }
 
 template<typename Dtype>
@@ -814,14 +818,8 @@ vector<int_tp> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   // Check dimensions.
   CHECK_GT(datum_channels, 0);
   if (param_.has_resize_param()) {
-    if (param_.resize_param().has_height() &&
-        param_.resize_param().height() > 0) {
-      datum_height = param_.resize_param().height();
-    }
-    if (param_.resize_param().has_width() &&
-        param_.resize_param().width() > 0) {
-      datum_width = param_.resize_param().width();
-    }
+    InferNewSize(param_.resize_param(), datum_width, datum_height,
+                 &datum_width, &datum_height);
   }
   CHECK_GE(datum_height, crop_h);
   CHECK_GE(datum_width, crop_w);
@@ -864,14 +862,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   // Check dimensions.
   CHECK_GT(img_channels, 0);
   if (param_.has_resize_param()) {
-    if (param_.resize_param().has_height() &&
-        param_.resize_param().height() > 0) {
-      img_height = param_.resize_param().height();
-    }
-    if (param_.resize_param().has_width() &&
-        param_.resize_param().width() > 0) {
-      img_width = param_.resize_param().width();
-    }
+    InferNewSize(param_.resize_param(), img_width, img_height,
+                 &img_width, &img_height);
   }
   CHECK_GE(img_height, crop_h);
   CHECK_GE(img_width, crop_w);

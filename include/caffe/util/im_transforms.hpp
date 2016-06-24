@@ -45,6 +45,10 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
                               const int old_width, const int old_height,
                               NormalizedBBox* bbox);
 
+void InferNewSize(const ResizeParameter& resize_param,
+                  const int old_width, const int old_height,
+                  int* new_width, int* new_height);
+
 cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param);
 
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param);
