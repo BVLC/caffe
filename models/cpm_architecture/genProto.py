@@ -162,9 +162,10 @@ base_lr: %f\n\
 momentum: 0.9\n\
 weight_decay: 0.0005\n\
 # The learning rate policy\n\
-lr_policy: "step"\n\
+#lr_policy: "step"\n\
+lr_policy: "fixed"\n\
 gamma: 0.333\n\
-stepsize: %d\n\
+#stepsize: %d\n\
 # Display every 100 iterations\n\
 display: 5\n\
 # The maximum number of iterations\n\

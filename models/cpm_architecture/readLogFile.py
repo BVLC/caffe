@@ -113,6 +113,22 @@ def smoothed_data(x, y, batch_size):
     smoothed_y.append(mean(y[i*batch_size:]))
     return smoothed_x, smoothed_y
     
+def mergeLogFiles(filenames, out_filename, merge):
+    regex_iteration = re.compile('Iteration (\d+)')
+    out_file = open(out_filename,"w")
+    
+    for i in range(len(filenames)):
+        with open(filenames[i]) as f:
+            curr_iter = -1
+            for line in f:
+                if (merge[i] > 0):
+                    iter_match = regex_iteration.search(line)
+                    if iter_match:
+                        curr_iter = int(iter_match.group(1))
+                    if (curr_iter == merge[i]):
+                        break
+                out_file.write(line)
+    out_file.close()
     
 
 def plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size = 5):
@@ -166,12 +182,14 @@ def plotData(train, test, nstages, main_title, avg_line = False, avg_batch_size 
     
 
 def main():
-    #filename = ['prototxt/caffemodel/trial_3/log.txt']
+    filename = ['prototxt/caffemodel/trial_5/log.txt']
     #filename = ['prototxt/caffemodel/trial_3/log.txt','prototxt/log.txt']
-    filename = ['prototxt/log1.txt','prototxt/log.txt']
+    #filename = ['prototxt/log1.txt','prototxt/log.txt']
+    #filename = ['prototxt/log.txt']
     stn_lrm = 1
     nstages = 6
-    merge = [50000]
+    merge = [50000, 0]
+    finetune_iter = 5000
     #merge = [0]
     train, test, base_lr, stepsize = parse_log(filename[0])
     print 'Num iterations file = %d' % (train['iteration'][-1])
@@ -180,8 +198,10 @@ def main():
             curr_tr, curr_ts, base_lr_, stepsize_ = parse_log(filename[i])
             print 'Num iterations file = %d' % (curr_tr['iteration'][-1])
             train, test = combine_data(train, test, curr_tr, curr_ts, merge[i-1])
-    main_title = 'Training with:\nbase_lr = %f; stepsize = %d; lr_mul = %d\nFinetuning: trial_2; Iter = %d ' % (base_lr, stepsize, stn_lrm, merge[0])
+    main_title = 'Training with:\nbase_lr = %f; stepsize = %d; lr_mul = %d\nFinetuning: trial_2; Iter = %d ' % (base_lr, stepsize, stn_lrm, finetune_iter)
     plotData(train, test, nstages, main_title, avg_line = True, avg_batch_size = 500)
+    
+    mergeLogFiles(filename,'prototxt/overall.txt', merge)
 
 if __name__ == '__main__':
     main()

@@ -5,8 +5,6 @@ Created on Wed Jun 15 14:25:18 2016
 @author: denitome
 """
 
-# TODO: remember to remove 0.5 (mean) from the images
-
 import os
 import re
 import caffe
@@ -17,7 +15,7 @@ from scipy.stats import multivariate_normal
 import matplotlib.pyplot as plt
 
 # general settings
-samplingRate = 5
+samplingRate = 50
 offset = 25
 inputSizeNN = 368
 outputSizeNN = 46
@@ -25,8 +23,9 @@ joints_idx = [0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27]
 sigma = 7
 stride = 8
 verbose = False
-iter_notification = 25
-device_id = 0
+fn_notification = 25
+iter_start_from = 20000
+device_id = 1
 
 def filterJoints(joints_orig):
     joints = [0] * len(joints_idx)
@@ -104,19 +103,25 @@ def generateHeatMaps(center, joints):
     center_hm[:,:,0] = generateGaussian(pos, center, Sigma)
     return heatMaps, center_hm
 
+def findPoint(heatMap):
+    idx = np.where(heatMap == heatMap.max())
+    x = idx[1][0]
+    y = idx[0][0]
+    return x,y
 
 def runCaffeOnModel(data, model_dir, def_file, idx):
     layer_names = ['conv7_stage1_new', 'Mconv5_stage2_new', 'Mconv5_stage3_new',
                'Mconv5_stage4_new', 'Mconv5_stage5_new', 'Mconv5_stage6_new']
     loss_stage = np.zeros(len(layer_names))
+    mpepj_model = []
     
     iterNumber = getIter(model_dir)
     print '-------------------------------'
     print '  Evaluating iteration: %d' % iterNumber
     print '-------------------------------'
-    # TODO: change it back
-    for i in range(2):#len(idx)):
-        if (np.mod(i,iter_notification) == 0):
+    
+    for i in range(len(idx)):
+        if (np.mod(i,fn_notification) == 0):
             print 'Iteration %d out of %d' % (i, len(idx))
         fno = idx[i]
         if (not data[fno]['isValidation']):
@@ -171,7 +176,9 @@ def runCaffeOnModel(data, model_dir, def_file, idx):
                 plt.imshow(labels[:,:,j])
                 plt.waitforbuttonpress()
                 
-        
+        resizedImage = np.divide(resizedImage,float(256))
+        resizedImage = np.subtract(resizedImage, 0.5)
+
         img4ch = np.concatenate((resizedImage, center), axis=2)
         img4ch = np.transpose(img4ch, (2, 0, 1))
         
@@ -186,22 +193,29 @@ def runCaffeOnModel(data, model_dir, def_file, idx):
             heatMaps = np.reshape(heatMaps,(num_channels,outputSizeNN,outputSizeNN))
             heatMaps = np.transpose(heatMaps, (1, 2, 0))
             
-            # reshape the labels
+            # reshape the heatMaps and compute loss
+            err = 0
             loss = 0
-            for i in range(num_channels):
-                curr_heatMap = cv2.resize(heatMaps[:,:,i],(inputSizeNN,inputSizeNN))
+            for j in range(num_channels-1):
+                curr_heatMap = cv2.resize(heatMaps[:,:,j],(inputSizeNN,inputSizeNN))
                 
-                diff = np.subtract(curr_heatMap, labels[:,:,i])
+                diff = np.subtract(curr_heatMap, labels[:,:,j])
                 dot = np.power(diff, 2)
                 loss += np.sum(dot)/(inputSizeNN*inputSizeNN)
+                if (l == (len(layer_names)-1)):
+                    x,y = findPoint(curr_heatMap)
+                    err += np.sqrt(np.power(joints[j][0]-x,2)+np.power(joints[j][1]-y,2))
             loss_stage[l] += loss
-        
-    val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
+        mpepj_model.append(float(err)/(num_channels-1))
+    
+    mpepj_value = np.mean(mpepj_model)
+    val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('mpepj',[]), ('stage',[])])
     
     for l in range(len(layer_names)):
         val['iteration'].append(iterNumber)
         val['loss_iter'].append(np.sum(loss_stage))
-        val['loss_stage'].append(loss_stage[l])
+        val['loss_stage'].append(float(loss_stage[l])/len(mpepj_model))
+        val['mpepj'].append(mpepj_value)
         val['stage'].append(l+1)
         
     # TODO: check why result from Matlab is different from this one (close to 1 vs 0.02)
@@ -236,9 +250,10 @@ def getLossOnValidationSet(json_file, models):
     print 'overall data %d' % len(data)
     idx = range(0, numSample, samplingRate)
     
-    # TODO: change it back
-    for i in range(2):#len(files)):
+    for i in range(len(files)):
         model_dir = '%s/%s' % (models, files[i])
+        if (getIter(model_dir) < iter_start_from):
+            continue
         new_val = runCaffeOnModel(data, model_dir, prototxt, idx)
         val = combine_data(val, new_val)
     return val
@@ -248,10 +263,8 @@ def main():
     caffe.set_device(device_id)
     
     caffe_dir = os.environ.get('CAFFE_HOME_CPM')
-    #lmdb_dir = '%s/models/cpm_architecture/lmdb/val_small' % caffe_dir
-    #json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations.json' % caffe_dir
-    json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations_test.json' % caffe_dir
-    caffe_models_dir = '%s/models/cpm_architecture/prototxt/caffemodel/trial_1/' % caffe_dir
+    json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations.json' % caffe_dir
+    caffe_models_dir = '%s/models/cpm_architecture/prototxt/caffemodel/trial_5/' % caffe_dir
     
     loss = getLossOnValidationSet(json_file, caffe_models_dir)
     return loss
