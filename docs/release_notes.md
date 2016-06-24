@@ -209,7 +209,7 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 * Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results
 
-* Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
+* Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
 
 # Instructions:
 
@@ -218,6 +218,7 @@ For instructions and tutorials please visit: [https://github.com/intelcaffe/caff
 ##	How to measure performance
 1. Make sure that you implemented recommendations to achieve best performance
 2. Prepare `Makefile.config` configuration as described in Building for Intel® Architecture section 
+3. Check in train_val.prototxt file what Data Layer type is used. For best results don't use data layer (or use LMDB)
 3. execute commands: 
 `source /opt/intel/mkl/bin/mklvars.sh intel64`
 `make all test -j 80`
@@ -248,6 +249,11 @@ Tutorials and training instructions are available at: [https://github.com/intelc
 ##	How to contribute 
 
 If you want to contribute code follow the instructions provided in: `/docs/development.md` file.
+
+##	How to create LMDB 
+
+Instructions how to create LMDB are available at: [http://deepdish.io/2015/04/28/creating-lmdb-in-python/](http://deepdish.io/2015/04/28/creating-lmdb-in-python/)
+
 
 #	License
 
