@@ -368,7 +368,7 @@ void ConvolutionLayerSpatial<Dtype>::pad_image(
   int_tp col_data_offset = 0;
   int_tp channels = this->channels_ / this->group_;
 
-  if (config->batched_execute) {
+  if (config->batched_execute || config->kernelType == 2) {
     for (int_tp x = 0; x < imgNum; x++) {
       argIdx = 0;
       int_tp image_offsetLocal = height_ * width_ * this->channels_ * x
@@ -538,6 +538,8 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         return err;
       viennacl::backend::finish();
     }
+    if (config->kernelType == 2)
+      break;
   }
 
   return err;
@@ -673,9 +675,9 @@ bool ConvolutionLayerSpatial<float>::verify_result(
                        0.1 * fabs(verify_data[offset]) &&
                 !(fabs(verify_data[offset]) < 1.e-3
                   && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
-              dbgPrint(printf("test verification failed @ out_ch %d h "
+              dbgPrint(printf("test verification failed @ image %d out_ch %d h "
                               "%d w %d got %G expected %G\n",
-                      out_ch, h, w, data[offset], verify_data[offset]));
+                      n, out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
               break;
             }
@@ -706,7 +708,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
   int_tp output_block_width = blockWidth;
   int_tp output_block_height = blockHeight;
   int_tp simd_size = 16;
-  int_tp num_batches = 1;
+  int_tp num_batches = num_;
 
   kernel_name_ = "U";
   kernel_name_ += kernelUKey.c_str();
@@ -742,7 +744,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -D INPUT_WIDTH=" << padded_width_ << " -D INPUT_HEIGHT="
                 << padded_height_ << " -D INPUT_DEPTH=" << channels_ / group_
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_ / group_
-                << " -DTOTAL_OUTPUT_DEPTH=" << channels_ / group_
+                << " -DTOTAL_OUTPUT_DEPTH=" << M_ / group_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
                 << " -DINPUT_START_Z=" << 0 << " -DOUTPUT_WIDTH=" << output_w_
                 << " -DOUTPUT_HEIGHT=" << output_h_ << " -DFILTER_WIDTH="
@@ -787,7 +789,7 @@ template<>
 bool ConvolutionLayerSpatial<float>::tune_local_size(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     kernelConfig* config) {
-  if (config->use_null_local)
+  if (config->use_null_local || !config->autoTune)
     return true;
 
   float fastestTime = 999999990000000000000000000.0f;
