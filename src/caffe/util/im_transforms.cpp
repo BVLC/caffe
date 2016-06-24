@@ -307,6 +307,33 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
   bbox->set_ymax(y_max / new_height);
 }
 
+void InferNewSize(const ResizeParameter& resize_param,
+                  const int old_width, const int old_height,
+                  int* new_width, int* new_height) {
+  int height = resize_param.height();
+  int width = resize_param.width();
+  float orig_aspect = static_cast<float>(old_width) / old_height;
+  float aspect = static_cast<float>(width) / height;
+
+  switch (resize_param.resize_mode()) {
+    case ResizeParameter_Resize_mode_WARP:
+      break;
+    case ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD:
+      break;
+    case ResizeParameter_Resize_mode_FIT_SMALL_SIZE:
+      if (orig_aspect < aspect) {
+        height = static_cast<int>(width / orig_aspect);
+      } else {
+        width = static_cast<int>(orig_aspect * height);
+      }
+      break;
+    default:
+      LOG(FATAL) << "Unknown resize mode.";
+  }
+  *new_height = height;
+  *new_width = width;
+}
+
 cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
   cv::Mat out_img;
 
