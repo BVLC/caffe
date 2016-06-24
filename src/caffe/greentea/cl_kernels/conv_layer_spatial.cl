@@ -6,64 +6,6 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(void) {
 
 }
 
-#ifdef VERIFICATION
-__kernel void copyImage(__global Dtype* image_data, int_tp image_offset,
-    const int_tp channels, const int_tp height, const int_tp width,
-    const int_tp adjustedHeight, const int_tp adjustedWidth,
-    const int_tp pad_h, const int_tp pad_w,
-    __global Dtype* output_image, const int_tp output_offset) {
-
-  uint_tp sX = get_global_id(0);
-  uint_tp sY = get_global_id(1);
-  uint_tp sZ = get_global_id(2);
-
-  int_tp in_y = sY - pad_h;
-  int_tp in_x = sX - pad_w;
-
-  if((in_y >= 0 && in_y < height && in_x >= 0 && in_x < width))
-  output_image[output_offset + sZ*adjustedHeight*adjustedWidth + sY*adjustedWidth +sX] = image_data[image_offset + sZ*height*width + in_y*width + in_x];
-  else
-  output_image[output_offset + sZ*adjustedHeight*adjustedWidth + sY*adjustedWidth +sX] = 0;
-}
-
-__kernel void copyWeights(__global Dtype* weightIn,
-    __global Dtype* weightOut) {
-
-  uint_tp sX = get_global_id(0);
-
-  weightOut[sX] = weightIn[sX];
-}
-
-__kernel void copyWeightsSwizzled(__global Dtype* weightIn,
-    __global Dtype* weightOut,
-    const int_tp kernel_w,
-    const int_tp kernel_h,
-    const int_tp channels,
-    const int_tp outputs,
-    const int_tp swizzleFactor) {
-
-  uint_tp sX = get_global_id(0);
-
-  //Original location
-
-  //Output location
-  int_tp outputSublayer = channels / swizzleFactor;
-  int_tp outputSublayerIndex = channels % swizzleFactor;
-
-  int_tp filter = sX / (kernel_w*kernel_h*channels);
-  int_tp kernel_X = sX % kernel_w;
-  int_tp kernel_Y = (sX / kernel_w) % kernel_h;
-  int_tp kernel_C = (sX / (kernel_w * kernel_h)) % channels;
-
-  int_tp FP = filter / swizzleFactor;
-  int_tp F1 = filter % swizzleFactor;
-
-  weightOut[FP*(kernel_w*kernel_h*channels*swizzleFactor) + kernel_C*(kernel_w*kernel_h*swizzleFactor) + kernel_Y*(kernel_w*swizzleFactor) + kernel_X*swizzleFactor + F1]
-  = weightIn[filter*(kernel_w*kernel_h*channels) + kernel_C*(kernel_w*kernel_h) + kernel_Y*kernel_w + kernel_X];
-}
-
-#endif
-
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
 #define LOOP1(VAR, STMT) (STMT); (VAR)++;
@@ -171,96 +113,6 @@ __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
 
 #endif
 
-#ifdef VERIFICATION
-__kernel void CFVerify(__global Dtype* image_data, int_tp image_offset,
-    __global Dtype* kernel_data, int_tp kernel_offset,
-    __global Dtype* bias,const int_tp bias_offset,
-    __global Dtype* convolved_image,const int_tp convolved_image_offset,
-    __global uint_tp* resultsFail) {
-
-  const int_tp outputX = get_global_id(0);
-  const int_tp outputY = get_global_id(1);
-  const int_tp kernelNum = get_global_id(2)*ZPAR;
-  if(outputX < OUTPUT_W && outputY < OUTPUT_H)
-  {
-    Dtype sum[ZPAR];
-    Dtype4 vectorSum[ZPAR];
-    for(int_tp kern =0; kern < ZPAR; kern++)
-    {
-      sum[kern] = 0.0f;
-      vectorSum[kern] = (0.0f,0.0f,0.0f,0.0f);
-    }
-
-    const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;
-    const int_tp biasIndex=bias_offset + kernelNum;
-    const int_tp local_image_offset = outputY*STRIDE_H*WIDTH + outputX*STRIDE_W;
-    const int_tp imageSize = WIDTH*HEIGHT;
-    const int_tp float4Reads = KERNEL_W / 4;
-    const int_tp floatReads = KERNEL_W % 4;
-    Dtype4 imageCache;
-
-    __global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));
-    __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
-
-    for(int_tp c = 0; c < CHANNELS; c++)
-    {
-      for(int_tp y = 0; y < KERNEL_H; y++)
-      {
-
-        for(int_tp x=0; x< float4Reads; x++)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[x];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          {
-            vectorSum[kern] += imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[x];
-          }
-        }
-
-        if(floatReads == 1)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s0 += ( imageCache * ( (__global Dtype4*) &(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]) )[float4Reads] ).s0;
-        }
-        else if(floatReads == 2)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s01 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s01;
-        }
-        else if(floatReads == 3)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;
-        }
-
-        image_dataPtrFloat += WIDTH;
-        kernel_dataPtrFloat += KERNEL_W;
-      }
-      image_dataPtrFloat += imageSize - WIDTH*KERNEL_H;
-    }
-    for(int_tp kern =0; kern < ZPAR; kern++)
-    sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;
-
-    if(APPLY_BIAS == 1)
-    {
-      for(int_tp kern = 0; kern < ZPAR; kern++)
-      if(kernelNum+kern < OUTPUT_Z)
-      if(convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX] != sum[kern] + bias[biasIndex +kern])
-      if( fabs(fabs(convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX]) - fabs(sum[kern] + bias[biasIndex +kern])) > 0.01)
-      resultsFail[0] = 1;
-    }
-    else
-    for(int_tp kern = 0; kern < ZPAR; kern++)
-    if(kernelNum+kern < OUTPUT_Z)
-    if(convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX] != sum[kern])
-    if( fabs(fabs(convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX]) - fabs(sum[kern])) > 0.01)
-    resultsFail[0] = 1;
-  }
-}
-
-#endif
 
 #ifdef MULTI_11
 __kernel void CFMulti_11_11_4(__global Dtype* image_data, int_tp image_offset,
@@ -588,6 +440,12 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 //#define SIMD_SIZE 16
 // NOTE: this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
 #ifdef SIMD16
+
+
+#define TILE_X ((OUT_BLOCK_WIDTH - 1) * STRIDEX + KERNEL)
+#define TILE_Y ((OUT_BLOCK_HEIGHT - 1) * STRIDEY + KERNEL)
+
+#if (TILE_X % 4) != 0
 __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
@@ -662,11 +520,27 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                   }
                 }
                 // We assume KERNEL_W is equal to KERNEL_H here.
-                if ((w_idx + 1) % WEIGHT_PREF == 0 && ((w_idx + 1) < (KERNEL * KERNEL - WEIGHT_PREF))) {
+                if ((w_idx + 1) % WEIGHT_PREF == 0
+                    #if KERNEL*KERNEL % 8 != 0
+                    && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
+                    #endif
+                    ) {
                   weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                   weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
-                } else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                }
+              #if KERNEL*KERNEL % 8 == 0
+                // need to do nothing
+              #else
+                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                #if KERNEL*KERNEL % 8 == 1
                   weight_buf.w[0] = weights[weight_addr];
+                #elif KERNEL*KERNEL % 4 == 0
+                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
+                #else
+                // should never be here if kernel_w equal to kernel_h. just in case.
+                #error unsupported kernel size.
+                #endif
+              #endif
                 ++w_idx;
               });
         });
@@ -740,6 +614,179 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   }
 #endif //#ifndef WRITE_PADDED_VALUES
 }
+#endif
+
+#if TILE_X % 4 == 0
+#define TILE_Y_STRIDE (64 / TILE_X)
+#define INVEC_NUM ((TILE_Y + TILE_Y_STRIDE - 1) / TILE_Y_STRIDE)
+__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
+kernel void
+convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
+    __global float* inputs_base,
+    const int_tp inputs_offset,
+    filter_qualifier float* weights_base,
+    const int_tp weights_offset,
+    __global float* biases_base,
+    const int_tp biases_offset,
+    __global float* outputs_base,
+    const int_tp outputs_offset)
+{
+  __global float* outputs = outputs_base + outputs_offset;
+  __global float* inputs = inputs_base + inputs_offset;
+  filter_qualifier float* weights = weights_base + weights_offset;
+  __global float* biases = biases_base + biases_offset;
+
+  uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
+  uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
+  uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
+  uint_tp fmg = get_group_id(2);
+  uint_tp lid = get_local_id(2);
+
+  float out[OUT_BLOCK_SIZE];
+
+  uint_tp in_addr;
+
+  // find weights adress of given neuron (lid is index)
+  uint_tp weight_addr = (fmg % (_OD/SIMD_SIZE)) * INPUT_DEPTH * KERNEL * KERNEL * SIMD_SIZE + lid;
+
+  for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {
+    out[i]=0.0f;
+  }
+
+  uint_tp num_in_batch = ( fm - get_global_offset(2) ) / _OD;
+
+  uint_tp input_batch_offset = num_in_batch * (_IH + IHPAD) * (_IW + IWPAD) * TOTAL_INPUT_DEPTH_SIZE;
+
+  in_addr = input_batch_offset + INPUT_START_Z * (_IH + IHPAD) * (_IW + IWPAD) + (or*STRIDEY + INPUT_START_Y) * (_IW + IWPAD) + (oc*STRIDEX + INPUT_START_X)
+            + ( lid / ( TILE_X / 4 ) ) * (_IW + IWPAD) * STRIDEY             // y tile offset
+            + ( lid % ( TILE_X / 4 ) ) * 4 * STRIDEX;                        // x tile offset
+
+  for(int_tp kd = 0; kd < _ID; kd++)
+  {
+    union {
+      float4 in_vec[INVEC_NUM];
+      float in_array[INVEC_NUM * 4];
+    } in_buf;
+    uint_tp in_offset = in_addr;
+    int_tp reg = 0;
+#if INVEC_NUM == 1
+    LOOP(1, reg,
+#elif INVEC_NUM == 2
+    LOOP(2, reg,
+#elif INVEC_NUM == 3
+    LOOP(3, reg,
+#elif INVEC_NUM == 4
+    LOOP(4, reg,
+#else
+    #error too large invec_num.
+#endif
+      {
+        in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
+        in_offset += (_IW + IWPAD) * TILE_Y_STRIDE;
+      });
+    in_addr += (_IH + IHPAD) * (_IW + IWPAD);
+    
+// PREF could be 4 or 8, could not be other values.
+#define WEIGHT_PREF 8
+    union {
+      float w[WEIGHT_PREF];
+      uint8 ui8;
+    } weight_buf;
+    int_tp w_idx=0;
+
+    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
+    uint_tp orig_weight_addr = weight_addr;
+    weight_addr += SIMD_SIZE * WEIGHT_PREF;
+
+#define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))
+
+    int_tp kr = 0;  // kr = Kernel Row
+    LOOP(KERNEL, kr,// LOOP is a macro that unrolls the loop.
+        {
+          int_tp kc = 0;  // kc = Kernel Column
+          LOOP(KERNEL, kc,
+              {
+                for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
+                  for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
+                    float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);//intel_sub_group_shuffle( in[br * K_STRIDE + kr], bc * K_STRIDE + kc);
+                    out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
+                  }
+                }
+                // We assume KERNEL_W is equal to KERNEL_H here.
+                if ((w_idx + 1) % WEIGHT_PREF == 0
+                #if KERNEL*KERNEL % 8 != 0
+                && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
+                #endif
+                    ) {
+                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
+                  weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
+                }
+              #if KERNEL*KERNEL % 8 == 0
+                // need to do nothing
+              #else
+                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
+                #if KERNEL*KERNEL % 8 == 1
+                  weight_buf.w[0] = weights[weight_addr];
+                #elif KERNEL*KERNEL % 4 == 0
+                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
+                #else
+                // should never be here if kernel_w equal to kernel_h. just in case.
+                #error unsupported kernel size.
+                #endif
+              #endif
+                ++w_idx;
+              });
+        });
+    weight_addr = orig_weight_addr + KERNEL * KERNEL * SIMD_SIZE;
+
+  }
+
+  // we need this address calculation for outputs because we support views and batching
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) + get_global_offset(2) ) * (_OW + OWPAD) * (_OH + OHPAD);
+
+  out_addr += or * (_OW + OWPAD) + oc;  // offset for the 4x3 block that this workitem is working on;
+
+  // we need this address calculation for biases because we support views and batching
+  float bias = biases[(fm - get_global_offset(2)) % _OD ];
+#ifndef WRITE_PADDED_VALUES
+  if(get_global_id(0) != (get_global_size(0)-1) &&
+      get_global_id(1) != (get_global_size(1)-1) )
+  {
+#endif
+    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
+      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
+        // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
+        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+      }
+    }
+#ifndef WRITE_PADDED_VALUES
+  } else if ( get_global_id(1) != (get_global_size(1)-1) )
+  {
+    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
+      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
+        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+      }
+    }
+  }
+  else if ( get_global_id(0) != (get_global_size(0)-1) )
+  {
+    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
+      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
+        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+      }
+    }
+  }
+  else
+  {
+    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
+      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
+        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+      }
+    }
+  }
+#endif //#ifndef WRITE_PADDED_VALUES
+}
+#endif // Stride > 2
 #endif
 
 #endif

@@ -303,25 +303,29 @@ bool ConvolutionLayerSpatial<float>::generate_batched_kernel(
   return true;
 }
 
-template<>
-void ConvolutionLayerSpatial<float>::swizzleWeights(int_tp swizzle_factor) {
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top,
+    int_tp swizzled_factor) {
+
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
-  viennacl::ocl::program & program = ctx.get_program(verification_kernel);
+  viennacl::ocl::program &program = this->device_->program();
   viennacl::ocl::kernel &oclk_copy_weight = program.get_kernel(
-      "copyWeightsSwizzled");
+      CL_KERNEL_SELECT("copyWeightsSwizzled"));
   cl_uint argIdx = 0;
 
-  int_tp channels = channels_ / group_;
+  int_tp channels = this->channels_ / this->group_;
   oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
   oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights, &ctx));
   oclk_copy_weight.arg(argIdx++, kernel_w_);
   oclk_copy_weight.arg(argIdx++, kernel_h_);
   oclk_copy_weight.arg(argIdx++, channels);
-  oclk_copy_weight.arg(argIdx++, num_output_);
-  oclk_copy_weight.arg(argIdx++, swizzle_factor);
-  const size_t global_work_size_Copy[3] = { (size_t) (num_output_ * channels
-      * kernel_w_ * kernel_h_), 1, 1 };
+  oclk_copy_weight.arg(argIdx++, this->num_output_);
+  oclk_copy_weight.arg(argIdx++, swizzled_factor);
+  const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_
+      * channels * kernel_w_ * kernel_h_), 1, 1 };
 
   OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                        oclk_copy_weight.handle().get(), 3, NULL,
@@ -345,68 +349,42 @@ void ConvolutionLayerSpatial<float>::calculate_global_size(int_tp batch,
           / lSize[2]) * lSize[2];
 }
 
-template<>
-void ConvolutionLayerSpatial<float>::pad_image(
-                                int_tp image_offset,
-                                kernelConfig* config,
-                                int_tp imgNum) {
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::pad_image(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top,
+    int_tp image_offset,
+    kernelConfig* config,
+    int_tp imgNum) {
 #ifdef USE_GREENTEA
-  // ClState& state = Caffe::cl_state();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
   // Copy kernel
-  viennacl::ocl::program & program = ctx.get_program(verification_kernel);
-  viennacl::ocl::kernel &oclk_copy = program.get_kernel("copyImage");
-
+  viennacl::ocl::program &program = this->device_->program();
+  viennacl::ocl::kernel &oclk_copy = program.get_kernel(
+                                       CL_KERNEL_SELECT("copyImage"));
   cl_uint argIdx = 0;
   int_tp col_data_offset = 0;
-  int_tp channels = channels_ / group_;
+  int_tp channels = this->channels_;
 
-  if (config->batched_execute) {
-    for (int_tp x = 0; x < imgNum; x++) {
-      argIdx = 0;
-      int_tp image_offsetLocal = height_ * width_ * channels_ * x
-          + image_offset;
-      col_data_offset = padded_width_ * padded_height_ * channels_ * x
-          + image_offset;
-      oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-      oclk_copy.arg(argIdx++, image_offsetLocal);
-      oclk_copy.arg(argIdx++, channels);
-      oclk_copy.arg(argIdx++, height_);
-      oclk_copy.arg(argIdx++, width_);
-      oclk_copy.arg(argIdx++, padded_height_);
-      oclk_copy.arg(argIdx++, padded_width_);
-      oclk_copy.arg(argIdx++, pad_h_);
-      oclk_copy.arg(argIdx++, pad_w_);
-      oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-      oclk_copy.arg(argIdx++, col_data_offset);
+  oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+  oclk_copy.arg(argIdx++, image_offset);
+  oclk_copy.arg(argIdx++, channels);
+  oclk_copy.arg(argIdx++, height_);
+  oclk_copy.arg(argIdx++, width_);
+  oclk_copy.arg(argIdx++, padded_height_);
+  oclk_copy.arg(argIdx++, padded_width_);
+  oclk_copy.arg(argIdx++, pad_h_);
+  oclk_copy.arg(argIdx++, pad_w_);
+  oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
+  oclk_copy.arg(argIdx++, col_data_offset);
+  oclk_copy.arg(argIdx++, imgNum);
+  const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
+      (size_t) padded_height_, (size_t) channels };
 
-      const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
-          (size_t) padded_height_, (size_t) channels };
-
-      clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                             oclk_copy.handle().get(), 3, NULL,
-                             global_work_size_Copy, NULL, 0, NULL, NULL);
-    }
-  } else {
-    oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-    oclk_copy.arg(argIdx++, image_offset);
-    oclk_copy.arg(argIdx++, channels);
-    oclk_copy.arg(argIdx++, height_);
-    oclk_copy.arg(argIdx++, width_);
-    oclk_copy.arg(argIdx++, padded_height_);
-    oclk_copy.arg(argIdx++, padded_width_);
-    oclk_copy.arg(argIdx++, pad_h_);
-    oclk_copy.arg(argIdx++, pad_w_);
-    oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-    oclk_copy.arg(argIdx++, col_data_offset);
-    const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
-        (size_t) padded_height_, (size_t) channels };
-
-    clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                           oclk_copy.handle().get(), 3, NULL,
-                           global_work_size_Copy, NULL, 0, NULL, NULL);
-  }
+  clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                         oclk_copy.handle().get(), 3, NULL,
+                         global_work_size_Copy, NULL, 0, NULL, NULL);
 #endif
 }
 
@@ -470,54 +448,13 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
 }
 
 template<>
-bool ConvolutionLayerSpatial<float>::create_verification_kernel(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
-  // Standard spatial setup is done here
-  std::stringstream keyBuilder;
-  std::stringstream multFunctionBuilder;
-  std::string stringBuilder;
-  std::stringstream optionsString;
-  std::string kernelDef = "VERIFICATION";
-
-  verification_kernel = "U";
-  verification_kernel += key_.c_str();
-  verification_kernel += "_VERIFICATION";
-
-  // Build list of options and defines
-  optionsString.str("");
-  optionsString << "-cl-fast-relaxed-math " << " -D KERNELSIZE="
-                << kernel_w_ * kernel_h_ << " -D KERNEL_W=" << kernel_w_
-                << " -D KERNEL_H=" << kernel_h_ << " -D CHANNELS="
-                << channels_ / group_ << " -D STRIDE_H=" << stride_h_
-                << " -D STRIDE_W=" << stride_w_ << " -D APPLY_BIAS="
-                << bias_term_ << " -D OUTPUT_W=" << output_w_ << " -D OUTPUT_H="
-                << output_h_ << " -D OUTPUT_Z=" << M_ << " -D WIDTH="
-                << padded_width_ << " -D HEIGHT=" << padded_height_
-                << " -D XPAR=1" << " -D YPAR=1" << " -D ZPAR=1" << " -D "
-                << kernelDef.c_str() << " -D CFVerify=U" << key_.c_str()
-                << "_VERIFICATION";
-
-  string options = optionsString.str();
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-
-  try {
-    submit_conv_spatial_program(&ctx, verification_kernel, options);
-  } catch (std::exception& e) {
-    dbgPrint(
-        std::cout << "Verification kernel generation failed" << std::endl);
-    return false;
-  }
-  return true;
-}
-
-template<>
 cl_int ConvolutionLayerSpatial<float>::convolve(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
 
   if (config->swizzle_weights)
-    swizzleWeights(16);
+    swizzleWeights(bottom, top, 16);
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
@@ -538,7 +475,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
 
       // Copy image
       if (pad_w_ > 0 || pad_h_ > 0) {
-        pad_image(image_offset, config, numImages);
+        pad_image(bottom, top, image_offset, config, numImages);
         image_offset = 0;
         kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
       } else {
@@ -573,6 +510,8 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         return err;
       viennacl::backend::finish();
     }
+    if (config->kernelType == 2)
+      break;
   }
 
   return err;
@@ -585,7 +524,7 @@ cl_int ConvolutionLayerSpatial<float>::batched_convolve(
     int_tp numImages, kernelConfig* config) {
 
   if (config->swizzle_weights)
-    swizzleWeights(16);
+    swizzleWeights(bottom, top, 16);
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
@@ -601,7 +540,7 @@ cl_int ConvolutionLayerSpatial<float>::batched_convolve(
     int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
         * g;
 
-    pad_image(image_offset, config, numImages);
+    pad_image(bottom, top, image_offset, config, numImages);
     kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
     kernel.arg(argIdx++, image_offset);
     if (config->swizzle_weights)
@@ -643,6 +582,8 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   timer.initted();
   timer.Start();
   cl_int err;
+  dbgPrint(std::cout << "Bechmarking kernel: " << config->kernelName
+           << std::endl);
   if (config->batched_execute)
     err = batched_convolve(bottom, top, index, num_, config);
   else
@@ -662,7 +603,6 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   double k_h = kernel_h_;
   double k_z = channels_;
   double totalFlops = ((k_w*k_h*k_z -1)*2)*(out_w*out_h*out_z)*num_;
-  std::cout << "Kernel: " << config->kernelName << std::endl;
   std::cout << "\tEstimated Gflops:" << ((totalFlops/1000)/1000)/1000
   << std::endl;
   std::cout << "\tEstimated GFLOPS/S: " <<
@@ -704,10 +644,12 @@ bool ConvolutionLayerSpatial<float>::verify_result(
             size_t offset = output_image_offset + out_ch * output_w_ * output_h_
                             + h * output_w_ + w;
             if (fabs(data[offset] - verify_data[offset]) >
-                       0.1 * fabs(verify_data[offset])) {
-              dbgPrint(printf("test verification failed @ out_ch %d h "
+                       0.1 * fabs(verify_data[offset]) &&
+                !(fabs(verify_data[offset]) < 1.e-3
+                  && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
+              dbgPrint(printf("test verification failed @ image %d out_ch %d h "
                               "%d w %d got %G expected %G\n",
-                      out_ch, h, w, data[offset], verify_data[offset]));
+                      n, out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
               break;
             }
@@ -738,7 +680,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
   int_tp output_block_width = blockWidth;
   int_tp output_block_height = blockHeight;
   int_tp simd_size = 16;
-  int_tp num_batches = 1;
+  int_tp num_batches = num_;
 
   kernel_name_ = "U";
   kernel_name_ += kernelUKey.c_str();
@@ -751,7 +693,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << kernelDef.c_str() << " -D convolve_simd16=U"
                 << kernelUKey.c_str() << "_SIMD16";
 
-  const int_tp in_buffer_size = output_block_height + kernel_h_ - 1;
+  const int_tp in_buffer_size = (output_block_height - 1) * stride_h_
+                                 + kernel_h_;
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
           output_block_width : output_width % output_block_width;
@@ -774,7 +717,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -D INPUT_WIDTH=" << padded_width_ << " -D INPUT_HEIGHT="
                 << padded_height_ << " -D INPUT_DEPTH=" << channels_ / group_
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_ / group_
-                << " -DTOTAL_OUTPUT_DEPTH=" << channels_ / group_
+                << " -DTOTAL_OUTPUT_DEPTH=" << M_ / group_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
                 << " -DINPUT_START_Z=" << 0 << " -DOUTPUT_WIDTH=" << output_w_
                 << " -DOUTPUT_HEIGHT=" << output_h_ << " -DFILTER_WIDTH="
@@ -819,7 +762,7 @@ template<>
 bool ConvolutionLayerSpatial<float>::tune_local_size(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     kernelConfig* config) {
-  if (config->use_null_local)
+  if (config->use_null_local || !config->autoTune)
     return true;
 
   float fastestTime = 999999990000000000000000000.0f;
@@ -939,33 +882,46 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
-  // Creates a verification kernel to verify kernel results
-  CHECK_EQ(create_verification_kernel(bottom, top), true) <<
-    "Spatial Convolution auto tuner failed to create verification kernel.";
-
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   const viennacl::ocl::device &device = ctx.current_device();
   if (device.vendor().find("Intel") != std::string::npos &&
     M_ % 16 == 0) {
-    /* IDLF kernel is using Intel specific extension which make
+    /* IDLF kernels are using Intel specific extension which make
        them intel only. */
-    create_convolution_kernel(bottom, top, 2, 4, 2, 1);
-    create_convolution_kernel(bottom, top, 2, 4, 4, 1);
-    create_convolution_kernel(bottom, top, 2, 8, 2, 1);
-    create_convolution_kernel(bottom, top, 2, 8, 4, 1);
-    create_convolution_kernel(bottom, top, 2, 6, 4, 1);
-    create_convolution_kernel(bottom, top, 2, 3, 3, 1);
-    create_convolution_kernel(bottom, top, 2, 5, 5, 1);
-    create_convolution_kernel(bottom, top, 2, 3, 4, 1);
-    create_convolution_kernel(bottom, top, 2, 6, 4, 1);
-  }
-  for (int_tp y = 1; y < 4; y += 1)
-    for (int_tp z = 1; z < 16 && z < M_; z += 1) {
-      if (4 * y * z > 32) continue;
-      create_convolution_kernel(bottom, top, 1, 4, y, z);
-      if (num_ > 1)
-        create_convolution_kernel(bottom, top, 3, 4, y, z);
+    int kernelCnt = 0;
+    for (uint32_t width = 14; width > 0; width--) {
+      int candidate = 0;
+      if (width > output_w_)
+        continue;
+      for (uint32_t height = 14; height > 0; height--) {
+        if (height * width > 32 || height > output_h_)
+          continue;
+        int tile_x = kernel_w_ + (width - 1) * stride_w_;
+        int tile_y = kernel_h_ + (height - 1) * stride_h_;
+        int tile_y_stride = 64 / tile_x;
+
+        if (tile_x % 4 != 0 && tile_x <= 16) {
+          create_convolution_kernel(bottom, top, 2, width, height, 1);
+          candidate++;
+        } else if ((tile_x % 4 == 0) &&
+                 ((tile_y + tile_y_stride - 1) / tile_y_stride < 4)) {
+          create_convolution_kernel(bottom, top, 2, width, height, 1);
+          candidate++;
+        }
+        if (candidate >= 4 && height == 2)
+          break;
+      }
+      kernelCnt += candidate;
+      if (kernelCnt >= 12 && width == 2)
+        break;
     }
+  } else {
+    for (int_tp y = 1; y < 4; y += 1)
+      for (int_tp z = 1; z < 16 && z < M_; z += 1) {
+        if (4 * y * z > 32) continue;
+        create_convolution_kernel(bottom, top, 1, 4, y, z);
+      }
+  }
   for (int_tp x = 0; x < kernelQueue.size(); x++)
     if (tune_local_size(bottom, top, kernelQueue[x])) {
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
@@ -975,10 +931,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       kernelQueue[x]->verified = false;
       kernelQueue[x]->tested = true;
     }
-
-  for (int_tp x = 0; x < kernelQueue.size(); x++)
-    kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
-                                                   num_, kernelQueue[x]);
 
   int_tp failures = 0;
   bool verification = false;
@@ -1174,10 +1126,6 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
-  // Creates a verification kernel to verify kernel results
-  if (create_verification_kernel(bottom, top) != true)
-    exit(-1);
-
   string outputFile;
   outputFile = CACHE_DIRECTORY + key_;
   std::ifstream cachedKernel(outputFile.c_str());
@@ -1240,6 +1188,25 @@ template void ConvolutionLayerSpatial<double>::SetUp(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     caffe::Backend backend);
 
+template void ConvolutionLayerSpatial<float>::swizzleWeights(
+    const vector<Blob<float>*>& bottom,
+    const vector<Blob<float>*>& top,
+    int_tp swizzle_factor);
+template void ConvolutionLayerSpatial<double>::swizzleWeights(
+    const vector<Blob<double>*>& bottom,
+    const vector<Blob<double>*>& top,
+    int_tp swizzle_factor);
+template void ConvolutionLayerSpatial<float>::pad_image(
+    const vector<Blob<float>*>& bottom,
+    const vector<Blob<float>*>& top,
+    int_tp image_offset, kernelConfig* config,
+    int_tp imgNum);
+template void ConvolutionLayerSpatial<double>::pad_image(
+    const vector<Blob<double>*>& bottom,
+    const vector<Blob<double>*>& top,
+    int_tp image_offset, kernelConfig* config,
+    int_tp imgNum);
+
 template<>
 void ConvolutionLayerSpatial<double>::create_convolution_kernel(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
@@ -1280,13 +1247,6 @@ bool ConvolutionLayerSpatial<double>::create_basic_kernel(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
-  NOT_IMPLEMENTED;
-  return false;
-}
-
-template<>
-bool ConvolutionLayerSpatial<double>::create_verification_kernel(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
   return false;
 }
@@ -1334,22 +1294,10 @@ void ConvolutionLayerSpatial<double>::setup_convolution(
 }
 
 template<>
-void ConvolutionLayerSpatial<double>::swizzleWeights(int_tp swizzle_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<>
 void ConvolutionLayerSpatial<double>::calculate_global_size(
     int_tp batch,
     int_tp* workItemOutput,
     size_t* localSizes, size_t* globalSizes) {
-  NOT_IMPLEMENTED;
-}
-
-template<>
-void ConvolutionLayerSpatial<double>::pad_image(int_tp image_offset,
-                                                kernelConfig* config,
-                                                int_tp imgNum) {
   NOT_IMPLEMENTED;
 }
 

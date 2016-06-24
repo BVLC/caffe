@@ -151,8 +151,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                    int_tp blockWidth,
                                    int_tp blockHeight,
                                    int_tp blockDepth);
-  virtual bool create_verification_kernel(const vector<Blob<Dtype>*>& bottom,
-                                          const vector<Blob<Dtype>*>& top);
   virtual cl_int convolve(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top, int_tp index,
                           int_tp numImages,
@@ -171,9 +169,13 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                              kernelConfig* config);
   virtual bool tune_local_size(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top, kernelConfig*);
-  virtual void swizzleWeights(int_tp swizzle_factor);
-  virtual void pad_image(int_tp image_offset, kernelConfig* config,
-  int_tp imgNum);
+  virtual void swizzleWeights(const vector<Blob<Dtype>*>& bottom,
+                              const vector<Blob<Dtype>*>& top,
+                              int_tp swizzle_factor);
+  virtual void pad_image(const vector<Blob<Dtype>*>& bottom,
+                         const vector<Blob<Dtype>*>& top,
+                         int_tp image_offset, kernelConfig* config,
+                         int_tp imgNum);
   virtual void generate_key();
   virtual std::string generate_unique_key();
   virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
@@ -225,7 +227,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   std::string key_;
   std::string kernel_name_;
-  std::string verification_kernel;
   Blob<Dtype> spatial_col_buffer_;
   Blob<Dtype> swizzled_weights_;
   Blob<Dtype> bias_multiplier_;
