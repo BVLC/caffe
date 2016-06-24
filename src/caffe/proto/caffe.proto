@@ -1281,7 +1281,7 @@ message MultiBoxLossParameter {
   optional bool map_object_to_agnostic = 17 [default = false];
   // If true, ignore cross boundary bbox during matching.
   // Cross boundary bbox is a bbox who is outside of the image region.
-  optional bool ignore_cross_boundary_bbox = 18 [default = true];
+  optional bool ignore_cross_boundary_bbox = 18 [default = false];
   // If true, only backpropagate on corners which are inside of the image
   // region when encode_type is CORNER or CORNER_SIZE.
   optional bool bp_inside = 19 [default = false];
@@ -1393,7 +1393,7 @@ message PriorBoxParameter {
   // we will generate aspect ratio "1.0/r" as well.
   optional bool flip = 4 [default = true];
   // If true, will clip the prior so that it is within [0, 1]
-  optional bool clip = 5 [default = true];
+  optional bool clip = 5 [default = false];
   // Variance for adjusting the prior bboxes.
   repeated float variance = 6;
 }
