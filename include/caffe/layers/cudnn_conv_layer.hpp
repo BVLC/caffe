@@ -46,7 +46,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   // This is the workspace used by all Convolution layers one after another.
   // We carry it global to prevent unnecessary allocations/deallocations
   // because they hurt performance.
-  static GPUMemory::Workspace WORKSPACE;
+  static GPUMemory::MultiWorkspace WORKSPACE;
 
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
@@ -114,7 +114,7 @@ const size_t CuDNNConvolutionLayer<Dtype>::INITIAL_WORKSPACE_SIZE =
     4*1024*1024;
 
 template<typename Dtype>
-GPUMemory::Workspace CuDNNConvolutionLayer<Dtype>::WORKSPACE;
+GPUMemory::MultiWorkspace CuDNNConvolutionLayer<Dtype>::WORKSPACE;
 
 template<typename Dtype>
 const float CuDNNConvolutionLayer<Dtype>::MAX_WORKSPACE_RATIO = 0.95F;
