@@ -18,6 +18,8 @@
 
 #include "caffe/util/device_alternate.hpp"
 
+#include "Python.h"
+
 // Convert macro to string
 #define STRINGIFY(m) #m
 #define AS_STRING(m) STRINGIFY(m)
@@ -180,6 +182,19 @@ class Caffe {
   Caffe();
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
+};
+
+class ScopedGILRelease{
+    public:
+        ScopedGILRelease(){
+            m_thread_state = PyEval_SaveThread();
+        };
+        ~ScopedGILRelease(){
+            PyEval_RestoreThread(m_thread_state);
+            m_thread_state = NULL;
+        };
+    private:
+        PyThreadState * m_thread_state;
 };
 
 }  // namespace caffe

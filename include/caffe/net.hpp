@@ -52,6 +52,16 @@ class Net {
    * included.
    */
   Dtype ForwardFromTo(int start, int end);
+  /**
+   * Basically, a ForwardFromTo, that release Python GIL, so that pycaffe
+   * can make multithreaded predictions. This is exposed to python-boost interface
+   * instead of ForwardFromTo
+   */
+  Dtype PyForwardFromTo(int start, int end){
+      //Release GIL
+      ScopedGILRelease scoped;
+      return ForwardFromTo(start,end);
+  }
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
   /// @brief DEPRECATED; set input blobs then use Forward() instead.
@@ -71,6 +81,16 @@ class Net {
    */
   void Backward();
   void BackwardFromTo(int start, int end);
+  /**
+   * Basically, a BackwardFromTo, that release Python GIL, so that pycaffe
+   * can make multithreaded predictions. This is exposed to python-boost interface
+   * instead of BackwardFromTo.
+   **/
+  void PyBackwardFromTo(int start, int end){
+      //Release GIL
+      ScopedGILRelease scoped;
+      BackwardFromTo(start,end);
+  }
   void BackwardFrom(int start);
   void BackwardTo(int end);
 
