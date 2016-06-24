@@ -357,7 +357,6 @@ void ConvolutionLayerSpatial<Dtype>::pad_image(
     kernelConfig* config,
     int_tp imgNum) {
 #ifdef USE_GREENTEA
-  // ClState& state = Caffe::cl_state();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
   // Copy kernel
@@ -366,53 +365,26 @@ void ConvolutionLayerSpatial<Dtype>::pad_image(
                                        CL_KERNEL_SELECT("copyImage"));
   cl_uint argIdx = 0;
   int_tp col_data_offset = 0;
-  int_tp channels = this->channels_ / this->group_;
+  int_tp channels = this->channels_;
 
-  if (config->batched_execute || config->kernelType == 2) {
-    for (int_tp x = 0; x < imgNum; x++) {
-      argIdx = 0;
-      int_tp image_offsetLocal = height_ * width_ * this->channels_ * x
-          + image_offset;
-      col_data_offset = padded_width_ * padded_height_ * this->channels_ * x
-          + image_offset;
-      oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-      oclk_copy.arg(argIdx++, image_offsetLocal);
-      oclk_copy.arg(argIdx++, channels);
-      oclk_copy.arg(argIdx++, height_);
-      oclk_copy.arg(argIdx++, width_);
-      oclk_copy.arg(argIdx++, padded_height_);
-      oclk_copy.arg(argIdx++, padded_width_);
-      oclk_copy.arg(argIdx++, pad_h_);
-      oclk_copy.arg(argIdx++, pad_w_);
-      oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-      oclk_copy.arg(argIdx++, col_data_offset);
+  oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+  oclk_copy.arg(argIdx++, image_offset);
+  oclk_copy.arg(argIdx++, channels);
+  oclk_copy.arg(argIdx++, height_);
+  oclk_copy.arg(argIdx++, width_);
+  oclk_copy.arg(argIdx++, padded_height_);
+  oclk_copy.arg(argIdx++, padded_width_);
+  oclk_copy.arg(argIdx++, pad_h_);
+  oclk_copy.arg(argIdx++, pad_w_);
+  oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
+  oclk_copy.arg(argIdx++, col_data_offset);
+  oclk_copy.arg(argIdx++, imgNum);
+  const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
+      (size_t) padded_height_, (size_t) channels };
 
-      const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
-          (size_t) padded_height_, (size_t) channels };
-
-      clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                             oclk_copy.handle().get(), 3, NULL,
-                             global_work_size_Copy, NULL, 0, NULL, NULL);
-    }
-  } else {
-    oclk_copy.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-    oclk_copy.arg(argIdx++, image_offset);
-    oclk_copy.arg(argIdx++, channels);
-    oclk_copy.arg(argIdx++, height_);
-    oclk_copy.arg(argIdx++, width_);
-    oclk_copy.arg(argIdx++, padded_height_);
-    oclk_copy.arg(argIdx++, padded_width_);
-    oclk_copy.arg(argIdx++, pad_h_);
-    oclk_copy.arg(argIdx++, pad_w_);
-    oclk_copy.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-    oclk_copy.arg(argIdx++, col_data_offset);
-    const size_t global_work_size_Copy[3] = { (size_t) padded_width_,
-        (size_t) padded_height_, (size_t) channels };
-
-    clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                           oclk_copy.handle().get(), 3, NULL,
-                           global_work_size_Copy, NULL, 0, NULL, NULL);
-  }
+  clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                         oclk_copy.handle().get(), 3, NULL,
+                         global_work_size_Copy, NULL, 0, NULL, NULL);
 #endif
 }
 
