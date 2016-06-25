@@ -128,6 +128,10 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // get a anno_datum
     AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
+    vector<int> shape =
+        this->data_transformer_->InferBlobShape(anno_datum.datum());
+    CHECK(std::equal(top_shape.begin() + 1, top_shape.begin() + 4,
+                     shape.begin() + 1));
     read_time += timer.MicroSeconds();
     timer.Start();
     AnnotatedDatum sampled_datum;
