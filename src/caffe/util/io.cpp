@@ -144,7 +144,7 @@ cv::Mat ReadImageToCVMat(const string& filename) {
 // Do the file extension and encoding match?
 static bool matchExt(const std::string & fn,
                      std::string en) {
-  size_t p = fn.rfind('.');
+  size_t p = fn.rfind('.') + 1;
   std::string ext = p != fn.npos ? fn.substr(p) : fn;
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
   std::transform(en.begin(), en.end(), en.begin(), ::tolower);
@@ -626,6 +626,9 @@ void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
   cv::imencode("."+encoding, cv_img, buf);
   datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
                               buf.size()));
+  datum->set_channels(cv_img.channels());
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
   datum->set_encoded(true);
 }
 
