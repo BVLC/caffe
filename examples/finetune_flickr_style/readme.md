@@ -57,7 +57,11 @@ The prototxts in this example assume this, and also assume the presence of the I
 
 We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
 
-Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
+Now we can train! The key to fine-tuning is the `-weights` argument in the
+command below, which tells Caffe that we want to load weights from a pre-trained
+Caffe model.
+
+(You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
 
     caffe % ./build/tools/caffe train -solver models/finetune_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
 
