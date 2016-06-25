@@ -9,6 +9,8 @@
 
 namespace caffe {
 
+template <typename Dtype> class SolverTrace;
+
 /**
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
@@ -60,7 +62,7 @@ class Solver {
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.
-  void Restore(const char* resume_file);
+  void Restore(const char* resume_file, const char* trace_file = NULL);
   // The Solver::Snapshot function implements the basic snapshotting utility
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
@@ -69,10 +71,12 @@ class Solver {
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const shared_ptr<Net<Dtype> >& net() const { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  int iter() const { return iter_; }
+  const TraceDigest& get_digest() const;
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -128,6 +132,9 @@ class Solver {
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;
+
+  // Maintains a history of the solver for analysis afterwards
+  shared_ptr<SolverTrace<Dtype> > solver_trace_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

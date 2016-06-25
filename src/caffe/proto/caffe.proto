@@ -98,7 +98,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 41 (last added: type)
+// SolverParameter next available ID: 42 (last added: solver_trace_param)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -239,6 +239,82 @@ message SolverParameter {
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
+  
+  optional SolverTraceParameter solver_trace_param = 41;
+}
+
+message TraceDigest {
+  repeated WeightTracePoint weight_trace_point = 1;
+  repeated ActivationTrace  activation_trace = 2;
+  repeated WeightTracePoint diff_trace_point = 3;
+  repeated TrainTracePoint  train_trace_point = 4;
+  repeated TestLossTracePoint   test_loss_trace_point = 5;
+  repeated TestScoreTracePoint   test_score_trace_point = 6;
+}
+
+message SolverTraceParameter {
+  // filename where the trace will be saved
+  optional string trace_filename = 1;
+  
+  // save the trace in a human readable format too
+  optional bool human_readable_trace = 2;
+  
+  // How often solver trace should be saved to disk
+  // determines the IO to disk load that the solver traces will create
+  // If not set, it is the same as SolverParameter.snapshot
+  optional int32 save_interval = 3;
+  
+  // tells us how often we should take trace values.
+  // If this value is zero or not set, no trace will be made
+  // determines how detailed the trace will be
+  // values like weight_trace_interval override this
+  optional int32 trace_interval = 4 [default = 0];
+  
+  // number of parameters to track from every layer / blob
+  // values like num_weight_traces override this
+  optional int32 num_traces = 5 [default = 10];
+  
+  // tells us how often we should take weight trace values.
+  // If this is not set, trace_interval is used as a default
+  // If this value is zero, no weight trace will be made
+  // determines how detailed the weight trace will be
+  optional int32 weight_trace_interval = 6;
+
+  // number of parameters to track from every layer
+  // If this is not set, num_traces is used as a default
+  optional int32 num_weight_traces = 7;
+  
+  // tells us how often we should take weight trace values.
+  // If this is not set, trace_interval is used as a default
+  // tells us how often we should take activation trace values.
+  // If this value is zero, no activation trace will be made
+  // determines how detailed the activation trace will be
+  optional int32 activation_trace_interval = 8;
+
+  // number of parameters to track from every layer
+  // If this is not set, num_traces is used as a default
+  optional int32 num_activation_traces = 9;
+  
+  // tells us how often we should take weight trace values.
+  // If this is not set, trace_interval is used as a default
+  // tells us how often we should take diff trace values.
+  // If this value is zero, no diff trace will be made
+  // determines how detailed the diff trace will be
+  optional int32 diff_trace_interval = 10;
+
+  // number of parameters to track from every layer
+  // If this is not set, num_traces is used as a default
+  optional int32 num_diff_traces = 11;
+  
+  // during training phase, record training loss in the solver trace
+  optional bool create_train_trace = 12 [default = true];
+  
+  // during test phase, record the loss / accuracy in the solver trace
+  optional bool create_test_trace = 13 [default = true];
+  
+  // save the trace every time we train
+  optional bool save_after_test = 14 [default = true];
+  
 }
 
 // A message that stores the solver snapshots
@@ -1150,6 +1226,61 @@ message TileParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+}
+
+message TestLossTracePoint {
+  //the id of the test net we test the loss of
+  optional int32 test_net_id = 1;
+
+  //number of training iterations up until this point
+  optional int32 iter = 2;
+
+  //the loss of this net at this point
+  optional float test_loss = 3;
+}
+
+//the test output of one forward pass of one net
+message TestScoreTracePoint {
+
+  //the id of the test net we test the loss of
+  optional int32 test_net_id = 1;
+  
+  //number of training iterations up until this point
+  optional int32 iter = 2;
+
+  //the index of the data blob we send through the net to test it
+  optional string score_name = 3;
+
+  //the mean score of the net on this test blob
+  optional float mean_score = 4;
+
+  //the weight given to this blob of test data
+  optional float loss_weight = 5;
+}
+
+message TrainTracePoint {
+  optional int32 iter = 1;
+  optional float train_loss = 2;
+  optional float train_smoothed_loss = 3;
+}
+
+// Stores a few weights from a blob of a layer. Used for solver trace.
+message WeightTracePoint {
+  optional int32  iter = 1;
+  optional int32  param_id = 2;
+  optional string layer_name = 3;
+  repeated float  value = 4;
+}
+
+// Stores a few activations from a blob.  Used for solver trace.
+message ActivationTrace {
+  optional string blob_name = 1;
+  repeated ActivationTracePoint activation_trace_point = 2;
+}
+
+message ActivationTracePoint {
+  optional int32 iter  = 1;
+  repeated float value = 2;
 }
 
 message WindowDataParameter {

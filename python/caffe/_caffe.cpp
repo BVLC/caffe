@@ -332,9 +332,10 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init);
 
+  typedef shared_ptr<Net<Dtype> >(Solver<Dtype>::*MutableNetGetter)();
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
-    .add_property("net", &Solver<Dtype>::net)
+    .add_property("net", static_cast<MutableNetGetter>(&Solver<Dtype>::net))
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
