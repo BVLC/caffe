@@ -1396,6 +1396,20 @@ message PriorBoxParameter {
   optional bool clip = 5 [default = false];
   // Variance for adjusting the prior bboxes.
   repeated float variance = 6;
+  // By default, we calculate img_height, img_width, step_x, step_y based on
+  // bottom[0] (feat) and bottom[1] (img). Unless these values are explicitely
+  // provided.
+  // Explicitly provide the img_size.
+  optional uint32 img_size = 7;
+  // Either img_size or img_h/img_w should be specified; not both.
+  optional uint32 img_h = 8;
+  optional uint32 img_w = 9;
+
+  // Explicitly provide the step size.
+  optional float step = 10;
+  // Either step or step_h/step_w should be specified; not both.
+  optional float step_h = 11;
+  optional float step_w = 12;
 }
 
 message PythonParameter {

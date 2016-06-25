@@ -61,6 +61,40 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     // Set default to 0.1.
     variance_.push_back(0.1);
   }
+
+  if (prior_box_param.has_img_h() || prior_box_param.has_img_w()) {
+    CHECK(!prior_box_param.has_img_size())
+        << "Either img_size or img_h/img_w should be specified; not both.";
+    img_h_ = prior_box_param.img_h();
+    CHECK_GT(img_h_, 0) << "img_h should be larger than 0.";
+    img_w_ = prior_box_param.img_w();
+    CHECK_GT(img_w_, 0) << "img_w should be larger than 0.";
+  } else if (prior_box_param.has_img_size()) {
+    const int img_size = prior_box_param.img_size();
+    CHECK_GT(img_size, 0) << "img_size should be larger than 0.";
+    img_h_ = img_size;
+    img_w_ = img_size;
+  } else {
+    img_h_ = 0;
+    img_w_ = 0;
+  }
+
+  if (prior_box_param.has_step_h() || prior_box_param.has_step_w()) {
+    CHECK(!prior_box_param.has_step())
+        << "Either step or step_h/step_w should be specified; not both.";
+    step_h_ = prior_box_param.step_h();
+    CHECK_GT(step_h_, 0.) << "step_h should be larger than 0.";
+    step_w_ = prior_box_param.step_w();
+    CHECK_GT(step_w_, 0.) << "step_w should be larger than 0.";
+  } else if (prior_box_param.has_step()) {
+    const float step = prior_box_param.step();
+    CHECK_GT(step, 0) << "step should be larger than 0.";
+    step_h_ = step;
+    step_w_ = step;
+  } else {
+    step_h_ = 0;
+    step_w_ = 0;
+  }
 }
 
 template <typename Dtype>
@@ -85,17 +119,29 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const int layer_width = bottom[0]->width();
   const int layer_height = bottom[0]->height();
-  const int img_width = bottom[1]->width();
-  const int img_height = bottom[1]->height();
-  const float step_x = static_cast<float>(img_width) / layer_width;
-  const float step_y = static_cast<float>(img_height) / layer_height;
+  int img_width, img_height;
+  if (img_h_ == 0 || img_w_ == 0) {
+    img_width = bottom[1]->width();
+    img_height = bottom[1]->height();
+  } else {
+    img_width = img_w_;
+    img_height = img_h_;
+  }
+  float step_w, step_h;
+  if (step_w_ == 0 || step_h_ == 0) {
+    step_w = static_cast<float>(img_width) / layer_width;
+    step_h = static_cast<float>(img_height) / layer_height;
+  } else {
+    step_w = step_w_;
+    step_h = step_h_;
+  }
   Dtype* top_data = top[0]->mutable_cpu_data();
   int dim = layer_height * layer_width * num_priors_ * 4;
   int idx = 0;
   for (int h = 0; h < layer_height; ++h) {
     for (int w = 0; w < layer_width; ++w) {
-      float center_x = (w + 0.5) * step_x;
-      float center_y = (h + 0.5) * step_y;
+      float center_x = (w + 0.5) * step_w;
+      float center_y = (h + 0.5) * step_h;
       float box_width, box_height;
       for (int s = 0; s < min_sizes_.size(); ++s) {
         int min_size_ = min_sizes_[s];
