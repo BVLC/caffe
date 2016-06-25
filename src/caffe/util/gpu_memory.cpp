@@ -37,7 +37,7 @@ void GPUMemory::Manager::init(const vector<int>& gpus, Mode m, bool debug) {
       // Just in case someone installed 'no cleanup' arena before
       delete cub_allocator_;
       cub_allocator_ = new cub::CachingDeviceAllocator(BIN_GROWTH, MIN_BIN,
-          MAX_BIN, MAX_CACHED_BYTES, false, debug_);
+          MAX_BIN, MAX_CACHED_BYTES, true, debug_);
     } catch (...) {
     }
     CHECK_NOTNULL(cub_allocator_);
@@ -117,7 +117,14 @@ void GPUMemory::Manager::deallocate(void* ptr, int device,
   }
   switch (mode_) {
   case CUB_ALLOCATOR:
-    CUDA_CHECK(cub_allocator_->DeviceFree(device, ptr));
+    {
+      int current_device;
+      cudaError_t status = cudaGetDevice(&current_device);
+      // Preventing dead lock while Caffe shutting down.
+      if (status != cudaErrorCudartUnloading) {
+        CUDA_CHECK(cub_allocator_->DeviceFree(device, ptr));
+      }
+    }
     break;
   default:
     CUDA_CHECK(cudaFree(ptr));
