@@ -89,6 +89,8 @@ class DataTransformer {
    *
    * @param anno_datum
    *    AnnotatedDatum containing the data and annotation to be transformed.
+   * @param do_resize
+   *    If true, resize the annotation accordingly before crop.
    * @param crop_bbox
    *    The cropped region applied to anno_datum.datum()
    * @param do_mirror
@@ -97,7 +99,7 @@ class DataTransformer {
    *    Stores all transformed AnnotationGroup.
    */
   void TransformAnnotation(
-      const AnnotatedDatum& anno_datum,
+      const AnnotatedDatum& anno_datum, const bool do_resize,
       const NormalizedBBox& crop_bbox, const bool do_mirror,
       RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all);
 

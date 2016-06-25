@@ -247,7 +247,8 @@ void DataTransformer<Dtype>::Transform(
   Transform(datum, transformed_blob, &crop_bbox, do_mirror);
 
   // Transform annotation.
-  TransformAnnotation(anno_datum, crop_bbox, *do_mirror,
+  const bool do_resize = true;
+  TransformAnnotation(anno_datum, do_resize, crop_bbox, *do_mirror,
                       transformed_anno_group_all);
 }
 
@@ -282,9 +283,11 @@ void DataTransformer<Dtype>::Transform(
 
 template<typename Dtype>
 void DataTransformer<Dtype>::TransformAnnotation(
-    const AnnotatedDatum& anno_datum,
+    const AnnotatedDatum& anno_datum, const bool do_resize,
     const NormalizedBBox& crop_bbox, const bool do_mirror,
     RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all) {
+  const int img_height = anno_datum.datum().height();
+  const int img_width = anno_datum.datum().width();
   if (anno_datum.type() == AnnotatedDatum_AnnotationType_BBOX) {
     // Go through each AnnotationGroup.
     for (int g = 0; g < anno_datum.annotation_group_size(); ++g) {
@@ -295,13 +298,21 @@ void DataTransformer<Dtype>::TransformAnnotation(
       for (int a = 0; a < anno_group.annotation_size(); ++a) {
         const Annotation& anno = anno_group.annotation(a);
         const NormalizedBBox& bbox = anno.bbox();
+        // Adjust bounding box annotation.
+        NormalizedBBox resize_bbox = bbox;
+        if (do_resize && param_.has_resize_param()) {
+          CHECK_GT(img_height, 0);
+          CHECK_GT(img_width, 0);
+          UpdateBBoxByResizePolicy(param_.resize_param(), img_width, img_height,
+                                   &resize_bbox);
+        }
         if (param_.has_emit_constraint() &&
-            !MeetEmitConstraint(crop_bbox, bbox, param_.emit_constraint())) {
+            !MeetEmitConstraint(crop_bbox, resize_bbox,
+                                param_.emit_constraint())) {
           continue;
         }
-        // Adjust bounding box annotation.
         NormalizedBBox proj_bbox;
-        if (ProjectBBox(crop_bbox, bbox, &proj_bbox)) {
+        if (ProjectBBox(crop_bbox, resize_bbox, &proj_bbox)) {
           has_valid_annotation = true;
           Annotation* transformed_anno =
               transformed_anno_group.add_annotation();
@@ -404,10 +415,11 @@ void DataTransformer<Dtype>::CropImage(const AnnotatedDatum& anno_datum,
   cropped_anno_datum->set_type(anno_datum.type());
 
   // Transform the annotation according to crop_bbox.
-  bool do_mirror = false;
+  const bool do_resize = false;
+  const bool do_mirror = false;
   NormalizedBBox crop_bbox;
   ClipBBox(bbox, &crop_bbox);
-  TransformAnnotation(anno_datum, crop_bbox, do_mirror,
+  TransformAnnotation(anno_datum, do_resize, crop_bbox, do_mirror,
                       cropped_anno_datum->mutable_annotation_group());
 }
 
@@ -437,50 +449,27 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob,
                                        NormalizedBBox* crop_bbox,
                                        bool* do_mirror) {
-  const int crop_size = param_.crop_size();
-  const int img_channels = cv_img.channels();
-  int img_height = cv_img.rows;
-  int img_width = cv_img.cols;
-
   // Check dimensions.
-  const int_tp channels = transformed_blob->channels();
-  const int_tp height = transformed_blob->height();
-  const int_tp width = transformed_blob->width();
-  const int_tp num = transformed_blob->num();
+  const int img_channels = cv_img.channels();
+  const int channels = transformed_blob->channels();
+  const int height = transformed_blob->height();
+  const int width = transformed_blob->width();
+  const int num = transformed_blob->num();
 
+  CHECK_GT(img_channels, 0);
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   CHECK_EQ(channels, img_channels);
   CHECK_GE(num, 1);
 
-  // (FTschopp) Fixed for float data
-  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_32F)
-  << "Image data type must be unsigned byte or 4 byte float";
-
+  const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
   *do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
-  cv::Mat cv_resized_image, cv_noised_image, cv_cropped_image;
-
-  *crop_bbox = UnitBBox();
-  if (param_.has_resize_param()) {
-    cv_resized_image = ApplyResize(cv_img, param_.resize_param());
-    UpdateBBoxByResizePolicy(param_.resize_param(), img_width, img_height,
-                             crop_bbox);
-  } else {
-    cv_resized_image = cv_img;
-  }
-  if (param_.has_noise_param()) {
-    cv_noised_image = ApplyNoise(cv_resized_image, param_.noise_param());
-  } else {
-    cv_noised_image = cv_resized_image;
-  }
-  CHECK_GT(img_channels, 0);
 
   Dtype* mean = NULL;
   if (has_mean_file) {
     CHECK_EQ(img_channels, data_mean_.channels());
-    CHECK_EQ(img_height, data_mean_.height());
-    CHECK_EQ(img_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
@@ -501,8 +490,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     crop_w = crop_size;
   }
 
-  img_height = cv_noised_image.rows;
-  img_width = cv_noised_image.cols;
+  cv::Mat cv_resized_image, cv_noised_image, cv_cropped_image;
+  if (param_.has_resize_param()) {
+    cv_resized_image = ApplyResize(cv_img, param_.resize_param());
+  } else {
+    cv_resized_image = cv_img;
+  }
+  if (param_.has_noise_param()) {
+    cv_noised_image = ApplyNoise(cv_resized_image, param_.noise_param());
+  } else {
+    cv_noised_image = cv_resized_image;
+  }
+  int img_height = cv_noised_image.rows;
+  int img_width = cv_noised_image.cols;
   CHECK_GE(img_height, crop_h);
   CHECK_GE(img_width, crop_w);
 
@@ -524,6 +524,12 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   } else {
     cv_cropped_image = cv_noised_image;
   }
+
+  // Return the normalized crop bbox.
+  crop_bbox->set_xmin(Dtype(w_off) / img_width);
+  crop_bbox->set_ymin(Dtype(h_off) / img_height);
+  crop_bbox->set_xmax(Dtype(w_off + width) / img_width);
+  crop_bbox->set_ymax(Dtype(h_off + height) / img_height);
 
   if (has_mean_file) {
     CHECK_EQ(cv_cropped_image.rows, data_mean_.height());
