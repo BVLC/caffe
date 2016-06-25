@@ -70,6 +70,11 @@ class PriorBoxLayer : public Layer<Dtype> {
   int num_priors_;
   bool clip_;
   vector<float> variance_;
+
+  int img_w_;
+  int img_h_;
+  int step_w_;
+  int step_h_;
 };
 
 }  // namespace caffe
