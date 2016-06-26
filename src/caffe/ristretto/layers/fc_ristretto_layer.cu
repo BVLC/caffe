@@ -10,26 +10,32 @@ namespace caffe {
 template <typename Dtype>
 void FcRistrettoLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  // Trim layer input
+  if (this->phase_ == TEST) {
+      this->QuantizeLayerInputs_gpu(bottom[0]->mutable_gpu_data(),
+          bottom[0]->count());
+  }
   // Trim weights
   caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(),
-      weights_quantized_[0]->mutable_gpu_data());
-  caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->gpu_data(),
-      weights_quantized_[1]->mutable_gpu_data());
+      this->weights_quantized_[0]->mutable_gpu_data());
+  if (this->bias_term_) {
+    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->gpu_data(),
+        this->weights_quantized_[1]->mutable_gpu_data());
+  }
   int rounding = this->phase_ == TEST ? this->rounding_ :
       QuantizationParameter_Rounding_STOCHASTIC;
-  this->QuantizeWeights_gpu(weights_quantized_[0]->mutable_gpu_data(),
-      weights_quantized_[0]->count(), weights_quantized_[1]->mutable_gpu_data(),
-      weights_quantized_[1]->count(), rounding);
+  this->QuantizeWeights_gpu(this->weights_quantized_, rounding,
+      this->bias_term_);
   // Do forward propagation
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const Dtype* weight = weights_quantized_[0]->gpu_data();
+  const Dtype* weight = this->weights_quantized_[0]->gpu_data();
   if (this->M_ == 1) {
     caffe_gpu_gemv<Dtype>(CblasNoTrans, this->N_, this->K_, (Dtype)1.,
                          weight, bottom_data, (Dtype)0., top_data);
     if (this->bias_term_)
-      caffe_gpu_axpy<Dtype>(this->N_, this->bias_multiplier_.cpu_data()[0],
-                            weights_quantized_[1]->gpu_data(), top_data);
+      caffe_gpu_axpy<Dtype>(this->N_, this->bias_multiplier_.gpu_data()[0],
+                            this->weights_quantized_[1]->gpu_data(), top_data);
   } else {
     caffe_gpu_gemm<Dtype>(CblasNoTrans,
                           this->transpose_ ? CblasNoTrans : CblasTrans,
@@ -38,7 +44,7 @@ void FcRistrettoLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (this->bias_term_)
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, this->M_, this->N_, 1,
                             (Dtype)1., this->bias_multiplier_.gpu_data(),
-                            weights_quantized_[1]->gpu_data(), (Dtype)1.,
+                            this->weights_quantized_[1]->gpu_data(), (Dtype)1.,
                             top_data);
   }
   // Trim layer output
@@ -79,12 +85,12 @@ void FcRistrettoLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->transpose_) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
           this->M_, this->K_, this->N_,
-          (Dtype)1., top_diff, weights_quantized_[0]->gpu_data(),
+          (Dtype)1., top_diff, this->weights_quantized_[0]->gpu_data(),
           (Dtype)0., bottom[0]->mutable_gpu_diff());
     } else {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
           this->M_, this->K_, this->N_,
-         (Dtype)1., top_diff, weights_quantized_[0]->gpu_data(),
+         (Dtype)1., top_diff, this->weights_quantized_[0]->gpu_data(),
          (Dtype)0., bottom[0]->mutable_gpu_diff());
     }
   }

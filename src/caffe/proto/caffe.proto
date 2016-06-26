@@ -308,7 +308,8 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 148 (last added: quantization_param)
+// LayerParameter next available layer-specific ID: 148 (last added:
+// quantization_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -408,30 +409,32 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
 }
 
-// Message for layers with quantized values
+// Message for layers with reduced word with arithmetic
 message QuantizationParameter{
-	enum Precision {
-		FIXED_POINT = 0;
-		MINI_FLOATING_POINT = 1;
-		POWER_2_WEIGHTS = 2;
-	}
-	optional Precision precision = 1 [default = FIXED_POINT];
+  enum Precision {
+    DYNAMIC_FIXED_POINT = 0;
+    MINIFLOAT = 1;
+    INTEGER_POWER_OF_2_WEIGHTS = 2;
+  }
+  optional Precision precision = 1 [default = DYNAMIC_FIXED_POINT];
   enum Rounding {
-		NEAREST = 0;
-		STOCHASTIC = 1;
-	}
-	optional Rounding rounding_scheme = 2 [default = NEAREST];
-	// Fixed point precision
-  optional uint32 bw_layer_out = 3 [default = 32];
-	optional uint32 bw_params = 4 [default = 32];
-	optional int32 fl_layer_out = 5 [default = 16];
-	optional int32 fl_params = 6 [default = 16];
-	// Mini floating point precision
-  optional uint32 mant_bits = 7 [default = 23];
-	optional uint32 exp_bits = 8 [default = 8];
-	// Power-of-two weights
-  optional int32 exp_min = 9 [default = -8];
-	optional int32 exp_max = 10 [default = -1];
+    NEAREST = 0;
+    STOCHASTIC = 1;
+  }
+  optional Rounding rounding_scheme = 2 [default = NEAREST];
+  // Dynamic fixed point word width
+  optional uint32 bw_layer_in = 3 [default = 32];
+  optional uint32 bw_layer_out = 4 [default = 32];
+  optional uint32 bw_params = 5 [default = 32];
+  optional int32 fl_layer_in = 6 [default = 16];
+  optional int32 fl_layer_out = 7 [default = 16];
+  optional int32 fl_params = 8 [default = 16];
+  // Minifloat word width
+  optional uint32 mant_bits = 9 [default = 23];
+  optional uint32 exp_bits = 10 [default = 8];
+  // Integer-power-of-two weights
+  optional int32 exp_min = 11 [default = -8];
+  optional int32 exp_max = 12 [default = -1];
 }
 
 // Message that stores parameters used to apply transformation

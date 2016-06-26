@@ -364,22 +364,19 @@ Dtype Net<Dtype>::findMax(Blob<Dtype>* blob){
 
 template <typename Dtype>
 void Net<Dtype>::RangeInLayers(vector<string>* layer_name,
-      vector<Dtype>* max_out, vector<Dtype>* max_param){
+      vector<Dtype>* max_in, vector<Dtype>* max_out, vector<Dtype>* max_param){
   Dtype max_val;
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
     if (strcmp(layers_[layer_id]->type(), "Convolution") == 0 ||
           strcmp(layers_[layer_id]->type(), "InnerProduct") == 0) {
       layer_name->push_back(this->layer_names()[layer_id]);
+      max_val = findMax(bottom_vecs_[layer_id][0]);
+      max_in->push_back(max_val);
       max_val = findMax(top_vecs_[layer_id][0]);
       max_out->push_back(max_val);
       // Consider the weights only, ignore the bias
       max_val = findMax(&(*layers_[layer_id]->blobs()[0]));
       max_param->push_back(max_val);
-    } else if (strcmp(layers_[layer_id]->type(), "Data") == 0) {
-      layer_name->push_back(this->layer_names()[layer_id]);
-      max_val = findMax(top_vecs_[layer_id][0]);
-      max_out->push_back(max_val);
-      max_param->push_back(1); //no parameters in this layer
     }
   }
 }

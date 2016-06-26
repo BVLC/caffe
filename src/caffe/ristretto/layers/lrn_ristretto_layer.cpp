@@ -12,15 +12,15 @@ LRNRistrettoLayer<Dtype>::LRNRistrettoLayer(const LayerParameter& param)
   this->precision_ = this->layer_param_.quantization_param().precision();
   this->rounding_ = this->layer_param_.quantization_param().rounding_scheme();
   switch (this->precision_) {
-  case QuantizationParameter_Precision_FIXED_POINT:
-    LOG(ERROR) << "LRN layer only supports mini floating point";
+  case QuantizationParameter_Precision_DYNAMIC_FIXED_POINT:
+    LOG(FATAL) << "LRN layer only supports minifloat";
     break;
-  case QuantizationParameter_Precision_MINI_FLOATING_POINT:
+  case QuantizationParameter_Precision_MINIFLOAT:
     this->fp_mant_ = this->layer_param_.quantization_param().mant_bits();
     this->fp_exp_ = this->layer_param_.quantization_param().exp_bits();
     break;
-  case QuantizationParameter_Precision_POWER_2_WEIGHTS:
-    LOG(ERROR) << "LRN layer only supports mini floating point";
+  case QuantizationParameter_Precision_INTEGER_POWER_OF_2_WEIGHTS:
+    LOG(FATAL) << "LRN layer only supports minifloat";
     break;
   default:
     LOG(FATAL) << "Unknown precision mode: " << this->precision_;
@@ -32,14 +32,14 @@ template <typename Dtype>
 void LRNRistrettoLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   //TODO
-  LOG(ERROR) << "LRNRistrettoLayer not implemented on CPU yet.";
+  LOG(FATAL) << "LRNRistrettoLayer not implemented on CPU yet.";
 }
 
 template <typename Dtype>
 void LRNRistrettoLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   //TODO
-  LOG(ERROR) << "LRNRistrettoLayer not implemented on CPU yet.";
+  LOG(FATAL) << "LRNRistrettoLayer not implemented on CPU yet.";
 }
 
 #ifdef CPU_ONLY

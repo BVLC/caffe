@@ -11,7 +11,7 @@ namespace caffe {
 // suboptimal, the performance is actually nearly the same as when using global
 // states.
 __device__ __forceinline__ double
-RandUniform_device(const int index){
+RandUniform_device(const int index) {
   curandState state;
   curand_init( (unsigned long long) clock() + index, 0, 0, &state);
   return curand_uniform_double(&state);
@@ -28,8 +28,8 @@ typedef union {
 
 template <typename Dtype>
 __device__ void
-Trim2FloatingPoint_device(Dtype* data, const int bw_mant, const int bw_exp,
-      const int rounding, const int index){
+Trim2MiniFloat_device(Dtype* data, const int bw_mant, const int bw_exp,
+      const int rounding, const int index) {
   int bias_out = powf(2, bw_exp - 1) -1;
   float_cast d2;
   // This casts the input to single precision
@@ -37,12 +37,12 @@ Trim2FloatingPoint_device(Dtype* data, const int bw_mant, const int bw_exp,
   int exponent=d2.parts.exponent - 127 + bias_out;
   double mantisa = d2.parts.mantisa;
   //special case: input is zero or denormalized number
-  if(d2.parts.exponent == 0){
+  if (d2.parts.exponent == 0) {
     *data = 0;
     return;
   }
   // Special case: denormalized number as output
-  if(exponent < 0){
+  if (exponent < 0) {
     *data = 0;
     return;
   }
