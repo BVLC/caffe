@@ -4,6 +4,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/layers/base_data_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
@@ -20,58 +21,62 @@ class BaseRistrettoLayer{
  public:
   explicit BaseRistrettoLayer();
  protected:
-  void QuantizeLayerOutputs_cpu(Dtype* top_data, const int top_count);
-  void QuantizeLayerOutputs_gpu(Dtype* top_data, const int top_count);
-  void QuantizeWeights_cpu(Dtype* weight, const int cnt_weight, Dtype* bias,
-      const int cnt_bias, const int rounding);
-  void QuantizeWeights_gpu(Dtype* weight, const int cnt_weight, Dtype* bias,
-      const int cnt_bias, const int rounding);
+  void QuantizeLayerOutputs_cpu(Dtype* data, const int count);
+  void QuantizeLayerInputs_cpu(Dtype* data, const int count);
+  void QuantizeLayerOutputs_gpu(Dtype* data, const int count);
+  void QuantizeLayerInputs_gpu(Dtype* data, const int count);
+  void QuantizeWeights_cpu(vector<shared_ptr<Blob<Dtype> > > weights_quantized,
+      const int rounding, const bool bias_term = true);
+  void QuantizeWeights_gpu(vector<shared_ptr<Blob<Dtype> > > weights_quantized,
+      const int rounding, const bool bias_term = true);
   /**
-   * @brief Trim data to dynamic fixed point.
-   * @param fl The number of bits in fractional part.
+   * @brief Trim data to fixed point.
+   * @param fl The number of bits in the fractional part.
    */
   void Trim2FixedPoint_cpu(Dtype* data, const int cnt, const int bit_width,
       const int rounding, int fl);
   void Trim2FixedPoint_gpu(Dtype* data, const int cnt, const int bit_width,
       const int rounding, int fl);
   /**
-   * @brief Trim data to mini floating point.
+   * @brief Trim data to minifloat.
    * @param bw_mant The number of bits used to represent the mantissa.
    * @param bw_exp The number of bits used to represent the exponent.
    */
-  void Trim2FloatingPoint_cpu(Dtype* data, const int cnt, const int bw_mant,
+  void Trim2MiniFloat_cpu(Dtype* data, const int cnt, const int bw_mant,
       const int bw_exp, const int rounding);
-  void Trim2FloatingPoint_gpu(Dtype* data, const int cnt, const int bw_mant,
+  void Trim2MiniFloat_gpu(Dtype* data, const int cnt, const int bw_mant,
       const int bw_exp, const int rounding);
   /**
-   * @brief Trim data to power-of-two numbers.
+   * @brief Trim data to integer-power-of-two numbers.
    * @param min_exp The smallest quantized value is 2^min_exp.
    * @param min_exp The largest quantized value is 2^max_exp.
    */
-  void Trim2PowerOf2_cpu(Dtype* data, const int cnt, const int min_exp,
+  void Trim2IntegerPowerOf2_cpu(Dtype* data, const int cnt, const int min_exp,
       const int max_exp, const int rounding);
-  void Trim2PowerOf2_gpu(Dtype* data, const int cnt, const int min_exp,
+  void Trim2IntegerPowerOf2_gpu(Dtype* data, const int cnt, const int min_exp,
       const int max_exp, const int rounding);
   /**
    * @brief Generate random number in [0,1) range.
    */
   inline double RandUniform_cpu();
   // The number of bits used for dynamic fixed point parameters and layer
-  // outputs.
-  int bw_params_, bw_layer_out_;
+  // activations.
+  int bw_params_, bw_layer_in_, bw_layer_out_;
   // The fractional length of dynamic fixed point numbers.
-  int fl_params_, fl_layer_out_;
-  // The number of bits used to represent mantissa and exponent of mini floating
-  // point numbers.
+  int fl_params_, fl_layer_in_, fl_layer_out_;
+  // The number of bits used to represent mantissa and exponent of minifloat
+  // numbers.
   int fp_mant_, fp_exp_;
-  // Power-of-two numbers are in range +/- [2^min_exp, 2^max_exp].
+  // Integer-power-of-two numbers are in range +/- [2^min_exp, 2^max_exp].
   int pow_2_min_exp_, pow_2_max_exp_;
   // The rounding mode for quantization and the quantization scheme.
   int rounding_, precision_;
+  // For parameter layers: reduced word with parameters.
+  vector<shared_ptr<Blob<Dtype> > > weights_quantized_;
 };
 
 /**
- * @brief Convolutional layer with quantized layer parameters and outputs.
+ * @brief Convolutional layer with quantized layer parameters and activations.
  */
 template <typename Dtype>
 class ConvolutionRistrettoLayer : public ConvolutionLayer<Dtype>,
@@ -91,12 +96,35 @@ class ConvolutionRistrettoLayer : public ConvolutionLayer<Dtype>,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  vector<shared_ptr<Blob<Dtype> > > weights_quantized_;
+};
+
+/**
+ * @brief Deconvolutional layer with quantized layer parameters and activations.
+ */
+template <typename Dtype>
+class DeconvolutionRistrettoLayer : public DeconvolutionLayer<Dtype>,
+      public BaseRistrettoLayer<Dtype> {
+ public:
+  explicit DeconvolutionRistrettoLayer(const LayerParameter& param);
+
+  virtual inline const char* type() const { return "DeconvolutionRistretto"; }
+
+ protected:
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 /**
  * @brief Inner product (fully connected) layer with quantized layer parameters
- * and outputs.
+ * and activations.
  */
 template <typename Dtype>
 class FcRistrettoLayer : public InnerProductLayer<Dtype>,
@@ -118,34 +146,11 @@ class FcRistrettoLayer : public InnerProductLayer<Dtype>,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  vector<shared_ptr<Blob<Dtype> > > weights_quantized_;
 };
 
 /**
- * @brief Data layer with quantized images.
- */
-template <typename Dtype>
-class DataRistrettoLayer : public BasePrefetchingDataLayer<Dtype>,
-      public BaseRistrettoLayer<Dtype>{
- public:
-  explicit DataRistrettoLayer(const LayerParameter& param);
-  virtual ~DataRistrettoLayer();
-  // DataLayer uses DataReader instead for sharing for parallelism
-  virtual inline bool ShareInParallel() const { return false; }
-  virtual inline const char* type() const { return "DataRistretto"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
-
- protected:
-  virtual void load_batch(Batch<Dtype>* batch);
-
-  DataReader reader_;
-};
-
-/**
- * @brief Local response normalization (LRN) layer with mini floating point
- * layer inputs, intermediate results and outputs.
+ * @brief Local response normalization (LRN) layer with minifloat layer inputs,
+ * intermediate results and outputs.
  */
 template <typename Dtype>
 class LRNRistrettoLayer : public LRNLayer<Dtype>,

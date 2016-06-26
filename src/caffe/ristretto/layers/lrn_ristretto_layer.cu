@@ -7,22 +7,22 @@
 
 namespace caffe {
 
-// Device function wrapper for quantization to mini floating point numbers.
+// Device function wrapper for quantization to minifloat numbers.
 template <typename Dtype>
 __device__ Dtype
 toFP(Dtype data, const int mant, const int exp, const int index){
-  Trim2FloatingPoint_device(&data, mant, exp,
+  Trim2MiniFloat_device(&data, mant, exp,
       QuantizationParameter_Rounding_NEAREST, index);
   return data;
 }
 
-// Same as LRNFillScale, but all intermediate results are quantized to mini
-// floating point.
+// Same as LRNFillScale, but all intermediate results are quantized to
+// minifloat.
 template <typename Dtype>
 __global__ void LRNFillScaleQ(const int nthreads, const Dtype* const in,
-      const int num, const int channels, const int height,
-      const int width, const int size, const Dtype alpha_over_size,
-      const Dtype k, Dtype* const scale, const int mant, const int exp) {
+      const int num, const int channels, const int height, const int width,
+      const int size, const Dtype alpha_over_size, const Dtype k,
+      Dtype* const scale, const int mant, const int exp) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     const int w = index % width;
@@ -91,14 +91,13 @@ void LRNRistrettoLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-// Same as LRNComputeOutput, but all intermediate results are quantized to mini
-// floating point.
+// Same as LRNComputeOutput, but all intermediate results are quantized to
+// minifloat
 // TODO: check if it would be faster to just put it into the previous kernel.
 template <typename Dtype>
-__global__ void LRNComputeOutputQ(const int nthreads,
-      const Dtype* const in, const Dtype* const scale,
-      const Dtype negative_beta, Dtype* const out, const int mant,
-      const int exp) {
+__global__ void LRNComputeOutputQ(const int nthreads, const Dtype* const in,
+      const Dtype* const scale, const Dtype negative_beta, Dtype* const out,
+      const int mant, const int exp) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     Dtype in_q = toFP(in[index], mant, exp, index);
     Dtype pow_q = toFP(pow(scale[index], negative_beta), mant, exp, index);

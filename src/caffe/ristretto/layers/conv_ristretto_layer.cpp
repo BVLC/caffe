@@ -12,21 +12,25 @@ ConvolutionRistrettoLayer<Dtype>::ConvolutionRistrettoLayer(
   this->precision_ = this->layer_param_.quantization_param().precision();
   this->rounding_ = this->layer_param_.quantization_param().rounding_scheme();
   switch (this->precision_) {
-  case QuantizationParameter_Precision_FIXED_POINT:
-    this->bw_layer_out_ =
-        this->layer_param_.quantization_param().bw_layer_out();
+  case QuantizationParameter_Precision_DYNAMIC_FIXED_POINT:
+    this->bw_layer_in_ = this->layer_param_.quantization_param().bw_layer_in();
+    this->bw_layer_out_ = this->layer_param_.quantization_param().bw_layer_out();
     this->bw_params_ = this->layer_param_.quantization_param().bw_params();
-    this->fl_layer_out_ =
-        this->layer_param_.quantization_param().fl_layer_out();
+    this->fl_layer_in_ = this->layer_param_.quantization_param().fl_layer_in();
+    this->fl_layer_out_ = this->layer_param_.quantization_param().fl_layer_out();
     this->fl_params_ = this->layer_param_.quantization_param().fl_params();
     break;
-  case QuantizationParameter_Precision_MINI_FLOATING_POINT:
+  case QuantizationParameter_Precision_MINIFLOAT:
     this->fp_mant_ = this->layer_param_.quantization_param().mant_bits();
     this->fp_exp_ = this->layer_param_.quantization_param().exp_bits();
     break;
-  case QuantizationParameter_Precision_POWER_2_WEIGHTS:
+  case QuantizationParameter_Precision_INTEGER_POWER_OF_2_WEIGHTS:
     this->pow_2_min_exp_ = this->layer_param_.quantization_param().exp_min();
     this->pow_2_max_exp_ = this->layer_param_.quantization_param().exp_max();
+    this->bw_layer_in_ = this->layer_param_.quantization_param().bw_layer_in();
+    this->bw_layer_out_ = this->layer_param_.quantization_param().bw_layer_out();
+    this->fl_layer_in_ = this->layer_param_.quantization_param().fl_layer_in();
+    this->fl_layer_out_ = this->layer_param_.quantization_param().fl_layer_out();
     break;
   default:
     LOG(FATAL) << "Unknown precision mode: " << this->precision_;
@@ -208,28 +212,36 @@ void ConvolutionRistrettoLayer<Dtype>::LayerSetUp(
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
   // Prepare quantized weights
-  weights_quantized_.resize(2);
-  weights_quantized_[0].reset(new Blob<Dtype>(weight_shape));
+  this->weights_quantized_.resize(2);
+  this->weights_quantized_[0].reset(new Blob<Dtype>(weight_shape));
   if (this->bias_term_) {
-      weights_quantized_[1].reset(new Blob<Dtype>(bias_shape));
+      this->weights_quantized_[1].reset(new Blob<Dtype>(bias_shape));
   }
 }
 
 template <typename Dtype>
 void ConvolutionRistrettoLayer<Dtype>::Forward_cpu(
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  // Trim layer input
+  if (this->phase_ == TEST) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      this->QuantizeLayerInputs_cpu(bottom[i]->mutable_cpu_data(),
+          bottom[i]->count());
+    }
+  }
   // Trim weights
   caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(),
-      weights_quantized_[0]->mutable_cpu_data());
-  caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(),
-      weights_quantized_[1]->mutable_cpu_data());
+      this->weights_quantized_[0]->mutable_cpu_data());
+  if (this->bias_term_) {
+    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(),
+        this->weights_quantized_[1]->mutable_cpu_data());
+  }
   int rounding = this->phase_ == TEST ? this->rounding_ :
       QuantizationParameter_Rounding_STOCHASTIC;
-  this->QuantizeWeights_cpu(weights_quantized_[0]->mutable_cpu_data(),
-      weights_quantized_[0]->count(), weights_quantized_[1]->mutable_cpu_data(),
-      weights_quantized_[1]->count(), rounding);
+  this->QuantizeWeights_cpu(this->weights_quantized_, rounding,
+      this->bias_term_);
   // Do forward propagation
-  const Dtype* weight = weights_quantized_[0]->cpu_data();
+  const Dtype* weight = this->weights_quantized_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
@@ -237,7 +249,7 @@ void ConvolutionRistrettoLayer<Dtype>::Forward_cpu(
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
-        const Dtype* bias = weights_quantized_[1]->cpu_data();
+        const Dtype* bias = this->weights_quantized_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
@@ -252,7 +264,7 @@ template <typename Dtype>
 void ConvolutionRistrettoLayer<Dtype>::Backward_cpu(
       const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* weight = weights_quantized_[0]->cpu_data();
+  const Dtype* weight = this->weights_quantized_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();

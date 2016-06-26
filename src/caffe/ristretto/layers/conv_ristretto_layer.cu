@@ -8,20 +8,27 @@ namespace caffe {
 
 template <typename Dtype>
 void ConvolutionRistrettoLayer<Dtype>::Forward_gpu(
-      const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  // Trim layer input
+  if (this->phase_ == TEST) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      this->QuantizeLayerInputs_gpu(bottom[i]->mutable_gpu_data(),
+          bottom[i]->count());
+    }
+  }
   // Trim weights
   caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(),
-      weights_quantized_[0]->mutable_gpu_data());
-  caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->gpu_data(),
-      weights_quantized_[1]->mutable_gpu_data());
+      this->weights_quantized_[0]->mutable_gpu_data());
+  if (this->bias_term_) {
+    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->gpu_data(),
+        this->weights_quantized_[1]->mutable_gpu_data());
+  }
   int rounding = this->phase_ == TEST ? this->rounding_ :
       QuantizationParameter_Rounding_STOCHASTIC;
-  this->QuantizeWeights_gpu(weights_quantized_[0]->mutable_gpu_data(),
-      weights_quantized_[0]->count(), weights_quantized_[1]->mutable_gpu_data(),
-      weights_quantized_[1]->count(), rounding);
+  this->QuantizeWeights_gpu(this->weights_quantized_, rounding,
+      this->bias_term_);
   // Do forward propagation
-  const Dtype* weight = weights_quantized_[0]->gpu_data();
+  const Dtype* weight = this->weights_quantized_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
@@ -29,7 +36,7 @@ void ConvolutionRistrettoLayer<Dtype>::Forward_gpu(
       this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
-        const Dtype* bias = weights_quantized_[1]->gpu_data();
+        const Dtype* bias = this->weights_quantized_[1]->gpu_data();
         this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
@@ -42,9 +49,9 @@ void ConvolutionRistrettoLayer<Dtype>::Forward_gpu(
 
 template <typename Dtype>
 void ConvolutionRistrettoLayer<Dtype>::Backward_gpu(
-      const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* weight = weights_quantized_[0]->gpu_data();
+      const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+  const Dtype* weight = this->weights_quantized_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
