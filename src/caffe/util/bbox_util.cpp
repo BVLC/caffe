@@ -105,6 +105,7 @@ void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
   clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f));
   clip_bbox->clear_size();
   clip_bbox->set_size(BBoxSize(*clip_bbox));
+  clip_bbox->set_difficult(bbox.difficult());
 }
 
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
