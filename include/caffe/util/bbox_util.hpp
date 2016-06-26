@@ -107,6 +107,15 @@ void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
     const bool clip_bbox, const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes);
 
+// Decode all bboxes in a batch.
+void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_pred,
+    const vector<NormalizedBBox>& prior_bboxes,
+    const vector<vector<float> >& prior_variances,
+    const int num, const bool share_location,
+    const int num_loc_classes, const int background_label_id,
+    const CodeType code_type, const bool variance_encoded_in_target,
+    const bool clip, vector<LabelBBox>* all_decode_bboxes);
+
 // Match prediction bboxes with ground truth bboxes.
 void MatchBBox(const vector<NormalizedBBox>& gt,
     const vector<NormalizedBBox>& pred_bboxes, const int label,
