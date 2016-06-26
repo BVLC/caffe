@@ -73,8 +73,8 @@ class PriorBoxLayer : public Layer<Dtype> {
 
   int img_w_;
   int img_h_;
-  int step_w_;
-  int step_h_;
+  float step_w_;
+  float step_h_;
 };
 
 }  // namespace caffe
