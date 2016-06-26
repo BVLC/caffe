@@ -658,7 +658,7 @@ def InceptionV3Body(net, from_layer, output_pred=False):
 def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         use_objectness=False, normalizations=[], use_batchnorm=True, lr_mult=1,
         use_scale=True, min_sizes=[], max_sizes=[], prior_variance = [0.1],
-        aspect_ratios=[], share_location=True, flip=True, clip=True,
+        aspect_ratios=[], steps=[], share_location=True, flip=True, clip=True,
         inter_layer_depth=[], kernel_size=1, pad=0, conf_postfix='', loc_postfix=''):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
@@ -667,6 +667,10 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
     assert len(from_layers) == len(min_sizes), "from_layers and min_sizes should have same length"
     if max_sizes:
         assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
+    if aspect_ratios:
+        assert len(from_layers) == len(aspect_ratios), "from_layers and aspect_ratios should have same length"
+    if steps:
+        assert len(from_layers) == len(steps), "from_layers and steps should have same length"
     net_layers = net.keys()
     assert data_layer in net_layers, "data_layer is not in net's layers"
     if inter_layer_depth:
@@ -697,20 +701,30 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
                 from_layer = inter_name
 
         # Estimate number of priors per location given provided parameters.
+        min_size = min_sizes[i]
+        if type(min_size) is not list:
+            min_size = [min_size]
         aspect_ratio = []
         if len(aspect_ratios) > i:
             aspect_ratio = aspect_ratios[i]
             if type(aspect_ratio) is not list:
                 aspect_ratio = [aspect_ratio]
-        min_size = min_sizes[i]
-        if type(min_size) is not list:
-            min_size = [min_size]
-        if max_sizes and max_sizes[i]:
+        max_size = []
+        if len(max_sizes) > i:
+            max_size = max_sizes[i]
+            if type(max_size) is not list:
+                max_size = [max_size]
+            if max_size:
+                assert len(max_size) == len(min_size), "max_size and min_size should have same length."
+        if max_size:
             num_priors_per_location = (2 + len(aspect_ratio)) * len(min_size)
         else:
             num_priors_per_location = (1 + len(aspect_ratio)) * len(min_size)
         if flip:
             num_priors_per_location += len(aspect_ratio) * len(min_size)
+        step = []
+        if len(steps) > i:
+            step = steps[i]
 
         # Create location prediction layer.
         name = "{}_mbox_loc{}".format(from_layer, loc_postfix)
@@ -738,20 +752,14 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
 
         # Create prior generation layer.
         name = "{}_mbox_priorbox".format(from_layer)
-        if max_sizes and max_sizes[i]:
-            if aspect_ratio:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size, max_size=max_sizes[i],
-                    aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
-            else:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size, max_size=max_sizes[i],
-                    clip=clip, variance=prior_variance)
-        else:
-            if aspect_ratio:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
-                    aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
-            else:
-                net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
-                    clip=clip, variance=prior_variance)
+        net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_size,
+                clip=clip, variance=prior_variance)
+        if max_size:
+            net.update(name, {'max_size': max_size})
+        if aspect_ratio:
+            net.update(name, {'aspect_ratio': aspect_ratio, 'flip': flip})
+        if step:
+            net.update(name, {'step': step})
         priorbox_layers.append(net[name])
 
         # Create objectness prediction layer.
