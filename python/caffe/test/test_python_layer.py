@@ -105,7 +105,6 @@ class TestPythonLayer(unittest.TestCase):
         os.remove(net_file)
 
     def test_forward(self):
-        print "test forward"
         x = 8
         self.net.blobs['data'].data[...] = x
         self.net.forward()
@@ -113,13 +112,11 @@ class TestPythonLayer(unittest.TestCase):
             self.assertEqual(y, 10**3 * x)
 
     def test_backward(self):
-        print "test backward"
         x = 7
         self.net.blobs['three'].diff[...] = x
         self.net.backward()
         for y in self.net.blobs['data'].diff.flat:
             self.assertEqual(y, 10**3 * x)
-        print "end test backward"
 
     def test_reshape(self):
         s = 4
@@ -138,9 +135,7 @@ class TestPythonLayer(unittest.TestCase):
         net_file = parameter_net_file()
         net = caffe.Net(net_file, caffe.TRAIN)
         # Test forward and backward
-        print "forward"
         net.forward()
-        print "backward"
         net.backward()
         layer = net.layers[list(net._layer_names).index('layer')]
         self.assertEqual(layer.blobs[0].data[0], 0)

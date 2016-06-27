@@ -397,7 +397,8 @@ LIBRARY_DIRS += $(BLAS_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
-#for linking to the libpython2.7 for releasing scope in pycaffe (however should be linked even if pycaffe disabled)
+#for linking to the libpython2.7 for releasing scope in pycaffe 
+#(however should be linked even if pycaffe disabled)
 LIBRARIES += python2.7
 
 # Automatic dependency generation (nvcc is handled separately)

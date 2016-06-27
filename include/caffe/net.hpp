@@ -12,6 +12,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "Python.h"
+
 namespace caffe {
 
 /**
@@ -59,8 +61,11 @@ class Net {
    */
   Dtype PyForwardFromTo(int start, int end) {
     // Release GIL
-    ScopedGILRelease scoped;
-    return ForwardFromTo(start, end);
+    m_thread_state = PyEval_SaveThread();
+    Dtype result = ForwardFromTo(start, end);
+    PyEval_RestoreThread(m_thread_state);
+    m_thread_state = NULL;
+    return result;
   }
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
@@ -88,8 +93,10 @@ class Net {
    **/
   void PyBackwardFromTo(int start, int end) {
     // Release GIL
-    ScopedGILRelease scoped;
+    m_thread_state = PyEval_SaveThread();
     BackwardFromTo(start, end);
+    PyEval_RestoreThread(m_thread_state);
+    m_thread_state = NULL;
   }
   void BackwardFrom(int start);
   void BackwardTo(int end);
@@ -328,6 +335,9 @@ class Net {
   /// The root net that actually holds the shared layers in data parallelism
   const Net* const root_net_;
   DISABLE_COPY_AND_ASSIGN(Net);
+
+  // For releasing/reacquiring GIL with pycaffe
+  PyThreadState * m_thread_state;
 };
 
 
