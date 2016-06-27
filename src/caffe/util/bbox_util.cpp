@@ -120,6 +120,53 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->set_difficult(bbox.difficult());
 }
 
+void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
+                const bool has_resize, const ResizeParameter& resize_param,
+                NormalizedBBox* out_bbox) {
+  const int height = img_size.first;
+  const int width = img_size.second;
+  NormalizedBBox temp_bbox = bbox;
+  if (has_resize && resize_param.resize_mode()) {
+    float resize_height = resize_param.height();
+    CHECK_GT(resize_height, 0);
+    float resize_width = resize_param.width();
+    CHECK_GT(resize_width, 0);
+    float resize_aspect = resize_width / resize_height;
+    float aspect = static_cast<float>(width) / height;
+
+    float padding;
+    NormalizedBBox source_bbox;
+    switch (resize_param.resize_mode()) {
+      case ResizeParameter_Resize_mode_WARP:
+        break;
+      case ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD:
+        if (aspect > resize_aspect) {
+          padding = (resize_height - resize_width / aspect) / 2;
+          source_bbox.set_xmin(0.);
+          source_bbox.set_ymin(padding / resize_height);
+          source_bbox.set_xmax(1.);
+          source_bbox.set_ymax(1. - padding / resize_height);
+        } else {
+          padding = (resize_width - resize_height * aspect) / 2;
+          source_bbox.set_xmin(padding / resize_width);
+          source_bbox.set_ymin(0.);
+          source_bbox.set_xmax(1. - padding / resize_width);
+          source_bbox.set_ymax(1.);
+        }
+        ProjectBBox(source_bbox, bbox, &temp_bbox);
+        break;
+      case ResizeParameter_Resize_mode_FIT_SMALL_SIZE:
+        break;
+      default:
+        LOG(FATAL) << "Unknown resize mode.";
+    }
+  }
+  // Clip the normalized bbox first.
+  ClipBBox(temp_bbox, &temp_bbox);
+  // Scale the bbox according to the original image size.
+  ScaleBBox(temp_bbox, height, width, out_bbox);
+}
+
 void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
                 NormalizedBBox* loc_bbox) {
   float src_width = src_bbox.xmax() - src_bbox.xmin();

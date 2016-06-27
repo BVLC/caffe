@@ -69,6 +69,11 @@ void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox);
 
+// Output predicted bbox on the actual image.
+void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
+                const bool has_resize, const ResizeParameter& resize_param,
+                NormalizedBBox* out_bbox);
+
 // Locate bbox in the coordinate system that src_bbox sits.
 void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
                 NormalizedBBox* loc_bbox);

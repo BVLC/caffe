@@ -220,6 +220,57 @@ TEST_F(CPUBBoxUtilTest, TestClipBBox) {
   EXPECT_NEAR(clip_bbox.size(), 1., eps);
 }
 
+TEST_F(CPUBBoxUtilTest, TestOutputBBox) {
+  NormalizedBBox bbox;
+  bbox.set_xmin(-0.1);
+  bbox.set_ymin(0.3);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.5);
+  pair<int, int> img_size(300, 500);
+  bool has_resize = false;
+  ResizeParameter resize_param;
+  resize_param.set_height(300);
+  resize_param.set_width(300);
+  NormalizedBBox out_bbox;
+
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  has_resize = true;
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_WARP);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_FIT_SMALL_SIZE);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  resize_param.set_resize_mode(
+      ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 50.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  img_size.first = 500;
+  img_size.second = 300;
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 150.);
+  CHECK_EQ(out_bbox.xmax(), 50.);
+  CHECK_EQ(out_bbox.ymax(), 250.);
+}
+
 TEST_F(CPUBBoxUtilTest, TestJaccardOverlap) {
   NormalizedBBox bbox1;
   bbox1.set_xmin(0.2);

@@ -38,6 +38,12 @@ void DetectionEvaluateLayer<Dtype>::LayerSetUp(
   count_ = 0;
   // If there is no name_size_file provided, use normalized bbox to evaluate.
   use_normalized_bbox_ = sizes_.size() == 0;
+
+  // Retrieve resize parameter if there is any provided.
+  has_resize_ = detection_evaluate_param.has_resize_param();
+  if (has_resize_) {
+    resize_param_ = detection_evaluate_param.resize_param();
+  }
 }
 
 template <typename Dtype>
@@ -164,8 +170,8 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
           if (!use_normalized_bbox_) {
             CHECK_LT(count_, sizes_.size());
             for (int i = 0; i < gt_bboxes.size(); ++i) {
-              ScaleBBox(gt_bboxes[i], sizes_[count_].first,
-                        sizes_[count_].second, &(gt_bboxes[i]));
+              OutputBBox(gt_bboxes[i], sizes_[count_], has_resize_,
+                         resize_param_, &(gt_bboxes[i]));
             }
           }
           vector<bool> visited(gt_bboxes.size(), false);
@@ -176,8 +182,8 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
             top_data[num_det * 5 + 1] = label;
             top_data[num_det * 5 + 2] = bboxes[i].score();
             if (!use_normalized_bbox_) {
-              ScaleBBox(bboxes[i], sizes_[count_].first, sizes_[count_].second,
-                        &(bboxes[i]));
+              OutputBBox(bboxes[i], sizes_[count_], has_resize_,
+                         resize_param_, &(bboxes[i]));
             }
             // Compare with each ground truth bbox.
             float overlap_max = -1;
