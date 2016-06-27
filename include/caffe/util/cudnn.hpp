@@ -166,6 +166,7 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
   CUDNN_CHECK(cudnnSetFilterNdDescriptor(*desc, dataType<Dtype>::type,
+                                         CUDNN_TENSOR_NCHW,
                                          num_spatial_dims + 2,
                                          shape_ptr));
 }
@@ -231,7 +232,9 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
   const int* pad_ptr = &pad_int[0];
   const int* stride_ptr = &stride_int[0];
 
-  CUDNN_CHECK(cudnnSetPoolingNdDescriptor(*pool_desc, *mode,
+  CUDNN_CHECK(cudnnSetPoolingNdDescriptor(*pool_desc,
+                                          *mode,
+                                          CUDNN_PROPAGATE_NAN,
                                           num_spatial_dims,
                                           shape_ptr,
                                           pad_ptr,
