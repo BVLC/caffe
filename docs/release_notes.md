@@ -252,7 +252,7 @@ If you want to contribute code follow the instructions provided in: `/docs/devel
 
 ##	How to create LMDB 
 
-Instructions how to create LMDB are available at: [http://deepdish.io/2015/04/28/creating-lmdb-in-python/](http://deepdish.io/2015/04/28/creating-lmdb-in-python/)
+In folder `/examples/imagenet/` we provide scripts and instructions `readme.md` how to create LMDB.
 
 
 #	License
