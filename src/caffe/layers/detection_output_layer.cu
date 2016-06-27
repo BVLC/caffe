@@ -152,14 +152,26 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
         CHECK(label_to_name_.find(c) != label_to_name_.end())
             << "Cannot find label: " << c << " in the label map.";
         CHECK_LT(name_count_, names_.size());
-        int height = sizes_[name_count_].first;
-        int width = sizes_[name_count_].second;
-        for (int j = 0; j < indices.size(); ++j) {
-          float score = top_data[j * 7 + 2];
-          float xmin = top_data[j * 7 + 3] * width;
-          float ymin = top_data[j * 7 + 4] * height;
-          float xmax = top_data[j * 7 + 5] * width;
-          float ymax = top_data[j * 7 + 6] * height;
+      }
+      for (int j = 0; j < indices.size(); ++j) {
+        int idx = indices[j];
+        top_data[count * 7] = i;
+        top_data[count * 7 + 1] = label;
+        top_data[count * 7 + 2] = scores[idx];
+        const NormalizedBBox& bbox = bboxes[idx];
+        top_data[count * 7 + 3] = bbox.xmin();
+        top_data[count * 7 + 4] = bbox.ymin();
+        top_data[count * 7 + 5] = bbox.xmax();
+        top_data[count * 7 + 6] = bbox.ymax();
+        if (need_save_) {
+          NormalizedBBox out_bbox;
+          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
+                     &out_bbox);
+          float score = top_data[count * 7 + 2];
+          float xmin = out_bbox.xmin();
+          float ymin = out_bbox.ymin();
+          float xmax = out_bbox.xmax();
+          float ymax = out_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);

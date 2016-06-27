@@ -102,6 +102,8 @@ class DetectionOutputLayer : public Layer<Dtype> {
   vector<pair<int, int> > sizes_;
   int num_test_image_;
   int name_count_;
+  bool has_resize_;
+  ResizeParameter resize_param_;
 
   ptree detections_;
 

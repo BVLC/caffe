@@ -95,6 +95,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     need_save_ = false;
   }
+  has_resize_ = save_output_param.has_resize_param();
+  if (has_resize_) {
+    resize_param_ = save_output_param.resize_param();
+  }
   name_count_ = 0;
   visualize_ = detection_output_param.visualize();
   if (visualize_) {
@@ -286,21 +290,20 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
         top_data[count * 7 + 2] = scores[idx];
-        NormalizedBBox clip_bbox;
-        ClipBBox(bboxes[idx], &clip_bbox);
-        top_data[count * 7 + 3] = clip_bbox.xmin();
-        top_data[count * 7 + 4] = clip_bbox.ymin();
-        top_data[count * 7 + 5] = clip_bbox.xmax();
-        top_data[count * 7 + 6] = clip_bbox.ymax();
+        const NormalizedBBox& bbox = bboxes[idx];
+        top_data[count * 7 + 3] = bbox.xmin();
+        top_data[count * 7 + 4] = bbox.ymin();
+        top_data[count * 7 + 5] = bbox.xmax();
+        top_data[count * 7 + 6] = bbox.ymax();
         if (need_save_) {
-          NormalizedBBox scale_bbox;
-          ScaleBBox(clip_bbox, sizes_[name_count_].first,
-                    sizes_[name_count_].second, &scale_bbox);
+          NormalizedBBox out_bbox;
+          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
+                     &out_bbox);
           float score = top_data[count * 7 + 2];
-          float xmin = scale_bbox.xmin();
-          float ymin = scale_bbox.ymin();
-          float xmax = scale_bbox.xmax();
-          float ymax = scale_bbox.ymax();
+          float xmin = out_bbox.xmin();
+          float ymin = out_bbox.ymin();
+          float xmax = out_bbox.xmax();
+          float ymax = out_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);
