@@ -185,16 +185,16 @@ class Caffe {
 };
 
 class ScopedGILRelease{
-    public:
-        ScopedGILRelease(){
-            m_thread_state = PyEval_SaveThread();
-        };
-        ~ScopedGILRelease(){
-            PyEval_RestoreThread(m_thread_state);
-            m_thread_state = NULL;
-        };
-    private:
-        PyThreadState * m_thread_state;
+ public:
+  ScopedGILRelease() {
+    m_thread_state = PyEval_SaveThread();
+  }
+  ~ScopedGILRelease() {
+    PyEval_RestoreThread(m_thread_state);
+    m_thread_state = NULL;
+  }
+ private:
+  PyThreadState * m_thread_state;
 };
 
 }  // namespace caffe

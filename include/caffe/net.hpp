@@ -57,10 +57,10 @@ class Net {
    * can make multithreaded predictions. This is exposed to python-boost interface
    * instead of ForwardFromTo
    */
-  Dtype PyForwardFromTo(int start, int end){
-      //Release GIL
-      ScopedGILRelease scoped;
-      return ForwardFromTo(start,end);
+  Dtype PyForwardFromTo(int start, int end) {
+    // Release GIL
+    ScopedGILRelease scoped;
+    return ForwardFromTo(start, end);
   }
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
@@ -86,10 +86,10 @@ class Net {
    * can make multithreaded predictions. This is exposed to python-boost interface
    * instead of BackwardFromTo.
    **/
-  void PyBackwardFromTo(int start, int end){
-      //Release GIL
-      ScopedGILRelease scoped;
-      BackwardFromTo(start,end);
+  void PyBackwardFromTo(int start, int end) {
+    // Release GIL
+    ScopedGILRelease scoped;
+    BackwardFromTo(start, end);
   }
   void BackwardFrom(int start);
   void BackwardTo(int end);

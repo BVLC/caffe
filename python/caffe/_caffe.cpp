@@ -268,7 +268,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
     .def("__init__", bp::make_constructor(&Net_Init_Load))
-    //Instead of ForwardFromTo and BackwardFromTo, expose PyForwardFromTo and PyBackwardFromTo, basically the same thing but with GIL release
+    // Instead of ForwardFromTo and BackwardFromTo,
+    // expose PyForwardFromTo and PyBackwardFromTo,
+    // basically the same thing but with GIL release
     .def("_forward", &Net<Dtype>::PyForwardFromTo)
     .def("_backward", &Net<Dtype>::PyBackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
