@@ -154,7 +154,7 @@ class SynchronousSync : public InternalThread
   IterSizeInfo children_iter_size;
 
   boost::mutex mtx;
-  volatile bool terminated_;
+  bool terminated_;
   int total_iters;
   TreeWaypoint* waypoint;
   boost::shared_ptr<Solver<Dtype> > solver;
@@ -165,11 +165,9 @@ class SynchronousSync : public InternalThread
   shared_ptr<BlobConstInfo> const_info;
   shared_ptr<BlobSyncInfo> up_sync;
   shared_ptr<BlobSyncInfo> down_sync;
-  vector<int> ready_layers;
   boost::thread::id main_thread_id;
   boost::thread::id solver_thread_id;
   int snapshot_per_iters;
-  bool calculates;
   vector<pair<int, uint32_t> > layers_to_update;
  public:
   shared_ptr<BlobKeyChain<Dtype> > keychain;
@@ -276,7 +274,6 @@ class SynchronousSync : public InternalThread
     , down_sync(BlobInfoFactory<Dtype>::create_sync_info(const_info))
     , main_thread_id(boost::this_thread::get_id())
     , snapshot_per_iters(solver->param().snapshot())
-    , calculates(true)
     , keychain(BlobKeyChain<Dtype>::create(const_info->layers()))
     , comms_up(BlobComms<Dtype>::create(blob_accessor,
         const_info, up_sync, up_waypoint, codec, keychain,
@@ -546,8 +543,7 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
 
  public:
   Impl(boost::shared_ptr<Solver<Dtype> > solver)
-    : solver(boost::make_shared<MultiSolver<Dtype> >(
-        solver, (Caffe::mode() != Caffe::CPU)))
+    : solver(boost::make_shared<MultiSolver<Dtype> >(solver))
     , sync(TreeWaypoint::get_instance(), solver)
     , initialized_(false) {
   }
@@ -563,9 +559,10 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
     CLOG(INFO) << "[proc " << TreeWaypoint::get_instance()->id() << "] solving";
     solver->add_callback(this);
     solver->Solve();
-    sync.wait_till_updated();
-    if (sync.is_root())
+    if (sync.is_root()) {
+      sync.wait_till_updated();
       solver->root_solver()->Snapshot();
+    }
     sync.terminate();
     sync.StopInternalThread();
   }
@@ -582,11 +579,11 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
 
   void on_start(int layer_id) {
     CDLOG(INFO) << "started forward of layer " << layer_id;
+    sync.apply_updates();
     sync.prepare_for_calculation(layer_id);
   }
 
   void on_forward_finished(int layer_id) {
-    sync.apply_updates();
     CDLOG(INFO) << "finished forward of layer " << layer_id;
   }
 
