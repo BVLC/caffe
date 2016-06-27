@@ -503,23 +503,23 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
 	//LOG(INFO) << "aug rot - INPUT " << img.rows <<" x "<<img.cols;
-	as.degree = augmentation_rotate(img, img_temp, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
+	//as.degree = augmentation_rotate(img, img_temp, meta);  //add rotation in a random way considering the max rotation defined in the prototxt
     //LOG(INFO) << "aug rotate - OUTPUT " << img_temp.rows <<" x "<<img_temp.cols;
-	//as.degree = 0.0;
+	as.degree = 0.0;
     if(1 && param_.visualize())
       visualize(img_temp, meta, as);
-    as.scale = augmentation_scale(img_temp, img_temp2, meta);  //change the scale by multiplying everything by a scale factor
+    //as.scale = augmentation_scale(img_temp, img_temp2, meta);  //change the scale by multiplying everything by a scale factor
 	//LOG(INFO) << "aug scale - OUTPUT " << img_temp2.rows <<" x "<<img_temp2.cols;
 	//as.scale = 1.0;
     if(1 && param_.visualize())
 	  visualize(img_temp2, meta, as);
-    as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
+    as.crop = augmentation_croppad(img, img_aug, meta);
     //LOG(INFO) << "aug crop - OUTPUT " << img_temp3.rows <<" x "<<img_temp3.cols;
     if(1 && param_.visualize())
       visualize(img_temp3, meta, as);
-    as.flip = augmentation_flip(img_temp3, img_aug, meta);
+    //as.flip = augmentation_flip(img_temp3, img_aug, meta);
     //LOG(INFO) << "aug flip - OUTPUT " << img_aug.rows <<" x "<<img_aug.cols;
-    //as.flip = 0;
+    as.flip = 0;
     if(param_.visualize()) 
       visualize(img_aug, meta, as);
   }

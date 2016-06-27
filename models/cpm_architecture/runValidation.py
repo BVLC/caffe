@@ -15,7 +15,7 @@ from scipy.stats import multivariate_normal
 import matplotlib.pyplot as plt
 
 # general settings
-samplingRate = 50
+samplingRate = 150
 offset = 25
 inputSizeNN = 368
 outputSizeNN = 46
@@ -24,8 +24,8 @@ sigma = 7
 stride = 8
 verbose = False
 fn_notification = 25
-iter_start_from = 20000
-device_id = 1
+iter_start_from = 45000
+device_id = 0
 
 def filterJoints(joints_orig):
     joints = [0] * len(joints_idx)
@@ -120,9 +120,11 @@ def runCaffeOnModel(data, model_dir, def_file, idx):
     print '  Evaluating iteration: %d' % iterNumber
     print '-------------------------------'
     
+    print 'Loading model...'
+    net = caffe.Net(def_file, model_dir, caffe.TEST)
     for i in range(len(idx)):
         if (np.mod(i,fn_notification) == 0):
-            print 'Iteration %d out of %d' % (i, len(idx))
+            print 'Iteration %d out of %d' % (i+1, len(idx))
         fno = idx[i]
         if (not data[fno]['isValidation']):
 			continue
@@ -182,7 +184,6 @@ def runCaffeOnModel(data, model_dir, def_file, idx):
         img4ch = np.concatenate((resizedImage, center), axis=2)
         img4ch = np.transpose(img4ch, (2, 0, 1))
         
-        net = caffe.Net(def_file, model_dir, caffe.TEST)
         #net.blobs['data'].reshape(*img4ch.shape)
         net.blobs['data'].data[...] = img4ch
         net.forward()
@@ -226,6 +227,7 @@ def combine_data(val, new_val):
         val['iteration'].append(new_val['iteration'][i])
         val['loss_iter'].append(new_val['loss_iter'][i])
         val['loss_stage'].append(new_val['loss_stage'][i])
+        val['mpepj'].append(new_val['mpepj'][i])
         val['stage'].append(new_val['stage'][i])
     return val
 
@@ -238,7 +240,7 @@ def getLossOnValidationSet(json_file, models):
     prototxt = models + 'pose_deploy.prototxt'
     files = [f for f in os.listdir(models) if f.endswith('.caffemodel')]
     files = sorted(files, key=getIter)
-    val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('stage',[])])
+    val = dict([('iteration',[]), ('loss_iter',[]), ('loss_stage',[]), ('mpepj',[]), ('stage',[])])
     
     print 'Loading json file with annotations...'
     with open(json_file) as data_file:
@@ -259,17 +261,18 @@ def getLossOnValidationSet(json_file, models):
     return val
 
 def main():
-    caffe.set_mode_cpu()
+    caffe.set_mode_gpu()
     caffe.set_device(device_id)
     
     caffe_dir = os.environ.get('CAFFE_HOME_CPM')
     json_file = '%s/models/cpm_architecture/jsonDatasets/H36M_annotations.json' % caffe_dir
     caffe_models_dir = '%s/models/cpm_architecture/prototxt/caffemodel/trial_5/' % caffe_dir
+    output_file = '%svalidation.json' % caffe_models_dir
     
     loss = getLossOnValidationSet(json_file, caffe_models_dir)
-    return loss
-    # TODO: save file ro be read by the readLofFile.py script
     
+    with open(output_file, 'w+') as out:
+        json.dump(loss, out)
 
 if __name__ == '__main__':
-    loss = main()
+    main()
