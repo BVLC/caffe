@@ -93,6 +93,26 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 }
 
 template <typename Dtype>
+size_t CuDNNConvolutionLayer<Dtype>::ComputeFindExWorkspaceSize() {
+  size_t workspace_limit_bytes, total_memory, workspace_bytes;
+  GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
+  // Use 95% of available memory.
+  // Using all of memory may result in failure of workspace.reserve.
+  // TODO: Since 95% of memory might be too large, we can allocate
+  //       exactly how much FindEx needs by taking the maximum
+  //       workspace among all algorithms (requires an initial call
+  //       to FindEx with workspace size 0).
+  workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
+  const size_t weights_size = this->weight_offset_ * sizeof(Dtype);
+  if (workspace_bytes >= weights_size) {
+    workspace_bytes -= weights_size;
+  } else {
+    return 0UL;
+  }
+  return workspace_bytes;
+}
+
+template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // Check whether cached descriptors have been initialized.
@@ -168,8 +188,6 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
   // Ask cuDNN to find the best algorithm
   if (use_algo_seeker_) {
-    size_t workspace_limit_bytes, total_memory;
-    GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
     // FindEx: A workspace of size workspace_bytes is allocated for FindEx.
     //         Besides, workspace, a buffer is allocated for the output of
     //         FindEx-backward-filter. The size of buffer is as big as weights.
@@ -181,19 +199,12 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       // most of memory for allocating layer blobs.
       workspace_bytes = INITIAL_WORKSPACE_SIZE;
     } else {
-      // Use 95% of available memory.
-      // Using all of memory may result in failure of workspace.reserve.
-      // TODO: Since 95% of memory might be too large, we can allocate
-      //       exactly how much FindEx needs by taking the maximum
-      //       workspace among all algorithms (requires an initial call
-      //       to FindEx with workspace size 0).
-      workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
+      workspace_bytes = ComputeFindExWorkspaceSize();
       // Sometimes closer to zero we might have memory info diverged from
       // reality. If try_reserve fails, it updates the info internally and
       // we have to re-evaluate the workspace size.
       if (!WORKSPACE.try_reserve(workspace_bytes)) {
-        GPUMemory::GetInfo(&workspace_limit_bytes, &total_memory);
-        workspace_bytes = workspace_limit_bytes * MAX_WORKSPACE_RATIO;
+        workspace_bytes = ComputeFindExWorkspaceSize();
       }
       // Avoid seeking for an algorithm in subsequent iterations
       use_algo_seeker_ = false;
@@ -296,7 +307,7 @@ void CuDNNConvolutionLayer<Dtype>::FindExConvAlgo(
 
   // Allocate temporary buffer for weights used for backward filter FindEx
   void *tmp_weights;
-  const int tmp_weights_size = sizeof(Dtype) * weight_offset_;
+  const int tmp_weights_size = sizeof(Dtype) * this->weight_offset_;
   GPUMemory::allocate(&tmp_weights, tmp_weights_size);
 
   for (int i = 0; i < bottom.size(); i++) {
@@ -469,7 +480,7 @@ void CuDNNConvolutionLayer<Dtype>::UpdateWorkspaceDemand(int size) {
   }
   // We might grab too much before calling Get/FindEx.
   // Reserve the only amount needed.
-  if (WORKSPACE_SIZE < WORKSPACE.size()) {
+  if (WORKSPACE_SIZE < WORKSPACE.size() && !use_modest_workspace_) {
     WORKSPACE.release();
     WORKSPACE.reserve(WORKSPACE_SIZE);
   }  // else: reserve in Fwd/Bwd calls
