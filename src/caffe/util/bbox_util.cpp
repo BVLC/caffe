@@ -108,6 +108,17 @@ void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
   clip_bbox->set_difficult(bbox.difficult());
 }
 
+void ClipBBox(const NormalizedBBox& bbox, const float height, const float width,
+              NormalizedBBox* clip_bbox) {
+  clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), width), 0.f));
+  clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), height), 0.f));
+  clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), width), 0.f));
+  clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), height), 0.f));
+  clip_bbox->clear_size();
+  clip_bbox->set_size(BBoxSize(*clip_bbox));
+  clip_bbox->set_difficult(bbox.difficult());
+}
+
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox) {
   scale_bbox->set_xmin(bbox.xmin() * width);
@@ -132,12 +143,16 @@ void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
     float resize_width = resize_param.width();
     CHECK_GT(resize_width, 0);
     float resize_aspect = resize_width / resize_height;
+    int height_scale = resize_param.height_scale();
+    int width_scale = resize_param.width_scale();
     float aspect = static_cast<float>(width) / height;
 
     float padding;
     NormalizedBBox source_bbox;
     switch (resize_param.resize_mode()) {
       case ResizeParameter_Resize_mode_WARP:
+        ClipBBox(temp_bbox, &temp_bbox);
+        ScaleBBox(temp_bbox, height, width, out_bbox);
         break;
       case ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD:
         if (aspect > resize_aspect) {
@@ -154,17 +169,27 @@ void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
           source_bbox.set_ymax(1.);
         }
         ProjectBBox(source_bbox, bbox, &temp_bbox);
+        ClipBBox(temp_bbox, &temp_bbox);
+        ScaleBBox(temp_bbox, height, width, out_bbox);
         break;
       case ResizeParameter_Resize_mode_FIT_SMALL_SIZE:
+        if (height_scale == 0 || width_scale == 0) {
+          ClipBBox(temp_bbox, &temp_bbox);
+          ScaleBBox(temp_bbox, height, width, out_bbox);
+        } else {
+          ScaleBBox(temp_bbox, height_scale, width_scale, out_bbox);
+          ClipBBox(*out_bbox, height, width, out_bbox);
+        }
         break;
       default:
         LOG(FATAL) << "Unknown resize mode.";
     }
+  } else {
+    // Clip the normalized bbox first.
+    ClipBBox(temp_bbox, &temp_bbox);
+    // Scale the bbox according to the original image size.
+    ScaleBBox(temp_bbox, height, width, out_bbox);
   }
-  // Clip the normalized bbox first.
-  ClipBBox(temp_bbox, &temp_bbox);
-  // Scale the bbox according to the original image size.
-  ScaleBBox(temp_bbox, height, width, out_bbox);
 }
 
 void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,

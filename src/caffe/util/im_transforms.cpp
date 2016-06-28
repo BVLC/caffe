@@ -253,6 +253,8 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
                               NormalizedBBox* bbox) {
   float new_height = param.height();
   float new_width = param.width();
+  int height_scale = param.height_scale();
+  int width_scale = param.width_scale();
   float orig_aspect = static_cast<float>(old_width) / old_height;
   float new_aspect = new_width / new_height;
 
@@ -297,6 +299,12 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
       x_max = std::min(new_width, x_max * new_width / old_width);
       y_min = std::max(0.f, y_min * new_height / old_height);
       y_max = std::min(new_height, y_max * new_height / old_height);
+      if (height_scale > 0 && width_scale > 0) {
+        x_min *= new_width / width_scale;
+        y_min *= new_height / height_scale;
+        x_max *= new_width / width_scale;
+        y_max *= new_height / height_scale;
+      }
       break;
     default:
       LOG(FATAL) << "Unknown resize mode.";

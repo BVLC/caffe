@@ -254,6 +254,15 @@ TEST_F(CPUBBoxUtilTest, TestOutputBBox) {
   CHECK_EQ(out_bbox.xmax(), 150.);
   CHECK_EQ(out_bbox.ymax(), 150.);
 
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_FIT_SMALL_SIZE);
+  resize_param.set_height_scale(300);
+  resize_param.set_width_scale(300);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 90.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
   resize_param.set_resize_mode(
       ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
   OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
