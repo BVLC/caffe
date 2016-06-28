@@ -21,6 +21,7 @@ struct GPUMemory {
       int device = INVALID_DEVICE,
       cudaStream_t stream = cudaStreamDefault) {
     if (!try_allocate(reinterpret_cast<void**>(ptr), size, device, stream)) {
+      CUDA_CHECK(cudaGetDevice(&device));
       LOG(FATAL) << "Out of memory: failed to allocate " << size
           << " bytes on device " << device;
     }
@@ -89,6 +90,7 @@ struct GPUMemory {
 
     void reserve(size_t size, int device = INVALID_DEVICE) {
       if (!try_reserve(size, device)) {
+        CUDA_CHECK(cudaGetDevice(&device));
         LOG(FATAL) << "Out of memory: failed to allocate " << size
             << " bytes on device " << device;
       }
