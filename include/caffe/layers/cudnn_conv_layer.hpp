@@ -76,7 +76,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   cudnnFilterDescriptor_t      filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
 
-  int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
+  int bottom_offset_, top_offset_, bias_offset_;
 
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
@@ -92,6 +92,8 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   void GetConvAlgo(const vector<Blob<Dtype>*>& bottom,
                    const vector<Blob<Dtype>*>& top,
                    const size_t workspace_bytes);
+
+  size_t ComputeFindExWorkspaceSize();
 
   vector<cudnnTensorDescriptor_t>      cached_bottom_descs_;
   vector<cudnnConvolutionDescriptor_t> cached_conv_descs_;
