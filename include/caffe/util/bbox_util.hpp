@@ -280,6 +280,10 @@ void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
 // Clip the NormalizedBBox such that the range for each corner is [0, 1].
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
 
+// Clip the bbox such that the bbox is within [0, 0; width, height].
+void ClipBBox(const NormalizedBBox& bbox, const float height, const float width,
+              NormalizedBBox* clip_bbox);
+
 // Scale the NormalizedBBox w.r.t. height and width.
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox);
