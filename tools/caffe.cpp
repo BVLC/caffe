@@ -51,14 +51,9 @@ DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
 DEFINE_string(param_server, "",
-    "Optional; multinode mode, "
-    "the parent param server address to synchronize with, "
-    "i.e.: tcp://127.0.0.1:7777");
+    "Optional; triggers multinode mode, usage: --param_server=mpi");
 DEFINE_string(listen_address, "",
-    "Optional; multinode mode, bind address for various servers");
-DEFINE_string(multinode_type, "sync",
-    "Optional; multinode mode, type of multinode training mode "
-    "[sync, async, ave]");
+    "Optional; multinode mode, bind address for data server");
 DEFINE_int32(comm_threads, 1,
     "Optional; multinode mode,"
     " The number of threads used by communication code.");
@@ -173,12 +168,7 @@ int train() {
       "but not both.";
 
   caffe::SolverParameter solver_param;
-  if (caffe::internode::is_remote_address(FLAGS_solver)) {
-    caffe::ReceiveProtoFromRemoteOrDie(FLAGS_solver, &solver_param);
-  } else {
-    LOG(INFO) << "assuming solver is local file";
-    caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
-  }
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
@@ -235,26 +225,13 @@ int train() {
   if (FLAGS_param_server != "") {
     LOG(INFO) << "Configuring multinode setup";
 
-    if (FLAGS_multinode_type.find("sync") == 0) {
-      if (FLAGS_param_server == "mpi") {
-        caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
-        LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
-        sync.run();
-      } else {
-        caffe::SynchronousParamClient<float> sync(
-          solver, FLAGS_param_server, FLAGS_comm_threads);
-        LOG(INFO) << "Starting Multi-node Optimization";
-        sync.run();
+      if (FLAGS_param_server != "mpi") {
+        LOG(ERROR) << "currently unsupported";
+        return 1;
       }
-    } else if (FLAGS_multinode_type.find("ave") == 0) {
-      LOG(ERROR) << "currently unsupported";
-      return 0;
-    } else if (FLAGS_multinode_type.find("async") == 0) {
-      LOG(ERROR) << "currently unsupported";
-      return 0;
-    } else {
-      LOG(ERROR) << "Invalid multinode type " << FLAGS_param_server;
-    }
+      caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
+      LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
+      sync.run();
   } else if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     sync.run(gpus);
@@ -267,8 +244,7 @@ int train() {
 }
 RegisterBrewFunction(train);
 
-template <template<typename T> class ServerType>
-int run_server(string name) {
+int data_server() {
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
@@ -292,38 +268,11 @@ int run_server(string name) {
   } else if (FLAGS_weights.size()) {
     CopyLayers(solver.get(), FLAGS_weights);
   }
-  LOG(INFO) << "Starting " << name;
-  ServerType<float> server(
+  LOG(INFO) << "Starting Data Server";
+  caffe::DataServer<float> server(
     solver, FLAGS_listen_address, FLAGS_param_server, FLAGS_comm_threads);
   server.run();
   return 0;
-}
-
-int param_server() {
-  if (FLAGS_multinode_type.find("sync") == 0) {
-    if (FLAGS_param_server == "") {
-      return run_server<caffe::SynchronousParamServer>("Param Server");
-    } else {
-      return run_server<caffe::ParamRelay>("Param Server");
-    }
-  } else if (FLAGS_multinode_type.find("ave") == 0) {
-    LOG(ERROR) << "currently unsupported";
-  } else if (FLAGS_multinode_type.find("async") == 0) {
-    LOG(ERROR) << "currently unsupported";
-  } else {
-    LOG(ERROR) << "Invalid multinode type " << FLAGS_param_server;
-  }
-  return 1;
-}
-RegisterBrewFunction(param_server);
-
-int model_server() {
-  return run_server<caffe::ModelServer>("Model Server");
-}
-RegisterBrewFunction(model_server);
-
-int data_server() {
-  return run_server<caffe::DataServer>("Data Server");
 }
 RegisterBrewFunction(data_server);
 
@@ -695,8 +644,6 @@ int main(int argc, char** argv) {
       "commands:\n"
       "  train           train or finetune a model\n"
       "  test            score a model\n"
-      "  param_server    run param server - weights synchronizing entity\n"
-      "  model_server    run model server - remote model source\n"
       "  data_server     run data server - remote data source\n"
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time\n"
