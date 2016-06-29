@@ -61,10 +61,9 @@ class Net {
    */
   Dtype PyForwardFromTo(int start, int end) {
     // Release GIL
-    m_thread_state = PyEval_SaveThread();
+    scoped_gil_release = make_shared<ScopedGILRelease>();
     Dtype result = ForwardFromTo(start, end);
-    PyEval_RestoreThread(m_thread_state);
-    m_thread_state = NULL;
+    scoped_gil_release.reset();
     return result;
   }
   Dtype ForwardFrom(int start);
@@ -93,10 +92,9 @@ class Net {
    **/
   void PyBackwardFromTo(int start, int end) {
     // Release GIL
-    m_thread_state = PyEval_SaveThread();
+    scoped_gil_release = make_shared<ScopedGILRelease>();
     BackwardFromTo(start, end);
-    PyEval_RestoreThread(m_thread_state);
-    m_thread_state = NULL;
+    scoped_gil_release.reset();
   }
   void BackwardFrom(int start);
   void BackwardTo(int end);
@@ -337,7 +335,7 @@ class Net {
   DISABLE_COPY_AND_ASSIGN(Net);
 
   // For releasing/reacquiring GIL with pycaffe
-  PyThreadState * m_thread_state;
+  shared_ptr<ScopedGILRelease> scoped_gil_release;
 };
 
 

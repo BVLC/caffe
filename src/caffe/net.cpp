@@ -544,12 +544,11 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     is_python = strcmp(layers_[i]->type(), "Python") == 0;
     if (is_python) {
-        PyEval_RestoreThread(m_thread_state);
-        m_thread_state = NULL;
+        scoped_gil_release.reset();
     }
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     if (is_python)
-        m_thread_state = PyEval_SaveThread();
+        scoped_gil_release = make_shared<ScopedGILRelease>();
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -597,11 +596,11 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
     if (layer_need_backward_[i]) {
       is_python = strcmp(layers_[i]->type(), "Python") == 0;
       if (is_python)
-          PyEval_RestoreThread(m_thread_state);
+          scoped_gil_release.reset();
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (is_python)
-          m_thread_state = PyEval_SaveThread();
+          scoped_gil_release = make_shared<ScopedGILRelease>();
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }
