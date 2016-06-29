@@ -182,11 +182,24 @@ class NetSpec(object):
         return self.__getattr__(item)
 
     def to_proto(self):
-        names = {v: k for k, v in six.iteritems(self.tops)}
+        names = {}
+        for k, v in six.iteritems(self.tops):
+            try:
+                iter(v)
+            except TypeError:
+                names[v] = k
+            else:
+                names.update({e: k for e in v})
         autonames = Counter()
         layers = OrderedDict()
         for name, top in six.iteritems(self.tops):
-            top._to_proto(layers, names, autonames)
+            try:
+                iter(top)
+            except TypeError:
+                top._to_proto(layers, names, autonames)
+            else:
+                for t in top:
+                    t._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
         return net
