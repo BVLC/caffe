@@ -11,6 +11,7 @@
 #include "boost/thread.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/parallel.hpp"
+#include "caffe/util/gpu_memory.hpp"
 
 namespace caffe {
 
@@ -82,14 +83,17 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 
   // Allocate device buffers
   CUDA_CHECK(cudaSetDevice(device));
-  CUDA_CHECK(cudaMalloc(&data_, size_ * sizeof(Dtype)));
+  buffer_device_ = device;
+  GPUMemory::allocate(reinterpret_cast<void **>(&data_),
+      size_ * sizeof(Dtype));
 
   // Copy blob values
   const vector<Blob<Dtype>*>& net =
       root_solver->net()->learnable_params();
   apply_buffers(net, data_, size_, copy);
 
-  CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
+  GPUMemory::allocate(reinterpret_cast<void **>(&diff_),
+      size_ * sizeof(Dtype));
   caffe_gpu_set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
@@ -101,8 +105,14 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 template<typename Dtype>
 GPUParams<Dtype>::~GPUParams() {
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaFree(data_));
-  CUDA_CHECK(cudaFree(diff_));
+  int initial_device;
+  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CUDA_CHECK(cudaSetDevice(buffer_device_));
+  GPUMemory::deallocate(data_);
+  GPUMemory::deallocate(diff_);
+  data_ = NULL;
+  diff_ = NULL;
+  CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
 }
 
