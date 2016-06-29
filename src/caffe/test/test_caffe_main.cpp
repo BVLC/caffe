@@ -1,5 +1,6 @@
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/util/gpu_memory.hpp"
 
 namespace caffe {
 #ifndef CPU_ONLY
@@ -32,6 +33,8 @@ int main(int argc, char** argv) {
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFE_TEST_CUDA_PROP, device);
   cout << "Current device name: " << CAFFE_TEST_CUDA_PROP.name << endl;
+  caffe::GPUMemory::Scope gpu_memory_scope(devices);
+
 #endif
   // invoke the test.
   return RUN_ALL_TESTS();
