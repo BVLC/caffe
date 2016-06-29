@@ -69,6 +69,10 @@ class DataTransformer {
                 Blob<Dtype>* transformed_blob);
 
 #ifdef USE_OPENCV
+  
+template<bool do_mirror, bool has_mean_file, bool has_mean_values>
+void TransformCore(const cv::Mat& cv_img,
+        Blob<Dtype>* transformed_blob);
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Mat.
@@ -81,7 +85,6 @@ class DataTransformer {
    */
   void Transform(const vector<cv::Mat> & mat_vector,
                 Blob<Dtype>* transformed_blob);
-
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
