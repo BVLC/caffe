@@ -45,7 +45,6 @@ void LRNRistrettoLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #ifdef CPU_ONLY
 STUB_GPU(LRNRistrettoLayer);
 STUB_GPU_FORWARD(LRNRistrettoLayer, CrossChannelForward);
-STUB_GPU_BACKWARD(LRNRistrettoLayer, CrossChannelBackward);
 #endif
 
 INSTANTIATE_CLASS(LRNRistrettoLayer);
