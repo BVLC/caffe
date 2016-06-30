@@ -21,10 +21,12 @@ TEST_F(CommonTest, TestCublasHandlerGPU) {
 #endif
 
 TEST_F(CommonTest, TestBrewMode) {
+  Caffe::Brew current_mode = Caffe::mode();
   Caffe::set_mode(Caffe::CPU);
   EXPECT_EQ(Caffe::mode(), Caffe::CPU);
   Caffe::set_mode(Caffe::GPU);
   EXPECT_EQ(Caffe::mode(), Caffe::GPU);
+  Caffe::set_mode(current_mode);
 }
 
 TEST_F(CommonTest, TestRandSeedCPU) {
