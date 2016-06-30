@@ -199,15 +199,16 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // datum scales
   const int lines_size = lines_.size();
   
-  
-//#define _OPENMP
-//#ifndef _OPENMP
-#if (0)
+#ifdef _OPENMP
+  #pragma omp parallel if (batch_size > 1)
+  #pragma omp single nowait
+#endif
   for (int item_id = 0; item_id < batch_size; ++item_id)
   {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
+ #ifndef _OPENMP   
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
@@ -219,7 +220,23 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
-    //  end OMP task
+#else
+    read_time = 0;
+    trans_time = 0;
+    
+    int offset = batch->data_.offset(item_id);
+    std::string img_file_name = lines_[lines_id_].first;
+    #pragma omp task firstprivate(offset, img_file_name)
+    {
+        Blob<Dtype> tmp_data;
+        tmp_data.Reshape(top_shape);
+        tmp_data.set_cpu_data(prefetch_data + offset);
+        cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
+            new_height, new_width, is_color);
+        CHECK(cv_img.data) << "Could not load " << img_file_name;
+        this->data_transformer_->Transform(cv_img, &tmp_data);
+    }
+#endif
     
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
@@ -233,48 +250,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
     }
   }
-#else
-  #pragma omp parallel if (batch_size > 1)
-  #pragma omp single nowait
-  
-  for (int item_id = 0; item_id < batch_size; ++item_id)
-  {
-    // get a blob
-    CHECK_GT(lines_size, lines_id_);
-    
-    int offset = batch->data_.offset(item_id);
-    std::string img_file_name = lines_[lines_id_].first;
-    
-    #pragma omp task firstprivate(offset, img_file_name)
-    {
-        Blob<Dtype> tmp_data;
-        tmp_data.Reshape(top_shape);
-        tmp_data.set_cpu_data(prefetch_data + offset);
-        cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
-            new_height, new_width, is_color);
-        CHECK(cv_img.data) << "Could not load " << img_file_name;
-        this->data_transformer_->Transform(cv_img, &tmp_data);
-    }
- 
-    //  end OMP task
-    prefetch_label[item_id] = lines_[lines_id_].second;
-    // go to the next iter
-    lines_id_++;
-    if (lines_id_ >= lines_size) {
-      // We have reached the end. Restart from the first.
-     // DLOG(INFO) << "Restarting data prefetching from start.";
-      lines_id_ = 0;
-      if (this->layer_param_.image_data_param().shuffle()) {
-        ShuffleImages();
-      }
-    }
-  }
 
-#endif
   batch_timer.Stop();
   LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  //DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
  }
 
 
