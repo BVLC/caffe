@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # Check if TOOLS is set
-if [ -z ${TOOLS+x} ];
-# if unset
-then
+if [ -z "$TOOLS" ]; then
   TOOLS=./build/tools
 fi
 

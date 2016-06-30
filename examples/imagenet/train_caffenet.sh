@@ -1,8 +1,7 @@
 #!/usr/bin/env sh
 
 # Check if TOOLS is unset
-if [ -z ${TOOLS+x} ];
-then
+if [ -z "$TOOLS" ]; then
 TOOLS=./build/tools
 fi
 

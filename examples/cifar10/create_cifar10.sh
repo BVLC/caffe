@@ -6,9 +6,7 @@ DATA=data/cifar10
 DBTYPE=lmdb
 
 # Check if CAFFE_BIN is set
-if [ -z ${CAFFE_BIN+x} ]; 
-# if unset
-then
+if [ -z "$CAFFE_BIN" ]; then
   EXAMPLES=./build/$EXAMPLE
   TOOLS=./build/tools
 else

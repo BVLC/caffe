@@ -6,8 +6,7 @@ EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
 
 # Check if TOOLS is unset
-if [ -z ${TOOLS+x} ];
-then
+if [ -z "$TOOLS" ]; then
 TOOLS=./build/tools
 fi
 

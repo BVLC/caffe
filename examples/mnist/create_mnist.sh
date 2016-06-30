@@ -6,9 +6,7 @@ EXAMPLE=examples/mnist
 DATA=data/mnist
 
 # Check if CAFFE_BIN is set
-if [ -z ${CAFFE_BIN+x} ];
-# if unset
-then
+if [ -z "$CAFFE_BIN" ]; then
   BUILD=build/examples/mnist
 else
   BUILD=$CAFFE_BIN
