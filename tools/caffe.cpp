@@ -485,7 +485,7 @@ bool loadFromFile(bool use_gpu, const char *name, int id,
   size_t bytesRead = fread(data, 1, bytesToRead, file);
   fclose(file);
 
-  if (bytesRead == bytesToRead) {
+  if (bytesRead != bytesToRead) {
     LOG(ERROR) << "Failed to read data from '" << file_name << "' file.";
     return false;
   }
