@@ -678,6 +678,8 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	# add data and model
 	cp -r data $(DISTRIBUTE_DIR)/
 	cp -r models $(DISTRIBUTE_DIR)/
+	# add scripts
+	cp -r scripts $(DISTRIBUTE_DIR)/
 	mkdir -p $(DISTRIBUTE_DIR)/include/caffe/proto
 	cp $(PROTO_GEN_HEADER_SRCS) $(DISTRIBUTE_DIR)/include/caffe/proto
 	# add tool and example binaries
