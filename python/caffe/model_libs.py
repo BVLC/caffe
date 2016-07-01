@@ -664,9 +664,9 @@ def InceptionV3Body(net, from_layer, output_pred=False, **bn_param):
 def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         use_objectness=False, normalizations=[], use_batchnorm=True, lr_mult=1,
         use_scale=True, min_sizes=[], max_sizes=[], prior_variance = [0.1],
-        aspect_ratios=[], steps=[], share_location=True, flip=True, clip=True,
-        inter_layer_depth=[], kernel_size=1, pad=0, conf_postfix='', loc_postfix='',
-        **bn_param):
+        aspect_ratios=[], steps=[], img_height=0, img_width=0, share_location=True,
+        flip=True, clip=True, inter_layer_depth=[], kernel_size=1, pad=0,
+        conf_postfix='', loc_postfix='', **bn_param):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
     if normalizations:
@@ -767,6 +767,11 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             net.update(name, {'aspect_ratio': aspect_ratio, 'flip': flip})
         if step:
             net.update(name, {'step': step})
+        if img_height != 0 and img_width != 0:
+            if img_height == img_width:
+                net.update(name, {'img_size': img_height})
+            else:
+                net.update(name, {'img_h': img_height, 'img_w': img_width})
         priorbox_layers.append(net[name])
 
         # Create objectness prediction layer.
