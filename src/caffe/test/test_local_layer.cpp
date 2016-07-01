@@ -43,10 +43,10 @@ TYPED_TEST_CASE(LocalLayerTest, TestDtypesAndDevices);
 TYPED_TEST(LocalLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  LocalParameter* convolution_param =
-      layer_param.mutable_local_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(4);
   shared_ptr<Layer<Dtype> > layer(
       new LocalLayer<Dtype>(layer_param));
@@ -67,16 +67,15 @@ TYPED_TEST(LocalLayerTest, TestSetup) {
 
 TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   typedef typename TypeParam::Dtype Dtype;
-  // We will simply see if the convolution layer carries out averaging well.
   FillerParameter filler_param;
   filler_param.set_value(1.);
   ConstantFiller<Dtype> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   LayerParameter layer_param;
-  LocalParameter* convolution_param =
-    layer_param.mutable_local_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(1);
+  ConvolutionParameter* convolution_param =
+    layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(1);
   convolution_param->set_num_output(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
@@ -85,12 +84,9 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // fill the weights of the layer
-  LOG(INFO) << "Doing mutable cpu";
-  LOG(INFO) << "blobs" << layer->blobs()[0];
   Dtype* data = layer->blobs()[0]->mutable_cpu_data();
-  LOG(INFO) << "Done Doing mutable cpu";
   CHECK_EQ(layer->blobs()[0]->channels(), 1);
-
+  LOG(ERROR) << "fill weights";
   for (int n = 0; n < layer->blobs()[0]->num(); n++) {
     for (int j = 0; j < layer->blobs()[0]->height(); j++) {
       for (int i = 0; i < layer->blobs()[0]->width(); i++) {
@@ -98,9 +94,11 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
       }
     }
   }
+  LOG(ERROR) << "filled weights";
 
   // preform forward pass, and test output
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  LOG(ERROR) << "forwarded";
   // After the convolution, the output should all have output values 27.1
   const Dtype* top_data = this->blob_top_->cpu_data();
   for (int n = 0; n < this->blob_top_->num(); n++) {
@@ -119,10 +117,10 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
 TYPED_TEST(LocalLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  LocalParameter* convolution_param =
-    layer_param.mutable_local_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  ConvolutionParameter* convolution_param =
+    layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");

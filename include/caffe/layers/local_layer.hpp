@@ -3,17 +3,18 @@
 
 #include <vector>
 
-#include "caffe/blob.hpp"
-#include "caffe/layer.hpp"
-#include "caffe/proto/caffe.pb.h"
+// #include "caffe/blob.hpp"
+// #include "caffe/layer.hpp"
+// #include "caffe/proto/caffe.pb.h"
+#include "caffe/layers/base_conv_layer.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-class LocalLayer : public Layer<Dtype> {
+class LocalLayer : public BaseConvolutionLayer<Dtype> {
  public:
   explicit LocalLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), dilation_(1) {}
+      : BaseConvolutionLayer<Dtype>(param) {}
 
   virtual inline const char* type() const { return "Local"; }
 
@@ -35,23 +36,25 @@ class LocalLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual inline bool reverse_dimensions() { return false; }
+  virtual void compute_output_shape();
 
 
   int kernel_size_;
-  int stride_;
-  int num_;
-  int channels_;
-  int pad_;
+  // int stride_;
+  // int num_; // commented because already in base_conv_layer.hpp
+  // int channels_; // commented because already in base_conv_layer.hpp
+  // int pad_;
   int height_, width_;
   int height_out_, width_out_;
-  int num_output_;
-  bool bias_term_;
+  // int num_output_; // commented because already in base_conv_layer.hpp
+  // bool bias_term_;
 
   int M_;
   int K_;
   int N_;
 
-  const int dilation_;
+  // const int dilation_;
 
   Blob<Dtype> col_buffer_;
 };
