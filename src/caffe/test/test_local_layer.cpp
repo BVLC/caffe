@@ -157,12 +157,12 @@ TYPED_TEST(LocalLayerTest, TestSimpleForwardBackward) {
     int count = 0;
     for (int patch = 0; patch < shape[3]; ++patch) {
       for (int patch2 = 0; patch2 < shape[3]; ++patch2) {
-        for (int output_channel = 0; output_channel < shape[0]; ++output_channel) {
+        for (int out_channel = 0; out_channel < shape[0]; ++out_channel) {
           for (int local_weight = 0; local_weight < shape[2]; ++local_weight) {
             if (*(weights_data + layer->blobs()[0]->
-                          offset(output_channel, dim1, local_weight, patch))
+                          offset(out_channel, dim1, local_weight, patch))
               != *(weights_data + layer->blobs()[0]->
-                          offset(output_channel, dim1, local_weight, patch2))) {
+                          offset(out_channel, dim1, local_weight, patch2))) {
               diff = true;
               count++;
             }

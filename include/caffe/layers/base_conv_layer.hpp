@@ -56,8 +56,10 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   inline int input_shape(int i) {
     return (*bottom_shape_)[channel_axis_ + i];
   }
-  /// @brief reverse_dimensions should return true iff we are implementing deconv, so
-  // that conv helpers know which dimensions are which.
+  /** @brief reverse_dimensions should return true iff
+   * we are implementing deconv, so
+   * that conv helpers know which dimensions are which.
+   */
   virtual bool reverse_dimensions() = 0;
   // @brief Compute height_out_ and width_out_ from other parameters.
   virtual void compute_output_shape() = 0;

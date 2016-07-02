@@ -54,7 +54,15 @@ class LocalLayer : public BaseConvolutionLayer<Dtype> {
   int K_;
   int N_;
 
-  // const int dilation_;
+  /// @brief shape(1, 1, 1, K_), full of 1s, used in forward pass
+  Blob<Dtype> E_;
+  /// @brief shape(1, 1, K_, N_), used in forward pass
+  Blob<Dtype> intermediate_;
+  /// @brief shape(1, 1, 1, N_), used in backward pass
+  Blob<Dtype> intermediate_backward_;
+  /// @brief shape(1, 1, K_, N_), used in backward pass
+  Blob<Dtype> xt_;
+
 
   Blob<Dtype> col_buffer_;
 };

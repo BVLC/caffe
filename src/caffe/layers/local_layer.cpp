@@ -19,16 +19,20 @@ void LocalLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // However, LocalLayer cannot (yet). So here we make sure that only 2D
   // square parameters have been given.
   // kernel size:
-  CHECK_EQ(this->num_spatial_axes_, 2) << "Local Layer can only be used for 2D convolution.";
+  CHECK_EQ(this->num_spatial_axes_, 2) <<
+    "Local Layer can only be used for 2D convolution.";
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
-  CHECK_EQ(kernel_shape_data[0], kernel_shape_data[1]) << "Local Layer can perform only square convolution.";
+  CHECK_EQ(kernel_shape_data[0], kernel_shape_data[1]) <<
+    "Local Layer can perform only square convolution.";
   kernel_size_ = kernel_shape_data[0];
   // stride:
   const int* stride_data = this->stride_.cpu_data();
-  CHECK_EQ(stride_data[0], stride_data[1]) << "Local Layer can perform only square stride.";
+  CHECK_EQ(stride_data[0], stride_data[1]) <<
+    "Local Layer can perform only square stride.";
   // pad:
   const int* pad_data = this->pad_.cpu_data();
-  CHECK_EQ(pad_data[0], pad_data[1]) << "Local Layer can perform only square pad.";
+  CHECK_EQ(pad_data[0], pad_data[1]) <<
+    "Local Layer can perform only square pad.";
   // dilation:
   const int* dilation_data = this->dilation_.cpu_data();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
@@ -83,9 +87,6 @@ void LocalLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LocalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-
-  // LOG(ERROR) << "Reshape " << top.size() << " tops and " << bottom.size() << " bottoms";
-  // LOG(ERROR) << "Before super, shape has " << top[0]->shape().size() << " dimensions";
   // BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
   const int first_spatial_axis = this->channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + this->num_spatial_axes_)
@@ -113,17 +114,12 @@ void LocalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   this->bottom_dim_ = bottom[0]->count(this->channel_axis_);
   this->top_dim_ = top[0]->count(this->channel_axis_);
   this->out_spatial_dim_ = top[0]->count(first_spatial_axis);
-  // BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
-  // LOG(ERROR) << "After super, shape has " << top[0]->shape().size() << " dimensions";
-  // LOG(ERROR) << top[0]->shape(0);
-  // LOG(ERROR) << top[0]->shape(1);
-  // LOG(ERROR) << top[0]->shape(2);
-  // LOG(ERROR) << top[0]->shape(3);
-  CHECK_EQ(bottom[0]->channels(), this->channels_) << "Input size incompatible with"
-    " weights.";
+  CHECK_EQ(bottom[0]->channels(), this->channels_) <<
+    "Input size incompatible with weights.";
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
-    CHECK_EQ(this->num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
+    CHECK_EQ(this->num_, bottom[bottom_id]->num()) <<
+      "Inputs must have same num.";
     CHECK_EQ(this->channels_, bottom[bottom_id]->channels())
       << "Inputs must have same channels.";
     CHECK_EQ(height_, bottom[bottom_id]->height())
@@ -133,22 +129,22 @@ void LocalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   // Shape the tops.
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(this->num_, this->num_output_, height_out_, width_out_);
+    top[top_id]->Reshape(this->num_, this->num_output_,
+      height_out_, width_out_);
   }
 
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
   col_buffer_.Reshape(
-      1, this->channels_ * kernel_size_ * kernel_size_, height_out_, width_out_);
+      1, this->channels_ * kernel_size_ * kernel_size_,
+      height_out_, width_out_);
 
-  // for (int top_id = 0; top_id < top.size(); ++top_id) {
-  //   top[top_id]->Reshape(this->num_, this->num_output_, height_out_, width_out_);
-  // }
-  // LOG(ERROR) << "After self, shape has " << top[0]->shape().size() << " dimensions";
-  // LOG(ERROR) << top[0]->shape(0);
-  // LOG(ERROR) << top[0]->shape(1);
-  // LOG(ERROR) << top[0]->shape(2);
-  // LOG(ERROR) << top[0]->shape(3);
+
+  E_.Reshape(1, 1, 1, K_);
+  caffe_set(E_.count(), Dtype(1), E_.mutable_cpu_data());
+  intermediate_.Reshape(1, 1, K_, N_);
+  intermediate_backward_.Reshape(1, 1, 1, N_);
+  xt_.Reshape(1, 1, K_, N_);
 }
 
 template <typename Dtype>
@@ -163,15 +159,6 @@ void LocalLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int* pad_data = this->pad_.cpu_data();
   const int* dilation_data = this->dilation_.cpu_data();
 
-  Blob<Dtype> E;
-  E.Reshape(1, 1, 1, K_);
-  FillerParameter filler_param;
-  filler_param.set_value(1);
-  ConstantFiller<Dtype> filler(filler_param);
-  filler.Fill(&E);
-
-  Blob<Dtype> intermediate;
-  intermediate.Reshape(1, 1, K_, N_);
   for (int n = 0; n < this->num_; n++) {
     im2col_cpu(bottom_data + bottom[0]->offset(n), this->channels_, height_,
         width_, kernel_size_, kernel_size_,
@@ -180,11 +167,11 @@ void LocalLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     for (int m = 0; m < this->num_output_; m++) {
       caffe_mul(K_*N_, x_data, weight+this->blobs_[0]->offset(m),
-          intermediate.mutable_cpu_data());
+          intermediate_.mutable_cpu_data());
 
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, 1, N_, K_,
-          (Dtype)1., E.cpu_data(),
-          intermediate.cpu_data(),
+          (Dtype)1., E_.cpu_data(),
+          intermediate_.cpu_data(),
           (Dtype)0., top_data + top[0]->offset(n, m));
     }
 
@@ -212,12 +199,7 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int* pad_data = this->pad_.cpu_data();
   const int* dilation_data = this->dilation_.cpu_data();
 
-  Blob<Dtype> intermediate;
-  intermediate.Reshape(1, 1, 1, N_);
-
-  Blob<Dtype> xt;
-  xt.Reshape(1, 1, K_, N_);
-  Dtype* xt_data = xt.mutable_cpu_data();
+  Dtype* xt_data = xt_.mutable_cpu_data();
 
   if (this->bias_term_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
@@ -241,7 +223,7 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       Dtype* filter_weight_diff = weight_diff+this->blobs_[0]->offset(m);
       for (int k = 0; k < K_; k++) {
         caffe_mul(N_, top_diff+top[0]->offset(n, m),
-            x_data+col_buffer_.offset(0, k), xt_data+xt.offset(0, 0, k));
+            x_data+col_buffer_.offset(0, k), xt_data+xt_.offset(0, 0, k));
       }
       caffe_cpu_axpby(K_*N_, Dtype(1.0), xt_data,
           Dtype(1.0), filter_weight_diff);
@@ -254,10 +236,10 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         for (int k = 0; k < K_; k++) {
           caffe_mul(N_, top_diff+top[0]->offset(n, m),
               weight+this->blobs_[0]->offset(m, 0, k),
-              intermediate.mutable_cpu_data());
+              intermediate_backward_.mutable_cpu_data());
 
           caffe_cpu_axpby(N_, Dtype(1.0),
-              intermediate.cpu_data(), Dtype(1.0),
+              intermediate_backward_.cpu_data(), Dtype(1.0),
               x_diff+col_buffer_.offset(0, k));
         }
       }
@@ -266,7 +248,7 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       col2im_cpu(x_diff, this->channels_, height_,
           width_, kernel_size_, kernel_size_,
           pad_data[0], pad_data[1], stride_data[0], stride_data[1],
-          dilation_data[0], dilation_data[1], bottom_diff + bottom[0]->offset(n));
+          dilation_data[0], dilation_data[1], bottom_diff+bottom[0]->offset(n));
     }
   }
 }
@@ -293,6 +275,6 @@ STUB_GPU(LocalLayer);
 #endif
 
 INSTANTIATE_CLASS(LocalLayer);
-// REGISTER_LAYER_CLASS(Local);
+REGISTER_LAYER_CLASS(Local);
 
 }  // namespace caffe

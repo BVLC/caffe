@@ -104,31 +104,19 @@ void LocalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
-  Blob<Dtype> E;
-  E.Reshape(1, 1, 1, K_);
-  FillerParameter filler_param;
-  filler_param.set_value(1);
-  ConstantFiller<Dtype> filler(filler_param);
-  filler.Fill(&E);
-
-
-  Blob<Dtype> intermediate;
-  intermediate.Reshape(1, 1, K_, N_);
   for (int n = 0; n < this->num_; n++) {
     im2col_gpu(bottom_data + bottom[0]->offset(n), this->channels_, height_,
         width_, kernel_size_, kernel_size_,
         this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
         this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
         this->dilation_.cpu_data()[0], this->dilation_.cpu_data()[1], x_data);
-        // pad_data[0], pad_data[1], stride_data[0], stride_data[1],
-        // dilation_data[0], dilation_data[1], x_data);
 
     for (int m = 0; m < this->num_output_; m++) {
       caffe_gpu_mul(K_*N_, x_data, weight+this->blobs_[0]->offset(m),
-          intermediate.mutable_gpu_data());
+          intermediate_.mutable_gpu_data());
 
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, 1, N_, K_,
-          (Dtype)1., E.gpu_data(), intermediate.gpu_data(),
+          (Dtype)1., E_.gpu_data(), intermediate_.gpu_data(),
           (Dtype)0., top_data + top[0]->offset(n, m));
     }
 
@@ -157,12 +145,7 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int* pad_data = this->pad_.cpu_data();
   const int* dilation_data = this->dilation_.cpu_data();
 
-  Blob<Dtype> intermediate;
-  intermediate.Reshape(1, 1, 1, N_);
-
-  Blob<Dtype> xt;
-  xt.Reshape(1, 1, K_, N_);
-  Dtype* xt_data = xt.mutable_gpu_data();
+  Dtype* xt_data = xt_.mutable_gpu_data();
   if (this->bias_term_) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[1]->count(), Dtype(0.), bias_diff);
@@ -192,9 +175,10 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       local_update2_gpu(top_diff+top[0]->offset(n), weight, x_diff, K_, N_, M_);
 
       // col2im back to the data
-      col2im_gpu(x_diff, this->channels_, height_, width_, kernel_size_, kernel_size_,
+      col2im_gpu(x_diff, this->channels_, height_, width_,
+          kernel_size_, kernel_size_,
           pad_data[0], pad_data[1], stride_data[0], stride_data[1],
-          dilation_data[0], dilation_data[1], bottom_diff + bottom[0]->offset(n));
+          dilation_data[0], dilation_data[1], bottom_diff+bottom[0]->offset(n));
     }
   }
 }
