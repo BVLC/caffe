@@ -106,7 +106,8 @@ void LocalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   for (int n = 0; n < this->num_; n++) {
     im2col_gpu(bottom_data + bottom[0]->offset(n), this->channels_, height_,
-        width_, kernel_size_, kernel_size_,
+        width_,
+        this->kernel_shape_.cpu_data()[0], this->kernel_shape_.cpu_data()[1],
         this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
         this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
         this->dilation_.cpu_data()[0], this->dilation_.cpu_data()[1], x_data);
@@ -141,6 +142,7 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype* bias_diff = NULL;
+  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
   const int* dilation_data = this->dilation_.cpu_data();
@@ -162,7 +164,7 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   caffe_gpu_set(this->blobs_[0]->count(), Dtype(0.), weight_diff);
   for (int n = 0; n < this->num_; n++) {
     im2col_gpu(bottom_data + bottom[0]->offset(n), this->channels_, height_,
-        width_, kernel_size_, kernel_size_,
+        width_, kernel_shape_data[0], kernel_shape_data[1],
         pad_data[0], pad_data[1], stride_data[0], stride_data[1],
         dilation_data[0], dilation_data[1], x_data);
 
@@ -176,7 +178,7 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // col2im back to the data
       col2im_gpu(x_diff, this->channels_, height_, width_,
-          kernel_size_, kernel_size_,
+          kernel_shape_data[0], kernel_shape_data[1],
           pad_data[0], pad_data[1], stride_data[0], stride_data[1],
           dilation_data[0], dilation_data[1], bottom_diff+bottom[0]->offset(n));
     }

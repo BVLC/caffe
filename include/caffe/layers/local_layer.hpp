@@ -39,16 +39,8 @@ class LocalLayer : public BaseConvolutionLayer<Dtype> {
   virtual inline bool reverse_dimensions() { return false; }
   virtual void compute_output_shape();
 
-
-  int kernel_size_;
-  // int stride_;
-  // int num_; // commented because already in base_conv_layer.hpp
-  // int channels_; // commented because already in base_conv_layer.hpp
-  // int pad_;
   int height_, width_;
   int height_out_, width_out_;
-  // int num_output_; // commented because already in base_conv_layer.hpp
-  // bool bias_term_;
 
   int M_;
   int K_;

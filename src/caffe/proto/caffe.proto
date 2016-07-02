@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: local_param)
+// LayerParameter next available layer-specific ID: 146 (last added: before local_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -382,7 +382,6 @@ message LayerParameter {
   optional InnerProductParameter inner_product_param = 117;
   optional InputParameter input_param = 143;
   optional LogParameter log_param = 134;
-  // optional LocalParameter local_param = 146;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
@@ -1378,14 +1377,3 @@ message PReLUParameter {
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
-
-// // Message that stores parameters used by LocalLayer
-// message LocalParameter {
-//   optional uint32 num_output = 1; // The number of outputs for the layer
-//   optional bool bias_term = 2 [default = true]; // whether to have bias terms
-//   optional uint32 pad = 3 [default = 0]; // The padding size
-//   optional uint32 kernel_size = 4; // The kernel size
-//   optional uint32 stride = 6 [default = 1]; // The stride
-//   optional FillerParameter weight_filler = 7; // The filler for the weight
-//   optional FillerParameter bias_filler = 8; // The filler for the bias
-// }
