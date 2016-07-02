@@ -197,9 +197,9 @@ void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype* bias_diff = NULL;
-  const int* stride_data = this->stride_.gpu_data();
-  const int* pad_data = this->pad_.gpu_data();
-  const int* dilation_data = this->dilation_.gpu_data();
+  const int* stride_data = this->stride_.cpu_data();
+  const int* pad_data = this->pad_.cpu_data();
+  const int* dilation_data = this->dilation_.cpu_data();
 
   Blob<Dtype> intermediate;
   intermediate.Reshape(1, 1, 1, N_);
