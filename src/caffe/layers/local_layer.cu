@@ -98,55 +98,55 @@ template void local_update2_gpu<double>(
 template <typename Dtype>
 void LocalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  LOG(ERROR) << "forward gpu x_data";
+  // LOG(ERROR) << "forward gpu x_data";
 
   Dtype* x_data = col_buffer_.mutable_gpu_data();
-  LOG(ERROR) << "forward gpu weight";
+  // LOG(ERROR) << "forward gpu weight";
   const Dtype* weight = this->blobs_[0]->gpu_data();
-  LOG(ERROR) << "forward gpu bottom_data";
+  // LOG(ERROR) << "forward gpu bottom_data";
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  LOG(ERROR) << "forward gpu top_data";
+  // LOG(ERROR) << "forward gpu top_data";
   Dtype* top_data = top[0]->mutable_gpu_data();
-  LOG(ERROR) << "forward gpu stride_data " << this->stride_.shape().size() << this->stride_.shape(0);
-  const int* stride_data = this->stride_.cpu_data();
-  LOG(ERROR) << "forward gpu pad_data" << this->pad_.shape().size() << this->pad_.shape(0) << this->pad_.count();
-  const int* pad_data = this->pad_.cpu_data();
-  LOG(ERROR) << "forward gpu pad_data" << pad_data;
-  LOG(ERROR) << "forward gpu dilation_data" << this->dilation_.shape().size() << this->dilation_.shape(0);
-  const int* dilation_data = this->dilation_.cpu_data();
-  LOG(ERROR) << "forward gpu ";
+  // LOG(ERROR) << "forward gpu stride_data " << this->stride_.shape().size() << this->stride_.shape(0);
+  // const int* stride_data = this->stride_.cpu_data();
+  // LOG(ERROR) << "forward gpu pad_data" << this->pad_.shape().size() << this->pad_.shape(0) << this->pad_.count();
+  // const int* pad_data = this->pad_.cpu_data();
+  // LOG(ERROR) << "forward gpu pad_data" << pad_data;
+  // LOG(ERROR) << "forward gpu dilation_data" << this->dilation_.shape().size() << this->dilation_.shape(0);
+  // const int* dilation_data = this->dilation_.cpu_data();
+  // LOG(ERROR) << "forward gpu ";
 
   // // LOG(ERROR) << "forward gpu " << pad_data.size() << " " <<  stride_data.size() << " " << dilation_data.size();
-  LOG(ERROR) << "\nbottom " << this->channels_ << " " <<  height_ << " " <<
-        width_ <<
-        "\nkernel   " <<  kernel_size_ << " " <<  kernel_size_ << "\n"
-        // ;
-         <<
-        "pad      " << pad_data[0] << " " <<  pad_data[1] << "\n" <<
-        "stride   " <<  stride_data[0] << " " <<  stride_data[1] << "\n" <<
-        "dilation " << dilation_data[0] << " " <<  dilation_data[1] << "\n";
+  // LOG(ERROR) << "\nbottom " << this->channels_ << " " <<  height_ << " " <<
+  //       width_ <<
+  //       "\nkernel   " <<  kernel_size_ << " " <<  kernel_size_ << "\n"
+  //       // ;
+  //        <<
+  //       "pad      " << pad_data[0] << " " <<  pad_data[1] << "\n" <<
+  //       "stride   " <<  stride_data[0] << " " <<  stride_data[1] << "\n" <<
+  //       "dilation " << dilation_data[0] << " " <<  dilation_data[1] << "\n";
 
-  LOG(ERROR) << this->num_output_ << " " << height_out_ << " " << width_out_;
+  // LOG(ERROR) << this->num_output_ << " " << height_out_ << " " << width_out_;
 
-  for (int i = 0; i < bottom.size(); ++i) {
-    LOG(ERROR) << "bottom ";
-    for (int j = 0; j < bottom[i]->shape().size(); ++j) {
-      LOG(ERROR) << "       " << bottom[i]->shape(j);
-    }
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    LOG(ERROR) << "top ";
-    for (int j = 0; j < top[i]->shape().size(); ++j) {
-      LOG(ERROR) << "    " << top[i]->shape(j);
-    }
-  }
+  // for (int i = 0; i < bottom.size(); ++i) {
+  //   LOG(ERROR) << "bottom ";
+  //   for (int j = 0; j < bottom[i]->shape().size(); ++j) {
+  //     LOG(ERROR) << "       " << bottom[i]->shape(j);
+  //   }
+  // }
+  // for (int i = 0; i < top.size(); ++i) {
+  //   LOG(ERROR) << "top ";
+  //   for (int j = 0; j < top[i]->shape().size(); ++j) {
+  //     LOG(ERROR) << "    " << top[i]->shape(j);
+  //   }
+  // }
 
-  for (int i = 0; i < this->blobs_.size(); ++i) {
-    LOG(ERROR) << "blob #" << i << ":";
-    for (int j = 0; j < this->blobs_[i]->shape().size(); ++j) {
-      LOG(ERROR) << "     " << this->blobs_[i]->shape(j);
-    }
-  }
+  // for (int i = 0; i < this->blobs_.size(); ++i) {
+  //   LOG(ERROR) << "blob #" << i << ":";
+  //   for (int j = 0; j < this->blobs_[i]->shape().size(); ++j) {
+  //     LOG(ERROR) << "     " << this->blobs_[i]->shape(j);
+  //   }
+  // }
 
   Blob<Dtype> E;
   E.Reshape(1, 1, 1, K_);

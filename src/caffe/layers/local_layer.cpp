@@ -84,14 +84,41 @@ template <typename Dtype>
 void LocalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 
-  LOG(ERROR) << "Reshape " << top.size() << " tops and " << bottom.size() << " bottoms";
-  LOG(ERROR) << "Before super, shape has " << top[0]->shape().size() << " dimensions";
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
-  LOG(ERROR) << "After super, shape has " << top[0]->shape().size() << " dimensions";
-  LOG(ERROR) << top[0]->shape(0);
-  LOG(ERROR) << top[0]->shape(1);
-  LOG(ERROR) << top[0]->shape(2);
-  LOG(ERROR) << top[0]->shape(3);
+  // LOG(ERROR) << "Reshape " << top.size() << " tops and " << bottom.size() << " bottoms";
+  // LOG(ERROR) << "Before super, shape has " << top[0]->shape().size() << " dimensions";
+  // BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  const int first_spatial_axis = this->channel_axis_ + 1;
+  CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + this->num_spatial_axes_)
+      << "bottom num_axes may not change.";
+  this->num_ = bottom[0]->count(0, this->channel_axis_);
+  CHECK_EQ(bottom[0]->shape(this->channel_axis_), this->channels_)
+      << "Input size incompatible with convolution kernel.";
+  // TODO: generalize to handle inputs of different shapes.
+  for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
+    CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
+        << "All inputs must have the same shape.";
+  }
+  // Shape the tops.
+  this->bottom_shape_ = &bottom[0]->shape();
+  compute_output_shape();
+  vector<int> top_shape(bottom[0]->shape().begin(),
+      bottom[0]->shape().begin() + this->channel_axis_);
+  top_shape.push_back(this->num_output_);
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
+    top_shape.push_back(this->output_shape_[i]);
+  }
+  for (int top_id = 0; top_id < top.size(); ++top_id) {
+    top[top_id]->Reshape(top_shape);
+  }
+  this->bottom_dim_ = bottom[0]->count(this->channel_axis_);
+  this->top_dim_ = top[0]->count(this->channel_axis_);
+  this->out_spatial_dim_ = top[0]->count(first_spatial_axis);
+  // BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  // LOG(ERROR) << "After super, shape has " << top[0]->shape().size() << " dimensions";
+  // LOG(ERROR) << top[0]->shape(0);
+  // LOG(ERROR) << top[0]->shape(1);
+  // LOG(ERROR) << top[0]->shape(2);
+  // LOG(ERROR) << top[0]->shape(3);
   CHECK_EQ(bottom[0]->channels(), this->channels_) << "Input size incompatible with"
     " weights.";
   // TODO: generalize to handle inputs of different shapes.
@@ -117,11 +144,11 @@ void LocalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // for (int top_id = 0; top_id < top.size(); ++top_id) {
   //   top[top_id]->Reshape(this->num_, this->num_output_, height_out_, width_out_);
   // }
-  LOG(ERROR) << "After self, shape has " << top[0]->shape().size() << " dimensions";
-  LOG(ERROR) << top[0]->shape(0);
-  LOG(ERROR) << top[0]->shape(1);
-  LOG(ERROR) << top[0]->shape(2);
-  LOG(ERROR) << top[0]->shape(3);
+  // LOG(ERROR) << "After self, shape has " << top[0]->shape().size() << " dimensions";
+  // LOG(ERROR) << top[0]->shape(0);
+  // LOG(ERROR) << top[0]->shape(1);
+  // LOG(ERROR) << top[0]->shape(2);
+  // LOG(ERROR) << top[0]->shape(3);
 }
 
 template <typename Dtype>

@@ -65,7 +65,7 @@ TYPED_TEST(LocalLayerTest, TestSetup) {
 }
 
 
-TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
+TYPED_TEST(LocalLayerTest, TestSimpleForward) {
   typedef typename TypeParam::Dtype Dtype;
   FillerParameter filler_param;
   filler_param.set_value(1.);
@@ -86,7 +86,7 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   // fill the weights of the layer
   Dtype* data = layer->blobs()[0]->mutable_cpu_data();
   CHECK_EQ(layer->blobs()[0]->channels(), 1);
-  LOG(ERROR) << "fill weights";
+  // LOG(ERROR) << "fill weights";
   for (int n = 0; n < layer->blobs()[0]->num(); n++) {
     for (int j = 0; j < layer->blobs()[0]->height(); j++) {
       for (int i = 0; i < layer->blobs()[0]->width(); i++) {
@@ -94,11 +94,11 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
       }
     }
   }
-  LOG(ERROR) << "filled weights";
+  // LOG(ERROR) << "filled weights";
 
   // preform forward pass, and test output
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  LOG(ERROR) << "forwarded";
+  // LOG(ERROR) << "forwarded";
   // After the convolution, the output should all have output values 27.1
   const Dtype* top_data = this->blob_top_->cpu_data();
   for (int n = 0; n < this->blob_top_->num(); n++) {
