@@ -11,31 +11,56 @@ import subprocess
 import sys
 
 # Add extra layers on top of a "base" network (e.g. VGGNet or Inception).
-def AddExtraLayers(net, use_batchnorm=True):
+def AddExtraLayers(net, use_batchnorm=True, lr_mult=1):
     use_relu = True
 
     # Add additional convolutional layers.
+    # 19 x 19
     from_layer = net.keys()[-1]
+
     # TODO(weiliu89): Construct the name using the last layer to avoid duplication.
+    # 10 x 10
     out_layer = "conv6_1"
-    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1)
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1,
+        lr_mult=lr_mult)
 
     from_layer = out_layer
     out_layer = "conv6_2"
-    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2)
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2,
+        lr_mult=lr_mult)
 
-    for i in xrange(7, 9):
-      from_layer = out_layer
-      out_layer = "conv{}_1".format(i)
-      ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1)
+    # 5 x 5
+    from_layer = out_layer
+    out_layer = "conv7_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
 
-      from_layer = out_layer
-      out_layer = "conv{}_2".format(i)
-      ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2)
+    from_layer = out_layer
+    out_layer = "conv7_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2,
+      lr_mult=lr_mult)
 
-    # Add global pooling layer.
-    name = net.keys()[-1]
-    net.pool6 = L.Pooling(net[name], pool=P.Pooling.AVE, global_pooling=True)
+    # 3 x 3
+    from_layer = out_layer
+    out_layer = "conv8_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
+
+    from_layer = out_layer
+    out_layer = "conv8_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 0, 1,
+      lr_mult=lr_mult)
+
+    # 1 x 1
+    from_layer = out_layer
+    out_layer = "conv9_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
+
+    from_layer = out_layer
+    out_layer = "conv9_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 0, 1,
+      lr_mult=lr_mult)
 
     return net
 
@@ -165,20 +190,12 @@ min_dim = 300
 # conv6_2 ==> 10 x 10
 # conv7_2 ==> 5 x 5
 # conv8_2 ==> 3 x 3
-# pool6 ==> 1 x 1
-mbox_source_layers = ['conv4_3', 'fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'pool6']
-# in percent %
-min_ratio = 20
-max_ratio = 95
-step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 2)))
-min_sizes = []
-max_sizes = []
-for ratio in xrange(min_ratio, max_ratio, step):
-  min_sizes.append(min_dim * ratio / 100.)
-  max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [min_dim * 10 / 100.] + min_sizes
-max_sizes = [[]] + max_sizes
-aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3]]
+# conv9_2 ==> 1 x 1
+mbox_source_layers = ['conv4_3', 'fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'conv9_2']
+min_sizes = [32, 64, 112, 160, 216, 272]
+max_sizes = [64, 112, 160, 216, 272, 320]
+steps = [8, 16, 32, 64, 100, 300]
+aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
 # L2 normalize conv4_3.
 normalizations = [20, -1, -1, -1, -1, -1]
 # variance used to encode/decode prior bboxes.
@@ -187,7 +204,7 @@ if code_type == P.PriorBox.CENTER_SIZE:
 else:
   prior_variance = [0.1]
 flip = True
-clip = True
+clip = False
 
 # Check file.
 check_if_exist(label_map_file)
@@ -206,13 +223,13 @@ net.data = L.VideoData(
 VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
     dropout=False)
 
-AddExtraLayers(net, use_batchnorm)
+AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, normalizations=normalizations,
+        aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
         num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1)
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult)
 
 conf_name = "mbox_conf"
 if conf_loss_type == P.MultiBoxLoss.SOFTMAX:
@@ -239,6 +256,7 @@ net.slience = L.Silence(net.detection_out, ntop=0,
 with open(test_net_file, 'w') as f:
     print('name: "{}_test"'.format(model_name), file=f)
     print(net.to_proto(), file=f)
+shutil.copy(test_net_file, job_dir)
 
 # Create job file.
 with open(job_file, 'w') as f:
