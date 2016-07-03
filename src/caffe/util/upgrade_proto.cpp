@@ -88,6 +88,24 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 }
 
+bool ReadNetParamsFromTextFile(const string& param_file,
+                                    NetParameter* param) {
+  if (ReadProtoFromTextFile(param_file, param)) {
+      UpgradeNetAsNeeded(param_file, param);
+      return true;
+  }
+  return false;
+}
+
+bool ReadNetParamsFromTextString(const string& param_file,
+                                    NetParameter* param) {
+  if (ReadProtoFromTextString(param_file, param)) {
+      UpgradeNetAsNeeded(param_file, param);
+      return true;
+  }
+  return false;
+}
+
 bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).has_layer()) {
