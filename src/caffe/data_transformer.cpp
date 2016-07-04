@@ -500,6 +500,15 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
 }
 
 template<typename Dtype>
+vector<int> DataTransformer<Dtype>::InferBlobShape(const SparseDatum& datum) {
+  // Build BlobShape.
+  vector<int> shape(2);
+  shape[0] = 1;
+  shape[1] = datum.size();
+  return shape;
+}
+
+template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(
     const vector<Datum> & datum_vector) {
   const int num = datum_vector.size();
