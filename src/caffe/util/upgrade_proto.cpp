@@ -88,6 +88,24 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 }
 
+bool ReadNetParamsFromTextFile(const string& param_file,
+                                    NetParameter* param) {
+  if (ReadProtoFromTextFile(param_file, param)) {
+      UpgradeNetAsNeeded(param_file, param);
+      return true;
+  }
+  return false;
+}
+
+bool ReadNetParamsFromTextString(const string& param_file,
+                                    NetParameter* param) {
+  if (ReadProtoFromTextString(param_file, param)) {
+      UpgradeNetAsNeeded(param_file, param);
+      return true;
+  }
+  return false;
+}
+
 bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).has_layer()) {
@@ -1063,6 +1081,16 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
+}
+
+// Read parameters from a string into a SolverParameter proto message.
+bool ReadSolverParamsFromTextString(const string& param_file,
+                                    SolverParameter* param) {
+  if (ReadProtoFromTextString(param_file, param)) {
+    UpgradeSolverAsNeeded(param_file, param);
+    return true;
+  }
+  return false;
 }
 
 }  // namespace caffe

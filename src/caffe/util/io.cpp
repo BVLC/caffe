@@ -41,6 +41,11 @@ bool ReadProtoFromTextFile(const char* filename, Message* proto) {
   return success;
 }
 
+bool ReadProtoFromTextString(const string& input, Message* proto) {
+  bool success = google::protobuf::TextFormat::ParseFromString(input, proto);
+  return success;
+}
+
 void WriteProtoToTextFile(const Message& proto, const char* filename) {
   int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   FileOutputStream* output = new FileOutputStream(fd);

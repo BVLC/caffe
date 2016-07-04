@@ -28,10 +28,20 @@ Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
 }
 
 template <typename Dtype>
-Net<Dtype>::Net(const string& param_file, Phase phase, const Net* root_net)
+Net<Dtype>::Net(const string& param_str_or_file, Phase phase,
+                const Net* root_net)
     : root_net_(root_net) {
   NetParameter param;
-  ReadNetParamsFromTextFileOrDie(param_file, &param);
+
+  // Net params are provided either as string or as a file
+  // Check if they are provided as a string first
+  if (ReadNetParamsFromTextString(param_str_or_file, &param)) {
+    // do nothing
+  } else if (ReadNetParamsFromTextString(param_str_or_file, &param)) {
+    // do nothing
+  } else {
+    CHECK(false) << "param_str_or_file was neither string nor file.";
+  }
   param.mutable_state()->set_phase(phase);
   Init(param);
 }
