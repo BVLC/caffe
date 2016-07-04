@@ -9,6 +9,8 @@
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
 
+#include <iostream>
+
 namespace caffe {
 
 template <typename Dtype>
@@ -61,7 +63,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
-
+  
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
@@ -94,7 +96,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       top_label[item_id] = datum.label();
     }
     trans_time += timer.MicroSeconds();
-
+    
     reader_.free().push(const_cast<Datum*>(&datum));
   }
   timer.Stop();

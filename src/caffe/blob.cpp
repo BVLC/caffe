@@ -6,6 +6,8 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include <iostream>
+
 namespace caffe {
 
 template <typename Dtype>
@@ -99,6 +101,12 @@ const Dtype* Blob<Dtype>::gpu_data() const {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::set_gpu_data(Dtype* data) {
+  CHECK(data);
+  this->data_->set_gpu_data(data);
+}
+
+template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->cpu_data();
@@ -112,6 +120,7 @@ const Dtype* Blob<Dtype>::gpu_diff() const {
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
+  //  std::cerr << "data_=" << data_ << std::endl;
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
@@ -533,6 +542,18 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
       proto->add_diff(diff_vec[i]);
     }
   }
+}
+
+template<>
+void Blob<int>::ToProto(BlobProto* proto, bool write_diff) const
+{  
+  //TODO?
+}
+
+template<>
+void Blob<unsigned int>::ToProto(BlobProto* proto, bool write_diff) const
+{  
+  //TODO?
 }
 
 INSTANTIATE_CLASS(Blob);
