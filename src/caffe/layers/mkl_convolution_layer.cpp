@@ -1,15 +1,28 @@
 #ifdef MKL2017_SUPPORTED
+#include <algorithm>
+#include <cstdlib>
 #include <vector>
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
+#include "mkl_service.h"
 
 // Uncomment to see where the layout conversions are done
 // #undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
+
+static int getMKLBuildDate() {
+  static int build = 0;
+  if (build == 0) {
+    MKLVersion v;
+    mkl_get_version(&v);
+    build = atoi(v.Build);
+  }
+  return build;
+}
 
 namespace caffe {
 template <typename Dtype>
@@ -78,7 +91,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   size_t kw, kh; /* filter */
   size_t dimension = 4;
 
-  g  = this->group_;
+  g  = std::max(this->group_, 1);
   n  = this->num_;
   iw = this->width_;
   ih = this->height_;
@@ -94,8 +107,17 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   size_t bdata_sizes[4] = {iw, ih, ic, n};
   size_t bdata_strides[4] = {1, iw, iw*ih, iw*ih*ic};
 
-  size_t fdata_sizes[4] = {kw, kh, ic/g, oc};
-  size_t fdata_strides[4]  = {1, kw, kw*kh, kw*kh*ic/g};
+  /* starting with MKL 2017 Gold in case of groups filter layout
+   * becomes 5D, i.e. groups become a separate dimension */
+  size_t g_mkl2017 = g;
+  size_t f_dimension = dimension + (g != 1);
+  if (getMKLBuildDate() < 20160701) {
+      g_mkl2017 = 1;
+      f_dimension = dimension;
+  }
+
+  size_t fdata_sizes[5] = {kw, kh, ic/g, oc/g_mkl2017, g_mkl2017};
+  size_t fdata_strides[5]  = {1, kw, kw*kh, kw*kh*ic/g, kw*kh*ic/g*oc/g};
 
   size_t bias_sizes[1] = {oc};
   size_t bias_strides[1] = {1};
@@ -160,7 +182,8 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           "Failed creation of l_fwd_top_data_usr layout with status "
           << status << "\n";
   status = dnnLayoutCreate<Dtype>(
-          &fwd_filter_data->layout_usr, dimension, fdata_sizes, fdata_strides);
+          &fwd_filter_data->layout_usr, f_dimension, fdata_sizes,
+          fdata_strides);
   CHECK_EQ(status, 0)
           << "Failed creation of l_fwd_filter_data_usr layout with status "
           << status << "\n";
@@ -224,7 +247,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   CHECK_EQ(status, 0)
           << "Failed creation of bwdd_top_diff->layout_usr with status "
           << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, dimension,
+  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, f_dimension,
           fdata_sizes, fdata_strides);
   CHECK_EQ(status, 0)
           << "Failed creation of bwdd_filter_data->layout_usr with status "
@@ -276,7 +299,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   CHECK_EQ(status, 0)
           << "Failed creation of bwdf_top_diff->layout_usr with status "
           << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, dimension,
+  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, f_dimension,
           fdata_sizes, fdata_strides);
   CHECK_EQ(status, 0)
           << "Failed creation of bwdf_filter_diff->layout_usr with status "
