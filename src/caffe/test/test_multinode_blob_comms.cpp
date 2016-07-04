@@ -1,7 +1,9 @@
 #include <boost/assign.hpp>
 #include <boost/make_shared.hpp>
-#include <gmock/gmock.h>
 #include <caffe/test/test_caffe_main.hpp>
+#include <gmock/gmock.h>
+#include <string>
+#include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/internode/communication.hpp"
 #include "caffe/internode/configuration.hpp"
@@ -162,7 +164,7 @@ MATCHER_P4(BlobUpdateInfoEqRef, layer_id, blob_id, part, version, "") {
 
 template <typename TypeParam>
 class BlobCommsTest : public MultiDeviceTest<TypeParam> {
-public:
+ public:
   shared_ptr<BlobCodecMock<float> > codec_mock;
   shared_ptr<WaypointMock> waypoint_mock;
   shared_ptr<IterSizeHandlerMock<float> > iter_size_handler_mock1;
@@ -217,7 +219,6 @@ public:
 
     blob_accessor_mock.reset(new NiceMock<BlobAccessorMock<float> >());
     sync_info_mock.reset(new StrictMock<BlobSyncInfoMock>());
-
   }
 
   BlobCommsTest()
