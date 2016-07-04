@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "caffe/common.hpp"
 #include "caffe/data_reader.hpp"
@@ -12,10 +13,21 @@ namespace caffe {
 
 using boost::weak_ptr;
 
-map<const string, weak_ptr<DataReader::Body> > DataReader::bodies_;
+template<>
+map<const string, weak_ptr<DataReader<Datum>::Body> > DataReader<Datum>::bodies_ = {};
+template<>
+map<const string, weak_ptr<DataReader<SparseDatum>::Body> > DataReader<SparseDatum>::bodies_ = {};
 static boost::mutex bodies_mutex_;
-
-DataReader::DataReader(const LayerParameter& param)
+/*template<>
+boost::mutex DataReader<Datum>::bodies_mutex_;
+template<>
+boost::mutex DataReader<SparseDatum>::bodies_mutex_;*/
+template<>
+std::hash<std::thread::id> DataReader<Datum>::idhasher_ = std::hash<std::thread::id>();
+template<>
+std::hash<std::thread::id> DataReader<SparseDatum>::idhasher_ = std::hash<std::thread::id>();
+template<class TDatum>
+DataReader<TDatum>::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
         param.data_param().prefetch() * param.data_param().batch_size())) {
   // Get or create a body
@@ -30,7 +42,8 @@ DataReader::DataReader(const LayerParameter& param)
   body_->new_queue_pairs_.push(queue_pair_);
 }
 
-DataReader::~DataReader() {
+template<class TDatum>
+DataReader<TDatum>::~DataReader() {
   string key = source_key(body_->param_);
   body_.reset();
   boost::mutex::scoped_lock lock(bodies_mutex_);
@@ -40,16 +53,18 @@ DataReader::~DataReader() {
 }
 
 //
-
-DataReader::QueuePair::QueuePair(int size) {
+template<class TDatum>
+DataReader<TDatum>::QueuePair::QueuePair(int size) {
   // Initialize the free queue with requested number of datums
+  //std::cerr << "\ninitializing queue pair=" << size << std::endl;
   for (int i = 0; i < size; ++i) {
-    free_.push(new Datum());
+    free_.push(new TDatum());
   }
 }
 
-DataReader::QueuePair::~QueuePair() {
-  Datum* datum;
+template<class TDatum>
+DataReader<TDatum>::QueuePair::~QueuePair() {
+  TDatum* datum;
   while (free_.try_pop(&datum)) {
     delete datum;
   }
@@ -59,30 +74,36 @@ DataReader::QueuePair::~QueuePair() {
 }
 
 //
-
-DataReader::Body::Body(const LayerParameter& param)
+template<class TDatum>
+DataReader<TDatum>::Body::Body(const LayerParameter& param)
     : param_(param),
       new_queue_pairs_() {
   StartInternalThread();
 }
 
-DataReader::Body::~Body() {
+template<class TDatum>
+DataReader<TDatum>::Body::~Body() {
   StopInternalThread();
 }
 
-void DataReader::Body::InternalThreadEntry() {
+template<class TDatum>
+void DataReader<TDatum>::Body::InternalThreadEntry() {
   shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
+  //std::cerr << "\nopening db\n";
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
+    //std::cerr << "\nsolver_count=" << solver_count << std::endl;
+
     // To ensure deterministic runs, only start running once all solvers
     // are ready. But solvers need to peek on one item during initialization,
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
+      //std::cerr << "\nreading one\n";
       read_one(cursor.get(), qp.get());
       qps.push_back(qp);
     }
@@ -102,10 +123,15 @@ void DataReader::Body::InternalThreadEntry() {
   }
 }
 
-void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
-  Datum* datum = qp->free_.pop();
+template<class TDatum>
+void DataReader<TDatum>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
+  //std::cerr << "\nin readone\n";
+  //std::cerr << "queue size=" << qp->free_.size() << std::endl;
+  TDatum* datum = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
   datum->ParseFromString(cursor->value());
+  //std::cerr << "read_one datum label=" << datum->label() << std::endl;
+//std::cerr << "\nread datum\n";
   qp->full_.push(datum);
 
   // go to the next iter
@@ -115,5 +141,8 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
     cursor->SeekToFirst();
   }
 }
+
+template class DataReader<Datum>;
+template class DataReader<SparseDatum>;
 
 }  // namespace caffe
