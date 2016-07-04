@@ -7,7 +7,7 @@ Improvements and new features include:
 - Switch from `LOG(FATAL)` error to `CaffeErrorException` thrown on every recoverable errors. This allows the safe use of Caffe as a C++ library from external applications, and in production
 - Various fixes, including ability to run the exact same job in parallel
 - Makefile fixes with default build supporting all NVIDIA architectures
-- Sparse inputs and CPU/GPU computations (at the moment in branch [master_dd_integ_sparse](https://github.com/beniz/caffe/tree/master_dd_integ_sparse)
+- Sparse inputs and CPU/GPU computations
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors.
 
