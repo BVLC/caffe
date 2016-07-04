@@ -5,9 +5,11 @@
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
 
-# Check if TOOLS is unset
-if [ -z "$TOOLS" ]; then
-TOOLS=./build/tools
+# Check if CAFFE_BIN is unset
+if [ -z "$CAFFE_BIN" ]; then
+  TOOLS=./build/tools
+else
+  TOOLS=$CAFFE_BIN
 fi
 
 

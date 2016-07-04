@@ -3,7 +3,7 @@
 
 DATA=./data/mnist
 
-# Check if CAFFE_BIN is set
+# Check if CAFFE_BIN is unset
 if [ -z "$CAFFE_BIN" ]; then
   EXAMPLES=./build/examples/siamese
 else
