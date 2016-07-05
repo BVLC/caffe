@@ -136,12 +136,13 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   LRNParameter_Engine engine = param.lrn_param().engine();
 
   if (engine == LRNParameter_Engine_DEFAULT) {
+    engine = LRNParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = LRNParameter_Engine_CUDNN;
 #elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
-    engine = LRNParameter_Engine_MKL2017;
-#else
-    engine = LRNParameter_Engine_CAFFE;
+    if (param.lrn_param().norm_region()
+            == LRNParameter_NormRegion_ACROSS_CHANNELS)
+      engine = LRNParameter_Engine_MKL2017;
 #endif
   }
 
@@ -261,7 +262,8 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   if (engine == ConcatParameter_Engine_DEFAULT) {
     engine = ConcatParameter_Engine_CAFFE;
 #if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
-    engine = ConcatParameter_Engine_MKL2017;
+    if (param.concat_param().axis() == 1)
+      engine = ConcatParameter_Engine_MKL2017;
 #endif
   }
   if (engine == ConcatParameter_Engine_CAFFE) {

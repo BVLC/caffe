@@ -15,8 +15,7 @@ namespace caffe {
 template <typename Dtype>
 class MultiSolver {
  public:
-  explicit MultiSolver(shared_ptr<Solver<Dtype> > root_solver,
-                       bool expand_iter_size);
+  explicit MultiSolver(shared_ptr<Solver<Dtype> > root_solver);
 
   // Invoked at specific points during an iteration
   class Callback : public Solver<Dtype>::Callback {
@@ -36,10 +35,6 @@ class MultiSolver {
     root_solver_->add_callback(value);
     callbacks_.push_back(value);
   }
-
-  int num_of_solvers();
-  void pop_if_able();
-  void add_another();
 
   virtual Dtype ForwardBackward();
 
@@ -62,9 +57,7 @@ class MultiSolver {
  protected:
   shared_ptr<Solver<Dtype> > root_solver_;
   int iter_size;
-  vector<shared_ptr<Solver<Dtype> > > worker_solvers;
   vector<Callback*> callbacks_;
-  boost::recursive_mutex mtx;
 };
 
 }  // namespace caffe

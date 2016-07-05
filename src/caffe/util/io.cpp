@@ -66,51 +66,6 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   return success;
 }
 
-bool ReceiveProtoFromRemote(const string& address, Message* proto) {
-  try {
-    using internode::Daemon;
-    using internode::Waypoint;
-    using internode::RemoteId;
-    shared_ptr<Daemon> comm = internode::create_communication_daemon();
-    shared_ptr<Waypoint> remote_client =
-      internode::configure_client(comm, address, UINT_MAX);
-    string msg_name = proto->GetTypeName();
-    ModelReq request;
-    request.set_name(msg_name);
-
-    SendCallback callback;
-    request.SerializeToString(callback.buffer.get());
-    remote_client->async_send(
-      callback.buffer->c_str(), callback.buffer->size(), callback);
-
-    struct Handler : Waypoint::Handler {
-      Message* proto;
-      bool* handled;
-      Handler(Message* dest, bool* handled)
-        : proto(dest), handled(handled) {}
-
-      void received(char* data, size_t size, Waypoint*) {
-        *handled = true;
-        if (!proto->ParseFromArray(data, size)) {
-          throw std::runtime_error("parse failed");
-        }
-      }
-    };
-
-    bool received = false;
-    Handler handler(proto, &received);
-    remote_client->register_receive_handler(&handler);
-
-    while (!received) {
-      poll_one(comm);
-    }
-
-    return true;
-  } catch(...) {
-    return false;
-  }
-}
-
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   fstream output(filename, ios::out | ios::trunc | ios::binary);
   CHECK(proto.SerializeToOstream(&output));

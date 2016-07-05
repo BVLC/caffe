@@ -108,7 +108,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, data_ptr, mean, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -131,7 +131,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, data_ptr, mean, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -168,7 +168,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, data_ptr, mean_ptr, datum_ptr, \
                      my_data_transformer, datum_channels, datum_width, \
-                     datum_height)
+                     datum_height, scale)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -192,7 +192,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
          firstprivate(transformed_data, h_off, w_off, height, \
                       width, data_ptr, mean_ptr, datum_ptr, \
                       my_data_transformer, datum_channels, datum_width, \
-                      datum_height)
+                      datum_height, scale)
 #endif
          {
          for (int c = 0; c < datum_channels; ++c) {
@@ -219,7 +219,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           firstprivate(transformed_data, h_off, w_off, \
                        height, width, data_ptr, datum_ptr, \
                        my_data_transformer, datum_channels, datum_width, \
-                       datum_height)
+                       datum_height, scale)
 #endif
           {
           for (int c = 0; c < datum_channels; ++c) {
@@ -241,7 +241,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
                      height, width, data_ptr, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -267,7 +267,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
 {
         for (int c = 0; c < datum_channels; ++c) {
@@ -289,7 +289,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -325,7 +325,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, height, \
                      width, datum_ptr, mean_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
@@ -348,7 +348,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
          firstprivate(transformed_data, h_off, \
                       w_off, height, width, datum_ptr, mean_ptr, \
                       my_data_transformer, datum_channels, datum_width, \
-                      datum_height)
+                      datum_height, scale)
 #endif
         {
          for (int c = 0; c < datum_channels; ++c) {
@@ -373,7 +373,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
                      height, width, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
       {
         for (int c = 0; c < datum_channels; ++c) {
@@ -394,7 +394,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         #pragma omp task default(none) \
         firstprivate(transformed_data, h_off, w_off, \
                      height, width, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height)
+                     datum_channels, datum_width, datum_height, scale)
 #endif
         {
         for (int c = 0; c < datum_channels; ++c) {
