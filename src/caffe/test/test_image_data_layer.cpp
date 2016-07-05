@@ -14,8 +14,6 @@
 #include "caffe/util/io.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-#include "caffe/serialization/BlobCodec.hpp"
-
 
 namespace caffe {
 
