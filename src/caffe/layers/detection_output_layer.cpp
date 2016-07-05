@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
 #include <map>
-#include <sstream>  // NOLINT(readability/streams)
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
 
@@ -173,32 +173,18 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   vector<vector<float> > prior_variances;
   GetPriorBBoxes(prior_data, num_priors_, &prior_bboxes, &prior_variances);
 
+  // Decode all loc predictions to bboxes.
+  vector<LabelBBox> all_decode_bboxes;
+  DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
+                  share_location_, num_loc_classes_, background_label_id_,
+                  code_type_, variance_encoded_in_target_, &all_decode_bboxes);
+
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
-  vector<LabelBBox> all_decode_bboxes;
   for (int i = 0; i < num; ++i) {
-    // Decode predictions into bboxes.
-    LabelBBox decode_bboxes;
-    for (int c = 0; c < num_loc_classes_; ++c) {
-      int label = share_location_ ? -1 : c;
-      if (label == background_label_id_) {
-        // Ignore background class.
-        continue;
-      }
-      if (all_loc_preds[i].find(label) == all_loc_preds[i].end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
-      }
-      DecodeBBoxes(prior_bboxes, prior_variances,
-                   code_type_, variance_encoded_in_target_,
-                   all_loc_preds[i][label], &(decode_bboxes[label]));
-    }
-    all_decode_bboxes.push_back(decode_bboxes);
-
-    // For each class, perform nms
-    map<int, vector<float> >& conf_scores = all_conf_scores[i];
+    const LabelBBox& decode_bboxes = all_decode_bboxes[i];
+    const map<int, vector<float> >& conf_scores = all_conf_scores[i];
     map<int, vector<int> > indices;
-    map<int, map<int, map<int, float> > > overlaps;
     int num_det = 0;
     for (int c = 0; c < num_classes_; ++c) {
       if (c == background_label_id_) {
@@ -209,14 +195,16 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         // Something bad happened if there are no predictions for current label.
         LOG(FATAL) << "Could not find confidence predictions for label " << c;
       }
+      const vector<float>& scores = conf_scores.find(c)->second;
       int label = share_location_ ? -1 : c;
       if (decode_bboxes.find(label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
         LOG(FATAL) << "Could not find location predictions for label " << label;
         continue;
       }
-      ApplyNMS(decode_bboxes[label], conf_scores[c], nms_threshold_,
-               top_k_, share_location_, &(overlaps[label]), &(indices[c]));
+      const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
+      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_,
+          top_k_, &(indices[c]));
       num_det += indices[c].size();
     }
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
@@ -230,11 +218,12 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           LOG(FATAL) << "Could not find location predictions for " << label;
           continue;
         }
+        const vector<float>& scores = conf_scores.find(label)->second;
         for (int j = 0; j < label_indices.size(); ++j) {
           int idx = label_indices[j];
-          CHECK_LT(idx, conf_scores[label].size());
+          CHECK_LT(idx, scores.size());
           score_index_pairs.push_back(std::make_pair(
-                  conf_scores[label][idx], std::make_pair(label, idx)));
+                  scores[idx], std::make_pair(label, idx)));
         }
       }
       // Keep top k results per image.
@@ -256,6 +245,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     }
   }
 
+  if (num_kept == 0) {
+    LOG(INFO) << "Couldn't find any detections";
+    return;
+  }
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
@@ -265,7 +258,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
-    map<int, vector<float> >& conf_scores = all_conf_scores[i];
+    const map<int, vector<float> >& conf_scores = all_conf_scores[i];
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
     for (map<int, vector<int> >::iterator it = all_indices[i].begin();
          it != all_indices[i].end(); ++it) {
@@ -275,6 +268,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         LOG(FATAL) << "Could not find confidence predictions for " << label;
         continue;
       }
+      const vector<float>& scores = conf_scores.find(label)->second;
       int loc_label = share_location_ ? -1 : label;
       if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
@@ -284,24 +278,16 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       const vector<NormalizedBBox>& bboxes =
           decode_bboxes.find(loc_label)->second;
       vector<int>& indices = it->second;
-      std::ofstream outfile;
       if (need_save_) {
         CHECK(label_to_name_.find(label) != label_to_name_.end())
-            << "Cannot find label: " << label << " in the label map.";
-        if (output_format_ == "VOC") {
-          boost::filesystem::path file(
-              output_name_prefix_ + label_to_name_[label] + ".txt");
-          boost::filesystem::path out_file = output_directory / file;
-          outfile.open(out_file.string().c_str(),
-                       std::ofstream::out | std::ofstream::app);
-        }
+          << "Cannot find label: " << label << " in the label map.";
         CHECK_LT(name_count_, names_.size());
       }
       for (int j = 0; j < indices.size(); ++j) {
         int idx = indices[j];
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
-        top_data[count * 7 + 2] = conf_scores[label][idx];
+        top_data[count * 7 + 2] = scores[idx];
         NormalizedBBox clip_bbox;
         ClipBBox(bboxes[idx], &clip_bbox);
         top_data[count * 7 + 3] = clip_bbox.xmin();
@@ -312,50 +298,84 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           NormalizedBBox scale_bbox;
           ScaleBBox(clip_bbox, sizes_[name_count_].first,
                     sizes_[name_count_].second, &scale_bbox);
-          if (output_format_ == "VOC") {
-            outfile << names_[name_count_];
-            outfile << " " << conf_scores[label][idx];
-            outfile << " " << static_cast<int>(scale_bbox.xmin());
-            outfile << " " << static_cast<int>(scale_bbox.ymin());
-            outfile << " " << static_cast<int>(scale_bbox.xmax());
-            outfile << " " << static_cast<int>(scale_bbox.ymax());
-            outfile << std::endl;
-            outfile.flush();
-          } else if (output_format_ == "COCO") {
-            boost::property_tree::ptree xmin, ymin, width, height;
-            xmin.put<float>("", round(scale_bbox.xmin() * 100) / 100.);
-            ymin.put<float>("", round(scale_bbox.ymin() * 100) / 100.);
-            width.put<float>("",
-                round((scale_bbox.xmax() - scale_bbox.xmin()) * 100) / 100.);
-            height.put<float>("",
-                round((scale_bbox.ymax() - scale_bbox.ymin()) * 100) / 100.);
+          float score = top_data[count * 7 + 2];
+          float xmin = scale_bbox.xmin();
+          float ymin = scale_bbox.ymin();
+          float xmax = scale_bbox.xmax();
+          float ymax = scale_bbox.ymax();
+          ptree pt_xmin, pt_ymin, pt_width, pt_height;
+          pt_xmin.put<float>("", round(xmin * 100) / 100.);
+          pt_ymin.put<float>("", round(ymin * 100) / 100.);
+          pt_width.put<float>("", round((xmax - xmin) * 100) / 100.);
+          pt_height.put<float>("", round((ymax - ymin) * 100) / 100.);
 
-            boost::property_tree::ptree cur_bbox;
-            cur_bbox.push_back(std::make_pair("", xmin));
-            cur_bbox.push_back(std::make_pair("", ymin));
-            cur_bbox.push_back(std::make_pair("", width));
-            cur_bbox.push_back(std::make_pair("", height));
+          ptree cur_bbox;
+          cur_bbox.push_back(std::make_pair("", pt_xmin));
+          cur_bbox.push_back(std::make_pair("", pt_ymin));
+          cur_bbox.push_back(std::make_pair("", pt_width));
+          cur_bbox.push_back(std::make_pair("", pt_height));
 
-            boost::property_tree::ptree cur_det;
-            cur_det.put<int>("image_id", atoi(names_[name_count_].c_str()));
-            cur_det.put<int>("category_id",
-                atoi(label_to_name_[label].c_str()));
-            cur_det.add_child("bbox", cur_bbox);
-            cur_det.put<float>("score", conf_scores[label][idx]);
-
-            detections_.push_back(std::make_pair("", cur_det));
+          ptree cur_det;
+          cur_det.put("image_id", names_[name_count_]);
+          if (output_format_ == "ILSVRC") {
+            cur_det.put<int>("category_id", label);
+          } else {
+            cur_det.put("category_id", label_to_name_[label].c_str());
           }
+          cur_det.add_child("bbox", cur_bbox);
+          cur_det.put<float>("score", score);
+
+          detections_.push_back(std::make_pair("", cur_det));
         }
         ++count;
-      }
-      if (need_save_) {
-        outfile.close();
       }
     }
     if (need_save_) {
       ++name_count_;
       if (name_count_ % num_test_image_ == 0) {
-        if (output_format_ == "COCO") {
+        if (output_format_ == "VOC") {
+          map<string, std::ofstream*> outfiles;
+          for (int c = 0; c < num_classes_; ++c) {
+            if (c == background_label_id_) {
+              continue;
+            }
+            string label_name = label_to_name_[c];
+            boost::filesystem::path file(
+                output_name_prefix_ + label_name + ".txt");
+            boost::filesystem::path out_file = output_directory / file;
+            outfiles[label_name] = new std::ofstream(out_file.string().c_str(),
+                std::ofstream::out);
+          }
+          BOOST_FOREACH(ptree::value_type &det, detections_.get_child("")) {
+            ptree pt = det.second;
+            string label_name = pt.get<string>("category_id");
+            if (outfiles.find(label_name) == outfiles.end()) {
+              std::cout << "Cannot find " << label_name << std::endl;
+              continue;
+            }
+            string image_name = pt.get<string>("image_id");
+            float score = pt.get<float>("score");
+            vector<int> bbox;
+            BOOST_FOREACH(ptree::value_type &elem, pt.get_child("bbox")) {
+              bbox.push_back(static_cast<int>(elem.second.get_value<float>()));
+            }
+            *(outfiles[label_name]) << image_name;
+            *(outfiles[label_name]) << " " << score;
+            *(outfiles[label_name]) << " " << bbox[0] << " " << bbox[1];
+            *(outfiles[label_name]) << " " << bbox[0] + bbox[2];
+            *(outfiles[label_name]) << " " << bbox[1] + bbox[3];
+            *(outfiles[label_name]) << std::endl;
+          }
+          for (int c = 0; c < num_classes_; ++c) {
+            if (c == background_label_id_) {
+              continue;
+            }
+            string label_name = label_to_name_[c];
+            outfiles[label_name]->flush();
+            outfiles[label_name]->close();
+            delete outfiles[label_name];
+          }
+        } else if (output_format_ == "COCO") {
           boost::filesystem::path output_directory(output_directory_);
           boost::filesystem::path file(output_name_prefix_ + ".json");
           boost::filesystem::path out_file = output_directory / file;
@@ -363,17 +383,36 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           outfile.open(out_file.string().c_str(), std::ofstream::out);
 
           boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
-          boost::property_tree::ptree output;
+          ptree output;
           output.add_child("detections", detections_);
           std::stringstream ss;
           write_json(ss, output);
           std::string rv = boost::regex_replace(ss.str(), exp, "$1");
           outfile << rv.substr(rv.find("["), rv.rfind("]") - rv.find("["))
               << std::endl << "]" << std::endl;
+        } else if (output_format_ == "ILSVRC") {
+          boost::filesystem::path output_directory(output_directory_);
+          boost::filesystem::path file(output_name_prefix_ + ".txt");
+          boost::filesystem::path out_file = output_directory / file;
+          std::ofstream outfile;
+          outfile.open(out_file.string().c_str(), std::ofstream::out);
+
+          BOOST_FOREACH(ptree::value_type &det, detections_.get_child("")) {
+            ptree pt = det.second;
+            int label = pt.get<int>("category_id");
+            string image_name = pt.get<string>("image_id");
+            float score = pt.get<float>("score");
+            vector<int> bbox;
+            BOOST_FOREACH(ptree::value_type &elem, pt.get_child("bbox")) {
+              bbox.push_back(static_cast<int>(elem.second.get_value<float>()));
+            }
+            outfile << image_name << " " << label << " " << score;
+            outfile << " " << bbox[0] << " " << bbox[1];
+            outfile << " " << bbox[0] + bbox[2];
+            outfile << " " << bbox[1] + bbox[3];
+            outfile << std::endl;
+          }
         }
-      }
-      if (name_count_ == names_.size()) {
-        // reset count after a full iterations through the DB.
         name_count_ = 0;
       }
     }
