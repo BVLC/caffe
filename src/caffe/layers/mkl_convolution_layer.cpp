@@ -381,18 +381,29 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   compute_output_shape();
   int status;
   size_t n, g;
-  size_t ic, oc;
+  size_t ic, oc, kw, kh;
   size_t dimension = 4;
 
   g  = this->group_;
   n  = this->num_;
   ic = this->channels_;
+  kw = this->kernel_w_;
+  kh = this->kernel_h_;
 
   oc = this->num_output_;
 
   size_t bdata_sizes[4] = {this->width_, this->height_, ic, n};
 
-  size_t fdata_sizes[4] = {this->kernel_w_, this->kernel_h_, ic/g, oc};
+  /* starting with MKL 2017 Gold in case of groups filter layout
+   * becomes 5D, i.e. groups become a separate dimension */
+  size_t g_mkl2017 = g;
+  size_t f_dimension = dimension + (g != 1);
+  if (getMKLBuildDate() < 20160701) {
+      g_mkl2017 = 1;
+      f_dimension = dimension;
+  }
+
+  size_t fdata_sizes[5] = {kw, kh, ic/g, oc/g_mkl2017, g_mkl2017};
 
   size_t tdata_sizes[4] = {this->width_out_, this->height_out_, oc, n};
 
