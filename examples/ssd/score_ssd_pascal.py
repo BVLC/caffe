@@ -327,7 +327,9 @@ freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
 # Evaluate on whole test set.
 num_test_image = 4952
 test_batch_size = 8
-test_iter = num_test_image / test_batch_size
+# Ideally test_batch_size should be divisible by num_test_image,
+# otherwise mAP will be slightly off the true value.
+test_iter = int(math.ceil(float(num_test_image) / test_batch_size))
 
 solver_param = {
     # Train parameters
