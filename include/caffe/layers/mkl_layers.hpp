@@ -162,8 +162,11 @@ class MKLLRNLayer : public Layer<Dtype> {
       : Layer<Dtype>(param),
         lrnFwd(static_cast<dnnPrimitive_t>(NULL)),
         lrnBwd(static_cast<dnnPrimitive_t>(NULL)),
-        lrn_buffer_(static_cast<Dtype*>(NULL)),
-        layout_usr_(static_cast<dnnLayout_t>(NULL)) {}
+        fwd_top_data    (new MKLData<Dtype>()),
+        fwd_bottom_data (new MKLData<Dtype>()),
+        bwd_top_diff    (new MKLDiff<Dtype>()),
+        bwd_bottom_diff (new MKLDiff<Dtype>()),
+        lrn_buffer_(static_cast<Dtype*>(NULL)) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -208,10 +211,9 @@ class MKLLRNLayer : public Layer<Dtype> {
   // scale_ stores the intermediate summing results
  private:
   dnnPrimitive_t lrnFwd, lrnBwd;
-  shared_ptr<MKLData<Dtype> > fwd_top_data;
-  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
+  shared_ptr<MKLData<Dtype> > fwd_top_data, fwd_bottom_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
   Dtype *lrn_buffer_;
-  dnnLayout_t layout_usr_;
 };
 
 
