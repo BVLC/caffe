@@ -334,7 +334,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_pred,
     const int num, const bool share_location,
     const int num_loc_classes, const int background_label_id,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const bool clip, vector<LabelBBox>* all_decode_bboxes);
+    vector<LabelBBox>* all_decode_bboxes);
 
 // Match prediction bboxes with ground truth bboxes.
 void MatchBBox(const vector<NormalizedBBox>& gt,
@@ -463,7 +463,22 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_scores);
 
-// Compute the confidence loss for each prior from conf_data.
+// Get confidence predictions from conf_data.
+//    conf_data: num x num_preds_per_class * num_classes blob.
+//    num: the number of images.
+//    num_preds_per_class: number of predictions per class.
+//    num_classes: number of classes.
+//    class_major: if true, data layout is
+//      num x num_classes x num_preds_per_class; otherwise, data layerout is
+//      num x num_preds_per_class * num_classes.
+//    conf_preds: stores the confidence prediction, where each item contains
+//      confidence prediction for an image.
+template <typename Dtype>
+void GetConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const bool class_major, vector<map<int, vector<float> > >* conf_scores);
+
+// Get max confidence scores for each prior from conf_data.
 //    conf_data: num x num_preds_per_class * num_classes blob.
 //    num: the number of images.
 //    num_preds_per_class: number of predictions per class.
@@ -543,6 +558,14 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
 void GetTopKScoreIndex(const vector<float>& scores, const int top_k,
                          vector<pair<float, int> >* score_index_vec);
 
+// Get max scores with corresponding indices.
+//    scores: a set of scores.
+//    threshold: only consider scores higher than the threshold.
+//    top_k: if -1, keep all; otherwise, keep at most top_k.
+//    score_index_vec: store the sorted (score, index) pair.
+void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
+      const int top_k, vector<pair<float, int> >* score_index_vec);
+
 // Do non maximum suppression given bboxes and scores.
 //    bboxes: a set of bounding boxes.
 //    scores: a set of corresponding confidences.
@@ -561,6 +584,19 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, vector<int>* indices);
 
 void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices);
+
+// Do non maximum suppression given bboxes and scores.
+// Inspired by Piotr Dollar's NMS implementation in EdgeBox.
+// https://goo.gl/jV3JYS
+//    bboxes: a set of bounding boxes.
+//    scores: a set of corresponding confidences.
+//    score_threshold: a threshold used to filter detection results.
+//    nms_threshold: a threshold used in non maximum suppression.
+//    top_k: if not -1, keep at most top_k picked indices.
+//    indices: the kept indices of bboxes after nms.
+void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
+      const vector<float>& scores, const float score_threshold,
+      const float nms_threshold, const int top_k, vector<int>* indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);

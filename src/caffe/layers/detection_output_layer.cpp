@@ -179,11 +179,9 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 
   // Decode all loc predictions to bboxes.
   vector<LabelBBox> all_decode_bboxes;
-  const bool clip_bbox = false;
   DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
                   share_location_, num_loc_classes_, background_label_id_,
-                  code_type_, variance_encoded_in_target_, clip_bbox,
-                  &all_decode_bboxes);
+                  code_type_, variance_encoded_in_target_, &all_decode_bboxes);
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
@@ -209,7 +207,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         continue;
       }
       const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
-      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_, eta_,
+      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_,
           top_k_, &(indices[c]));
       num_det += indices[c].size();
     }
@@ -251,6 +249,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     }
   }
 
+  if (num_kept == 0) {
+    LOG(INFO) << "Couldn't find any detections";
+    return;
+  }
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
@@ -290,20 +292,21 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
         top_data[count * 7 + 2] = scores[idx];
-        const NormalizedBBox& bbox = bboxes[idx];
-        top_data[count * 7 + 3] = bbox.xmin();
-        top_data[count * 7 + 4] = bbox.ymin();
-        top_data[count * 7 + 5] = bbox.xmax();
-        top_data[count * 7 + 6] = bbox.ymax();
+        NormalizedBBox clip_bbox;
+        ClipBBox(bboxes[idx], &clip_bbox);
+        top_data[count * 7 + 3] = clip_bbox.xmin();
+        top_data[count * 7 + 4] = clip_bbox.ymin();
+        top_data[count * 7 + 5] = clip_bbox.xmax();
+        top_data[count * 7 + 6] = clip_bbox.ymax();
         if (need_save_) {
-          NormalizedBBox out_bbox;
-          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
-                     &out_bbox);
+          NormalizedBBox scale_bbox;
+          ScaleBBox(clip_bbox, sizes_[name_count_].first,
+                    sizes_[name_count_].second, &scale_bbox);
           float score = top_data[count * 7 + 2];
-          float xmin = out_bbox.xmin();
-          float ymin = out_bbox.ymin();
-          float xmax = out_bbox.xmax();
-          float ymax = out_bbox.ymax();
+          float xmin = scale_bbox.xmin();
+          float ymin = scale_bbox.ymin();
+          float xmax = scale_bbox.xmax();
+          float ymax = scale_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);
