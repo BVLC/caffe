@@ -202,8 +202,6 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     } else {
       concat_res[dnnResourceMultipleDst + i] = bottom[i]->mutable_cpu_diff();
     }
-    caffe_set(bottom[i]->count(), Dtype(0),
-      reinterpret_cast<Dtype*>(concat_res[dnnResourceMultipleDst + i]));
   }
 
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
