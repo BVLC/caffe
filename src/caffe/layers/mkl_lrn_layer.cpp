@@ -12,7 +12,6 @@ MKLLRNLayer<Dtype>::~MKLLRNLayer() {
   dnnDelete<Dtype>(lrnFwd);
   dnnDelete<Dtype>(lrnBwd);
   dnnReleaseBuffer<Dtype>(lrn_buffer_);
-  dnnLayoutDelete<Dtype>(layout_usr_);
 }
 
 template <typename Dtype>
@@ -43,7 +42,13 @@ void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   strides[3] = sizes[0]*sizes[1]*sizes[2];
 
   dnnError_t e;
-  e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
+  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, sizes, strides);
+  CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, sizes, strides);
+  CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff->layout_usr, dim, sizes, strides);
+  CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
   // Fwd, Bwd primitives and lrn_buffer_ are allocated in  "Lazy"
@@ -104,12 +109,26 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
               (bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
+      fwd_bottom_data = mem_descr;
+
       dnnError_t e;
       dnnLayout_t lrn_buffer_l = NULL;
 
-      e = dnnLRNCreateForward<Dtype>(
-              &lrnFwd, NULL, mem_descr->layout_int, size_, alpha_, beta_, k_);
+      e = dnnLRNCreateForward<Dtype>(&lrnFwd, NULL, fwd_bottom_data->layout_int,
+              size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
+
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
+             lrnFwd, dnnResourceDst);
+      CHECK_EQ(e, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+             << e << "\n";
+      fwd_top_data->create_conversions();
+
+      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL,
+              fwd_bottom_data->layout_int, fwd_bottom_data->layout_int,
+              size_, alpha_, beta_, k_);
+      CHECK_EQ(e, E_SUCCESS);
+
       e = dnnLayoutCreateFromPrimitive<Dtype>(
               &lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
       CHECK_EQ(e, E_SUCCESS);
@@ -118,20 +137,28 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
       CHECK_EQ(e, E_SUCCESS);
       dnnLayoutDelete<Dtype>(lrn_buffer_l);
 
-      fwd_top_data = mem_descr;
-    }
-    top_data = top[0]->mutable_prv_data();
-    top[0]->set_prv_descriptor_data(fwd_top_data);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff->layout_int,
+              lrnBwd, dnnResourceDiffDst);
+      CHECK_EQ(e, E_SUCCESS);
 
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff->layout_int,
+              lrnBwd, dnnResourceDiffSrc);
+      CHECK_EQ(e, E_SUCCESS);
+
+      bwd_top_diff->create_conversions();
+      bwd_bottom_diff->create_conversions();
+    }
   } else {
     DLOG(INFO) << "Using cpu_data in MKLLRNLayer.";
     if (lrnFwd == NULL) {
       // First pass
       dnnError_t e;
       dnnLayout_t lrn_buffer_l = NULL;
-      e = dnnLRNCreateForward<Dtype>(
-              &lrnFwd, NULL, layout_usr_, size_, alpha_, beta_, k_);
+      e = dnnLRNCreateForward<Dtype>(&lrnFwd, NULL, fwd_bottom_data->layout_usr,
+              size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
+
+
       e = dnnLayoutCreateFromPrimitive<Dtype>(
               &lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
       CHECK_EQ(e, E_SUCCESS);
@@ -139,6 +166,11 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
               reinterpret_cast<void **>(&lrn_buffer_), lrn_buffer_l);
       CHECK_EQ(e, E_SUCCESS);
       dnnLayoutDelete<Dtype>(lrn_buffer_l);
+
+      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL,
+              fwd_bottom_data->layout_usr, fwd_bottom_data->layout_usr,
+              size_, alpha_, beta_, k_);
+      CHECK_EQ(e, E_SUCCESS);
     }
     bottom_data = reinterpret_cast<const void*>(bottom[0]->cpu_data());
     top_data = top[0]->mutable_cpu_data();
@@ -147,7 +179,15 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   dnnError_t e;
   void* lrn_res[dnnResourceNumber];
   lrn_res[dnnResourceSrc] = const_cast<void*>(bottom_data);
-  lrn_res[dnnResourceDst] = top_data;
+  if (fwd_top_data->convert_from_int) {
+    top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
+    lrn_res[dnnResourceDst] =reinterpret_cast<void *>(
+            const_cast<Dtype*>(fwd_top_data->prv_ptr()));
+  } else {
+    lrn_res[dnnResourceDst] =
+            reinterpret_cast<void *>(top[0]->mutable_cpu_data());
+    DLOG(INFO) << "Using cpu_data for top in DnnLRN.";
+  }
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
 
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
@@ -173,51 +213,25 @@ template <typename Dtype>
 void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  const void* top_diff = reinterpret_cast<const void*>(top[0]->prv_diff());
-  const void* bottom_data =
-      reinterpret_cast<const void*>(bottom[0]->prv_data());
-  void* bottom_diff = NULL;
-
-  if (top_diff && bottom_data) {
-    bottom_diff = reinterpret_cast<void*>(bottom[0]->mutable_prv_diff());
-    // Is it the first pass? Create a primitive.
-    if (lrnBwd == NULL) {
-      CHECK_EQ((top[0]->get_prv_descriptor_diff())->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKL2017);
-      shared_ptr<MKLDiff<Dtype> > mem_descr
-        =  boost::static_pointer_cast<MKLDiff<Dtype> >
-              (top[0]->get_prv_descriptor_diff());
-      CHECK(mem_descr != NULL);
-
-      dnnError_t e;
-      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL, mem_descr->layout_int,
-              mem_descr->layout_int, size_, alpha_, beta_, k_);
-      CHECK_EQ(e, E_SUCCESS);
-
-      bwd_bottom_diff = mem_descr;
-    }
-    bottom[0]->set_prv_descriptor_diff(bwd_bottom_diff);
-
-  } else {
-    DLOG(INFO) << "Using cpu_data in MKLLRNLayer.";
-    top_diff = reinterpret_cast<const void*>(top[0]->cpu_diff());
-    bottom_data = reinterpret_cast<const void*>(bottom[0]->cpu_data());
-    bottom_diff = reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
-    if (lrnBwd == NULL) {
-      dnnError_t e;
-      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL, layout_usr_,
-              layout_usr_, size_, alpha_, beta_, k_);
-      CHECK_EQ(e, E_SUCCESS);
-    }
-  }
 
   dnnError_t e;
   void* lrn_res[dnnResourceNumber];
-  lrn_res[dnnResourceSrc] = const_cast<void *>(bottom_data);
-  lrn_res[dnnResourceDiffDst] = const_cast<void *>(top_diff);
-  lrn_res[dnnResourceDiffSrc] = bottom_diff;
+  lrn_res[dnnResourceDiffDst] =
+          bwd_top_diff->get_converted_prv(top[0], true);
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
+  lrn_res[dnnResourceSrc] =
+          fwd_bottom_data->get_converted_prv(bottom[0], false);
 
+  if (bwd_bottom_diff->convert_from_int) {
+    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(), bwd_bottom_diff,
+            false);
+    lrn_res[dnnResourceDiffSrc] =
+            reinterpret_cast<void *>(bwd_bottom_diff->prv_ptr());
+  } else {
+    lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
+  }
+  caffe_set(bottom[0]->count(), Dtype(0),
+          reinterpret_cast<Dtype *>(lrn_res[dnnResourceDiffSrc]));
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
   CHECK_EQ(e, E_SUCCESS);
 }
