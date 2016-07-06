@@ -122,8 +122,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
-  top_shape[0] = 1;
-
+  
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
@@ -158,12 +157,13 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     std::string img_file_name = lines_[lines_id_].first;
     #pragma omp task firstprivate(offset, img_file_name)
     {
-        Blob<Dtype> tmp_data;
-        tmp_data.Reshape(top_shape);
-        tmp_data.set_cpu_data(prefetch_data + offset);
         cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
             new_height, new_width, is_color);
         CHECK(cv_img.data) << "Could not load " << img_file_name;
+        
+        Blob<Dtype> tmp_data;
+        tmp_data.Reshape(top_shape);
+        tmp_data.set_cpu_data(prefetch_data + offset);
         this->data_transformer_->Transform(cv_img, &tmp_data);
     }
 #endif
