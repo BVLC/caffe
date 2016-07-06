@@ -1,3 +1,5 @@
+#ifdef WITH_PYTHON_LAYER
+
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -393,3 +395,5 @@ void PythonInitEmbeddedCaffeModule() {
 #endif
 
 }  // namespace caffe
+
+#endif // WITH_PYTHON_LAYER
