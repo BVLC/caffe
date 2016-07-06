@@ -258,7 +258,6 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   mask = (use_top_mask) ?
       reinterpret_cast<size_t*>(top[1]->mutable_cpu_data()) :
       (max_idx_.mutable_cpu_data());
-  // caffe_set<size_t>(top_count, -1, mask);
   pooling_res[dnnResourceWorkspace] = reinterpret_cast<void*>(mask);
 
   void* bottom_data =
@@ -371,8 +370,6 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   } else {
     pooling_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
-  caffe_set(bottom[0]->count(), Dtype(0),
-          reinterpret_cast<Dtype *>(pooling_res[dnnResourceDiffSrc]));
 
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
   CHECK_EQ(e, E_SUCCESS);
