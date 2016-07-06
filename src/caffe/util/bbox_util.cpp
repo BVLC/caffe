@@ -1991,8 +1991,8 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     return;
   }
   // Comute FPS.
-  float fps = num_img / (double(clock() - start_clock) / CLOCKS_PER_SEC);
-  start_clock = clock();
+  float fps = num_img / (static_cast<double>(clock() - start) / CLOCKS_PER_SEC);
+  start = clock();
 
   const Dtype* detections_data = detections->cpu_data();
   const int width = images[0].cols;
