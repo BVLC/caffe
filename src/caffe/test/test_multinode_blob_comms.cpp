@@ -1,7 +1,7 @@
 #include <boost/assign.hpp>
 #include <boost/make_shared.hpp>
+#include <caffe/test/test_caffe_main.hpp>
 #include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 #include "caffe/blob.hpp"
@@ -9,10 +9,6 @@
 #include "caffe/internode/configuration.hpp"
 #include "caffe/internode/tree_cluster.hpp"
 #include "caffe/multinode/BlobComms.hpp"
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/serialization/bitfield.hpp"
-#include "caffe/serialization/BlobCodec.hpp"
-#include "caffe/solver_factory.hpp"
 
 namespace caffe {
 namespace {
@@ -166,8 +162,9 @@ MATCHER_P4(BlobUpdateInfoEqRef, layer_id, blob_id, part, version, "") {
           && arg.info().version() == version;
 }
 
-template <class T> struct BlobCommsBase : public T {
-//  shared_ptr<BlobCodec<float> > codec;
+template <typename TypeParam>
+class BlobCommsTest : public MultiDeviceTest<TypeParam> {
+ public:
   shared_ptr<BlobCodecMock<float> > codec_mock;
   shared_ptr<WaypointMock> waypoint_mock;
   shared_ptr<IterSizeHandlerMock<float> > iter_size_handler_mock1;
@@ -224,7 +221,7 @@ template <class T> struct BlobCommsBase : public T {
     sync_info_mock.reset(new StrictMock<BlobSyncInfoMock>());
   }
 
-  BlobCommsBase()
+  BlobCommsTest()
       : settings(BlobComms<float>::Settings(
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0)) {}
 
@@ -282,8 +279,6 @@ template <class T> struct BlobCommsBase : public T {
   }
 
   void SendIterSize(
-//          shared_ptr<BlobComms<float> > comms,
-//          Waypoint::SentCallback* callback,
           shared_ptr<WaypointMock> waypoint_mock,
           int size) {
     BlobUpdate update;
@@ -295,299 +290,298 @@ template <class T> struct BlobCommsBase : public T {
     callback(true);
   }
 
-  void buildOne(int num_of_threads) {
-//    codec = BlobCodec<float>::create_codec(
-//            MultinodeParameter::default_instance(), true);
+  void buildOne() {
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
-//    settings = BlobComms<float>::Settings(
-//              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0);
     comms = BlobComms<float>::create(blob_accessor_mock,
             const_info_mock, sync_info_mock, waypoint_mock, codec_mock,
-            keychain_mock, settings, num_of_threads);
+            keychain_mock, settings, 1);
   }
 };
 
-class BlobCommsTest : public BlobCommsBase<testing::Test> {};
-class BlobCommsParamTest : public BlobCommsBase<
-                           testing::TestWithParam<int> > {};
+TYPED_TEST_CASE(BlobCommsTest, TestDtypesAndDevices);
 
-TEST_P(BlobCommsParamTest, SendIterSize) {
-  buildOne(GetParam());
-  SendIterSize(waypoint_mock, 10);
-  SendIterSize(waypoint_mock, -1);
-  SendIterSize(waypoint_mock, 0);
-  SendIterSize(waypoint_mock, 101);
-  SendIterSize(waypoint_mock, 1);
-  comms->finish_all_tasks();
+TYPED_TEST(BlobCommsTest, SendIterSize) {
+    this->buildOne();
+    this->SendIterSize(this->waypoint_mock, 10);
+    this->SendIterSize(this->waypoint_mock, -1);
+    this->SendIterSize(this->waypoint_mock, 0);
+    this->SendIterSize(this->waypoint_mock, 101);
+    this->SendIterSize(this->waypoint_mock, 1);
+    this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, pushOneWithCancelledVersion) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, pushOneWithCancelledVersion) {
+  this->buildOne();
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 0;
 
-  buildSendMethodExpects(layer_id, blob_id, part_id, version, NULL, times);
-  comms->cancel(layer_id, version);
-  comms->push(layer_id, blob_id, part_id, version);
-  comms->finish_all_tasks();
+  this->buildSendMethodExpects(layer_id, blob_id, part_id,
+                 version, NULL, times);
+  this->comms->cancel(layer_id, version);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, pushOne) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, pushOne) {
+  this->buildOne();
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
-  buildSendMethodExpects(layer_id, blob_id, part_id,
-                             version, &callback, times);
-  comms->push(layer_id, blob_id, part_id, version);
-  callback(true);
-  comms->finish_all_tasks();
+  this->buildSendMethodExpects(layer_id, blob_id, part_id,
+                             version, &this->callback, times);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->callback(true);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, pushAnotherTwoDuringSending) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, pushAnotherTwoDuringSending) {
+  this->buildOne();
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 1;
-  buildSendMethodExpects(layer_id, blob_id, part_id,
-                            version, &callback, times);
-  comms->push(layer_id, blob_id, part_id, version);
-  comms->push(layer_id, blob_id, part_id, version);
-  comms->push(layer_id, blob_id, part_id, version);
-  comms->finish_all_tasks();
+  this->buildSendMethodExpects(layer_id, blob_id, part_id,
+                            version, &this->callback, times);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, push3OneByOne) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, push3OneByOne) {
+  this->buildOne();
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 3;
 
-  buildSendMethodExpects(layer_id, blob_id, part_id,
-                             version, &callback, times);
-  comms->push(layer_id, blob_id, part_id, version);
+  this->buildSendMethodExpects(layer_id, blob_id, part_id,
+                             version, &this->callback, times);
+  this->comms->push(layer_id, blob_id, part_id, version);
   // simulate Waypoint async_send => implicit call BlobComms::sent()
   // clears during_sending BlobComms state
-  callback(true);
-  comms->push(layer_id, blob_id, part_id, version);
-  callback(true);
-  comms->push(layer_id, blob_id, part_id, version);
-  callback(true);
-  comms->finish_all_tasks();
+  this->callback(true);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->callback(true);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->callback(true);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, cancelOneWhenInQueueDuringSending3Queue) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
+  this->buildOne();
   int layer_id = 0, blob_id = 0, part_id = 0, version = 1;
   int times = 2;
 
-  buildSendMethodExpects(layer_id, blob_id, part_id,
-                   version, &callback, times);
-  comms->push(layer_id, blob_id, part_id, version);
+  this->buildSendMethodExpects(layer_id, blob_id, part_id,
+                   version, &this->callback, times);
+  this->comms->push(layer_id, blob_id, part_id, version);
   // simulate Waypoint async_send => implicit call BlobComms::sent()
   // clears during_sending BlobComms state
-  callback(true);
-  comms->push(layer_id, blob_id, part_id, version);
-  callback(true);
-  comms->cancel(layer_id, version);
-  comms->push(layer_id, blob_id, part_id, version);
-  callback(true);
-  comms->finish_all_tasks();
+  this->callback(true);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->callback(true);
+  this->comms->cancel(layer_id, version);
+  this->comms->push(layer_id, blob_id, part_id, version);
+  this->callback(true);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, cancelLayer1WhenInQueue) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, cancelLayer1WhenInQueue) {
+//  BlobCommsBase bb ;
+  this->buildOne();
   int blob_id = 0, part_id = 0, version = 1;
   {
     InSequence dummy;
 
-    buildSendMethodExpects(2, blob_id, part_id, 2, &callback, 1);
-    buildSendMethodExpects(2, blob_id, part_id, 3, &callback, 1);
-    buildSendMethodExpects(3, blob_id, part_id, version, &callback, 1);
+    this->buildSendMethodExpects(2, blob_id, part_id, 2, &this->callback, 1);
+    this->buildSendMethodExpects(2, blob_id, part_id, 3, &this->callback, 1);
+    this->buildSendMethodExpects(3, blob_id, part_id,
+                                         version, &this->callback, 1);
   }
-    EXPECT_CALL(*keychain_mock, lock(1)).Times(0);
-    EXPECT_CALL(*keychain_mock, unlock(1)).Times(0);
-    EXPECT_CALL(*blob_accessor_mock, get_blob(1, _)).Times(0);
+    EXPECT_CALL(*this->keychain_mock, lock(1)).Times(0);
+    EXPECT_CALL(*this->keychain_mock, unlock(1)).Times(0);
+    EXPECT_CALL(*this->blob_accessor_mock, get_blob(1, _)).Times(0);
 
-    comms->cancel(1, version);
-    comms->push(2, blob_id, part_id, 2);
-    comms->push(3, blob_id, part_id, version);
-    comms->push(1, blob_id, part_id, version);
-    comms->push(2, blob_id, part_id, 3);
+    this->comms->cancel(1, version);
+    this->comms->push(2, blob_id, part_id, 2);
+    this->comms->push(3, blob_id, part_id, version);
+    this->comms->push(1, blob_id, part_id, version);
+    this->comms->push(2, blob_id, part_id, 3);
 
 
-  callback(true);
-  callback(true);
-  callback(true);
-  comms->finish_all_tasks();
+  this->callback(true);
+  this->callback(true);
+  this->callback(true);
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, pushParamsOutOfRange) {
-    buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, pushParamsOutOfRange) {
+    this->buildOne();
     int part_id = 0;
 
-    EXPECT_DEATH(comms->push(1, 33, part_id, 1), "");
-    EXPECT_DEATH(comms->push(1, const_info_mock->blobs(1), part_id, 1), "");
-    EXPECT_DEATH(comms->push(const_info_mock->layers(), 0, part_id, 1), "");
-    EXPECT_DEATH(comms->push(1, 0, 45, 1), "");
+    EXPECT_DEATH(this->comms->push(1, 33, part_id, 1), "");
+    EXPECT_DEATH(this->comms->push(1,
+                 this->const_info_mock->blobs(1), part_id, 1), "");
+    EXPECT_DEATH(this->comms->push(this->const_info_mock->layers(),
+                 0, part_id, 1), "");
+    EXPECT_DEATH(this->comms->push(1, 0, 45, 1), "");
 }
 
-TEST_P(BlobCommsParamTest, checkPriorityQueue) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, checkPriorityQueue) {
+  this->buildOne();
   int part_id = 0;
   {
     InSequence dummy;
-    buildSendMethodExpects(2,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(2,  4, part_id, 5, &callback, 1);
-    buildSendMethodExpects(1,  0, part_id, 5, &callback, 1);
-    buildSendMethodExpects(1,  1, part_id, 5, &callback, 1);
-    buildSendMethodExpects(3,  5, part_id, 5, &callback, 1);
-    buildSendMethodExpects(3,  4, part_id, 5, &callback, 1);
-    buildSendMethodExpects(3,  3, part_id, 5, &callback, 1);
-    buildSendMethodExpects(3,  2, part_id, 5, &callback, 1);
-    buildSendMethodExpects(3,  1, part_id, 5, &callback, 1);
-    buildSendMethodExpects(1,  4, part_id, 5, &callback, 1);
-    buildSendMethodExpects(1,  2, part_id, 5, &callback, 1);
-    buildSendMethodExpects(1,  3, part_id, 5, &callback, 1);
-    buildSendMethodExpects(2,  3, part_id, 5, &callback, 1);
-    buildSendMethodExpects(2,  2, part_id, 5, &callback, 1);
-    buildSendMethodExpects(2,  1, part_id, 5, &callback, 1);
+    this->buildSendMethodExpects(2,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(2,  4, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(1,  0, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(1,  1, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(3,  5, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(3,  4, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(3,  3, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(3,  2, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(3,  1, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(1,  4, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(1,  2, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(1,  3, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(2,  3, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(2,  2, part_id, 5, &this->callback, 1);
+    this->buildSendMethodExpects(2,  1, part_id, 5, &this->callback, 1);
   }
 
   // queue 2:[5,4,3,2,1]
-  comms->push(2, 0, part_id, 1);  //  2v1 sent immediately
-  comms->push(2, 1, part_id, 2);  // then hold bof during_sending state
-  comms->push(2, 2, part_id, 3);
-  comms->push(2, 3, part_id, 4);
-  comms->push(2, 4, part_id, 5);
+  this->comms->push(2, 0, part_id, 1);  //  2v1 sent immediately
+  this->comms->push(2, 1, part_id, 2);  // then hold bof during_sending state
+  this->comms->push(2, 2, part_id, 3);
+  this->comms->push(2, 3, part_id, 4);
+  this->comms->push(2, 4, part_id, 5);
   // callback immitates incoming data and turns 'during sending' state to
   // 'ready' for sending
-  callback(true);  // sent 2v5 => [2:[4,3,2]]
+  this->callback(true);  // sent 2v5 => [2:[4,3,2]]
   // queue 1:[5,4,3,2,1]
-  comms->push(1, 3, part_id, 1);  // holds 2v4
-  comms->push(1, 2, part_id, 2);
-  comms->push(1, 4, part_id, 3);
-  comms->push(1, 1, part_id, 4);
-  comms->push(1, 0, part_id, 5);
+  this->comms->push(1, 3, part_id, 1);  // holds 2v4
+  this->comms->push(1, 2, part_id, 2);
+  this->comms->push(1, 4, part_id, 3);
+  this->comms->push(1, 1, part_id, 4);
+  this->comms->push(1, 0, part_id, 5);
 
-  callback(true);  // sent 1v5 => [1:[4,3,2,1], 2:[4,3,2]]
-  callback(true);  // sent 1v4 as 1v5 (sending version determines arguments)
+  this->callback(true);  // sent 1v5 => [1:[4,3,2,1], 2:[4,3,2]]
+  this->callback(true);  // sent 1v4 as 1v5 (sending version determines args)
 //    =>[1:[3,2,1], 2:[4,3,2]]
   // queue 3:[5,4,3,2,1]
-  comms->push(3, 1, part_id, 1);  // holds 1v3
-  comms->push(3, 2, part_id, 2);
-  comms->push(3, 3, part_id, 3);
-  comms->push(3, 4, part_id, 4);
-  comms->push(3, 5, part_id, 5);
+  this->comms->push(3, 1, part_id, 1);  // holds 1v3
+  this->comms->push(3, 2, part_id, 2);
+  this->comms->push(3, 3, part_id, 3);
+  this->comms->push(3, 4, part_id, 4);
+  this->comms->push(3, 5, part_id, 5);
 //    => [3:[5,4,3,2,1], 1:[3,2,1],2:[4,3,2]]
 
-  callback(true);   // sent 3v5 => [3:[4,3,2,1], 1:[3,2,1],2:[4,3,2]]
-  callback(true);   // sent 3v4 as 3v5 => [3:[3,2,1], 1:[3,2,1],2:[4,3,2]]
-  callback(true);   // sent 3v3 as 3v5 => [3:[2,1], 1:[3,2,1],2:[4,3,2]]
-  callback(true);   // sent 3v2 as 3v5 => [3:[1], 1:[3,2,1],2:[4,3,2]]
-  callback(true);   // sent 3v1 as 3v5 => [1:[3,2,1],2:[4,3,2]]
-  callback(true);   // sent 1v3 as 1v5 => [1:[2,1],2:[4,3,2]]
-  callback(true);   // sent 1v2 as 1v5 => [1:[1],2:[4,3,2]]
-  callback(true);   // sent 1v1 as 1v5 => [2:[4,3,2]]
-  callback(true);   // sent 2v4 as 2v5 => [2:[3,2]]
-  callback(true);   // sent 2v3 as 2v5 => [2:[2]]
-  callback(true);   // sent 2v2 as 2v5 => []
-  callback(true);   // nothing to send
-  comms->finish_all_tasks();
+  this->callback(true);   // sent 3v5 => [3:[4,3,2,1], 1:[3,2,1],2:[4,3,2]]
+  this->callback(true);   // sent 3v4 as 3v5 => [3:[3,2,1], 1:[3,2,1],2:[4,3,2]]
+  this->callback(true);   // sent 3v3 as 3v5 => [3:[2,1], 1:[3,2,1],2:[4,3,2]]
+  this->callback(true);   // sent 3v2 as 3v5 => [3:[1], 1:[3,2,1],2:[4,3,2]]
+  this->callback(true);   // sent 3v1 as 3v5 => [1:[3,2,1],2:[4,3,2]]
+  this->callback(true);   // sent 1v3 as 1v5 => [1:[2,1],2:[4,3,2]]
+  this->callback(true);   // sent 1v2 as 1v5 => [1:[1],2:[4,3,2]]
+  this->callback(true);   // sent 1v1 as 1v5 => [2:[4,3,2]]
+  this->callback(true);   // sent 2v4 as 2v5 => [2:[3,2]]
+  this->callback(true);   // sent 2v3 as 2v5 => [2:[2]]
+  this->callback(true);   // sent 2v2 as 2v5 => []
+  this->callback(true);   // nothing to send
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, cancelDuringReceivingPartsPushedLayer) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, cancelDuringReceivingPartsPushedLayer) {
+  this->buildOne();
   int part_id = 0;  // blob_id = 0, , version = 1;
   {
     InSequence dummy;
-    buildSendMethodExpects(0,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  1, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  2, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  3, part_id, 1, &callback, 1);
-    EXPECT_CALL(*blob_accessor_mock, get_blob(0, 4)).Times(0);
-    EXPECT_CALL(*blob_accessor_mock, get_blob(0, 5)).Times(0);
+    this->buildSendMethodExpects(0,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  1, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  2, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  3, part_id, 1, &this->callback, 1);
+    EXPECT_CALL(*this->blob_accessor_mock, get_blob(0, 4)).Times(0);
+    EXPECT_CALL(*this->blob_accessor_mock, get_blob(0, 5)).Times(0);
   }
-  comms->push(0, 1);    // 0b0 added to send queue and sent immediately
-  callback(true);       // 0b1 sent
-  callback(true);       // 0b2 sent
-  callback(true);       // 0b3 sent
-  comms->cancel(0, 1);  // sets 'during_sending' state to false
-  callback(true);       // clears cancelled version
+  this->comms->push(0, 1);    // 0b0 added to send queue and sent immediately
+  this->callback(true);       // 0b1 sent
+  this->callback(true);       // 0b2 sent
+  this->callback(true);       // 0b3 sent
+  this->comms->cancel(0, 1);  // sets 'during_sending' state to false
+  this->callback(true);       // clears cancelled version
 }
-TEST_P(BlobCommsParamTest, pushLayers) {
-  buildOne(GetParam());
+TYPED_TEST(BlobCommsTest, pushLayers) {
+  this->buildOne();
   int part_id = 0;  // blob_id = 0, , version = 1;
   {
     InSequence dummy;
-    buildSendMethodExpects(0,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  1, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  2, part_id, 1, &callback, 1);
-    buildSendMethodExpects(0,  3, part_id, 1, &callback, 1);
-    EXPECT_CALL(*blob_accessor_mock, get_blob(0, 4)).Times(0);
-    EXPECT_CALL(*blob_accessor_mock, get_blob(0, 5)).Times(0);
-    buildSendMethodExpects(1,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(1,  1, part_id, 1, &callback, 1);
-    buildSendMethodExpects(1,  2, part_id, 1, &callback, 1);
-    buildSendMethodExpects(1,  3, part_id, 1, &callback, 1);
-    buildSendMethodExpects(1,  4, part_id, 1, &callback, 1);
-    buildSendMethodExpects(1,  5, part_id, 1, &callback, 1);
+    this->buildSendMethodExpects(0,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  1, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  2, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(0,  3, part_id, 1, &this->callback, 1);
+    EXPECT_CALL(*this->blob_accessor_mock, get_blob(0, 4)).Times(0);
+    EXPECT_CALL(*this->blob_accessor_mock, get_blob(0, 5)).Times(0);
+    this->buildSendMethodExpects(1,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(1,  1, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(1,  2, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(1,  3, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(1,  4, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(1,  5, part_id, 1, &this->callback, 1);
 
-    buildSendMethodExpects(2,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(2,  1, part_id, 1, &callback, 1);
+    this->buildSendMethodExpects(2,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(2,  1, part_id, 1, &this->callback, 1);
 
-    buildSendMethodExpects(3,  0, part_id, 1, &callback, 1);
-    buildSendMethodExpects(3,  1, part_id, 1, &callback, 1);
-    buildSendMethodExpects(3,  2, part_id, 1, &callback, 1);
-    buildSendMethodExpects(3,  3, part_id, 1, &callback, 1);
-    buildSendMethodExpects(3,  4, part_id, 1, &callback, 1);
-    buildSendMethodExpects(3,  5, part_id, 1, &callback, 1);
+    this->buildSendMethodExpects(3,  0, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(3,  1, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(3,  2, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(3,  3, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(3,  4, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(3,  5, part_id, 1, &this->callback, 1);
 
-    buildSendMethodExpects(2,  2, part_id, 1, &callback, 1);
-    buildSendMethodExpects(2,  3, part_id, 1, &callback, 1);
-    buildSendMethodExpects(2,  4, part_id, 1, &callback, 1);
-    buildSendMethodExpects(2,  5, part_id, 1, &callback, 1);
+    this->buildSendMethodExpects(2,  2, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(2,  3, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(2,  4, part_id, 1, &this->callback, 1);
+    this->buildSendMethodExpects(2,  5, part_id, 1, &this->callback, 1);
   }
-  comms->push(0, 1);    // 0b0 added to send queue and sent immediately
-  callback(true);       // 0b1 sent
-  callback(true);       // 0b2 sent
-  callback(true);       // 0b3 sent
-  comms->cancel(0, 1);  // sets 'during_sending' state to false
-  callback(true);       // clears cancelled version
-  comms->push(1, 1);    // 1b0 sent
-  callback(true);       // 1b1 sent
-  callback(true);       // 1b2 sent
-  callback(true);       // 1b3 sent
-  callback(true);       // 1b4 sent
-  callback(true);       // 1b5 sent
-  comms->push(2, 1);    // just adds to queue bof 'during_sending' state
-  callback(true);       // 2b0 sent
-  callback(true);       // 2b1 sent
-  comms->push(3, 1);    // // just adds to queue bof 'during_sending' state
-  callback(true);       // 3b0 sent
-  callback(true);       // 3b1 sent
-  callback(true);       // 3b2 sent
-  callback(true);       // 3b3 sent
-  callback(true);       // 3b4 sent
-  callback(true);       // 3b5 sent
+  this->comms->push(0, 1);    // 0b0 added to send queue and sent immediately
+  this->callback(true);       // 0b1 sent
+  this->callback(true);       // 0b2 sent
+  this->callback(true);       // 0b3 sent
+  this->comms->cancel(0, 1);  // sets 'during_sending' state to false
+  this->callback(true);       // clears cancelled version
+  this->comms->push(1, 1);    // 1b0 sent
+  this->callback(true);       // 1b1 sent
+  this->callback(true);       // 1b2 sent
+  this->callback(true);       // 1b3 sent
+  this->callback(true);       // 1b4 sent
+  this->callback(true);       // 1b5 sent
+  this->comms->push(2, 1);    // just adds to queue bof 'during_sending' state
+  this->callback(true);       // 2b0 sent
+  this->callback(true);       // 2b1 sent
+  this->comms->push(3, 1);    // // adds to queue bof 'during_sending' state
+  this->callback(true);       // 3b0 sent
+  this->callback(true);       // 3b1 sent
+  this->callback(true);       // 3b2 sent
+  this->callback(true);       // 3b3 sent
+  this->callback(true);       // 3b4 sent
+  this->callback(true);       // 3b5 sent
 
-  callback(true);       // 2b2 sent
-  callback(true);       // 2b3 sent
-  callback(true);       // 2b4 sent
-  callback(true);       // 2b5 sent
-  callback(true);       // nothing to send
-  comms->finish_all_tasks();
+  this->callback(true);       // 2b2 sent
+  this->callback(true);       // 2b3 sent
+  this->callback(true);       // 2b4 sent
+  this->callback(true);       // 2b5 sent
+  this->callback(true);       // nothing to send
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
+TYPED_TEST(BlobCommsTest, receiveProperBlobUpdate) {
   int layer_id= 0, part_id = 0, blob_id = 0, version = 1;
-  buildOne(GetParam());
+  this->buildOne();
   BlobUpdate update;
   update.mutable_info()->set_layer_id(layer_id);
   update.mutable_info()->set_blob_id(blob_id);
   update.mutable_info()->set_part(part_id);
   update.mutable_info()->set_version(version);
 
-  codec_mock->encode_real(
-      &update, &blob_accessor_mock->dummy_blob,
-      settings.what_sent, part_id);
+  this->codec_mock->encode_real(
+      &update, &this->blob_accessor_mock->dummy_blob,
+      this->settings.what_sent, part_id);
 
   string str = update.SerializeAsString();
   vector<char> dane(str.begin(), str.end());
@@ -598,69 +592,67 @@ TEST_P(BlobCommsParamTest, receiveProperBlobUpdate) {
 
   {
     InSequence dumm;
-    EXPECT_CALL(*waypoint_mock, id());
-    EXPECT_CALL(*sync_info_mock,
+    EXPECT_CALL(*this->waypoint_mock, id());
+    EXPECT_CALL(*this->sync_info_mock,
       received_version(waypoint_id, layer_id, blob_id, part_id)).Times
       (AtLeast(1));
-
-    // EXPECT_CALL(*blob_accessor_mock, get_blob(layer_id, blob_id)).Times(1);
 
     const BlobUpdateInfoEqRefMatcherP4<int, int, int, int> &p4 =
     BlobUpdateInfoEqRef(layer_id, blob_id, part_id, version);
 
-    EXPECT_CALL(*keychain_mock, lock(layer_id));
-    EXPECT_CALL(*codec_mock, decode(p4, _,
-                            settings.what_received,
-                            settings.received_incoming_multiplier,
-                            settings.received_current_multiplier));
-    EXPECT_CALL(*keychain_mock, unlock(layer_id));
+    EXPECT_CALL(*this->keychain_mock, lock(layer_id));
+    EXPECT_CALL(*this->codec_mock, decode(p4, _,
+                            this->settings.what_received,
+                            this->settings.received_incoming_multiplier,
+                            this->settings.received_current_multiplier));
+    EXPECT_CALL(*this->keychain_mock, unlock(layer_id));
 
-    EXPECT_CALL(*sync_info_mock,
+    EXPECT_CALL(*this->sync_info_mock,
       received(waypoint_id, layer_id, blob_id, part_id, version));
   }
-  comms->received(&dane[0], str.size(), waypoint_mock.get());
-  comms->finish_all_tasks();
+  this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, receiveWrongBlobUpdate) {
-  buildOne(1);
+TYPED_TEST(BlobCommsTest, receiveWrongBlobUpdate) {
+  this->buildOne();
   vector<int> v(boost::assign::list_of(1).operator vector<int> ());
   Blob<float > blob(v);
 
-  EXPECT_CALL(*waypoint_mock, id()).Times(1);
-  EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
+  EXPECT_CALL(*this->waypoint_mock, id()).Times(1);
+  EXPECT_CALL(*this->sync_info_mock, received_version(_, _, _, _)).Times(0);
 
-  EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-  EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-  EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+  EXPECT_CALL(*this->blob_accessor_mock, get_blob(_, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, lock(_)).Times(0);
+  EXPECT_CALL(*this->codec_mock, decode(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
-  comms->received(&vector<char>(boost::assign::list_of(1).operator
+  this->comms->received(&vector<char>(boost::assign::list_of(1).operator
       vector<char>
-      ())[0], 3, waypoint_mock.get());
-  comms->finish_all_tasks();
+      ())[0], 3, this->waypoint_mock.get());
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
+TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
   int part_id = 0;
-  buildOne(1);
+  this->buildOne();
   BlobUpdate update;
 
-  EXPECT_CALL(*waypoint_mock, id()).Times(1);
-  EXPECT_CALL(*sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
+  EXPECT_CALL(*this->waypoint_mock, id()).Times(1);
+  EXPECT_CALL(*this->sync_info_mock, received_version(0, 0, 0, 0)).Times(1);
 
-  EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-  EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-  EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+  EXPECT_CALL(*this->blob_accessor_mock, get_blob(_, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, lock(_)).Times(0);
+  EXPECT_CALL(*this->codec_mock, decode(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
-  codec_mock->encode_real(
-      &update, &blob_accessor_mock->dummy_blob,
-      settings.what_sent, part_id);
+  this->codec_mock->encode_real(
+      &update, &this->blob_accessor_mock->dummy_blob,
+      this->settings.what_sent, part_id);
 
   string str = update.SerializeAsString();
   vector<char> dane(str.begin(), str.end());
@@ -668,19 +660,18 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithoutInfo) {
   vector<int> v(boost::assign::list_of(1).operator vector<int> ());
   Blob<float > blob(v);
 
-  comms->received(&dane[0], str.size(), waypoint_mock.get());
-  comms->finish_all_tasks();
+  this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
+  this->comms->finish_all_tasks();
 }
 
-TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
-  //  int part_id = 0;
+TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithIters) {
   int iters_count = 2;
   size_t remote_id = 0;
-  buildOne(1);
+  this->buildOne();
   BlobUpdate update;
 
-  comms->register_iter_size_handler(iter_size_handler_mock1.get());
-  comms->register_iter_size_handler(iter_size_handler_mock2.get());
+  this->comms->register_iter_size_handler(this->iter_size_handler_mock1.get());
+  this->comms->register_iter_size_handler(this->iter_size_handler_mock2.get());
   update.set_iters(iters_count);
   update.clear_info();
 
@@ -689,27 +680,26 @@ TEST_P(BlobCommsParamTest, receiveBlobUpdateWithIters) {
   vector<int> v(boost::assign::list_of(1).operator vector<int> ());
   Blob<float > blob(v);
 
-  EXPECT_CALL(*waypoint_mock, id()).Times(1);
-  EXPECT_CALL(*iter_size_handler_mock1,
+  EXPECT_CALL(*this->waypoint_mock, id()).Times(1);
+  EXPECT_CALL(*this->iter_size_handler_mock1,
               received_iter_size(remote_id, iters_count)).Times(1);
-  EXPECT_CALL(*iter_size_handler_mock2,
+  EXPECT_CALL(*this->iter_size_handler_mock2,
               received_iter_size(remote_id, iters_count)).Times(1);
 //      should return from method
 //      the following not to be called
-  EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
-  EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received_version(_, _, _, _)).Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-  EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-  EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+  EXPECT_CALL(*this->blob_accessor_mock, get_blob(_, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, lock(_)).Times(0);
+  EXPECT_CALL(*this->codec_mock, decode(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
-  comms->received(&dane[0], str.size(), waypoint_mock.get());
-  comms->finish_all_tasks();
+  this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
+  this->comms->finish_all_tasks();
 }
-TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
-//    int part_id = 0;
-  buildOne(1);
+TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithNoIters) {
+  this->buildOne();
   BlobUpdate update;
   update.clear_iters();
   update.clear_info();
@@ -719,25 +709,22 @@ TEST_F(BlobCommsTest, receiveBlobUpdateWithNoIters) {
   vector<int> v(boost::assign::list_of(1).operator vector<int> ());
   Blob<float> blob(v);
 
-  EXPECT_CALL(*waypoint_mock, id()).Times(2);
+  EXPECT_CALL(*this->waypoint_mock, id()).Times(2);
 //      should return from method
 //      the following not to be called
-  EXPECT_CALL(*iter_size_handler_mock1, received_iter_size(_, _)).Times(0);
-  EXPECT_CALL(*sync_info_mock, received_version(_, _, _, _)).Times(0);
-  EXPECT_CALL(*sync_info_mock, received(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->iter_size_handler_mock1, received_iter_size(_, _))
+               .Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received_version(_, _, _, _)).Times(0);
+  EXPECT_CALL(*this->sync_info_mock, received(_, _, _, _, _)).Times(0);
 
-  EXPECT_CALL(*blob_accessor_mock, get_blob(_, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, lock(_)).Times(0);
-  EXPECT_CALL(*codec_mock, decode(_, _, _, _, _)).Times(0);
-  EXPECT_CALL(*keychain_mock, unlock(_)).Times(0);
+  EXPECT_CALL(*this->blob_accessor_mock, get_blob(_, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, lock(_)).Times(0);
+  EXPECT_CALL(*this->codec_mock, decode(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
-  comms->received(&dane[0], str.size(), waypoint_mock.get());
-  comms->received(&dane[0], str.size(), waypoint_mock.get());
-  comms->finish_all_tasks();
+  this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
+  this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
+  this->comms->finish_all_tasks();
 }
-INSTANTIATE_TEST_CASE_P(BlobCommsParamTest_NumOfThreads,
-                        BlobCommsParamTest,
-                        ::testing::Values(0, 1));
-// TODO ::testing::Values(0, 1, 2, 3));
 }  // namespace
 }  // namespace caffe
