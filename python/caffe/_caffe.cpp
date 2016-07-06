@@ -220,7 +220,30 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
-BOOST_PYTHON_MODULE(_caffe) {
+// Workaround a Boost.Python limitation on Windows where wrapped C++ 
+// objects can't cross over from the process embedding python 
+// to the dynamic library implementing an extension module when
+// both the process and extension module use Boost.Python
+//
+// Change the Python module name when embedded 
+// pycaffe.py and __init__.py try importing from embedded_caffe first 
+// then fall back to _caffe
+#ifndef EMBED_PYTHON_MODULE
+    #define PREFIXED_MODULE_NAME(module_name) module_name
+#else
+    #define PREFIXED_MODULE_NAME(module_name) embedded ## module_name
+#endif
+
+// Macro to get the module entry point function, in Python 2.x "init" is prefixed, 
+// for Python 3.x the prefix is "PyInit_"
+#if PY_VERSION_HEX >= 0x03000000
+    #define PREFIXED_MODULE_INIT(name) BOOST_PP_CAT(PyInit_, PREFIXED_MODULE_NAME(name))
+#else
+    #define PREFIXED_MODULE_INIT(name) BOOST_PP_CAT(init, PREFIXED_MODULE_NAME(name))
+#endif
+
+
+BOOST_PYTHON_MODULE(PREFIXED_MODULE_NAME(_caffe)) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
 
@@ -361,8 +384,12 @@ BOOST_PYTHON_MODULE(_caffe) {
   }
 }
 
+// Inform the embedded interpreter that the module is embedded_caffe is internal
+// and set its entry point function
+#ifdef EMBED_PYTHON_MODULE
 void PythonInitEmbeddedCaffeModule() {
-    PyImport_AppendInittab("_caffe", caffe::init_caffe);
+    PyImport_AppendInittab("embedded_caffe", PREFIXED_MODULE_INIT(_caffe) );
 }
+#endif
 
 }  // namespace caffe

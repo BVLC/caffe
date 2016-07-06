@@ -53,6 +53,9 @@
     <PostBuildEvent>
       <Command>"$(ScriptsDir)\FixGFlagsNaming.cmd" "$(OutDir)" $(Configuration)</Command>
     </PostBuildEvent>
+    <ClCompile>
+      <PreprocessorDefinitions>EMBED_PYTHON_MODULE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
@@ -63,7 +66,7 @@
       <Command>"$(ScriptsDir)\FixGFlagsNaming.cmd" "$(OutDir)" $(Configuration)</Command>
     </PostBuildEvent>
     <ClCompile>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);CAFFE_VERSION=1.0.0-rc3</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EMBED_PYTHON_MODULE;NDEBUG;%(PreprocessorDefinitions);CAFFE_VERSION=1.0.0-rc3</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -10,8 +10,16 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
-        RMSPropSolver, AdaDeltaSolver, AdamSolver
+# On Windows, evaluating python layers from the caffe executable tool
+# requires using an embedded _caffe module
+# so here we try to load the embedded (no dot) module first
+try:
+    from embedded_caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
+            RMSPropSolver, AdaDeltaSolver, AdamSolver
+except ImportError:
+    from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
+            RMSPropSolver, AdaDeltaSolver, AdamSolver
+
 import caffe.io
 
 import six
