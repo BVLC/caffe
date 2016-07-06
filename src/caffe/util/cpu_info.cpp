@@ -251,7 +251,9 @@ static const char *openMpEnvVars[] = {
 static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
-OpenMpManager::OpenMpManager(Collection *collection) : collection(*collection) {
+OpenMpManager::OpenMpManager(Collection *collection) :
+                             mainThreadId(boost::this_thread::get_id()),
+                             collection(*collection) {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
@@ -272,6 +274,11 @@ void OpenMpManager::setGpuEnabled() {
 void OpenMpManager::setGpuDisabled() {
   OpenMpManager &openMpManager = getInstance();
   openMpManager.isGpuEnabled = false;
+}
+
+bool OpenMpManager::isMajorThread(boost::thread::id currentThread) {
+  OpenMpManager &openMpManager = getInstance();
+  return (boost::this_thread::get_id() == openMpManager.mainThreadId);
 }
 
 // Ideally bind given thread to secondary logical core, if

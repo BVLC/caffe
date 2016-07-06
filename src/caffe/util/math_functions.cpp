@@ -17,7 +17,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
-
 namespace caffe {
 
 template<>
@@ -73,7 +72,8 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
 
   int nthr = omp_get_max_threads();
   int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
-  bool run_parallel = true;
+  bool run_parallel =  // Do not do parallel computation from non major threads
+       caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id());
 
   // Note: we Assume GPU's CPU path is single threaded
   if (omp_in_parallel() == 0) {
@@ -129,10 +129,10 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X == Y) return;
 
   #ifdef _OPENMP
-
   int nthr = omp_get_max_threads();
   int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
+    caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id()) &&
     (Caffe::mode() != Caffe::GPU) &&
     (omp_in_parallel() == 0) &&
     (N >= threshold);
