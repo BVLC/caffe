@@ -2,8 +2,7 @@
 #include <boost/python.hpp>
 namespace bp = boost::python;
 #ifdef _MSC_VER
-namespace caffe
-{
+namespace caffe {
     extern void PythonInitEmbeddedCaffeModule();
 }
 #endif

@@ -222,13 +222,13 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
-// Workaround a Boost.Python limitation on Windows where wrapped C++ 
-// objects can't cross over from the process embedding python 
+// Workaround a Boost.Python limitation on Windows where wrapped C++
+// objects can't cross over from the process embedding python
 // to the dynamic library implementing an extension module when
 // both the process and extension module use Boost.Python
 //
-// Change the Python module name when embedded 
-// pycaffe.py and __init__.py try importing from embedded_caffe first 
+// Change the Python module name when embedded
+// pycaffe.py and __init__.py try importing from embedded_caffe first
 // then fall back to _caffe
 #ifndef EMBED_PYTHON_MODULE
     #define PREFIXED_MODULE_NAME(module_name) module_name
@@ -236,12 +236,12 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
     #define PREFIXED_MODULE_NAME(module_name) embedded ## module_name
 #endif
 
-// Macro to get the module entry point function, in Python 2.x "init" is prefixed, 
-// for Python 3.x the prefix is "PyInit_"
+// Macro to get the module entry point function, in Python 2.x "init" is
+// prefixed,for Python 3.x the prefix is "PyInit_"
 #if PY_VERSION_HEX >= 0x03000000
-    #define PREFIXED_MODULE_INIT(name) BOOST_PP_CAT(PyInit_, PREFIXED_MODULE_NAME(name))
+#define MODULE_INIT(name) BOOST_PP_CAT(PyInit_, PREFIXED_MODULE_NAME(name))
 #else
-    #define PREFIXED_MODULE_INIT(name) BOOST_PP_CAT(init, PREFIXED_MODULE_NAME(name))
+#define MODULE_INIT(name) BOOST_PP_CAT(init, PREFIXED_MODULE_NAME(name))
 #endif
 
 
@@ -382,7 +382,8 @@ BOOST_PYTHON_MODULE(PREFIXED_MODULE_NAME(_caffe)) {
   // so call _import_array directly instead of using import_array macro
   if (_import_array() < 0) {
       PyErr_Print();
-      PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+      PyErr_SetString(PyExc_ImportError,
+        "numpy.core.multiarray failed to import");
   }
 }
 
@@ -390,10 +391,10 @@ BOOST_PYTHON_MODULE(PREFIXED_MODULE_NAME(_caffe)) {
 // and set its entry point function
 #ifdef EMBED_PYTHON_MODULE
 void PythonInitEmbeddedCaffeModule() {
-    PyImport_AppendInittab("embedded_caffe", PREFIXED_MODULE_INIT(_caffe) );
+    PyImport_AppendInittab("embedded_caffe", MODULE_INIT(_caffe) );
 }
 #endif
 
 }  // namespace caffe
 
-#endif // WITH_PYTHON_LAYER
+#endif  // WITH_PYTHON_LAYER
