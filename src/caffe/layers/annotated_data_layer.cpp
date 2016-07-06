@@ -58,6 +58,12 @@ void AnnotatedDataLayer<Dtype>::DataLayerSetUp(
     vector<int> label_shape(4, 1);
     if (has_anno_type_) {
       anno_type_ = anno_datum.type();
+      if (anno_data_param.has_anno_type()) {
+        // If anno_type is provided in AnnotatedDataParameter, replace
+        // the type stored in each individual AnnotatedDatum.
+        LOG(WARNING) << "type stored in AnnotatedDatum is shadowed.";
+        anno_type_ = anno_data_param.anno_type();
+      }
       // Infer the label shape from anno_datum.AnnotationGroup().
       int num_bboxes = 0;
       if (anno_type_ == AnnotatedDatum_AnnotationType_BBOX) {
@@ -105,6 +111,8 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first anno_datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
+  const AnnotatedDataParameter& anno_data_param =
+      this->layer_param_.annotated_data_param();
   AnnotatedDatum& anno_datum = *(reader_.full().peek());
   // Use data_transformer to infer the expected blob shape from anno_datum.
   vector<int> top_shape =
@@ -158,8 +166,12 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       if (has_anno_type_) {
         // Make sure all data have same annotation type.
         CHECK(sampled_datum.has_type()) << "Some datum misses AnnotationType.";
-        CHECK_EQ(anno_type_, sampled_datum.type()) <<
-            "Different AnnotationType.";
+        if (anno_data_param.has_anno_type()) {
+          sampled_datum.set_type(anno_type_);
+        } else {
+          CHECK_EQ(anno_type_, sampled_datum.type()) <<
+              "Different AnnotationType.";
+        }
         // Transform datum and annotation_group at the same time
         transformed_anno_vec.clear();
         this->data_transformer_->Transform(sampled_datum,

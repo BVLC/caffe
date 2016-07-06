@@ -180,8 +180,7 @@ def InceptionTower(net, from_layer, tower_name, layer_params, **bn_param):
   return net[from_layer]
 
 def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
-        output_label=True, train=True, label_map_file='',
-        anno_type=caffe_pb2.AnnotatedDatum.AnnotationType.Value('BBOX'),
+        output_label=True, train=True, label_map_file='', anno_type=None,
         transform_param={}, batch_sampler=[{}]):
     if train:
         kwargs = {
@@ -195,12 +194,14 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
                 }
     ntop = 1
     if output_label:
-        if anno_type == caffe_pb2.AnnotatedDatum.AnnotationType.Value('BBOX'):
-          ntop = 2
-        elif anno_type == caffe_pb2.AnnotatedDatum.AnnotationType.Value('SEG'):
-          ntop = 3
-    return L.AnnotatedData(name="data",
-        annotated_data_param=dict(label_map_file=label_map_file, batch_sampler=batch_sampler),
+        ntop = 2
+    annotated_data_param = {
+        'label_map_file': label_map_file,
+        'batch_sampler': batch_sampler,
+        }
+    if anno_type:
+        annotated_data_param.update({'anno_type': anno_type})
+    return L.AnnotatedData(name="data", annotated_data_param=annotated_data_param,
         data_param=dict(batch_size=batch_size, backend=backend, source=source),
         ntop=ntop, **kwargs)
 
