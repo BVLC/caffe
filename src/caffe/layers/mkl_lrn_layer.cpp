@@ -230,8 +230,6 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
   } else {
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
-  caffe_set(bottom[0]->count(), Dtype(0),
-          reinterpret_cast<Dtype *>(lrn_res[dnnResourceDiffSrc]));
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
   CHECK_EQ(e, E_SUCCESS);
 }
