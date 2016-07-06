@@ -750,6 +750,9 @@ message AnnotatedDataParameter {
   repeated BatchSampler batch_sampler = 1;
   // Store label name and label id in LabelMap format.
   optional string label_map_file = 2;
+  // If provided, it will replace the AnnotationType stored in each
+  // AnnotatedDatum.
+  optional AnnotatedDatum.AnnotationType anno_type = 3;
 }
 
 message ArgMaxParameter {
