@@ -515,7 +515,7 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 
 template<typename Dtype>
 template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-void DataTransformer<Dtype>::TransformOpt(const cv::Mat& cv_img,
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         Blob<Dtype>* transformed_blob) 
 {
   const int crop_size = param_.crop_size();
@@ -619,31 +619,29 @@ template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         Blob<Dtype>* transformed_blob) 
 {
-    bool do_mirror;
+  bool do_mirror;
 #ifdef _OPENMP
-    #pragma omp critical
+  #pragma omp critical
 #endif
-    {
-        do_mirror = param_.mirror() && Rand(2);
-    }
-    const bool has_mean_file = param_.has_mean_file();
-    const bool has_mean_values = mean_values_.size() > 0;
-    
-    int transform_func_id = (static_cast<int>(do_mirror)<<2) + 
-                            (static_cast<int>(has_mean_file)<<1) + 
-                             static_cast<int>(has_mean_values);
-    
-    switch(transform_func_id)
-    {
-        case 0:TransformOpt<false, false, false>(cv_img, transformed_blob);break;
-        case 1:TransformOpt<false, false, true >(cv_img, transformed_blob);break;
-        case 2:TransformOpt<false, true , false>(cv_img, transformed_blob);break;
-        case 3:TransformOpt<false, true , true >(cv_img, transformed_blob);break;
-        case 4:TransformOpt<true , false, true >(cv_img, transformed_blob);break;
-        case 5:TransformOpt<true , false, false>(cv_img, transformed_blob);break;
-        case 6:TransformOpt<true , false, false>(cv_img, transformed_blob);break;
-        case 7:TransformOpt<true , true , true >(cv_img, transformed_blob);break;
-    }
+  {
+    do_mirror = param_.mirror() && Rand(2);
+  }
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  int transform_func_id = (do_mirror<<2) + (has_mean_file<<1) + has_mean_values;
+
+  switch(transform_func_id)
+  {
+      case 0:Transform<false, false, false>(cv_img, transformed_blob);break;
+      case 1:Transform<false, false, true >(cv_img, transformed_blob);break;
+      case 2:Transform<false, true , false>(cv_img, transformed_blob);break;
+      case 3:Transform<false, true , true >(cv_img, transformed_blob);break;
+      case 4:Transform<true , false, false>(cv_img, transformed_blob);break;
+      case 5:Transform<true , false, true >(cv_img, transformed_blob);break;
+      case 6:Transform<true , true , false>(cv_img, transformed_blob);break;
+      case 7:Transform<true , true , true >(cv_img, transformed_blob);break;
+  }
 }
 #endif  // USE_OPENCV
 

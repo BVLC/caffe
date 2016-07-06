@@ -172,7 +172,7 @@ class DataTransformer {
   
  private:
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-  void TransformOpt(const cv::Mat& cv_img,
+  void Transform(const cv::Mat& cv_img,
                 Blob<Dtype>* transformed_blob);
 };
 
