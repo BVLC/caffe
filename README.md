@@ -281,7 +281,7 @@ Please cite SSD in your publications if it helps your research:
   ```
   [Here](https://drive.google.com/file/d/0BzKzrI_SkD1_R09NcjM1eElLcWc/view) is a demo video of running a SSD500 model trained on [MSCOCO](http://mscoco.org) dataset.
 
-4. Check out `examples/ssd_detect.ipynb` on how to detect objects using a SSD model.
+4. Check out `examples/ssd_detect.ipynb` or `examples/ssd/ssd_detect.cpp` on how to detect objects using a SSD model.
 
 5. To train on other dataset, please refer to data/OTHERDATASET for more details.
 We currently add support for MSCOCO and ILSVRC2016.
