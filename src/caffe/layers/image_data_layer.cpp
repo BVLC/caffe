@@ -122,7 +122,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
-  
+
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
@@ -137,14 +137,14 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
-#ifndef _OPENMP   
+#ifndef _OPENMP
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
-   // Apply transformations (mirror, crop...) to the image
-       
+// Apply transformations (mirror, crop...) to the image
+
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
@@ -152,7 +152,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 #else
     read_time = 0;
     trans_time = 0;
-    
+
     int offset = batch->data_.offset(item_id);
     std::string img_file_name = lines_[lines_id_].first;
     int rand = this->data_transformer_->getRandMirror();
@@ -161,14 +161,14 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
             new_height, new_width, is_color);
         CHECK(cv_img.data) << "Could not load " << img_file_name;
-        
+
         Blob<Dtype> tmp_data;
         tmp_data.Reshape(top_shape);
         tmp_data.set_cpu_data(prefetch_data + offset);
         this->data_transformer_->Transform(cv_img, &tmp_data, rand);
     }
 #endif
-    
+
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
     lines_id_++;
@@ -186,7 +186,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
- }
+}
 
 
 

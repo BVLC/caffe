@@ -81,7 +81,7 @@ class DataTransformer {
    */
   void Transform(const vector<cv::Mat> & mat_vector,
                 Blob<Dtype>* transformed_blob);
-  
+
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -95,10 +95,10 @@ class DataTransformer {
 #ifndef _OPENMP
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #else
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob, 
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
           int rand = -1);
-  bool getRandMirror(){ return  param_.mirror() ? Rand(2) : -1; };
-#endif // _OPENMP
+  bool getRandMirror() { return  param_.mirror() ? Rand(2) : -1; }
+#endif  // _OPENMP
 
 #endif  // USE_OPENCV
 
@@ -175,8 +175,8 @@ class DataTransformer {
 
   // Data reader used if any to get data
   DataReader* data_reader_used;
-  
-  
+
+
  private:
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
   void Transform(const cv::Mat& cv_img,

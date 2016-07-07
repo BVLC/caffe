@@ -1,8 +1,8 @@
 #ifdef USE_OPENCV
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
 
 #include "gtest/gtest.h"
 
@@ -26,7 +26,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
       : seed_(1701),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()) {}
-      
+
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -61,50 +61,50 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
- 
+
 TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesAndDevices);
 
 
 template <typename Dtype>
-static void write_blob_to_file(const std::string& file_name, const Blob<Dtype>& blob)
-{
+static void write_blob_to_file(const std::string& file_name,
+        const Blob<Dtype>& blob) {
   std::ofstream file(file_name.c_str(), std::ios::out | std::ios::binary);
-  if (file.fail())
-  {
+  if (file.fail())  {
       ASSERT_FALSE(true);
       return;
   }
   file.write(reinterpret_cast<const char*>(&blob.shape()[0]), 4 * sizeof(int));
   ASSERT_FALSE(file.fail());
-  file.write(reinterpret_cast<const char*>(blob.cpu_data()), blob.count() * sizeof(Dtype));
+  file.write(reinterpret_cast<const char*>(blob.cpu_data()),
+          blob.count() * sizeof(Dtype));
   ASSERT_FALSE(file.fail());
   file.close();
 }
 template <typename Dtype>
-static void read_blob_from_file(const std::string& file_name,  Blob<Dtype>& blob)
-{
+static void read_blob_from_file(const std::string& file_name,
+        Blob<Dtype>& blob) {
   std::ifstream file(file_name.c_str(), std::ifstream::binary);
-  if (file.fail())
-  {   
+  if (file.fail()) {
       ASSERT_FALSE(true);
       return;
   }
-  vector<int> shape(4,0);
+  vector<int> shape(4, 0);
   file.read(reinterpret_cast<char*>(&shape[0]), 4 * sizeof(int));
   ASSERT_FALSE(file.fail());
   blob.Reshape(shape);
-  file.read(reinterpret_cast<char*>(blob.mutable_cpu_data()), blob.count() * sizeof(Dtype));
+  file.read(reinterpret_cast<char*>(blob.mutable_cpu_data()),
+          blob.count() * sizeof(Dtype));
   ASSERT_FALSE(file.fail());
 }
 
-//#define GENERATE_IDL_TEST_DATA
+// #define GENERATE_IDL_TEST_DATA
 
-TYPED_TEST(ImageDataLayerTest, TestRead) 
-{
+TYPED_TEST(ImageDataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;
-  std::string file_name = std::string(EXAMPLES_SOURCE_DIR) + 
-          std::string("test_blobs/ImageDataLayerTest_TestRead_")+std::string(typeid(Dtype).name())+std::string(".blob");
-  
+  std::string file_name = std::string(EXAMPLES_SOURCE_DIR)+
+          std::string("test_blobs/ImageDataLayerTest_TestRead_")+
+          std::string(typeid(Dtype).name())+std::string(".blob");
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -121,28 +121,28 @@ TYPED_TEST(ImageDataLayerTest, TestRead)
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
-  for (int iter = 0; iter < 2; ++iter)
-  {
+  for (int iter = 0; iter < 2; ++iter)  {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i)
-    {
+    for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
 
-#ifdef GENERATE_IDL_TEST_DATA        
+#ifdef GENERATE_IDL_TEST_DATA
     write_blob_to_file(file_name, *this->blob_top_data_);
 #endif
     Blob<Dtype> tmp_blob;
     read_blob_from_file(file_name, tmp_blob);
-    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data() ,sizeof(Dtype)*this->blob_top_data_->count()));
+    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data(),
+            sizeof(Dtype)*this->blob_top_data_->count()));
   }
 }
 
 TYPED_TEST(ImageDataLayerTest, TestResize) {
   typedef typename TypeParam::Dtype Dtype;
-  std::string file_name = std::string(EXAMPLES_SOURCE_DIR) + 
-          std::string("test_blobs/ImageDataLayerTest_TestResize_")+std::string(typeid(Dtype).name())+std::string(".blob");
-  
+  std::string file_name = std::string(EXAMPLES_SOURCE_DIR) +
+          std::string("test_blobs/ImageDataLayerTest_TestResize_")
+          +std::string(typeid(Dtype).name())+std::string(".blob");
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -166,12 +166,13 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
-#ifdef GENERATE_IDL_TEST_DATA        
+#ifdef GENERATE_IDL_TEST_DATA
     write_blob_to_file(file_name, *this->blob_top_data_);
 #endif
     Blob<Dtype> tmp_blob;
     read_blob_from_file(file_name, tmp_blob);
-    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data() ,sizeof(Dtype)*this->blob_top_data_->count()));
+    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data(),
+            sizeof(Dtype)*this->blob_top_data_->count()));
   }
 }
 
@@ -204,9 +205,10 @@ TYPED_TEST(ImageDataLayerTest, TestReshape) {
 
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   typedef typename TypeParam::Dtype Dtype;
-  std::string file_name = std::string(EXAMPLES_SOURCE_DIR) + 
-          std::string("test_blobs/ImageDataLayerTest_TestShuffle_")+std::string(typeid(Dtype).name())+std::string(".blob");
-  
+  std::string file_name = std::string(EXAMPLES_SOURCE_DIR) +
+          std::string("test_blobs/ImageDataLayerTest_TestShuffle_")+
+          std::string(typeid(Dtype).name())+std::string(".blob");
+
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -236,13 +238,14 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
     }
     EXPECT_EQ(5, values_to_indices.size());
     EXPECT_GT(5, num_in_order);
-    
-#ifdef GENERATE_IDL_TEST_DATA        
+
+#ifdef GENERATE_IDL_TEST_DATA
     write_blob_to_file(file_name, *this->blob_top_data_);
 #endif
     Blob<Dtype> tmp_blob;
     read_blob_from_file(file_name, tmp_blob);
-    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data() ,sizeof(Dtype)*this->blob_top_data_->count()));
+    EXPECT_EQ(0, memcmp(this->blob_top_data_->cpu_data(), tmp_blob.cpu_data(),
+            sizeof(Dtype)*this->blob_top_data_->count()));
   }
 }
 
