@@ -7,7 +7,14 @@
 
 // Stub out GPU calls as unavailable.
 
-#define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
+#define NO_GPU                                                          \
+    do {                                                                \
+        static bool logged = false;                                     \
+        if ( !logged ) {                                                \
+            LOG(ERROR) << "Cannot use GPU in CPU-only Caffe: check mode." ; \
+            logged = true;                                              \
+        }                                                               \
+    } while (0)
 
 #define STUB_GPU(classname) \
 template <typename Dtype> \
