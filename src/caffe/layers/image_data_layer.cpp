@@ -128,7 +128,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   // datum scales
   const int lines_size = lines_.size();
-  
+
 #ifdef _OPENMP
   #pragma omp parallel if (batch_size > 1)
   #pragma omp single nowait
@@ -137,7 +137,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
- #ifndef _OPENMP   
+#ifndef _OPENMP   
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
@@ -155,7 +155,8 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     
     int offset = batch->data_.offset(item_id);
     std::string img_file_name = lines_[lines_id_].first;
-    #pragma omp task firstprivate(offset, img_file_name)
+    int rand = this->data_transformer_->getRandMirror();
+    #pragma omp task firstprivate(offset, img_file_name, rand)
     {
         cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
             new_height, new_width, is_color);
@@ -164,7 +165,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         Blob<Dtype> tmp_data;
         tmp_data.Reshape(top_shape);
         tmp_data.set_cpu_data(prefetch_data + offset);
-        this->data_transformer_->Transform(cv_img, &tmp_data);
+        this->data_transformer_->Transform(cv_img, &tmp_data, rand);
     }
 #endif
     

@@ -616,16 +616,15 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
 
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob) 
-{
-  bool do_mirror;
 #ifdef _OPENMP
-  #pragma omp critical
-#endif
-  {
-    do_mirror = param_.mirror() && Rand(2);
-  }
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
+        Blob<Dtype>* transformed_blob, const int rand) {
+  const bool do_mirror = param_.mirror() && ( rand >= 0 ? rand: Rand(2));
+#else
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
+        Blob<Dtype>* transformed_blob) {
+  const bool do_mirror = param_.mirror() && Rand(2);
+#endif // _OPENMP
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
