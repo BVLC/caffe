@@ -422,6 +422,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           }
         }
         name_count_ = 0;
+        detections_.clear();
       }
     }
   }

@@ -285,6 +285,7 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
           }
         }
         name_count_ = 0;
+        detections_.clear();
       }
     }
   }
