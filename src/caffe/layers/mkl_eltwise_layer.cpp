@@ -178,7 +178,8 @@ void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       switch (op_) {
       case EltwiseParameter_EltwiseOp_SUM:
-        bottom[i]->ShareData(*top[0]);
+        CHECK_EQ(coeffs_[i], Dtype(1)) << "Not supported yet";
+        bottom[i]->ShareDiff(*top[0]);
         break;
       case EltwiseParameter_EltwiseOp_MAX:
       case EltwiseParameter_EltwiseOp_PROD:
