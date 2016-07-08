@@ -174,12 +174,35 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+
+  const Dtype* top_diff = top[0]->prv_diff();
+  int count = 0;
+  bool is_top_diff_prv = false;
+
+  // If there is no diff in prv layout
+  // then we are given cpu layout
+  // and we will produce bottom at cpu layout as well
+  if (top_diff == NULL) {
+    top_diff = top[0]->cpu_diff();
+    count = top[0]->count();
+  } else {
+    count = top[0]->prv_diff_count();
+    is_top_diff_prv = true;
+  }
+  Dtype* bottom_diff = NULL;
+
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
       switch (op_) {
       case EltwiseParameter_EltwiseOp_SUM:
         CHECK_EQ(coeffs_[i], Dtype(1)) << "Not supported yet";
-        bottom[i]->ShareDiff(*top[0]);
+        if (is_top_diff_prv == false) {
+          bottom_diff = bottom[i]->mutable_cpu_diff();
+        } else {
+          bottom_diff = bottom[i]->mutable_prv_diff();
+          bottom[i]->set_prv_descriptor_diff(top[0]->get_prv_descriptor_diff());
+        }
+        caffe_copy(count, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_MAX:
       case EltwiseParameter_EltwiseOp_PROD:
