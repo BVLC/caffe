@@ -1,12 +1,14 @@
 #ifndef CAFFE_UTIL_CPU_INFO_HPP
 #define CAFFE_UTIL_CPU_INFO_HPP
 
+#include <boost/thread/thread.hpp>
 #include <sched.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <set>
 #include <vector>
+
 
 namespace caffe {
 namespace cpu {
@@ -103,9 +105,11 @@ class OpenMpManager {
   static void bindOpenMpThreads();
   static void printVerboseInformation();
 
+  static bool isMajorThread(boost::thread::id currentThread);
   static unsigned getProcessorSpeedMHz();
 
  private:
+  boost::thread::id mainThreadId;
   Collection &collection;
 
   bool isGpuEnabled;

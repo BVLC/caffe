@@ -5,8 +5,7 @@
 namespace caffe {
 namespace cpu {
 
-class CpuInfoContent
-{
+class CpuInfoContent {
  public:
   CpuInfoContent(const char *modelName,
     int numberOfSockets, int coresPerSocket, int threadsPerCore) {
@@ -18,9 +17,9 @@ class CpuInfoContent
     char *contentEnd = &content[contentLength];
 
     int processorId = 0;
-    for(int socketId = 0; socketId < numberOfSockets; socketId++) {
-      for(int threadId = 0; threadId < threadsPerCore; threadId++) {
-        for(int coreId = 0; coreId < coresPerSocket; coreId++) {
+    for (int socketId = 0; socketId < numberOfSockets; socketId++) {
+      for (int threadId = 0; threadId < threadsPerCore; threadId++) {
+        for (int coreId = 0; coreId < coresPerSocket; coreId++) {
           contentPosition += snprintf(
             contentPosition,
             contentEnd - contentPosition,
@@ -176,7 +175,10 @@ TEST(CpuInfo, testCollectionForMultipleSocketsMultipleCoresWithMultithreading) {
 }
 
 TEST(CpuInfo, testCollectionForSpeed) {
-  CpuInfoContent cpuInfoContent("Intel(R) Xeon(R) CPU E5-2699 v4 @ 2.20GHz", 2, 22, 2);
+  CpuInfoContent cpuInfoContent("Intel(R) Xeon(R) CPU E5-2699 v4 @ 2.20GHz",
+                                 2,
+                                 22,
+                                 2);
   CpuInfo cpuInfo(cpuInfoContent.getContent());
   Collection collection(&cpuInfo);
   EXPECT_EQ(collection.getProcessorSpeedMHz(), 2200);
