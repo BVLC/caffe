@@ -1849,7 +1849,7 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
   // Make sure that tp and fp have complement value.
   for (int i = 0; i < num; ++i) {
     CHECK_LE(fabs(tp[i].first - fp[i].first), eps);
-    // CHECK_EQ(tp[i].second, 1 - fp[i].second);
+    CHECK_EQ(tp[i].second, 1 - fp[i].second);
   }
   prec->clear();
   rec->clear();
