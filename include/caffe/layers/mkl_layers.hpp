@@ -20,8 +20,8 @@ template <typename Dtype, bool is_diff>
 struct MKLMemoryDescriptor : PrvMemDescr,
     boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
   MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
-          convert_to_int(NULL), convert_from_int(NULL), name("UKNOWN"),
-          internal_ptr(NULL) {}
+          convert_to_int(NULL), convert_from_int(NULL), convert_prv2prv(NULL),
+          name("UNKNOWN"), internal_ptr(NULL) {}
   ~MKLMemoryDescriptor() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
@@ -38,6 +38,9 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   dnnLayout_t layout_int;
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
+  dnnPrimitive_t convert_prv2prv;
+  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > descr_prv2prv_conversion;
+  
   std::string name;  // for debugging purposes
   void allocate() {
     if (internal_ptr == NULL) {

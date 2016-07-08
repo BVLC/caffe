@@ -51,6 +51,11 @@ void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
+  fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data->name =    "fwd_top_data      @ " + this->layer_param_.name();
+  bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+  bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
+
   // Fwd, Bwd primitives and lrn_buffer_ are allocated in  "Lazy"
   // mode, because here we don't know
   // what layout is used by neighbours.
@@ -97,7 +102,6 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const void* bottom_data =
     reinterpret_cast<const void*>(bottom[0]->prv_data());
-  void* top_data = NULL;
 
   if (NULL != bottom_data) {
     // Is it the first pass? Create a primitive.
@@ -173,7 +177,6 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
       CHECK_EQ(e, E_SUCCESS);
     }
     bottom_data = reinterpret_cast<const void*>(bottom[0]->cpu_data());
-    top_data = top[0]->mutable_cpu_data();
   }
 
   dnnError_t e;
