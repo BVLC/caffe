@@ -549,14 +549,21 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
         DLOG(INFO) << "convert priv => priv      "
                 << current_descr->name << " => " << this->name;
 
-        dnnPrimitive_t convert_padding;
-        status = dnnConversionCreate<Dtype>(&convert_padding,
-                current_descr->layout_int , this->layout_int);
-        // CHECK_EQ(status, 0)
-        // << "Failed creation convert_padding with status " << status << "\n";
+        if (this->convert_prv2prv) {
+          CHECK_EQ(dnnLayoutCompare<Dtype>(
+              this->descr_prv2prv_conversion->layout_int,
+              this->layout_int), 0);
+          status = 0;
+        } else {
+          status = dnnConversionCreate<Dtype>(&this->convert_prv2prv,
+                  current_descr->layout_int , this->layout_int);
+          if(status == 0)
+            this->descr_prv2prv_conversion = current_descr;
+        }
+
         if (status != 0) {
           // TODO: Very weird that we end up here for conv1. No idea why....
-          DLOG(INFO) << "!!!! Failed creation convert_padding with status "
+          DLOG(INFO) << "!!!! Failed creation convert_prv2prv with status "
                   << status << "\n";
 
           allocate();
@@ -577,9 +584,8 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
           convert_resources[dnnResourceTo] =
                   reinterpret_cast<void *>(this->internal_ptr);
-          status = dnnExecute<Dtype>(convert_padding, convert_resources);
+          status = dnnExecute<Dtype>(this->convert_prv2prv, convert_resources);
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
-          dnnDelete<Dtype>(convert_padding);
         }
 
         if (set_prv_ptr) {

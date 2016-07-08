@@ -370,7 +370,8 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   } else {
     pooling_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
-
+  caffe_set(bottom[0]->count(), Dtype(0),
+          reinterpret_cast<Dtype *>(pooling_res[dnnResourceDiffSrc]));
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
   CHECK_EQ(e, E_SUCCESS);
 }
