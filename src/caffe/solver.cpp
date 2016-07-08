@@ -467,6 +467,11 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
           float score = result_vec[k * 5 + 2];
           int tp = static_cast<int>(result_vec[k * 5 + 3]);
           int fp = static_cast<int>(result_vec[k * 5 + 4]);
+          if (tp == 0 && fp == 0) {
+            // Ignore such case. It happens when a detection bbox is matched to
+            // a difficult gt bbox and we don't evaluate on difficult gt bbox.
+            continue;
+          }
           all_true_pos[j][label].push_back(std::make_pair(score, tp));
           all_false_pos[j][label].push_back(std::make_pair(score, fp));
         }
