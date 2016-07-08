@@ -368,6 +368,12 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 
+  if (this->width_ == bottom[0]->width() &&
+      this->height_ == bottom[0]->height() &&
+      this->channels_ == bottom[0]->channels() &&
+      this->num_ == bottom[0]->num())
+    return;
+
   // Free MKL primitives
   dnnDelete<Dtype>(convolutionFwd);
   dnnDelete<Dtype>(convolutionBwdData);
@@ -557,7 +563,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
         } else {
           status = dnnConversionCreate<Dtype>(&this->convert_prv2prv,
                   current_descr->layout_int , this->layout_int);
-          if(status == 0)
+          if (status == 0)
             this->descr_prv2prv_conversion = current_descr;
         }
 

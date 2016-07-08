@@ -40,7 +40,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   dnnPrimitive_t convert_from_int;
   dnnPrimitive_t convert_prv2prv;
   shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > descr_prv2prv_conversion;
-  
+
   std::string name;  // for debugging purposes
   void allocate() {
     if (internal_ptr == NULL) {
@@ -262,7 +262,7 @@ class MKLPoolingLayer : public Layer<Dtype> {
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int pad_h_, pad_w_;
-  int channels_;
+  int channels_, num_;
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
