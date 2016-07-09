@@ -74,6 +74,8 @@ caffe_root = os.getcwd()
 run_soon = True
 # The device id for webcam
 webcam_id = 0
+# Number of frames to be skipped.
+skip_frames = 0
 
 # The parameters for the webcam demo
 
@@ -86,6 +88,7 @@ share_location = True
 background_label_id=0
 conf_loss_type = P.MultiBoxLoss.SOFTMAX
 code_type = P.PriorBox.CENTER_SIZE
+lr_mult = 1.
 # Stores LabelMapItem.
 label_map_file = "data/VOC0712/labelmap_voc.prototxt"
 # The resized image size
@@ -111,6 +114,11 @@ scale = 1.5
 
 ### Hopefully you don't need to change the following ###
 resize = "{}x{}".format(resize_width, resize_height)
+video_data_param = {
+        'video_type': P.VideoData.WEBCAM,
+        'device_id': webcam_id,
+        'skip_frames': skip_frames,
+        }
 test_transform_param = {
         'mean_value': [104, 117, 123],
         'resize_param': {
@@ -215,8 +223,7 @@ make_if_not_exist(snapshot_dir)
 
 # Create test net.
 net = caffe.NetSpec()
-net.data = L.VideoData(
-        video_data_param=dict(video_type=P.VideoData.WEBCAM, device_id=webcam_id),
+net.data = L.VideoData(video_data_param=video_data_param,
         data_param=dict(batch_size=test_batch_size),
         transform_param=test_transform_param)
 
