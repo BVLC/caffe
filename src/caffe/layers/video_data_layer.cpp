@@ -49,8 +49,6 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
   } else if (video_type_ == VideoDataParameter_VideoType_VIDEO) {
     CHECK(video_data_param.has_video_file()) << "Must provide video file!";
     const string& video_file = video_data_param.video_file();
-    cv::VideoCapture cap(video_file);
-    LOG(INFO) << cap.isOpened();
     if (!cap_.open(video_file)) {
       LOG(FATAL) << "Failed to open video: " << video_file;
     }
