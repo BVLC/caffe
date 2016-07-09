@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <string>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/video_data_layer.hpp"
@@ -22,7 +23,7 @@ VideoDataLayer<Dtype>::VideoDataLayer(const LayerParameter& param)
 template <typename Dtype>
 VideoDataLayer<Dtype>::~VideoDataLayer() {
   this->StopInternalThread();
-  if (video_type_ == VideoDataParameter_VideoType_WEBCAM) {
+  if (cap_.isOpened()) {
     cap_.release();
   }
 }
@@ -34,25 +35,42 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
   const VideoDataParameter& video_data_param =
       this->layer_param_.video_data_param();
   video_type_ = video_data_param.video_type();
+  skip_frames_ = video_data_param.skip_frames();
+  CHECK_GE(skip_frames_, 0);
 
-  vector<int> top_shape;
+  // Read an image, and use it to initialize the top blob.
+  cv::Mat cv_img;
   if (video_type_ == VideoDataParameter_VideoType_WEBCAM) {
     const int device_id = video_data_param.device_id();
     if (!cap_.open(device_id)) {
       LOG(FATAL) << "Failed to open webcam: " << device_id;
     }
-    // Read an image, and use it to initialize the top blob.
-    cv::Mat cv_img;
     cap_ >> cv_img;
-    CHECK(cv_img.data) << "Could not load image from webcam!";
-    // Use data_transformer to infer the expected blob shape from a cv_image.
-    top_shape = this->data_transformer_->InferBlobShape(cv_img);
-    this->transformed_data_.Reshape(top_shape);
+  } else if (video_type_ == VideoDataParameter_VideoType_VIDEO) {
+    CHECK(video_data_param.has_video_file()) << "Must provide video file!";
+    const string& video_file = video_data_param.video_file();
+    cv::VideoCapture cap(video_file);
+    LOG(INFO) << cap.isOpened();
+    if (!cap_.open(video_file)) {
+      LOG(FATAL) << "Failed to open video: " << video_file;
+    }
+    total_frames_ = cap_.get(CV_CAP_PROP_FRAME_COUNT);
+    processed_frames_ = 0;
+    // Read image to infer shape.
+    cap_ >> cv_img;
+    // Set index back to the first frame.
+    cap_.set(CV_CAP_PROP_POS_FRAMES, 0);
+  } else {
+    LOG(FATAL) << "Unknow video type!";
   }
-  top_shape[0] = batch_size;
-  top[0]->Reshape(top_shape);
+  CHECK(cv_img.data) << "Could not load image!";
+  // Use data_transformer to infer the expected blob shape from a cv_image.
+  top_shape_ = this->data_transformer_->InferBlobShape(cv_img);
+  this->transformed_data_.Reshape(top_shape_);
+  top_shape_[0] = batch_size;
+  top[0]->Reshape(top_shape_);
   for (int i = 0; i < this->prefetch_.size(); ++i) {
-    this->prefetch_[i]->data_.Reshape(top_shape);
+    this->prefetch_[i]->data_.Reshape(top_shape_);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -81,18 +99,11 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first anno_datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  vector<int> top_shape;
-  if (video_type_ == VideoDataParameter_VideoType_WEBCAM) {
-    cv::Mat cv_img;
-    cap_ >> cv_img;
-    CHECK(cv_img.data) << "Could not load image from webcam!";
-    // Use data_transformer to infer the expected blob shape from a cv_img.
-    top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  }
-  this->transformed_data_.Reshape(top_shape);
+  top_shape_[0] = 1;
+  this->transformed_data_.Reshape(top_shape_);
   // Reshape batch according to the batch_size.
-  top_shape[0] = batch_size;
-  batch->data_.Reshape(top_shape);
+  top_shape_[0] = batch_size;
+  batch->data_.Reshape(top_shape_);
 
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
@@ -100,13 +111,29 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
 
+  int skip_frames = skip_frames_;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
+    cv::Mat cv_img;
     if (video_type_ == VideoDataParameter_VideoType_WEBCAM) {
-      cv::Mat cv_img;
       cap_ >> cv_img;
-      CHECK(cv_img.data) << "Could not load image from webcam!";
-      read_time += timer.MicroSeconds();
+    } else if (video_type_ == VideoDataParameter_VideoType_VIDEO) {
+      if (processed_frames_ >= total_frames_) {
+        LOG(INFO) << "Finished processing video.";
+        exit(-1);
+      }
+      ++processed_frames_;
+      cap_ >> cv_img;
+    } else {
+      LOG(FATAL) << "Unknown video type.";
+    }
+    CHECK(cv_img.data) << "Could not load image!";
+    read_time += timer.MicroSeconds();
+    if (skip_frames > 0) {
+      --skip_frames;
+      --item_id;
+    } else {
+      skip_frames = skip_frames_;
       timer.Start();
       // Apply transformations (mirror, crop...) to the image
       int offset = batch->data_.offset(item_id);

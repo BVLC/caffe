@@ -1696,9 +1696,13 @@ message ThresholdParameter {
 message VideoDataParameter{
   enum VideoType {
     WEBCAM = 0;
+    VIDEO = 1;
   }
   optional VideoType video_type = 1 [default = WEBCAM];
   optional int32 device_id = 2 [default = 0];
+  optional string video_file = 3;
+  // Number of frames to be skipped before processing a frame.
+  optional uint32 skip_frames = 4 [default = 0];
 }
 
 message WindowDataParameter {
