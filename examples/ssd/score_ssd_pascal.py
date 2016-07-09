@@ -186,6 +186,19 @@ train_transform_param = {
                         P.Resize.LANCZOS4,
                         ],
                 },
+        'distort_param': {
+                'brightness_prob': 0.5,
+                'brightness_delta': 32,
+                'contrast_prob': 0.5,
+                'contrast_lower': 0.5,
+                'contrast_upper': 1.5,
+                'hue_prob': 0.5,
+                'hue_delta': 18,
+                'saturation_prob': 0.5,
+                'saturation_lower': 0.5,
+                'saturation_upper': 1.5,
+                'random_order_prob': 0.0,
+                },
         'emit_constraint': {
             'emit_type': caffe_pb2.EmitConstraint.CENTER,
             }
@@ -352,7 +365,7 @@ solver_param = {
     'base_lr': base_lr,
     'weight_decay': 0.0005,
     'lr_policy': "multistep",
-    'stepvalue': [30000, 40000, 50000],
+    'stepvalue': [40000, 50000, 60000],
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
