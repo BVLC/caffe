@@ -174,7 +174,7 @@ void MeanfieldIteration<Dtype>::Backward_cpu() {
   sum_layer_->Backward(sum_top_vec_, eltwise_propagate_down, sum_bottom_vec_);
 
   Dtype * const prob_diff = prob_.mutable_cpu_diff();
-  caffe_set(prob_.count(), Dtype(0.), prob_diff); // Do this regardless of if detections or HOs are enabled or not.
+  caffe_set(prob_.count(), Dtype(0.), prob_diff);
 
 
   //---------------------------- Update compatibility diffs ------------------
