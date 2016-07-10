@@ -1,74 +1,62 @@
-#ifndef CAFFE_MULTISTAGEMEANFIELD_LAYER_HPP_
-#define CAFFE_MULTISTAGEMEANFIELD_LAYER_HPP_
-#include <string>
-#include <utility>
-#include <vector>
+#ifndef CAFFE_HASH_TABLE_HPP
+#define CAFFE_HASH_TABLE_HPP
 
-#include "caffe/net.hpp"
-#include "caffe/blob.hpp"
-#include "caffe/layer.hpp"
-#include "caffe/proto/caffe.pb.h"
+#include "caffe/common.hpp"
 
-#include "caffe/layers/meanfield_iteration.hpp"
-#include "caffe/util/modified_permutohedral.hpp"
-#include <boost/shared_array.hpp>
-namespace caffe {
-template <typename Dtype>
-class MultiStageMeanfieldLayer : public Layer<Dtype> {
+namespace caffe{
 
- public:
-  explicit MultiStageMeanfieldLayer(const LayerParameter& param) : Layer<Dtype>(param) {}
+class HashTable
+{
+  public:
+    int *table_entries;
+    unsigned int table_capacity;
+    signed short *table_keys;
+    bool create;
 
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+    HashTable() : create(false) {}
 
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+    void createHashTable(const int capacity, const int kd){
+      #ifndef CPU_ONLY
+      // TODO? use symbol to go in constant memory instead
+      // Initialize table_capacity
+      table_capacity = (unsigned int)capacity ;
 
-  virtual inline const char* type() const { 
-    return "MultiStageMeanfield"; 
-  }
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+      // Initialize table_entries
+      CUDA_CHECK(cudaMalloc((void **) &table_entries, 2*capacity*sizeof(int)));
+      CUDA_CHECK(cudaMemset(table_entries, -1, 2*capacity*sizeof(int)));
 
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+      // Initialize table_keys
+      CUDA_CHECK(cudaMalloc((void **) &table_keys, capacity*kd*sizeof(signed short)));
+      CUDA_CHECK(cudaMemset(table_keys, 0, capacity*kd*sizeof(signed short)));
 
-  virtual void compute_spatial_kernel(float* const output_kernel);
-  virtual void compute_bilateral_kernel(const Blob<Dtype>* const rgb_blob, const int n, float* const output_kernel);
+      // Set create to true
+      create = true;
+      #endif // CPU_ONLY
+    }
 
-  int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int num_pixels_;
+    void resetHashTable(const int capacity, const int kd){
+      #ifndef CPU_ONLY
+      // Initialize table_capacity
+      table_capacity = (unsigned int)capacity ;
 
-  Dtype theta_alpha_;
-  Dtype theta_beta_;
-  Dtype theta_gamma_;
-  int num_iterations_;
+      // Reset table_entries
+      CUDA_CHECK(cudaMemset(table_entries, -1, 2*capacity*sizeof(int)));
 
-  boost::shared_array<Dtype> norm_feed_;
-  Blob<Dtype> spatial_norm_;
-  Blob<Dtype> bilateral_norms_;
+      // Resettable_keys
+      CUDA_CHECK(cudaMemset(table_keys, 0, capacity*kd*sizeof(signed short)));
+      #endif // CPU_ONLY
+    }
 
-  vector<Blob<Dtype>*> split_layer_bottom_vec_;
-  vector<Blob<Dtype>*> split_layer_top_vec_;
-  vector<shared_ptr<Blob<Dtype> > > split_layer_out_blobs_;
-  vector<shared_ptr<Blob<Dtype> > > iteration_output_blobs_;
-  vector<shared_ptr<MeanfieldIteration<Dtype> > > meanfield_iterations_;
+    ~HashTable(){
+      #ifndef CPU_ONLY
+      if(create){
+        // Free pointers allocated during
+        CUDA_CHECK(cudaFree(table_entries));
+        CUDA_CHECK(cudaFree(table_keys));
+        }
+      #endif //CPU_ONLY
+    }
 
-  shared_ptr<SplitLayer<Dtype> > split_layer_;
-
-  shared_ptr<ModifiedPermutohedral> spatial_lattice_;
-  boost::shared_array<float> bilateral_kernel_buffer_;
-  vector<shared_ptr<ModifiedPermutohedral> > bilateral_lattices_;
 };
-}
-
-#endif
-
+}//namespace caffe
+#endif //CAFFE_HASH_TABLE_HPP

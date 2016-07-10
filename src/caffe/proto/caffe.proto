@@ -469,11 +469,11 @@ message MultiStageMeanfieldParameter {
   required float theta_gamma = 5 [default = 10.];
 
   required uint32 num_iterations = 6 [default = 1];
-  optional float spatial_filter_weight = 7 [default = 1];
-  optional float bilateral_filter_weight = 8 [default = 1];
 
-  optional float forced_spatial_filter_weight = 9;
-  optional float forced_bilateral_filter_weight = 10;
+  optional string spatial_filter_weights_str = 19 [default=""];
+  optional string bilateral_filter_weights_str = 20 [default=""];
+
+  optional bool force_cpu=29 [default=false];//Force CPU meanfield to use, even though GPU is available
 }
 
 // Messages that store parameters used by individual layer types follow, in

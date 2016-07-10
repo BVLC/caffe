@@ -102,10 +102,10 @@ public:
 /***          ModifiedPermutohedral Lattice           ***/
 /************************************************/
 
-ModifiedPermutohedral::ModifiedPermutohedral():N_( 0 ), M_( 0 ), d_( 0 ) {
+ModifiedPermutohedral::ModifiedPermutohedral(): is_init(false), N_( 0 ), M_( 0 ), d_( 0 ) {
 }
 #ifdef SSE_PERMUTOHEDRAL
-void ModifiedPermutohedral::init(const float* features, int num_dimensions, int num_points)
+void ModifiedPermutohedral::init_cpu(const float* features, int num_dimensions, int num_points)
 {
 	// Compute the lattice coordinates for each feature [there is going to be a lot of magic here
 	N_ = num_points;
@@ -288,7 +288,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 	delete[] n2;
 }
 #else
-void ModifiedPermutohedral::init (const float* features, int num_dimensions, int num_points)
+void ModifiedPermutohedral::init_cpu(const float* features, int num_dimensions, int num_points)
 {
 	// Compute the lattice coordinates for each feature [there is going to be a lot of magic here
 	N_ = num_points;
@@ -725,7 +725,7 @@ void ModifiedPermutohedral::sseCompute(double* out, const double* in, int value_
 #endif
 
 
-void ModifiedPermutohedral::compute (float* out, const float* in, int value_size, bool reverse, bool add) const
+void ModifiedPermutohedral::compute_cpu (float* out, const float* in, int value_size, bool reverse, bool add) const
 {
 	if (value_size <= 2)
 		seqCompute(out, in, value_size, reverse, add);
@@ -733,7 +733,7 @@ void ModifiedPermutohedral::compute (float* out, const float* in, int value_size
 		sseCompute(out, in, value_size, reverse, add);
 }
 
-void ModifiedPermutohedral::compute (double* out, const double* in, int value_size, bool reverse, bool add) const
+void ModifiedPermutohedral::compute_cpu (double* out, const double* in, int value_size, bool reverse, bool add) const
 {
   if (value_size <= 2)
     seqCompute(out, in, value_size, reverse, add);
