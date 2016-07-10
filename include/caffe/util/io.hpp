@@ -228,6 +228,9 @@ bool ReadJSONToAnnotatedDatum(const string& labelname, const int img_height,
     const int img_width, const std::map<string, int>& name_to_label,
     AnnotatedDatum* anno_datum);
 
+bool ReadTxtToAnnotatedDatum(const string& labelname, const int height,
+    const int width, AnnotatedDatum* anno_datum);
+
 bool ReadLabelFileToLabelMap(const string& filename, bool include_background,
     const string& delimiter, LabelMap* map);
 

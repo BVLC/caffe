@@ -245,6 +245,9 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
       } else if (labeltype == "json") {
         return ReadJSONToAnnotatedDatum(labelfile, ori_height, ori_width,
                                         name_to_label, anno_datum);
+      } else if (labeltype == "txt") {
+        return ReadTxtToAnnotatedDatum(labelfile, ori_height, ori_width,
+                                       anno_datum);
       } else {
         LOG(FATAL) << "Unknown label file type.";
         return false;
@@ -460,6 +463,72 @@ bool ReadJSONToAnnotatedDatum(const string& labelfile, const int img_height,
     bbox->set_xmax(xmax / width);
     bbox->set_ymax(ymax / height);
     bbox->set_difficult(iscrowd);
+  }
+  return true;
+}
+
+// Parse plain txt detection annotation: label_id, xmin, ymin, xmax, ymax.
+bool ReadTxtToAnnotatedDatum(const string& labelfile, const int height,
+    const int width, AnnotatedDatum* anno_datum) {
+  std::ifstream infile(labelfile.c_str());
+  if (!infile.good()) {
+    LOG(INFO) << "Cannot open " << labelfile;
+    return false;
+  }
+  int label;
+  float xmin, ymin, xmax, ymax;
+  while (infile >> label >> xmin >> ymin >> xmax >> ymax) {
+    Annotation* anno = NULL;
+    int instance_id = 0;
+    bool found_group = false;
+    for (int g = 0; g < anno_datum->annotation_group_size(); ++g) {
+      AnnotationGroup* anno_group = anno_datum->mutable_annotation_group(g);
+      if (label == anno_group->group_label()) {
+        if (anno_group->annotation_size() == 0) {
+          instance_id = 0;
+        } else {
+          instance_id = anno_group->annotation(
+              anno_group->annotation_size() - 1).instance_id() + 1;
+        }
+        anno = anno_group->add_annotation();
+        found_group = true;
+      }
+    }
+    if (!found_group) {
+      // If there is no such annotation_group, create a new one.
+      AnnotationGroup* anno_group = anno_datum->add_annotation_group();
+      anno_group->set_group_label(label);
+      anno = anno_group->add_annotation();
+      instance_id = 0;
+    }
+    anno->set_instance_id(instance_id++);
+    LOG_IF(WARNING, xmin > width) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymin > height) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmax > width) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymax > height) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmin < 0) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymin < 0) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmax < 0) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymax < 0) << labelfile <<
+      " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmin > xmax) << labelfile <<
+      " bounding box irregular.";
+    LOG_IF(WARNING, ymin > ymax) << labelfile <<
+      " bounding box irregular.";
+    // Store the normalized bounding box.
+    NormalizedBBox* bbox = anno->mutable_bbox();
+    bbox->set_xmin(xmin / width);
+    bbox->set_ymin(ymin / height);
+    bbox->set_xmax(xmax / width);
+    bbox->set_ymax(ymax / height);
+    bbox->set_difficult(false);
   }
   return true;
 }
