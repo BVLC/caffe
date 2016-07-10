@@ -14,7 +14,15 @@ if nargin < 3 || isempty(model_file)
   error('Missing argument model_file');
 end
 
-
+% set to use GPU or CPU
+if use_gpu
+  fprintf('Using GPU Mode\n');
+  caffe.set_mode_gpu();
+  caffe.set_device(gpu_id);
+else
+  fprintf('Using CPU Mode\n');
+  caffe.set_mode_cpu();
+end
 
 if exist(model_file, 'file') ~= 2
     error('You need a network model file');
@@ -27,14 +35,5 @@ net = caffe.Net(model_def_file, model_file, 'test');
 fprintf('Done with set_phase_test\n');
 fprintf('Done with init\n');
 
-% set to use GPU or CPU
-if use_gpu
-  fprintf('Using GPU Mode\n');
-  caffe.set_mode_gpu();
-  caffe.set_device(gpu_id);
-else
-  fprintf('Using CPU Mode\n');
-  caffe.set_mode_cpu();
-end
 fprintf('Done with set_mode\n');
 
