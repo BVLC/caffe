@@ -22,7 +22,7 @@ if __name__ == "__main__":
   parser.add_argument("--anno-type", default = "classification",
       help="The type of annotation {classification, detection}.")
   parser.add_argument("--label-type", default = "xml",
-      help="The type of label file format for detection {xml, json}.")
+      help="The type of label file format for detection {xml, json, txt}.")
   parser.add_argument("--backend", default = "lmdb",
       help="The backend {lmdb, leveldb} for storing the result")
   parser.add_argument("--check-size", default = False, action = "store_true",
