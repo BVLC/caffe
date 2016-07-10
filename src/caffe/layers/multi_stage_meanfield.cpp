@@ -117,8 +117,6 @@ void MultiStageMeanfieldLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
  * bottom[0] - Unary terms
  * bottom[1] - Softmax input (a copy of the unary terms)
  * bottom[2] - RGB images
- * bottom[3] - Image indices, useful for higher order potentials.
- *
  * top[0] - Output of the mean field inference (not normalized).
  */
 template <typename Dtype>
