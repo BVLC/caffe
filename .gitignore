@@ -101,3 +101,6 @@ MANIFEST-*
 *.opensdf
 *.pdb
 *.props
+
+# Packages cache
+windows/packages/

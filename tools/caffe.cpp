@@ -1,6 +1,11 @@
 #ifdef WITH_PYTHON_LAYER
-#include "boost/python.hpp"
+#include <boost/python.hpp>
 namespace bp = boost::python;
+#ifdef _MSC_VER
+namespace caffe {
+    extern void PythonInitEmbeddedCaffeModule();
+}
+#endif
 #endif
 
 #include <gflags/gflags.h>
@@ -400,6 +405,11 @@ int main(int argc, char** argv) {
       "  test            score a model\n"
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time");
+
+#if defined(WITH_PYTHON_LAYER) && defined(_MSC_VER)
+  caffe::PythonInitEmbeddedCaffeModule();
+#endif
+
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {
