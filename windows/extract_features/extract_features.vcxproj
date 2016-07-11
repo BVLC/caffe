@@ -45,7 +45,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <ClCompile>
-      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -54,7 +54,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <ClCompile>
-      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
