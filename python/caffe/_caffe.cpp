@@ -1,5 +1,3 @@
-#include <Python.h>  // NOLINT(build/include_alpha)
-
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
