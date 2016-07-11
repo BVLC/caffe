@@ -28,6 +28,11 @@ def parse_args():
                               'http://www.graphviz.org/doc/info/'
                               'attrs.html#k:rankdir'),
                         default='LR')
+    parser.add_argument('--phase',
+                        help=('Which network phase to draw: can be TRAIN, '
+                              'TEST, or ALL.  If ALL, then all layers are drawn '
+                              'regardless of phase.'),
+                        default="ALL")
 
     args = parser.parse_args()
     return args
@@ -38,7 +43,15 @@ def main():
     net = caffe_pb2.NetParameter()
     text_format.Merge(open(args.input_net_proto_file).read(), net)
     print('Drawing net to %s' % args.output_image_file)
-    caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir)
+    phase=None;
+    if args.phase == "TRAIN":
+        phase = caffe.TRAIN
+    elif args.phase == "TEST":
+        phase = caffe.TEST
+    elif args.phase != "ALL":
+        raise ValueError("Unknown phase: " + args.phase)
+    caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir,
+                                phase)
 
 
 if __name__ == '__main__':
