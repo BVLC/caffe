@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
-TOOLS=./build/tools
+# Check if TOOLS is set
+if [ -z ${TOOLS+x} ];
+# if unset
+then
+  TOOLS=./build/tools  
+fi
 
 $TOOLS/caffe train --solver=examples/siamese/mnist_siamese_solver.prototxt

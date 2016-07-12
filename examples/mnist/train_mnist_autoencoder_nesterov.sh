@@ -1,4 +1,11 @@
 #!/bin/bash
 
-./build/tools/caffe train \
+# Check if TOOLS is set
+if [ -z ${TOOLS+x} ];
+# if unset
+then
+  TOOLS=./build/tools
+fi
+
+$TOOLS/caffe train \
   --solver=examples/mnist/mnist_autoencoder_solver_nesterov.prototxt

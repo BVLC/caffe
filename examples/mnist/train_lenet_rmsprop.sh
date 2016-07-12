@@ -1,3 +1,10 @@
 #!/usr/bin/env sh
 
-./build/tools/caffe train --solver=examples/mnist/lenet_solver_rmsprop.prototxt
+# Check if TOOLS is set
+if [ -z ${TOOLS+x} ];
+# if unset
+then
+  TOOLS=./build/tools
+fi
+
+$TOOLS/caffe train --solver=examples/mnist/lenet_solver_rmsprop.prototxt

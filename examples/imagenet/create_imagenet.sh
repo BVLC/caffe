@@ -4,7 +4,12 @@
 
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
-TOOLS=build/tools
+
+# Check if TOOLS is unset
+if [ -z ${TOOLS+x} ];
+then
+TOOLS=./build/tools
+fi
 
 TRAIN_DATA_ROOT=/path/to/imagenet/train/
 VAL_DATA_ROOT=/path/to/imagenet/val/
@@ -36,6 +41,7 @@ fi
 
 echo "Creating train lmdb..."
 
+rm -rf $EXAMPLE/ilsvrc12_train_lmdb
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
@@ -46,6 +52,7 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
 
 echo "Creating val lmdb..."
 
+rm -rf $EXAMPLE/ilsvrc12_val_lmdb
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
