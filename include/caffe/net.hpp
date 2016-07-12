@@ -29,6 +29,7 @@ class Net {
                const Net* root_net =
                NULL);
   explicit Net(const string& param_file, Phase phase, device* device_context,
+               const int level = 0, const vector<string>* stages = NULL,
                const Net* root_net = NULL);
   virtual ~Net() {
   }
