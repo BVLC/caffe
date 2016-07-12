@@ -333,7 +333,7 @@ def VGGNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
     return net
 
 
-def ResNet101Body(net, from_layer, use_pool5=True, **bn_param):
+def ResNet152Body(net, from_layer, use_pool5=True):
     conv_prefix = ''
     conv_postfix = ''
     bn_prefix = 'bn_'
@@ -344,7 +344,7 @@ def ResNet101Body(net, from_layer, use_pool5=True, **bn_param):
         num_output=64, kernel_size=7, pad=3, stride=2,
         conv_prefix=conv_prefix, conv_postfix=conv_postfix,
         bn_prefix=bn_prefix, bn_postfix=bn_postfix,
-        scale_prefix=scale_prefix, scale_postfix=scale_postfix, **bn_param)
+        scale_prefix=scale_prefix, scale_postfix=scale_postfix)
 
     net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2)
 
