@@ -627,7 +627,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
-  int transform_func_id = (do_mirror << 2) + (has_mean_file << 1) + has_mean_values;
+  int transform_func_id = (do_mirror << 2) +
+                          (has_mean_file << 1) +
+                          has_mean_values;
 
   switch (transform_func_id) {
       case 0: Transform<false, false, false>(cv_img, transformed_blob); break;
