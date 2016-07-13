@@ -9,7 +9,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <string>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/video_data_layer.hpp"
