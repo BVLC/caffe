@@ -5,7 +5,9 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include <csignal>
 #include <map>
+#include <string>
 #include <vector>
 #include <string>
 
@@ -67,8 +69,8 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
   this->transformed_data_.Reshape(top_shape_);
   top_shape_[0] = batch_size;
   top[0]->Reshape(top_shape_);
-  for (int i = 0; i < this->prefetch_.size(); ++i) {
-    this->prefetch_[i]->data_.Reshape(top_shape_);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].data_.Reshape(top_shape_);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -118,7 +120,7 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     } else if (video_type_ == VideoDataParameter_VideoType_VIDEO) {
       if (processed_frames_ >= total_frames_) {
         LOG(INFO) << "Finished processing video.";
-        exit(-1);
+        raise(SIGINT);
       }
       ++processed_frames_;
       cap_ >> cv_img;
@@ -127,18 +129,12 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     CHECK(cv_img.data) << "Could not load image!";
     read_time += timer.MicroSeconds();
-    if (skip_frames > 0) {
-      --skip_frames;
-      --item_id;
-    } else {
-      skip_frames = skip_frames_;
-      timer.Start();
-      // Apply transformations (mirror, crop...) to the image
-      int offset = batch->data_.offset(item_id);
-      this->transformed_data_.set_cpu_data(top_data + offset);
-      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-      trans_time += timer.MicroSeconds();
-    }
+    timer.Start();
+    // Apply transformations (mirror, crop...) to the image
+    int offset = batch->data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(top_data + offset);
+    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+    trans_time += timer.MicroSeconds();
     if (this->output_labels_) {
       top_label[item_id] = 0;
     }
