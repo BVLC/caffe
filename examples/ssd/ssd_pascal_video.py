@@ -73,7 +73,7 @@ test_iter = int(math.pow(2, 29) - 1)
 # Use GPU or CPU
 solver_mode = P.Solver.GPU
 # Defining which GPUs to use.
-gpus = "2"
+gpus = "0"
 # Number of frames to be processed per batch.
 test_batch_size = 1
 # Only display high quality detections whose scores are higher than a threshold.
