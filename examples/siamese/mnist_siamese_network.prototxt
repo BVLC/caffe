@@ -1,12 +1,9 @@
-name: "mnist_siamese_train_test"
+name: "mnist_siamese"
 layer {
-  name: "pair_data"
+  name: "train_data"
   type: "Data"
   top: "pair_data"
   top: "sim"
-  include {
-    phase: TRAIN
-  }
   transform_param {
     scale: 0.00390625
   }
@@ -14,15 +11,13 @@ layer {
     source: "examples/siamese/mnist_siamese_train_leveldb"
     batch_size: 64
   }
+  include { stage: "train" }
 }
 layer {
-  name: "pair_data"
+  name: "val_data"
   type: "Data"
   top: "pair_data"
   top: "sim"
-  include {
-    phase: TEST
-  }
   transform_param {
     scale: 0.00390625
   }
@@ -30,6 +25,7 @@ layer {
     source: "examples/siamese/mnist_siamese_test_leveldb"
     batch_size: 100
   }
+  include { stage: "val" }
 }
 layer {
   name: "slice_pair"
@@ -41,6 +37,15 @@ layer {
     slice_dim: 1
     slice_point: 1
   }
+  include { stage: "train" }
+  include { stage: "val" }
+}
+layer {
+  name: "deploy_data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 10000 dim: 1 dim: 28 dim: 28 } }
+  include { stage: "deploy" }
 }
 layer {
   name: "conv1"
@@ -189,6 +194,8 @@ layer {
     }
   }
 }
+
+# Start of duplicated layers (excluded from deploy stage)
 layer {
   name: "conv1_p"
   type: "Convolution"
@@ -213,6 +220,7 @@ layer {
       type: "constant"
     }
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "pool1_p"
@@ -224,6 +232,7 @@ layer {
     kernel_size: 2
     stride: 2
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "conv2_p"
@@ -249,6 +258,7 @@ layer {
       type: "constant"
     }
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "pool2_p"
@@ -260,6 +270,7 @@ layer {
     kernel_size: 2
     stride: 2
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "ip1_p"
@@ -283,12 +294,14 @@ layer {
       type: "constant"
     }
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "relu1_p"
   type: "ReLU"
   bottom: "ip1_p"
   top: "ip1_p"
+  exclude { stage: "deploy" }
 }
 layer {
   name: "ip2_p"
@@ -312,6 +325,7 @@ layer {
       type: "constant"
     }
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "feat_p"
@@ -335,6 +349,7 @@ layer {
       type: "constant"
     }
   }
+  exclude { stage: "deploy" }
 }
 layer {
   name: "loss"
@@ -346,4 +361,5 @@ layer {
   contrastive_loss_param {
     margin: 1
   }
+  exclude { stage: "deploy" }
 }
