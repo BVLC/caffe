@@ -79,10 +79,10 @@ test_batch_size = 1
 # Only display high quality detections whose scores are higher than a threshold.
 visualize_threshold = 0.3
 # Size of video image.
-video_width = 640
-video_height = 480
+video_width = 1280
+video_height = 720
 # Scale the image size for display.
-scale = 1.5
+scale = 0.8
 
 ### Hopefully you don't need to change the following ###
 resize = "{}x{}".format(resize_width, resize_height)
