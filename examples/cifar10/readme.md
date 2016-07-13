@@ -31,7 +31,7 @@ If it complains that `wget` or `gunzip` are not installed, you need to install t
 The Model
 ---------
 
-The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_train_test.prototxt`.
+The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_network.prototxt`.
 
 Training and Testing the "Quick" Model
 --------------------------------------
@@ -82,7 +82,7 @@ Our model achieved ~75% test accuracy. The model parameters are stored in binary
 
     cifar10_quick_iter_5000
 
-which is ready-to-deploy in CPU or GPU mode! Refer to the `CAFFE_ROOT/examples/cifar10/cifar10_quick.prototxt` for the deployment model definition that can be called on new data.
+which is ready-to-deploy in CPU or GPU mode!
 
 Why train on a GPU?
 -------------------
