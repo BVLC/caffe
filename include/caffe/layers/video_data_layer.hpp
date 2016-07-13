@@ -44,6 +44,10 @@ class VideoDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   VideoDataParameter_VideoType video_type_;
   cv::VideoCapture cap_;
+
+  int total_frames_;
+  int processed_frames_;
+  vector<int> top_shape_;
 };
 
 }  // namespace caffe

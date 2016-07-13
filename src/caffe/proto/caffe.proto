@@ -1557,9 +1557,11 @@ message ThresholdParameter {
 message VideoDataParameter{
   enum VideoType {
     WEBCAM = 0;
+    VIDEO = 1;
   }
   optional VideoType video_type = 1 [default = WEBCAM];
   optional int32 device_id = 2 [default = 0];
+  optional string video_file = 3;
 }
 
 message WindowDataParameter {
