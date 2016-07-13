@@ -1,9 +1,40 @@
 name: "LeNet"
 layer {
-  name: "data"
+  name: "train_data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 64
+    backend: LMDB
+  }
+  include { stage: "train" }
+}
+layer {
+  name: "val_data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+  include { stage: "val" }
+}
+layer {
+  name: "deploy_data"
   type: "Input"
   top: "data"
   input_param { shape: { dim: 64 dim: 1 dim: 28 dim: 28 } }
+  include { stage: "deploy" }
 }
 layer {
   name: "conv1"
@@ -122,8 +153,26 @@ layer {
   }
 }
 layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "ip2"
+  bottom: "label"
+  top: "loss"
+  include { stage: "train" }
+  include { stage: "val" }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "ip2"
+  bottom: "label"
+  top: "accuracy"
+  include { stage: "val" }
+}
+layer {
   name: "prob"
   type: "Softmax"
   bottom: "ip2"
   top: "prob"
+  include { stage: "deploy" }
 }
