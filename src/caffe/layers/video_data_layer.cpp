@@ -5,9 +5,10 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include <csignal>
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/video_data_layer.hpp"
@@ -118,7 +119,7 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     } else if (video_type_ == VideoDataParameter_VideoType_VIDEO) {
       if (processed_frames_ >= total_frames_) {
         LOG(INFO) << "Finished processing video.";
-        exit(-1);
+        raise(SIGINT);
       }
       ++processed_frames_;
       cap_ >> cv_img;

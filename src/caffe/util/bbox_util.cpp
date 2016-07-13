@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <csignal>
 #include <ctime>
 #include <functional>
 #include <map>
@@ -1980,7 +1981,7 @@ vector<cv::Scalar> GetColors(const int n) {
   return colors;
 }
 
-static clock_t start = clock();
+static clock_t start_clock = clock();
 
 template <typename Dtype>
 void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
@@ -1994,8 +1995,8 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     return;
   }
   // Comute FPS.
-  float fps = num_img / (static_cast<double>(clock() - start) / CLOCKS_PER_SEC);
-  start = clock();
+  float fps = num_img / (static_cast<double>(clock() - start_clock) /
+          CLOCKS_PER_SEC);
 
   const Dtype* detections_data = detections->cpu_data();
   const int width = images[0].cols;
@@ -2064,9 +2065,10 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     }
     cv::imshow("detections", image);
     if (cv::waitKey(1) == 27) {
-      exit(-1);
+      raise(SIGINT);
     }
   }
+  start_clock = clock();
 }
 
 template
