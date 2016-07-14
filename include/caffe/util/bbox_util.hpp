@@ -88,7 +88,7 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
 
 // Extrapolate the transformed bbox if height_scale and width_scale is
 // explicitly provided, and it is only effective for FIT_SMALL_SIZE case.
-bool ExtrapolateBBox(const ResizeParameter& param, const int height,
+void ExtrapolateBBox(const ResizeParameter& param, const int height,
     const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox);
 
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
