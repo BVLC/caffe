@@ -35,7 +35,7 @@ If you don't have CUDA installed, you can experiment with CPU_ONLY build.
 In `.\windows\CommonSettings.props` set `CpuOnlyBuild` to `true` and set `UseCuDNN` to `false`.
 
 ### cuDNN
-Download `cuDNN v3` or `cuDNN v4` [from nVidia website](https://developer.nvidia.com/cudnn).
+Download `cuDNN v4` or `cuDNN v5` [from nVidia website](https://developer.nvidia.com/cudnn).
 Unpack downloaded zip to %CUDA_PATH% (environment variable set by CUDA installer).
 Alternatively, you can unpack zip to any location and set `CuDnnPath` to point to this location in `.\windows\CommonSettings.props`.
 `CuDnnPath` defined in `.\windows\CommonSettings.props`.
