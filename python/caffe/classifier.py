@@ -5,10 +5,9 @@ Classifier is an image classifier specialization of Net.
 
 import numpy as np
 
-import caffe
+from . import Net, io, TEST
 
-
-class Classifier(caffe.Net):
+class Classifier(Net):
     """
     Classifier extends Net for image class prediction
     by scaling, center cropping, or oversampling.
@@ -23,7 +22,7 @@ class Classifier(caffe.Net):
     def __init__(self, model_file, pretrained_file, image_dims=None,
                  mean=None, input_scale=None, raw_scale=None,
                  channel_swap=None):
-        caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
+        Net.__init__(self, model_file, pretrained_file, TEST)
 
         # configure pre-processing
         in_ = self.inputs[0]
@@ -67,11 +66,11 @@ class Classifier(caffe.Net):
                            inputs[0].shape[2]),
                           dtype=np.float32)
         for ix, in_ in enumerate(inputs):
-            input_[ix] = caffe.io.resize_image(in_, self.image_dims)
+            input_[ix] = io.resize_image(in_, self.image_dims)
 
         if oversample:
             # Generate center, corner, and mirrored crops.
-            input_ = caffe.io.oversample(input_, self.crop_dims)
+            input_ = io.oversample(input_, self.crop_dims)
         else:
             # Take center crop.
             center = np.array(self.image_dims) / 2.0
