@@ -35,6 +35,16 @@ void AnnotatedDataLayer<Dtype>::DataLayerSetUp(
     batch_samplers_.push_back(anno_data_param.batch_sampler(i));
   }
   label_map_file_ = anno_data_param.label_map_file();
+  // Make sure dimension is consistent within batch.
+  const TransformationParameter& transform_param =
+    this->layer_param_.transform_param();
+  if (transform_param.has_resize_param()) {
+    if (transform_param.resize_param().resize_mode() ==
+        ResizeParameter_Resize_mode_FIT_SMALL_SIZE) {
+      CHECK_EQ(batch_size, 1)
+        << "Only support batch size of 1 for FIT_SMALL_SIZE.";
+    }
+  }
 
   // Read a data point, and use it to initialize the top blob.
   AnnotatedDatum& anno_datum = *(reader_.full().peek());
@@ -113,6 +123,8 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   const AnnotatedDataParameter& anno_data_param =
       this->layer_param_.annotated_data_param();
+  const TransformationParameter& transform_param =
+    this->layer_param_.transform_param();
   AnnotatedDatum& anno_datum = *(reader_.full().peek());
   // Use data_transformer to infer the expected blob shape from anno_datum.
   vector<int> top_shape =
@@ -136,10 +148,6 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // get a anno_datum
     AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
-    vector<int> shape =
-        this->data_transformer_->InferBlobShape(anno_datum.datum());
-    CHECK(std::equal(top_shape.begin() + 1, top_shape.begin() + 4,
-                     shape.begin() + 1));
     read_time += timer.MicroSeconds();
     timer.Start();
     AnnotatedDatum sampled_datum;
@@ -157,6 +165,22 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
     } else {
       sampled_datum.CopyFrom(anno_datum);
+    }
+    vector<int> shape =
+        this->data_transformer_->InferBlobShape(sampled_datum.datum());
+    if (transform_param.has_resize_param()) {
+      if (transform_param.resize_param().resize_mode() ==
+          ResizeParameter_Resize_mode_FIT_SMALL_SIZE) {
+        this->transformed_data_.Reshape(shape);
+        batch->data_.Reshape(shape);
+        top_data = batch->data_.mutable_cpu_data();
+      } else {
+        CHECK(std::equal(top_shape.begin() + 1, top_shape.begin() + 4,
+              shape.begin() + 1));
+      }
+    } else {
+      CHECK(std::equal(top_shape.begin() + 1, top_shape.begin() + 4,
+            shape.begin() + 1));
     }
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);

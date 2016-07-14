@@ -86,6 +86,11 @@ void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
 bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
                  NormalizedBBox* proj_bbox);
 
+// Extrapolate the transformed bbox if height_scale and width_scale is
+// explicitly provided, and it is only effective for FIT_SMALL_SIZE case.
+bool ExtrapolateBBox(const ResizeParameter& param, const int height,
+    const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox);
+
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized = true);
