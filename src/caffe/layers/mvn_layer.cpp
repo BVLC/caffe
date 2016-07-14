@@ -66,7 +66,7 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           variance_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
           temp_.mutable_cpu_data());
 
-    caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
+    caffe_div_in_place(temp_.count(), top_data, temp_.cpu_data());
   }
 }
 
@@ -94,7 +94,7 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
           mean_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
           bottom_diff);
-    caffe_mul(temp_.count(), top_data, bottom_diff, bottom_diff);
+    caffe_mul_in_place(temp_.count(), bottom_diff, top_data);
 
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., top_diff,
             sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());
@@ -112,7 +112,7 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         variance_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
         temp_.mutable_cpu_data());
 
-    caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
+    caffe_div_in_place(temp_.count(), bottom_diff, temp_.cpu_data());
   } else {
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
       sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());

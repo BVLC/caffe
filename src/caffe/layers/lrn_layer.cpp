@@ -148,7 +148,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 
   // In the end, compute output
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
-  caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+  caffe_mul_in_place<Dtype>(scale_.count(), top_data, bottom_data);
 }
 
 template <typename Dtype>
@@ -195,7 +195,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
-  caffe_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
+  caffe_mul_in_place<Dtype>(scale_.count(), bottom_diff, top_diff);
 
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
