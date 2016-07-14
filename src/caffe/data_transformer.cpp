@@ -324,6 +324,10 @@ void DataTransformer<Dtype>::TransformAnnotation(
             transformed_bbox->set_xmin(1 - transformed_bbox->xmax());
             transformed_bbox->set_xmax(1 - temp);
           }
+          if (do_resize && param_.has_resize_param()) {
+            ExtrapolateBBox(param_.resize_param(), img_height, img_width,
+                crop_bbox, transformed_bbox);
+          }
         }
       }
       // Save for output.

@@ -231,6 +231,32 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
   }
 }
 
+bool ExtrapolateBBox(const ResizeParameter& param, const int height,
+    const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox) {
+  float height_scale = param.height_scale();
+  float width_scale = param.width_scale();
+  if (height_scale > 0 && width_scale > 0 &&
+      param.resize_mode() == ResizeParameter_Resize_mode_FIT_SMALL_SIZE) {
+    float orig_aspect = static_cast<float>(width) / height;
+    float resize_height = param.height();
+    float resize_width = param.width();
+    float resize_aspect = resize_width / resize_height;
+    if (orig_aspect < resize_aspect) {
+      resize_height = resize_width / orig_aspect;
+    } else {
+      resize_width = resize_height * orig_aspect;
+    }
+    float crop_height = resize_height * (crop_bbox.ymax() - crop_bbox.ymin());
+    float crop_width = resize_width * (crop_bbox.xmax() - crop_bbox.xmin());
+    CHECK_GE(crop_width, width_scale);
+    CHECK_GE(crop_height, height_scale);
+    bbox->set_xmin(bbox->xmin() * crop_width / width_scale);
+    bbox->set_xmax(bbox->xmax() * crop_width / width_scale);
+    bbox->set_ymin(bbox->ymin() * crop_height / height_scale);
+    bbox->set_ymax(bbox->ymax() * crop_height / height_scale);
+  }
+}
+
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized) {
   NormalizedBBox intersect_bbox;
