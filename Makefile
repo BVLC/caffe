@@ -272,7 +272,7 @@ endif
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
 	ifneq ($(CPU_ONLY), 1)
-		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release [0-9.]*' | grep -o '[0-9.]*')
+		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release [0-9.]*' | tr -d '[a-z ]')
 		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
