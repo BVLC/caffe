@@ -8,7 +8,7 @@
 # - the training splits with labels
 
 DIR="$( cd "$(dirname "$0")" ; pwd -P )"
-cd $DIR
+cd "$DIR"
 
 echo "Downloading..."
 
