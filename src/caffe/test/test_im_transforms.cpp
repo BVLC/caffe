@@ -43,16 +43,6 @@ TEST_F(ImTransformsTest, TestUpdateBBoxByResizePolicy) {
   EXPECT_NEAR(out_bbox.xmax(), 0.3, eps);
   EXPECT_NEAR(out_bbox.ymax(), 0.6, eps);
 
-  // Test fit small size with fixed scale.
-  out_bbox = bbox;
-  resize_param.set_height_scale(300);
-  resize_param.set_width_scale(300);
-  UpdateBBoxByResizePolicy(resize_param, img_width, img_height, &out_bbox);
-  EXPECT_NEAR(out_bbox.xmin(), 0.1 * 5 / 3, eps);
-  EXPECT_NEAR(out_bbox.ymin(), 0.3, eps);
-  EXPECT_NEAR(out_bbox.xmax(), 0.3 * 5 / 3, eps);
-  EXPECT_NEAR(out_bbox.ymax(), 0.6, eps);
-
   // Test fit large size and pad.
   out_bbox = bbox;
   resize_param.set_resize_mode(
@@ -66,17 +56,6 @@ TEST_F(ImTransformsTest, TestUpdateBBoxByResizePolicy) {
   /*** Reverse the image size. ***/
   img_height = 1000;
   img_width = 600;
-
-  // Test fit small size with fixed scale.
-  out_bbox = bbox;
-  resize_param.set_resize_mode(ResizeParameter_Resize_mode_FIT_SMALL_SIZE);
-  resize_param.set_height_scale(300);
-  resize_param.set_width_scale(300);
-  UpdateBBoxByResizePolicy(resize_param, img_width, img_height, &out_bbox);
-  EXPECT_NEAR(out_bbox.xmin(), 0.1, eps);
-  EXPECT_NEAR(out_bbox.ymin(), 0.3 * 5 / 3, eps);
-  EXPECT_NEAR(out_bbox.xmax(), 0.3, eps);
-  EXPECT_NEAR(out_bbox.ymax(), 0.6 * 5 / 3, eps);
 
   // Test fit large size and pad.
   out_bbox = bbox;
