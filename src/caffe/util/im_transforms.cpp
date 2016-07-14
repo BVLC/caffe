@@ -253,8 +253,6 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
                               NormalizedBBox* bbox) {
   float new_height = param.height();
   float new_width = param.width();
-  int height_scale = param.height_scale();
-  int width_scale = param.width_scale();
   float orig_aspect = static_cast<float>(old_width) / old_height;
   float new_aspect = new_width / new_height;
 

@@ -231,7 +231,7 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
   }
 }
 
-bool ExtrapolateBBox(const ResizeParameter& param, const int height,
+void ExtrapolateBBox(const ResizeParameter& param, const int height,
     const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox) {
   float height_scale = param.height_scale();
   float width_scale = param.width_scale();
