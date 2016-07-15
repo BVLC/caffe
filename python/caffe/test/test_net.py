@@ -3,6 +3,7 @@ import tempfile
 import os
 import numpy as np
 import six
+from collections import OrderedDict
 
 import caffe
 
@@ -77,6 +78,18 @@ class TestNet(unittest.TestCase):
     def test_inputs_outputs(self):
         self.assertEqual(self.net.inputs, [])
         self.assertEqual(self.net.outputs, ['loss'])
+
+    def test_top_bottom_names(self):
+        self.assertEqual(self.net.top_names,
+                         OrderedDict([('data', ['data', 'label']),
+                                      ('conv', ['conv']),
+                                      ('ip', ['ip']),
+                                      ('loss', ['loss'])]))
+        self.assertEqual(self.net.bottom_names,
+                         OrderedDict([('data', []),
+                                      ('conv', ['data']),
+                                      ('ip', ['conv']),
+                                      ('loss', ['ip', 'label'])]))
 
     def test_save_and_read(self):
         f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
