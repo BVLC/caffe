@@ -28,7 +28,7 @@ def UnpackVariable(var, num):
     return ret
 
 def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
-    kernel_size, pad, stride, use_scale=True, lr_mult=1,
+    kernel_size, pad, stride, dilation=1, use_scale=True, lr_mult=1,
     conv_prefix='', conv_postfix='', bn_prefix='', bn_postfix='_bn',
     scale_prefix='', scale_postfix='_scale', bias_prefix='', bias_postfix='_bias',
     **bn_params):
@@ -100,6 +100,8 @@ def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
     net[conv_name] = L.Convolution(net[from_layer], num_output=num_output,
         kernel_h=kernel_h, kernel_w=kernel_w, pad_h=pad_h, pad_w=pad_w,
         stride_h=stride_h, stride_w=stride_w, **kwargs)
+  if dilation > 1:
+    net.update(conv_name, {'dilation': dilation})
   if use_bn:
     bn_name = '{}{}{}'.format(bn_prefix, out_layer, bn_postfix)
     net[bn_name] = L.BatchNorm(net[conv_name], in_place=True, **bn_kwargs)
@@ -113,7 +115,7 @@ def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
     relu_name = '{}_relu'.format(conv_name)
     net[relu_name] = L.ReLU(net[conv_name], in_place=True)
 
-def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch1, **bn_param):
+def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch1, dilation=1, **bn_param):
   # ResBody(net, 'pool1', '2a', 64, 64, 256, 1, True)
 
   conv_prefix = 'res{}_'.format(block_name)
@@ -144,11 +146,19 @@ def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch
   out_name = '{}{}'.format(conv_prefix, branch_name)
 
   branch_name = 'branch2b'
-  ConvBNLayer(net, out_name, branch_name, use_bn=True, use_relu=True,
-      num_output=out2b, kernel_size=3, pad=1, stride=1, use_scale=use_scale,
-      conv_prefix=conv_prefix, conv_postfix=conv_postfix,
-      bn_prefix=bn_prefix, bn_postfix=bn_postfix,
-      scale_prefix=scale_prefix, scale_postfix=scale_postfix, **bn_param)
+  if dilation == 1:
+    ConvBNLayer(net, out_name, branch_name, use_bn=True, use_relu=True,
+        num_output=out2b, kernel_size=3, pad=1, stride=1, use_scale=use_scale,
+        conv_prefix=conv_prefix, conv_postfix=conv_postfix,
+        bn_prefix=bn_prefix, bn_postfix=bn_postfix,
+        scale_prefix=scale_prefix, scale_postfix=scale_postfix, **bn_param)
+  else:
+    pad = int((3 + (dilation - 1) * 2) - 1) / 2
+    ConvBNLayer(net, out_name, branch_name, use_bn=True, use_relu=True,
+        num_output=out2b, kernel_size=3, pad=pad, stride=1, use_scale=use_scale,
+        dilation=dilation, conv_prefix=conv_prefix, conv_postfix=conv_postfix,
+        bn_prefix=bn_prefix, bn_postfix=bn_postfix,
+        scale_prefix=scale_prefix, scale_postfix=scale_postfix, **bn_param)
   out_name = '{}{}'.format(conv_prefix, branch_name)
 
   branch_name = 'branch2c'
@@ -333,7 +343,7 @@ def VGGNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
     return net
 
 
-def ResNet152Body(net, from_layer, use_pool5=True):
+def ResNet101Body(net, from_layer, use_pool5=True, use_dilation_conv5=False, **bn_param):
     conv_prefix = ''
     conv_postfix = ''
     bn_prefix = 'bn_'
@@ -368,9 +378,15 @@ def ResNet152Body(net, from_layer, use_pool5=True):
       ResBody(net, from_layer, block_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=False, **bn_param)
       from_layer = 'res{}'.format(block_name)
 
-    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=2, use_branch1=True, **bn_param)
-    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, **bn_param)
-    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, **bn_param)
+    stride = 2
+    dilation = 1
+    if use_dilation_conv5:
+      stride = 1
+      dilation = 2
+
+    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=stride, use_branch1=True, dilation=dilation, **bn_param)
+    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, dilation=dilation, **bn_param)
+    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, dilation=dilation, **bn_param)
 
     if use_pool5:
       net.pool5 = L.Pooling(net.res5c, pool=P.Pooling.AVE, global_pooling=True)
@@ -413,9 +429,15 @@ def ResNet152Body(net, from_layer, use_pool5=True, **bn_param):
       ResBody(net, from_layer, block_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=False, **bn_param)
       from_layer = 'res{}'.format(block_name)
 
-    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=2, use_branch1=True, **bn_param)
-    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, **bn_param)
-    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, **bn_param)
+    stride = 2
+    dilation = 1
+    if use_dilation_conv5:
+      stride = 1
+      dilation = 2
+
+    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=stride, use_branch1=True, dilation=dilation, **bn_param)
+    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, dilation=dilation, **bn_param)
+    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False, dilation=dilation, **bn_param)
 
     if use_pool5:
       net.pool5 = L.Pooling(net.res5c, pool=P.Pooling.AVE, global_pooling=True)
