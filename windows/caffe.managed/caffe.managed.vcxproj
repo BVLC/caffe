@@ -45,7 +45,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="Exists('$(SolutionDir)\CommonSettings.props')">
-    <Import Project="..\CommonSettings.props" />
+    <Import Project="$(SolutionDir)\CommonSettings.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
     <NuGetPackageImportStamp>768b5cca</NuGetPackageImportStamp>

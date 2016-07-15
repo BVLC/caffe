@@ -26,7 +26,7 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="Exists('$(SolutionDir)\CommonSettings.props')">
-    <Import Project="..\CommonSettings.props" />
+    <Import Project="$(SolutionDir)\CommonSettings.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetExt>.mexw64</TargetExt>
