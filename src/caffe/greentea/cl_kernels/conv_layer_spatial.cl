@@ -362,22 +362,18 @@ __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
     __global float* inputs_base,
-    const int_tp inputs_offset,
     filter_qualifier float* weights_base,
-    const int_tp weights_offset,
     __global float* biases_base,
-    const int_tp biases_offset,
     __global float* outputs_base,
-    const int_tp outputs_offset,
     const ushort _IW,
     const ushort _IH,
     const ushort _OW,
     const ushort _OH)
 {
-  __global float* outputs = outputs_base + outputs_offset;
-  __global float* inputs = inputs_base + inputs_offset;
-  filter_qualifier float* weights = weights_base + weights_offset;
-  __global float* biases = biases_base + biases_offset;
+  __global float* outputs = outputs_base;
+  __global float* inputs = inputs_base;
+  filter_qualifier float* weights = weights_base;
+  __global float* biases = biases_base;
 
   uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
@@ -539,22 +535,18 @@ __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
     __global float* inputs_base,
-    const int_tp inputs_offset,
     filter_qualifier float* weights_base,
-    const int_tp weights_offset,
     __global float* biases_base,
-    const int_tp biases_offset,
     __global float* outputs_base,
-    const int_tp outputs_offset,
     const ushort _IW,
     const ushort _IH,
     const ushort _OW,
     const ushort _OH)
 {
-  __global float* outputs = outputs_base + outputs_offset;
-  __global float* inputs = inputs_base + inputs_offset;
-  filter_qualifier float* weights = weights_base + weights_offset;
-  __global float* biases = biases_base + biases_offset;
+  __global float* outputs = outputs_base;
+  __global float* inputs = inputs_base;
+  filter_qualifier float* weights = weights_base;
+  __global float* biases = biases_base;
 
   uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
