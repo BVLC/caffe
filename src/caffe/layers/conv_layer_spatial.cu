@@ -334,24 +334,24 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::setBufferKernelArg(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
-    viennacl::ocl::kernel &kernel,
+    viennacl::ocl::kernel *kernel,
     const cl_uint &argIdx,
-    viennacl::ocl::context &ctx,
+    viennacl::ocl::context *ctx,
     cl_mem buffer, size_t offset,
     size_t size, bool readOnly,
     bool preserved) {
 
   if (offset == 0) {
-    kernel.arg(argIdx, WrapHandle((cl_mem) buffer, &ctx));
+    kernel->arg(argIdx, WrapHandle((cl_mem) buffer, ctx));
     return;
   }
 
   if (preserved &&
     subBufferMap.find(std::make_tuple(buffer, offset, size))
       != subBufferMap.end()) {
-    kernel.arg(argIdx,
-      WrapHandle(subBufferMap.find(
-                   std::make_tuple(buffer, offset, size))->second, &ctx));
+    kernel->arg(argIdx,
+      WrapHandle(subBufferMap.find
+                   (std::make_tuple(buffer, offset, size))->second, ctx));
     return;
   }
   cl_buffer_region region;
@@ -361,9 +361,9 @@ void ConvolutionLayerSpatial<Dtype>::setBufferKernelArg(
   cl_int error;
   cl_mem sub_buffer = clCreateSubBuffer(buffer, memFlags,
                         CL_BUFFER_CREATE_TYPE_REGION,
-                        &region, &error );
+                        &region, &error);
   CHECK_EQ(error, CL_SUCCESS) << "Failed to create sub buffer." << std::endl;
-  kernel.arg(argIdx, WrapHandle((cl_mem) sub_buffer, &ctx));
+  kernel->arg(argIdx, WrapHandle(sub_buffer, ctx));
   if (preserved)
     subBufferMap.insert(std::make_pair(std::make_tuple(buffer, offset, size),
                         sub_buffer));
@@ -374,7 +374,7 @@ void ConvolutionLayerSpatial<Dtype>::setBufferKernelArg(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::cleanTmpSubBuffers(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  for( auto &buffer : tmpSubBuffers)
+  for (auto &buffer : tmpSubBuffers)
     clReleaseMemObject(buffer);
   tmpSubBuffers.clear();
 }
@@ -442,9 +442,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         viennacl::backend::finish();
       }
     }
-  }
-  else {
-
+  } else {
     swizzleWeights(bottom, top, 16);
     size_t total_bottom_size = bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
@@ -464,20 +462,21 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         pad_image(bottom, top, image_offset, config, numImages);
         image_offset = 0;
         input_image = (cl_mem) col_data;
-      }
-      else
+      } else {
         input_image = (cl_mem) bottom_data;
-      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, input_image,
+      }
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, input_image,
                          image_offset, total_bottom_size - image_offset,
                          true, false);
-      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx,
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                          (cl_mem) swizzled_weights,
                          kernel_offset, total_kernel_size - kernel_offset,
                          true, true);
-      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, (cl_mem) bias_,
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
                          bias_offset_, total_bias_size - bias_offset_,
                          true, true);
-      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, (cl_mem) top_data,
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                         (cl_mem) top_data,
                          output_image_offset,
                          total_top_size - output_image_offset,
                          false, false);
@@ -576,8 +575,8 @@ bool ConvolutionLayerSpatial<float>::verify_result(
                        0.1 * fabs(verify_data[offset]) &&
                 !(fabs(verify_data[offset]) < 1.e-3
                   && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
-              dbgPrint(printf("test verification failed @ image %d group %d out_ch %d h "
-                              "%d w %d got %G expected %G\n",
+              dbgPrint(printf("test verification failed @ image %d group %d"
+                              "out_ch %d h %d w %d got %G expected %G\n",
                       n, g, out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
               break;
@@ -647,7 +646,6 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << num_output_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
-                //<< " -D_OW1=" << output_w_ << " -D_OH1=" << output_h_
                 << " -DINPUT_START_Z=" << 0
                 << " -DFILTER_WIDTH=" << kernel_w_
                 << " -DFILTER_HEIGHT=" << kernel_h_
@@ -784,9 +782,8 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
     setup_IDLF(bottom, top, blockWidth, blockHeight, blockDepth);
   else if (kernelType == 4)
     create_basic_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
-  else {
+  else
     assert(0);
-  }
 }
 
 template<>
@@ -1079,7 +1076,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     // get correct work/local group size at the create_convolution kernel stage.
     // To not break the previous trained record, for now just skipping them.
     // Will use a totally different cache mechanism in the future.
-    size_t foo; // for deprecated parameters.
+    size_t foo;  // for deprecated parameters.
     cachedKernel >> foo;
     cachedKernel >> foo;
     cachedKernel >> foo;

@@ -1,6 +1,7 @@
 #ifndef CAFFE_CONV_SPATIAL_LAYER_HPP_
 #define CAFFE_CONV_SPATIAL_LAYER_HPP_
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -178,9 +179,9 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
              const vector<Blob<Dtype>*>& top, caffe::Backend backend);
   void setBufferKernelArg(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top,
-                          viennacl::ocl::kernel &cl_kernel,
+                          viennacl::ocl::kernel *cl_kernel,
                           const cl_uint &argIdx,
-                          viennacl::ocl::context &ctx,
+                          viennacl::ocl::context *ctx,
                           cl_mem buffer, size_t offset,
                           size_t size, bool readOnly,
                           bool preserved);
