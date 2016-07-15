@@ -476,9 +476,9 @@ bool ConvolutionLayerSpatial<float>::verify_result(
                        0.1 * fabs(verify_data[offset]) &&
                 !(fabs(verify_data[offset]) < 1.e-3
                   && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
-              dbgPrint(printf("test verification failed @ image %d out_ch %d h "
+              dbgPrint(printf("test verification failed @ image %d group %d out_ch %d h "
                               "%d w %d got %G expected %G\n",
-                      n, out_ch, h, w, data[offset], verify_data[offset]));
+                      n, g, out_ch, h, w, data[offset], verify_data[offset]));
               verificationFail = 1;
               break;
             }
@@ -544,8 +544,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << in_buffer_size << " -D LAST_BLOCK_WIDTH=" << last_block_width
                 << " -D LAST_BLOCK_HEIGHT=" << last_block_height
                 << " -D INPUT_DEPTH=" << channels_ / group_
-                << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_ / group_
-                << " -DTOTAL_OUTPUT_DEPTH=" << M_ / group_
+                << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_
+                << " -DTOTAL_OUTPUT_DEPTH=" << num_output_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
                 //<< " -D_OW1=" << output_w_ << " -D_OH1=" << output_h_
                 << " -DINPUT_START_Z=" << 0
