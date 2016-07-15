@@ -31,34 +31,26 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
   kernel_h_ = kernel_shape_data[0];
   kernel_w_ = kernel_shape_data[1];
-  height_ = bottom[0]->shape(this->channel_axis_ + 1);
-  width_ = bottom[0]->shape(this->channel_axis_ + 2);
   const int_tp* pad_data = this->pad_.cpu_data();
   pad_h_ = pad_data[0];
   pad_w_ = pad_data[1];
   const int_tp* stride_data = this->stride_.cpu_data();
   stride_h_ = stride_data[0];
   stride_w_ = stride_data[1];
-
-  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  padded_width_ = width_ + 2 * pad_w_;
-  padded_height_ = height_ + 2 * pad_h_;
-#ifndef CPU_ONLY
-#ifdef USE_GREENTEA
-  if (std::is_same<Dtype, float>::value) {
-    M_ = this->num_output_ / this->group_;
-    this->num_ = bottom[0]->count(0, this->channel_axis_);
-    SetUp(bottom, top, Caffe::GetDefaultDevice()->backend());
-  }
-#endif
-#endif
+  M_ = this->num_output_ / this->group_;
+  K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
 }
 
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  height_ = bottom[0]->shape(this->channel_axis_ + 1);
+  width_ = bottom[0]->shape(this->channel_axis_ + 2);
+  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  padded_width_ = width_ + 2 * pad_w_;
+  padded_height_ = height_ + 2 * pad_h_;
 
   // Shape the tops.
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
@@ -78,8 +70,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   const int_tp height_out = top[0]->shape(this->channel_axis_ + 1);
   const int_tp width_out = top[0]->shape(this->channel_axis_ + 2);
-  M_ = this->num_output_ / this->group_;
-  K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
   N_ = height_out * width_out;
   // The im2col result buffer will only hold one image at a time to avoid
   // overly large memory usage.
@@ -91,6 +81,11 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (this->bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+  }
+
+  if (std::is_same<Dtype, float>::value) {
+    this->num_ = bottom[0]->count(0, this->channel_axis_);
+    SetUp(bottom, top, Caffe::GetDefaultDevice()->backend());
   }
 }
 
