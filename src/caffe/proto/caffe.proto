@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 146 (last added: parameter_param)
+// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -390,6 +390,7 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
+  optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
@@ -926,6 +927,25 @@ message PythonParameter {
   // If true, each worker solver sequentially run forward from this layer.
   // This value should be set true if you are using it as a data layer.
   optional bool share_in_parallel = 4 [default = false];
+}
+
+// Message that stores parameters used by RecurrentLayer
+message RecurrentParameter {
+  // The dimension of the output (and usually hidden state) representation --
+  // must be explicitly set to non-zero.
+  optional uint32 num_output = 1 [default = 0];
+
+  optional FillerParameter weight_filler = 2; // The filler for the weight
+  optional FillerParameter bias_filler = 3; // The filler for the bias
+
+  // Whether to enable displaying debug_info in the unrolled recurrent net.
+  optional bool debug_info = 4 [default = false];
+
+  // Whether to add as additional inputs (bottoms) the initial hidden state
+  // blobs, and add as additional outputs (tops) the final timestep hidden state
+  // blobs.  The number of additional bottom/top blobs required depends on the
+  // recurrent architecture -- e.g., 1 for RNNs, 2 for LSTMs.
+  optional bool expose_hidden = 5 [default = false];
 }
 
 // Message that stores parameters used by ReductionLayer
