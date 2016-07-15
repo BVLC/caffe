@@ -64,7 +64,7 @@ void AnnotatedDataLayer<Dtype>::DataLayerSetUp(
       << top[0]->width();
   // label
   if (this->output_labels_) {
-    has_anno_type_ = anno_datum.has_type();
+    has_anno_type_ = anno_datum.has_type() || anno_data_param.has_anno_type();
     vector<int> label_shape(4, 1);
     if (has_anno_type_) {
       anno_type_ = anno_datum.type();

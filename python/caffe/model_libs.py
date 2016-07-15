@@ -209,7 +209,7 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
         'label_map_file': label_map_file,
         'batch_sampler': batch_sampler,
         }
-    if anno_type:
+    if anno_type is not None:
         annotated_data_param.update({'anno_type': anno_type})
     return L.AnnotatedData(name="data", annotated_data_param=annotated_data_param,
         data_param=dict(batch_size=batch_size, backend=backend, source=source),
