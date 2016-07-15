@@ -236,6 +236,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp kernel_uid_;
 
   vector<kernelConfig*> kernelQueue;
+  kernelConfig* bestKernelConfig;
 };
 
 }  // namespace caffe

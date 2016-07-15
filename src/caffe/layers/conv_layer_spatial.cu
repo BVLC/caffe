@@ -893,15 +893,19 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     CHECK_EQ(verification, true) << "Basic kernel failed verification."
                                  << std::endl;
   }
+  this->bestKernelConfig = kernelQueue[kernel_index_];
 
   dbgPrint(std::cout << "Convolution Time:"
                      << kernelQueue[kernel_index_]->executionTime << std::endl);
 
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
-    if (x != kernel_index_)
+    if (x != kernel_index_) {
       viennacl::ocl::current_context().delete_program(
           kernelQueue[x]->kernelName);
+      delete kernelQueue[x];
+    }
   }
+  kernelQueue.clear();
 
   tuned_ = true;
 
@@ -925,19 +929,19 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   std::ifstream cachedKernel(outputFile.c_str());
   std::ofstream outputKernel;
   outputKernel.open(outputFile.c_str());
-  outputKernel << kernelQueue[kernel_index_]->workItem_output[0] << " "
-               << kernelQueue[kernel_index_]->workItem_output[1] << " "
-               << kernelQueue[kernel_index_]->workItem_output[2] << " "
-               << kernelQueue[kernel_index_]->kernelType << " "
-               << kernelQueue[kernel_index_]->global_work_size[0] << " "
-               << kernelQueue[kernel_index_]->global_work_size[1] << " "
-               << kernelQueue[kernel_index_]->global_work_size[2] << " "
-               << kernelQueue[kernel_index_]->local_work_size[0] << " "
-               << kernelQueue[kernel_index_]->local_work_size[1] << " "
-               << kernelQueue[kernel_index_]->local_work_size[2] << " "
-               << kernelQueue[kernel_index_]->swizzle_weights << " "
+  outputKernel << bestKernelConfig->workItem_output[0] << " "
+               << bestKernelConfig->workItem_output[1] << " "
+               << bestKernelConfig->workItem_output[2] << " "
+               << bestKernelConfig->kernelType << " "
+               << bestKernelConfig->global_work_size[0] << " "
+               << bestKernelConfig->global_work_size[1] << " "
+               << bestKernelConfig->global_work_size[2] << " "
+               << bestKernelConfig->local_work_size[0] << " "
+               << bestKernelConfig->local_work_size[1] << " "
+               << bestKernelConfig->local_work_size[2] << " "
+               << bestKernelConfig->swizzle_weights << " "
                << 0 << " "  // deprecated
-               << kernelQueue[kernel_index_]->use_null_local << " ";
+               << bestKernelConfig->use_null_local << " ";
   outputKernel.close();
 }
 
@@ -982,7 +986,7 @@ void ConvolutionLayerSpatial<float>::Forward_gpu(
       CHECK_EQ(tuned_, true) << "Spatial convolution auto-tuning failed.";
     }
 
-    convolve(bottom, top, i, num_, kernelQueue[kernel_index_]);
+    convolve(bottom, top, i, num_, bestKernelConfig);
   }
   viennacl::backend::finish();
 }
@@ -1033,9 +1037,17 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // Generates static key_
-  if (tuned_)
-    return;
+  std::string previous_key = key_;
   generate_key();
+  if (tuned_) {
+    if (key_.compare(previous_key) == 0)
+      return;
+    tuned_ = false;
+    viennacl::ocl::current_context().
+      delete_program(bestKernelConfig->kernelName);
+    delete bestKernelConfig;
+    bestKernelConfig = NULL;
+  }
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
@@ -1060,6 +1072,8 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
       std::rename(outputFile.c_str(), bakFile.c_str());
       return;
     }
+    bestKernelConfig = kernelQueue[kernel_index_];
+    kernelQueue.clear();
     // As we are using varying image size kernels now, let's skip the
     // cached work group size and local group size here, and we already
     // get correct work/local group size at the create_convolution kernel stage.
@@ -1069,16 +1083,16 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> foo;
     cachedKernel >> foo;
     cachedKernel >> foo;
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[0];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[1];
-    cachedKernel >> kernelQueue[kernel_index_]->local_work_size[2];
-    if (kernelQueue[kernel_index_]->kernelType == 1)
-      calculate_global_size(1, kernelQueue[kernel_index_]->workItem_output,
-                            kernelQueue[kernel_index_]->local_work_size,
-                            kernelQueue[kernel_index_]->global_work_size);
-    cachedKernel >> kernelQueue[kernel_index_]->swizzle_weights;
+    cachedKernel >> bestKernelConfig->local_work_size[0];
+    cachedKernel >> bestKernelConfig->local_work_size[1];
+    cachedKernel >> bestKernelConfig->local_work_size[2];
+    if (bestKernelConfig->kernelType == 1)
+      calculate_global_size(1, bestKernelConfig->workItem_output,
+                            bestKernelConfig->local_work_size,
+                            bestKernelConfig->global_work_size);
+    cachedKernel >> bestKernelConfig->swizzle_weights;
     cachedKernel >> foo;
-    cachedKernel >> kernelQueue[kernel_index_]->use_null_local;
+    cachedKernel >> bestKernelConfig->use_null_local;
     tuned_ = true;
   }
   return;
