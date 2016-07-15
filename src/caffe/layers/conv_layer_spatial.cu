@@ -331,75 +331,175 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
   return true;
 }
 
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::setBufferKernelArg(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+    viennacl::ocl::kernel &kernel,
+    const cl_uint &argIdx,
+    viennacl::ocl::context &ctx,
+    cl_mem buffer, size_t offset,
+    size_t size, bool readOnly,
+    bool preserved) {
+
+  if (offset == 0) {
+    kernel.arg(argIdx, WrapHandle((cl_mem) buffer, &ctx));
+    return;
+  }
+
+  if (preserved &&
+    subBufferMap.find(std::make_tuple(buffer, offset, size))
+      != subBufferMap.end()) {
+    kernel.arg(argIdx,
+      WrapHandle(subBufferMap.find(
+                   std::make_tuple(buffer, offset, size))->second, &ctx));
+    return;
+  }
+  cl_buffer_region region;
+  region.origin = offset * sizeof(Dtype);
+  region.size = size * sizeof(Dtype);
+  cl_mem_flags memFlags = readOnly ? CL_MEM_READ_ONLY : CL_MEM_READ_WRITE;
+  cl_int error;
+  cl_mem sub_buffer = clCreateSubBuffer(buffer, memFlags,
+                        CL_BUFFER_CREATE_TYPE_REGION,
+                        &region, &error );
+  CHECK_EQ(error, CL_SUCCESS) << "Failed to create sub buffer." << std::endl;
+  kernel.arg(argIdx, WrapHandle((cl_mem) sub_buffer, &ctx));
+  if (preserved)
+    subBufferMap.insert(std::make_pair(std::make_tuple(buffer, offset, size),
+                        sub_buffer));
+  else
+    tmpSubBuffers.push_back(sub_buffer);
+}
+
+template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::cleanTmpSubBuffers(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  for( auto &buffer : tmpSubBuffers)
+    clReleaseMemObject(buffer);
+  tmpSubBuffers.clear();
+}
+
 template<>
 cl_int ConvolutionLayerSpatial<float>::convolve(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
 
-  if (config->swizzle_weights)
-    swizzleWeights(bottom, top, 16);
-
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
   viennacl::ocl::kernel &kernel = program.get_kernel(config->kernelName);
   cl_int err = 0;
 
-  for (int_tp n = 0; n < numImages; ++n) {
+  if (config->kernelType != 2) {
+    for (int_tp n = 0; n < numImages; ++n) {
+      for (int_tp g = 0; g < group_; ++g) {
+        bias_offset_ = M_ * g;
+        int_tp image_offset = n * this->bottom_dim_
+            + width_ * height_ * (channels_ / group_) * g;
+        int_tp output_image_offset = n * this->top_dim_
+            + output_w_ * output_h_ * M_ * g;
+
+        cl_uint argIdx = 0;
+        int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
+            * g;
+
+        // Copy image
+        if (pad_w_ > 0 || pad_h_ > 0) {
+          pad_image(bottom, top, image_offset, config, numImages);
+          image_offset = 0;
+          kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
+        } else {
+          kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+        }
+        kernel.arg(argIdx++, image_offset);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
+        kernel.arg(argIdx++, kernel_offset);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
+        kernel.arg(argIdx++, bias_offset_);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+        kernel.arg(argIdx++, output_image_offset);
+        kernel.arg(argIdx++, (uint16_t)padded_width_);
+        kernel.arg(argIdx++, (uint16_t)padded_height_);
+        kernel.arg(argIdx++, (uint16_t)output_w_);
+        kernel.arg(argIdx++, (uint16_t)output_h_);
+        if (config->use_null_local) {
+          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       kernel.handle().get(), 3,
+                                       NULL,
+                                       config->global_work_size, NULL, 0, NULL,
+                                       NULL);
+        } else {
+          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       kernel.handle().get(), 3,
+                                       NULL,
+                                       config->global_work_size,
+                                       config->local_work_size, 0, NULL,
+                                       NULL);
+        }
+
+        if (err != CL_SUCCESS)
+          return err;
+        viennacl::backend::finish();
+      }
+    }
+  }
+  else {
+
+    swizzleWeights(bottom, top, 16);
+    size_t total_bottom_size = bottom_dim_ * numImages;
+    size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
+    size_t total_bias_size = M_ * group_;
+    size_t total_top_size = top_dim_ * numImages;
     for (int_tp g = 0; g < group_; ++g) {
       bias_offset_ = M_ * g;
-      int_tp image_offset = n * this->bottom_dim_
-          + width_ * height_ * (channels_ / group_) * g;
-      int_tp output_image_offset = n * this->top_dim_
-          + output_w_ * output_h_ * M_ * g;
+      int_tp image_offset = width_ * height_ * (channels_ / group_) * g;
+      int_tp output_image_offset = output_w_ * output_h_ * M_ * g;
 
       cl_uint argIdx = 0;
-      int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
-          * g;
-
+      int_tp kernel_offset = kernel_h_ * kernel_w_
+                             * (channels_ / group_) * M_ * g;
       // Copy image
+      cl_mem input_image;
       if (pad_w_ > 0 || pad_h_ > 0) {
         pad_image(bottom, top, image_offset, config, numImages);
         image_offset = 0;
-        kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-      } else {
-        kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+        input_image = (cl_mem) col_data;
       }
-      kernel.arg(argIdx++, image_offset);
-      if (config->swizzle_weights)
-        kernel.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights, &ctx));
       else
-        kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-      kernel.arg(argIdx++, kernel_offset);
-      kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
-      kernel.arg(argIdx++, bias_offset_);
-      kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-      kernel.arg(argIdx++, output_image_offset);
+        input_image = (cl_mem) bottom_data;
+      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, input_image,
+                         image_offset, total_bottom_size - image_offset,
+                         true, false);
+      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx,
+                         (cl_mem) swizzled_weights,
+                         kernel_offset, total_kernel_size - kernel_offset,
+                         true, true);
+      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, (cl_mem) bias_,
+                         bias_offset_, total_bias_size - bias_offset_,
+                         true, true);
+      setBufferKernelArg(bottom, top, kernel, argIdx++, ctx, (cl_mem) top_data,
+                         output_image_offset,
+                         total_top_size - output_image_offset,
+                         false, false);
       kernel.arg(argIdx++, (uint16_t)padded_width_);
       kernel.arg(argIdx++, (uint16_t)padded_height_);
       kernel.arg(argIdx++, (uint16_t)output_w_);
       kernel.arg(argIdx++, (uint16_t)output_h_);
-      if (config->use_null_local) {
-        err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                     kernel.handle().get(), 3,
-                                     NULL,
-                                     config->global_work_size, NULL, 0, NULL,
-                                     NULL);
-      } else {
-        err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                     kernel.handle().get(), 3,
-                                     NULL,
-                                     config->global_work_size,
-                                     config->local_work_size, 0, NULL,
-                                     NULL);
-      }
-
+      err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                   kernel.handle().get(), 3,
+                                   NULL,
+                                   config->global_work_size,
+                                   config->local_work_size, 0, NULL,
+                                   NULL);
       if (err != CL_SUCCESS)
         return err;
       viennacl::backend::finish();
     }
-    if (config->kernelType == 2)
-      break;
+
+    if (group_ > 1) {
+      viennacl::backend::finish();
+      cleanTmpSubBuffers(bottom, top);
+    }
   }
 
   return err;

@@ -176,6 +176,18 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                            const vector<Blob<Dtype>*>& top);
   void SetUp(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top, caffe::Backend backend);
+  void setBufferKernelArg(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top,
+                          viennacl::ocl::kernel &cl_kernel,
+                          const cl_uint &argIdx,
+                          viennacl::ocl::context &ctx,
+                          cl_mem buffer, size_t offset,
+                          size_t size, bool readOnly,
+                          bool preserved);
+  void cleanTmpSubBuffers(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+  std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
+  std::vector<cl_mem> tmpSubBuffers;
 #endif
 #endif
 
