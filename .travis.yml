@@ -1,40 +1,52 @@
-# Use a build matrix to do two builds in parallel:
-# one using CMake, and one using make.
-env:
-  matrix:
-    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
-    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
-    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
-    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
-    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
-    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+dist: trusty
+sudo: required
 
 language: cpp
+compiler: gcc
 
-# Cache Ubuntu apt packages.
+env:
+  global:
+    - NUM_THREADS=4
+  matrix:
+    # Use a build matrix to test many builds in parallel
+    # envvar defaults:
+    #   WITH_CMAKE: false
+    #   WITH_PYTHON3: false
+    #   WITH_IO: true
+    #   WITH_CUDA: false
+    #   WITH_CUDNN: false
+    - BUILD_NAME="default-make"
+#   - BUILD_NAME="python3-make" WITH_PYTHON3=true
+    - BUILD_NAME="no-io-make" WITH_IO=false
+    - BUILD_NAME="cuda-make" WITH_CUDA=true
+    - BUILD_NAME="cudnn-make" WITH_CUDA=true WITH_CUDNN=true
+
+    - BUILD_NAME="default-cmake" WITH_CMAKE=true
+    - BUILD_NAME="python3-cmake" WITH_CMAKE=true WITH_PYTHON3=true
+    - BUILD_NAME="no-io-cmake" WITH_CMAKE=true WITH_IO=false
+    - BUILD_NAME="cuda-cmake" WITH_CMAKE=true WITH_CUDA=true
+    - BUILD_NAME="cudnn-cmake" WITH_CMAKE=true WITH_CUDA=true WITH_CUDNN=true
+
 cache:
   apt: true
   directories:
-  - /home/travis/miniconda
-  - /home/travis/miniconda2
-  - /home/travis/miniconda3
-
-compiler: gcc
+    - ~/protobuf3
 
 before_install:
-  - export NUM_THREADS=4
-  - export SCRIPTS=./scripts/travis
-  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+  - source ./scripts/travis/defaults.sh
 
 install:
-  - sudo -E $SCRIPTS/travis_install.sh
+  - sudo -E ./scripts/travis/install-deps.sh
+  - ./scripts/travis/setup-venv.sh ~/venv
+  - source ~/venv/bin/activate
+  - ./scripts/travis/install-python-deps.sh
 
 before_script:
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
-  - export PATH=$CONDA_DIR/bin:$PATH
-  - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
+  - ./scripts/travis/configure.sh
 
-script: $SCRIPTS/travis_build_and_test.sh
+script:
+  - ./scripts/travis/build.sh
+  - ./scripts/travis/test.sh
 
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
