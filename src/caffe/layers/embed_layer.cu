@@ -9,7 +9,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 
@@ -70,18 +69,22 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
       viennacl::ocl::kernel &oclk_embed = program.get_kernel(
           CL_KERNEL_SELECT("embed_forward"));
+
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_weight = clState.get_buffer_mem(weight);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
       viennacl::ocl::enqueue(
-          oclk_embed(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                    WrapHandle((cl_mem) weight, &ctx), M_, N_, K_,
-                    WrapHandle((cl_mem) top_data, &ctx)),
+          oclk_embed(count, WrapHandle(buf_bottom.memobj, &ctx),
+                     WrapHandle(buf_weight.memobj, &ctx), M_, N_, K_,
+                     WrapHandle(buf_top.memobj, &ctx)),
           ctx.get_queue());
 
     if (bias_term_) {
-      greentea_gpu_gemm<Dtype>(this->get_device()->id(), CblasNoTrans,
-                               CblasNoTrans, M_, N_, 1, Dtype(1),
-                               (cl_mem) (bias_multiplier_.gpu_data()), 0,
-                               (cl_mem) (this->blobs_[1]->gpu_data()), 0,
-                               Dtype(1), (cl_mem) top_data, 0);
+      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, Dtype(1),
+                            bias_multiplier_.gpu_data(),
+                            this->blobs_[1]->gpu_data(), Dtype(1), top_data);
     }
 
 #endif  // USE_GREENTEA
@@ -111,10 +114,16 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       viennacl::ocl::kernel &oclk_embed = program.get_kernel(
           CL_KERNEL_SELECT("embed_backward"));
+
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_weight = clState.get_buffer_mem(weight_diff);
+
       viennacl::ocl::enqueue(
-          oclk_embed(top_count, WrapHandle((cl_mem) bottom_data, &ctx),
-                     WrapHandle((cl_mem) top_diff, &ctx), M_, N_, K_,
-                     WrapHandle((cl_mem) weight_diff, &ctx)),
+          oclk_embed(top_count, WrapHandle(buf_bottom.memobj, &ctx),
+                     WrapHandle(buf_top.memobj, &ctx), M_, N_, K_,
+                     WrapHandle(buf_weight.memobj, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }
@@ -122,19 +131,8 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (bias_term_ && this->param_propagate_down_[1]) {
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    if (this->get_device()->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
     caffe_gpu_gemv<Dtype>(CblasTrans, M_, N_, Dtype(1), top_diff,
         bias_multiplier_.gpu_data(), Dtype(1), bias_diff);
-#endif  // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_gemv<Dtype>(this->get_device()->id(), CblasTrans, M_, N_,
-                               Dtype(1), (cl_mem) top_diff, 0,
-                               (cl_mem) (bias_multiplier_.gpu_data()), 0,
-                               Dtype(1), (cl_mem) bias_diff, 0);
-#endif  // USE_GREENTEA
-    }
   }
 }
 

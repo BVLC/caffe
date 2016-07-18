@@ -57,11 +57,15 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
+
+      cl_mem bottom_mem = Caffe::cl_state().get_buffer_mem(bottom_data).memobj;
+      cl_mem top_mem = Caffe::cl_state().get_buffer_mem(top_data).memobj;
+
       viennacl::ocl::enqueue(
-          oclk_slice(nthreads, WrapHandle((cl_mem) bottom_data, &ctx),
+          oclk_slice(nthreads, WrapHandle(bottom_mem, &ctx),
                      kForward ? 1 : 0, num_slices_, slice_size_,
                      bottom_slice_axis, top_slice_axis, offset_slice_axis,
-                     WrapHandle((cl_mem) top_data, &ctx)),
+                     WrapHandle(top_mem, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }
@@ -99,11 +103,15 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
+
+      cl_mem bottom_mem = Caffe::cl_state().get_buffer_mem(bottom_diff).memobj;
+      cl_mem top_mem = Caffe::cl_state().get_buffer_mem(top_diff).memobj;
+
       viennacl::ocl::enqueue(
-          oclk_slice(nthreads, WrapHandle((cl_mem) top_diff, &ctx),
+          oclk_slice(nthreads, WrapHandle(top_mem, &ctx),
                      kForward ? 1 : 0, num_slices_, slice_size_,
                      bottom_slice_axis, top_slice_axis, offset_slice_axis,
-                     WrapHandle((cl_mem) bottom_diff, &ctx)),
+                     WrapHandle(bottom_mem, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

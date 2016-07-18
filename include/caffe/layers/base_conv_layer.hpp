@@ -8,10 +8,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/im2col.hpp"
 
-#ifdef USE_GREENTEA
-#include "caffe/greentea/greentea_im2col.hpp"
-#endif
-
 namespace caffe {
 
 /**
@@ -143,7 +139,6 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
 
 #ifndef CPU_ONLY
-#ifdef USE_CUDA
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       im2col_gpu(data, conv_in_channels_,
@@ -175,84 +170,6 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           dilation_.gpu_data(), data);
     }
   }
-#endif  // USE_CUDA
-#ifdef USE_GREENTEA
-  inline void greentea_conv_im2col_gpu(const Dtype* data, const int_tp data_off,
-                                       Dtype* col_buff,
-                                       const int_tp col_buff_off) {
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
-
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                 conv_in_channels_,
-                                 conv_input_shape_.cpu_data()[1],
-                                 conv_input_shape_.cpu_data()[2],
-                                 kernel_shape_.cpu_data()[0],
-                                 kernel_shape_.cpu_data()[1],
-                                 pad_.cpu_data()[0], pad_.cpu_data()[1],
-                                 stride_.cpu_data()[0], stride_.cpu_data()[1],
-                                 dilation_.cpu_data()[0],
-                                 dilation_.cpu_data()[1], (cl_mem) col_buff,
-                                 col_buff_off);
-    } else {
-      greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                    num_spatial_axes_,
-                                    (int_tp)0,
-                                    num_kernels_im2col_,
-                                    (cl_mem) (conv_input_shape_.gpu_data()),
-                                    (cl_mem) (col_buffer_.gpu_shape()),
-                                    (cl_mem) (kernel_shape_.gpu_data()),
-                                    (cl_mem) (pad_.gpu_data()),
-                                    (cl_mem) (stride_.gpu_data()),
-                                    (cl_mem) (dilation_.gpu_data()),
-                                    (cl_mem) col_buff, col_buff_off);
-    }
-  }
-
-  inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
-                                       const int_tp col_buff_off, Dtype* data,
-                                       const int_tp data_off) {
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
-
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      greentea_col2im_gpu<Dtype>(&program, &ctx,
-                                 (cl_mem) col_buff,
-                                 col_buff_off,
-                                 conv_in_channels_,
-                                 conv_input_shape_.cpu_data()[1],
-                                 conv_input_shape_.cpu_data()[2],
-                                 kernel_shape_.cpu_data()[0],
-                                 kernel_shape_.cpu_data()[1],
-                                 pad_.cpu_data()[0],
-                                 pad_.cpu_data()[1],
-                                 stride_.cpu_data()[0],
-                                 stride_.cpu_data()[1],
-                                 dilation_.cpu_data()[0],
-                                 dilation_.cpu_data()[1],
-                                 (cl_mem) data,
-                                 data_off);
-    } else {
-      greentea_col2im_nd_gpu<Dtype>(&program, &ctx,
-                                    (cl_mem) col_buff,
-                                    col_buff_off,
-                                    num_spatial_axes_,
-                                    (int_tp)0,
-                                    num_kernels_col2im_,
-                                    (cl_mem) (conv_input_shape_.gpu_data()),
-                                    (cl_mem) (col_buffer_.gpu_shape()),
-                                    (cl_mem) (kernel_shape_.gpu_data()),
-                                    (cl_mem) (pad_.gpu_data()),
-                                    (cl_mem) (stride_.gpu_data()),
-                                    (cl_mem) (dilation_.gpu_data()),
-                                    (cl_mem) data,
-                                    data_off);
-    }
-  }
-#endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
 
   int_tp num_kernels_im2col_;

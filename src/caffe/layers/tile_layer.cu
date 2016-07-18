@@ -5,7 +5,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 
@@ -47,10 +46,15 @@ void TileLayer<Dtype>::Forward_gpu(
 
     viennacl::ocl::kernel &oclk_tile = program.get_kernel(
         CL_KERNEL_SELECT("tile"));
+
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
     viennacl::ocl::enqueue(
-        oclk_tile(nthreads, WrapHandle((cl_mem) bottom_data, &ctx), inner_dim_,
+        oclk_tile(nthreads, WrapHandle(buf_bottom.memobj, &ctx), inner_dim_,
                   tiles_, bottom_tile_axis,
-                  WrapHandle((cl_mem) top_data, &ctx)),
+                  WrapHandle(buf_top.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -100,10 +104,15 @@ void TileLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
     viennacl::ocl::kernel &oclk_tile = program.get_kernel(
         CL_KERNEL_SELECT("tile_backward"));
+
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
     viennacl::ocl::enqueue(
-        oclk_tile(nthreads, WrapHandle((cl_mem) top_diff, &ctx), tile_size,
+        oclk_tile(nthreads, WrapHandle(buf_top.memobj, &ctx), tile_size,
                   tiles_, bottom_tile_axis,
-                  WrapHandle((cl_mem) bottom_diff, &ctx)),
+                  WrapHandle(buf_bottom.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }

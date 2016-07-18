@@ -10,8 +10,8 @@
 #include "caffe/layers/conv_fft_layer.hpp"
 
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_im2col.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
+#include "caffe/util/im2col.hpp"
+#include "caffe/util/math_functions.hpp"
 
 
 // #define COMPLEX_MULT_CONJ_1D
@@ -114,16 +114,17 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() {
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::fft_gpu_clean() {
   if (fft_gpu_initialized_) {
-    clReleaseMemObject((cl_mem)fft_gpu_weights_complex_);
+    ClState& clState = Caffe::cl_state();
+    clState.destroy_buffer(fft_gpu_weights_complex_);
+    clState.destroy_buffer(fft_gpu_map_in_real_all_channels_);
+    clState.destroy_buffer(fft_gpu_map_in_complex_all_channels_);
+    clState.destroy_buffer(fft_gpu_map_in_real_all_num_output_);
+    clState.destroy_buffer(fft_gpu_map_in_complex_all_num_output_);
+    clState.destroy_buffer(fft_gpu_map_out_complex_);
+    clState.destroy_buffer(fft_gpu_map_out_real_);
 #ifdef COMPLEX_NULT_CONJ_RESHAPE
     clReleaseMemObject(fft_gpu_weights_complex_reshape_);
 #endif
-    clReleaseMemObject((cl_mem)fft_gpu_map_in_real_all_channels_);
-    clReleaseMemObject((cl_mem)fft_gpu_map_in_complex_all_channels_);
-    clReleaseMemObject((cl_mem)fft_gpu_map_in_real_all_num_output_);
-    clReleaseMemObject((cl_mem)fft_gpu_map_in_complex_all_num_output_);
-    clReleaseMemObject((cl_mem)fft_gpu_map_out_complex_);
-    clReleaseMemObject((cl_mem)fft_gpu_map_out_real_);
   }
   fft_gpu_initialized_ = false;
 }
@@ -411,12 +412,11 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu(
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 
   if (this->param_propagate_down_[0]) {
-    greentea_gpu_set(this->device_->id(), this->blobs_[0]->count(), Dtype(0),
-                     (cl_mem)weight_diff, Dtype(0));
+    caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
-    greentea_gpu_set(this->device_->id(), this->blobs_[1]->count(), Dtype(0),
-        (cl_mem)this->blobs_[1]->mutable_gpu_diff(), Dtype(0));
+    caffe_gpu_set(this->blobs_[1]->count(), Dtype(0),
+                  this->blobs_[1]->mutable_gpu_diff());
   }
 
 

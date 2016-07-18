@@ -37,9 +37,13 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
         CL_KERNEL_SELECT("sigmoid_forward"));
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
     viennacl::ocl::enqueue(
-        oclk_sigmoid(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                     WrapHandle((cl_mem) top_data, &ctx)),
+        oclk_sigmoid(count, WrapHandle(buf_bottom.memobj, &ctx),
+                     WrapHandle(buf_top.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -85,13 +89,17 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
       viennacl::ocl::program &program = this->device_->program();
-
       viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
           CL_KERNEL_SELECT("sigmoid_backward"));
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_topdiff = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_topdata = clState.get_buffer_mem(top_data);
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+
       viennacl::ocl::enqueue(
-          oclk_sigmoid(count, WrapHandle((cl_mem) top_diff, &ctx),
-                       WrapHandle((cl_mem) top_data, &ctx),
-                       WrapHandle((cl_mem) bottom_diff, &ctx)),
+          oclk_sigmoid(count, WrapHandle(buf_topdiff.memobj, &ctx),
+                       WrapHandle(buf_topdata.memobj, &ctx),
+                       WrapHandle(buf_bottom.memobj, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

@@ -129,24 +129,34 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
         const int_tp bottom_off = bottom[0]->offset(ind_off);
         Dtype* top_data = top[0]->mutable_gpu_data();
         const int_tp top_off = top[0]->offset(indices);
+
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+        ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
         viennacl::ocl::enqueue(
             oclk_copy_crop(lines, height, width, src_outer_stride,
                            src_inner_stride, dest_outer_stride,
                            dest_inner_stride,
-                           WrapHandle((cl_mem) bottom_data, &ctx), bottom_off,
-                           WrapHandle((cl_mem) top_data, &ctx), top_off),
+                           WrapHandle(buf_bottom.memobj, &ctx), bottom_off,
+                           WrapHandle(buf_top.memobj, &ctx), top_off),
             ctx.get_queue());
       } else {
         const Dtype* top_diff = top[0]->gpu_diff();
         const int_tp top_off = top[0]->offset(indices);
         Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
         const int_tp bottom_off = bottom[0]->offset(ind_off);
+
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+        ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+
         viennacl::ocl::enqueue(
             oclk_copy_crop(lines, height, width, dest_outer_stride,
                            dest_inner_stride, src_outer_stride,
                            src_inner_stride,
-                           WrapHandle((cl_mem) top_diff, &ctx), top_off,
-                           WrapHandle((cl_mem) bottom_diff, &ctx), bottom_off),
+                           WrapHandle(buf_top.memobj, &ctx), top_off,
+                           WrapHandle(buf_bottom.memobj, &ctx), bottom_off),
             ctx.get_queue());
       }
     }
@@ -171,16 +181,8 @@ void CropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
   if (propagate_down[0]) {
-    if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      caffe_gpu_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
-#endif
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_set(this->device_->id(), bottom[0]->count(),
-                       static_cast<Dtype>(0), (cl_mem) bottom_diff, 0);
-#endif
-    }
+    caffe_gpu_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
+
     std::vector<int_tp> indices(top[0]->num_axes(), 0);
     crop_copy_gpu(bottom, top, offsets, indices, 0, top_diff, bottom_diff,
                   false);

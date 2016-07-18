@@ -3,7 +3,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -38,10 +37,15 @@ void adadelta_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype* h2,
     viennacl::ocl::program &program = dev->program();
     viennacl::ocl::kernel &oclk_ada_delta_update = program.get_kernel(
         CL_KERNEL_SELECT("ada_delta_update"));
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> bufg = clState.get_buffer_mem(g);
+    ClMemOff<Dtype> bufh = clState.get_buffer_mem(h);
+    ClMemOff<Dtype> bufh2 = clState.get_buffer_mem(h2);
+
     viennacl::ocl::enqueue(
-        oclk_ada_delta_update(N, WrapHandle((cl_mem) g, &ctx),
-                              WrapHandle((cl_mem) h, &ctx),
-                              WrapHandle((cl_mem) h2, &ctx), momentum, delta,
+        oclk_ada_delta_update(N, WrapHandle(bufg.memobj, &ctx),
+                              WrapHandle(bufh.memobj, &ctx),
+                              WrapHandle(bufh2.memobj, &ctx), momentum, delta,
                               local_rate),
         ctx.get_queue());
 #endif  // USE_GREENTEA

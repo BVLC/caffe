@@ -40,9 +40,14 @@ void ELULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     viennacl::ocl::kernel &oclk_elu = program.get_kernel(
         CL_KERNEL_SELECT("elu_forward"));
+
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
     viennacl::ocl::enqueue(
-        oclk_elu(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                  WrapHandle((cl_mem) top_data, &ctx), alpha),
+        oclk_elu(count, WrapHandle(buf_bottom.memobj, &ctx),
+                  WrapHandle(buf_top.memobj, &ctx), alpha),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -88,11 +93,17 @@ void ELULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       viennacl::ocl::kernel &oclk_elu = program.get_kernel(
           CL_KERNEL_SELECT("elu_backward"));
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom_diff = clState.get_buffer_mem(bottom_diff);
+      ClMemOff<Dtype> buf_top_diff = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_bottom_data = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_top_data = clState.get_buffer_mem(top_data);
+
       viennacl::ocl::enqueue(
-          oclk_elu(count, WrapHandle((cl_mem) top_diff, &ctx),
-                   WrapHandle((cl_mem) top_data, &ctx),
-                   WrapHandle((cl_mem) bottom_data, &ctx),
-                   WrapHandle((cl_mem) bottom_diff, &ctx), alpha),
+          oclk_elu(count, WrapHandle(buf_top_diff.memobj, &ctx),
+                   WrapHandle(buf_top_data.memobj, &ctx),
+                   WrapHandle(buf_bottom_data.memobj, &ctx),
+                   WrapHandle(buf_bottom_diff.memobj, &ctx), alpha),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

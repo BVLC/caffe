@@ -39,9 +39,14 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
         CL_KERNEL_SELECT("tanh_forward"));
+
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
+
     viennacl::ocl::enqueue(
-        oclk_tanh(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                  WrapHandle((cl_mem) top_data, &ctx)),
+        oclk_tanh(count, WrapHandle(buf_bottom.memobj, &ctx),
+                  WrapHandle(buf_top.memobj, &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -84,10 +89,16 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
           CL_KERNEL_SELECT("tanh_backward"));
+
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_diff);
+      ClMemOff<Dtype> buf_top_diff = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_top_data = clState.get_buffer_mem(top_data);
+
       viennacl::ocl::enqueue(
-          oclk_tanh(count, WrapHandle((cl_mem) top_diff, &ctx),
-                    WrapHandle((cl_mem) top_data, &ctx),
-                    WrapHandle((cl_mem) bottom_diff, &ctx)),
+          oclk_tanh(count, WrapHandle(buf_top_diff.memobj, &ctx),
+                    WrapHandle(buf_top_data.memobj, &ctx),
+                    WrapHandle(buf_bottom.memobj, &ctx)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

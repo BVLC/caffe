@@ -6,7 +6,6 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -19,38 +18,16 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 
   const int_tp count = bottom[0]->count();
 
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_sub(count, bottom[0]->gpu_data(),  // a
-                  bottom[1]->gpu_data(),  // b
-                  diff_.mutable_gpu_data());  // a_i-b_i
-    caffe_gpu_powx(count, diff_.mutable_gpu_data(),  // a_i-b_i
-                   Dtype(2), diff_sq_.mutable_gpu_data());  // (a_i-b_i)^2
-    caffe_gpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->channels(),
-                   Dtype(1.0),
-                   diff_sq_.gpu_data(),  // (a_i-b_i)^2
-                   summer_vec_.gpu_data(), Dtype(0.0),
-                   dist_sq_.mutable_gpu_data());  // \Sum (a_i-b_i)^2
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_sub<Dtype>(this->device_->id(), count,
-                            (cl_mem) (bottom[0]->gpu_data()), 0,
-                            (cl_mem) (bottom[1]->gpu_data()), 0,
-                            (cl_mem) (diff_.mutable_gpu_data()), 0);
-    greentea_gpu_powx<Dtype>(this->device_->id(), count,
-                             (cl_mem) (diff_.mutable_gpu_data()),
-                             0,  // a_i-b_i
-                             Dtype(2), (cl_mem) (diff_sq_.mutable_gpu_data()),
-                             0);  // (a_i-b_i)^2
-    greentea_gpu_gemv<Dtype>(this->device_->id(), CblasNoTrans,
-                             bottom[0]->num(), bottom[0]->channels(),
-                             Dtype(1.0), (cl_mem) (diff_sq_.gpu_data()),
-                             0,  // (a_i-b_i)^2
-                             (cl_mem) (summer_vec_.gpu_data()), 0, Dtype(0.0),
-                             (cl_mem) (dist_sq_.mutable_gpu_data()), 0);
-#endif  // USE_GREENTEA
-  }
+  caffe_gpu_sub(count, bottom[0]->gpu_data(),  // a
+                bottom[1]->gpu_data(),  // b
+                diff_.mutable_gpu_data());  // a_i-b_i
+  caffe_gpu_powx(count, diff_.mutable_gpu_data(),  // a_i-b_i
+                 Dtype(2), diff_sq_.mutable_gpu_data());  // (a_i-b_i)^2
+  caffe_gpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->channels(),
+                 Dtype(1.0),
+                 diff_sq_.gpu_data(),  // (a_i-b_i)^2
+                 summer_vec_.gpu_data(), Dtype(0.0),
+                 dist_sq_.mutable_gpu_data());  // \Sum (a_i-b_i)^2
 
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
   Dtype loss(0.0);
@@ -139,15 +116,24 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
         viennacl::ocl::kernel &oclk_cll = program.get_kernel(
             legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
                 CL_KERNEL_SELECT("cll_backward"));
+        ClState& clState = Caffe::cl_state();
+        ClMemOff<Dtype> buf_bottom2 =
+            clState.get_buffer_mem(bottom[2]->gpu_data());
+        ClMemOff<Dtype> buf_diff =
+            clState.get_buffer_mem(diff_.gpu_data());
+        ClMemOff<Dtype> buf_dist_sq =
+            clState.get_buffer_mem(dist_sq_.gpu_data());
+        ClMemOff<Dtype> buf_bottomi =
+            clState.get_buffer_mem(bottom[i]->mutable_gpu_diff());
+
         viennacl::ocl::enqueue(
             oclk_cll(
                 count, channels, margin, alpha,
-                WrapHandle((cl_mem) (bottom[2]->gpu_data()), &ctx),
-                WrapHandle((cl_mem) (diff_.gpu_data()), &ctx),
-                WrapHandle((cl_mem) (dist_sq_.gpu_data()), &ctx),
-                WrapHandle((cl_mem) (bottom[i]->mutable_gpu_diff()), &ctx)),
+                WrapHandle(buf_bottom2.memobj, &ctx),
+                WrapHandle(buf_diff.memobj, &ctx),
+                WrapHandle(buf_dist_sq.memobj, &ctx),
+                WrapHandle(buf_bottomi.memobj, &ctx)),
             ctx.get_queue());
-
 #endif  // USE_GREENTEA
       }
     }

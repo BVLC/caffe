@@ -5,7 +5,7 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
+#include "caffe/util/math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -42,9 +42,12 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = this->device_->program();
     viennacl::ocl::kernel &oclk_relu_forward = program.get_kernel(
         CL_KERNEL_SELECT("relu_forward"));
+    ClState& clState = Caffe::cl_state();
+    ClMemOff<Dtype> buf_bottom = clState.get_buffer_mem(bottom_data);
+    ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_data);
     viennacl::ocl::enqueue(
-        oclk_relu_forward(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                          WrapHandle((cl_mem) top_data, &ctx), negative_slope),
+        oclk_relu_forward(count, WrapHandle(buf_bottom.memobj, &ctx),
+                          WrapHandle(buf_top.memobj, &ctx), negative_slope),
         ctx.get_queue());
     ctx.get_queue().finish();
 #endif  // USE_GREENTEA
@@ -93,10 +96,15 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::program &program = this->device_->program();
       viennacl::ocl::kernel &oclk_relu_backward = program.get_kernel(
           CL_KERNEL_SELECT("relu_backward"));
+      ClState& clState = Caffe::cl_state();
+      ClMemOff<Dtype> buf_top = clState.get_buffer_mem(top_diff);
+      ClMemOff<Dtype> buf_bottomdata = clState.get_buffer_mem(bottom_data);
+      ClMemOff<Dtype> buf_bottomdiff = clState.get_buffer_mem(bottom_diff);
+
       viennacl::ocl::enqueue(
-          oclk_relu_backward(count, WrapHandle((cl_mem) top_diff, &ctx),
-                             WrapHandle((cl_mem) bottom_data, &ctx),
-                             WrapHandle((cl_mem) bottom_diff, &ctx),
+          oclk_relu_backward(count, WrapHandle(buf_top.memobj, &ctx),
+                             WrapHandle(buf_bottomdata.memobj, &ctx),
+                             WrapHandle(buf_bottomdiff.memobj, &ctx),
                              negative_slope),
           ctx.get_queue());
       ctx.get_queue().finish();
