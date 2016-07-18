@@ -482,6 +482,91 @@ void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
 }
 
 template <typename Dtype, bool is_diff>
+void MKLMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr,
+        void* prv_ptr) {
+  CHECK(prv_ptr);
+  CHECK(cpu_ptr);
+  CHECK(this->convert_to_int);
+  int status;
+  void *convert_resources[dnnResourceNumber];
+
+  DLOG(INFO) << "convert      => priv                                => "
+             << this->name << " =>";
+
+  convert_resources[dnnResourceFrom] = cpu_ptr;
+  convert_resources[dnnResourceTo]   = prv_ptr;
+  status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
+  CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
+}
+
+
+template <typename Dtype, bool is_diff>
+bool MKLMemoryDescriptor<Dtype, is_diff>::layout_compare(
+  shared_ptr<PrvMemDescr> other, bool is_other_diff) {
+  // TODO: Think about removing 'is_other_diff'
+
+  CHECK_EQ(other->get_descr_type(),
+              PrvMemDescr::PRV_DESCR_MKL2017);
+
+  if (is_other_diff) {
+    shared_ptr<MKLMemoryDescriptor<Dtype, true> > other_descr =
+        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, true> >
+              (other);
+
+    if (dnnLayoutCompare<Dtype>(other_descr->layout_int,
+              this->layout_int))
+      return true;
+  } else {
+    shared_ptr<MKLMemoryDescriptor<Dtype, false> > other_descr =
+        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, false> >
+              (other);
+    if (dnnLayoutCompare<Dtype>(other_descr->layout_int,
+              this->layout_int))
+      return true;
+  }
+  return false;
+}
+
+
+template <typename Dtype, bool is_diff>
+void MKLMemoryDescriptor<Dtype, is_diff>::convert_to_other(
+  shared_ptr<PrvMemDescr> other, void* from, void* to, bool is_other_diff) {
+  // TODO: Think about removing is_other_diff
+  // TODO: cache this primitive
+
+  std::string other_name;
+  dnnLayout_t other_layout;
+  if (is_other_diff) {
+    shared_ptr<MKLMemoryDescriptor<Dtype, true> > other_descr =
+        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, true> >
+              (other);
+    other_name = other_descr->name;
+    other_layout = other_descr->layout_int;
+  } else {
+    shared_ptr<MKLMemoryDescriptor<Dtype, false> > other_descr =
+        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, false> >
+              (other);
+    other_name = other_descr->name;
+    other_layout = other_descr->layout_int;
+  }
+
+  DLOG(INFO) << "convert priv => other     "  << this->name << " => " << other_name;
+
+  int status;
+  void *convert_resources[dnnResourceNumber];
+  dnnPrimitive_t convert;
+  status = dnnConversionCreate<Dtype>(&convert,
+                  this->layout_int, other_layout);
+
+  convert_resources[dnnResourceFrom] = from;
+  convert_resources[dnnResourceTo]   = to;
+  status = dnnExecute<Dtype>(convert, convert_resources);
+  CHECK_EQ(status, 0) << "Conversion from prv to other failed with status " << status;
+
+  dnnDelete<Dtype>(convert);
+}
+
+template <typename Dtype, bool is_diff>
 Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
   Blob<Dtype>* blob, bool set_prv_ptr,
   MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {

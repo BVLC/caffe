@@ -28,6 +28,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
     dnnReleaseBuffer<Dtype>(internal_ptr);
     dnnDelete<Dtype>(convert_to_int);
     dnnDelete<Dtype>(convert_from_int);
+    dnnDelete<Dtype>(convert_prv2prv);
   }
 
   shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
@@ -72,16 +73,23 @@ struct MKLMemoryDescriptor : PrvMemDescr,
               << status << "\n";
     }
   }
+  virtual size_t prv_size() {
+      return dnnLayoutGetMemorySize<Dtype>(layout_int);
+  }
   virtual size_t prv_count() {
       return dnnLayoutGetMemorySize<Dtype>(layout_int) / sizeof(Dtype);
   }
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
+  virtual void convert_to_prv(void* cpu_ptr, void* prv_ptr);
   virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
 
   // The last get_converted_prv() argument is a hack for reusing
   // in backward a conversion done already in the forward direction.
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr,
           MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
+  
+  virtual bool layout_compare(shared_ptr<PrvMemDescr> other, bool is_other_diff);
+  virtual void convert_to_other(shared_ptr<PrvMemDescr> other, void* from, void* to, bool is_other_diff);
  private:
   Dtype* internal_ptr;
 };
