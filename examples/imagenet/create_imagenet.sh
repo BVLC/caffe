@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 # Create the imagenet lmdb inputs
 # N.B. set the path to the imagenet train + val data dirs
+set -e
 
 EXAMPLE=/media/dd2/projects/deepdetect/datasets/imagenet/ilsvrc15/
 DATA=/media/data/datasets/imagenet/ILSVRC2015/ImageSets/CLS-LOC/caffe/
