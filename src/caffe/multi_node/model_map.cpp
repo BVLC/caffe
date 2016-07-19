@@ -289,12 +289,12 @@ void ModelMap<Dtype>::PrepareTestMsg()
     }
     
     for (int j = 0; j < fc_nodes_.size(); j++) {
-      int fc_idx = fc_nodes_[i];
+      int fc_idx = fc_nodes_[j];
       for (int k = 0; k < route_nodes_[fc_idx].size(); k++) {
         rt.add_fc_nodes()->CopyFrom(route_nodes_[fc_idx][k]);
       }
     }
-   
+
     rt.mutable_solver_param()->CopyFrom(test_solver_);
     
     string rt_str;

@@ -11,17 +11,29 @@
 using boost::unordered_map;
 using namespace caffe;
 
-DEFINE_string(id_server_req, "tcp://127.0.0.1:1955", "the zmq REQ addr of the id / layer-map server");
-DEFINE_string(model_server, "tcp://127.0.0.1:1957", "the address of zmq model server");
+DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
+DEFINE_int32(id_port, 1955, "the tcp port of ID server");
+DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
 
 int main(int argc, char** argv)
 {
   google::InstallFailureSignalHandler();
   gflags::ParseCommandLineFlags(&argc, &argv, true);
+  
+  string id_server_addr = "tcp://";
+  id_server_addr += FLAGS_ip;
+  id_server_addr += ":";
+  id_server_addr += boost::lexical_cast<string>(FLAGS_id_port);
 
-  NodeEnv::set_model_server(FLAGS_model_server);
-  NodeEnv::set_id_server(FLAGS_id_server_req);
+  string model_server_addr = "tcp://";
+  model_server_addr += FLAGS_ip;
+  model_server_addr += ":";
+  model_server_addr += boost::lexical_cast<string>(FLAGS_model_port);
+  
+  NodeEnv::set_model_server(model_server_addr);
+  NodeEnv::set_id_server(id_server_addr);
+
   NodeEnv::set_node_role(TEST_NODE);
   
   ModelRequest rq;
