@@ -30,7 +30,11 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(void) {
 __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
     __global Dtype* kernel_data, int_tp kernel_offset,
     __global Dtype* bias,const int_tp bias_offset,
-    __global Dtype* convolved_image,const int_tp convolved_image_offset) {
+    __global Dtype* convolved_image,const int_tp convolved_image_offset,
+    const ushort WIDTH,
+    const ushort HEIGHT,
+    const ushort OUTPUT_W,
+    const ushort OUTPUT_H) {
 
   const int_tp outputX = get_global_id(0);
   const int_tp outputY = get_global_id(1);
@@ -118,7 +122,11 @@ __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
 __kernel void CFMulti_11_11_4(__global Dtype* image_data, int_tp image_offset,
     __global Dtype* kernel_data, int_tp kernel_offset,
     __global Dtype* bias,const int_tp bias_offset,
-    __global Dtype* convolved_image,const int_tp convolved_image_offset) {
+    __global Dtype* convolved_image,const int_tp convolved_image_offset,
+    const ushort WIDTH,
+    const ushort HEIGHT,
+    const ushort OUTPUT_W,
+    const ushort OUTPUT_H) {
 
   int_tp outputX = get_global_id(0)*XPAR;
   int_tp outputY = get_global_id(1)*YPAR;
@@ -204,7 +212,11 @@ __kernel void CFMulti_11_11_4(__global Dtype* image_data, int_tp image_offset,
 __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp image_offset,
     __global const Dtype* restrict kernel_data, const int_tp kernel_offset,
     __global const Dtype* restrict bias,const int_tp bias_offset,
-    __global Dtype* restrict convolved_image,const int_tp convolved_image_offset) {
+    __global Dtype* restrict convolved_image,const int_tp convolved_image_offset,
+    const ushort WIDTH,
+    const ushort HEIGHT,
+    const ushort OUTPUT_W,
+    const ushort OUTPUT_H) {
 
   const int_tp outputX = get_global_id(0)*XPAR;
   const int_tp outputY = get_global_id(1)*YPAR;
@@ -293,119 +305,19 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 }
 #endif
 
-#ifdef MULTI_BATCHED
-__kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp image_offset_I,
-    __global const Dtype* restrict kernel_data, const int_tp kernel_offset,
-    __global const Dtype* restrict bias,const int_tp bias_offset,
-    __global Dtype* restrict convolved_image,const int_tp convolved_image_offset_I,
-    const int_tp img_num) {
-
-  const int_tp outputX = get_global_id(0)*XPAR;
-  const int_tp outputY = get_global_id(1)*YPAR;
-
-  if(outputX < OUTPUT_W && outputY < OUTPUT_H)
-  {
-    int_tp zPara = get_global_id(2)*ZPAR;
-    const int_tp img = zPara / OUTPUT_Z;
-    const int_tp kernelNum = zPara % OUTPUT_Z;
-
-    int_tp image_offset = img*IMG_OFFSET + image_offset_I;
-    int_tp convolved_image_offset = img*OUTPUT_OFFSET + convolved_image_offset_I;
-
-    Dtype sum[XPAR*YPAR*ZPAR];
-    for(uint_tp kern = 0; kern < XPAR*YPAR*ZPAR; kern++)
-    sum[kern] = 0.0f;
-
-    const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNELSIZE*CHANNELS;
-    const int_tp biasIndex=bias_offset + kernelNum;
-    const int_tp local_image_offset = outputY*STRIDE_H*WIDTH + outputX*STRIDE_W;
-    const int_tp imageSize = WIDTH*HEIGHT;
-    int_tp index;
-
-    __global const Dtype* image_dataPtrFloat[2];
-    image_dataPtrFloat[0] = (image_data + (image_offset + local_image_offset));
-    image_dataPtrFloat[1] = image_dataPtrFloat[0];
-    __global const Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
-
-    DTImage imageCache[YPAR];
-    DTKernel kernelCache;
-    Dtype4 temp;
-
-    for(uint_tp c = 0; c < CHANNELS; c++)
-    {
-      imageCache[0] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-      for(uint_tp preload = 1; preload < YPAR; preload++)
-      {
-        image_dataPtrFloat[1] += WIDTH;
-        imageCache[preload] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-      }
-
-      int_tp y =0;
-      LOOP(KERNEL_H, y,
-          {
-            int_tp kern=0;
-            LOOP(ZPAR, kern,
-                {
-                  kernelCache = ((__global DTKernel*)&(kernel_dataPtrFloat[kern*KERNELSIZE*CHANNELS]))[0];
-                  index = kern*XPAR*YPAR;
-
-                  for(uint_tp y_par = 0; y_par < YPAR; y_par++)
-                  {
-                    temp = floatDotV4(imageCache[y_par],kernelCache);
-                    sum[index + y_par*XPAR + 0] += temp.s0;
-                    sum[index + y_par*XPAR + 1] += temp.s1;
-                    sum[index + y_par*XPAR + 2] += temp.s2;
-                    sum[index + y_par*XPAR + 3] += temp.s3;
-                  }
-                });
-
-            kernel_dataPtrFloat += KERNEL_W;
-
-            for(uint_tp rotateData = 0; rotateData < YPAR - 1; rotateData++)
-            imageCache[rotateData] = imageCache[rotateData + 1];
-
-            image_dataPtrFloat[1] += WIDTH;
-            imageCache[YPAR - 1] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-          });
-
-      image_dataPtrFloat[0] += imageSize;
-      image_dataPtrFloat[1] = image_dataPtrFloat[0];
-    }
-
-    if(APPLY_BIAS == 1)
-    {
-      for(uint_tp kern = 0; kern < ZPAR; kern++)
-      {
-        for(uint_tp hi =0; hi < YPAR; hi++)
-        for(uint_tp wi =0; wi < XPAR; wi++)
-        if(kernelNum+kern < OUTPUT_Z*img_num && outputX + wi < OUTPUT_W && outputY + hi < OUTPUT_H)
-        convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + (outputY +hi)*OUTPUT_W + outputX + wi] =
-        sum[kern*XPAR*YPAR + XPAR*hi + wi] + bias[biasIndex +kern];
-      }
-    }
-    else
-    for(uint_tp kern = 0; kern < ZPAR; kern++)
-    for(uint_tp hi =0; hi < YPAR; hi++)
-    for(uint_tp wi =0; wi < XPAR; wi++)
-    if(kernelNum+kern < OUTPUT_Z*img_num && outputX + wi < OUTPUT_W && outputY + hi < OUTPUT_H)
-    convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + (outputY + hi)*OUTPUT_W + outputX + wi] = sum[kern*XPAR*YPAR +XPAR*hi +wi];
-  }
-
-}
-
-#endif
-
 //Begin IDLF kernels below here
 #ifdef IDLF
 
 #define activation_function(x) (x)
 
+#if 0
 #define _IW INPUT_WIDTH
 #define _IH INPUT_HEIGHT
-#define _ID INPUT_DEPTH
-
 #define _OW OUTPUT_WIDTH
 #define _OH OUTPUT_HEIGHT
+#endif
+
+#define _ID INPUT_DEPTH
 #define _OD NUM_FILTERS
 
 #define FILTER_DEPTH INPUT_DEPTH
@@ -450,18 +362,18 @@ __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
     __global float* inputs_base,
-    const int_tp inputs_offset,
     filter_qualifier float* weights_base,
-    const int_tp weights_offset,
     __global float* biases_base,
-    const int_tp biases_offset,
     __global float* outputs_base,
-    const int_tp outputs_offset)
+    const ushort _IW,
+    const ushort _IH,
+    const ushort _OW,
+    const ushort _OH)
 {
-  __global float* outputs = outputs_base + outputs_offset;
-  __global float* inputs = inputs_base + inputs_offset;
-  filter_qualifier float* weights = weights_base + weights_offset;
-  __global float* biases = biases_base + biases_offset;
+  __global float* outputs = outputs_base;
+  __global float* inputs = inputs_base;
+  filter_qualifier float* weights = weights_base;
+  __global float* biases = biases_base;
 
   uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
@@ -482,7 +394,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     out[i]=0.0f;
   }
 
-  uint_tp num_in_batch = ( fm - get_global_offset(2) ) / _OD;
+  uint_tp num_in_batch = fm / _OD;
 
   uint_tp input_batch_offset = num_in_batch * (_IH + IHPAD) * (_IW + IWPAD) * TOTAL_INPUT_DEPTH_SIZE;
   for(int_tp kd = 0; kd < _ID; kd++)
@@ -550,16 +462,16 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 
 #ifdef IMAGE_AS_OUTPUT
   // TODO: no ULT for that one yet!
-  uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) + get_global_offset(2) ) * (_OW + OWPAD) * (_OH + OHPAD);// out_addr indexes into start of 16 feature maps.
+  uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD)) * (_OW + OWPAD) * (_OH + OHPAD);// out_addr indexes into start of 16 feature maps.
 #else
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) + get_global_offset(2) ) * (_OW + OWPAD) * (_OH + OHPAD);
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * (_OW + OWPAD) * (_OH + OHPAD);
 #endif
 
   out_addr += or * (_OW + OWPAD) + oc;  // offset for the 4x3 block that this workitem is working on;
 
   // we need this address calculation for biases because we support views and batching
-  float bias = biases[(fm - get_global_offset(2)) % _OD ];
+  float bias = biases[(fm) % _OD ];
 #ifndef WRITE_PADDED_VALUES
   if(get_global_id(0) != (get_global_size(0)-1) &&
       get_global_id(1) != (get_global_size(1)-1) )
@@ -623,18 +535,18 @@ __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
     __global float* inputs_base,
-    const int_tp inputs_offset,
     filter_qualifier float* weights_base,
-    const int_tp weights_offset,
     __global float* biases_base,
-    const int_tp biases_offset,
     __global float* outputs_base,
-    const int_tp outputs_offset)
+    const ushort _IW,
+    const ushort _IH,
+    const ushort _OW,
+    const ushort _OH)
 {
-  __global float* outputs = outputs_base + outputs_offset;
-  __global float* inputs = inputs_base + inputs_offset;
-  filter_qualifier float* weights = weights_base + weights_offset;
-  __global float* biases = biases_base + biases_offset;
+  __global float* outputs = outputs_base;
+  __global float* inputs = inputs_base;
+  filter_qualifier float* weights = weights_base;
+  __global float* biases = biases_base;
 
   uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
@@ -653,7 +565,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     out[i]=0.0f;
   }
 
-  uint_tp num_in_batch = ( fm - get_global_offset(2) ) / _OD;
+  uint_tp num_in_batch = ( fm ) / _OD;
 
   uint_tp input_batch_offset = num_in_batch * (_IH + IHPAD) * (_IW + IWPAD) * TOTAL_INPUT_DEPTH_SIZE;
 
@@ -742,12 +654,12 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   }
 
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) + get_global_offset(2) ) * (_OW + OWPAD) * (_OH + OHPAD);
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * (_OW + OWPAD) * (_OH + OHPAD);
 
   out_addr += or * (_OW + OWPAD) + oc;  // offset for the 4x3 block that this workitem is working on;
 
   // we need this address calculation for biases because we support views and batching
-  float bias = biases[(fm - get_global_offset(2)) % _OD ];
+  float bias = biases[(fm) % _OD ];
 #ifndef WRITE_PADDED_VALUES
   if(get_global_id(0) != (get_global_size(0)-1) &&
       get_global_id(1) != (get_global_size(1)-1) )
