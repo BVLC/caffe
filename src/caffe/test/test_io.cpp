@@ -420,5 +420,27 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   }
 }
 
+TEST_F(IOTest, TestReadDatumToCVMat) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  cv::Mat loaded_cv_img = ReadImageToCVMat(filename);
+  EXPECT_EQ(loaded_cv_img.channels(), 3);
+  EXPECT_EQ(loaded_cv_img.rows, 360);
+  EXPECT_EQ(loaded_cv_img.cols, 480);
+  Datum datum;
+  CVMatToDatum(loaded_cv_img, &datum);
+  cv::Mat converted_cv_img = DatumToCVMat<3>(datum);
+  EXPECT_EQ(loaded_cv_img.rows, converted_cv_img.rows);
+  EXPECT_EQ(loaded_cv_img.cols, converted_cv_img.cols);
+  EXPECT_EQ(loaded_cv_img.channels(), converted_cv_img.channels());
+  for (int h = 0; h < loaded_cv_img.rows; ++h) {
+    for (int w = 0; w < loaded_cv_img.cols; ++w) {
+      for (int c = 0; c < loaded_cv_img.channels(); ++c) {
+        EXPECT_EQ(loaded_cv_img.at<cv::Vec3b>(h, w)[c],
+                  converted_cv_img.at<cv::Vec3b>(h, w)[c]);
+      }
+    }
+  }
+}
+
 }  // namespace caffe
 #endif  // USE_OPENCV

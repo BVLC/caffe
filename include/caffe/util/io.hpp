@@ -8,6 +8,7 @@
 
 #include "google/protobuf/message.h"
 
+#include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/format.hpp"
@@ -145,6 +146,14 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum);
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
+template<int channels>
+cv::Mat DatumToCVMat(const Datum& datum);
+
+template <typename Dtype, int channels>
+cv::Mat BlobToCVMat(Blob<Dtype> *blob, int num = 0);
+
+template <typename Dtype, int channels>
+void CVMatToBlob(cv::Mat img, Blob<Dtype> *blob);
 #endif  // USE_OPENCV
 
 }  // namespace caffe
