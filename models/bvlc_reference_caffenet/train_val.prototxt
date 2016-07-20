@@ -132,7 +132,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.4
     }
   }
 }
@@ -255,7 +255,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.4
     }
   }
 }
@@ -297,7 +297,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.4
     }
   }
 }
@@ -337,7 +337,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.4
     }
   }
 }
@@ -377,7 +377,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.1
     }
   }
 }

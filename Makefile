@@ -358,6 +358,8 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+
+
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
@@ -395,6 +397,16 @@ endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
+USE_OPENMP ?= 1
+ifeq ($(USE_OPENMP), 1)
+	# OMP
+	# COMMON_FLAGS += -D_OPENMP
+	COMMON_FLAGS += -fopenmp
+	ifeq ($(BLAS), mkl)
+		LIBRARIES += iomp5
+	endif
+endif
+
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 # Automatic dependency generation (nvcc is handled separately)
@@ -411,6 +423,7 @@ LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
 	PKG_CONFIG := $(shell pkg-config opencv --libs)
+  PKG_CONFIG += $(shell pkg-config libzmq --libs)
 else
 	PKG_CONFIG :=
 endif

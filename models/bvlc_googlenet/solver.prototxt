@@ -13,4 +13,4 @@ momentum: 0.9
 weight_decay: 0.0002
 snapshot: 40000
 snapshot_prefix: "models/bvlc_googlenet/bvlc_googlenet"
-solver_mode: GPU
+solver_mode: CPU

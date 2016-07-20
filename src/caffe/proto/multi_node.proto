@@ -1,0 +1,152 @@
+
+syntax = "proto2";
+
+package caffe;
+
+import "caffe.proto";
+
+enum NodeRole {
+  INVALID_ROLE  = 0;
+
+  CONV_CLIENT   = 1;
+
+  PARAM_SERVER  = 2;
+
+  // nodes that runs a part of FC models
+  FC_NODE       = 3;
+
+  // the gateway to a all the fc nodes
+  FC_GATEWAY    = 4;
+  
+  // Nodes that collect weights and run tests
+  TEST_NODE     = 5;
+}
+
+message NodeInfo {
+  optional string ip = 1 [default = "127.0.0.1"];
+  
+  // port # less or equal than 0 means it is invalid & un-initialized
+  optional int32 router_port = 2 [default = 0];
+
+  optional int32 pub_port = 3 [default = 0];
+  
+  // which part of the layer it has
+  optional int32 position = 4 [default = 0];
+
+  // used by zmq to identify node
+  optional int32 node_id = 5 [default = 0];
+  
+  optional NodeRole node_role = 6 [default = INVALID_ROLE];
+
+  // staleness is used by parameter server to sync workers
+  optional int32 staleness = 7 [default = 0];
+}
+
+message RouteNode {
+  required NodeInfo node_info = 1;
+  
+  // all the layers in the sub-model
+  // inserted by model server in BFS order
+  repeated string layers = 2;
+
+  // the input blobs it needs
+  // inserted by model server
+  repeated string input_blobs = 3;
+}
+
+
+message RouteInfo {
+  // the upstream nodes
+  repeated RouteNode prev_nodes = 1;
+
+  // broadcast a blob to downstream nodes
+  repeated RouteNode bcast_nodes = 2;
+
+  // forward only, don't received backward gradients
+  repeated RouteNode fwrd_nodes = 3;
+
+  // gateway of FC nodes
+  repeated RouteNode gateway_nodes = 4;
+
+  // list of all the parameter servers
+  repeated RouteNode ps_nodes = 5;
+
+  // list of all the FC nodes
+  repeated RouteNode fc_nodes = 6;
+  
+  // sub solver that a node needs to run
+  required SolverParameter solver_param = 7;
+  
+  // Node info of dest node
+  optional NodeInfo node_info = 8;
+  
+  // number of conv. workers in the cluster
+  optional int32 num_workers = 9 [default = 0];
+}
+
+
+message ModelRequest {
+  // a node can have only 1 starting layers
+  optional string start_layer = 1;
+
+  // multiple end layers
+  repeated string end_layers = 2;
+
+  // a layer can be splitted to multiple parts (model parallel)
+  optional int32 num_splits = 3 [default = 1];
+
+  required NodeInfo node_info = 4;
+}
+
+
+enum MsgType {
+  PING            = 0;
+  PONG            = 1;
+  GET_TRAIN_MODEL = 2;
+  REGISTER_NODE   = 3;
+  GET_PARAM       = 4;
+  PUT_PARAM       = 5;
+  PUT_GRADIENT    = 6;
+  FORWARD         = 7;
+  BACKWARD        = 8;
+  TRAIN_ITER      = 9;
+  INVALID_MSG     = 10;
+}
+
+message BlobInfo {
+  optional string blob_name = 1;
+  
+  //the message index of fragment in the vector
+  repeated int32 msg_index = 3;
+
+  // shape of the blob
+  optional BlobShape blob_shape = 4;
+}
+
+
+message MsgHeader {
+  // the source node which generates these series of packet
+  optional int32 src = 1 [default = 0];
+
+  // dst is used as next hop in routing
+  optional int32 dst = 2 [default = 0];
+  optional int64 msg_id = 3 [default = 0];
+  required MsgType type = 4 [default = INVALID_MSG];
+
+  repeated BlobInfo blobs = 5;
+  
+  // id of the convolution thread
+  optional int32 conv_id = 6 [default = 0];
+
+  // the clock at the client, used by parameter server
+  optional int32 clock = 7;
+  
+  // for model parallel, message's position in the layer
+  optional int32 data_offset = 8 [default = 0];
+  
+  // whether the message contains only partial information
+  optional bool is_partial = 9 [default = false];
+}
+
+
+
