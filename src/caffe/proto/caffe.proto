@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: smooth_l1_loss_param)
+// LayerParameter next available layer-specific ID: 150 (last added: psroi_pooling_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -389,6 +389,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
+	optional PSROIPoolingParameter psroi_pooling_param = 149;
   optional PythonParameter python_param = 130;
   optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
@@ -919,6 +920,12 @@ message PowerParameter {
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
 }
+
+message PSROIPoolingParameter {
+   required float spatial_scale = 1; 
+   required int32 output_dim = 2; // output channel number
+   required int32 group_size = 3; // equal to pooled_size
+ }
 
 message PythonParameter {
   optional string module = 1;
