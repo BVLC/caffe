@@ -366,6 +366,7 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
+  optional CyclicPoolParameter cyclic_pool_param = 208;
   optional DataParameter data_param = 107;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
@@ -623,6 +624,16 @@ message CropParameter {
   optional int32 axis = 1 [default = 2];
   repeated uint32 offset = 2;
 }
+
+message CyclicPoolParameter {
+  enum PoolMethod {
+    AVE = 0;
+    MAX = 1;
+    RMS = 2;
+  }
+  optional PoolMethod pool = 1 [default = AVE]; // The pooling method
+}
+
 
 message DataParameter {
   enum DB {
