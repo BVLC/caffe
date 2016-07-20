@@ -768,11 +768,14 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       if (bwdf_filter_diff->convert_from_int) {
         convert_resources[dnnResourceTo] =
                 reinterpret_cast<void *>(bwdf_filter_diff->prv_ptr());
+        DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
+           << " => " << bwdf_filter_diff->name;
       } else {
         convert_resources[dnnResourceTo] = this->blobs_[0]->mutable_cpu_diff();
+        DLOG(INFO) << "convert priv =>       " << bwdf2fwd_filter_diff->name
+           << " =>";
       }
-      DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
-                 << " => " << bwdf_filter_diff->name;
+
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
               convert_resources);
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
