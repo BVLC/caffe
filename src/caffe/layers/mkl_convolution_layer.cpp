@@ -289,13 +289,16 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           convolutionFwd, dnnResourceFilter);
   CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
           << status << "\n";
-  // bwdf2fwd_filter_diff: layout_int = internal layout of weight diff on backward filter convolution, layout_usr = internal layout of weight on forward convolution
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf2fwd_filter_diff->layout_int,
-          convolutionBwdFilter, dnnResourceDiffFilter);
+  // bwdf2fwd_filter_diff:
+  // layout_int = internal layout of weight diff on backward filter convolution,
+  // layout_usr = internal layout of weight on forward convolution
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &bwdf2fwd_filter_diff->layout_int, convolutionBwdFilter,
+          dnnResourceDiffFilter);
   CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
           << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf2fwd_filter_diff->layout_usr,
-          convolutionFwd, dnnResourceFilter);
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
   CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
           << status << "\n";
 
@@ -370,7 +373,8 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
   bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
   bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
-  bwdf2fwd_filter_diff->name = "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
+  bwdf2fwd_filter_diff->name =
+                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
   bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
   bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 }
@@ -762,12 +766,16 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       void *convert_resources[dnnResourceNumber];
       convert_resources[dnnResourceFrom] = bwdf2fwd_filter_diff->prv_ptr();
       if (bwdf_filter_diff->convert_from_int) {
-        convert_resources[dnnResourceTo] = reinterpret_cast<void *>(bwdf_filter_diff->prv_ptr());
+        convert_resources[dnnResourceTo] =
+                reinterpret_cast<void *>(bwdf_filter_diff->prv_ptr());
       } else {
-        convert_resources[dnnResourceTo] =  this->blobs_[0]->mutable_cpu_diff();
+        convert_resources[dnnResourceTo] = this->blobs_[0]->mutable_cpu_diff();
       }
-      status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int, convert_resources);
-      CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
+      DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
+                 << " => " << bwdf_filter_diff->name;
+      status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
+              convert_resources);
+      CHECK_EQ(status, 0) << "Conversion failed with status " << status;
     }
   }
 
