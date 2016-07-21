@@ -8,6 +8,7 @@ namespace caffe {
 namespace internode {
 
 int mpi_get_current_proc_rank();
+std::string mpi_get_current_proc_rank_as_string();
 int mpi_get_comm_size();
 std::string mpi_get_current_proc_name();
 std::string mpi_get_error_string(int errorcode);
