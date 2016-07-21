@@ -375,6 +375,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   explicit MKLBatchNormLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         fwd_top_data(new MKLData<Dtype>()),
+        fwd_bottom_data(new MKLData<Dtype>()),
+        bwd_top_diff(new MKLDiff<Dtype>()),
         bwd_bottom_diff(new MKLDiff<Dtype>()),
         batchNormFwd(static_cast<dnnPrimitive_t>(NULL)),
         batchNormBwdData(static_cast<dnnPrimitive_t>(NULL)),
@@ -414,6 +416,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
 
  private:
   shared_ptr<MKLData<Dtype> > fwd_top_data;
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
   dnnPrimitive_t batchNormFwd, batchNormBwdData, batchNormBwdScaleShift;
   Dtype *workspace_buffer_;
