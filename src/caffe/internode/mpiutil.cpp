@@ -31,6 +31,26 @@ int mpi_get_current_proc_rank() {
 }
 
 /**
+ * Returns current process rank as string, ex: [1].
+ * Default is MPI_COMM_WORLD communicator.
+ */
+std::string mpi_get_current_proc_rank_as_string() {
+#ifdef USE_MPI
+
+  int rank = -1;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  std::ostringstream sstream;
+  sstream << "[" << mpi_get_current_proc_rank() << "]";
+
+  return sstream.str();
+#else
+  throw std::runtime_error("can't use mpi");
+  return "";
+#endif
+}
+
+/**
  * Returns number of processes in the group of communicator.
  * Default is MPI_COMM_WORLD communicator.
  */
