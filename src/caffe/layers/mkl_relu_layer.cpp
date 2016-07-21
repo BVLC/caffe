@@ -26,11 +26,18 @@ void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   e = dnnLayoutCreate<Dtype>(&fwd_bottom_data_->layout_usr, dim, sizes,
           strides);
   CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&fwd_top_data_->layout_usr, dim, sizes, strides);
+  CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff_->layout_usr, dim, sizes,
+          strides);
+  CHECK_EQ(e, E_SUCCESS);
   e = dnnLayoutCreate<Dtype>(&bwd_top_diff_->layout_usr, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
   // Names are for debugging only
   fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
+  bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
   // "Lazy" allocation because here we don't know
@@ -44,11 +51,8 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   void* bottom_data =
     reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
-  void* top_data = NULL;
 
   if (bottom_data) {
-    top_data = top[0]->mutable_prv_data();
-
     if (reluFwd_ == NULL) {
       // first pass
       CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
@@ -67,20 +71,29 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               mem_descr->layout_int, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
 
+      DLOG(INFO) << "Using layout of " << mem_descr->name
+              << " as input layout for " << this->layer_param_.name();
       // copy shared_ptr
       fwd_bottom_data_ = mem_descr;
 
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data_->layout_int,
+              reluFwd_, dnnResourceDst);
+      CHECK_EQ(e, E_SUCCESS);
       e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff_->layout_int,
               reluFwd_, dnnResourceDst);
       CHECK_EQ(e, E_SUCCESS);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff_->layout_int,
+              reluFwd_, dnnResourceSrc);
+      CHECK_EQ(e, E_SUCCESS);
+
+      fwd_top_data_->create_conversions();
       bwd_top_diff_->create_conversions();
+      bwd_bottom_diff_->create_conversions();
     }
   } else {
     DLOG(INFO) << "Using cpu_data in MKLReLULayer.";
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
-    top_data = top[0]->mutable_cpu_data();
-
     if (reluFwd_ == NULL) {
       // first pass
       dnnError_t e;
@@ -98,7 +111,17 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   dnnError_t e;
   void* relu_res[dnnResourceNumber];
   relu_res[dnnResourceSrc] = bottom_data;
-  relu_res[dnnResourceDst] = top_data;
+
+  if (fwd_top_data_->convert_from_int) {
+    top[0]->set_prv_data(fwd_top_data_->prv_ptr(), fwd_top_data_, false);
+    relu_res[dnnResourceDst] =reinterpret_cast<void *>(
+            const_cast<Dtype*>(fwd_top_data_->prv_ptr()));
+  } else {
+    relu_res[dnnResourceDst] =
+            reinterpret_cast<void *>(top[0]->mutable_cpu_data());
+    DLOG(INFO) << "Using cpu_data for top in mklReLU.";
+  }
+
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -108,30 +131,28 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
-    void* top_diff =
-      reinterpret_cast<void *>(const_cast<Dtype*>(top[0]->prv_diff()));
     void* bottom_data =
-      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
-    void* bottom_diff = NULL;
-
-    if (top_diff && bottom_data) {
-      top_diff = bwd_top_diff_->get_converted_prv(top[0], true);
-      bottom_diff = reinterpret_cast<void *>(bottom[0]->mutable_prv_diff());
-    } else {
-      DLOG(INFO) << "Using cpu_data in MKLReLULayer.";
-      top_diff =
-        reinterpret_cast<void *>(const_cast<Dtype*>(top[0]->cpu_diff()));
+        reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
+    if (NULL == bottom_data) {
       bottom_data =
         reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
-      bottom_diff =
-        reinterpret_cast<void *>(bottom[0]->mutable_cpu_diff());
     }
 
     dnnError_t e;
     void* relu_res[dnnResourceNumber];
     relu_res[dnnResourceSrc] = bottom_data;
-    relu_res[dnnResourceDiffDst] = top_diff;
-    relu_res[dnnResourceDiffSrc] = bottom_diff;
+
+    relu_res[dnnResourceDiffDst] = bwd_top_diff_->get_converted_prv(top[0],
+            true);
+    if (bwd_bottom_diff_->convert_from_int) {
+      bottom[0]->set_prv_diff(bwd_bottom_diff_->prv_ptr(), bwd_bottom_diff_,
+              false);
+      relu_res[dnnResourceDiffSrc] =
+              reinterpret_cast<void *>(bwd_bottom_diff_->prv_ptr());
+    } else {
+      relu_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
+    }
+
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
     CHECK_EQ(e, E_SUCCESS);
   }

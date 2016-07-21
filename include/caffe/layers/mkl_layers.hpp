@@ -291,8 +291,10 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
    */
   explicit MKLReLULayer(const LayerParameter& param)
     : NeuronLayer<Dtype>(param),
+      fwd_top_data_    (new MKLData<Dtype>()),
       fwd_bottom_data_ (new MKLData<Dtype>()),
       bwd_top_diff_    (new MKLDiff<Dtype>()),
+      bwd_bottom_diff_ (new MKLDiff<Dtype>()),
       reluFwd_(NULL),
       reluBwd_(NULL) {}
 
@@ -317,8 +319,10 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
  private:
-  shared_ptr<MKLData<Dtype> > fwd_bottom_data_;
+  shared_ptr<MKLData<Dtype> > fwd_top_data_;
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data_;
+  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
 
