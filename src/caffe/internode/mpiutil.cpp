@@ -37,9 +37,6 @@ int mpi_get_current_proc_rank() {
 std::string mpi_get_current_proc_rank_as_string() {
 #ifdef USE_MPI
 
-  int rank = -1;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
   std::ostringstream sstream;
   sstream << "[" << mpi_get_current_proc_rank() << "]";
 
