@@ -408,12 +408,14 @@ static void bernoulli_generate(int n, double p, int* r) {
     const int my_offset = 0;
 #endif
 
-    VSLStreamStatePtr stream;
-    vslNewStream(&stream, VSL_BRNG_MCG31, seed);
-    vslSkipAheadStream(stream, my_offset);
-    viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, stream, my_amount,
-      r + my_offset, p);
-    vslDeleteStream(&stream);
+    if (my_amount > 0) {
+      VSLStreamStatePtr stream;
+      vslNewStream(&stream, VSL_BRNG_MCG31, seed);
+      vslSkipAheadStream(stream, my_offset);
+      viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, stream, my_amount,
+        r + my_offset, p);
+      vslDeleteStream(&stream);
+    }
   }
 }
 #endif
