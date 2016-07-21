@@ -141,6 +141,7 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
 
   /* Bwd filter step */
   shared_ptr<MKLDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
+  shared_ptr<MKLDiff<Dtype> > bwdf2fwd_filter_diff;
   shared_ptr<MKLData<Dtype> > bwdf_bottom_data;
   dnnPrimitive_t convolutionBwdFilter;
 

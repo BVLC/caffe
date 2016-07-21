@@ -26,6 +26,13 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
   bias_term_ = this->layer_param_.batch_norm_param().bias_term();
 
+  // Workaround. Checking count of parameters in order to handle
+  // topology for reference BatchNorm layer which don't have scaling
+  if (this->layer_param_.param_size() == 3) {
+    this->blobs_.resize(3);
+    use_weight_bias_ = false;
+  }
+
   size_t dim = 4, sizes[4], strides[4];
 
   channels_ = bottom[0]->channels();
