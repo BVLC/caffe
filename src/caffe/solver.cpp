@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "boost/bind.hpp"
+#include "caffe/internode/mpiutil.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -236,8 +237,14 @@ void Solver<Dtype>::Step(int iters) {
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
+#ifdef USE_MPI
+      LOG_IF(INFO, Caffe::root_solver())
+             << caffe::internode::mpi_get_current_proc_rank_as_string()
+             << " Iteration " << iter_ << ", loss = " << smoothed_loss_;
+#else
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss_;
+#endif
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -327,7 +334,12 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
     UpdateSmoothedLoss(loss, start_iter, average_loss);
 
+#ifdef USE_MPI
+    LOG(INFO) << caffe::internode::mpi_get_current_proc_rank_as_string()
+              << " Iteration " << iter_ << ", loss = " << smoothed_loss_;
+#else
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
+#endif
   }
   if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
     TestAll();
