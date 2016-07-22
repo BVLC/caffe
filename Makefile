@@ -410,7 +410,8 @@ ifeq ($(BLAS), mkl)
 	# TODO: make it nice , NOT hardcoded working properly
 	RETURN_STRING=$(shell "./external/mkl/prepare_mkl.sh")
 	MKLROOT=$(firstword $(RETURN_STRING))
-	LIBRARIES+=$(lastword $(RETURN_STRING))
+	LIBRARIES+=$(word 2, $(RETURN_STRING))
+	OMP_EXTERNAL=$(lastword $(RETURN_STRING))
 
 #$(info "RETURN_STRING: "$(RETURN_STRING))
 #$(info "MKLROOT: "$(MKLROOT))
@@ -511,13 +512,16 @@ USE_OPENMP ?= 1
 ifeq ($(USE_OPENMP), 1)
   DUMMY_OPENMP_BINARY := $(shell mktemp)
   DUMMY_OPENMP_FILE := $(shell mktemp).cpp
-  #INTEL_OMP_DIR ?= $(shell find ${MKLROOT}/.. -readable -name libiomp5.so 2>/dev/null | grep -v mic | grep -m 1 intel64 | xargs dirname)
+  ifeq ($(OMP_EXTERNAL), 1)
+    INTEL_OMP_DIR ?= $(shell find ${MKLROOT} -readable -name libiomp5.so 2>/dev/null | grep -v mic | xargs dirname)
+  endif
+  INTEL_OMP_DIR ?= $(shell find ${MKLROOT}/.. -readable -name libiomp5.so 2>/dev/null | grep -v mic | grep -m 1 intel64 | xargs dirname)
   define OPENMP_VERIFYING_CODE
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
   endef
-  #ifeq ($(BLAS), mkl)
-    #OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)
-  #endif
+  ifeq ($(BLAS), mkl)
+    OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)
+  endif
   OPENMP_VERIFYING_COMPILE_COMMAND = $(CXX) -fopenmp $(DUMMY_OPENMP_FILE) $(OPENMP_VERIFYING_COMPILE_FLAGS) -o $(DUMMY_OPENMP_BINARY) 2>/dev/null
   OPENMP_VERIFYING_COMMAND = printf $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
   IS_OPENMP_PRESENT = $(shell $(OPENMP_VERIFYING_COMMAND))
@@ -525,10 +529,10 @@ ifeq ($(USE_OPENMP), 1)
   ifeq ($(IS_OPENMP_PRESENT), 1)
     CXXFLAGS += -fopenmp
     LINKFLAGS += -fopenmp
-    #ifeq ($(BLAS), mkl)
-      #LIBRARIES += iomp5
-      #LIBRARY_DIRS += $(INTEL_OMP_DIR)
-    #endif
+    ifeq ($(BLAS), mkl)
+      LIBRARIES += iomp5
+      LIBRARY_DIRS += $(INTEL_OMP_DIR)
+    endif
   endif
 endif
 
