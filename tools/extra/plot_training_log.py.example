@@ -82,8 +82,12 @@ def load_data(data_file, field_idx0, field_idx1):
     with open(data_file, 'r') as f:
         for line in f:
             line = line.strip()
-            if line[0] != '#':
+            if line[0] == '#':
+		num_fields = len(line.split())
+            else:
                 fields = line.split()
+                if len(fields) != num_fields:
+		    continue
                 data[0].append(float(fields[field_idx0].strip()))
                 data[1].append(float(fields[field_idx1].strip()))
     return data
