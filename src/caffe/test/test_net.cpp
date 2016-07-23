@@ -38,7 +38,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     string param_file;
     MakeTempFilename(&param_file);
     WriteProtoToTextFile(param, param_file);
-    net_.reset(new Net<Dtype>(param_file, phase, Caffe::GetDefaultDevice(), level, stages));
+    net_.reset(new Net<Dtype>(param_file, phase,
+                              Caffe::GetDefaultDevice(), level, stages));
   }
 
   virtual void CopyNetBlobs(const bool copy_diff,
