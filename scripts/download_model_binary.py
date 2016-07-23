@@ -4,6 +4,7 @@ import sys
 import time
 import yaml
 import urllib
+import urllib.request
 import hashlib
 import argparse
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
 
     # Closure-d function for checking SHA1.
     def model_checks_out(filename=model_filename, sha1=frontmatter['sha1']):
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding="latin1") as f:
             return hashlib.sha1(f.read()).hexdigest() == sha1
 
     # Check if model exists.
@@ -69,7 +70,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Download and verify model.
-    urllib.urlretrieve(
+    urllib.request.urlretrieve(
         frontmatter['caffemodel_url'], model_filename, reporthook)
     if not model_checks_out():
         print('ERROR: model did not download correctly! Run this again.')
