@@ -1,3 +1,4 @@
+#ifdef USE_INTEL_SPATIAL
 #ifndef CAFFE_CONV_SPATIAL_LAYER_HPP_
 #define CAFFE_CONV_SPATIAL_LAYER_HPP_
 
@@ -243,3 +244,4 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 }  // namespace caffe
 
 #endif  // CAFFE_CONV_SPATIAL_LAYER_HPP_
+#endif  // USE_INTEL_SPATIAL
