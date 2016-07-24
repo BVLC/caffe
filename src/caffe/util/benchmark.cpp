@@ -28,6 +28,7 @@ void Timer::Start() {
     if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
       CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
+	  CUDA_CHECK(cudaEventSynchronize(start_gpu_));
 #else
       NO_GPU;
 #endif
