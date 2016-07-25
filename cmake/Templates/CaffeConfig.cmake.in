@@ -37,6 +37,14 @@ if(@USE_OPENCV@)
   endif()
 endif()
 
+# CLBlast dependency (optional)
+
+include(CMakeFindDependencyMacro)
+
+if(@USE_CLBLAST@)
+  find_dependency(CLBlast)
+endif()
+
 # Compute paths
 get_filename_component(Caffe_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
