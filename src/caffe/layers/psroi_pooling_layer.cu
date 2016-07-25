@@ -121,7 +121,7 @@ namespace caffe {
       int ph = (index / pooled_width) % pooled_height;
       int n = index / pooled_width / pooled_height / output_dim;
 
-			// [start, end) interval for spatial sampling
+      // [start, end) interval for spatial sampling
       bottom_rois += n * 5;
       int roi_batch_ind = bottom_rois[0];
       Dtype roi_start_w = static_cast<Dtype>(round(bottom_rois[1])) * spatial_scale;

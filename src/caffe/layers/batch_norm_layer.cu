@@ -86,8 +86,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // TODO(cdoersch): The caching is only needed because later in-place layers
   //                 might clobber the data.  Can we skip this if they won't?
   if (!use_global_stats_) {
-	  caffe_copy(x_norm_.count(), top_data,
-		  x_norm_.mutable_gpu_data());
+    caffe_copy(x_norm_.count(), top_data,
+      x_norm_.mutable_gpu_data());
   }
 }
 
@@ -99,13 +99,13 @@ void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (bottom[0] != top[0]) {
     top_diff = top[0]->gpu_diff();
   } else {
-	  if (use_global_stats_) {
-		  top_diff = top[0]->gpu_diff();
-	  }
-	  else {
-		  caffe_copy(x_norm_.count(), top[0]->gpu_diff(), x_norm_.mutable_gpu_diff());
-		  top_diff = x_norm_.gpu_diff();
-	  }
+    if (use_global_stats_) {
+      top_diff = top[0]->gpu_diff();
+    }
+    else {
+      caffe_copy(x_norm_.count(), top[0]->gpu_diff(), x_norm_.mutable_gpu_diff());
+      top_diff = x_norm_.gpu_diff();
+    }
   }
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   if (use_global_stats_) {

@@ -106,6 +106,7 @@
     <ClCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\box_annotator_ohem_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\power_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\prelu_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\psroi_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\relu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reshape_layer.cpp" />
@@ -156,8 +158,11 @@
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\silence_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\slice_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\smooth_l1_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_ohem_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\softmax_loss_ohem_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\split_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\spp_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp" />
@@ -250,6 +255,7 @@
     <ClInclude Include="..\..\include\caffe\layers\pooling_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\power_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\prelu_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\psroi_pooling_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\python_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\reduction_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\relu_layer.hpp" />
@@ -259,6 +265,7 @@
     <ClInclude Include="..\..\include\caffe\layers\sigmoid_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\silence_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\slice_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\smooth_l1_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\softmax_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\softmax_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\split_layer.hpp" />
@@ -353,6 +360,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\src\caffe\layers\box_annotator_ohem_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\psroi_pooling_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_l1_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_ohem_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_ohem_layer.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)\CommonSettings.targets" />

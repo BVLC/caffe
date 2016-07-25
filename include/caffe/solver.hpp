@@ -73,6 +73,7 @@ class Solver {
     return test_nets_;
   }
   int iter() { return iter_; }
+  int max_iter() const { return param_.max_iter(); }
 
   // Invoked at specific points during an iteration
   class Callback {
