@@ -53,7 +53,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 struct PrvMemDescr {
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr) = 0;
   virtual void convert_to_prv(void* cpu_ptr, void* prv_ptr) = 0;
-  virtual void convert_to_other(shared_ptr<PrvMemDescr> other,
+  virtual void convert_from_other(shared_ptr<PrvMemDescr> other,
                                 void* from, void* to) = 0;
 
   // returns true for matching layouts
