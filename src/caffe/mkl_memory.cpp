@@ -7,16 +7,6 @@
 #define DLOG LOG
 #endif
 
-static int getMKLBuildDate() {
-  static int build = 0;
-  if (build == 0) {
-    MKLVersion v;
-    mkl_get_version(&v);
-    build = atoi(v.Build);
-  }
-  return build;
-}
-
 namespace caffe {
 
 template <typename Dtype>
