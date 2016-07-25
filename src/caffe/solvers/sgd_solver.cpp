@@ -164,16 +164,21 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
         // add weight decay
         if (net_params[param_id]->prv_data()
              && (net_params[param_id]->prv_data_count()
-                 == net_params[param_id]->count()))
+                 == net_params[param_id]->count())) {
+          CHECK_EQ(true,
+            net_params[param_id]->get_prv_descriptor_data()->layout_compare(
+            net_params[param_id]->get_prv_descriptor_diff()));
+
           caffe_axpy(net_params[param_id]->count(),
                      local_decay,
                      net_params[param_id]->prv_data(),
                      net_params[param_id]->mutable_prv_diff());
-        else
+        } else {
           caffe_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->cpu_data(),
               net_params[param_id]->mutable_cpu_diff());
+        }
       } else if (regularization_type == "L1") {
         caffe_cpu_sign(net_params[param_id]->count(),
             net_params[param_id]->cpu_data(),

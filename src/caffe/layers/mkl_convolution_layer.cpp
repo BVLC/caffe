@@ -480,8 +480,8 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
 }
-template <typename Dtype, bool is_diff>
-void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* prv_ptr,
         void* cpu_ptr) {
   CHECK(prv_ptr);
   CHECK(cpu_ptr);
@@ -495,6 +495,69 @@ void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
   convert_resources[dnnResourceTo]   = cpu_ptr;
   status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
   CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr,
+        void* prv_ptr) {
+  CHECK(prv_ptr);
+  CHECK(cpu_ptr);
+  CHECK(this->convert_to_int);
+  int status;
+  void *convert_resources[dnnResourceNumber];
+
+  DLOG(INFO) << "convert      => priv                                => "
+             << this->name << " =>";
+
+  convert_resources[dnnResourceFrom] = cpu_ptr;
+  convert_resources[dnnResourceTo]   = prv_ptr;
+  status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
+  CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
+}
+
+
+template <typename Dtype>
+bool MKLMemoryDescriptorBase<Dtype>::layout_compare(
+  shared_ptr<PrvMemDescr> other) {
+  CHECK_EQ(other->get_descr_type(),
+              PrvMemDescr::PRV_DESCR_MKL2017);
+
+  shared_ptr<MKLMemoryDescriptorBase<Dtype> > other_descr =
+      boost::static_pointer_cast<MKLMemoryDescriptorBase<Dtype> >
+            (other);
+
+  if (dnnLayoutCompare<Dtype>(other_descr->layout_int,
+      this->layout_int))
+    return true;
+  else
+    return false;
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::convert_to_other(
+  shared_ptr<PrvMemDescr> other, void* from, void* to) {
+  // TODO: cache this primitive
+
+  shared_ptr<MKLMemoryDescriptorBase<Dtype> > other_descr =
+      boost::static_pointer_cast<MKLMemoryDescriptorBase<Dtype> >
+            (other);
+
+  DLOG(INFO) << "convert priv => other     "  << this->name
+             << " => " << other_descr->name;
+
+  int status;
+  dnnPrimitive_t convert;
+  status = dnnConversionCreate<Dtype>(&convert,
+                  this->layout_int, other_descr->layout_int);
+
+  void *convert_resources[dnnResourceNumber];
+  convert_resources[dnnResourceFrom] = from;
+  convert_resources[dnnResourceTo]   = to;
+  status = dnnExecute<Dtype>(convert, convert_resources);
+  CHECK_EQ(status, 0) << "Conversion from prv to other failed with status "
+                      << status;
+
+  dnnDelete<Dtype>(convert);
 }
 
 template <typename Dtype, bool is_diff>
@@ -522,7 +585,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       DLOG(INFO) << "convert      => priv                                => "
                  << this->name;
 
-      allocate();
+      this->allocate();
       convert_resources[dnnResourceFrom] =
               is_diff ?
                 reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
@@ -535,9 +598,9 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
       if (set_prv_ptr) {
         if (is_diff)
-          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
+          blob->set_prv_diff(this->internal_ptr, this->get_shared_ptr(), true);
         else
-          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
+          blob->set_prv_data(this->internal_ptr, this->get_shared_ptr(), true);
       }
       return this->internal_ptr;
     } else {
@@ -588,7 +651,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           DLOG(INFO) << "!!!! Failed creation convert_prv2prv with status "
                   << status << "\n";
 
-          allocate();
+          this->allocate();
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
             reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
@@ -599,7 +662,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
-          allocate();
+          this->allocate();
 
           convert_resources[dnnResourceFrom] = is_diff ?
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
@@ -612,9 +675,9 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
         if (set_prv_ptr) {
           if (is_diff)
-            blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
+            blob->set_prv_diff(this->internal_ptr, this->get_shared_ptr(), true);
           else
-            blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
+            blob->set_prv_data(this->internal_ptr, this->get_shared_ptr(), true);
         }
         return this->internal_ptr;
       } else if (current_descr.get() != this) {
