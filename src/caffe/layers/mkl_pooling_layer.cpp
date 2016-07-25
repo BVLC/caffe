@@ -137,26 +137,16 @@ void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   kernel_size[0] = kernel_w_;
   kernel_size[1] = kernel_h_;
 
-  dnnError_t e;
-  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, src_sizes,
-          src_strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, dst_sizes,
-          dst_strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff->layout_usr, dim, src_sizes,
-          src_strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, dst_sizes,
-          dst_strides);
-  CHECK_EQ(e, E_SUCCESS);
-
   // Names are for debugging only
   fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
   fwd_top_data->name =    "fwd_top_data      @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
 
+  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides);
+  fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides);
+  bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides);
+  bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides);
   // Primitives will be allocated during the first fwd pass
   poolingFwd = NULL;
   poolingBwd = NULL;
@@ -316,12 +306,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
-            poolingFwd, dnnResourceDst);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-
-    fwd_top_data->create_conversions();
+    fwd_top_data->create_internal_layout(poolingFwd, dnnResourceDst);
 
     // Now create poolingBwd
     status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL,
@@ -329,16 +314,8 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff->layout_int,
-            poolingFwd, dnnResourceDst);
-    CHECK_EQ(status, E_SUCCESS);
-
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff->layout_int,
-            poolingFwd, dnnResourceSrc);
-    CHECK_EQ(status, E_SUCCESS);
-
-    bwd_top_diff->create_conversions();
-    bwd_bottom_diff->create_conversions();
+    bwd_top_diff   ->create_internal_layout(poolingFwd, dnnResourceDst);
+    bwd_bottom_diff->create_internal_layout(poolingFwd, dnnResourceSrc);
   }
 
   pooling_res[dnnResourceSrc] = bottom_data;

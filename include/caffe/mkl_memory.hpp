@@ -61,13 +61,46 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
       int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr,
               layout_int);
       CHECK_EQ(status, 0) << "Failed creation convert_to_int with status "
-              << status << "\n";
+              << status << " for buffer: " << this->name << "\n";
       status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int,
               layout_usr);
       CHECK_EQ(status, 0) << "Failed creation convert_from_int with status "
-              << status << "\n";
+              << status << " for buffer: " << this->name << "\n";
     }
   }
+  
+  void create_internal_layout(const dnnPrimitive_t primitive, dnnResourceType_t type) {
+      int status;
+      CHECK(this->layout_int == NULL) << "Internal layout already created for "
+                                      << this->name;
+      status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &this->layout_int, primitive, type);
+      CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << " for buffer: " << this->name << "\n";
+
+      if(this->layout_usr && !this->convert_from_int && !this->convert_to_int)
+          create_conversions();
+  }
+  
+  void create_user_layout(size_t dimension, const size_t size[], const size_t strides[]) {
+      int status;
+      CHECK(this->layout_usr == NULL) << "User layout already created for"
+                                      << this->name;
+      status = dnnLayoutCreate<Dtype>(
+          &this->layout_usr, dimension, size, strides);
+      CHECK_EQ(status, 0) << "Failed dnnLayoutCreate with status "
+          << status << " for buffer: " << this->name << "\n";
+
+      if(this->layout_int && !this->convert_from_int && !this->convert_to_int)
+          create_conversions();
+  }
+  void create_layouts(const dnnPrimitive_t primitive, dnnResourceType_t type, 
+                 size_t dimension, const size_t size[], const size_t strides[]) {
+      this->create_internal_layout(primitive, type);
+      this->create_user_layout(dimension, size, strides);
+      this->create_conversions();
+  }
+  
   virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
   virtual size_t prv_size() {
       return dnnLayoutGetMemorySize<Dtype>(layout_int);
