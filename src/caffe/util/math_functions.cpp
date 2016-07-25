@@ -1,5 +1,6 @@
 #if USE_MKL
-#include <mkl.h>
+#include <mkl_vsl.h>
+#include <mkl_vml_functions.h>
 #endif
 
 #ifdef _OPENMP
