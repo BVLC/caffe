@@ -15,14 +15,13 @@
 #include "mkl_dnn_cppwrapper.h"
 
 namespace caffe {
-
-template <typename Dtype, bool is_diff>
-struct MKLMemoryDescriptor : PrvMemDescr,
-    boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
-  MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
+template <typename Dtype>
+struct MKLMemoryDescriptorBase : PrvMemDescr,
+    boost::enable_shared_from_this<MKLMemoryDescriptorBase<Dtype> > {
+  MKLMemoryDescriptorBase() : layout_usr(NULL), layout_int(NULL),
           convert_to_int(NULL), convert_from_int(NULL), convert_prv2prv(NULL),
           name("UNKNOWN"), internal_ptr(NULL) {}
-  ~MKLMemoryDescriptor() {
+  ~MKLMemoryDescriptorBase() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
     dnnReleaseBuffer<Dtype>(internal_ptr);
@@ -31,7 +30,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
     dnnDelete<Dtype>(convert_prv2prv);
   }
 
-  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
+  shared_ptr<MKLMemoryDescriptorBase<Dtype> > get_shared_ptr() {
     return this->shared_from_this();
   }
 
@@ -40,7 +39,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
   dnnPrimitive_t convert_prv2prv;
-  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > descr_prv2prv_conversion;
+  shared_ptr<MKLMemoryDescriptorBase<Dtype> > descr_prv2prv_conversion;
 
   std::string name;  // for debugging purposes
   void allocate() {
@@ -73,6 +72,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
               << status << "\n";
     }
   }
+  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
   virtual size_t prv_size() {
       return dnnLayoutGetMemorySize<Dtype>(layout_int);
   }
@@ -81,17 +81,19 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   }
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
   virtual void convert_to_prv(void* cpu_ptr, void* prv_ptr);
-  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
+  virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
+  virtual void convert_to_other(shared_ptr<PrvMemDescr> other,
+                                void* from, void* to);
+ protected:
+  Dtype* internal_ptr;
+};
 
+template <typename Dtype, bool is_diff>
+struct MKLMemoryDescriptor : MKLMemoryDescriptorBase<Dtype> {
   // The last get_converted_prv() argument is a hack for reusing
   // in backward a conversion done already in the forward direction.
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr,
           MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
-  
-  virtual bool layout_compare(shared_ptr<PrvMemDescr> other, bool is_other_diff);
-  virtual void convert_to_other(shared_ptr<PrvMemDescr> other, void* from, void* to, bool is_other_diff);
- private:
-  Dtype* internal_ptr;
 };
 
 template <typename Dtype>

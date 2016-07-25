@@ -162,46 +162,23 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
-        if (net_params[param_id]->prv_data()) {
-/* */      CHECK_EQ(net_params[param_id]->count(),
-                    net_params[param_id]->prv_data_count());
-          if(false ==
-                  net_params[param_id]->get_prv_descriptor_data()->layout_compare(
-                    net_params[param_id]->get_prv_descriptor_diff(), true))
-          {
-            LOG(INFO) << "Regularize: layout mismatch for param_id: " << param_id;
-            // Converting DIFFs to the same layout as
-            // use history diff - not used anywhere
-            // TODO: is it ok?
-
-            history_[param_id]->set_prv_descriptor_diff(
-              net_params[param_id]->get_prv_descriptor_data());
-
-            net_params[param_id]->get_prv_descriptor_diff()->convert_to_other(
-              net_params[param_id]->get_prv_descriptor_data(),
-              (void*) net_params[param_id]->prv_diff(),
-              (void*) history_[param_id]->mutable_prv_diff(),
-              false
-              );
-
-            caffe_copy(net_params[param_id]->count(),
-                 history_[param_id]->prv_diff(),
-                 net_params[param_id]->mutable_prv_diff());
-
-            net_params[param_id]->set_prv_descriptor_diff(
-              net_params[param_id]->get_prv_descriptor_data());
-          }
+        if (net_params[param_id]->prv_data()
+             && (net_params[param_id]->prv_data_count()
+                 == net_params[param_id]->count())) {
+          CHECK_EQ(true,
+            net_params[param_id]->get_prv_descriptor_data()->layout_compare(
+            net_params[param_id]->get_prv_descriptor_diff()));
 
           caffe_axpy(net_params[param_id]->count(),
                      local_decay,
                      net_params[param_id]->prv_data(),
                      net_params[param_id]->mutable_prv_diff());
-        }
-        else
+        } else {
           caffe_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->cpu_data(),
               net_params[param_id]->mutable_cpu_diff());
+        }
       } else if (regularization_type == "L1") {
         caffe_cpu_sign(net_params[param_id]->count(),
             net_params[param_id]->cpu_data(),
@@ -262,42 +239,16 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    if (net_params[param_id]->prv_diff()) {
-      CHECK_EQ(net_params[param_id]->count(), net_params[param_id]->prv_data_count());
-      if(false ==
-          net_params[param_id]->get_prv_descriptor_data()->layout_compare(
-          net_params[param_id]->get_prv_descriptor_diff(), true)) {
-        LOG(INFO) << "ComputeUpdateValue: layout mismatch for param_id: " << param_id;
+    if (net_params[param_id]->prv_diff()
+        && (net_params[param_id]->prv_diff_count()
+            == net_params[param_id]->count())) {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->prv_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
 
-        CHECK_EQ(net_params[param_id]->count(),
-                 net_params[param_id]->prv_data_count());
-        // Converting DIFFs to the same layout as
-        // use history diff - not used anywhere
-        // TODO: is it ok?
-        history_[param_id]->set_prv_descriptor_diff(
-          net_params[param_id]->get_prv_descriptor_data());
-
-        net_params[param_id]->get_prv_descriptor_diff()->convert_to_other(
-          net_params[param_id]->get_prv_descriptor_data(),
-          (void*) net_params[param_id]->prv_diff(),
-          (void*) history_[param_id]->mutable_prv_diff(),
-          false
-        );
-        caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-                history_[param_id]->prv_diff(), momentum,
-                history_[param_id]->mutable_cpu_data());
-      } else {
-        caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-                net_params[param_id]->prv_diff(), momentum,
-                history_[param_id]->mutable_cpu_data());
-      }
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_prv_diff());
-
-      net_params[param_id]->set_prv_descriptor_diff(
-          net_params[param_id]->get_prv_descriptor_data());
-
     } else {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,

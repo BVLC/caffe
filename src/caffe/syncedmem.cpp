@@ -215,7 +215,8 @@ void* SyncedMemory::mutable_prv_data() {
   if (NULL == prv_ptr_) {
     // TODO:
     if (prv_descriptor_.get())
-      CaffeMallocHost(&prv_ptr_, prv_descriptor_->prv_size(), &cpu_malloc_use_cuda_);
+      CaffeMallocHost(&prv_ptr_, prv_descriptor_->prv_size(),
+                      &cpu_malloc_use_cuda_);
     else
       CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, prv_ptr_);
