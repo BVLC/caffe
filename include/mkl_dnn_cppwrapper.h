@@ -6,19 +6,16 @@
 
 #include "mkl_dnn_types.h"
 #include "mkl_dnn.h"
+#include "mkl_version.h"
 
 #define TEMPLATE_PREFIX template <typename Dtype> inline
 #define SPEC_PREFIX template <> inline
 
-#ifdef USE_MKL2017_NEW_API
 #if (__INTEL_MKL__ < 2017) || (__INTEL_MKL_BUILD_DATE <= 20160311)
 #error: To use the new MKL DNN API, you must install Intel(R) MKL 2017 Beta Update 1 or higher.
 #endif
-    #define ATTRIBUTES attributes,
-#else
-    typedef void* dnnPrimitiveAttributes_t;
-    #define ATTRIBUTES
-#endif
+
+
 
 TEMPLATE_PREFIX dnnError_t dnnLayoutCreate(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[]);
@@ -188,7 +185,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateForward<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
         {return dnnConvolutionCreateForward_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -201,7 +198,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateForward<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
         {return dnnConvolutionCreateForward_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -221,7 +218,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateForwardBias<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
         {return dnnConvolutionCreateForwardBias_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -233,7 +230,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateForwardBias<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
         {return dnnConvolutionCreateForwardBias_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -253,7 +250,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardData<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnConvolutionCreateBackwardData_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -265,7 +262,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardData<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnConvolutionCreateBackwardData_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -284,7 +281,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardFilter<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnConvolutionCreateBackwardFilter_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -296,7 +293,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardFilter<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnConvolutionCreateBackwardFilter_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -313,7 +310,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardBias<float>(
         size_t dimension, const size_t dstSize[])
 {return dnnConvolutionCreateBackwardBias_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, dstSize);}
 SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardBias<double>(
@@ -323,7 +320,7 @@ SPEC_PREFIX dnnError_t dnnConvolutionCreateBackwardBias<double>(
         size_t dimension, const size_t dstSize[])
 {return dnnConvolutionCreateBackwardBias_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         dimension, dstSize);}
 
@@ -341,7 +338,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateForward<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateForward_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -353,7 +350,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateForward<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateForward_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -372,7 +369,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateForwardBias<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateForwardBias_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -384,7 +381,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateForwardBias<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateForwardBias_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -403,7 +400,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardData<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateBackwardData_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -415,7 +412,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardData<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateBackwardData_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -435,7 +432,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardFilter<float>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateBackwardFilter_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -447,7 +444,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardFilter<double>(
         const size_t convolutionStrides[], const int inputOffset[], const dnnBorder_t border_type)
 {return dnnGroupsConvolutionCreateBackwardFilter_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, srcSize, dstSize, filterSize,
         convolutionStrides, inputOffset, border_type);}
@@ -464,7 +461,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardBias<float>(
         size_t groups, size_t dimension, const size_t dstSize[])
 {return dnnGroupsConvolutionCreateBackwardBias_F32(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, dstSize);}
 SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardBias<double>(
@@ -474,7 +471,7 @@ SPEC_PREFIX dnnError_t dnnGroupsConvolutionCreateBackwardBias<double>(
         size_t groups, size_t dimension, const size_t dstSize[])
 {return dnnGroupsConvolutionCreateBackwardBias_F64(
         pConvolution,
-        ATTRIBUTES
+        attributes,
         algorithm,
         groups, dimension, dstSize);}
 
@@ -488,7 +485,7 @@ SPEC_PREFIX dnnError_t dnnReLUCreateForward<float>(
         const dnnLayout_t dataLayout, float negativeSlope)
 {return dnnReLUCreateForward_F32(
         pRelu,
-        ATTRIBUTES
+        attributes,
         dataLayout, negativeSlope);}
 SPEC_PREFIX dnnError_t dnnReLUCreateForward<double>(
         dnnPrimitive_t* pRelu,
@@ -496,7 +493,7 @@ SPEC_PREFIX dnnError_t dnnReLUCreateForward<double>(
         const dnnLayout_t dataLayout, float negativeSlope)
 {return dnnReLUCreateForward_F64(
         pRelu,
-        ATTRIBUTES
+        attributes,
         dataLayout, negativeSlope);}
 
 TEMPLATE_PREFIX dnnError_t dnnReLUCreateBackward(
@@ -509,7 +506,7 @@ SPEC_PREFIX dnnError_t dnnReLUCreateBackward<float>(
         const dnnLayout_t diffLayout, const dnnLayout_t dataLayout, float negativeSlope)
 {return dnnReLUCreateBackward_F32(
         pRelu,
-        ATTRIBUTES
+        attributes,
         diffLayout, dataLayout, negativeSlope);}
 SPEC_PREFIX dnnError_t dnnReLUCreateBackward<double>(
         dnnPrimitive_t* pRelu,
@@ -517,7 +514,7 @@ SPEC_PREFIX dnnError_t dnnReLUCreateBackward<double>(
         const dnnLayout_t diffLayout, const dnnLayout_t dataLayout, float negativeSlope)
 {return dnnReLUCreateBackward_F64(
         pRelu,
-        ATTRIBUTES
+        attributes,
         diffLayout, dataLayout, negativeSlope);}
 
 TEMPLATE_PREFIX dnnError_t dnnLRNCreateForward(
@@ -530,7 +527,7 @@ SPEC_PREFIX dnnError_t dnnLRNCreateForward<float>(
         const dnnLayout_t dataLayout, size_t kernel_size, float alpha, float beta, float k)
 {return dnnLRNCreateForward_F32(
         pLrn,
-        ATTRIBUTES
+        attributes,
         dataLayout, kernel_size, alpha, beta, k);}
 SPEC_PREFIX dnnError_t dnnLRNCreateForward<double>(
         dnnPrimitive_t* pLrn,
@@ -538,7 +535,7 @@ SPEC_PREFIX dnnError_t dnnLRNCreateForward<double>(
         const dnnLayout_t dataLayout, size_t kernel_size, float alpha, float beta, float k)
 {return dnnLRNCreateForward_F64(
         pLrn,
-        ATTRIBUTES
+        attributes,
         dataLayout, kernel_size, alpha, beta, k);}
 
 
@@ -552,7 +549,7 @@ SPEC_PREFIX dnnError_t dnnLRNCreateBackward<float>(
         const dnnLayout_t diffLayout, const dnnLayout_t dataLayout, size_t kernel_size, float alpha, float beta, float k)
 {return dnnLRNCreateBackward_F32(
         pLrn,
-        ATTRIBUTES
+        attributes,
         diffLayout, dataLayout, kernel_size, alpha, beta, k);}
 SPEC_PREFIX dnnError_t dnnLRNCreateBackward<double>(
         dnnPrimitive_t* pLrn,
@@ -560,7 +557,7 @@ SPEC_PREFIX dnnError_t dnnLRNCreateBackward<double>(
         const dnnLayout_t diffLayout, const dnnLayout_t dataLayout, size_t kernel_size, float alpha, float beta, float k)
 {return dnnLRNCreateBackward_F64(
         pLrn,
-        ATTRIBUTES
+        attributes,
         diffLayout, dataLayout, kernel_size, alpha, beta, k);}
 
 
@@ -580,7 +577,7 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateForward<float>(
         const int inputOffset[], const dnnBorder_t border_type)
 {return dnnPoolingCreateForward_F32(
         pPooling,
-        ATTRIBUTES
+        attributes,
         op,
         srcLayout,
         kernelSize, kernelStride,
@@ -594,7 +591,7 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateForward<double>(
         const int inputOffset[], const dnnBorder_t border_type)
 {return dnnPoolingCreateForward_F64(
         pPooling,
-        ATTRIBUTES
+        attributes,
         op,
         srcLayout,
         kernelSize, kernelStride,
@@ -617,7 +614,7 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateBackward<float>(
         const int inputOffset[], const dnnBorder_t border_type)
 {return dnnPoolingCreateBackward_F32(
         pPooling,
-        ATTRIBUTES
+        attributes,
         op,
         srcLayout,
         kernelSize, kernelStride,
@@ -631,7 +628,7 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateBackward<double>(
         const int inputOffset[], const dnnBorder_t border_type)
 {return dnnPoolingCreateBackward_F64(
         pPooling,
-        ATTRIBUTES
+        attributes,
         op,
         srcLayout,
         kernelSize, kernelStride,
@@ -650,7 +647,7 @@ SPEC_PREFIX dnnError_t dnnConcatCreate<float>(
         dnnLayout_t src[])
 {return dnnConcatCreate_F32(
         pConcat,
-        ATTRIBUTES
+        attributes,
         N,
         src);}
 SPEC_PREFIX dnnError_t dnnConcatCreate<double>(
@@ -660,7 +657,7 @@ SPEC_PREFIX dnnError_t dnnConcatCreate<double>(
         dnnLayout_t src[])
 {return dnnConcatCreate_F64(
         pConcat,
-        ATTRIBUTES
+        attributes,
         N,
         src);}
 
@@ -679,7 +676,7 @@ SPEC_PREFIX dnnError_t dnnSplitCreate<float>(
         size_t dst[])
 {return dnnSplitCreate_F32(
         pSplit,
-        ATTRIBUTES
+        attributes,
         N,
         src,
         dst);}
@@ -691,7 +688,7 @@ SPEC_PREFIX dnnError_t dnnSplitCreate<double>(
         size_t dst[])
 {return dnnSplitCreate_F64(
         pSplit,
-        ATTRIBUTES
+        attributes,
         N,
         src,
         dst);}
@@ -706,7 +703,7 @@ SPEC_PREFIX dnnError_t dnnSumCreate<float>(
         const size_t nSummands, dnnLayout_t layout, float *coefficients)
 {return dnnSumCreate_F32(
         pSum,
-        ATTRIBUTES
+        attributes,
         nSummands,
         layout, coefficients);}
 SPEC_PREFIX dnnError_t dnnSumCreate<double>(
@@ -715,7 +712,7 @@ SPEC_PREFIX dnnError_t dnnSumCreate<double>(
         const size_t nSummands, dnnLayout_t layout, double *coefficients)
 {return dnnSumCreate_F64(
         pSum,
-        ATTRIBUTES
+        attributes,
         nSummands,
         layout, coefficients);}
 
@@ -729,7 +726,7 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<float>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateForward_F32(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<double>(
         dnnPrimitive_t* pBatchNormalization,
@@ -737,7 +734,7 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<double>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateForward_F64(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 
 
@@ -751,7 +748,7 @@ SPEC_PREFIX  dnnError_t dnnBatchNormalizationCreateBackwardData<float>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateBackwardData_F32(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 
 SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardData<double>(
@@ -760,7 +757,7 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardData<double>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateBackwardData_F64(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 
 TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift(
@@ -773,7 +770,7 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<float>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateBackwardScaleShift_F32(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<double>(
         dnnPrimitive_t* pBatchNormalization,
@@ -781,7 +778,7 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<double>(
         const dnnLayout_t dataLayout, float eps)
 {return dnnBatchNormalizationCreateBackwardScaleShift_F64(
         pBatchNormalization,
-        ATTRIBUTES
+        attributes,
         dataLayout, eps); }
 #endif // #ifdef USE_MKL2017_NEW_API
 

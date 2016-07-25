@@ -403,13 +403,21 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
-# BLAS configuration (default = ATLAS)
-BLAS ?= atlas
+# BLAS configuration (default = MKL)
+BLAS ?= mkl
 ifeq ($(BLAS), mkl)
 	# MKL
-	LIBRARIES += mkl_rt
+	# TODO: make it nice , NOT hardcoded working properly
+	RETURN_STRING=$(shell "./external/mkl/prepare_mkl.sh")
+	MKLROOT=$(firstword $(RETURN_STRING))
+	LIBRARIES+=$(word 2, $(RETURN_STRING))
+	OMP_EXTERNAL=$(lastword $(RETURN_STRING))
+
+#$(info "RETURN_STRING: "$(RETURN_STRING))
+#$(info "MKLROOT: "$(MKLROOT))
+#$(info "LIBRARIES: "$(LIBRARIES))
+
 	COMMON_FLAGS += -DUSE_MKL
-	MKLROOT ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 
@@ -499,10 +507,14 @@ endif
 
 # Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
 # if no openmp is supported in compiler then openmp compiler flags are not to be updated 
+# TODO: FIX for ICC?
 USE_OPENMP ?= 1
 ifeq ($(USE_OPENMP), 1)
   DUMMY_OPENMP_BINARY := $(shell mktemp)
   DUMMY_OPENMP_FILE := $(shell mktemp).cpp
+  ifeq ($(OMP_EXTERNAL), 1)
+    INTEL_OMP_DIR ?= $(shell find ${MKLROOT} -readable -name libiomp5.so 2>/dev/null | grep -v mic | xargs dirname)
+  endif
   INTEL_OMP_DIR ?= $(shell find ${MKLROOT}/.. -readable -name libiomp5.so 2>/dev/null | grep -v mic | grep -m 1 intel64 | xargs dirname)
   define OPENMP_VERIFYING_CODE
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
@@ -534,12 +546,20 @@ ifeq ($(USE_MPI), 1)
  #endif
 endif
 
-
-all: lib tools examples
+# set_env should be at the end
+all: lib tools examples set_env
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
+
+# TODO: Make it conditional, if MKLROOT exists outside do not call set_env.sh
+set_env: 
+	@echo ""
+	@echo "	To use IntelCaffe with MKL. please execute:"
+	@echo ""
+	@echo "			source ./external/mkl/set_env_up.sh"
+	@echo ""
 
 linecount:
 	cloc --read-lang-def=$(PROJECT).cloc \
