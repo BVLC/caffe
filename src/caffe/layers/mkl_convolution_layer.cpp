@@ -123,6 +123,22 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
   int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
 
+  // Names are for debugging purposes only.
+  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
+  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
+  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
+  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
+  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
+  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
+  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
+  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
+  bwdf2fwd_filter_diff->name =
+                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
+  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
+  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
+
   if (this->bias_term_) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
@@ -150,55 +166,21 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       inputOffset,
       dnnBorderZeros);
   }
+
   CHECK_EQ(status, 0)
           << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_bottom_data->layout_int, convolutionFwd, dnnResourceSrc);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_top_data->layout_int, convolutionFwd, dnnResourceDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_filter_data->layout_int, convolutionFwd, dnnResourceFilter);
-  CHECK_EQ(status, 0) <<
-          "Failed dnnLayoutCreateFromPrimitive with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of l_fwd_bottom_data_usr layout with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_top_data->layout_usr   , dimension, tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0) <<
-          "Failed creation of l_fwd_top_data_usr layout with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_filter_data->layout_usr, f_dimension, fdata_sizes,
-          fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of l_fwd_filter_data_usr layout with status "
-          << status << "\n";
+  fwd_bottom_data->create_layouts(convolutionFwd, dnnResourceSrc, dimension,
+                                  bdata_sizes, bdata_strides);
+  fwd_top_data   ->create_layouts(convolutionFwd, dnnResourceDst, dimension,
+                                  tdata_sizes, tdata_strides);
+  fwd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,f_dimension,
+                                  fdata_sizes, fdata_strides);
 
-  fwd_bottom_data->create_conversions();
-  fwd_top_data   ->create_conversions();
-  fwd_filter_data->create_conversions();
-
-  if (this->bias_term_) {
-    status = dnnLayoutCreateFromPrimitive<Dtype>(
-            &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-    status = dnnLayoutCreate<Dtype>(
-            &fwd_bias_data->layout_usr, 1, bias_sizes, bias_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of l_fwd_bias_data_usr layout with status "
-            << status << "\n";
-    fwd_bias_data  ->create_conversions();
-  }
+  if (this->bias_term_)
+    fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
+                                  bias_sizes, bias_strides);
 
 /*
  * Backward by data layer setup
@@ -219,38 +201,12 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_bottom_diff->layout_int,
-          convolutionBwdData, dnnResourceDiffSrc);
-  CHECK_EQ(status, 0)
-          << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &bwdd_top_diff->layout_int, convolutionBwdData, dnnResourceDiffDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_filter_data->layout_int,
-          convolutionBwdData, dnnResourceFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff->layout_usr, dimension,
-          bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_bottom_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_top_diff->layout_usr, dimension,
-          tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_top_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, f_dimension,
-          fdata_sizes, fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_filter_data->layout_usr with status "
-          << status << "\n";
-
-  bwdd_bottom_diff->create_conversions();
-  bwdd_top_diff->create_conversions();
-  bwdd_filter_data->create_conversions();
+  bwdd_bottom_diff->create_layouts(convolutionBwdData, dnnResourceDiffSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdd_top_diff   ->create_layouts(convolutionBwdData, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
 
 /*
  * Backward by filter layer setup
@@ -271,50 +227,24 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardFilter with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_bottom_data->layout_int,
-          convolutionBwdFilter, dnnResourceSrc);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_top_diff->layout_int,
-          convolutionBwdFilter, dnnResourceDiffDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_filter_diff->layout_int,
-          convolutionFwd, dnnResourceFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
+  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdf_filter_diff->create_layouts(convolutionFwd, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
+
+
   // bwdf2fwd_filter_diff:
   // layout_int = internal layout of weight diff on backward filter convolution,
   // layout_usr = internal layout of weight on forward convolution
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &bwdf2fwd_filter_diff->layout_int, convolutionBwdFilter,
+  bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
           dnnResourceDiffFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
   status = dnnLayoutCreateFromPrimitive<Dtype>(
           &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
   CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
           << status << "\n";
 
-  status = dnnLayoutCreate<Dtype>(&bwdf_bottom_data->layout_usr, dimension,
-          bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_bottom_data->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_top_diff->layout_usr, dimension,
-          tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_top_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, f_dimension,
-          fdata_sizes, fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_filter_diff->layout_usr with status "
-          << status << "\n";
-
-  bwdf_bottom_data->create_conversions();
-  bwdf_top_diff->create_conversions();
-  bwdf_filter_diff->create_conversions();
   bwdf2fwd_filter_diff->create_conversions();
 
 /*
@@ -332,45 +262,11 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
             << "Failed dnnConvolutionCreateBackwardBias with status "
             << status << "\n";
 
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
-            convolutionBwdBias, dnnResourceDiffDst);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int,
-            convolutionBwdBias, dnnResourceDiffBias);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-
-    status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension,
-            tdata_sizes, tdata_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of bwdb_top_diff->layout_usr with status "
-            << status << "\n";
-    status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr, 1,
-            bias_sizes, bias_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of bwdb_bias_diff->layout_usr with status "
-            << status << "\n";
-
-    bwdb_top_diff->create_conversions();
-    bwdb_bias_diff->create_conversions();
+    bwdb_top_diff->create_layouts(convolutionBwdBias, dnnResourceDiffDst,
+                                  dimension, tdata_sizes, tdata_strides);
+    bwdb_bias_diff->create_layouts(convolutionBwdBias, dnnResourceDiffBias, 1,
+                                   bias_sizes, bias_strides);
   }
-
-  // Names are for debugging purposes only. TODO: Consider removing this.
-  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
-  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
-  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
-  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
-  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
-  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
-  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
-  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
-  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
-  bwdf2fwd_filter_diff->name =
-                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
-  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
-  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 }
 
 template <typename Dtype>

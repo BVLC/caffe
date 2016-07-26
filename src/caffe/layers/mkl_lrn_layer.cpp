@@ -41,20 +41,15 @@ void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   strides[2] = sizes[0]*sizes[1];
   strides[3] = sizes[0]*sizes[1]*sizes[2];
 
-  dnnError_t e;
-  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-
   fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
   fwd_top_data->name =    "fwd_top_data      @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
+
+  fwd_bottom_data->create_user_layout(dim, sizes, strides);
+  fwd_top_data   ->create_user_layout(dim, sizes, strides);
+  bwd_bottom_diff->create_user_layout(dim, sizes, strides);
+  bwd_top_diff   ->create_user_layout(dim, sizes, strides);
 
   // Fwd, Bwd primitives and lrn_buffer_ are allocated in  "Lazy"
   // mode, because here we don't know
@@ -122,11 +117,7 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
               size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
-             lrnFwd, dnnResourceDst);
-      CHECK_EQ(e, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-             << e << "\n";
-      fwd_top_data->create_conversions();
+      fwd_top_data->create_internal_layout(lrnFwd, dnnResourceDst);
 
       e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL,
               fwd_bottom_data->layout_int, fwd_bottom_data->layout_int,
@@ -141,16 +132,8 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
       CHECK_EQ(e, E_SUCCESS);
       dnnLayoutDelete<Dtype>(lrn_buffer_l);
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff->layout_int,
-              lrnBwd, dnnResourceDiffDst);
-      CHECK_EQ(e, E_SUCCESS);
-
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff->layout_int,
-              lrnBwd, dnnResourceDiffSrc);
-      CHECK_EQ(e, E_SUCCESS);
-
-      bwd_top_diff->create_conversions();
-      bwd_bottom_diff->create_conversions();
+      bwd_top_diff->create_internal_layout(lrnBwd, dnnResourceDiffDst);
+      bwd_bottom_diff->create_internal_layout(lrnBwd, dnnResourceDiffSrc);
     }
   } else {
     DLOG(INFO) << "Using cpu_data in MKLLRNLayer.";
