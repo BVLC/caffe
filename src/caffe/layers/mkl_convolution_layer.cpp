@@ -171,12 +171,16 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
           << status << "\n";
 
-  fwd_bottom_data->create_layouts(convolutionFwd, dnnResourceSrc,    dimension, bdata_sizes, bdata_strides);
-  fwd_top_data   ->create_layouts(convolutionFwd, dnnResourceDst,    dimension, tdata_sizes, tdata_strides);
-  fwd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,f_dimension, fdata_sizes, fdata_strides);
+  fwd_bottom_data->create_layouts(convolutionFwd, dnnResourceSrc, dimension,
+                                  bdata_sizes, bdata_strides);
+  fwd_top_data   ->create_layouts(convolutionFwd, dnnResourceDst, dimension,
+                                  tdata_sizes, tdata_strides);
+  fwd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,f_dimension,
+                                  fdata_sizes, fdata_strides);
 
   if (this->bias_term_)
-    fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1, bias_sizes, bias_strides);
+    fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
+                                  bias_sizes, bias_strides);
 
 /*
  * Backward by data layer setup
@@ -197,9 +201,12 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
 
-  bwdd_bottom_diff->create_layouts(convolutionBwdData, dnnResourceDiffSrc, dimension, bdata_sizes, bdata_strides);
-  bwdd_top_diff   ->create_layouts(convolutionBwdData, dnnResourceDiffDst, dimension, tdata_sizes, tdata_strides);
-  bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,f_dimension, fdata_sizes, fdata_strides);
+  bwdd_bottom_diff->create_layouts(convolutionBwdData, dnnResourceDiffSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdd_top_diff   ->create_layouts(convolutionBwdData, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
 
 /*
  * Backward by filter layer setup
@@ -220,9 +227,12 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardFilter with status "
           << status << "\n";
 
-  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceSrc, dimension, bdata_sizes, bdata_strides);
-  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst, dimension, tdata_sizes, tdata_strides);
-  bwdf_filter_diff->create_layouts(convolutionFwd,       dnnResourceFilter, f_dimension, fdata_sizes, fdata_strides);
+  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdf_filter_diff->create_layouts(convolutionFwd, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
 
 
   // bwdf2fwd_filter_diff:
@@ -252,8 +262,10 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
             << "Failed dnnConvolutionCreateBackwardBias with status "
             << status << "\n";
 
-    bwdb_top_diff->create_layouts(convolutionBwdBias, dnnResourceDiffDst, dimension, tdata_sizes, tdata_strides);
-    bwdb_bias_diff->create_layouts(convolutionBwdBias, dnnResourceDiffBias, 1, bias_sizes, bias_strides);
+    bwdb_top_diff->create_layouts(convolutionBwdBias, dnnResourceDiffDst,
+                                  dimension, tdata_sizes, tdata_strides);
+    bwdb_bias_diff->create_layouts(convolutionBwdBias, dnnResourceDiffBias, 1,
+                                   bias_sizes, bias_strides);
   }
 }
 

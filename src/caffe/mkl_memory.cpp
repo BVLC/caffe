@@ -10,6 +10,85 @@
 namespace caffe {
 
 template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
+  int status;
+  if (this->convert_from_int) {
+    DLOG(INFO) << "convert_from_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_from_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+  if (this->convert_to_int) {
+    DLOG(INFO) << "convert_to_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_to_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+  if (layout_int
+      && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
+    CHECK(layout_usr);
+    status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr,
+            layout_int);
+    CHECK_EQ(status, E_SUCCESS)
+            << "Failed creation convert_to_int with status "
+            << status << " for buffer: " << this->name << "\n";
+    status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int,
+            layout_usr);
+    CHECK_EQ(status, E_SUCCESS)
+            << "Failed creation convert_from_int with status "
+            << status << " for buffer: " << this->name << "\n";
+  }
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
+    const dnnPrimitive_t primitive, dnnResourceType_t type) {
+  int status;
+  if (this->layout_int) {
+    DLOG(INFO) << "Internal layout already created, recreating for"
+           << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+      &this->layout_int, primitive, type);
+  CHECK_EQ(status, E_SUCCESS)
+      << "Failed dnnLayoutCreateFromPrimitive with status "
+      << status << " for buffer: " << this->name << "\n";
+
+  if (this->layout_usr)
+    this->create_conversions();
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
+    size_t dimension, const size_t size[], const size_t strides[]) {
+  int status;
+  if (this->layout_usr) {
+    DLOG(INFO) << "User layout already created, recreating for"
+               << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_usr);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+
+  status = dnnLayoutCreate<Dtype>(
+      &this->layout_usr, dimension, size, strides);
+  CHECK_EQ(status, E_SUCCESS) << "Failed dnnLayoutCreate with status "
+      << status << " for buffer: " << this->name << "\n";
+
+  if (this->layout_int)
+    this->create_conversions();
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::create_layouts(
+    const dnnPrimitive_t primitive, dnnResourceType_t type,
+    size_t dimension, const size_t size[], const size_t strides[]) {
+  this->create_internal_layout(primitive, type);
+  this->create_user_layout(dimension, size, strides);
+}
+
+template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* prv_ptr,
         void* cpu_ptr) {
   CHECK(prv_ptr);
@@ -83,7 +162,7 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
   convert_resources[dnnResourceFrom] = from;
   convert_resources[dnnResourceTo]   = to;
   status = dnnExecute<Dtype>(convert, convert_resources);
-  CHECK_EQ(status, 0) << "Conversion from prv to other failed with status "
+  CHECK_EQ(status, 0) << "Conversion from other failed with status "
                       << status;
 
   dnnDelete<Dtype>(convert);
@@ -226,6 +305,7 @@ template class MKLMemoryDescriptor<double, true>;
 template class MKLMemoryDescriptor<float, true>;
 template class MKLMemoryDescriptor<float, false>;
 template class MKLMemoryDescriptor<double, false>;
-
+template class MKLMemoryDescriptorBase<float>;
+template class MKLMemoryDescriptorBase<double>;
 }  // namespace caffe
 #endif  // #ifdef MKL2017_SUPPORTED

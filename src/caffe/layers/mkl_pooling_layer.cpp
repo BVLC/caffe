@@ -223,13 +223,7 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     src_strides[2] = src_sizes[0]*src_sizes[1];
     src_strides[3] = src_sizes[0]*src_sizes[1]*src_sizes[2];
 
-    dnnError_t e;
-    e = dnnLayoutDelete<Dtype>(fwd_bottom_data->layout_usr);
-    CHECK_EQ(e, E_SUCCESS);
-
-    e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, src_sizes,
-            src_strides);
-    CHECK_EQ(e, E_SUCCESS);
+    fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides);
   }
 }
 
