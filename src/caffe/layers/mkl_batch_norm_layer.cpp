@@ -50,25 +50,20 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   strides[2] = sizes[0]*sizes[1];
   strides[3] = sizes[0]*sizes[1]*sizes[2];
 
-  dnnError_t e;
-  e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, sizes,
-          strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff->layout_usr, dim, sizes,
-          strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-
   // Names are for debugging only
   fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
   fwd_top_data->name =    "fwd_top_data      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+
+  dnnError_t e;
+  e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
+  CHECK_EQ(e, E_SUCCESS);
+
+  fwd_bottom_data->create_user_layout(dim, sizes, strides);
+  fwd_top_data   ->create_user_layout(dim, sizes, strides);
+  bwd_bottom_diff->create_user_layout(dim, sizes, strides);
+  bwd_top_diff   ->create_user_layout(dim, sizes, strides);
 
   workspace_buffer_ = NULL;
   scaleShift_buffer_ = NULL;
@@ -155,19 +150,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
         &batchNormFwd, NULL, mem_descr->layout_int, eps_);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
-              batchNormFwd, dnnResourceDst);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff->layout_int,
-              batchNormFwd, dnnResourceDst);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff->layout_int,
-              batchNormFwd, dnnResourceSrc);
-      CHECK_EQ(e, E_SUCCESS);
+      fwd_top_data   ->create_internal_layout(batchNormFwd, dnnResourceDst);
+      bwd_top_diff   ->create_internal_layout(batchNormFwd, dnnResourceDst);
+      bwd_bottom_diff->create_internal_layout(batchNormFwd, dnnResourceSrc);
 
-      fwd_top_data->create_conversions();
-      bwd_top_diff->create_conversions();
-      bwd_bottom_diff->create_conversions();
 
       e = dnnBatchNormalizationCreateBackwardData<Dtype>(
         &batchNormBwdData, NULL, mem_descr->layout_int, eps_);
