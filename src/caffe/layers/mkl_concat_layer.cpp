@@ -14,7 +14,6 @@ template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
-  dnnError_t e;
   size_t dim_src = bottom[0]->shape().size();
   size_t dim_dst = dim_src;
 

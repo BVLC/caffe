@@ -22,23 +22,16 @@ void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       strides[d] = (d == 0) ? 1 : strides[d-1]*sizes[d-1];
   }
 
-  dnnError_t e;
-  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data_->layout_usr, dim, sizes,
-          strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data_->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff_->layout_usr, dim, sizes,
-          strides);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreate<Dtype>(&bwd_top_diff_->layout_usr, dim, sizes, strides);
-  CHECK_EQ(e, E_SUCCESS);
-
   // Names are for debugging only
   fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
   fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
   bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+
+  fwd_bottom_data_->create_user_layout(dim, sizes, strides);
+  fwd_top_data_   ->create_user_layout(dim, sizes, strides);
+  bwd_bottom_diff_->create_user_layout(dim, sizes, strides);
+  bwd_top_diff_   ->create_user_layout(dim, sizes, strides);
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
@@ -76,19 +69,9 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // copy shared_ptr
       fwd_bottom_data_ = mem_descr;
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data_->layout_int,
-              reluFwd_, dnnResourceDst);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_top_diff_->layout_int,
-              reluFwd_, dnnResourceDst);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&bwd_bottom_diff_->layout_int,
-              reluFwd_, dnnResourceSrc);
-      CHECK_EQ(e, E_SUCCESS);
-
-      fwd_top_data_->create_conversions();
-      bwd_top_diff_->create_conversions();
-      bwd_bottom_diff_->create_conversions();
+      fwd_top_data_   ->create_internal_layout(reluFwd_, dnnResourceDst);
+      bwd_top_diff_   ->create_internal_layout(reluFwd_, dnnResourceDst);
+      bwd_bottom_diff_->create_internal_layout(reluFwd_, dnnResourceSrc);
     }
   } else {
     DLOG(INFO) << "Using cpu_data in MKLReLULayer.";

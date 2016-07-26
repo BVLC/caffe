@@ -243,8 +243,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
 
  private:
   shared_ptr<MKLData<Dtype> > fwd_top_data_;
-  shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
   shared_ptr<MKLData<Dtype> > fwd_bottom_data_;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
