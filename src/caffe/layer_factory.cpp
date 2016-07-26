@@ -180,7 +180,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   BatchNormParameter_Engine engine = param.batch_norm_param().engine();
 
   if (engine == BatchNormParameter_Engine_DEFAULT) {
-#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = BatchNormParameter_Engine_MKL2017;
 #else
     engine = BatchNormParameter_Engine_CAFFE;
@@ -189,7 +189,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
 
   if (engine == BatchNormParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new BatchNormLayer<Dtype>(param));
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
   } else if (engine == BatchNormParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLBatchNormLayer<Dtype>(param));
 #endif
@@ -206,7 +206,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
   SplitParameter_Engine engine = param.split_param().engine();
 
   if (engine == SplitParameter_Engine_DEFAULT) {
-#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = SplitParameter_Engine_MKL2017;
 #else
     engine = SplitParameter_Engine_CAFFE;
@@ -215,7 +215,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
 
   if (engine == SplitParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new SplitLayer<Dtype>(param));
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
   } else if (engine == SplitParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLSplitLayer<Dtype>(param));
 #endif
@@ -261,14 +261,14 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   ConcatParameter_Engine engine = param.concat_param().engine();
   if (engine == ConcatParameter_Engine_DEFAULT) {
     engine = ConcatParameter_Engine_CAFFE;
-#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     if (param.concat_param().axis() == 1)
       engine = ConcatParameter_Engine_MKL2017;
 #endif
   }
   if (engine == ConcatParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ConcatLayer<Dtype>(param));
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
   } else if (engine == ConcatParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLConcatLayer<Dtype>(param));
 #endif
@@ -285,13 +285,13 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   EltwiseParameter_Engine engine = param.eltwise_param().engine();
   if (engine == EltwiseParameter_Engine_DEFAULT) {
     engine = EltwiseParameter_Engine_CAFFE;
-#if defined(USE_MKL2017_AS_DEFAULT_ENGINE) && defined(USE_MKL2017_NEW_API)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = EltwiseParameter_Engine_MKL2017;
 #endif
   }
   if (engine == EltwiseParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new EltwiseLayer<Dtype>(param));
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
   } else if (engine == EltwiseParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLEltwiseLayer<Dtype>(param));
 #endif
