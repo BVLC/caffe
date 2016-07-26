@@ -316,10 +316,10 @@ endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS += -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -g -O0 -std=c++11
 	NVCCFLAGS += -G
 else
-	COMMON_FLAGS += -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2 -std=c++11
 endif
 
 # cuDNN acceleration configuration.
