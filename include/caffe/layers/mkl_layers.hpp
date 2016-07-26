@@ -249,7 +249,6 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
 
-#ifdef USE_MKL2017_NEW_API
 template <typename Dtype>
 class MKLConcatLayer : public Layer<Dtype> {
  public:
@@ -430,7 +429,6 @@ class MKLEltwiseLayer : public Layer<Dtype> {
 
   bool stable_prod_grad_;
 };
-#endif  // #ifdef USE_MKL2017_NEW_API
 
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKL2017_LAYERS_HPP_

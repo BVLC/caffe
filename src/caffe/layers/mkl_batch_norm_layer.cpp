@@ -1,4 +1,4 @@
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
 #include <vector>
 
 #include "caffe/filler.hpp"
@@ -329,4 +329,4 @@ void MKLBatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 INSTANTIATE_CLASS(MKLBatchNormLayer);
 // REGISTER_LAYER_CLASS(MKLBatchNorm);
 }  // namespace caffe
-#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#endif  // #if defined(MKL2017_SUPPORTED)

@@ -81,7 +81,6 @@ SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
         dnnLayout_t layout)
     {return dnnLayoutDelete_F64(layout);}
 
-#ifdef USE_MKL2017_NEW_API
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesCreate(
         dnnPrimitiveAttributes_t *attributes);
 SPEC_PREFIX dnnError_t dnnPrimitiveAttributesCreate<float>(
@@ -112,7 +111,6 @@ SPEC_PREFIX dnnError_t dnnPrimitiveGetAttributes<double>(
         dnnPrimitive_t primitive,
         dnnPrimitiveAttributes_t *attributes)
         {return dnnPrimitiveGetAttributes_F64(primitive, attributes);}
-#endif
 
 TEMPLATE_PREFIX dnnError_t dnnExecute(
         dnnPrimitive_t primitive, void *resources[]);
@@ -634,7 +632,6 @@ SPEC_PREFIX dnnError_t dnnPoolingCreateBackward<double>(
         kernelSize, kernelStride,
         inputOffset,border_type);}
 
-#ifdef USE_MKL2017_NEW_API
 TEMPLATE_PREFIX dnnError_t dnnConcatCreate(
         dnnPrimitive_t *pConcat,
         dnnPrimitiveAttributes_t attributes,
@@ -780,6 +777,5 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardScaleShift<double>(
         pBatchNormalization,
         attributes,
         dataLayout, eps); }
-#endif // #ifdef USE_MKL2017_NEW_API
 
 #endif
