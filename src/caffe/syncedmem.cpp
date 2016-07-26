@@ -213,12 +213,15 @@ const void* SyncedMemory::prv_data() {
 
 void* SyncedMemory::mutable_prv_data() {
   if (NULL == prv_ptr_) {
-    if (prv_descriptor_.get())
+    if (prv_descriptor_.get()) {
       CaffeMallocHost(&prv_ptr_, prv_descriptor_->prv_size(),
                       &cpu_malloc_use_cuda_);
-    else
+    } else {
+      LOG(WARNING) << "mutable_prv_data() called, but prv_descriptor_ not set!";
       CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
+    }
     caffe_memset(size_, 0, prv_ptr_);
+    own_prv_data_ = true;
   }
 
   if (head_ == HEAD_AT_CPU) {

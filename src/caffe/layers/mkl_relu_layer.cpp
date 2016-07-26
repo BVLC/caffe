@@ -48,11 +48,11 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (bottom_data) {
     if (reluFwd_ == NULL) {
       // first pass
-      CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
+      CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(),
               PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLData<Dtype> > mem_descr
         =  boost::static_pointer_cast<MKLData<Dtype> >
-              (bottom[0]->get_prv_descriptor_data());
+              (bottom[0]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
@@ -95,10 +95,10 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   void* relu_res[dnnResourceNumber];
   relu_res[dnnResourceSrc] = bottom_data;
 
-  if (fwd_top_data_->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data_->prv_ptr(), fwd_top_data_, false);
-    relu_res[dnnResourceDst] =reinterpret_cast<void *>(
-            const_cast<Dtype*>(fwd_top_data_->prv_ptr()));
+  if (fwd_top_data_->conversion_needed()) {
+    top[0]->set_prv_data_descriptor(fwd_top_data_);
+    relu_res[dnnResourceDst] =
+            reinterpret_cast<void *>(top[0]->mutable_prv_data());
   } else {
     relu_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
@@ -127,11 +127,9 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     relu_res[dnnResourceDiffDst] = bwd_top_diff_->get_converted_prv(top[0],
             true);
-    if (bwd_bottom_diff_->convert_from_int) {
-      bottom[0]->set_prv_diff(bwd_bottom_diff_->prv_ptr(), bwd_bottom_diff_,
-              false);
-      relu_res[dnnResourceDiffSrc] =
-              reinterpret_cast<void *>(bwd_bottom_diff_->prv_ptr());
+    if (bwd_bottom_diff_->conversion_needed()) {
+      bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff_);
+      relu_res[dnnResourceDiffSrc] = bottom[0]->mutable_prv_diff();
     } else {
       relu_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
     }

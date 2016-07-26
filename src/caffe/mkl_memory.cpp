@@ -2,7 +2,7 @@
 #include "caffe/mkl_memory.hpp"
 
 // Uncomment to see where the layout conversions are done
-// #undef DLOG
+#undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
@@ -115,7 +115,7 @@ void MKLMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr,
   void *convert_resources[dnnResourceNumber];
 
   DLOG(INFO) << "convert      => priv                                => "
-             << this->name << " =>";
+             << this->name;
 
   convert_resources[dnnResourceFrom] = cpu_ptr;
   convert_resources[dnnResourceTo]   = prv_ptr;
@@ -215,8 +215,8 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
       shared_ptr<PrvMemDescr> prv_mem_descriptor =
-          is_diff ? (blob->get_prv_descriptor_diff()) :
-            (blob->get_prv_descriptor_data());
+          is_diff ? (blob->get_prv_diff_descriptor()) :
+            (blob->get_prv_data_descriptor());
 
       CHECK_EQ(prv_mem_descriptor->get_descr_type(),
               PrvMemDescr::PRV_DESCR_MKL2017);
@@ -280,7 +280,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           status = dnnExecute<Dtype>(this->convert_prv2prv, convert_resources);
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
         }
-
+LOG(INFO) << " done \n";
         if (set_prv_ptr) {
           if (is_diff)
             blob->set_prv_diff(this->internal_ptr, this->get_shared_ptr(), true);

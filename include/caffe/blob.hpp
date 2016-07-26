@@ -242,11 +242,11 @@ class Blob {
   Dtype* mutable_prv_data();
   Dtype* mutable_prv_diff();
 
-  void set_prv_descriptor_data(shared_ptr<PrvMemDescr> descriptor);
-  void set_prv_descriptor_diff(shared_ptr<PrvMemDescr> descriptor);
+  void set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor);
+  void set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor);
 
-  shared_ptr<PrvMemDescr> get_prv_descriptor_data();
-  shared_ptr<PrvMemDescr> get_prv_descriptor_diff();
+  shared_ptr<PrvMemDescr> get_prv_data_descriptor();
+  shared_ptr<PrvMemDescr> get_prv_diff_descriptor();
 
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);

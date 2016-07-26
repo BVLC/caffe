@@ -173,25 +173,25 @@ void Blob<Dtype>::set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_descriptor_data(shared_ptr<PrvMemDescr> descriptor) {
+void Blob<Dtype>::set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor) {
     CHECK(data_);
     data_->prv_descriptor_ = descriptor;
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_descriptor_diff(shared_ptr<PrvMemDescr> descriptor) {
+void Blob<Dtype>::set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor) {
   CHECK(diff_);
   diff_->prv_descriptor_ = descriptor;
 }
 
 template <typename Dtype>
-shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_data() {
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_data_descriptor() {
   CHECK(data_);
   return data_->prv_descriptor_;
 }
 
 template <typename Dtype>
-shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_diff() {
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_diff_descriptor() {
   CHECK(diff_);
   return diff_->prv_descriptor_;
 }
@@ -222,8 +222,8 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::HEAD_AT_PRV:
     if ((diff_->head() == SyncedMemory::SYNCED_PRV) ||
         (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
-      CHECK_EQ(true, get_prv_descriptor_data()->layout_compare(
-                get_prv_descriptor_diff()));
+      CHECK_EQ(true, get_prv_data_descriptor()->layout_compare(
+                get_prv_diff_descriptor()));
       caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
           static_cast<const Dtype*>(diff_->prv_data()),
           static_cast<Dtype*>(data_->mutable_prv_data()));

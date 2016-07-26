@@ -166,8 +166,8 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
              && (net_params[param_id]->prv_data_count()
                  == net_params[param_id]->count())) {
           CHECK_EQ(true,
-            net_params[param_id]->get_prv_descriptor_data()->layout_compare(
-            net_params[param_id]->get_prv_descriptor_diff()));
+            net_params[param_id]->get_prv_data_descriptor()->layout_compare(
+            net_params[param_id]->get_prv_diff_descriptor()));
 
           caffe_axpy(net_params[param_id]->count(),
                      local_decay,

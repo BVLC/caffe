@@ -101,11 +101,11 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   if (NULL != bottom_data) {
     // Is it the first pass? Create a primitive.
     if (lrnFwd == NULL) {
-      CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
+      CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(),
               PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLData<Dtype> > mem_descr
         =  boost::static_pointer_cast<MKLData<Dtype> >
-              (bottom[0]->get_prv_descriptor_data());
+              (bottom[0]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
       fwd_bottom_data = mem_descr;
@@ -165,10 +165,10 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   dnnError_t e;
   void* lrn_res[dnnResourceNumber];
   lrn_res[dnnResourceSrc] = const_cast<void*>(bottom_data);
-  if (fwd_top_data->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
-    lrn_res[dnnResourceDst] =reinterpret_cast<void *>(
-            const_cast<Dtype*>(fwd_top_data->prv_ptr()));
+  if (fwd_top_data->conversion_needed()) {
+    top[0]->set_prv_data_descriptor(fwd_top_data);
+    lrn_res[dnnResourceDst] =
+            reinterpret_cast<void *>(top[0]->mutable_prv_data());
   } else {
     lrn_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
@@ -208,11 +208,9 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
   lrn_res[dnnResourceSrc] =
           fwd_bottom_data->get_converted_prv(bottom[0], false);
 
-  if (bwd_bottom_diff->convert_from_int) {
-    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(), bwd_bottom_diff,
-            false);
-    lrn_res[dnnResourceDiffSrc] =
-            reinterpret_cast<void *>(bwd_bottom_diff->prv_ptr());
+  if (bwd_bottom_diff->conversion_needed()) {
+    bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff);
+    lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_prv_diff();
   } else {
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }

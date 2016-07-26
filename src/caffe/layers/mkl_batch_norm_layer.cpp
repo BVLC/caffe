@@ -133,11 +133,11 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     if (batchNormFwd == NULL) {
       is_first_pass = 1;
 
-      CHECK((bottom[0]->get_prv_descriptor_data())->get_descr_type() ==
+      CHECK((bottom[0]->get_prv_data_descriptor())->get_descr_type() ==
         PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLData<Dtype> > mem_descr
         =  boost::static_pointer_cast<MKLData<Dtype> >(
-           bottom[0]->get_prv_descriptor_data());
+           bottom[0]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
       DLOG(INFO) << "Using layout of " << mem_descr->name
@@ -232,10 +232,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
   BatchNorm_res[dnnResourceSrc] = bottom_data;
   BatchNorm_res[dnnResourceWorkspace] = workspace_buffer_;
   BatchNorm_res[dnnResourceScaleShift] = scaleShift_buffer_;
-  if (fwd_top_data->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
-    BatchNorm_res[dnnResourceDst] =reinterpret_cast<void *>(
-            const_cast<Dtype*>(fwd_top_data->prv_ptr()));
+  if (fwd_top_data->conversion_needed()) {
+    top[0]->set_prv_data_descriptor(fwd_top_data);
+    BatchNorm_res[dnnResourceDst] =
+            reinterpret_cast<void *>(top[0]->mutable_prv_data());
   } else {
     BatchNorm_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
@@ -265,11 +265,9 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
 
   BatchNorm_res[dnnResourceDiffDst] = bwd_top_diff->get_converted_prv(top[0],
           true);
-  if (bwd_bottom_diff->convert_from_int) {
-    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(), bwd_bottom_diff,
-            false);
-    BatchNorm_res[dnnResourceDiffSrc] =
-            reinterpret_cast<void *>(bwd_bottom_diff->prv_ptr());
+  if (bwd_bottom_diff->conversion_needed()) {
+    bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff);
+    BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_prv_diff();
   } else {
     BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }

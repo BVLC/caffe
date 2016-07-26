@@ -54,6 +54,7 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
         allocate();
     return internal_ptr;
   }
+  inline bool conversion_needed() { return (convert_to_int != NULL);}
   void create_conversions();
   void create_internal_layout(const dnnPrimitive_t primitive,
                               dnnResourceType_t type);

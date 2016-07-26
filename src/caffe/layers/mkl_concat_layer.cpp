@@ -99,11 +99,11 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
         isBottomDataFilled[n] = true;
       }
     } else if (isFirstPass) {
-      CHECK((bottom[n]->get_prv_descriptor_data())->get_descr_type() ==
+      CHECK((bottom[n]->get_prv_data_descriptor())->get_descr_type() ==
         PrvMemDescr::PRV_DESCR_MKL2017);
       shared_ptr<MKLData<Dtype> > mem_descr =
         boost::static_pointer_cast<MKLData<Dtype> >(
-          bottom[n]->get_prv_descriptor_data());
+          bottom[n]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
       fwd_bottom_data_[n] = mem_descr;
@@ -141,10 +141,10 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
       = reinterpret_cast<void*>(bottom_data[n]);
   }
 
-  if (fwd_top_data_->convert_from_int) {
-    top[0]->set_prv_data(fwd_top_data_->prv_ptr(), fwd_top_data_, false);
+  if (fwd_top_data_->conversion_needed()) {
+    top[0]->set_prv_data_descriptor(fwd_top_data_);
     concat_res[dnnResourceDst] =
-      reinterpret_cast<void*>(fwd_top_data_->prv_ptr());
+      reinterpret_cast<void*>(top[0]->mutable_prv_data());
   } else {
     concat_res[dnnResourceDst] =
       reinterpret_cast<void*>(top[0]->mutable_cpu_data());
@@ -172,11 +172,9 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   concat_res[dnnResourceSrc] = bwd_top_diff_->get_converted_prv(top[0], true);
 
   for (size_t i = 0; i < num_concats_; ++i) {
-    if (bwd_bottom_diff_[i]->convert_from_int) {
-      bottom[i]->set_prv_diff(bwd_bottom_diff_[i]->prv_ptr(),
-        bwd_bottom_diff_[i], false);
-      concat_res[dnnResourceMultipleDst + i] =
-        reinterpret_cast<void*>(bwd_bottom_diff_[i]->prv_ptr());
+    if (bwd_bottom_diff_[i]->conversion_needed()) {
+      bottom[i]->set_prv_diff_descriptor(bwd_bottom_diff_[i]);
+      concat_res[dnnResourceMultipleDst + i] = bottom[i]->mutable_prv_diff();
     } else {
       concat_res[dnnResourceMultipleDst + i] = bottom[i]->mutable_cpu_diff();
     }
