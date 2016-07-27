@@ -172,7 +172,8 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 }
 #endif
 
-void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data) {
+void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor,
+        bool same_data) {
   // If it wasn't synced before, it won't be now.
   if ((head_ != HEAD_AT_PRV) && same_data)
     head_ = SYNCED_PRV;

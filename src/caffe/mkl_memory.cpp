@@ -276,7 +276,7 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           status = dnnExecute<Dtype>(this->convert_prv2prv, convert_resources);
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
         }
-LOG(INFO) << " done \n";
+
         if (set_prv_ptr) {
           if (is_diff)
             blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
