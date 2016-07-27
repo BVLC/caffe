@@ -520,7 +520,7 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
     int start_idx = i * 8;
     int item_id = gt_data[start_idx];
     if (item_id == -1) {
-      break;
+      continue;
     }
     int label = gt_data[start_idx + 1];
     CHECK_NE(background_label_id, label)
@@ -777,6 +777,9 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
   for (int i = 0; i < num_det; ++i) {
     int start_idx = i * 7;
     int item_id = det_data[start_idx];
+    if (item_id == -1) {
+      continue;
+    }
     int label = det_data[start_idx + 1];
     CHECK_NE(background_label_id, label)
         << "Found background label in the detection results.";
