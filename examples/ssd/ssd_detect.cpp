@@ -5,9 +5,12 @@
 //
 // where model_file is the .prototxt file defining the network architecture, and
 // weights_file is the .caffemodel file containing the network parameters, and
-// list_file contains a list of image files with the format as
+// list_file contains a list of image files with the format as follows:
 //    folder/img1.JPEG
 //    folder/img2.JPEG
+// list_file can also contain a list of video files with the format as follows:
+//    folder/video1.mp4
+//    folder/video2.mp4
 //
 #include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
@@ -16,6 +19,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
 #include <algorithm>
+#include <iomanip>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -95,6 +99,11 @@ std::vector<vector<float> > Detector::Detect(const cv::Mat& img) {
   const int num_det = result_blob->height();
   vector<vector<float> > detections;
   for (int k = 0; k < num_det; ++k) {
+    if (result[0] == -1) {
+      // Skip invalid detection.
+      result += 7;
+      continue;
+    }
     vector<float> detection(result, result + 7);
     detections.push_back(detection);
     result += 7;
@@ -224,9 +233,11 @@ DEFINE_string(mean_value, "104,117,123",
     "If specified, can be one value or can be same as image channels"
     " - would subtract from the corresponding channel). Separated by ','."
     "Either mean_file or mean_value should be provided, not both.");
+DEFINE_string(file_type, "image",
+    "The file type in the list_file. Currently support image and video.");
 DEFINE_string(out_file, "",
     "If provided, store the detection results in the out_file.");
-DEFINE_double(confidence_threshold, 0.6,
+DEFINE_double(confidence_threshold, 0.01,
     "Only store detections with score higher than the threshold.");
 
 int main(int argc, char** argv) {
@@ -253,6 +264,7 @@ int main(int argc, char** argv) {
   const string& weights_file = argv[2];
   const string& mean_file = FLAGS_mean_file;
   const string& mean_value = FLAGS_mean_value;
+  const string& file_type = FLAGS_file_type;
   const string& out_file = FLAGS_out_file;
   const float confidence_threshold = FLAGS_confidence_threshold;
 
@@ -272,27 +284,69 @@ int main(int argc, char** argv) {
 
   // Process image one by one.
   std::ifstream infile(argv[3]);
-  std::string imgfile;
-  while (infile >> imgfile) {
-    cv::Mat img = cv::imread(imgfile, -1);
-    CHECK(!img.empty()) << "Unable to decode image " << imgfile;
-    std::vector<vector<float> > detections = detector.Detect(img);
+  std::string file;
+  while (infile >> file) {
+    if (file_type == "image") {
+      cv::Mat img = cv::imread(file, -1);
+      CHECK(!img.empty()) << "Unable to decode image " << file;
+      std::vector<vector<float> > detections = detector.Detect(img);
 
-    /* Print the detection results. */
-    for (int i = 0; i < detections.size(); ++i) {
-      const vector<float>& d = detections[i];
-      // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
-      CHECK_EQ(d.size(), 7);
-      const float score = d[2];
-      if (score >= confidence_threshold) {
-        out << imgfile << " ";
-        out << static_cast<int>(d[1]) << " ";
-        out << score << " ";
-        out << static_cast<int>(d[3] * img.cols) << " ";
-        out << static_cast<int>(d[4] * img.rows) << " ";
-        out << static_cast<int>(d[5] * img.cols) << " ";
-        out << static_cast<int>(d[6] * img.rows) << std::endl;
+      /* Print the detection results. */
+      for (int i = 0; i < detections.size(); ++i) {
+        const vector<float>& d = detections[i];
+        // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
+        CHECK_EQ(d.size(), 7);
+        const float score = d[2];
+        if (score >= confidence_threshold) {
+          out << file << " ";
+          out << static_cast<int>(d[1]) << " ";
+          out << score << " ";
+          out << static_cast<int>(d[3] * img.cols) << " ";
+          out << static_cast<int>(d[4] * img.rows) << " ";
+          out << static_cast<int>(d[5] * img.cols) << " ";
+          out << static_cast<int>(d[6] * img.rows) << std::endl;
+        }
       }
+    } else if (file_type == "video") {
+      cv::VideoCapture cap(file);
+      if (!cap.isOpened()) {
+        LOG(FATAL) << "Failed to open video: " << file;
+      }
+      cv::Mat img;
+      int frame_count = 0;
+      while (true) {
+        bool success = cap.read(img);
+        if (!success) {
+          LOG(INFO) << "Process " << frame_count << " frames from " << file;
+          break;
+        }
+        CHECK(!img.empty()) << "Error when read frame";
+        std::vector<vector<float> > detections = detector.Detect(img);
+
+        /* Print the detection results. */
+        for (int i = 0; i < detections.size(); ++i) {
+          const vector<float>& d = detections[i];
+          // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
+          CHECK_EQ(d.size(), 7);
+          const float score = d[2];
+          if (score >= confidence_threshold) {
+            out << file << "_";
+            out << std::setfill('0') << std::setw(6) << frame_count << " ";
+            out << static_cast<int>(d[1]) << " ";
+            out << score << " ";
+            out << static_cast<int>(d[3] * img.cols) << " ";
+            out << static_cast<int>(d[4] * img.rows) << " ";
+            out << static_cast<int>(d[5] * img.cols) << " ";
+            out << static_cast<int>(d[6] * img.rows) << std::endl;
+          }
+        }
+        ++frame_count;
+      }
+      if (cap.isOpened()) {
+        cap.release();
+      }
+    } else {
+      LOG(FATAL) << "Unknown file_type: " << file_type;
     }
   }
 #else
