@@ -48,8 +48,11 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (size_t i = 0; i < num_bottoms; ++i) {
       fwd_bottom_data.push_back(
         shared_ptr<MKLData<Dtype> >(new MKLData<Dtype>));
+      bwd_bottom_diff.push_back(
+        shared_ptr<MKLDiff<Dtype> >(new MKLDiff<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
       fwd_bottom_data[i]->create_user_layout(dim_src, sizes_src, strides_src);
+      bwd_bottom_diff[i]->create_user_layout(dim_src, sizes_src, strides_src);
   }
 
   fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src);
@@ -186,8 +189,14 @@ void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (is_top_diff_prv == false) {
           bottom_diff = bottom[i]->mutable_cpu_diff();
         } else {
+          if(!bwd_bottom_diff[i]->layout_int) {
+            bwd_bottom_diff[i]->create_internal_layout(sumPrimitive,
+              (dnnResourceType_t)(dnnResourceMultipleSrc + i));
+          }
+          CHECK_EQ(true, bwd_bottom_diff[i]->layout_compare(
+                  top[0]->get_prv_diff_descriptor()));
+          bottom[i]->set_prv_diff_descriptor(bwd_bottom_diff[i]);
           bottom_diff = bottom[i]->mutable_prv_diff();
-          bottom[i]->set_prv_diff_descriptor(top[0]->get_prv_diff_descriptor());
         }
         caffe_copy(count, top_diff, bottom_diff);
         break;
