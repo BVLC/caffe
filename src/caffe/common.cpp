@@ -49,6 +49,10 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
+void SetMinLogLevel(int level) {
+	FLAGS_minloglevel = level;
+}
+
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
