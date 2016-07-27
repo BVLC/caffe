@@ -1,5 +1,5 @@
 # Ristretto SqueezeNet Example
-# Finetune in 8-bit dynamic fixed point
+# Fine-tuning of 8-bit dynamic fixed point network
 
 test_iter: 2000
 test_interval: 100

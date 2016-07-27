@@ -25,13 +25,14 @@ private:
    * @brief Score network.
    * @param accuracy Reports the network's accuracy according to
    * accuracy_number.
+   * @param do_stats: Find the maximal values in each layer.
    * @param score_number The accuracy layer that matters.
    *
    * For networks with multiple accuracy layers, set score_number to the
    * appropriate value. For example, for BVLC GoogLeNet, use score_number=7.
    */
   void RunForwardBatches(const int iterations, Net<float>* caffe_net,
-      float* accuracy, const int score_number = 0);
+      float* accuracy, const bool do_stats = false, const int score_number = 0);
   /**
    * @brief Quantize convolutional and fully connected layers to dynamic fixed
    * point.
@@ -100,16 +101,18 @@ private:
   double error_margin_;
   string gpus_;
   float test_score_baseline_;
-  Net<float>* baseline_net_;
-
-  // The integer bits for dynamic fixed point parameters, layer inputs, and
+  // The maximal absolute values of layer inputs, parameters and
   // layer outputs.
-  vector<int> il_params_, il_in_, il_out_;
+  vector<float> max_in_, max_params_, max_out_;
+
+  // The integer bits for dynamic fixed point layer inputs, parameters and
+  // layer outputs.
+  vector<int> il_in_, il_params_, il_out_;
   // The name of the layers that need to be quantized to dynamic fixed point.
   vector<string> layer_names_;
-  // The number of bits used for dynamic fixed point parameters, layer inputs
+  // The number of bits used for dynamic fixed point layer inputs, parameters
   // and layer outputs.
-  int bw_conv_params_, bw_fc_params_, bw_in_, bw_out_;
+  int bw_in_, bw_conv_params_, bw_fc_params_, bw_out_;
 
   // The number of bits used for minifloat exponent.
   int exp_bits_;
