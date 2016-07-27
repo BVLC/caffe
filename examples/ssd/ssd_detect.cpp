@@ -99,6 +99,11 @@ std::vector<vector<float> > Detector::Detect(const cv::Mat& img) {
   const int num_det = result_blob->height();
   vector<vector<float> > detections;
   for (int k = 0; k < num_det; ++k) {
+    if (result[0] == -1) {
+      // Skip invalid detection.
+      result += 7;
+      continue;
+    }
     vector<float> detection(result, result + 7);
     detections.push_back(detection);
     result += 7;
