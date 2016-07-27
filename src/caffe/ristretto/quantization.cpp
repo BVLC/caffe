@@ -12,7 +12,7 @@ using caffe::LayerParameter;
 using caffe::NetParameter;
 
 Quantization::Quantization(string model, string weights, string model_quantized,
-      int iterations, string trimming_mode, double error_margin, string gpus){
+      int iterations, string trimming_mode, double error_margin, string gpus) {
   this->model_ = model;
   this->weights_ = weights;
   this->model_quantized_ = model_quantized;
@@ -23,19 +23,27 @@ Quantization::Quantization(string model, string weights, string model_quantized,
 
   // Could possibly improve choice of exponent. Experiments show LeNet needs
   // 4bits, but the saturation border is at 3bits (when assuming infinitely long
-  // mantisssa)
+  // mantisssa).
   this->exp_bits_ = 4;
 }
 
 void Quantization::QuantizeNet() {
   CheckWritePermissions(model_quantized_);
   SetGpu();
-  // Run the reference floating point network to find baseline accuracy
-  baseline_net_ = new Net<float>(model_, caffe::TEST);
-  baseline_net_->CopyTrainedLayersFrom(weights_);
+  // Run the reference floating point network on validation set to find baseline
+  // accuracy.
+  Net<float>* net_val = new Net<float>(model_, caffe::TEST);
+  net_val->CopyTrainedLayersFrom(weights_);
   float accuracy;
-  RunForwardBatches(this->iterations_, baseline_net_, &accuracy);
+  RunForwardBatches(this->iterations_, net_val, &accuracy);
   test_score_baseline_ = accuracy;
+  delete net_val;
+  // Run the reference floating point network on train data set to find maximum
+  // values. Do statistic for 10 batches.
+  Net<float>* net_test = new Net<float>(model_, caffe::TRAIN);
+  net_test->CopyTrainedLayersFrom(weights_);
+  RunForwardBatches(10, net_test, &accuracy, true);
+  delete net_test;
   // Do network quantization and scoring.
   if (trimming_mode_ == "dynamic_fixed_point") {
     Quantize2DynamicFixedPoint();
@@ -92,7 +100,8 @@ void Quantization::SetGpu() {
 }
 
 void Quantization::RunForwardBatches(const int iterations,
-      Net<float>* caffe_net, float* accuracy, const int score_number) {
+      Net<float>* caffe_net, float* accuracy, const bool do_stats,
+      const int score_number) {
   LOG(INFO) << "Running for " << iterations << " iterations.";
   vector<Blob<float>* > bottom_vec;
   vector<int> test_score_output_id;
@@ -100,8 +109,15 @@ void Quantization::RunForwardBatches(const int iterations,
   float loss = 0;
   for (int i = 0; i < iterations; ++i) {
     float iter_loss;
+    // Do forward propagation.
     const vector<Blob<float>*>& result =
         caffe_net->Forward(bottom_vec, &iter_loss);
+    // Find maximal values in network.
+    if(do_stats) {
+      caffe_net->RangeInLayers(&layer_names_, &max_in_, &max_out_,
+          &max_params_);
+    }
+    // Keep track of network score over multiple batches.
     loss += iter_loss;
     int idx = 0;
     for (int j = 0; j < result.size(); ++j) {
@@ -139,16 +155,14 @@ void Quantization::RunForwardBatches(const int iterations,
 }
 
 void Quantization::Quantize2DynamicFixedPoint() {
-  // Find the integer length for dynamic fixed point numbers
-  vector<float> max_in, max_out, max_params;
-  baseline_net_->RangeInLayers(&layer_names_, &max_in, &max_out, &max_params);
+  // Find the integer length for dynamic fixed point numbers.
   // The integer length is chosen such that no saturation occurs.
   // This approximation assumes an infinitely long factional part.
   // For layer activations, we reduce the integer length by one bit.
   for (int i = 0; i < layer_names_.size(); ++i) {
-    il_in_.push_back((int)ceil(log2(max_in[i])));
-    il_out_.push_back((int)ceil(log2(max_out[i])));
-    il_params_.push_back((int)ceil(log2(max_params[i])+1));
+    il_in_.push_back((int)ceil(log2(max_in_[i])));
+    il_out_.push_back((int)ceil(log2(max_out_[i])));
+    il_params_.push_back((int)ceil(log2(max_params_[i])+1));
   }
   // Debug
   for (int k = 0; k < layer_names_.size(); ++k) {
@@ -157,31 +171,30 @@ void Quantization::Quantize2DynamicFixedPoint() {
         ", integer length output=" << il_out_[k] <<
         ", integer length parameters=" << il_params_[k];
   }
-  delete baseline_net_;
 
   // Score net with dynamic fixed point convolution parameters.
-  // The rest of the net remains in 32-bit floating point.
+  // The rest of the net remains in high precision format.
   NetParameter param;
   caffe::ReadNetParamsFromTextFileOrDie(model_, &param);
   param.mutable_state()->set_phase(caffe::TEST);
   vector<int> test_bw_conv_params;
   vector<float> test_scores_conv_params;
   float accuracy;
-  Net<float>* caffe_net;
+  Net<float>* net_test;
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "Convolution", "Parameters",
         bitwidth, -1, -1, -1);
-    caffe_net = new Net<float>(param, NULL);
-    caffe_net->CopyTrainedLayersFrom(weights_);
-    RunForwardBatches(iterations_, caffe_net, &accuracy);
+    net_test = new Net<float>(param, NULL);
+    net_test->CopyTrainedLayersFrom(weights_);
+    RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_conv_params.push_back(bitwidth);
     test_scores_conv_params.push_back(accuracy);
-    delete caffe_net;
+    delete net_test;
     if ( accuracy + error_margin_ / 100 < test_score_baseline_ ) break;
   }
 
   // Score net with dynamic fixed point inner product parameters.
-  // The rest of the net remains in 32-bit floating point.
+  // The rest of the net remains in high precision format.
   caffe::ReadNetParamsFromTextFileOrDie(model_, &param);
   param.mutable_state()->set_phase(caffe::TEST);
   vector<int> test_bw_fc_params;
@@ -189,17 +202,17 @@ void Quantization::Quantize2DynamicFixedPoint() {
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "InnerProduct", "Parameters",
         -1, bitwidth, -1, -1);
-    caffe_net = new Net<float>(param, NULL);
-    caffe_net->CopyTrainedLayersFrom(weights_);
-    RunForwardBatches(iterations_, caffe_net, &accuracy);
+    net_test = new Net<float>(param, NULL);
+    net_test->CopyTrainedLayersFrom(weights_);
+    RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_fc_params.push_back(bitwidth);
     test_scores_fc_params.push_back(accuracy);
-    delete caffe_net;
+    delete net_test;
     if ( accuracy + error_margin_ / 100 < test_score_baseline_ ) break;
   }
 
   // Score net with dynamic fixed point layer activations.
-  // The rest of the net remains in 32-bit floating point.
+  // The rest of the net remains in high precision format.
   caffe::ReadNetParamsFromTextFileOrDie(model_, &param);
   param.mutable_state()->set_phase(caffe::TEST);
   vector<int> test_bw_layer_activations;
@@ -207,16 +220,19 @@ void Quantization::Quantize2DynamicFixedPoint() {
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
         "Activations", -1, -1, bitwidth, bitwidth);
-    caffe_net = new Net<float>(param, NULL);
-    caffe_net->CopyTrainedLayersFrom(weights_);
-    RunForwardBatches(iterations_, caffe_net, &accuracy);
+    net_test = new Net<float>(param, NULL);
+    net_test->CopyTrainedLayersFrom(weights_);
+    RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_layer_activations.push_back(bitwidth);
     test_scores_layer_activations.push_back(accuracy);
-    delete caffe_net;
+    delete net_test;
     if ( accuracy + error_margin_ / 100 < test_score_baseline_ ) break;
   }
 
-  // Choose bitwidth for different network parts
+  // Choose bit-width for different network parts
+  bw_conv_params_ = 32;
+  bw_fc_params_ = 32;
+  bw_out_ = 32;
   for (int i = 0; i < test_scores_conv_params.size(); ++i) {
     if (test_scores_conv_params[i] + error_margin_ / 100 >=
           test_score_baseline_)
@@ -231,7 +247,7 @@ void Quantization::Quantize2DynamicFixedPoint() {
     else
       break;
   }
-  for (int i=0; i<test_scores_layer_activations.size(); ++i) {
+  for (int i = 0; i < test_scores_layer_activations.size(); ++i) {
     if (test_scores_layer_activations[i] + error_margin_ / 100 >=
           test_score_baseline_)
       bw_out_ = test_bw_layer_activations[i];
@@ -248,10 +264,10 @@ void Quantization::Quantize2DynamicFixedPoint() {
   EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
       "Parameters_and_Activations", bw_conv_params_, bw_fc_params_, bw_in_,
       bw_out_);
-  caffe_net = new Net<float>(param, NULL);
-  caffe_net->CopyTrainedLayersFrom(weights_);
-  RunForwardBatches(iterations_, caffe_net, &accuracy);
-  delete caffe_net;
+  net_test = new Net<float>(param, NULL);
+  net_test->CopyTrainedLayersFrom(weights_);
+  RunForwardBatches(iterations_, net_test, &accuracy);
+  delete net_test;
   param.release_state();
   WriteProtoToTextFile(param, model_quantized_);
 
@@ -287,18 +303,16 @@ void Quantization::Quantize2DynamicFixedPoint() {
 }
 
 void Quantization::Quantize2MiniFloat() {
-  vector<float> max_in, max_out, max_params;
-  baseline_net_->RangeInLayers(&layer_names_, &max_in, &max_out, &max_params);
+  // Find the necessary amount of exponent bits.
   // The exponent bits are chosen such that no saturation occurs.
   // This approximation assumes an infinitely long mantissa.
   // Parameters are ignored, since they are normally smaller than layer
   // activations.
   for ( int i = 0; i < layer_names_.size(); ++i ) {
-    int exp_in = ceil(log2(log2(max_in[i]) - 1) + 1);
-    int exp_out = ceil(log2(log2(max_out[i]) - 1) + 1);
+    int exp_in = ceil(log2(log2(max_in_[i]) - 1) + 1);
+    int exp_out = ceil(log2(log2(max_out_[i]) - 1) + 1);
     exp_bits_ = std::max( std::max( exp_bits_, exp_in ), exp_out);
   }
-  delete baseline_net_;
 
   // Score net with minifloat parameters and activations.
   NetParameter param;
@@ -307,21 +321,21 @@ void Quantization::Quantize2MiniFloat() {
   vector<int> test_bitwidth;
   vector<float> test_scores;
   float accuracy;
-  Net<float>* caffe_net;
+  Net<float>* net_test;
   // Test the net with different bit-widths
   for (int bitwidth = 16; bitwidth - 1 - exp_bits_ > 0; bitwidth /= 2) {
     EditNetDescriptionMiniFloat(&param, bitwidth);
-    caffe_net = new Net<float>(param, NULL);
-    caffe_net->CopyTrainedLayersFrom(weights_);
-    RunForwardBatches(iterations_, caffe_net, &accuracy);
+    net_test = new Net<float>(param, NULL);
+    net_test->CopyTrainedLayersFrom(weights_);
+    RunForwardBatches(iterations_, net_test, &accuracy);
     test_bitwidth.push_back(bitwidth);
     test_scores.push_back(accuracy);
-    delete caffe_net;
+    delete net_test;
     if ( accuracy + error_margin_ / 100 < test_score_baseline_ ) break;
   }
 
   // Choose bitwidth for network
-  int best_bitwidth = 0;
+  int best_bitwidth = 32;
   for(int i = 0; i < test_scores.size(); ++i) {
     if (test_scores[i] + error_margin_ / 100 >= test_score_baseline_)
       best_bitwidth = test_bitwidth[i];
@@ -347,34 +361,30 @@ void Quantization::Quantize2MiniFloat() {
   LOG(INFO) << "Please fine-tune.";
 }
 
-void Quantization::Quantize2IntegerPowerOf2Weights(){
-  // Find the integer length for activations
-  vector<float> max_in, max_out, max_params;
-  baseline_net_->RangeInLayers(&layer_names_, &max_in, &max_out, &max_params);
-  // The integer length is chosen such that we can represent the largest values
-  // without saturation. Then we reduce the integer length by one bit.
-  // This approximation assumes an infinitely long factional.
+void Quantization::Quantize2IntegerPowerOf2Weights() {
+  // Find the integer length for dynamic fixed point numbers.
+  // The integer length is chosen such that no saturation occurs.
+  // This approximation assumes an infinitely long factional part.
+  // For layer activations, we reduce the integer length by one bit.
   for (int i = 0; i < layer_names_.size(); ++i) {
-    il_in_.push_back((int)ceil(log2(max_in[i])));
-    il_out_.push_back((int)ceil(log2(max_out[i])));
+    il_in_.push_back((int)ceil(log2(max_in_[i])));
+    il_out_.push_back((int)ceil(log2(max_out_[i])));
   }
-  delete baseline_net_;
-
   // Score net with integer-power-of-two weights and dynamic fixed point
   // activations.
   NetParameter param;
   caffe::ReadNetParamsFromTextFileOrDie(model_, &param);
   param.mutable_state()->set_phase(caffe::TEST);
   float accuracy;
-  Net<float>* caffe_net;
+  Net<float>* net_test;
   EditNetDescriptionIntegerPowerOf2Weights(&param);
   // Bit-width of layer activations is hard-coded to 8-bit.
   EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
       "Activations", -1, -1, 8, 8);
-  caffe_net = new Net<float>(param, NULL);
-  caffe_net->CopyTrainedLayersFrom(weights_);
-  RunForwardBatches(iterations_, caffe_net, &accuracy);
-  delete caffe_net;
+  net_test = new Net<float>(param, NULL);
+  net_test->CopyTrainedLayersFrom(weights_);
+  RunForwardBatches(iterations_, net_test, &accuracy);
+  delete net_test;
 
   // Write prototxt file of quantized net
   param.release_state();
