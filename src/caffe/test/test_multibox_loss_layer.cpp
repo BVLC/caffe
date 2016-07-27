@@ -322,6 +322,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.add_propagate_down(true);
+  layer_param.add_propagate_down(false);
   LossParameter* loss_param = layer_param.mutable_loss_param();
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
