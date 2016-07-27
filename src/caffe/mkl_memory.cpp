@@ -2,7 +2,7 @@
 #include "caffe/mkl_memory.hpp"
 
 // Uncomment to see where the layout conversions are done
-#undef DLOG
+//#undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
@@ -140,8 +140,6 @@ bool MKLMemoryDescriptorBase<Dtype>::layout_compare(
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
   shared_ptr<PrvMemDescr> other) {
-  // TODO: cache this primitive
-
   shared_ptr<MKLMemoryDescriptorBase<Dtype> > other_descr =
       boost::static_pointer_cast<MKLMemoryDescriptorBase<Dtype> >
             (other);
@@ -151,6 +149,7 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
 
   int status;
   dnnPrimitive_t convert;
+  // TODO: cache this primitive?
   status = dnnConversionCreate<Dtype>(&convert,
     other_descr->layout_int, this->layout_int);
 
