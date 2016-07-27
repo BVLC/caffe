@@ -9,10 +9,6 @@ SyncedMemory::~SyncedMemory() {
     CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
   }
 
-  if (prv_ptr_  && own_prv_data_) {
-    CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
-  }
-
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
     int initial_device;
@@ -52,7 +48,7 @@ inline void SyncedMemory::to_cpu() {
       own_cpu_data_ = true;
     }
     CHECK(prv_descriptor_.get());
-    prv_descriptor_->convert_from_prv(prv_ptr_, cpu_ptr_);
+    prv_descriptor_->convert_from_prv(cpu_ptr_);
     head_ = SYNCED_PRV;
     break;
   case SYNCED_PRV:
@@ -176,61 +172,33 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 }
 #endif
 
-/*
-  If data is NULL, then allocate the memory here.
-  same_data - shall be true if data will be the same as in cpu_ptr_
-    but (potentially) with different layout.
-*/
-void SyncedMemory::set_prv_data(void* data, bool same_data) {
-  if (data != NULL) {
-    if (prv_ptr_ && own_prv_data_) {
-      CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
-    }
-    prv_ptr_ = data;
-    own_prv_data_ = false;
-  } else if (NULL == prv_ptr_) {
-    CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
-    caffe_memset(size_, 0, prv_ptr_);
-    own_prv_data_ = true;
-  }
-
+void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data) {
   // If it wasn't synced before, it won't be now.
   if ((head_ != HEAD_AT_PRV) && same_data)
     head_ = SYNCED_PRV;
   else
     head_ = HEAD_AT_PRV;
+
+  prv_descriptor_ = descriptor;
 }
 
 const void* SyncedMemory::prv_data() {
   if ((head_ != HEAD_AT_PRV) &&
      (head_ != SYNCED_PRV)) {
-    DLOG(INFO) << "prv_ptr_ is not up-to-date, call set_prv_data() first.";
     return NULL;
   }
 
-  return (const void* ) prv_ptr_;
+  CHECK(prv_descriptor_.get());
+  return (const void* ) prv_descriptor_->prv_ptr();
 }
 
 void* SyncedMemory::mutable_prv_data() {
-  if (NULL == prv_ptr_) {
-    if (prv_descriptor_.get()) {
-      CaffeMallocHost(&prv_ptr_, prv_descriptor_->prv_size(),
-                      &cpu_malloc_use_cuda_);
-    } else {
-      LOG(WARNING) << "mutable_prv_data() called, but prv_descriptor_ not set!";
-      CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
-    }
-    caffe_memset(size_, 0, prv_ptr_);
-    own_prv_data_ = true;
-  }
-
+  CHECK(prv_descriptor_.get());
   if (head_ == HEAD_AT_CPU) {
-    if (prv_descriptor_.get())
-      prv_descriptor_->convert_to_prv(cpu_ptr_, prv_ptr_);
+    prv_descriptor_->convert_to_prv(cpu_ptr_);
   }
   head_ = HEAD_AT_PRV;
-
-  return prv_ptr_;
+  return prv_descriptor_->prv_ptr();
 }
 
 }  // namespace caffe

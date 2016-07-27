@@ -145,14 +145,6 @@ Dtype* Blob<Dtype>::mutable_prv_data() {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor,
-        bool same_data) {
-  CHECK(data_);
-  data_->set_prv_data(data, same_data);
-  data_->prv_descriptor_ = descriptor;
-}
-
-template <typename Dtype>
 const Dtype* Blob<Dtype>::prv_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->prv_data();
@@ -164,24 +156,19 @@ Dtype* Blob<Dtype>::mutable_prv_diff() {
   return static_cast<Dtype*>(diff_->mutable_prv_data());
 }
 
-template <typename Dtype>
-void Blob<Dtype>::set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
-        bool same_data) {
-  CHECK(diff_);
-  diff_->set_prv_data(diff, same_data);
-  diff_->prv_descriptor_ = descriptor;
-}
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor) {
+void Blob<Dtype>::set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor,
+         bool same_data) {
     CHECK(data_);
-    data_->prv_descriptor_ = descriptor;
+    data_->set_prv_descriptor(descriptor, same_data);
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor) {
+void Blob<Dtype>::set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor,
+                 bool same_data) {
   CHECK(diff_);
-  diff_->prv_descriptor_ = descriptor;
+  diff_->set_prv_descriptor(descriptor, same_data);
 }
 
 template <typename Dtype>

@@ -51,11 +51,10 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 
 // Base class
 struct PrvMemDescr {
-  virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr) = 0;
-  virtual void convert_to_prv(void* cpu_ptr, void* prv_ptr) = 0;
-  virtual void convert_from_other(shared_ptr<PrvMemDescr> other,
-                                void* from, void* to) = 0;
-
+  virtual void convert_from_prv(void* cpu_ptr) = 0;
+  virtual void convert_to_prv(void* cpu_ptr) = 0;
+  virtual void convert_from_other(shared_ptr<PrvMemDescr> other) = 0;
+  virtual void* prv_ptr() = 0;
   // returns true for matching layouts
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other) = 0;
   virtual size_t prv_count() = 0;
@@ -76,12 +75,12 @@ struct PrvMemDescr {
 class SyncedMemory {
  public:
   SyncedMemory()
-      : prv_descriptor_(), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL),
+      : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(0), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
-      : prv_descriptor_(), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL),
+      : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(size), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
@@ -93,11 +92,10 @@ class SyncedMemory {
   void* mutable_cpu_data();
   void* mutable_gpu_data();
 
-  void set_prv_data(void* data, bool same_data);
+  void set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data);
   const void* prv_data();
   void* mutable_prv_data();
   shared_ptr<PrvMemDescr> prv_descriptor_;
-
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED,
                     HEAD_AT_PRV, SYNCED_PRV};
   SyncedHead head() { return head_; }
@@ -112,7 +110,6 @@ class SyncedMemory {
   void to_gpu();
   void* cpu_ptr_;
   void* gpu_ptr_;
-  void* prv_ptr_;
   const size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;

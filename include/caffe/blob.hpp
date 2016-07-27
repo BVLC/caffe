@@ -227,11 +227,6 @@ class Blob {
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
 
-  void set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor,
-          bool same_data);
-  void set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
-          bool same_data);
-
   size_t prv_data_count() {
       CHECK(data_); return data_->prv_descriptor_->prv_count();}
   size_t prv_diff_count() {
@@ -242,8 +237,8 @@ class Blob {
   Dtype* mutable_prv_data();
   Dtype* mutable_prv_diff();
 
-  void set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor);
-  void set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor);
+  void set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data=false);
+  void set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data=false);
 
   shared_ptr<PrvMemDescr> get_prv_data_descriptor();
   shared_ptr<PrvMemDescr> get_prv_diff_descriptor();

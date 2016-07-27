@@ -49,7 +49,7 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
       caffe_set(prv_count(), Dtype(0), internal_ptr);
     }
   }
-  Dtype* prv_ptr() {
+  virtual void* prv_ptr() {
     if (internal_ptr == NULL)
         allocate();
     return internal_ptr;
@@ -71,11 +71,10 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   virtual size_t prv_count() {
       return dnnLayoutGetMemorySize<Dtype>(layout_int) / sizeof(Dtype);
   }
-  virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  virtual void convert_to_prv(void* cpu_ptr, void* prv_ptr);
+  virtual void convert_from_prv(void* cpu_ptr);
+  virtual void convert_to_prv(void* cpu_ptr);
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
-  virtual void convert_from_other(shared_ptr<PrvMemDescr> other,
-                                  void* from, void* to);
+  virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
  protected:
   Dtype* internal_ptr;
 };

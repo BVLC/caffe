@@ -468,9 +468,8 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
     }
-    LOG(INFO) << "Backward Data " ;
+
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
-    LOG(INFO) << "Backward Data done" ;
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
 
