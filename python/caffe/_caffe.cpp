@@ -54,13 +54,8 @@ const int NPY_DTYPE = NPY_FLOAT32;
 
 #ifndef CPU_ONLY
 shared_ptr<GPUMemory::Scope> gpu_memory_scope;
-#endif
 
-// Selecting mode.
-void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
-void set_mode_gpu() {
-  Caffe::set_mode(Caffe::GPU);
-#ifndef CPU_ONLY
+void initialize_gpu_memory_scope() {
   vector<int> gpus;
   int count = 0;
   CUDA_CHECK(cudaGetDeviceCount(&count));
@@ -69,6 +64,22 @@ void set_mode_gpu() {
   }
   CHECK_GT(gpus.size(), 0);
   gpu_memory_scope.reset(new GPUMemory::Scope(gpus));
+}
+#endif
+
+// Selecting mode.
+void set_mode_cpu() {
+  Caffe::set_mode(Caffe::CPU);
+#ifndef CPU_ONLY
+  // We need to run GPU-built Caffe on CPU sometimes.
+  initialize_gpu_memory_scope();
+#endif
+}
+
+void set_mode_gpu() {
+  Caffe::set_mode(Caffe::GPU);
+#ifndef CPU_ONLY
+  initialize_gpu_memory_scope();
 #endif
 }
 
