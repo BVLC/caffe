@@ -8,6 +8,9 @@
 #include "caffe/layers/mkl_layers.hpp"
 #include "mkl_service.h"
 
+#include "caffe/caffe.hpp"
+using caffe::Timer;
+
 static int getMKLBuildDate() {
   static int build = 0;
   if (build == 0) {
@@ -499,7 +502,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
                 this->blobs_[0]->mutable_cpu_diff();
       }
     }
+    Timer timer;
+    timer.Start();
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
+    LOG(INFO) << this->layer_param_.name() << " convolutionBwdFilter Time: " << timer.MilliSeconds() << " ms.";
+
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
     if (bwdf2fwd_filter_diff->conversion_needed()) {
       void *convert_resources[dnnResourceNumber];
