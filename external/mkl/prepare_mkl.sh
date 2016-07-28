@@ -3,8 +3,12 @@
 # MKL
 DST=`dirname $0`
 SET_ENV_SCRIPT=$DST/"set_env_up.sh"
-# TODO: For ICC use intel for GCC use gnu 
-LOCALMKL=`find $DST -name libmklml_gnu.so`   # name of MKL SDL lib 
+ 
+if [ $1 == "1" ]; then
+	LOCALMKL=`find $DST -name libmklml_intel.so`   # name of MKL SDL lib 
+else
+	LOCALMKL=`find $DST -name libmklml_gnu.so`   # name of MKL SDL lib 
+fi
 MKLURL="http://idljenkins.igk.intel.com:8080/job/Temp_upload/lastSuccessfulBuild/artifact/mklml_lnx_2017.0.b1.20160513.tgz" # TODO: Adjust accordingly
 
 # Check if MKL_ROOT is set if positive then set one will be used..
