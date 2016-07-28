@@ -496,7 +496,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     } else {
       if (bwdf_filter_diff->conversion_needed()) {
         res_convolutionBwdFilter[dnnResourceDiffFilter] =
-                this->blobs_[0]->mutable_prv_data();
+                this->blobs_[0]->mutable_prv_diff();
       } else {
         res_convolutionBwdFilter[dnnResourceDiffFilter] =
                 this->blobs_[0]->mutable_cpu_diff();
@@ -513,7 +513,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       convert_resources[dnnResourceFrom] = bwdf2fwd_filter_diff->prv_ptr();
       if (bwdf_filter_diff->conversion_needed()) {
         convert_resources[dnnResourceTo] =
-                this->blobs_[0]->mutable_prv_data();
+                this->blobs_[0]->mutable_prv_diff();
         DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
            << " => " << bwdf_filter_diff->name;
       } else {
