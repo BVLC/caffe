@@ -11,6 +11,8 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
+#if defined(USE_GREENTEA) && defined(USE_INTEL_SPATIAL)
+
 namespace caffe {
 
 // Reference convolution for checking results:
@@ -779,3 +781,4 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradientGroup_Spatial) {
 }
 
 }  // namespace caffe
+#endif
