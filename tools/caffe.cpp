@@ -526,6 +526,7 @@ int autotune() {
     }
 #endif  // USE_LIBDNN
   }
+  return 0;
 }
 RegisterBrewFunction(autotune);
 
