@@ -3,7 +3,7 @@
 # MKL
 DST=`dirname $0`
 SET_ENV_SCRIPT=$DST/"set_env_up.sh"
- 
+OMP=0 
 if [ $1 == "1" ]; then
 	LOCALMKL=`find $DST -name libmklml_intel.so`   # name of MKL SDL lib 
 else
