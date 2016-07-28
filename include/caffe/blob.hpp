@@ -226,6 +226,28 @@ class Blob {
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+
+  void set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor,
+          bool same_data);
+  void set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
+          bool same_data);
+
+  size_t prv_data_count() {
+      CHECK(data_); return data_->prv_descriptor_->prv_count();}
+  size_t prv_diff_count() {
+      CHECK(diff_); return diff_->prv_descriptor_->prv_count();}
+
+  const Dtype* prv_data() const;
+  const Dtype* prv_diff() const;
+  Dtype* mutable_prv_data();
+  Dtype* mutable_prv_diff();
+
+  void set_prv_descriptor_data(shared_ptr<PrvMemDescr> descriptor);
+  void set_prv_descriptor_diff(shared_ptr<PrvMemDescr> descriptor);
+
+  shared_ptr<PrvMemDescr> get_prv_descriptor_data();
+  shared_ptr<PrvMemDescr> get_prv_descriptor_diff();
+
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;

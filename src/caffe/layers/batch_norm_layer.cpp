@@ -235,5 +235,5 @@ STUB_GPU(BatchNormLayer);
 #endif
 
 INSTANTIATE_CLASS(BatchNormLayer);
-REGISTER_LAYER_CLASS(BatchNorm);
+// REGISTER_LAYER_CLASS(BatchNorm);
 }  // namespace caffe

@@ -133,6 +133,70 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+const Dtype* Blob<Dtype>::prv_data() const {
+  CHECK(data_);
+  return (const Dtype*)data_->prv_data();
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_prv_data() {
+  CHECK(data_);
+  return static_cast<Dtype*>(data_->mutable_prv_data());
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor,
+        bool same_data) {
+  CHECK(data_);
+  data_->set_prv_data(data, same_data);
+  data_->prv_descriptor_ = descriptor;
+}
+
+template <typename Dtype>
+const Dtype* Blob<Dtype>::prv_diff() const {
+  CHECK(diff_);
+  return (const Dtype*)diff_->prv_data();
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_prv_diff() {
+  CHECK(diff_);
+  return static_cast<Dtype*>(diff_->mutable_prv_data());
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
+        bool same_data) {
+  CHECK(diff_);
+  diff_->set_prv_data(diff, same_data);
+  diff_->prv_descriptor_ = descriptor;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_descriptor_data(shared_ptr<PrvMemDescr> descriptor) {
+    CHECK(data_);
+    data_->prv_descriptor_ = descriptor;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_descriptor_diff(shared_ptr<PrvMemDescr> descriptor) {
+  CHECK(diff_);
+  diff_->prv_descriptor_ = descriptor;
+}
+
+template <typename Dtype>
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_data() {
+  CHECK(data_);
+  return data_->prv_descriptor_;
+}
+
+template <typename Dtype>
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_diff() {
+  CHECK(diff_);
+  return diff_->prv_descriptor_;
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
@@ -154,6 +218,15 @@ template <typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+    if ((diff_->head() == SyncedMemory::SYNCED_PRV) ||
+        (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
+      caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
+          static_cast<const Dtype*>(diff_->prv_data()),
+          static_cast<Dtype*>(data_->mutable_prv_data()));
+      break;
+    }
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
     caffe_axpy<Dtype>(count_, Dtype(-1),
@@ -535,7 +608,7 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
 
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
+template class Blob<size_t>;
 template class Blob<unsigned int>;
 
 }  // namespace caffe
-
