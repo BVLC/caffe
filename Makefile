@@ -404,6 +404,7 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 endif
 
 # BLAS configuration (default = MKL)
+MKL_EXTERNAL := 0
 BLAS ?= mkl
 ifeq ($(BLAS), mkl)
 	# MKL

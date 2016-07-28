@@ -131,6 +131,7 @@ if(NOT APPLE)
 	#--find mkl in external/mkl
 	#TODO: check if ICC is used. If used then variable ICC_ON=1
 	set(ICC_ON "0")
+	set(MKL_EXTERNAL "0")
 	set(script_cmd "./external/mkl/prepare_mkl.sh" )
 	execute_process(COMMAND ${script_cmd} ${ICC_ON}
 	  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -140,7 +141,6 @@ if(NOT APPLE)
 	list(GET RETURN_STRING 0 MKL_ROOT_DIR)
 	list(GET RETURN_STRING 1 MKL_LIBRARIES)
 	list(GET RETURN_STRING 2 MKL_EXTERNAL)
-	set(MKL_EXTERNAL "$MKL_EXTERNAL" PARENT_SCOPE)
 	set(MKL_INCLUDE_DIR "${MKL_ROOT_DIR}/include/")
 	if( ${MKL_EXTERNAL} EQUAL 1 )
 	  set(MKL_LIBRARIES "${MKL_ROOT_DIR}/lib/lib${MKL_LIBRARIES}.so")
