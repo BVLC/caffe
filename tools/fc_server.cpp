@@ -13,8 +13,9 @@ DEFINE_int32(omp_param_threads, 0, "number of OMP threads in param thread");
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
 DEFINE_int32(model_port, 1957, "the tcp port of model server");
-DEFINE_string(request, "models/bvlc_alexnet/fc.prototxt", "the location of the model request configuration file");
 
+DEFINE_string(request, "models/bvlc_alexnet/fc.prototxt", "the location of the model request configuration file");
+//DEFINE_string(request, "examples/cifar10/fc.prototxt", "the location of the model request configuration file");
 
 void fc_server_thread()
 {
