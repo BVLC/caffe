@@ -1,3 +1,7 @@
+#ifdef CMAKE_BUILD
+#include "caffe_config.h"
+#endif
+
 #ifdef USE_INTEL_SPATIAL
 #include <sstream>
 #include <string>
