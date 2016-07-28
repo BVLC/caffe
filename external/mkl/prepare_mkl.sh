@@ -20,7 +20,7 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160514 ]; then
     # TODO: make it pretty, hash progress print what it does actually eg. downloading unpacking
     tar -xzf $DST/mklml_lnx*.tgz -C $DST
   fi
-  if [ $1 == "1" ]; then
+  if [ $1 -eq 1 ]; then
 	LOCALMKL=`find $DST -name libmklml_intel.so`   # name of MKL SDL lib 
   else
 	LOCALMKL=`find $DST -name libmklml_gnu.so`   # name of MKL SDL lib 
