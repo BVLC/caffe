@@ -8,12 +8,6 @@
 #include "caffe/layers/mkl_layers.hpp"
 #include "mkl_service.h"
 
-// Uncomment to see where the layout conversions are done
-// #undef DLOG
-#ifndef DLOG
-#define DLOG LOG
-#endif
-
 static int getMKLBuildDate() {
   static int build = 0;
   if (build == 0) {
@@ -129,6 +123,22 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
   int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
 
+  // Names are for debugging purposes only.
+  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
+  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
+  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
+  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
+  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
+  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
+  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
+  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
+  bwdf2fwd_filter_diff->name =
+                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
+  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
+  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
+
   if (this->bias_term_) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
@@ -156,55 +166,21 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       inputOffset,
       dnnBorderZeros);
   }
+
   CHECK_EQ(status, 0)
           << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_bottom_data->layout_int, convolutionFwd, dnnResourceSrc);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_top_data->layout_int, convolutionFwd, dnnResourceDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &fwd_filter_data->layout_int, convolutionFwd, dnnResourceFilter);
-  CHECK_EQ(status, 0) <<
-          "Failed dnnLayoutCreateFromPrimitive with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of l_fwd_bottom_data_usr layout with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_top_data->layout_usr   , dimension, tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0) <<
-          "Failed creation of l_fwd_top_data_usr layout with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(
-          &fwd_filter_data->layout_usr, f_dimension, fdata_sizes,
-          fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of l_fwd_filter_data_usr layout with status "
-          << status << "\n";
+  fwd_bottom_data->create_layouts(convolutionFwd, dnnResourceSrc, dimension,
+                                  bdata_sizes, bdata_strides);
+  fwd_top_data   ->create_layouts(convolutionFwd, dnnResourceDst, dimension,
+                                  tdata_sizes, tdata_strides);
+  fwd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,f_dimension,
+                                  fdata_sizes, fdata_strides);
 
-  fwd_bottom_data->create_conversions();
-  fwd_top_data   ->create_conversions();
-  fwd_filter_data->create_conversions();
-
-  if (this->bias_term_) {
-    status = dnnLayoutCreateFromPrimitive<Dtype>(
-            &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-    status = dnnLayoutCreate<Dtype>(
-            &fwd_bias_data->layout_usr, 1, bias_sizes, bias_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of l_fwd_bias_data_usr layout with status "
-            << status << "\n";
-    fwd_bias_data  ->create_conversions();
-  }
+  if (this->bias_term_)
+    fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
+                                  bias_sizes, bias_strides);
 
 /*
  * Backward by data layer setup
@@ -225,38 +201,12 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_bottom_diff->layout_int,
-          convolutionBwdData, dnnResourceDiffSrc);
-  CHECK_EQ(status, 0)
-          << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &bwdd_top_diff->layout_int, convolutionBwdData, dnnResourceDiffDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_filter_data->layout_int,
-          convolutionBwdData, dnnResourceFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff->layout_usr, dimension,
-          bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_bottom_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_top_diff->layout_usr, dimension,
-          tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_top_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, f_dimension,
-          fdata_sizes, fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdd_filter_data->layout_usr with status "
-          << status << "\n";
-
-  bwdd_bottom_diff->create_conversions();
-  bwdd_top_diff->create_conversions();
-  bwdd_filter_data->create_conversions();
+  bwdd_bottom_diff->create_layouts(convolutionBwdData, dnnResourceDiffSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdd_top_diff   ->create_layouts(convolutionBwdData, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
 
 /*
  * Backward by filter layer setup
@@ -277,50 +227,24 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
           << "Failed dnnConvolutionCreateBackwardFilter with status "
           << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_bottom_data->layout_int,
-          convolutionBwdFilter, dnnResourceSrc);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_top_diff->layout_int,
-          convolutionBwdFilter, dnnResourceDiffDst);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_filter_diff->layout_int,
-          convolutionFwd, dnnResourceFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
+  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceSrc,
+                                   dimension, bdata_sizes, bdata_strides);
+  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
+                                   dimension, tdata_sizes, tdata_strides);
+  bwdf_filter_diff->create_layouts(convolutionFwd, dnnResourceFilter,
+                                   f_dimension, fdata_sizes, fdata_strides);
+
+
   // bwdf2fwd_filter_diff:
   // layout_int = internal layout of weight diff on backward filter convolution,
   // layout_usr = internal layout of weight on forward convolution
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &bwdf2fwd_filter_diff->layout_int, convolutionBwdFilter,
+  bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
           dnnResourceDiffFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
   status = dnnLayoutCreateFromPrimitive<Dtype>(
           &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
   CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
           << status << "\n";
 
-  status = dnnLayoutCreate<Dtype>(&bwdf_bottom_data->layout_usr, dimension,
-          bdata_sizes, bdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_bottom_data->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_top_diff->layout_usr, dimension,
-          tdata_sizes, tdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_top_diff->layout_usr with status "
-          << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, f_dimension,
-          fdata_sizes, fdata_strides);
-  CHECK_EQ(status, 0)
-          << "Failed creation of bwdf_filter_diff->layout_usr with status "
-          << status << "\n";
-
-  bwdf_bottom_data->create_conversions();
-  bwdf_top_diff->create_conversions();
-  bwdf_filter_diff->create_conversions();
   bwdf2fwd_filter_diff->create_conversions();
 
 /*
@@ -338,45 +262,11 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
             << "Failed dnnConvolutionCreateBackwardBias with status "
             << status << "\n";
 
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
-            convolutionBwdBias, dnnResourceDiffDst);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-    status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int,
-            convolutionBwdBias, dnnResourceDiffBias);
-    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-            << status << "\n";
-
-    status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension,
-            tdata_sizes, tdata_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of bwdb_top_diff->layout_usr with status "
-            << status << "\n";
-    status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr, 1,
-            bias_sizes, bias_strides);
-    CHECK_EQ(status, 0)
-            << "Failed creation of bwdb_bias_diff->layout_usr with status "
-            << status << "\n";
-
-    bwdb_top_diff->create_conversions();
-    bwdb_bias_diff->create_conversions();
+    bwdb_top_diff->create_layouts(convolutionBwdBias, dnnResourceDiffDst,
+                                  dimension, tdata_sizes, tdata_strides);
+    bwdb_bias_diff->create_layouts(convolutionBwdBias, dnnResourceDiffBias, 1,
+                                   bias_sizes, bias_strides);
   }
-
-  // Names are for debugging purposes only. TODO: Consider removing this.
-  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
-  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
-  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
-  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
-  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
-  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
-  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
-  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
-  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
-  bwdf2fwd_filter_diff->name =
-                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
-  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
-  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 }
 
 template <typename Dtype>
@@ -480,156 +370,6 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
 }
-template <typename Dtype, bool is_diff>
-void MKLMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
-        void* cpu_ptr) {
-  CHECK(prv_ptr);
-  CHECK(cpu_ptr);
-  CHECK(this->convert_from_int);
-  int status;
-  void *convert_resources[dnnResourceNumber];
-
-  DLOG(INFO) << "convert priv =>           "  << this->name << " =>";
-
-  convert_resources[dnnResourceFrom] = prv_ptr;
-  convert_resources[dnnResourceTo]   = cpu_ptr;
-  status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
-  CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
-}
-
-template <typename Dtype, bool is_diff>
-Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
-  Blob<Dtype>* blob, bool set_prv_ptr,
-  MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
-  if (this->convert_to_int) {
-    int status;
-    void *convert_resources[dnnResourceNumber];
-    const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
-    if (prv_ptr == NULL) {
-      if (converted_in_fwd) {
-        // hack for reusing previously done conversion
-        // if(dnnLayoutCompare(converted_in_fwd->layout_int , this->layout_int))
-        if (1) {
-          DLOG(INFO) << "reusing fwd               "
-                  << converted_in_fwd->name << " == " << this->name;
-          return converted_in_fwd->internal_ptr;
-        } else {
-          DLOG(INFO) << "layout doesn't match      "
-                  << converted_in_fwd->name << " != " << this->name;
-        }
-      }
-
-      DLOG(INFO) << "convert      => priv                                => "
-                 << this->name;
-
-      allocate();
-      convert_resources[dnnResourceFrom] =
-              is_diff ?
-                reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
-              : reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
-      convert_resources[dnnResourceTo] =
-              reinterpret_cast<void *>(this->internal_ptr);
-
-      status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
-      CHECK_EQ(status, 0) << "Conversion failed with status " << status;
-
-      if (set_prv_ptr) {
-        if (is_diff)
-          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
-        else
-          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
-      }
-      return this->internal_ptr;
-    } else {
-      // This section helps if padding needs to be added (or removed...)
-      // TODO: consider removing when no longer needed.
-      shared_ptr<PrvMemDescr> prv_mem_descriptor =
-          is_diff ? (blob->get_prv_descriptor_diff()) :
-            (blob->get_prv_descriptor_data());
-
-      CHECK_EQ(prv_mem_descriptor->get_descr_type(),
-              PrvMemDescr::PRV_DESCR_MKL2017);
-
-      shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > current_descr =
-        boost::static_pointer_cast<MKLMemoryDescriptor<Dtype, is_diff> >
-              (prv_mem_descriptor);
-
-      if (!dnnLayoutCompare<Dtype>(current_descr->layout_int,
-              this->layout_int)) {
-        if (converted_in_fwd) {
-          // hack for reusing previously done conversion
-          // if(dnnLayoutCompare(converted_in_fwd->layout_int,this->layout_int))
-          if (1) {
-            DLOG(INFO) << "reusing fwd               "
-                    << converted_in_fwd->name << " == " << this->name;
-            return converted_in_fwd->internal_ptr;
-          } else {
-            DLOG(INFO) << "layout doesn't match      "
-                    << converted_in_fwd->name << " != " << this->name;
-          }
-        }
-        DLOG(INFO) << "convert priv => priv      "
-                << current_descr->name << " => " << this->name;
-
-        if (this->convert_prv2prv) {
-          CHECK_EQ(dnnLayoutCompare<Dtype>(
-              this->descr_prv2prv_conversion->layout_int,
-              this->layout_int), 0);
-          status = 0;
-        } else {
-          status = dnnConversionCreate<Dtype>(&this->convert_prv2prv,
-                  current_descr->layout_int , this->layout_int);
-          if (status == 0)
-            this->descr_prv2prv_conversion = current_descr;
-        }
-
-        if (status != 0) {
-          // TODO: Very weird that we end up here for conv1. No idea why....
-          DLOG(INFO) << "!!!! Failed creation convert_prv2prv with status "
-                  << status << "\n";
-
-          allocate();
-          convert_resources[dnnResourceFrom] = is_diff ?
-            reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
-            reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
-          convert_resources[dnnResourceTo] =
-            reinterpret_cast<void*>(this->internal_ptr);
-
-          status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
-          CHECK_EQ(status, 0) << "Conversion failed with status " << status;
-
-        } else {
-          allocate();
-
-          convert_resources[dnnResourceFrom] = is_diff ?
-            reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
-            reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
-          convert_resources[dnnResourceTo] =
-                  reinterpret_cast<void *>(this->internal_ptr);
-          status = dnnExecute<Dtype>(this->convert_prv2prv, convert_resources);
-          CHECK_EQ(status, 0) << "Conversion failed with status " << status;
-        }
-
-        if (set_prv_ptr) {
-          if (is_diff)
-            blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
-          else
-            blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
-        }
-        return this->internal_ptr;
-      } else if (current_descr.get() != this) {
-        DLOG(INFO) << "layout OK                 "
-                << current_descr->name << " == " << this->name;
-      }
-    }
-
-    return const_cast<Dtype *>(prv_ptr);
-  }
-
-  return (is_diff ? const_cast<Dtype *>(blob->cpu_diff()) :
-                    const_cast<Dtype *>(blob->cpu_data()));
-}
-
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Forward_cpu(

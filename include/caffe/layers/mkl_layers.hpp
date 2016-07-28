@@ -12,87 +12,10 @@
 #include "caffe/layers/neuron_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "caffe/mkl_memory.hpp"
 #include "mkl_dnn_cppwrapper.h"
 
 namespace caffe {
-
-template <typename Dtype, bool is_diff>
-struct MKLMemoryDescriptor : PrvMemDescr,
-    boost::enable_shared_from_this<MKLMemoryDescriptor<Dtype, is_diff> > {
-  MKLMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
-          convert_to_int(NULL), convert_from_int(NULL), convert_prv2prv(NULL),
-          name("UNKNOWN"), internal_ptr(NULL) {}
-  ~MKLMemoryDescriptor() {
-    dnnLayoutDelete<Dtype>(layout_usr);
-    dnnLayoutDelete<Dtype>(layout_int);
-    dnnReleaseBuffer<Dtype>(internal_ptr);
-    dnnDelete<Dtype>(convert_to_int);
-    dnnDelete<Dtype>(convert_from_int);
-  }
-
-  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
-    return this->shared_from_this();
-  }
-
-  dnnLayout_t layout_usr;
-  dnnLayout_t layout_int;
-  dnnPrimitive_t convert_to_int;
-  dnnPrimitive_t convert_from_int;
-  dnnPrimitive_t convert_prv2prv;
-  shared_ptr<MKLMemoryDescriptor<Dtype, is_diff> > descr_prv2prv_conversion;
-
-  std::string name;  // for debugging purposes
-  void allocate() {
-    if (internal_ptr == NULL) {
-      int status = dnnAllocateBuffer<Dtype>(
-        reinterpret_cast<void **>(&internal_ptr), layout_int);
-      CHECK_EQ(status, 0)
-        << "Failed internal_ptr memory allocation with status "
-        << status << "\n";
-
-      caffe_set(prv_count(), Dtype(0), internal_ptr);
-    }
-  }
-  Dtype* prv_ptr() {
-    if (internal_ptr == NULL)
-        allocate();
-    return internal_ptr;
-  }
-  void create_conversions() {
-    if (layout_int
-        && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
-      CHECK(layout_usr);
-      int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr,
-              layout_int);
-      CHECK_EQ(status, 0) << "Failed creation convert_to_int with status "
-              << status << "\n";
-      status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int,
-              layout_usr);
-      CHECK_EQ(status, 0) << "Failed creation convert_from_int with status "
-              << status << "\n";
-    }
-  }
-  virtual size_t prv_count() {
-      return dnnLayoutGetMemorySize<Dtype>(layout_int) / sizeof(Dtype);
-  }
-  virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
-
-  // The last get_converted_prv() argument is a hack for reusing
-  // in backward a conversion done already in the forward direction.
-  Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr,
-          MKLMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
- private:
-  Dtype* internal_ptr;
-};
-
-template <typename Dtype>
-struct MKLData : MKLMemoryDescriptor<Dtype, false>
-{};
-
-template <typename Dtype>
-struct MKLDiff : MKLMemoryDescriptor<Dtype, true>
-{};
 
 template <typename Dtype>
 class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
@@ -291,8 +214,10 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
    */
   explicit MKLReLULayer(const LayerParameter& param)
     : NeuronLayer<Dtype>(param),
+      fwd_top_data_    (new MKLData<Dtype>()),
       fwd_bottom_data_ (new MKLData<Dtype>()),
       bwd_top_diff_    (new MKLDiff<Dtype>()),
+      bwd_bottom_diff_ (new MKLDiff<Dtype>()),
       reluFwd_(NULL),
       reluBwd_(NULL) {}
 
@@ -317,12 +242,13 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
  private:
+  shared_ptr<MKLData<Dtype> > fwd_top_data_;
   shared_ptr<MKLData<Dtype> > fwd_bottom_data_;
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
+  shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
 
-#ifdef USE_MKL2017_NEW_API
 template <typename Dtype>
 class MKLConcatLayer : public Layer<Dtype> {
  public:
@@ -375,6 +301,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   explicit MKLBatchNormLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         fwd_top_data(new MKLData<Dtype>()),
+        fwd_bottom_data(new MKLData<Dtype>()),
+        bwd_top_diff(new MKLDiff<Dtype>()),
         bwd_bottom_diff(new MKLDiff<Dtype>()),
         batchNormFwd(static_cast<dnnPrimitive_t>(NULL)),
         batchNormBwdData(static_cast<dnnPrimitive_t>(NULL)),
@@ -414,6 +342,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
 
  private:
   shared_ptr<MKLData<Dtype> > fwd_top_data;
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data;
+  shared_ptr<MKLDiff<Dtype> > bwd_top_diff;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
   dnnPrimitive_t batchNormFwd, batchNormBwdData, batchNormBwdScaleShift;
   Dtype *workspace_buffer_;
@@ -499,7 +429,6 @@ class MKLEltwiseLayer : public Layer<Dtype> {
 
   bool stable_prod_grad_;
 };
-#endif  // #ifdef USE_MKL2017_NEW_API
 
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKL2017_LAYERS_HPP_

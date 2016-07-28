@@ -208,18 +208,26 @@ const void* SyncedMemory::prv_data() {
     return NULL;
   }
 
-  return (const void* )prv_ptr_;
+  return (const void* ) prv_ptr_;
 }
 
 void* SyncedMemory::mutable_prv_data() {
-  head_ = HEAD_AT_PRV;
-
   if (NULL == prv_ptr_) {
-    CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
+    if (prv_descriptor_.get())
+      CaffeMallocHost(&prv_ptr_, prv_descriptor_->prv_size(),
+                      &cpu_malloc_use_cuda_);
+    else
+      CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, prv_ptr_);
   }
+
+  if (head_ == HEAD_AT_CPU) {
+    if (prv_descriptor_.get())
+      prv_descriptor_->convert_to_prv(cpu_ptr_, prv_ptr_);
+  }
+  head_ = HEAD_AT_PRV;
+
   return prv_ptr_;
 }
 
 }  // namespace caffe
-

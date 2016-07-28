@@ -1,4 +1,4 @@
-#if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#if defined(MKL2017_SUPPORTED)
 #include <cfloat>
 #include <vector>
 
@@ -39,9 +39,6 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   num_bottoms = bottom.size();
   size_t dim_src = bottom[0]->shape().size();
-
-  dnnError_t e;
-
   size_t sizes_src[dim_src], strides_src[dim_src];
   for (size_t d = 0; d < dim_src; ++d) {
       sizes_src[d] = bottom[0]->shape()[dim_src - d - 1];
@@ -52,14 +49,10 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       fwd_bottom_data.push_back(
         shared_ptr<MKLData<Dtype> >(new MKLData<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      e = dnnLayoutCreate<Dtype>(&(fwd_bottom_data[i]->layout_usr),
-         dim_src, sizes_src, strides_src);
-      CHECK_EQ(e, E_SUCCESS);
+      fwd_bottom_data[i]->create_user_layout(dim_src, sizes_src, strides_src);
   }
 
-  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr,
-    dim_src, sizes_src, strides_src);
-  CHECK_EQ(e, E_SUCCESS);
+  fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src);
 }
 
 template <typename Dtype>
@@ -114,18 +107,12 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
         num_bottoms, int_layout, &coeffs_[0]);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int,
-        sumPrimitive, dnnResourceDst);
-      CHECK_EQ(e, E_SUCCESS);
-      fwd_top_data->create_conversions();
+      fwd_top_data->create_internal_layout(sumPrimitive, dnnResourceDst);
 
       for (int i = 0; i < num_bottoms; ++i) {
         if (bottom[i]->prv_data() == NULL) {
-          e = dnnLayoutCreateFromPrimitive<Dtype>(
-            &fwd_bottom_data[i]->layout_int, sumPrimitive,
+          fwd_bottom_data[i]->create_internal_layout(sumPrimitive,
               (dnnResourceType_t)(dnnResourceMultipleSrc + i));
-          CHECK_EQ(e, E_SUCCESS);
-          fwd_bottom_data[i]->create_conversions();
         }
       }
     }
@@ -228,4 +215,4 @@ void MKLEltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
 INSTANTIATE_CLASS(MKLEltwiseLayer);
 }  // namespace caffe
-#endif  // #if defined(MKL2017_SUPPORTED) && defined(USE_MKL2017_NEW_API)
+#endif  // #if defined(MKL2017_SUPPORTED)
