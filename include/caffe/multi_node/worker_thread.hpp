@@ -132,10 +132,45 @@ protected:
   virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
     Caffe::set_root_solver(false);
     SGDSolver<Dtype> *proot = (SGDSolver<Dtype> *)root_solver;
-
-    return new WorkerSolver<Dtype>(solver_param, proot);
+    WorkerSolver<Dtype> * solver = new WorkerSolver<Dtype>(solver_param, proot);
+    
+    //Disable bottom backward to data layer.
+    DisableBottomBwdToData(solver);
+    
+    return solver;
   }
+  
+  // disable bottom backward to data layer.
+  void DisableBottomBwdToData(WorkerSolver<Dtype> * solver){
+    
+    vector<Blob<Dtype>*> data_top_blobs;
+    shared_ptr<Net<Dtype> > net = solver->net();
+    const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
+    
+    for(int layer_id = 0; layer_id < layers.size(); layer_id ++){
+      
+      if( net->bottom_vecs()[layer_id].size() == 0 ){	
+        const vector<Blob<Dtype>*> & top_blobs = net->top_vecs()[layer_id];
+        data_top_blobs.insert(data_top_blobs.end(), top_blobs.begin(), top_blobs.end());
+      }
+    }
+    
+    vector<vector<bool> >& bottom_need_bwd = 
+      const_cast<vector<vector<bool> >&>(net->bottom_need_backward());
 
+    for(int layer_id = 0; layer_id < layers.size(); layer_id ++){
+      const vector<Blob<Dtype>*> & bottom_blobs = net->bottom_vecs()[layer_id];
+      
+      for(int i = 0; i < bottom_blobs.size(); i ++){
+        if( std::find(data_top_blobs.begin(), data_top_blobs.end(), bottom_blobs[i])
+            != data_top_blobs.end()){
+          CHECK(i < bottom_need_bwd[layer_id].size());
+          bottom_need_bwd[layer_id][i] = false;
+        }
+      }
+    }
+  }
+ 
 protected:
   int worker_id_;
   int num_workers_;
