@@ -15,7 +15,7 @@ layer {
     mean_value: 123
   }
   image_data_param {
-    source: "data/ilsvrc12/train_shuffled.txt"
+    source: "data/ilsvrc12/train.txt"
     batch_size: 512
     shuffle: true
   }
