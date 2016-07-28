@@ -4,7 +4,6 @@
 #ifdef USE_MKL
 
 #include <mkl_cblas.h>
-//#include <mkl_service.h>
 
 #else  // If use MKL, simply include the MKL header
 
