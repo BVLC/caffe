@@ -115,10 +115,10 @@ if(USE_MPI)
 endif()
 
 # ---[ BLAS
+set(MKL_EXTERNAL "0")
 if(NOT APPLE)
   set(BLAS "MKL" CACHE STRING "Selected BLAS library")
   set_property(CACHE BLAS PROPERTY STRINGS "Atlas;Open;MKL")
-  set(MKL_EXTERNAL "0")
   if(BLAS STREQUAL "Atlas" OR BLAS STREQUAL "atlas")
     find_package(Atlas REQUIRED)
     include_directories(SYSTEM ${Atlas_INCLUDE_DIR})
