@@ -235,17 +235,20 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
                                    f_dimension, fdata_sizes, fdata_strides);
 
 
-  // bwdf2fwd_filter_diff:
-  // layout_int = internal layout of weight diff on backward filter convolution,
-  // layout_usr = internal layout of weight on forward convolution
-  bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
-          dnnResourceDiffFilter);
-  status = dnnLayoutCreateFromPrimitive<Dtype>(
-          &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
-  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
-          << status << "\n";
+  // Note: this caused some trouble for older MKL
+  if (getMKLBuildDate() > 20160701) {
+    // bwdf2fwd_filter_diff:
+    // layout_int = internal layout of weight diff on backward filter convolution,
+    // layout_usr = internal layout of weight on forward convolution
+    bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
+            dnnResourceDiffFilter);
+    status = dnnLayoutCreateFromPrimitive<Dtype>(
+            &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
+    CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+            << status << "\n";
 
-  bwdf2fwd_filter_diff->create_conversions();
+    bwdf2fwd_filter_diff->create_conversions();
+  }
 
 /*
  * Backward by bias layer setup
