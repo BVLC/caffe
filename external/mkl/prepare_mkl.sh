@@ -4,7 +4,7 @@
 DST=`dirname $0`
 SET_ENV_SCRIPT=$DST/"set_env_up.sh"
 OMP=0 
-MKLURL="http://idljenkins.igk.intel.com:8080/job/Temp_upload/lastSuccessfulBuild/artifact/mklml_lnx_2017.0.b1.20160513.tgz" # TODO: Adjust accordingly
+MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_contained_BU1/mklml_lnx_2017.0.b1.20160513.1.tgz"
 if [ $MKLROOT ]; then
 	VERSION_LINE=`grep __INTEL_MKL_BUILD_DATE $MKLROOT/include/mkl_version.h | sed -e 's/.* //'`
 fi
