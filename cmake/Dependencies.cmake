@@ -132,6 +132,9 @@ if(NOT APPLE)
 	#TODO: check if ICC is used. If used then variable ICC_ON=1
 	set(ICC_ON "0")
 	set(script_cmd "./external/mkl/prepare_mkl.sh" )
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+	  set(ICC_ON "1")
+	endif()
 	execute_process(COMMAND ${script_cmd} ${ICC_ON}
 	  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	  RESULT_VARIABLE script_result
