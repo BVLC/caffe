@@ -1,6 +1,3 @@
-
-
-
 #include "caffe/caffe.hpp"
 #include "caffe/multi_node/ps_node.hpp"
 
@@ -13,6 +10,7 @@ DEFINE_int32(id_port, 1955, "the tcp port of ID server");
 DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
 DEFINE_string(request, "models/bvlc_alexnet/ps.prototxt", "the location of the model request configuration file");
+//DEFINE_string(request, "examples/cifar10/ps.prototxt", "the location of the model request configuration file");
 
 int main(int argc, char** argv)
 {

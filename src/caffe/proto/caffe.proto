@@ -21,6 +21,61 @@ message BlobProto {
   optional int32 width = 4 [default = 0];
 }
 
+//multinode related messages
+//******************************************************
+message ThresholdCompressionConfig {
+  optional float threshold = 1;
+  optional int32 size = 2 [default = 2];
+  optional float multiplier = 3 [default = 1.0];
+}
+
+enum CompressionAlgo {
+  COMPRESSION_NONE = 0;
+  COMPRESSION_AVERAGING = 1;
+}
+
+message CompressionParam {
+  optional CompressionAlgo algo = 1 [default = COMPRESSION_NONE];
+  optional ThresholdCompressionConfig threshold_param = 3;
+};
+
+message BlobPartInfo {
+  optional uint32 version = 1;
+  optional int32 layer_id = 2;
+  optional int32 blob_id = 3;
+  optional int32 part = 4;
+}
+
+message BlobUpdate {
+  optional BlobPartInfo info = 1;
+  optional uint32 iters = 5;
+  repeated BlobPartInfo ack = 2;
+  optional CompressionParam compression_param = 7;
+  optional bytes data = 8;
+}
+
+message ModelReq {
+  optional string name = 1;
+}
+
+message DataMsg {
+  repeated BlobShape shape = 6;
+  repeated bytes data = 7;
+}
+
+message DataReq {
+  optional string layer_name = 1;
+  optional int32 iters = 2;
+}
+
+message MultinodeParameter {
+  optional CompressionParam outgoing_compression = 2;
+  optional uint32 update_per_iters = 4 [default = 1];
+  optional uint32 max_packet_size = 5 [default = 65000];
+  optional uint32 wait_for_clients = 6 [default = 0];
+}
+//******************************************************
+
 // The BlobProtoVector is simply a way to pass multiple blobproto instances
 // around.
 message BlobProtoVector {
@@ -63,12 +118,12 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  // The input blobs to the network.
+  // DEPRECATED. See InputParameter. The input blobs to the network.
   repeated string input = 3;
-  // The shape of the input blobs.
+  // DEPRECATED. See InputParameter. The shape of the input blobs.
   repeated BlobShape input_shape = 8;
 
-  // 4D input dimensions -- deprecated.  Use "shape" instead.
+  // 4D input dimensions -- deprecated.  Use "input_shape" instead.
   // If specified, for each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
@@ -239,6 +294,11 @@ message SolverParameter {
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
+
+  optional MultinodeParameter multinode_param = 41;
+  optional bool disabled_update = 42 [default = false];
+  optional string dump_dir = 49;
+  optional bool dump_checksums = 50 [default = false];
 }
 
 // A message that stores the solver snapshots
@@ -306,7 +366,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+// LayerParameter next available layer-specific ID: 144 (last added: input_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -364,6 +424,7 @@ message LayerParameter {
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
+  optional ELUParameter elu_param = 140;
   optional EmbedParameter embed_param = 137;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
@@ -373,6 +434,7 @@ message LayerParameter {
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
+  optional InputParameter input_param = 143;
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
@@ -388,11 +450,13 @@ message LayerParameter {
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
+  optional SplitParameter split_param = 146;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional RemoteDataParameter remote_data_param = 145;
 }
 
 // Message that stores parameters used to apply transformation
@@ -430,7 +494,7 @@ message LossParameter {
     // Outputs that receive the ignore label will NOT be ignored in computing
     // the normalization factor.
     FULL = 0;
-    // Divide by the total number of output locations that do not take the 
+    // Divide by the total number of output locations that do not take the
     // ignore_label.  If ignore_label is not set, this behaves like FULL.
     VALID = 1;
     // Divide by the batch size.
@@ -485,7 +549,12 @@ message ConcatParameter {
 
   // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
-}
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 3 [default = DEFAULT];}
 
 message BatchNormParameter {
   // If false, accumulate global mean/variance values via a moving average. If
@@ -497,6 +566,25 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 4 [default = DEFAULT];
+  optional bool use_weight_bias = 5 [default = true];
+  optional bool bias_term = 6 [default = true]; // whether to have bias terms
+  optional FillerParameter filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+}
+
+message SplitParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
 }
 
 message BiasParameter {
@@ -552,6 +640,10 @@ message ConvolutionParameter {
   repeated uint32 pad = 3; // The padding size; defaults to 0
   repeated uint32 kernel_size = 4; // The kernel size
   repeated uint32 stride = 6; // The stride; defaults to 1
+  // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
+  // holes. (Kernel dilation is sometimes referred to by its use in the
+  // algorithme à trous from Holschneider et al. 1987.)
+  repeated uint32 dilation = 18; // The dilation; defaults to 1
 
   // For 2D convolution only, the *_h and *_w versions may also be used to
   // specify both spatial dimensions.
@@ -570,6 +662,7 @@ message ConvolutionParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
+    MKL2017 = 3;
   }
   optional Engine engine = 15 [default = DEFAULT];
 
@@ -626,6 +719,22 @@ message DataParameter {
   optional uint32 prefetch = 10 [default = 4];
 }
 
+message RemoteDataParameter {
+  optional string address = 1;
+
+  //cache_size equal 0 means it will cache everything,
+  //and will forward data from cache only
+  optional uint32 cache_size = 2;
+
+  enum CachePolicy {
+    PULL_CONTINOUSLY = 0; //will continously pull from data server
+    USE_CACHE_WHEN_FULL = 1; //when cache is full, than it will be repeated
+  }
+  optional CachePolicy policy = 3 [default = PULL_CONTINOUSLY];
+
+  repeated BlobShape shape = 5;
+}
+
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
 }
@@ -661,6 +770,20 @@ message EltwiseParameter {
   // Whether to use an asymptotically slower (for >2 inputs) but stabler method
   // of computing the gradient for the PROD operation. (No effect for SUM op.)
   optional bool stable_prod_grad = 3 [default = true];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    MKL2017 = 3;
+  }
+  optional Engine engine = 4 [default = DEFAULT];
+}
+
+// Message that stores parameters used by ELULayer
+message ELUParameter {
+  // Described in:
+  // Clevert, D.-A., Unterthiner, T., & Hochreiter, S. (2015). Fast and Accurate 
+  // Deep Network Learning by Exponential Linear Units (ELUs). arXiv
+  optional float alpha = 1 [default = 1];
 }
 
 // Message that stores parameters used by EmbedLayer
@@ -773,6 +896,19 @@ message InnerProductParameter {
   // all preceding axes are retained in the output.
   // May be negative to index from the end (e.g., -1 for the last axis).
   optional int32 axis = 5 [default = 1];
+  // Specify whether to transpose the weight matrix or not.
+  // If transpose == true, any operations will be performed on the transpose
+  // of the weight matrix. The weight matrix itself is not going to be transposed
+  // but rather the transfer flag of operations will be toggled accordingly.
+  optional bool transpose = 6 [default = false];
+}
+
+message InputParameter {
+  // This layer produces N >= 1 top blob(s) to be assigned manually.
+  // Define N shapes to set a shape for each top.
+  // Define 1 shape to set the same shape for every top.
+  // Define no shape to defer to reshaping manually.
+  repeated BlobShape shape = 1;
 }
 
 // Message that stores parameters used by LogLayer
@@ -800,6 +936,7 @@ message LRNParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
+    MKL2017 = 3;
   }
   optional Engine engine = 6 [default = DEFAULT];
 }
@@ -844,6 +981,7 @@ message PoolingParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
+    MKL2017 = 3;
   }
   optional Engine engine = 11 [default = DEFAULT];
   // If global_pooling then it will pool over the size of the bottom by doing
@@ -913,6 +1051,7 @@ message ReLUParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
+    MKL2017 = 3;
   }
   optional Engine engine = 2 [default = DEFAULT];
 }

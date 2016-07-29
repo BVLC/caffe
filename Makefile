@@ -347,9 +347,14 @@ ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
+	COMMON_FLAGS += -DMKL2017_SUPPORTED
+	COMMON_FLAGS += -DUSE_MKL2017_AS_DEFAULT_ENGINE
+	COMMON_FLAGS += -DUSE_MKL2017_NEW_API
+		
 	MKL_DIR ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas

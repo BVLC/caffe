@@ -8,10 +8,10 @@ DEFINE_string(id_server_req, "tcp://*:1955", "the zmq REQ addr of the id / layer
 DEFINE_string(model_server, "tcp://*:1957", "the address of zmq model server");
 
 DEFINE_string(solver, "models/bvlc_alexnet/solver.prototxt", "location of solver");
+//DEFINE_string(solver, "examples/cifar10/cifar10_full_solver.prototxt", "location of solver");
 
 DEFINE_string(weights, "", 
                 "Optional; the pretrained weights to initialize finetuning");
-
 
 DEFINE_int32(workers, 0, "number of convolutional workers in fc server");
 
