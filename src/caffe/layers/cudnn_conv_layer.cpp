@@ -383,8 +383,6 @@ bool CuDNNConvolutionLayer<Dtype>::IsBottomDescChanged(
   int cached_stride_n; int cached_stride_c;
   int cached_stride_h; int cached_stride_w;
   int n; int c; int h; int w;
-  int stride_n; int stride_c;
-  int stride_h; int stride_w;
   cudnnDataType_t type;
 
   for (int i = 0; i < bottom.size(); i++) {
@@ -394,21 +392,16 @@ bool CuDNNConvolutionLayer<Dtype>::IsBottomDescChanged(
       &cached_n, &cached_c, &cached_h, &cached_w,
       &cached_stride_n, &cached_stride_c,
       &cached_stride_h, &cached_stride_w));
-    CUDNN_CHECK(cudnnGetTensor4dDescriptor(
-      bottom_descs_[i],
-      &type,
-      &n, &c, &h, &w,
-      &stride_n, &stride_c,
-      &stride_h, &stride_w));
+    const vector<int>& shape = bottom[i]->shape();
+    n = shape[0];
+    c = shape[1];
+    h = shape[2];
+    w = shape[3];
 
     if ((cached_n != n) ||
         (cached_c != c) ||
         (cached_h != h) ||
-        (cached_w != w) ||
-        (cached_stride_n != stride_n) ||
-        (cached_stride_c != stride_c) ||
-        (cached_stride_h != stride_h) ||
-        (cached_stride_w != stride_w)) {
+        (cached_w != w)) {
       return true;
     }
   }
