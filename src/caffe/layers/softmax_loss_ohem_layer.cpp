@@ -11,9 +11,9 @@ template <typename Dtype>
 void SoftmaxWithLossOHEMLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
-	LayerParameter softmax_param(this->layer_param_);
-	// Fix a bug which occurs with more than one output
-	softmax_param.clear_loss_weight();
+  LayerParameter softmax_param(this->layer_param_);
+  // Fix a bug which occurs with more than one output
+  softmax_param.clear_loss_weight();
   softmax_param.set_type("Softmax");
   softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
   softmax_bottom_vec_.clear();
@@ -56,10 +56,10 @@ void SoftmaxWithLossOHEMLayer<Dtype>::Reshape(
     top[1]->ReshapeLike(*bottom[0]);
   }
 
-	// top[2] stores per-instance loss, which takes the shape of N*1*H*W
+  // top[2] stores per-instance loss, which takes the shape of N*1*H*W
   if (top.size() >= 3) {
-		top[2]->ReshapeLike(*bottom[1]);
-	}
+    top[2]->ReshapeLike(*bottom[1]);
+  }
 }
 
 template <typename Dtype>
@@ -95,13 +95,14 @@ Dtype SoftmaxWithLossOHEMLayer<Dtype>::get_normalizer(
 template <typename Dtype>
 void SoftmaxWithLossOHEMLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-	NOT_IMPLEMENTED;
+  NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
-void SoftmaxWithLossOHEMLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-	NOT_IMPLEMENTED;
+void SoftmaxWithLossOHEMLayer<Dtype>::Backward_cpu(
+  const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+  const vector<Blob<Dtype>*>& bottom) {
+  NOT_IMPLEMENTED;
 }
 
 #ifdef CPU_ONLY

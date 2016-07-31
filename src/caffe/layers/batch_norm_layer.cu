@@ -101,9 +101,9 @@ void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
     if (use_global_stats_) {
       top_diff = top[0]->gpu_diff();
-    }
-    else {
-      caffe_copy(x_norm_.count(), top[0]->gpu_diff(), x_norm_.mutable_gpu_diff());
+    } else {
+      caffe_copy(x_norm_.count(), top[0]->gpu_diff(),
+      x_norm_.mutable_gpu_diff());
       top_diff = x_norm_.gpu_diff();
     }
   }

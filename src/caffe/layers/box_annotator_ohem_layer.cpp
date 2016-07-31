@@ -1,7 +1,5 @@
 // ------------------------------------------------------------------
 // R-FCN
-// Copyright (c) 2016 Microsoft
-// Licensed under The MIT License [see r-fcn/LICENSE for details]
 // Written by Yi Li
 // ------------------------------------------------------------------
 
@@ -9,6 +7,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -24,9 +23,11 @@ using std::ceil;
 namespace caffe {
 
   template <typename Dtype>
-  void BoxAnnotatorOHEMLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  void BoxAnnotatorOHEMLayer<Dtype>::LayerSetUp(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-    BoxAnnotatorOHEMParameter box_anno_param = this->layer_param_.box_annotator_ohem_param();
+    BoxAnnotatorOHEMParameter box_anno_param =
+      this->layer_param_.box_annotator_ohem_param();
     roi_per_img_ = box_anno_param.roi_per_img();
     CHECK_GT(roi_per_img_, 0);
     ignore_label_ = box_anno_param.ignore_label();
@@ -40,7 +41,7 @@ namespace caffe {
     height_ = bottom[0]->height();
     width_ = bottom[0]->width();
     spatial_dim_ = height_*width_;
-    
+
     CHECK_EQ(bottom[1]->num(), num_);
     CHECK_EQ(bottom[1]->channels(), 1);
     CHECK_EQ(bottom[1]->height(), height_);
@@ -63,14 +64,15 @@ namespace caffe {
   }
 
   template <typename Dtype>
-  void BoxAnnotatorOHEMLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+  void BoxAnnotatorOHEMLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
     NOT_IMPLEMENTED;
   }
 
   template <typename Dtype>
-  void BoxAnnotatorOHEMLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  void BoxAnnotatorOHEMLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
 
