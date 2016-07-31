@@ -62,12 +62,13 @@ void SoftmaxWithLossOHEMLayer<Dtype>::Forward_gpu(
     top[1]->ShareData(prob_);
   }
   if (top.size() >= 3) {
-		// Output per-instance loss
-    caffe_gpu_memcpy(top[2]->count() * sizeof(Dtype), loss_data, top[2]->mutable_gpu_data());
+    // Output per-instance loss
+    caffe_gpu_memcpy(top[2]->count() * sizeof(Dtype), loss_data,
+      top[2]->mutable_gpu_data());
   }
 
-	// Fix a bug, which happens when propagate_down[0] = false in backward
-	caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
+  // Fix a bug, which happens when propagate_down[0] = false in backward
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>
@@ -95,9 +96,9 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
 }
 
 template <typename Dtype>
-void SoftmaxWithLossOHEMLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-
+void SoftmaxWithLossOHEMLayer<Dtype>::Backward_gpu(
+  const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+  const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";

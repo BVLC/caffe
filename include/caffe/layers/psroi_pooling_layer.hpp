@@ -33,7 +33,7 @@ namespace caffe {
 
 template <typename Dtype>
 class PSROIPoolingLayer : public Layer<Dtype> {
-public:
+ public:
   explicit PSROIPoolingLayer(const LayerParameter& param)
     : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -48,7 +48,7 @@ public:
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 1; }
 
-protected:
+ protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,

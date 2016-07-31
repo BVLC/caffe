@@ -19,7 +19,7 @@ namespace caffe {
  */
   template <typename Dtype>
   class BoxAnnotatorOHEMLayer :public Layer<Dtype>{
-  public:
+   public:
     explicit BoxAnnotatorOHEMLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -32,7 +32,7 @@ namespace caffe {
     virtual inline int ExactNumBottomBlobs() const { return 4; }
     virtual inline int ExactNumTopBlobs() const { return 2; }
 
-  protected:
+   protected:
     virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
     virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -54,4 +54,4 @@ namespace caffe {
 
 }  // namespace caffe
 
-#endif  //CAFFE_BOX_ANNOTATOR_OHEM_LAYER_HPP_
+#endif  // CAFFE_BOX_ANNOTATOR_OHEM_LAYER_HPP_

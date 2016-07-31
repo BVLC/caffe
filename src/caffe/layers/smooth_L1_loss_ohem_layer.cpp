@@ -3,6 +3,7 @@
 // Written by Yi Li, 2016.
 // --------------------------------------------------------
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,8 +23,7 @@ void SmoothL1LossOHEMLayer<Dtype>::LayerSetUp(
     normalization_ = this->layer_param_.loss_param().normalize() ?
     LossParameter_NormalizationMode_VALID :
     LossParameter_NormalizationMode_BATCH_SIZE;
-  }
-  else {
+  } else {
     normalization_ = this->layer_param_.loss_param().normalization();
   }
 }
@@ -50,14 +50,16 @@ void SmoothL1LossOHEMLayer<Dtype>::Reshape(
       bottom[0]->height(), bottom[0]->width());
 
   // top[2] stores per-instance loss, which takes the shape of N*1*H*W
-  if (top.size()>=2) {
-    top[1]->Reshape(bottom[0]->num(), 1, bottom[0]->height(), bottom[0]->width());
+  if (top.size() >= 2) {
+    top[1]->Reshape(
+      bottom[0]->num(), 1, bottom[0]->height(), bottom[0]->width());
   }
 }
 
 template <typename Dtype>
 Dtype SmoothL1LossOHEMLayer<Dtype>::get_normalizer(
-  LossParameter_NormalizationMode normalization_mode, Dtype pre_fixed_normalizer) {
+  LossParameter_NormalizationMode normalization_mode,
+  Dtype pre_fixed_normalizer) {
   Dtype normalizer;
   switch (normalization_mode) {
   case LossParameter_NormalizationMode_FULL:
@@ -85,14 +87,15 @@ Dtype SmoothL1LossOHEMLayer<Dtype>::get_normalizer(
 }
 
 template <typename Dtype>
-void SmoothL1LossOHEMLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+void SmoothL1LossOHEMLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
-void SmoothL1LossOHEMLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+void SmoothL1LossOHEMLayer<Dtype>::Backward_cpu(
+  const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+  const vector<Blob<Dtype>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 
