@@ -1960,6 +1960,123 @@ TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlappedMultiClass) {
   EXPECT_EQ(overlapped_cpu_data[14], 1);
   EXPECT_EQ(overlapped_cpu_data[15], 0);
 }
+
+TYPED_TEST(GPUBBoxUtilTest, TestSoftMaxGPU) {
+  const int num = 2;
+  const int num_preds = 2;
+  const int num_classes = 2;
+  Blob<TypeParam> data_blob(num, num_preds * num_classes, 1, 1);
+  Blob<TypeParam> prob_blob(num, num_preds * num_classes, 1, 1);
+  TypeParam* cpu_data = data_blob.mutable_cpu_data();
+  cpu_data[0] = 0.1;
+  cpu_data[1] = 0.9;
+  cpu_data[2] = 0.9;
+  cpu_data[3] = 0.1;
+  cpu_data[4] = 0.3;
+  cpu_data[5] = 0.7;
+  cpu_data[6] = 0.7;
+  cpu_data[7] = 0.3;
+
+  const TypeParam* gpu_data = data_blob.gpu_data();
+  TypeParam* gpu_prob = prob_blob.mutable_gpu_data();
+  SoftMaxGPU(gpu_data, num * num_preds, num_classes, 1, gpu_prob);
+
+  const TypeParam* cpu_prob = prob_blob.cpu_data();
+  EXPECT_NEAR(cpu_prob[0], exp(-0.8) / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[1], 1 / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[2], 1 / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[3], exp(-0.8) / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[4], exp(-0.4) / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[5], 1 / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[6], 1 / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[7], exp(-0.4) / (exp(-0.4) + 1), eps);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestComputeConfLossMatchGPU) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<TypeParam> conf_blob(num, dim, 1, 1);
+  TypeParam* conf_data = conf_blob.mutable_cpu_data();
+  vector<map<int, vector<int> > > all_match_indices;
+  map<int, vector<NormalizedBBox> > all_gt_bboxes;
+  for (int i = 0; i < num; ++i) {
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = sign * idx * 0.1;
+      }
+    }
+    map<int, vector<int> > match_indices;
+    vector<int> indices(num_preds_per_class, -1);
+    match_indices[-1] = indices;
+    if (i == 1) {
+      NormalizedBBox gt_bbox;
+      gt_bbox.set_label(1);
+      all_gt_bboxes[i].push_back(gt_bbox);
+      // The first prior in second image is matched to a gt bbox of label 1.
+      match_indices[-1][0] = 0;
+    }
+    all_match_indices.push_back(match_indices);
+  }
+
+  vector<vector<float> > all_conf_loss;
+  ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      -1, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
+
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      0, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
+
+  loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      0, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      if (sign == 1) {
+        if (j == 0) {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+        } else {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
+        }
+      } else {
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+      }
+    }
+  }
+}
 #endif //USE_CUDA
 #endif
 

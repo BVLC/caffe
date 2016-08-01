@@ -808,7 +808,7 @@ inline bool IsEligibleMining(const MiningType mining_type, const int match_idx,
 }
 
 template <typename Dtype>
-void MineHardExamples(const Dtype* conf_data,
+void MineHardExamples(const Blob<Dtype>& conf_blob,
     const vector<LabelBBox>& all_loc_preds,
     const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
     const vector<NormalizedBBox>& prior_bboxes,
@@ -853,9 +853,15 @@ void MineHardExamples(const Dtype* conf_data,
   const int sample_size = multibox_loss_param.sample_size();
   // Compute confidence losses based on matching results.
   vector<vector<float> > all_conf_loss;
-  ComputeConfLoss(conf_data, num, num_priors, num_classes,
-                  background_label_id, conf_loss_type,
-                  *all_match_indices, all_gt_bboxes, &all_conf_loss);
+#ifdef CPU_ONLY
+  ComputeConfLoss(conf_blob.cpu_data(), num, num_priors, num_classes,
+      background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
+      &all_conf_loss);
+#else
+  ComputeConfLossGPU(conf_blob, num, num_priors, num_classes,
+      background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
+      &all_conf_loss);
+#endif
   vector<vector<float> > all_loc_loss;
   if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
     // Compute localization losses based on matching results.
@@ -985,7 +991,7 @@ void MineHardExamples(const Dtype* conf_data,
 }
 
 // Explicite initialization.
-template void MineHardExamples(const float* conf_data,
+template void MineHardExamples(const Blob<float>& conf_blob,
     const vector<LabelBBox>& all_loc_preds,
     const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
     const vector<NormalizedBBox>& prior_bboxes,
@@ -995,7 +1001,7 @@ template void MineHardExamples(const float* conf_data,
     int* num_matches, int* num_negs,
     vector<map<int, vector<int> > >* all_match_indices,
     vector<vector<int> >* all_neg_indices);
-template void MineHardExamples(const double* conf_data,
+template void MineHardExamples(const Blob<double>& conf_blob,
     const vector<LabelBBox>& all_loc_preds,
     const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
     const vector<NormalizedBBox>& prior_bboxes,

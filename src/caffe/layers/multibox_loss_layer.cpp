@@ -174,7 +174,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   num_matches_ = 0;
   int num_negs = 0;
   // Sample hard negative (and positive) examples based on mining type.
-  MineHardExamples(conf_data, all_loc_preds, all_gt_bboxes, prior_bboxes,
+  MineHardExamples(*bottom[1], all_loc_preds, all_gt_bboxes, prior_bboxes,
                    prior_variances, all_match_overlaps, multibox_loss_param_,
                    &num_matches_, &num_negs, &all_match_indices_,
                    &all_neg_indices_);

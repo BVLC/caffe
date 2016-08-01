@@ -370,7 +370,7 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
                     const int num);
 
 // Mine the hard examples from the batch.
-//    conf_data: stores the confidence prediction.
+//    conf_blob: stores the confidence prediction.
 //    all_loc_preds: stores the location prediction, where each item contains
 //      location prediction for an image.
 //    all_gt_bboxes: stores ground truth bboxes for the batch.
@@ -381,7 +381,7 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
 //    all_match_indices: stores mapping between predictions and ground truth.
 //    all_loc_loss: stores the confidence loss per location for each image.
 template <typename Dtype>
-void MineHardExamples(const Dtype* conf_data,
+void MineHardExamples(const Blob<Dtype>& conf_blob,
     const vector<LabelBBox>& all_loc_preds,
     const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
     const vector<NormalizedBBox>& prior_bboxes,
@@ -644,6 +644,10 @@ template <typename Dtype>
 void PermuteDataGPU(const int nthreads,
           const Dtype* data, const int num_classes, const int num_data,
           const int num_dim, Dtype* new_data);
+
+template <typename Dtype>
+void SoftMaxGPU(const Dtype* data, const int outer_num, const int channels,
+    const int inner_num, Dtype* prob);
 
 template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,
