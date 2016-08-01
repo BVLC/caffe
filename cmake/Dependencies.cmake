@@ -10,6 +10,20 @@ list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
+# ---[ ZeroMQ
+find_package(ZeroMQ REQUIRED)
+include_directories(SYSTEM ${ZeroMQ_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS ${ZeroMQ_LIBRARIES})
+# ---[ OpenMP
+if(USE_OPENMP)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  else()
+    set(USE_OPENMP "OFF")   # compiler is not supporting OpenMP then do not use it
+  endif()
+endif()
+
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
@@ -97,11 +111,35 @@ if(NOT APPLE)
     include_directories(SYSTEM ${MKL_INCLUDE_DIR})
     list(APPEND Caffe_LINKER_LIBS ${MKL_LIBRARIES})
     add_definitions(-DUSE_MKL)
+    # If MKL and OpenMP is to be used then use Intel OpenMP
+    if(OPENMP_FOUND)    
+      list(APPEND Caffe_LINKER_LIBS iomp5)
+    endif()
   endif()
 elseif(APPLE)
   find_package(vecLib REQUIRED)
   include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
+endif()
+
+# ---[ MKL2017
+if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
+  if(EXISTS ${MKL_INCLUDE_DIR}/mkl_dnn.h)
+    message(STATUS "Found MKL2017")
+    set(MKL2017_SUPPORTED ON)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMKL2017_SUPPORTED")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MKL2017_NEW_API")
+    if(USE_MKL2017_AS_DEFAULT_ENGINE)
+      message(STATUS "MKL2017 engine will be used as a default engine")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MKL2017_AS_DEFAULT_ENGINE")
+    endif()
+  else()
+    message(STATUS "MKL2017 not found")
+    set(MKL2017_SUPPORTED OFF)
+    if(USE_MKL2017_AS_DEFAULT_ENGINE)
+      message(WARNING "Flag USE_MKL2017_AS_DEFAULT_ENGINE was set, but MKL2017 not found")
+    endif()
+  endif()
 endif()
 
 # ---[ Python
