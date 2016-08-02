@@ -133,9 +133,9 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   int nthr = omp_get_max_threads();
   int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
+    (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
     (N >= threshold) &&
     (omp_in_parallel() == 0) &&
-    (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
     (Caffe::mode() != Caffe::GPU);
 
   if (run_parallel) {
