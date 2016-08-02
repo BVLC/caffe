@@ -189,7 +189,7 @@ void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (is_top_diff_prv == false) {
           bottom_diff = bottom[i]->mutable_cpu_diff();
         } else {
-          if(!bwd_bottom_diff[i]->layout_int) {
+          if (!bwd_bottom_diff[i]->layout_int) {
             bwd_bottom_diff[i]->create_internal_layout(sumPrimitive,
               (dnnResourceType_t)(dnnResourceMultipleSrc + i));
           }

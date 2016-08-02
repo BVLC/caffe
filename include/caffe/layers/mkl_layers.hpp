@@ -64,6 +64,10 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwdb_top_diff, bwdb_bias_diff;
   dnnPrimitive_t convolutionBwdBias;
 
+  /* In case of (iter_size > 1) we need additional buffers */
+  shared_ptr<MKLDiff<Dtype> > bwdf_filter_diff_iter,
+                              bwdb_bias_diff_iter;
+
   // TODO: temp. compatibility vs. older cafe
   size_t width_,
          height_,
