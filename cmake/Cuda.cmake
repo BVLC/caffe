@@ -175,7 +175,7 @@ function(detect_cuDNN)
             DOC "Path to cuDNN include directory." )
 
   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
-  find_library(CUDNN_LIBRARY NAMES libcudnn.so # libcudnn_static.a
+  find_library(CUDNN_LIBRARY NAMES cudnn
                              PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist}
                              DOC "Path to cuDNN library.")
 
