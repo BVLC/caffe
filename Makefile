@@ -480,7 +480,7 @@ else
 	PKG_CONFIG :=
 endif
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) $(PKG_CONFIG) \
-		$(foreach library,$(LIBRARIES),-l$(library))
+		$(foreach library,$(LIBRARIES),-l$(library)) -Wl,--as-needed
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 # 'superclean' target recursively* deletes all files ending with an extension
@@ -523,7 +523,7 @@ ifeq ($(USE_OPENMP), 1)
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
   endef
   ifeq ($(BLAS), mkl)
-    OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)
+    OPENMP_VERIFYING_COMPILE_FLAGS = -Wl,--as-needed -liomp5 -L$(INTEL_OMP_DIR)
   endif
   OPENMP_VERIFYING_COMPILE_COMMAND = $(CXX) -fopenmp $(DUMMY_OPENMP_FILE) $(OPENMP_VERIFYING_COMPILE_FLAGS) -o $(DUMMY_OPENMP_BINARY) 2>/dev/null
   OPENMP_VERIFYING_COMMAND = printf $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
