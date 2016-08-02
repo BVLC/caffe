@@ -48,8 +48,11 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (size_t i = 0; i < num_bottoms; ++i) {
       fwd_bottom_data.push_back(
         shared_ptr<MKLData<Dtype> >(new MKLData<Dtype>));
+      bwd_bottom_diff.push_back(
+        shared_ptr<MKLDiff<Dtype> >(new MKLDiff<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
       fwd_bottom_data[i]->create_user_layout(dim_src, sizes_src, strides_src);
+      bwd_bottom_diff[i]->create_user_layout(dim_src, sizes_src, strides_src);
   }
 
   fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src);
@@ -91,11 +94,11 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
       dnnLayout_t int_layout = NULL;
       for (size_t i = 0; i < num_bottoms; ++i) {
         if (bottom[i]->prv_data() != NULL) {
-          CHECK((bottom[i]->get_prv_descriptor_data())->get_descr_type()
+          CHECK((bottom[i]->get_prv_data_descriptor())->get_descr_type()
             == PrvMemDescr::PRV_DESCR_MKL2017);
           shared_ptr<MKLData<Dtype> > mem_descr =
               boost::static_pointer_cast<MKLData<Dtype> >(
-                bottom[i]->get_prv_descriptor_data());
+                bottom[i]->get_prv_data_descriptor());
           CHECK(mem_descr != NULL);
           fwd_bottom_data[i] = mem_descr;
           if (int_layout == NULL) {
@@ -137,10 +140,10 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
       }
     }
 
-    if (fwd_top_data->convert_from_int) {
-      top[0]->set_prv_data(fwd_top_data->prv_ptr(), fwd_top_data, false);
+    if (fwd_top_data->conversion_needed()) {
+      top[0]->set_prv_data_descriptor(fwd_top_data);
       eltwise_res[dnnResourceDst] =
-        reinterpret_cast<void*>(const_cast<Dtype*>(fwd_top_data->prv_ptr()));
+        reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_prv_data()));
     } else {
       eltwise_res[dnnResourceDst] =
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
@@ -186,8 +189,14 @@ void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (is_top_diff_prv == false) {
           bottom_diff = bottom[i]->mutable_cpu_diff();
         } else {
+          if(!bwd_bottom_diff[i]->layout_int) {
+            bwd_bottom_diff[i]->create_internal_layout(sumPrimitive,
+              (dnnResourceType_t)(dnnResourceMultipleSrc + i));
+          }
+          CHECK_EQ(true, bwd_bottom_diff[i]->layout_compare(
+                  top[0]->get_prv_diff_descriptor()));
+          bottom[i]->set_prv_diff_descriptor(bwd_bottom_diff[i]);
           bottom_diff = bottom[i]->mutable_prv_diff();
-          bottom[i]->set_prv_descriptor_diff(top[0]->get_prv_descriptor_diff());
         }
         caffe_copy(count, top_diff, bottom_diff);
         break;
