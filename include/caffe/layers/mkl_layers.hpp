@@ -418,6 +418,7 @@ class MKLEltwiseLayer : public Layer<Dtype> {
  private:
   shared_ptr<MKLData<Dtype> > fwd_top_data;
   vector<shared_ptr<MKLData<Dtype> > > fwd_bottom_data;
+  vector<shared_ptr<MKLDiff<Dtype> > > bwd_bottom_diff;
 
   dnnPrimitive_t sumPrimitive;
   dnnPrimitive_t convertPrimitive;

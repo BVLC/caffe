@@ -82,11 +82,11 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       dnnLayout_t int_layout = NULL;
       for (size_t i = 0; i < num_tops; ++i) {
         if (top[i]->prv_diff() != NULL) {
-          CHECK((top[i]->get_prv_descriptor_diff())->get_descr_type() ==
+          CHECK((top[i]->get_prv_diff_descriptor())->get_descr_type() ==
             PrvMemDescr::PRV_DESCR_MKL2017);
           shared_ptr<MKLDiff<Dtype> > mem_descr =
             boost::static_pointer_cast<MKLDiff<Dtype> >(
-                top[i]->get_prv_descriptor_diff());
+                top[i]->get_prv_diff_descriptor());
           CHECK(mem_descr != NULL);
           bwd_top_diff[i] = mem_descr;
           if (int_layout == NULL) {
@@ -126,11 +126,10 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 
-  if (bwd_bottom_diff->convert_from_int) {
-    bottom[0]->set_prv_diff(bwd_bottom_diff->prv_ptr(),
-        bwd_bottom_diff, false);
+  if (bwd_bottom_diff->conversion_needed()) {
+    bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff);
     sum_res[dnnResourceDst] =
-        reinterpret_cast<void*>(bwd_bottom_diff->prv_ptr());
+        reinterpret_cast<void*>(bottom[0]->mutable_prv_diff());
   } else {
     sum_res[dnnResourceDst] =
         reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());

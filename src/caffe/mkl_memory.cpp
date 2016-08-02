@@ -2,7 +2,7 @@
 #include "caffe/mkl_memory.hpp"
 
 // Uncomment to see where the layout conversions are done
-// #undef DLOG
+//#undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
@@ -89,9 +89,7 @@ void MKLMemoryDescriptorBase<Dtype>::create_layouts(
 }
 
 template <typename Dtype>
-void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* prv_ptr,
-        void* cpu_ptr) {
-  CHECK(prv_ptr);
+void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr) {
   CHECK(cpu_ptr);
   CHECK(this->convert_from_int);
   int status;
@@ -99,26 +97,24 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* prv_ptr,
 
   DLOG(INFO) << "convert priv =>           "  << this->name << " =>";
 
-  convert_resources[dnnResourceFrom] = prv_ptr;
+  convert_resources[dnnResourceFrom] = this->prv_ptr();
   convert_resources[dnnResourceTo]   = cpu_ptr;
   status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
   CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
 }
 
 template <typename Dtype>
-void MKLMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr,
-        void* prv_ptr) {
-  CHECK(prv_ptr);
+void MKLMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr) {
   CHECK(cpu_ptr);
   CHECK(this->convert_to_int);
   int status;
   void *convert_resources[dnnResourceNumber];
 
   DLOG(INFO) << "convert      => priv                                => "
-             << this->name << " =>";
+             << this->name;
 
   convert_resources[dnnResourceFrom] = cpu_ptr;
-  convert_resources[dnnResourceTo]   = prv_ptr;
+  convert_resources[dnnResourceTo]   = this->prv_ptr();
   status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
   CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
 }
@@ -143,9 +139,7 @@ bool MKLMemoryDescriptorBase<Dtype>::layout_compare(
 
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
-  shared_ptr<PrvMemDescr> other, void* from, void* to) {
-  // TODO: cache this primitive
-
+  shared_ptr<PrvMemDescr> other) {
   shared_ptr<MKLMemoryDescriptorBase<Dtype> > other_descr =
       boost::static_pointer_cast<MKLMemoryDescriptorBase<Dtype> >
             (other);
@@ -155,12 +149,13 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
 
   int status;
   dnnPrimitive_t convert;
+  // TODO: cache this primitive?
   status = dnnConversionCreate<Dtype>(&convert,
     other_descr->layout_int, this->layout_int);
 
   void *convert_resources[dnnResourceNumber];
-  convert_resources[dnnResourceFrom] = from;
-  convert_resources[dnnResourceTo]   = to;
+  convert_resources[dnnResourceFrom] = other_descr->prv_ptr();
+  convert_resources[dnnResourceTo]   = this->prv_ptr();
   status = dnnExecute<Dtype>(convert, convert_resources);
   CHECK_EQ(status, 0) << "Conversion from other failed with status "
                       << status;
@@ -206,17 +201,17 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
       if (set_prv_ptr) {
         if (is_diff)
-          blob->set_prv_diff(this->internal_ptr, this->get_shared_ptr(), true);
+          blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
         else
-          blob->set_prv_data(this->internal_ptr, this->get_shared_ptr(), true);
+          blob->set_prv_data_descriptor(this->get_shared_ptr(), true);
       }
       return this->internal_ptr;
     } else {
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
       shared_ptr<PrvMemDescr> prv_mem_descriptor =
-          is_diff ? (blob->get_prv_descriptor_diff()) :
-            (blob->get_prv_descriptor_data());
+          is_diff ? (blob->get_prv_diff_descriptor()) :
+            (blob->get_prv_data_descriptor());
 
       CHECK_EQ(prv_mem_descriptor->get_descr_type(),
               PrvMemDescr::PRV_DESCR_MKL2017);
@@ -283,9 +278,9 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
         if (set_prv_ptr) {
           if (is_diff)
-            blob->set_prv_diff(this->internal_ptr, this->get_shared_ptr(), true);
+            blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
           else
-            blob->set_prv_data(this->internal_ptr, this->get_shared_ptr(), true);
+            blob->set_prv_data_descriptor(this->get_shared_ptr(), true);
         }
         return this->internal_ptr;
       } else if (current_descr.get() != this) {
