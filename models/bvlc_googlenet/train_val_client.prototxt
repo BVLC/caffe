@@ -15,8 +15,30 @@ layer {
     mean_value: 123
   }
   image_data_param {
-    source: "data/ilsvrc12/train_shuffled.txt"
+    source: "data/ilsvrc12/train.txt"
     batch_size: 512
+    shuffle: true
+  }
+}
+layer {
+  name: "data"
+  type: "ImageData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    crop_size: 224
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+  }
+  image_data_param {
+    source: "data/ilsvrc12/val.txt"
+    batch_size: 50
+    new_width: 256
+    new_height: 256
   }
 }
 layer {
