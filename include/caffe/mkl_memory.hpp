@@ -16,12 +16,11 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
     boost::enable_shared_from_this<MKLMemoryDescriptorBase<Dtype> > {
   MKLMemoryDescriptorBase() : layout_usr(NULL), layout_int(NULL),
           convert_to_int(NULL), convert_from_int(NULL), convert_prv2prv(NULL),
-          name("UNKNOWN"), internal_ptr(NULL), aux_cpu_ptr_(NULL) {}
+          name("UNKNOWN"), internal_ptr(NULL) {}
   ~MKLMemoryDescriptorBase() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
     dnnReleaseBuffer<Dtype>(internal_ptr);
-    dnnReleaseBuffer<Dtype>(aux_cpu_ptr_);
     dnnDelete<Dtype>(convert_to_int);
     dnnDelete<Dtype>(convert_from_int);
     dnnDelete<Dtype>(convert_prv2prv);
@@ -55,18 +54,6 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
         allocate();
     return internal_ptr;
   }
-
-  void* aux_cpu_ptr() {
-    if (aux_cpu_ptr_ == NULL) {
-      int status = dnnAllocateBuffer<Dtype>(
-          reinterpret_cast<void **>(&aux_cpu_ptr_), layout_usr);
-      CHECK_EQ(status, E_SUCCESS)
-        << "Failed aux_cpu_ptr_ memory allocation with status "
-        << status << "\n";
-    }
-    return aux_cpu_ptr_;
-  }
-
   inline bool conversion_needed() { return (convert_to_int != NULL);}
   void create_conversions();
   void create_internal_layout(const dnnPrimitive_t primitive,
@@ -90,7 +77,6 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
  protected:
   Dtype* internal_ptr;
-  Dtype* aux_cpu_ptr_;
 };
 
 template <typename Dtype, bool is_diff>

@@ -502,27 +502,20 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       res_convolutionBwdFilter[dnnResourceDiffFilter] =
               reinterpret_cast<void *>(bwdf2fwd_filter_diff->prv_ptr());
     } else {
-      if (bwdf_filter_diff->conversion_needed()) {
-        if (Caffe::iter_size() > 1) {
-          // if (iter_size > 1) then diffs are accumulated across iterations
-          res_convolutionBwdFilter[dnnResourceDiffFilter] =
-                bwdf_filter_diff_iter->prv_ptr();
-        } else {
+      if (Caffe::iter_size() > 1) {
+        // if (iter_size > 1) then diffs are accumulated across iterations
+        res_convolutionBwdFilter[dnnResourceDiffFilter] =
+              bwdf_filter_diff_iter->prv_ptr();
+      } else {
+        if (bwdf_filter_diff->conversion_needed()) {
           res_convolutionBwdFilter[dnnResourceDiffFilter] =
                 this->blobs_[0]->mutable_prv_diff();
-        }
-      } else {
-        if (Caffe::iter_size() > 1) {
-          // if (iter_size > 1) then diffs are accumulated across iterations
-          res_convolutionBwdFilter[dnnResourceDiffFilter] =
-                bwdf_filter_diff_iter->aux_cpu_ptr();
         } else {
-          res_convolutionBwdFilter[dnnResourceDiffFilter] =
-                this->blobs_[0]->mutable_cpu_diff();
+        res_convolutionBwdFilter[dnnResourceDiffFilter] =
+              this->blobs_[0]->mutable_cpu_diff();
         }
       }
     }
-
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
 
@@ -530,28 +523,29 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       // Different layouts in fwd filters vs bwd diffs
       void *convert_resources[dnnResourceNumber];
       convert_resources[dnnResourceFrom] = bwdf2fwd_filter_diff->prv_ptr();
-      if (bwdf_filter_diff->conversion_needed()) {
-        if (Caffe::iter_size() > 1) {
-          // if (iter_size > 1) then diffs are accumulated across iterations
-          convert_resources[dnnResourceTo] =
-                bwdf_filter_diff_iter->prv_ptr();
-        } else {
+
+      if (Caffe::iter_size() > 1) {
+        // if (iter_size > 1) then diffs are accumulated across iterations
+        convert_resources[dnnResourceTo] =
+              bwdf_filter_diff_iter->prv_ptr();
+        if (bwdf_filter_diff->conversion_needed())
+          DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
+                     << " => " << bwdf_filter_diff->name;
+        else
+          DLOG(INFO) << "convert priv =>       " << bwdf2fwd_filter_diff->name
+                     << " =>";
+      } else {
+        if (bwdf_filter_diff->conversion_needed()) {
           convert_resources[dnnResourceTo] =
                 this->blobs_[0]->mutable_prv_diff();
-        }
-        DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
-           << " => " << bwdf_filter_diff->name;
-      } else {
-        if (Caffe::iter_size() > 1) {
-          // if (iter_size > 1) then diffs are accumulated across iterations
-          convert_resources[dnnResourceTo] =
-                bwdf_filter_diff_iter->aux_cpu_ptr();
+          DLOG(INFO) << "convert priv => priv  " << bwdf2fwd_filter_diff->name
+                     << " => " << bwdf_filter_diff->name;
         } else {
           convert_resources[dnnResourceTo] =
                 this->blobs_[0]->mutable_cpu_diff();
+          DLOG(INFO) << "convert priv =>       " << bwdf2fwd_filter_diff->name
+                     << " =>";
         }
-        DLOG(INFO) << "convert priv =>       " << bwdf2fwd_filter_diff->name
-           << " =>";
       }
 
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
@@ -567,7 +561,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
               this->blobs_[0]->mutable_prv_diff());
       } else {
         caffe_axpy<Dtype>((const int)this->blobs_[0]->count(), 1,
-              reinterpret_cast<Dtype*>(bwdf_filter_diff_iter->aux_cpu_ptr()),
+              reinterpret_cast<Dtype*>(bwdf_filter_diff_iter->prv_ptr()),
               this->blobs_[0]->mutable_cpu_diff());
       }
     }
@@ -578,27 +572,22 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 
     res_convolutionBwdBias[dnnResourceDiffDst] =
             bwdb_top_diff->get_converted_prv(top[0], true);
-
-    if (bwdb_bias_diff->conversion_needed()) {
-      this->blobs_[1]->set_prv_diff_descriptor(bwdb_bias_diff);
-      if (Caffe::iter_size() > 1) {
-        // if (iter_size > 1) then diffs are accumulated across iterations
-        res_convolutionBwdBias[dnnResourceDiffBias] =
-              reinterpret_cast<void *>(bwdb_bias_diff_iter->prv_ptr());
-      } else {
-        res_convolutionBwdBias[dnnResourceDiffBias] =
-              reinterpret_cast<void *>(this->blobs_[1]->mutable_prv_diff());
-      }
+    if (Caffe::iter_size() > 1) {
+      // if (iter_size > 1) then diffs are accumulated across iterations
+      res_convolutionBwdBias[dnnResourceDiffBias] =
+            bwdb_bias_diff_iter->prv_ptr();
     } else {
-      if (Caffe::iter_size() > 1) {
-        // if (iter_size > 1) then diffs are accumulated across iterations
-        res_convolutionBwdBias[dnnResourceDiffBias] =
-              bwdb_bias_diff_iter->aux_cpu_ptr();
+      if (bwdb_bias_diff->conversion_needed()) {
+        this->blobs_[1]->set_prv_diff_descriptor(bwdb_bias_diff);
+          res_convolutionBwdBias[dnnResourceDiffBias] =
+              reinterpret_cast<void *>(this->blobs_[1]->mutable_prv_diff());
+
       } else {
         res_convolutionBwdBias[dnnResourceDiffBias] =
-              reinterpret_cast<void *>(this->blobs_[1]->mutable_cpu_diff());
+            reinterpret_cast<void *>(this->blobs_[1]->mutable_cpu_diff());
       }
     }
+
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
 
@@ -610,7 +599,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
               this->blobs_[1]->mutable_prv_diff());
       } else {
         caffe_axpy<Dtype>((const int)this->blobs_[1]->count(), 1,
-              reinterpret_cast<Dtype*>(bwdb_bias_diff_iter->aux_cpu_ptr()),
+              reinterpret_cast<Dtype*>(bwdb_bias_diff_iter->prv_ptr()),
               this->blobs_[1]->mutable_cpu_diff());
       }
     }
