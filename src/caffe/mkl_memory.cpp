@@ -2,7 +2,7 @@
 #include "caffe/mkl_memory.hpp"
 
 // Uncomment to see where the layout conversions are done
-//#undef DLOG
+// #undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
