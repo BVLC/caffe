@@ -8,7 +8,12 @@ MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_contained_BU1
 if [ $MKLROOT ]; then
 	VERSION_LINE=`grep __INTEL_MKL_BUILD_DATE $MKLROOT/include/mkl_version.h | sed -e 's/.* //'`
 fi
-LOCALMKL=`find $DST -name libmklml_gnu.so`
+# there are diffrent MKL lib to be used for GCC and for ICC
+if [ $1 -eq 1 ]; then
+LOCALMKL=`find $DST -name libmklml_intel.so`   # name of MKL SDL lib 
+else
+LOCALMKL=`find $DST -name libmklml_gnu.so`   # name of MKL SDL lib 
+fi
 
 
 # Check if MKL_ROOT is set if positive then set one will be used..
@@ -19,11 +24,6 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160514 ]; then
     wget --no-check-certificate -P $DST $MKLURL
     # TODO: make it pretty, hash progress print what it does actually eg. downloading unpacking
     tar -xzf $DST/mklml_lnx*.tgz -C $DST
-  fi
-  if [ $1 -eq 1 ]; then
-	LOCALMKL=`find $DST -name libmklml_intel.so`   # name of MKL SDL lib 
-  else
-	LOCALMKL=`find $DST -name libmklml_gnu.so`   # name of MKL SDL lib 
   fi
 
   # set MKL env vars are to be done via generated script
@@ -37,12 +37,12 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160514 ]; then
   echo "export CPATH=\${CPATH}:${MKLROOT}/include/" >> $SET_ENV_SCRIPT
   chmod 755 $SET_ENV_SCRIPT
   
-  OMP=1
 fi
 
 # Check what MKL lib we have in MKLROOT
 if [ -z `find $MKLROOT -name libmkl_rt.so -print -quit` ]; then
   LIBRARIES=`basename $LOCALMKL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`
+  OMP=1
 else
   LIBRARIES="mkl_rt"
 fi 
