@@ -3,6 +3,7 @@
 #include "caffe/caffe.hpp"
 #include "ristretto/quantization.hpp"
 
+
 using caffe::Caffe;
 using caffe::Net;
 using caffe::string;
