@@ -1,6 +1,10 @@
 #ifndef CAFFE_LAYERS_HALIDE_HPP_
 #define CAFFE_LAYERS_HALIDE_HPP_
 
+#include <dlfcn.h>
+#include <utility>
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/layers/halide_layer.hpp"
 #include "caffe/util/halide.hpp"
@@ -28,19 +32,16 @@ typedef HalideExtern* create_t();
 typedef void destroy_t(HalideExtern*);
 */
 
-
-//typedef void (*func_t)(buffer_t *bottom_buf_, buffer_t *top_buff_);
-
-
 template <typename Dtype>
 class HalideLayer : public Layer<Dtype> {
  public:
   explicit HalideLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-        h_Forward_cpu(NULL),
-        h_Backward_cpu(NULL),
-        h_Forward_gpu(NULL),
-        h_Backward_gpu(NULL)
+        param_(param.halide_param()),
+        hv_Forward_cpu(NULL),
+        hv_Backward_cpu(NULL),
+        hv_Forward_gpu(NULL),
+        hv_Backward_gpu(NULL)
       /*,
         create_ext(NULL),
         destroy_ext(NULL),
@@ -67,6 +68,10 @@ class HalideLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  HalideParameter param_;
+
+  std::vector< std::pair<int, int> > caffe_from_halide_;
+
  private:
   // Creator and destructors of external instance
   /*
@@ -75,25 +80,19 @@ class HalideLayer : public Layer<Dtype> {
   HalideExtern* inst_ext;
   */
 
-  //void (*extern_Forward_gpu)(buffer_t *bottom_buf_, buffer_t *top_buff_);
+  typedef void (*hvfunc_t)(void* argv);
 
-  typedef void (*hfunc_t)(buffer_t *bottom_buf_, buffer_t *top_buff_);
-  hfunc_t h_Forward_cpu;
-  hfunc_t h_Backward_cpu;
-  hfunc_t h_Forward_gpu;
-  hfunc_t h_Backward_gpu;
-
+  hvfunc_t hv_Forward_cpu;
+  hvfunc_t hv_Backward_cpu;
+  hvfunc_t hv_Forward_gpu;
+  hvfunc_t hv_Backward_gpu;
 
   buffer_t bottom_buf_;
   buffer_t bottom_diff_buf_;
-  buffer_t p_buf_;
-  buffer_t p_diff_buf_;
   buffer_t top_buf_;
   buffer_t top_diff_buf_;
-  int stride_;
 
   void* halide_lib_handle;
-
 };
 
 }  // namespace caffe
