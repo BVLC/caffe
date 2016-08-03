@@ -133,22 +133,21 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   int nthr = omp_get_max_threads();
   int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
-    caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id()) &&
-    (Caffe::mode() != Caffe::GPU) &&
+    (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
+    (N >= threshold) &&
     (omp_in_parallel() == 0) &&
-    (N >= threshold);
+    (Caffe::mode() != Caffe::GPU);
 
   if (run_parallel) {
-    const int block = 256*1024/sizeof(Dtype), remainder = N%block;
+    const int block_mem_size = 256*1024;
+    const int block_size = block_mem_size / sizeof(Dtype);
     #pragma omp parallel for
-    for (int i = 0; i <= N-block; i += block)
-      memcpy(Y+i, X+i, sizeof(Dtype) * block);  // NOLINT(caffe/alt_fn)
-    if (remainder != 0)
-      memcpy(Y+N-remainder, X+N-remainder,  // NOLINT(caffe/alt_fn)
-          sizeof(Dtype) * remainder);
+    for (int i = 0; i < N; i += block_size)
+      memcpy(Y + i, X + i,
+              (i + block_size > N) ? (N-i)*sizeof(Dtype): block_mem_size);
+
     return;
   }
-
   #endif
 
   memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
