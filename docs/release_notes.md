@@ -38,7 +38,6 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 Before building Caffe make sure that the following dependencies are available on target system:
 
 * [BLAS library](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms)
-    * [Intel® Math Kernel Library (Intel &reg; MKL)](https://software.intel.com/en-us/intel-mkl)
     * [Open BLAS](http://www.openblas.net)
     * [ATLAS](http://math-atlas.sourceforge.net)
 * [Boost](http://www.boost.org/) >= 1.55
@@ -86,15 +85,16 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 ##Building for Intel® Architecture
 
-This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel® Architecture we recommend building Caffe with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. If you don't have Intel® MKL yet you can download it [free of charge](https://software.intel.com/en-us/articles/free_mkl). The following configuration changes are recommended:
+This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel® Architecture we recommend building Caffe with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
+This Caffe version is seflcontained. This means that newest version of Intel® MKL will be downloaded and installed during compilation of IntelCaffe.
 
 * Set `BLAS := mkl` in `Makefile.config`
 * If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
 
 [Intel® MKL 2017 Beta Update 1](https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305) introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel® MKL. There are two ways to take advantage of the new primitives: 
 
-* At Caffe build time add `USE_MKL2017_AS_DEFAULT_ENGINE := 1` to `Makefile.config` or add `-DUSE_MKL2017_AS_DEFAULT_ENGINE=ON` to your commandline when invoking `cmake`. All layers will use new primitives by default.
-* Set layer engine to `MKL2017` in model configuration. Only this specific layer will be accelerated with new primitives. 
+* As default and recommended configuration Caffe is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel® MKL primitives by default.
+* Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
 
 ## Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
@@ -181,33 +181,45 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Known issues and limitations
-* Intel® MKL2017 beta update1 engine is not recommended for old CPUs (before HSW). For old machines performance results will be better with Intel® MKL2016
+* Intel® MKL2017 beta update1 primitives are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
+Workaround: For older processors use Intel® MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`) or use Intel® MKL 11.3.3.
 
-* There is a problem with precision degradation when MPI and  Intel® MKL2017 beta update1 engine is used.
+* Itersize parameter value different from 1 in prototxt is not supported in Intel® MKL2017 beta update1 and will lead to incorrect results.
 
-* There is a problem with precision degradation when using itersize>1 parameter in prototxt file and  Intel® MKL2017 beta update1 engine is used.
+* Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
+Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
 
-* Cifar10 LRN (within channel) is not provided in Intel® MKL2017 beta update1
+* Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
+Workaround: We recommend to always use LMDB Data Layer
 
-* Low performance results for top CPU's when Data Layer is provided in txt files (our recommendation is to always use LMDB Data Layer)
+* Compressed LMDB Data Layer is not supported in Caffe 
+Workaround: Use uncompressed LMDB Data Layer (durring creation of Data Layer do not specify encode type) 
 
-* Multi node training is possible only with Intel® MKL2016 engine
+* Multi node training is not supported in Intel® MKL2017 beta update1 when used with option `USE_MKL2017_AS_DEFAULT_ENGINE := 1`
+Workaround: use Intel® MKL2017 GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config` and make sure that in prototxt file you do not have lines: `engine:=MKL2017`) or use Intel® MKL 11.3.3.
 
-* Mnist and Cifar10 training is possible with Intel® MKL2016 engine
+* LeNet (with Mnist dataset) and Cifar (with Cifar10 dataset) are not optimized in terms of performance in Intel® MKL2017 beta update1
+Workaround: better performance results might be achieved with Intel® MKL 11.3.3.
+
+* It is recommended to use newest XPPSL software for Intel® Xeon Phi™ product family: [http://registrationcenter-download.intel.com/akdlm/irc_nas/9505/oof_user_guide.pdf] (http://registrationcenter-download.intel.com/akdlm/irc_nas/9505/oof_user_guide.pdf)
 
 
 # Recomendations to achieve best performance
 * Disable Hyper-threading (HT) on your platform.
 
+* With Intel® Xeon Phi™ product family - set BIOS MCDRAM mode as `cache`
+
+* With Intel® Xeon Phi™ product family - it is recommended to use Centos 7.2 or newer
+
 * Make sure that your hardware configurations includes fast SSD (M.2) drive
 
 * Optimize hardware in bios: set CPU max frequency, set 100% fan speed, check cooling system
 
-* Change network to MKL's optimized versions. IntelCaffe includes optimized (for Intel® MKL2016 and Intel® MKL2017) versions of popular network topologies. 
+* Change topology (prototxt file) to Intel® MKL's optimized versions. Caffe includes optimized (for Intel® MKL2017) versions of popular network topologies. 
 
 * Use LMDB data layer (Data layer provided in txt files will be slower). Or to achieve maximum theoretical performance - don't use any data layer. 
 
-* Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results
+* Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results.
 
 * Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
 
@@ -244,7 +256,7 @@ or edit commands and provide other optimized topologies.
 
 ##	How to train multinode
 
-Tutorials and training instructions are available at: [https://github.com/intelcaffe/caffe/wiki/Googlenet-multinode](https://github.com/intelcaffe/caffe/wiki/Googlenet-multinode)
+Tutorials and training instructions are available at: [https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F](https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F)
 
 ##	How to contribute 
 
