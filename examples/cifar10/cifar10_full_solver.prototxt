@@ -2,8 +2,7 @@
 # then another factor of 10 after 10 more epochs (5000 iters)
 
 # The train/test net protocol buffer definition
-#net: "examples/cifar10/cifar10_full_train_test.prototxt"
-net: "examples/cifar10/cifar10_full_sigmoid_train_test.prototxt"
+net: "examples/cifar10/cifar10_full_train_test.prototxt"
 
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of CIFAR10, we have test batch size 100 and 100 test iterations,
