@@ -5,7 +5,10 @@
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
-# CPU_ONLY := 1
+CPU_ONLY := 1
+
+# Uncomment to use optimized MKL2017 primitives by default for supported layers
+USE_MKL2017_AS_DEFAULT_ENGINE := 1
 
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
@@ -43,7 +46,7 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := atlas
+BLAS := mkl
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
@@ -82,7 +85,7 @@ PYTHON_LIB := /usr/lib
 # WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
-INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
@@ -91,7 +94,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
-# USE_PKG_CONFIG := 1
+USE_PKG_CONFIG := 1
 
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute

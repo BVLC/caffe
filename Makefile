@@ -45,7 +45,7 @@ TEST_MAIN_SRC := src/$(PROJECT)/test/test_caffe_main.cpp
 TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
 TEST_SRCS := $(filter-out $(TEST_MAIN_SRC), $(TEST_SRCS))
 TEST_CU_SRCS := $(shell find src/$(PROJECT) -name "test_*.cu")
-GTEST_SRC := src/gtest/gtest-all.cpp
+GTEST_SRCS := $(shell find src/gtest src/gmock -name "*all*.cpp")
 # TOOL_SRCS are the source files for the tool binaries
 TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
@@ -114,7 +114,7 @@ TEST_CU_BUILD_DIR := $(BUILD_DIR)/cuda/src/$(PROJECT)/test
 TEST_CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o})
 TEST_CU_OBJS := $(addprefix $(BUILD_DIR)/cuda/, ${TEST_CU_SRCS:.cu=.o})
 TEST_OBJS := $(TEST_CXX_OBJS) $(TEST_CU_OBJS)
-GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
+GTEST_OBJS := $(addprefix $(BUILD_DIR)/, ${GTEST_SRCS:.cpp=.o})
 EXAMPLE_OBJS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o})
 # Output files for automatic dependency generation
 DEPS := ${CXX_OBJS:.o=.d} ${CU_OBJS:.o=.d} ${TEST_CXX_OBJS:.o=.d} \
@@ -164,6 +164,8 @@ endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += ./src/gtest/include ./src/gtest/
+INCLUDE_DIRS += ./src/gmock/include ./src/gmock/
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -191,7 +193,7 @@ ifeq ($(USE_OPENCV), 1)
 	endif
 		
 endif
-PYTHON_LIBRARIES := boost_python python2.7
+PYTHON_LIBRARIES ?= boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
 ##############################
@@ -347,14 +349,18 @@ ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
-	COMMON_FLAGS += -DMKL2017_SUPPORTED
-	COMMON_FLAGS += -DUSE_MKL2017_AS_DEFAULT_ENGINE
-	COMMON_FLAGS += -DUSE_MKL2017_NEW_API
-		
 	MKL_DIR ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
+	# detect support for mkl2017 primitives
+	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
+	    COMMON_FLAGS += -DMKL2017_SUPPORTED
+	    COMMON_FLAGS += -DUSE_MKL2017_NEW_API
+	    ifeq ($(USE_MKL2017_AS_DEFAULT_ENGINE), 1)
+		COMMON_FLAGS += -DUSE_MKL2017_AS_DEFAULT_ENGINE
+	    endif
+	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
