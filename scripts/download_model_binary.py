@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     # Closure-d function for checking SHA1.
     def model_checks_out(filename=model_filename, sha1=frontmatter['sha1']):
-        with open(filename, 'r') as f:
+        with open(filename, 'rb') as f:
             return hashlib.sha1(f.read()).hexdigest() == sha1
 
     # Check if model exists.

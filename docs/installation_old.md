@@ -95,10 +95,6 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 
-#### Windows
-
-There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
-
 ## Compilation
 
 Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.
@@ -126,7 +122,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation with CMake
+### CMake Build
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:

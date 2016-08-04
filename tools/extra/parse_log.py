@@ -16,13 +16,10 @@ from collections import OrderedDict
 
 def parse_log(path_to_log):
     """Parse log file
-    Returns (train_dict_list, train_dict_names, test_dict_list, test_dict_names)
+    Returns (train_dict_list, test_dict_list)
 
     train_dict_list and test_dict_list are lists of dicts that define the table
     rows
-
-    train_dict_names and test_dict_names are ordered tuples of the column names
-    for the two dict_lists
     """
 
     regex_iteration = re.compile('Iteration (\d+)')
@@ -148,6 +145,11 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 def write_csv(output_filename, dict_list, delimiter, verbose=False):
     """Write a CSV file
     """
+
+    if not dict_list:
+        if verbose:
+            print('Not writing %s; no lines to write' % output_filename)
+        return
 
     dialect = csv.excel
     dialect.delimiter = delimiter

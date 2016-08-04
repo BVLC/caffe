@@ -394,6 +394,26 @@ TYPED_TEST(NeuronLayerTest, TestExpGradient) {
   this->TestExpGradient(kBase, kScale, kShift);
 }
 
+TYPED_TEST(NeuronLayerTest, TestExpLayerWithShift) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e,
+  // with a non-zero shift
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradientWithShift) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e,
+  // with a non-zero shift
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestExpGradient(kBase, kScale, kShift);
+}
+
 TYPED_TEST(NeuronLayerTest, TestExpLayerBase2) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kBase = 2;

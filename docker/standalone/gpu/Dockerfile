@@ -1,4 +1,4 @@
-FROM nvidia/cuda:cudnn
+FROM nvidia/cuda:7.5-cudnn5-devel-ubuntu14.04
 MAINTAINER caffe-maint@googlegroups.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
