@@ -50,6 +50,11 @@ public:
 
         player->mutable_data_param()->set_batch_size(batch_size / NUM_SUB_SOLVERS);
       }
+
+      if (layer_type == "ImageData") {
+        int batch_size = player->image_data_param().batch_size();
+        player->mutable_image_data_param()->set_batch_size(batch_size / NUM_SUB_SOLVERS);
+      }
     }
     
     solver_param_.clear_net();
