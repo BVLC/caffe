@@ -40,7 +40,7 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   num_bottoms = bottom.size();
   size_t dim_src = bottom[0]->shape().size();
-  size_t dim_dst = dim_src;
+  // size_t dim_dst = dim_src;
 
   dnnError_t e;
 
@@ -176,12 +176,12 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const int count = top[0]->count();
-  const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* top_diff = top[0]->cpu_diff();
+  // const int count = top[0]->count();
+  // const Dtype* top_data = top[0]->cpu_data();
+  // const Dtype* top_diff = top[0]->cpu_diff();
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
-      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      // Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_SUM:
         bottom[i]->ShareData(*top[0]);
