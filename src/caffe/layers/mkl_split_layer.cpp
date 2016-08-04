@@ -17,7 +17,7 @@ void MKLSplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   num_tops = top.size();
   size_t dim_src = bottom[0]->shape().size();
-  size_t dim_dst = dim_src;
+  // size_t dim_dst = dim_src;
 
   dnnError_t e;
 

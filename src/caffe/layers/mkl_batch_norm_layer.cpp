@@ -70,7 +70,7 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     scaleshift_shape[0] = channels_;
 
     this->blobs_[0].reset(new Blob<Dtype>(scaleshift_shape));
-    Dtype* data = this->blobs_[0]->mutable_cpu_data();
+    // Dtype* data = this->blobs_[0]->mutable_cpu_data();
     FillerParameter filler_param(
       this->layer_param_.batch_norm_param().filler());
     if (!this->layer_param_.batch_norm_param().has_filler()) {
@@ -82,7 +82,7 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     if ( bias_term_ ) {
       this->blobs_[1].reset(new Blob<Dtype>(scaleshift_shape));
-      Dtype* data = this->blobs_[1]->mutable_cpu_data();
+      // Dtype* data = this->blobs_[1]->mutable_cpu_data();
       FillerParameter bias_filler_param(
         this->layer_param_.batch_norm_param().bias_filler());
       if (!this->layer_param_.batch_norm_param().has_bias_filler()) {
