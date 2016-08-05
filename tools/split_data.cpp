@@ -28,17 +28,17 @@ using std::pair;
 using boost::scoped_ptr;
 
 int main(int argc, char** argv) {
-    //::google::InitGoogleLogging(argv[0]);
+    // ::google::InitGoogleLogging(argv[0]);
     google::InstallFailureSignalHandler();
 
     if (argc != 3) {
         LOG(ERROR) << "./split_data.bin db_path split_num";
         return -1;
     }
-    
+
     int num_dbs = 0;
     sscanf(argv[2], "%d", &num_dbs);
-    
+
 
     if (num_dbs <= 0) {
         LOG(ERROR) << "invalid number of dbs: " << num_dbs;
@@ -49,34 +49,35 @@ int main(int argc, char** argv) {
 
     db->Open(argv[1], db::READ);
     scoped_ptr<db::Cursor> cursor(db->NewCursor());
-  
+
     int cnt = 0;
     #if 1
     for (; cursor->valid(); cursor->Next()) {
         cnt++;
         if (cnt % 10000 == 0) {
             LOG(INFO) << "found " << cnt << " items in data base " << argv[1];
-            //LOG(INFO) << "key: " << cursor->key();
+            // LOG(INFO) << "key: " << cursor->key();
         }
     }
     cursor->SeekToFirst();
     #endif
-    
+
     int per_db_items = cnt / num_dbs;
 
-    //num_dbs = 1;
-    //per_db_items = 50000;
+    // num_dbs = 1;
+    // per_db_items = 50000;
 
-    LOG(INFO) << "splitting the db into " << num_dbs << " each db has " << per_db_items << " items";
-    
+    LOG(INFO) << "splitting the db into " << num_dbs <<" each" \
+                 " db has " << per_db_items << " items";
+
     for (int i = 0; i < num_dbs; i++) {
         char db_name[500];
         sprintf(db_name, "%s_%d", argv[1], i);
-        
+
         scoped_ptr<db::DB> new_db(db::GetDB("lmdb"));
         new_db->Open(db_name, db::NEW);
         scoped_ptr<db::Transaction> txn(new_db->NewTransaction());
-        
+
         LOG(INFO) << "start to copy";
 
         int j = 0;
