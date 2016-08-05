@@ -34,7 +34,7 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
 
   virtual inline const char* type() const { return "MultiBoxLoss"; }
   // bottom[0] stores the location predictions.
-  // bottom[0] stores the confidence predictions.
+  // bottom[1] stores the confidence predictions.
   // bottom[2] stores the prior bounding boxes.
   // bottom[3] stores the ground truth bounding boxes.
   virtual inline int ExactNumBottomBlobs() const { return 4; }
