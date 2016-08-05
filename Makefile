@@ -309,8 +309,10 @@ ifeq ($(OSX), 1)
 	ORIGIN := @loader_path
 	VERSIONFLAGS += -Wl,-install_name,@rpath/$(DYNAMIC_VERSIONED_NAME_SHORT) -Wl,-rpath,$(ORIGIN)/../../build/lib
 else
-	CXXFLAGS += -fopenmp
-	LINKFLAGS += -fopenmp
+	ifeq (${USE_OPENMP}, 1)
+		CXXFLAGS += -fopenmp
+		LINKFLAGS += -fopenmp
+	endif
 	ORIGIN := \$$ORIGIN
 endif
 

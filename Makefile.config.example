@@ -44,6 +44,9 @@ VIENNACL_DIR = ../ViennaCL
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+# CPU OpenMP switch. Do not use OpenMP on dual socket systems!
+USE_OPENMP := 1
+
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
