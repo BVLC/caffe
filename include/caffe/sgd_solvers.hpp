@@ -15,19 +15,21 @@ namespace caffe {
 template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
-  explicit SGDSolver(const SolverParameter& param, const Solver<Dtype>* root_solver = NULL)
+  explicit SGDSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
       : Solver<Dtype>(param, root_solver) { PreSolve(); }
-  explicit SGDSolver(const string& param_file, const Solver<Dtype>* root_solver = NULL)
+  explicit SGDSolver(const string& param_file,
+      const Solver<Dtype>* root_solver = NULL)
       : Solver<Dtype>(param_file, root_solver) { PreSolve(); }
   virtual inline const char* type() const { return "SGD"; }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
-  
+
   void CommitGradient() {
     ApplyUpdate();
     ++this->iter_;
   }
-  
+
   void UpdateDiff() {
     Dtype rate = GetLearningRate();
     ClipGradients();
