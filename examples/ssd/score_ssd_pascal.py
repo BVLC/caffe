@@ -181,7 +181,7 @@ test_transform_param = {
 use_batchnorm = False
 # Use different initial learning rate.
 if use_batchnorm:
-    base_lr = 0.04
+    base_lr = 0.0004
 else:
     # A learning rate for batch_size = 1, num_gpus = 1.
     base_lr = 0.00004
@@ -310,16 +310,14 @@ if num_gpus > 0:
   solver_mode = P.Solver.GPU
   device_id = int(gpulist[0])
 
-if normalization_mode == P.Loss.BATCH_SIZE:
-  base_lr /= iter_size
-elif normalization_mode == P.Loss.NONE:
-  base_lr /= batch_size_per_device * iter_size
+if normalization_mode == P.Loss.NONE:
+  base_lr /= batch_size_per_device
 elif normalization_mode == P.Loss.VALID:
-  base_lr *= 25. / loc_weight / iter_size
+  base_lr *= 25. / loc_weight
 elif normalization_mode == P.Loss.FULL:
   # Roughly there are 2000 prior bboxes per image.
   # TODO(weiliu89): Estimate the exact # of priors.
-  base_lr *= 2000. / iter_size
+  base_lr *= 2000.
 
 # Which layers to freeze (no backward) during training.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
@@ -422,6 +420,7 @@ net[name] = L.MultiBoxLoss(*mbox_layers, multibox_loss_param=multibox_loss_param
 with open(train_net_file, 'w') as f:
     print('name: "{}_train"'.format(model_name), file=f)
     print(net.to_proto(), file=f)
+shutil.copy(train_net_file, job_dir)
 
 # Create test net.
 net = caffe.NetSpec()
@@ -464,6 +463,7 @@ net.detection_eval = L.DetectionEvaluate(net.detection_out, net.label,
 with open(test_net_file, 'w') as f:
     print('name: "{}_test"'.format(model_name), file=f)
     print(net.to_proto(), file=f)
+shutil.copy(test_net_file, job_dir)
 
 # Create deploy net.
 # Remove the first and last layer from test net.
@@ -478,6 +478,7 @@ with open(deploy_net_file, 'w') as f:
     net_param.input_shape.extend([
         caffe_pb2.BlobShape(dim=[1, 3, resize_height, resize_width])])
     print(net_param, file=f)
+shutil.copy(deploy_net_file, job_dir)
 
 # Create solver.
 solver = caffe_pb2.SolverParameter(
@@ -488,6 +489,7 @@ solver = caffe_pb2.SolverParameter(
 
 with open(solver_file, 'w') as f:
     print(solver, file=f)
+shutil.copy(solver_file, job_dir)
 
 # Create job file.
 with open(job_file, 'w') as f:
