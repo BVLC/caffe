@@ -746,29 +746,16 @@ message FlattenParameter {
 
 // Message that stores parameters used by HalideLayer
 message HalideParameter {
-  enum FunctionType {
-    Forward_CPU = 1;
-    Backward_CPU = 2;
-    Forward_GPU = 3;
-    Backward_GPU = 4;
-  }
-
   // files will be read in the following order
-  repeated string library = 1;
-  repeated string function_name = 2;
+  optional string library = 1;
 
-  // repeated function_types will overtite predecessors
-  repeated FunctionType function_type = 3;
+  // Do we want this?
+  //optional string creator = 2 [default = "create"];
 
   // This value is set to the attribute `param_str` of the `HalideLayer` instace
   // in C++ before calling the `setup()` method. This is a string. You may parse
   // this string in `setup` method and use it in `forward` and `backward`.
   optional string param_str = 4 [default = ''];
-
-  // halide input and output arguments may come in any order, but are named
-  // so these need to be specified, in case there are more than one
-  repeated string bottom_blob_names = 5;
-  repeated string top_blob_names = 6;
 }
 
 
