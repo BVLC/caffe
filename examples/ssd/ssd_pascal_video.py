@@ -221,7 +221,7 @@ if code_type == P.PriorBox.CENTER_SIZE:
 else:
   prior_variance = [0.1]
 flip = True
-clip = False
+clip = True
 
 # Check file.
 check_if_exist(label_map_file)

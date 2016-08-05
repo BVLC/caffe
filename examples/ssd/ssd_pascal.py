@@ -351,6 +351,9 @@ elif normalization_mode == P.Loss.FULL:
   # TODO(weiliu89): Estimate the exact # of priors.
   base_lr *= 2000.
 
+# Which layers to freeze (no backward) during training.
+freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
+
 # Evaluate on whole test set.
 num_test_image = 4952
 test_batch_size = 8
