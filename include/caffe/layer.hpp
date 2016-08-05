@@ -184,25 +184,6 @@ class Layer {
   }
 
   /**
-   * @brief Sets blobs
-   */
-  void SetBlobs(const vector<Blob<Dtype>*>& weights) {
-    CHECK_EQ(blobs_.size(), weights.size());
-    for (int i = 0; i < weights.size(); ++i)
-      blobs_[i].reset(weights[i]);
-  }
-
-  /**
-   * @brief Gets blobs with normal pointer
-   */
-  vector<Blob<Dtype>*> GetBlobs() {
-    vector<Blob<Dtype>*> ans;
-    for (int i = 0; i < blobs_.size(); ++i)
-      ans.push_back(blobs_[i].get());
-    return ans;
-  }
-
-  /**
    * @brief Returns the layer parameter.
    */
   const LayerParameter& layer_param() const { return layer_param_; }
