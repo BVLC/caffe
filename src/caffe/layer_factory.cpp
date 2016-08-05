@@ -80,6 +80,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    return shared_ptr<Layer<Dtype> >();
   }
 }
 
