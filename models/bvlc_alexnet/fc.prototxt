@@ -1,0 +1,14 @@
+
+# fcnode
+
+start_layer : "fc6"
+end_layers : "loss"
+num_splits : 1
+
+node_info {
+  router_port : 2003
+  pub_port : 2004
+  position : 0
+}
+
+
