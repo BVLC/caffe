@@ -94,13 +94,32 @@ void ConvThread<Dtype>::BackwardLayer(shared_ptr<Net<Dtype> > conv_net, int laye
 template <typename Dtype>
 void ConvThread<Dtype>::ConvForward()
 {
+  Caffe::set_root_solver(false);
+  #if 1
   WorkerSolver<Dtype> *pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
   if (NULL == pconv) {
     Solver<Dtype> *root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
     const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
     pconv = (WorkerSolver<Dtype> *)this->NewSolver(root_solver, solver_param);
   }
+  #endif
+  
+  #if 0
+  static WorkerSolver<Dtype> *pconv = NULL;
+  if (pconv == NULL) {
+    pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();  
+    
+    if (NULL == pconv) {
+      Solver<Dtype> *root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
+      const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
+      pconv = (WorkerSolver<Dtype> *)this->NewSolver(root_solver, solver_param);
+    }
+  }
 
+  #endif
+
+  // ParamHelper<Dtype>::PrintParam(pconv->net());
+  
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
   conv_net->ClearParamDiffs();
   conv_net->ForwardPrefilled();
@@ -144,65 +163,69 @@ WorkerSolver<Dtype> *ConvThread<Dtype>::PrepareBackwardSolver(shared_ptr<Msg> m)
 }
 
 template <typename Dtype>
-void ConvThread<Dtype>::SyncLayer(int conv_id,int layer_id)
+void ConvThread<Dtype>::SendLayer(int layer_id)
 {
   shared_ptr<Msg> m(new Msg());
   m->set_src(this->GetWorkerId());
   m->set_dst(ROOT_THREAD_ID);
   m->set_type(PUT_GRADIENT);
-  m->set_conv_id(conv_id);
-
+  
   m->AppendData(&layer_id, sizeof(layer_id));
+  
+  #if 1
+  const string& layer_name = param_solver_->net()->layer_names()[layer_id];
+  vector<string> name_vec;
+  name_vec.push_back(layer_name);
+  
+  ParamHelper<Dtype>::CopyParamDiffToMsg(param_solver_->net(), name_vec, m);
+  #endif
+  // m->AppendData(&param_solver_, sizeof(param_solver_));
 
   this->SendMsg(m);
 }
 
 template <typename Dtype>
-bool ConvThread<Dtype>::SyncedBackward(Solver<Dtype> *prev_solver, int prev_idx, shared_ptr<Msg> m)
+bool ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver, int prev_idx, shared_ptr<Msg> m)
 {
-  int conv_id = m->conv_id();
   WorkerSolver<Dtype> * pconv = PrepareBackwardSolver(m);
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
   const vector<shared_ptr<Layer<Dtype> > >& layers = conv_net->layers();
   
-  shared_ptr<Net<Dtype> > prev_net;
-  if (prev_solver != NULL) {
-    prev_net = prev_solver->net();
-  }
+  shared_ptr<Net<Dtype> > param_net;
+  param_net = param_solver_->net();
 
   // backward and sync per layer
   for (int i = layers.size() - 1; i >= prev_idx; i--) {
     conv_net->BackwardFromTo(i, i);
-    // BackwardLayer(conv_net, i);
 
-    if (prev_net != NULL) {
-      ParamHelper<Dtype>::AddDiffFromNet(conv_net, prev_net, i);
-      ParamHelper<Dtype>::ScalDiff(conv_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
-    }
+    ParamHelper<Dtype>::AddDiffFromNet(param_net, conv_net, i);
+    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
 
-    SyncLayer(conv_id, i);
+    SendLayer(i);
   }
 
   for (int i = prev_idx - 1; i >= 0; i--) {
-    conv_net->BackwardFromTo(i, i);
-    // BackwardLayer(conv_net, i);
-    
-    if (prev_net != NULL) {
-      prev_net->BackwardFromTo(i, i);
-      ParamHelper<Dtype>::AddDiffFromNet(conv_net, prev_net, i);
-      ParamHelper<Dtype>::ScalDiff(conv_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
-      // BackwardLayer(prev_net, i);
+    if (prev_solver != NULL) {
+      prev_solver->net()->BackwardFromTo(i, i);
+      ParamHelper<Dtype>::AddDiffFromNet(param_net, prev_solver->net(), i);
     }
+    
+    conv_net->BackwardFromTo(i, i);
+    ParamHelper<Dtype>::AddDiffFromNet(param_net, conv_net, i);
+    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
 
-    SyncLayer(conv_id, i);
+    SendLayer(i);
   }
+  
+  NodeEnv::Instance()->DeleteSolver(m->conv_id());
+  NodeEnv::Instance()->PushFreeSolver(pconv);
 
   return true;
 }
 
 
 template <typename Dtype>
-bool ConvThread<Dtype>::ConvBackward(WorkerSolver<Dtype> *pconv, WorkerSolver<Dtype> *prev_conv, bool peek_next)
+bool ConvThread<Dtype>::ConvBackward(WorkerSolver<Dtype> *pconv, bool peek_next)
 {
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
 
@@ -211,19 +234,17 @@ bool ConvThread<Dtype>::ConvBackward(WorkerSolver<Dtype> *pconv, WorkerSolver<Dt
   // do backward from layer to layer
   // and sync with PS when a new backward msg becomes ready
   for (int i = layers.size() - 1; i >= 0; i--) {
+    conv_net->BackwardFromTo(i, i);
+    ParamHelper<Dtype>::AddDiffFromNet(param_solver_->net(), conv_net, i);
+    
     // check whether we can do full backwards
     shared_ptr<Msg> r;
     if (peek_next) {
       if ((r = this->RecvMsg(false)) != NULL) {
         return SyncedBackward(pconv, i, r);
       }
-    } else {
-      conv_net->BackwardFromTo(i, i);
-      // BackwardLayer(conv_net, i);
-      if (prev_conv != NULL) {
-        ParamHelper<Dtype>::AddDiffFromNet(conv_net, prev_conv->net(), i);
-      }
     }
+
   }
 
   return false;
@@ -239,35 +260,41 @@ void ConvThread<Dtype>::Run()
   mkl_set_dynamic(false);
   #endif
 
+  Solver<Dtype> *root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
+  const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
+  param_solver_ = (WorkerSolver<Dtype> *)this->NewSolver(root_solver, solver_param);
+
+
   while (!this->must_stop()) {
     for (int i = 0; i < NUM_SUB_SOLVERS; i++) {
       ConvForward();
     }
+    
+    shared_ptr<Msg> r;
 
-    bool is_done = false;
-    WorkerSolver<Dtype> *prev_solver = NULL;
-    int prev_conv_id = -1;
-
-    for (int i = 0; i < NUM_SUB_SOLVERS - 1; i++) {
-      shared_ptr<Msg> r;
-      
+    // for (int i = 0; i < NUM_SUB_SOLVERS; i++) {
+    for (int i = 0; i < NUM_SUB_SOLVERS - 2; i++) {
       if ( (r = this->RecvMsg(true)) != NULL) {  //blocked
         WorkerSolver<Dtype> *psolver = PrepareBackwardSolver(r);
         
-        bool peek_next = false;
-        if (i == (NUM_SUB_SOLVERS - 2)) {
-          peek_next = true;
-        }
+        ConvBackward(psolver, false);
 
-        is_done = ConvBackward(psolver, prev_solver, peek_next);
+        NodeEnv::Instance()->DeleteSolver(r->conv_id());
+        NodeEnv::Instance()->PushFreeSolver(psolver);
+      }
+    }
+    
+    #if 1
+    bool is_done = false;
+    WorkerSolver<Dtype> *prev_solver = NULL;
+    int prev_conv_id = 0;
 
-        if (prev_solver != NULL) {
-          NodeEnv::Instance()->DeleteSolver(prev_conv_id);
-          NodeEnv::Instance()->PushFreeSolver(prev_solver);
-        }
-
+    if (NUM_SUB_SOLVERS >= 2) {
+      if ( (r = this->RecvMsg(true)) != NULL) {
+        prev_solver = PrepareBackwardSolver(r);
         prev_conv_id = r->conv_id();
-        prev_solver = psolver;
+        
+        is_done = ConvBackward(prev_solver, true);
       }
     }
     
@@ -276,11 +303,16 @@ void ConvThread<Dtype>::Run()
       SyncedBackward(prev_solver, 0, r);
     }
     
-    // delete the conv_solver
     if (prev_solver != NULL) {
       NodeEnv::Instance()->DeleteSolver(prev_conv_id);
       NodeEnv::Instance()->PushFreeSolver(prev_solver);
     }
+    #endif
+
+    // ParamHelper<Dtype>::ScalDiff(param_solver_->net(), (Dtype)0.25);
+    // ParamHelper<Dtype>::PrintDiff(param_solver_->net());
+    
+    param_solver_->net()->ClearParamDiffs();
 
     // waiting for parameter update
     shared_ptr<Msg> m = this->RecvMsg(true);
@@ -478,25 +510,23 @@ void ConvParamThread<Dtype>::ProcessBackward(shared_ptr<Msg> m)
 template <typename Dtype>
 int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m)
 {
-  WorkerSolver<Dtype> *psolver = (WorkerSolver<Dtype> *)NodeEnv::Instance()->FindSolver(m->conv_id());
-  CHECK(psolver != NULL) << "cannot find solver for conv id: " << m->conv_id();
-  
   SGDSolver<Dtype> *root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
  
   int layer_id = ((int *)m->ZmsgData(0))[0];
+  // WorkerSolver<Dtype> *psolver = ((WorkerSolver<Dtype> **)m->ZmsgData(1))[0];
 
-  ParamHelper<Dtype>::AddDiffFromNet(root_net, psolver->net(), layer_id);
+  // LOG(INFO) << "add diff from: " << psolver << ", layer: " << layer_id;
+
+  // ParamHelper<Dtype>::AddDiffFromNet(root_net, psolver->net(), layer_id);
+  // shared_ptr<Layer<Dtype> > l = psolver->net()->layers()[layer_id];
+  
+  ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
   layer_updates_[layer_id]++;
   
   if (layer_updates_[layer_id] == this->GetWorkerNum()) {
     SyncLayer(layer_id);
     layer_updates_[layer_id] = 0;
-  }
-
-  if (layer_id == 0) {
-    NodeEnv::Instance()->DeleteSolver(m->conv_id());
-    NodeEnv::Instance()->PushFreeSolver(psolver);
   }
 
   return 0;

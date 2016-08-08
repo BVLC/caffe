@@ -22,6 +22,14 @@ enum NodeRole {
   TEST_NODE     = 5;
 }
 
+enum SyncMode {
+  
+  PSEUDO_SYNC = 0;
+
+  STALED_SYNC = 1;
+
+}
+
 message NodeInfo {
   optional string ip = 1 [default = "127.0.0.1"];
   
@@ -30,7 +38,7 @@ message NodeInfo {
 
   optional int32 pub_port = 3 [default = 0];
   
-  // which part of the layer it has
+  // which part of layer it has
   optional int32 position = 4 [default = 0];
 
   // used by zmq to identify node
@@ -38,8 +46,10 @@ message NodeInfo {
   
   optional NodeRole node_role = 6 [default = INVALID_ROLE];
 
+  optional SyncMode sync_mode = 7 [default = STALED_SYNC];
+
   // staleness is used by parameter server to sync workers
-  optional int32 staleness = 7 [default = 0];
+  optional int32 staleness = 8 [default = 0];
 }
 
 message RouteNode {
@@ -110,7 +120,8 @@ enum MsgType {
   FORWARD         = 7;
   BACKWARD        = 8;
   TRAIN_ITER      = 9;
-  INVALID_MSG     = 10;
+  UPDATE_CLOCK    = 10;
+  INVALID_MSG     = 11;
 }
 
 message BlobInfo {

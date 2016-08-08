@@ -11,21 +11,42 @@ template <typename Dtype>
 boost::once_flag FcWorker<Dtype>::once_;
 
 template <typename Dtype>
-vector<Blob<Dtype>*> * ParamBuf<Dtype>::RefParam(void *psolver)
+vector<Blob<Dtype>*> * ParamBuf<Dtype>::RefParam(void *psolver, int clock)
 {
-  boost::mutex::scoped_lock plock(param_mutex_);
-  
-  unordered_map<void *, int>::iterator iter = pointer_to_idx_.find(pparam_);
-  CHECK(iter != pointer_to_idx_.end()) << "cannot find index to pointer: " << pparam_;
-
-  int idx = iter->second;
-
   boost::mutex::scoped_lock rlock(ref_mutex_);
+  
+  psolver_to_clock_[psolver] = clock;
+  unordered_map<int, int>::iterator clock_iter = clock_to_idx_.find(clock);
+
+  int idx = -1;
+  if (clock_iter != clock_to_idx_.end()) {
+    // use the param associated with the clock
+    idx = clock_iter->second;
+  } else {
+    // use the latest param for this clock
+    unordered_map<void *, int>::iterator iter = pointer_to_idx_.find(platest_param_);
+    CHECK(iter != pointer_to_idx_.end()) << "cannot find index to pointer: " << platest_param_;
+    idx = iter->second;
+    clock_to_idx_[clock] = idx;
+  }
   
   psolver_to_idx_[psolver] = idx;
   ref_cnt_vec_[idx]++;
 
-  return pparam_;
+  return param_vec_[idx];
+}
+
+template <typename Dtype>
+vector<Blob<Dtype>*> *ParamBuf<Dtype>::FindParam(void *psolver)
+{
+  boost::mutex::scoped_lock lock(ref_mutex_);
+  
+  unordered_map<void *, int>::iterator iter = psolver_to_idx_.find(psolver);
+  CHECK(iter != psolver_to_idx_.end()) << "cannot find index to pointer: " << psolver;
+
+  int idx = iter->second;
+
+  return param_vec_[idx];
 }
 
 
@@ -42,6 +63,11 @@ int ParamBuf<Dtype>::DeRefParam(void *psolver)
   psolver_to_idx_.erase(iter);
   ref_cnt_vec_[idx]--;
   CHECK_GE(ref_cnt_vec_[idx], 0) << "unexpected reference counter";
+
+  unordered_map<void *, int>::iterator clock_iter = psolver_to_clock_.find(psolver);
+  CHECK(clock_iter != psolver_to_clock_.end());
+
+  psolver_to_clock_.erase(clock_iter);
 
   return ref_cnt_vec_[idx];
 }
@@ -85,7 +111,7 @@ void ParamBuf<Dtype>::InitParamBuf(const vector<Blob<Dtype>*> &params)
 template <typename Dtype>
 vector<Blob<Dtype>*> *ParamBuf<Dtype>::GetParam()
 {
-  return pparam_;
+  return platest_param_;
 }
 
 template <typename Dtype>
@@ -96,7 +122,7 @@ vector<Blob<Dtype>*> *ParamBuf<Dtype>::FindFreeParam()
   // find a free param pointer
   vector<Blob<Dtype>*> *pfree = NULL;
   for (int i = 0; i < param_vec_.size(); i++) {
-    if (ref_cnt_vec_[i] == 0 && param_vec_[i] != pparam_) {
+    if (ref_cnt_vec_[i] == 0 && param_vec_[i] != platest_param_) {
       pfree = param_vec_[i];
     }
   }
@@ -107,8 +133,8 @@ vector<Blob<Dtype>*> *ParamBuf<Dtype>::FindFreeParam()
 template <typename Dtype>
 void ParamBuf<Dtype>::ReplaceParam(vector<Blob<Dtype>*> *p)
 {
-  boost::mutex::scoped_lock lock(param_mutex_);
-  pparam_ = p;
+  boost::mutex::scoped_lock lock(ref_mutex_);
+  platest_param_ = p;
 }
 
 template <typename Dtype>
@@ -140,7 +166,7 @@ shared_ptr<Msg> FcThread<Dtype>::FcForward(shared_ptr<Msg> m)
   const vector<Blob<Dtype>*>& params = pfc->net()->learnable_params();
   // const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
 
-  const vector<Blob<Dtype>*> *ref_params = this->GetParamBuf()->RefParam(pfc);
+  const vector<Blob<Dtype>*> *ref_params = this->GetParamBuf()->RefParam(pfc, m->clock());
   CHECK_EQ(params.size(), ref_params->size());
   
   for (int i = 0; i < params.size(); i++) {
@@ -149,6 +175,8 @@ shared_ptr<Msg> FcThread<Dtype>::FcForward(shared_ptr<Msg> m)
     params[i]->ShareData(*ref_params->at(i));
   }
 
+  // ParamHelper<Dtype>::PrintParam(pfc->net());
+  
   shared_ptr<Net<Dtype> > fc_net = pfc->net();
   
   CopyInputDataFromMsg(fc_net, m);
@@ -228,6 +256,25 @@ void FcThread<Dtype>::FcBackward(shared_ptr<Msg> m, vector<shared_ptr<Msg> >& re
 }
 
 template <typename Dtype>
+void FcThread<Dtype>::ProcessMsg(shared_ptr<Msg> m)
+{
+  vector<shared_ptr<Msg> > msg_arr;
+
+  if (m->type() == FORWARD) {
+    shared_ptr<Msg> f = FcForward(m);
+    msg_arr.push_back(f);
+  } else if (m->type() == BACKWARD) {
+    FcBackward(m, msg_arr, true);
+  } else {
+    LOG(INFO) << "unkown type: " << m->msg_id();
+  }
+  
+  for (int i = 0; i < msg_arr.size(); i++) {
+    this->SendMsg(msg_arr[i]);
+  }
+}
+
+template <typename Dtype>
 void FcThread<Dtype>::Run()
 {
   #ifdef USE_MKL
@@ -238,20 +285,32 @@ void FcThread<Dtype>::Run()
 
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);
+    vector<shared_ptr<Msg> > msgs;
     
-    vector<shared_ptr<Msg> > msg_arr;
+    int clock_bound = clock_ + staleness_;
 
-    if (m->type() == FORWARD) {
-      shared_ptr<Msg> f = FcForward(m);
-      msg_arr.push_back(f);
-    } else if (m->type() == BACKWARD) {
-      FcBackward(m, msg_arr, true);
+    if (m->type() == UPDATE_CLOCK) {
+      clock_ = m->clock();
+      clock_bound = clock_ + staleness_;
+
+      for (int i = 0; i < msg_buf_.size(); i++) {
+        if (msg_buf_[i]->clock() <= clock_bound) {
+          ProcessMsg(msg_buf_[i]);
+        } else {
+          msgs.push_back(msg_buf_[i]);
+        }
+      }
+      msg_buf_.clear();
+
+      for (int i = 0; i < msgs.size(); i++) {
+        msg_buf_.push_back(msgs[i]);
+      }
     } else {
-      LOG(INFO) << "unkown type: " << m->msg_id();
-    }
-    
-    for (int i = 0; i < msg_arr.size(); i++) {
-      this->SendMsg(msg_arr[i]);
+      if (m->clock() <= clock_bound) {
+        ProcessMsg(m);
+      } else {
+        msg_buf_.push_back(m);
+      }
     }
   }
 }
@@ -259,6 +318,22 @@ void FcThread<Dtype>::Run()
 template <typename Dtype>
 boost::atomic_int FcLossThread<Dtype>::iter_(0);
 
+template <typename Dtype>
+void FcLossThread<Dtype>::ProcessMsg(shared_ptr<Msg> m)
+{
+  shared_ptr<Msg> f = this->FcForward(m);
+  
+  vector<shared_ptr<Msg> > replies;
+  this->FcBackward(f, replies, false);
+
+  iter_++;
+
+  for (int i = 0; i < replies.size(); i++) {
+    this->SendMsg(replies[i]);
+  }
+}
+
+#if 0
 template <typename Dtype>
 void FcLossThread<Dtype>::Run()
 {
@@ -271,23 +346,69 @@ void FcLossThread<Dtype>::Run()
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);
     
-    shared_ptr<Msg> f = this->FcForward(m);
-    
-    vector<shared_ptr<Msg> > replies;
-    this->FcBackward(f, replies, false);
+  }
+}
+#endif
+  
+template <typename Dtype>
+int FcParamThread<Dtype>::GetGroupIndex(void *psolver, int64_t msg_id) {
+  int clock = this->GetParamBuf()->GetClock(psolver);
+  CHECK_NE(clock, INVALID_CLOCK) << "invalid clock";
+  
+  unordered_map<int, int>::iterator iter = clock_to_group_idx_.find(clock);
+  if (iter != clock_to_group_idx_.end()) {
+    return iter->second;
+  }
 
-    iter_++;
-    
-    /*
-    Dtype loss = *((Dtype *)f->ZmsgData(0));
-
-    LOG(INFO) << "loss " << loss;
-    */
-
-    for (int i = 0; i < replies.size(); i++) {
-      this->SendMsg(replies[i]);
+  // find or allocate a new slot the store the group solver
+  int i = 0;
+  for (i = 0; i < group_solvers_.size(); i++) {
+    if (group_solvers_[i] == NULL) {
+      break;
     }
   }
+
+  if (i >= group_solvers_.size()) {
+    group_solvers_.push_back(psolver);
+    grad_updates_vec_.push_back(0);
+    msg_id_vec_.push_back(msg_id);
+    group_loss_vec_.push_back(0);
+    clock_vec_.push_back(clock);
+    clock_to_group_idx_[clock] = group_solvers_.size() - 1;
+  } else {
+    group_solvers_[i] = psolver;
+    grad_updates_vec_[i] = 0;
+    msg_id_vec_[i] = msg_id;
+    group_loss_vec_[i] = 0;
+    clock_vec_[i] = clock;
+    clock_to_group_idx_[clock] = i;
+  }
+
+  return i;
+}
+
+template <typename Dtype>
+void FcParamThread<Dtype>::ClearGroup(int grp_idx)
+{
+  Solver<Dtype> *pgroup_solver = (Solver<Dtype> *)group_solvers_[grp_idx];
+  CHECK(pgroup_solver != NULL);
+
+  ParamHelper<Dtype>::ScalDiff(pgroup_solver->net(), (Dtype)0.0);
+  
+  this->GetParamBuf()->RemoveClock(clock_vec_[grp_idx]);
+  this->GetParamBuf()->DeRefParam(pgroup_solver);
+
+  NodeEnv::Instance()->DeleteSolver(msg_id_vec_[grp_idx]);
+  NodeEnv::Instance()->PushFreeSolver(pgroup_solver);
+  
+  unordered_map<int, int>::iterator iter = clock_to_group_idx_.find(clock_vec_[grp_idx]);
+  clock_to_group_idx_.erase(iter);
+  
+  group_solvers_[grp_idx] = NULL;
+  group_loss_vec_[grp_idx] = 0;
+  grad_updates_vec_[grp_idx] = 0;
+  msg_id_vec_[grp_idx] = INVALID_ID;
+  clock_vec_[grp_idx] = INVALID_CLOCK;
 }
 
 template <typename Dtype>
@@ -335,6 +456,8 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   }
   #endif
   
+
+  #if 0
   if (sub_batches_ == 0) {
     ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), psolver->net());
   } else {
@@ -363,6 +486,40 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   if (sub_batches_ < num_workers_ * NUM_SUB_SOLVERS) {
     return;
   }
+  #endif
+  
+  int group_id = GetGroupIndex(psolver, m->msg_id());
+
+  Solver<Dtype> *pgroup_solver = (Solver<Dtype> *)group_solvers_[group_id];
+  // doesn't have broadcast nodes means we are loss layer
+  const vector<string>& bcast_addrs = NodeEnv::Instance()->bcast_addrs();
+ 
+  if (bcast_addrs.size() == 0) {
+    const vector<Blob<Dtype>*>& output = psolver->net()->output_blobs();
+    CHECK_EQ(output.size(), 1) << "only deal with output size 1";
+    Blob<Dtype>* pblob = output[0];
+    group_loss_vec_[group_id] += pblob->cpu_data()[0];
+  }
+  grad_updates_vec_[group_id]++;
+
+  if (pgroup_solver != psolver) {
+    ParamHelper<Dtype>::AddDiffFromNet(pgroup_solver->net(), psolver->net());
+    
+    // clear diff params
+    ParamHelper<Dtype>::ScalDiff(psolver->net(), (Dtype)0.0);
+  
+    this->GetParamBuf()->DeRefParam(psolver);
+  
+    NodeEnv::Instance()->DeleteSolver(m->msg_id());
+    NodeEnv::Instance()->PushFreeSolver(psolver);
+    // LOG(INFO) << "release solver for group id: " << group_id;
+  } else {
+    // LOG(INFO) << "keep solver for group id: " << group_id;
+  }
+  
+  if (grad_updates_vec_[group_id] < num_workers_ * NUM_SUB_SOLVERS) {
+    return;
+  }
 
   // share paramters
   const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
@@ -376,17 +533,28 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   
   for (int i = 0; i < root_params.size(); i++) {
     CHECK_EQ(root_params[i]->count(), param->at(i)->count());
-
-    ParamHelper<Dtype>::BlasCopy(root_params[i]->count(), root_params[i]->cpu_data(), param->at(i)->mutable_cpu_data());
-    root_params[i]->ShareData(*param->at(i));
+    
+    if (root_params[i]->cpu_data() != param->at(i)->cpu_data()) {
+      ParamHelper<Dtype>::BlasCopy(root_params[i]->count(), root_params[i]->cpu_data(), param->at(i)->mutable_cpu_data());
+      root_params[i]->ShareData(*param->at(i));
+    }
   }
+
+  ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), pgroup_solver->net());
   
-  // scaling the diff
+  // scaling gradients
   Dtype s = (Dtype)(1.0 / (Dtype)(num_workers_ * NUM_SUB_SOLVERS));
   ParamHelper<Dtype>::ScalDiff(proot->net(), s);
   
   proot->CommitGradient();
   
+  if (bcast_addrs.size() == 0) {
+    group_loss_vec_[group_id] *= s;
+    LOG(INFO) << "train iteration: " << train_iter_ << " loss: " << group_loss_vec_[group_id];
+  }
+ 
+  ClearGroup(group_id);
+
   // switch the working param
   this->GetParamBuf()->ReplaceParam(param);
   
@@ -395,14 +563,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   ParamHelper<Dtype>::PrintDiff(proot->net());
   #endif
   
-  if (bcast_addrs.size() == 0) {
-    sub_loss_ *= s; 
-    LOG(INFO) << "train iteration: " << train_iter_ << " loss: " << sub_loss_;
-  }
-
-  sub_loss_ = 0;
-  sub_batches_ = 0;
-  train_iter_++;
+  UpdateClock();
 
   if (test_node_id_ > 0  
      && train_iter_ % TRAIN_NOTIFY_INTERVAL == 0
@@ -410,6 +571,22 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
       ) {
     this->SendNotify();
   }
+}
+
+template <typename Dtype>
+void FcParamThread<Dtype>::UpdateClock()
+{
+  train_iter_++;
+  
+  shared_ptr<Msg> r(new Msg());
+  r->set_type(UPDATE_CLOCK);
+  r->set_dst(WORKER_BCAST);
+  r->set_src(NodeEnv::Instance()->ID());
+  r->set_clock(train_iter_);
+  
+  r->AppendData(&train_iter_, sizeof(train_iter_));
+
+  this->SendMsg(r);
 }
 
 template <typename Dtype>

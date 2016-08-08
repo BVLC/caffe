@@ -21,6 +21,7 @@ const int REQ_SERVER_ID = 3;
 const int ROOT_THREAD_ID = 2;
 const int WORKER_BCAST = 1;
 const int INVALID_ID = -1;
+const int INVALID_CLOCK = -1;
 
 /// overlapping computation and communication 
 /// by splitting the solver into sub-solvers

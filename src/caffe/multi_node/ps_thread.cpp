@@ -77,6 +77,8 @@ void PSThread<Dtype>::SendUpdates()
       #if 0
       LOG(INFO) << "iter: " << iter_;
       ParamHelper<Dtype>::PrintDiff(ps_solver_->net());
+      LOG(INFO) << "param:";
+      ParamHelper<Dtype>::PrintParam(ps_solver_->net());
       #endif
       ps_solver_->CommitGradient();
     }
@@ -117,7 +119,7 @@ void PSThread<Dtype>::RegisterNode(shared_ptr<Msg> m)
   LOG(INFO) << "registering node: " << m->src();
   
   //init clock as the minimal clock among the clients
-  int clock = MinClock() + staleness_ + 1;
+  int clock = MinClock() + staleness_;
   client_clocks_.push_back(clock);
   
   int client_idx = client_ids_.size();

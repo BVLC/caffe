@@ -226,7 +226,12 @@ int FcNode<Dtype>::RouteMsg()
   if (this->poll_items_[param_thread_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = this->sockp_arr_[param_thread_index_]->RecvMsg(true);
     
-    if (m->type() == PUT_PARAM || m->type() == TRAIN_ITER) {
+    if (m->dst() == WORKER_BCAST) {
+      // broadcast the message to all the workers
+      for (int i = 0; i < this->nworkers_; i++) {
+        this->Enqueue(i, m);
+      }
+    } else if (m->type() == PUT_PARAM || m->type() == TRAIN_ITER) {
       sock_back_->SendMsg(m);
     } else {
       LOG(ERROR) << "Received unsupported message";

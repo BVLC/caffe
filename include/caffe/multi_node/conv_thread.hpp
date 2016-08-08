@@ -16,6 +16,7 @@ class ConvThread : public WorkerThread<Dtype>
 
 public:
   ConvThread() {
+    param_solver_ = NULL;
   }
 
   virtual ~ConvThread() {
@@ -52,12 +53,12 @@ protected:
   WorkerSolver<Dtype> *PrepareBackwardSolver(shared_ptr<Msg> m);
 
   // backward and sync, return true if backward is done
-  bool ConvBackward(WorkerSolver<Dtype> *pconv, WorkerSolver<Dtype> *prev_conv, bool peek_next);
+  bool ConvBackward(WorkerSolver<Dtype> *pconv, bool peek_next);
 
-  bool SyncedBackward(Solver<Dtype> *prev_solver, int prev_idx, shared_ptr<Msg> m);
+  bool SyncedBackward(WorkerSolver<Dtype> *prev_solver, int prev_idx, shared_ptr<Msg> m);
 
   // inform the parameter thread to update layer i
-  void SyncLayer(int conv_id, int i);
+  void SendLayer(int layer_id);
   
   // do forward to a layer
   void ForwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
@@ -68,6 +69,9 @@ protected:
 protected:
   // store and merge backward messages from multiple gateways
   unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > > msg_id_to_buf_;
+
+  // the pointer of solver which is used to store gradients
+  WorkerSolver<Dtype> *param_solver_;
 
 protected:
   static int conv_id_;
