@@ -32,6 +32,7 @@ Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
       requested_early_exit_(false),
       forward_backward_(boost::bind(&Solver<Dtype>::ForwardBackward, this)) {
   Init(param);
+  Caffe::set_iter_size(param_.iter_size());
 }
 
 template <typename Dtype>
@@ -42,6 +43,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
+  Caffe::set_iter_size(param_.iter_size());
 }
 
 template <typename Dtype>

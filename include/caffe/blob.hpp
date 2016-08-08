@@ -238,9 +238,9 @@ class Blob {
   Dtype* mutable_prv_diff();
 
   void set_prv_data_descriptor(shared_ptr<PrvMemDescr> descriptor,
-                               bool same_data=false);
+                               bool same_data = false);
   void set_prv_diff_descriptor(shared_ptr<PrvMemDescr> descriptor,
-                               bool same_data=false);
+                               bool same_data = false);
 
   shared_ptr<PrvMemDescr> get_prv_data_descriptor();
   shared_ptr<PrvMemDescr> get_prv_diff_descriptor();
