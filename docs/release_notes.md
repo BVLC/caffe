@@ -28,7 +28,7 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run and test Caffe on CentOS (7.0, 7.1, 7.2). 
+We build and test Caffe on CentOS (7.0, 7.1, 7.2). 
 The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
 
 When updating Caffe, it's best to `make clean` before re-compiling.
