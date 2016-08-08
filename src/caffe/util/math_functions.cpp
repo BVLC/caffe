@@ -73,8 +73,16 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
 
 template void caffe_set<char>(const int N, const char alpha, char* Y);
 template void caffe_set<int>(const int N, const int alpha, int* Y);
-template void caffe_set<float>(const int N, const float alpha, float* Y);
-template void caffe_set<double>(const int N, const double alpha, double* Y);
+template <>
+void caffe_set<float>(const int N, const float alpha, float* Y) {
+  cblas_scopy(N, &alpha, 0, Y, 1);
+}
+
+template <>
+void caffe_set<double>(const int N, const double alpha, double* Y) {
+  cblas_dcopy(N, &alpha, 0, Y, 1);
+}
+
 template void caffe_set<size_t>(const int N, const size_t alpha, size_t* Y);
 
 template <>

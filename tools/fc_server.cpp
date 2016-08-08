@@ -63,4 +63,5 @@ int main(int argc, char** argv) {
 
   fc_server_thread();
 
-  return 0;}
+  return 0;
+}
