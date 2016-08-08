@@ -4,7 +4,13 @@
 
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
-TOOLS=build/tools
+
+# Check if CAFFE_BIN is unset
+if [ -z "$CAFFE_BIN" ]; then
+  TOOLS=./build/tools
+else
+  TOOLS=$CAFFE_BIN
+fi
 
 TRAIN_DATA_ROOT=/path/to/imagenet/train/
 VAL_DATA_ROOT=/path/to/imagenet/val/
@@ -36,6 +42,7 @@ fi
 
 echo "Creating train lmdb..."
 
+rm -rf $EXAMPLE/ilsvrc12_train_lmdb
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
@@ -46,6 +53,7 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
 
 echo "Creating val lmdb..."
 
+rm -rf $EXAMPLE/ilsvrc12_val_lmdb
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \

@@ -1,8 +1,14 @@
 #!/usr/bin/env sh
 # This script converts the mnist data into leveldb format.
 
-EXAMPLES=./build/examples/siamese
 DATA=./data/mnist
+
+# Check if CAFFE_BIN is unset
+if [ -z "$CAFFE_BIN" ]; then
+  EXAMPLES=./build/examples/siamese
+else
+  EXAMPLES=$CAFFE_BIN
+fi
 
 echo "Creating leveldb..."
 
