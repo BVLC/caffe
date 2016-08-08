@@ -32,6 +32,7 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
     filler.Fill(this->blob_top_);
+    this->alpha = 0.15;
   }
 
   virtual ~MathFunctionsTest() {
@@ -41,6 +42,7 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
 
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
+  Dtype alpha;
 };
 
 template <typename Dtype>
@@ -116,6 +118,16 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
   caffe_copy(n, bottom_data, top_data);
   for (int i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
+  }
+}
+
+TYPED_TEST(CPUMathFunctionsTest, TestSet) {
+  const int n = this->blob_bottom_->count();
+  // const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  TypeParam* top_data = this->blob_top_->mutable_cpu_data();
+  caffe_set(n, this->alpha, top_data);
+  for (int i = 0; i < n; ++i) {
+    EXPECT_NEAR(this->alpha, top_data[i], 1e-4);
   }
 }
 

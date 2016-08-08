@@ -61,9 +61,6 @@ DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 // Power function
 template <typename Dtype>
 inline void vPowx(const int n, const Dtype* a, Dtype b, Dtype* y) {
-#ifdef _OPENMP
-    #pragma omp parallel for
-#endif
   for (int i = 0; i < n; ++i) {
     y[i] = std::pow(a[i], b);
   }

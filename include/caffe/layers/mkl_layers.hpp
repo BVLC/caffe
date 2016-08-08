@@ -42,7 +42,7 @@ struct MKLMemoryDescriptor : PrvMemDescr,
   std::string name;  // for debugging purposes
   void create_conversions() {
     if (layout_int
-        && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {    
+        && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
       CHECK(layout_usr);
       int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr,
               layout_int);

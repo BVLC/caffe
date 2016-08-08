@@ -2,10 +2,6 @@
 #include <mkl.h>
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
@@ -68,34 +64,6 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   // If we are executing parallel region already then do not start another one
   // if also number of data to be processed is smaller than arbitrary:
   // threashold 12*4 cachelines per thread then no parallelization is to be made
-  #ifdef _OPENMP
-
-  // TODO: Threshold is a function of num threads and CPU speed and constant
-  int threshold = omp_get_max_threads() * 768;
-  bool run_parallel = true;
-
-  // Note: we Assume GPU's CPU path is single threaded
-  if (omp_in_parallel() == 0) {
-    // inactive parallel region may mean also batch 1,
-    // but no new threads are to be created
-    run_parallel = run_parallel && (Caffe::mode() != Caffe::GPU) &&
-                   (N >= threshold);
-  } else {
-    // If we are running active parallel region then it is CPU
-    run_parallel = run_parallel && (N >= threshold);
-  }
-
-  if (run_parallel) {
-    #pragma omp parallel for
-    for (int i = 0; i < N; ++i) {
-      Y[i] = alpha;
-    }
-
-    return;
-  }
-
-  #endif
-
   if (alpha == 0) {
     memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
   } else {
@@ -105,8 +73,16 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
 
 template void caffe_set<char>(const int N, const char alpha, char* Y);
 template void caffe_set<int>(const int N, const int alpha, int* Y);
-template void caffe_set<float>(const int N, const float alpha, float* Y);
-template void caffe_set<double>(const int N, const double alpha, double* Y);
+template <>
+void caffe_set<float>(const int N, const float alpha, float* Y) {
+  cblas_scopy(N, &alpha, 0, Y, 1);
+}
+
+template <>
+void caffe_set<double>(const int N, const double alpha, double* Y) {
+  cblas_dcopy(N, &alpha, 0, Y, 1);
+}
+
 template void caffe_set<size_t>(const int N, const size_t alpha, size_t* Y);
 
 template <>
@@ -123,31 +99,9 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
   }
 }
 
-template <typename Dtype>
+template  <typename Dtype>
 void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X == Y) return;
-
-  #ifdef _OPENMP
-
-  // TODO: Threshold is a function of num threads and CPU speed and constant
-  const int threshold = omp_get_max_threads() * 768;
-  const bool run_parallel =
-    (Caffe::mode() != Caffe::GPU) &&
-    (omp_in_parallel() == 0) &&
-    (N >= threshold);
-
-  if (run_parallel) {
-    const int block = 256*1024/sizeof(Dtype), remainder = N%block;
-    #pragma omp parallel for
-    for (int i = 0; i <= N-block; i += block)
-      memcpy(Y+i, X+i, sizeof(Dtype) * block);  // NOLINT(caffe/alt_fn)
-    if (remainder != 0)
-      memcpy(Y+N-remainder, X+N-remainder,  // NOLINT(caffe/alt_fn)
-          sizeof(Dtype) * remainder);
-    return;
-  }
-
-  #endif
 
   memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
 }
@@ -155,8 +109,19 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
 template void caffe_cpu_copy<int>(const int N, const int* X, int* Y);
 template void caffe_cpu_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
-template void caffe_cpu_copy<float>(const int N, const float* X, float* Y);
-template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
+template <>
+void caffe_cpu_copy<float>(const int N, const float* X, float* Y) {
+  if (X == Y) return;
+
+  cblas_scopy(N, X, 1, Y, 1);
+}
+
+template <>
+void caffe_cpu_copy<double>(const int N, const double* X, double* Y) {
+  if (X == Y) return;
+
+  cblas_dcopy(N, X, 1, Y, 1);
+}
 
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
@@ -165,9 +130,6 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
     // then checking Caffe::mode can create additional GPU Context
     //
     if (
-#ifdef _OPENMP
-        (omp_in_parallel() == 0) &&
-#endif
         (Caffe::mode() == Caffe::GPU)) {
 #ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
@@ -385,28 +347,9 @@ void caffe_rng_gaussian<double>(const int n, const double mu,
 #ifdef USE_MKL
 static void bernoulli_generate(int n, double p, int* r) {
   int seed = 17 + caffe_rng_rand() % 4096;
-
-#ifdef _OPENMP
-  int nthr = omp_get_max_threads();
-  // TODO: Threshold is a function of num threads and CPU speed and constant
-  int threshold = nthr * 768;
-  bool run_parallel =
-    (Caffe::mode() != Caffe::GPU) &&
-    (omp_in_parallel() == 0) &&
-    (n >= threshold);
-  if (!run_parallel) nthr = 1;
-
-# pragma omp parallel num_threads(nthr)
-  {
-    const int ithr = omp_get_thread_num();
-    const int avg_amount = (n + nthr - 1) / nthr;
-    const int my_offset = ithr * avg_amount;
-    const int my_amount = std::min(my_offset + avg_amount, n) - my_offset;
-#else
   {
     const int my_amount = n;
     const int my_offset = 0;
-#endif
 
     VSLStreamStatePtr stream;
     vslNewStream(&stream, VSL_BRNG_MCG31, seed);

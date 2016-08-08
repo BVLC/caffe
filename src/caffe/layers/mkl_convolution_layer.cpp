@@ -173,7 +173,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   fwd_top_data   ->create_conversions();
   // std::cout << "creating fwd_top_data conversions done.\n";
   fwd_filter_data->create_conversions();
-  
+
   if (this->bias_term_) {
     status = dnnLayoutCreateFromPrimitive<Dtype>(
             &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
@@ -542,7 +542,6 @@ template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Backward_cpu(
   const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
   const vector<Blob<Dtype>*>& bottom) {
-
   // LOG(INFO) << "MKL conv -- " << this->layer_param().name()
   // << " backward start";
   // LOG(INFO) << "Propagate down: " << propagate_down[0];
@@ -571,10 +570,9 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         top[0]->channels() == oc*g &&
         top[0]->num()      == n) << "Incompatible shape of bottom with layer";
 
-  
+
   if (propagate_down[0]) {
-    
-    // LOG(INFO) << "propagate_down";
+   // LOG(INFO) << "propagate_down";
     void *res_convolutionBwdData[dnnResourceNumber];
 
     res_convolutionBwdData[dnnResourceDiffDst] =
@@ -588,7 +586,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
 
     // LOG(INFO) << "set filter done";
-    
+
     if (bwdd_bottom_diff->convert_from_int) {
       bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, bwdd_bottom_diff,
               false);
@@ -596,11 +594,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
               reinterpret_cast<void *>(bwdd_bottom_diff->internal_ptr);
 
       // LOG(INFO) << "set diff src done -- 1.";
-      
+
     } else {
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
-      
+
       // LOG(INFO) << "set diff src done -- 2.";
     }
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
@@ -610,9 +608,8 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
   }
 
   if (this->param_propagate_down(0)) {
+    // LOG(INFO) << "param_propagate_down";
 
-    //LOG(INFO) << "param_propagate_down";
-    
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
     res_convolutionBwdFilter[dnnResourceDiffDst] =
@@ -655,7 +652,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
   }
-  //LOG(INFO) << "MKL conv backward done.";
+  // LOG(INFO) << "MKL conv backward done.";
 }
 
 #ifdef CPU_ONLY

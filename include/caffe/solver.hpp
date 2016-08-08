@@ -46,12 +46,12 @@ class Solver {
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
-  
+
   void TestAll(int iter) {
     iter_ = iter;
     TestAll();
   }
-  
+
   void Snapshot(int iter) {
     iter_ = iter;
     Snapshot();
