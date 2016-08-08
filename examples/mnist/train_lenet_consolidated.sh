@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+set -e
 
 # Check if CAFFE_BIN is unset
 if [ -z "$CAFFE_BIN" ]; then
@@ -8,4 +9,4 @@ else
 fi
 
 $TOOLS/caffe train \
-  --solver=examples/mnist/lenet_consolidated_solver.prototxt
+  --solver=examples/mnist/lenet_consolidated_solver.prototxt $@
