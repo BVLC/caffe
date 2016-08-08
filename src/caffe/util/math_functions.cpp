@@ -91,7 +91,7 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
   }
 }
 
-template <typename Dtype>
+template  <typename Dtype>
 void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X == Y) return;
 
@@ -101,8 +101,19 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
 template void caffe_cpu_copy<int>(const int N, const int* X, int* Y);
 template void caffe_cpu_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
-template void caffe_cpu_copy<float>(const int N, const float* X, float* Y);
-template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
+template <>
+void caffe_cpu_copy<float>(const int N, const float* X, float* Y) {
+  if (X == Y) return;
+
+  cblas_scopy(N, X, 1, Y, 1);
+}
+
+template <>
+void caffe_cpu_copy<double>(const int N, const double* X, double* Y) {
+  if (X == Y) return;
+
+  cblas_dcopy(N, X, 1, Y, 1);
+}
 
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
