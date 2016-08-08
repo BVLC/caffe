@@ -75,12 +75,20 @@ template void caffe_set<char>(const int N, const char alpha, char* Y);
 template void caffe_set<int>(const int N, const int alpha, int* Y);
 template <>
 void caffe_set<float>(const int N, const float alpha, float* Y) {
-  cblas_scopy(N, &alpha, 0, Y, 1);
+  if (alpha == 0) {
+    cblas_sscal(N, alpha, Y, 1);
+  } else {
+    std::fill(Y, Y + N, alpha);
+  }
 }
 
 template <>
 void caffe_set<double>(const int N, const double alpha, double* Y) {
-  cblas_dcopy(N, &alpha, 0, Y, 1);
+   if (alpha == 0) {
+    cblas_dscal(N, alpha, Y, 1);
+  } else {
+    std::fill(Y, Y + N, alpha);
+  }
 }
 
 template void caffe_set<size_t>(const int N, const size_t alpha, size_t* Y);
