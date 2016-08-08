@@ -39,3 +39,18 @@ class TestBlobProtoToArray(unittest.TestCase):
 
         arr = caffe.io.blobproto_to_array(blob)
         self.assertEqual(arr, 123)
+
+
+class TestArrayToDatum(unittest.TestCase):
+
+    def test_label_none_size(self):
+        # Set label
+        d1 = caffe.io.array_to_datum(
+            np.ones((10,10,3)), label=1)
+        # Don't set label
+        d2 = caffe.io.array_to_datum(
+            np.ones((10,10,3)))
+        # Not setting the label should result in a smaller object
+        self.assertGreater(
+            len(d1.SerializeToString()),
+            len(d2.SerializeToString()))

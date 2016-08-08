@@ -91,6 +91,8 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 }
 
 int main(int argc, char** argv) {
+  FLAGS_alsologtostderr = 1;
+
   if (argc != 4) {
     printf("This script converts the CIFAR dataset to the leveldb format used\n"
            "by caffe to perform classification.\n"

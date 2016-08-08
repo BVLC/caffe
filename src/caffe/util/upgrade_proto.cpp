@@ -13,7 +13,8 @@
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
-  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param);
+  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param)
+      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param);
 }
 
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
@@ -655,12 +656,14 @@ void UpgradeNetDataTransformation(NetParameter* net_param) {
 }
 
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
-  bool is_fully_compatible = true;
   if (v1_net_param.layer_size() > 0) {
-    LOG(ERROR) << "Input NetParameter to be upgraded already specifies 'layer' "
-               << "fields; these will be ignored for the upgrade.";
-    is_fully_compatible = false;
+    LOG(FATAL) << "Refusing to upgrade inconsistent NetParameter input; "
+        << "the definition includes both 'layer' and 'layers' fields. "
+        << "The current format defines 'layer' fields with string type like "
+        << "layer { type: 'Layer' ... } and not layers { type: LAYER ... }. "
+        << "Manually switch the definition to 'layer' format to continue.";
   }
+  bool is_fully_compatible = true;
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
   net_param->clear_layer();
@@ -952,29 +955,35 @@ bool NetNeedsInputUpgrade(const NetParameter& net_param) {
 }
 
 void UpgradeNetInput(NetParameter* net_param) {
-  LayerParameter* layer_param = net_param->add_layer();
-  layer_param->set_name("input");
-  layer_param->set_type("Input");
-  InputParameter* input_param = layer_param->mutable_input_param();
+  // Collect inputs and convert to Input layer definitions.
+  // If the NetParameter holds an input alone, without shape/dim, then
+  // it's a legacy caffemodel and simply stripping the input field is enough.
   bool has_shape = net_param->input_shape_size() > 0;
-  // Convert input fields into a layer.
-  for (int i = 0; i < net_param->input_size(); ++i) {
-    layer_param->add_top(net_param->input(i));
-    if (has_shape) {
-      input_param->add_shape()->CopyFrom(net_param->input_shape(i));
-    } else {
-      // Turn legacy input dimensions into shape.
-      BlobShape* shape = input_param->add_shape();
-      int first_dim = i*4;
-      int last_dim = first_dim + 4;
-      for (int j = first_dim; j < last_dim; j++) {
-        shape->add_dim(net_param->input_dim(j));
+  bool has_dim = net_param->input_dim_size() > 0;
+  if (has_shape || has_dim) {
+    LayerParameter* layer_param = net_param->add_layer();
+    layer_param->set_name("input");
+    layer_param->set_type("Input");
+    InputParameter* input_param = layer_param->mutable_input_param();
+    // Convert input fields into a layer.
+    for (int i = 0; i < net_param->input_size(); ++i) {
+      layer_param->add_top(net_param->input(i));
+      if (has_shape) {
+        input_param->add_shape()->CopyFrom(net_param->input_shape(i));
+      } else {
+        // Turn legacy input dimensions into shape.
+        BlobShape* shape = input_param->add_shape();
+        int first_dim = i*4;
+        int last_dim = first_dim + 4;
+        for (int j = first_dim; j < last_dim; j++) {
+          shape->add_dim(net_param->input_dim(j));
+        }
       }
     }
-  }
-  // Swap input layer to beginning of net to satisfy layer dependencies.
-  for (int i = net_param->layer_size() - 1; i > 0; --i) {
-    net_param->mutable_layer(i-1)->Swap(net_param->mutable_layer(i));
+    // Swap input layer to beginning of net to satisfy layer dependencies.
+    for (int i = net_param->layer_size() - 1; i > 0; --i) {
+      net_param->mutable_layer(i-1)->Swap(net_param->mutable_layer(i));
+    }
   }
   // Clear inputs.
   net_param->clear_input();
