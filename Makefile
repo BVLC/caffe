@@ -328,6 +328,14 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
+# MASS configuration.
+ifeq ($(USE_MASS), 1)
+       LIBRARIES += mass massvp8 mass_simdp8
+       COMMON_FLAGS += -DUSE_MASS
+       CXXFLAGS += -mveclibabi=mass -ftree-vectorize -funsafe-math-optimizations
+       LIBRARY_DIRS += $(MASS_LIB)
+endif
+
 # configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV

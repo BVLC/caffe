@@ -7,6 +7,11 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+# MASS switch (uncomment to build with IBM Mathematical Acceleration Subsystem)
+# USE_MASS := 1
+# MASS lib directories
+# MASS_LIB := /opt/ibm/xlmass/8.1.3/lib
+
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0

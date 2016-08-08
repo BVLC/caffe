@@ -17,6 +17,13 @@ This can be skipped for CPU-only installation.
 
 **Python** (optional): if you use the default Python you will need to `sudo apt-get install` the `python-dev` package to have the Python headers for building the pycaffe interface.
 
+**MASS** (optional): Install MASS library as below -
+
+    wget -q http://public.dhe.ibm.com/software/server/POWER/Linux/xl-compiler/eval/ppc64le/ubuntu/public.gpg -O- | sudo apt-key add -
+    echo "deb http://public.dhe.ibm.com/software/server/POWER/Linux/xl-compiler/eval/ppc64le/ubuntu/ trusty main" | sudo tee /etc/apt/sources.list.d/ibm-xl-compiler-eval.list
+    sudo apt-get update
+    sudo apt-get install libxlmass-devel.8.1.3
+
 **Remaining dependencies, 14.04**
 
 Everything is packaged in 14.04.
