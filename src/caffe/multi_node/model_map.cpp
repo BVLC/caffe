@@ -167,6 +167,7 @@ void ModelMap<Dtype>::AddSolver(RouteInfo *proute, int node_idx)
   
   // set number of workers
   proute->set_num_workers(num_workers_);
+  proute->set_num_sub_solvers(num_sub_solvers_);
 }
 
 template <typename Dtype>
@@ -320,6 +321,7 @@ void ModelMap<Dtype>::PrepareConvMsg()
     // add solver for conv nodes
     RouteInfo rt;
     
+    rt.set_num_sub_solvers(num_sub_solvers_);
     // add ps nodes
     for (int j = 0; j < ps_nodes_.size(); j++) {
       int ps_idx = ps_nodes_[j];

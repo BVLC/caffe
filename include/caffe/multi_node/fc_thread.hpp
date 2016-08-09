@@ -95,7 +95,9 @@ template <typename Dtype>
 class FcWorker : public WorkerThread<Dtype>
 {
 public:
-  FcWorker() { }
+  FcWorker() {
+  }
+
   virtual ~FcWorker() { }
 
   static ParamBuf<Dtype> *GetParamBuf() {
@@ -103,6 +105,8 @@ public:
 
     return pbuf_;
   }
+
+protected:
 
 private:
   static void CreateParamBuf() {
@@ -183,6 +187,7 @@ public:
     train_iter_ = 0;
     test_node_id_ = -1;
     num_workers_ = NodeEnv::Instance()->num_workers();
+    num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
     sub_batches_ = 0;
     sub_loss_ = 0;
   }
@@ -232,6 +237,9 @@ protected:
   
   // number of conv. clients
   int num_workers_;
+  
+  // number of overlapping solvers
+  int num_sub_solvers_;
   
   // number of sub batches the param thread processed
   int sub_batches_;

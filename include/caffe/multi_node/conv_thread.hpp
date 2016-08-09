@@ -17,6 +17,7 @@ class ConvThread : public WorkerThread<Dtype>
 public:
   ConvThread() {
     param_solver_ = NULL;
+    num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
   }
 
   virtual ~ConvThread() {
@@ -72,6 +73,9 @@ protected:
 
   // the pointer of solver which is used to store gradients
   WorkerSolver<Dtype> *param_solver_;
+
+protected:
+  int num_sub_solvers_;
 
 protected:
   static int conv_id_;

@@ -92,6 +92,9 @@ message RouteInfo {
   
   // number of conv. workers in the cluster
   optional int32 num_workers = 9 [default = 0];
+
+  // number of sub solvers per batch
+  optional int32 num_sub_solvers = 10 [default = 0];
 }
 
 

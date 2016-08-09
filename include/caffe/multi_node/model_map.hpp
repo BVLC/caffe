@@ -21,7 +21,7 @@ class ModelMap
 {
 
 public:
-  ModelMap(const string full_solver, int nworkers) {
+  ModelMap(const string full_solver, int nworkers, int sub_solvers) {
     ReadProtoFromTextFileOrDie(full_solver, &solver_param_);
     
     // init test solver
@@ -40,6 +40,8 @@ public:
     NetParameter net_param;
     ReadNetParamsFromTextFileOrDie(solver_param_.net(), &net_param);
 
+    num_sub_solvers_ = sub_solvers;
+    
     // TRICK: overlapping communication and computation
     for (int i = 0; i < net_param.layer_size(); i++) {
       LayerParameter *player = net_param.mutable_layer(i);
@@ -48,12 +50,12 @@ public:
       if (layer_type == "Data" || layer_type == "AsyncData") {
         int batch_size = player->data_param().batch_size();
 
-        player->mutable_data_param()->set_batch_size(batch_size / NUM_SUB_SOLVERS);
+        player->mutable_data_param()->set_batch_size(batch_size / num_sub_solvers_);
       }
 
       if (layer_type == "ImageData") {
         int batch_size = player->image_data_param().batch_size();
-        player->mutable_image_data_param()->set_batch_size(batch_size / NUM_SUB_SOLVERS);
+        player->mutable_image_data_param()->set_batch_size(batch_size / num_sub_solvers_);
       }
     }
     
@@ -284,6 +286,9 @@ protected:
   int fc_batch_size_;
 
   int num_workers_;
+  
+  // number of overlapping sub solvers
+  int num_sub_solvers_;
 
 DISABLE_COPY_AND_ASSIGN(ModelMap);
 };

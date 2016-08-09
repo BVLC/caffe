@@ -100,6 +100,8 @@ public:
 
   int num_workers() { return num_workers_; }
 
+  int num_sub_solvers() { return num_sub_solvers_; }
+
   shared_ptr<Msg> model_server_msg() { return model_server_msg_; }
 
   string pub_addr() {
@@ -319,6 +321,7 @@ private:
   NodeEnv() {
     node_id_ = INVALID_ID;
     num_workers_ = 0;
+    num_sub_solvers_ = 0;
   }
 
 
@@ -394,12 +397,15 @@ protected:
   unordered_map<int64_t, void *> id_to_solver_;
   boost::mutex  id_map_mutex_;
   
-  //available solvers
+  // available solvers
   vector<void *> free_solver_;
   
   shared_ptr<SkSock> sk_id_req_;
 
   int num_workers_;
+  
+  // number of sub solvers
+  int num_sub_solvers_;
 
 private:
   //For Singleton pattern

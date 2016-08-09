@@ -119,7 +119,6 @@ void ConvThread<Dtype>::ConvForward()
   #endif
 
   // ParamHelper<Dtype>::PrintParam(pconv->net());
-  
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
   conv_net->ClearParamDiffs();
   conv_net->ForwardPrefilled();
@@ -140,7 +139,7 @@ void ConvThread<Dtype>::ConvForward()
   
   // append the solver pointer
   m->AppendData(&pconv, sizeof(pconv));
-  
+   
   this->SendMsg(m);
 
   NodeEnv::Instance()->PutSolver(conv_id, pconv);
@@ -199,7 +198,7 @@ bool ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver, int pre
     conv_net->BackwardFromTo(i, i);
 
     ParamHelper<Dtype>::AddDiffFromNet(param_net, conv_net, i);
-    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
+    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / num_sub_solvers_), i);
 
     SendLayer(i);
   }
@@ -212,7 +211,7 @@ bool ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver, int pre
     
     conv_net->BackwardFromTo(i, i);
     ParamHelper<Dtype>::AddDiffFromNet(param_net, conv_net, i);
-    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / NUM_SUB_SOLVERS), i);
+    ParamHelper<Dtype>::ScalDiff(param_net, (Dtype)(1.0 / num_sub_solvers_), i);
 
     SendLayer(i);
   }
@@ -266,14 +265,14 @@ void ConvThread<Dtype>::Run()
 
 
   while (!this->must_stop()) {
-    for (int i = 0; i < NUM_SUB_SOLVERS; i++) {
+    for (int i = 0; i < num_sub_solvers_; i++) {
       ConvForward();
     }
-    
+
     shared_ptr<Msg> r;
 
-    // for (int i = 0; i < NUM_SUB_SOLVERS; i++) {
-    for (int i = 0; i < NUM_SUB_SOLVERS - 2; i++) {
+    // for (int i = 0; i < num_sub_solvers_; i++) {
+    for (int i = 0; i < num_sub_solvers_ - 2; i++) {
       if ( (r = this->RecvMsg(true)) != NULL) {  //blocked
         WorkerSolver<Dtype> *psolver = PrepareBackwardSolver(r);
         
@@ -289,7 +288,7 @@ void ConvThread<Dtype>::Run()
     WorkerSolver<Dtype> *prev_solver = NULL;
     int prev_conv_id = 0;
 
-    if (NUM_SUB_SOLVERS >= 2) {
+    if (num_sub_solvers_ >= 2) {
       if ( (r = this->RecvMsg(true)) != NULL) {
         prev_solver = PrepareBackwardSolver(r);
         prev_conv_id = r->conv_id();
@@ -442,7 +441,7 @@ template <typename Dtype>
 void ConvParamThread<Dtype>::ProcessForward(shared_ptr<Msg> m)
 {
   fwd_msgs_.push_back(m);
-
+  
   if (fwd_msgs_.size() == this->GetWorkerNum()) {
     SendActivations();
     fwd_msgs_.clear();

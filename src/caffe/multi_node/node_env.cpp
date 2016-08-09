@@ -198,6 +198,8 @@ int NodeEnv::InitModel()
   model_server_msg_ = r;
 
   num_workers_ = rt_info_.num_workers();
+  
+  num_sub_solvers_ = rt_info_.num_sub_solvers();
 
   return 0;
 }

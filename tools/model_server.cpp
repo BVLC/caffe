@@ -6,20 +6,20 @@
 #include "caffe/multi_node/sk_server.hpp"
 
 DEFINE_string(id_server_req, "tcp://*:1955", \
-"the zmq REQ addr of the id / layer-map server");
+        "the zmq REQ addr of the id / layer-map server");
 DEFINE_string(model_server, "tcp://*:1957", "the address of zmq model server");
 
 DEFINE_string(solver, "models/bvlc_alexnet/solver.prototxt",
-"location of solver");
-// DEFINE_string(solver, "examples/cifar10/cifar10_full_solver.prototxt",
-// "location of solver");
+        "location of solver");
 
 DEFINE_string(weights, "",
-"Optional; the pretrained weights to initialize finetuning");
+          "Optional; the pretrained weights to initialize finetuning");
 
 DEFINE_int32(workers, 0, "number of convolutional workers in fc server");
 
-// using namespace caffe;
+DEFINE_int32(sub_solvers, 1, 
+        "number of overlapping sub-solvers in conv clients");
+
 using caffe::ModelMap;
 using caffe::PONG;
 using caffe::Msg;
@@ -27,6 +27,7 @@ using caffe::SkServer;
 using caffe::GET_TRAIN_MODEL;
 using caffe::SkSock;
 using caffe::PING;
+
 // id server
 // low frequence update
 void rep_server_thread() {
@@ -55,7 +56,6 @@ void rep_server_thread() {
   }
 }
 
-
 // layer server, to send route info and solver parameters to clients
 void model_server_thread() {
   LOG(INFO) << "starting model server in " << FLAGS_model_server;
@@ -63,7 +63,7 @@ void model_server_thread() {
   shared_ptr<SkServer> mserver(new SkServer());
   mserver->Bind(FLAGS_model_server);
 
-  ModelMap<float> lmap(FLAGS_solver, FLAGS_workers);
+  ModelMap<float> lmap(FLAGS_solver, FLAGS_workers, FLAGS_sub_solvers);
 
   if (FLAGS_weights.size() > 0) {
     lmap.CopyTrainedLayersFrom(FLAGS_weights);

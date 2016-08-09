@@ -25,7 +25,7 @@ const int INVALID_CLOCK = -1;
 
 /// overlapping computation and communication 
 /// by splitting the solver into sub-solvers
-const int NUM_SUB_SOLVERS = 4;
+/// const int NUM_SUB_SOLVERS = 4;
 
 using boost::shared_ptr;
 

@@ -483,7 +483,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   NodeEnv::Instance()->PushFreeSolver(psolver);
  
   sub_batches_++;
-  if (sub_batches_ < num_workers_ * NUM_SUB_SOLVERS) {
+  if (sub_batches_ < num_workers_ * this->num_sub_solvers_) {
     return;
   }
   #endif
@@ -517,10 +517,10 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
     // LOG(INFO) << "keep solver for group id: " << group_id;
   }
   
-  if (grad_updates_vec_[group_id] < num_workers_ * NUM_SUB_SOLVERS) {
+  if (grad_updates_vec_[group_id] < num_workers_ * this->num_sub_solvers_) {
     return;
   }
-
+  
   // share paramters
   const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
   vector<Blob<Dtype>*> *param = this->GetParamBuf()->FindFreeParam();
@@ -543,7 +543,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), pgroup_solver->net());
   
   // scaling gradients
-  Dtype s = (Dtype)(1.0 / (Dtype)(num_workers_ * NUM_SUB_SOLVERS));
+  Dtype s = (Dtype)(1.0 / (Dtype)(num_workers_ * this->num_sub_solvers_));
   ParamHelper<Dtype>::ScalDiff(proot->net(), s);
   
   proot->CommitGradient();
