@@ -47,7 +47,7 @@ fi
 
 # Check what MKL lib we have in MKLROOT
 if [ -z `find $MKLROOT -name libmkl_rt.so -print -quit` ]; then
-  LIBRARIES=`basename $LOCALMKL | sed -e 's/^.*lib//'`
+  LIBRARIES=`basename $LOCALMKL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`
   OMP=1
 else
   LIBRARIES="mkl_rt"
