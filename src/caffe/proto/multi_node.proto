@@ -50,6 +50,9 @@ message NodeInfo {
 
   // staleness is used by parameter server to sync workers
   optional int32 staleness = 8 [default = 0];
+  
+  // the network interface to be used
+  optional string net_if = 9;
 }
 
 message RouteNode {

@@ -234,7 +234,7 @@ public:
   }
 
 protected:
-  static std::string IP(const std::string& interface) {
+  static std::string GetIP(const std::string& interface) {
     struct ifaddrs * ifAddrStruct = NULL;
     struct ifaddrs * ifa = NULL;
     void * tmpAddrPtr = NULL;

@@ -62,8 +62,17 @@ int NodeEnv::InitIP()
 {
   interface_.clear();
   node_ip_.clear();
-
-  GetInterfaceAndIP(interface_, node_ip_);
+  
+  if (model_request_.node_info().has_ip()) {
+    node_ip_ = model_request_.node_info().ip();
+  } else {
+    if (model_request_.node_info().has_net_if()) {
+      interface_ = model_request_.node_info().net_if();
+      node_ip_ = GetIP(interface_);
+    } else {
+      GetInterfaceAndIP(interface_, node_ip_);
+    }
+  }
 
   return 0;
 }

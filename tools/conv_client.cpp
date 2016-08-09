@@ -21,6 +21,7 @@ using caffe::ConvClient;
 DEFINE_int32(threads, 1, "number of convolution client threads");
 
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
+DEFINE_string(net_if, "", "the network interface to be used");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
 DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
@@ -44,6 +45,9 @@ int main(int argc, char** argv) {
 
   ModelRequest rq;
   rq.mutable_node_info()->set_node_role(CONV_CLIENT);
+  if (!FLAGS_net_if.empty()) {
+    rq.mutable_node_info()->set_net_if(FLAGS_net_if);
+  }
   NodeEnv::set_model_request(rq);
 
   LOG(INFO) << "conv node id: " << NodeEnv::Instance()->ID();
