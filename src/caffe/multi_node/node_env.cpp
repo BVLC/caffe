@@ -73,7 +73,8 @@ int NodeEnv::InitIP()
       GetInterfaceAndIP(interface_, node_ip_);
     }
   }
-
+  
+  CHECK(!node_ip_.empty()) << "failed to get IP address";
   return 0;
 }
 
