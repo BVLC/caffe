@@ -127,7 +127,10 @@ void MemorySparseDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
   nnz_pos_ = nnz;
 
   if (ptr_pos_ == 0)
-    has_new_data_ = false;
+    {
+      nnz_pos_ = 0;
+      has_new_data_ = false;
+    }
 }
 
 INSTANTIATE_CLASS(MemorySparseDataLayer);
