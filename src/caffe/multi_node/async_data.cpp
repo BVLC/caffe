@@ -70,10 +70,12 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
   
+  #ifndef TEST_ACCURACY
   if (Caffe::root_solver()) {
     LOG(WARNING) << "skip reading data in AsyncData layer with root solvers";
     return;
   }
+  #endif
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.

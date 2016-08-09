@@ -30,7 +30,9 @@ public:
   
   
   // disable sharing data layer in different solvers
+  #ifndef TEST_ACCURACY
   virtual inline bool ShareInParallel() const { return false; }
+  #endif
 
   virtual ~AsyncDataLayer();
 
