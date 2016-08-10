@@ -1,0 +1,84 @@
+NAME
+  caffe - command line brew for Caffe
+SYNOPSIS
+ caffe <COMMAND> <FLAGS>
+DESCRIPTION
+  Caffe is a deep learning framework made with expression, speed, 
+  and modularity in mind. It is developed by the Berkeley Vision
+  and Learning Center (BVLC) and community contributors.
+COMMANDS
+  train           train or finetune a model
+  test            score a model
+  device_query    show GPU diagnostic information
+  time            benchmark model execution time
+FREQUENTLY USED FLAGS
+  -gpu            (Optional; run in GPU mode on given device IDs separated by ','.
+                  Use '-gpu all' to run on all available GPUs. The effective
+                  training batch size is multiplied by the number of devices.)
+                  type: string default: ""
+  -iterations     (The number of iterations to run.) type: int32 default: 50
+  -level          (Optional; network level.) type: int32 default: 0
+  -model          (The model definition protocol buffer text file..) type: string
+                  default: ""
+  -phase          (Optional; network phase (TRAIN or TEST). Only used for 'time'.)
+                  type: string default: ""
+  -sighup_effect  (Optional; action to take when a SIGHUP signal is received:
+                  snapshot, stop or none.) type: string default: "snapshot"
+  -sigint_effect  (Optional; action to take when a SIGINT signal is received:
+                  snapshot, stop or none.) type: string default: "stop"
+  -snapshot       (Optional; the snapshot solver state to resume training.)
+                  type: string default: ""
+  -solver         (The solver definition protocol buffer text file.) type: string
+                  default: ""
+  -stage          (Optional; network stages (not to be confused with phase), separated
+                  by ','.) type: string default: ""
+  -weights        (Optional; the pretrained weights to initialize finetuning,
+                  separated by ','. Cannot be set simultaneously with snapshot.)
+                  type: string default: ""
+  -help           Show complete help messages.
+OTHER CAFFE UTILITIES
+  Apart from the "caffe" command line utility, there are also some utilities
+  available, run them with "-h" or "--help" argument to see corresponding help.
+  * convert_imageset
+  * convert_cifar_data
+  * compute_image_mean
+  * convert_mnist_siamese_data
+  * upgrade_net_proto_binary
+  * extract_features
+  * upgrade_solver_proto_text
+  * classification
+  * upgrade_net_proto_text
+  * convert_mnist_data
+
+EXAMPLES
+  Train a new Network
+
+    $ caffe train -solver solver.prototxt
+
+  Resume training a network from a snapshot
+
+    $ caffe train -solver solver.prototxt -snapshot bvlc_alexnet.solverstate
+
+  Fine-tune a network
+
+    $ caffe train -solver solver.prototxt -weights pre_trained.caffemodel
+
+  Test (evaluate) a trained model for 100 iterations, on GPU 0
+
+    $ caffe test -model train_val.prototxt -weights bvlc_alexnet.caffemodel -gpu 0 -iterations 100
+
+  Run a benchmark against AlexNet on GPU 0
+
+    $ caffe time -model deploy.prototxt -gpu 0
+
+  Check CUDA device availability of GPU 0
+
+    $ caffe device_query -gpu 0
+
+HOMEPAGE
+  http://caffe.berkeleyvision.org
+BUGS
+  https://github.com/BVLC/caffe/issues
+AUTHOR
+  This manpage is written by Zhou Mo <cdluminate@gmail.com> with the help of txt2man for Debian
+  according to program's help message.
