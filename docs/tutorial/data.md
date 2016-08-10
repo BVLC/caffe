@@ -60,6 +60,9 @@ The (data, label) pairing is a convenience for classification models.
         # - at random during training
         # - from the center during testing
         crop_size: 227
+        # mask one in `mask_freq` iterations, a `mask_size` block at a random position
+        mask_size: 50
+        mask_freq: 3
       }
     }
 
