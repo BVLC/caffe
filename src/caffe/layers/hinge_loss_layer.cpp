@@ -12,7 +12,7 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   const Dtype* label = bottom[1]->cpu_data();
-  int_tp num = bottom[0]->num();
+  int_tp num = bottom[0]->shape(0);
   int_tp count = bottom[0]->count();
   int_tp dim = count / num;
 
@@ -49,7 +49,7 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* label = bottom[1]->cpu_data();
-    int_tp num = bottom[0]->num();
+    int_tp num = bottom[0]->shape(0);
     int_tp count = bottom[0]->count();
     int_tp dim = count / num;
 

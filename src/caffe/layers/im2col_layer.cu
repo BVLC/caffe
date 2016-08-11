@@ -110,7 +110,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
-    for (int_tp n = 0; n < top[0]->num(); ++n) {
+    for (int_tp n = 0; n < top[0]->shape(0); ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
                                    n * top_dim_, channels_,

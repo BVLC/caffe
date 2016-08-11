@@ -119,9 +119,9 @@ class PositiveUnitballFiller : public Filler<Dtype> {
     caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
-    int_tp dim = blob->count() / blob->num();
+    int_tp dim = blob->count() / blob->shape(0);
     CHECK(dim);
-    for (int_tp i = 0; i < blob->num(); ++i) {
+    for (int_tp i = 0; i < blob->shape(0); ++i) {
       Dtype sum = 0;
       for (int_tp j = 0; j < dim; ++j) {
         sum += data[i * dim + j];
@@ -159,8 +159,8 @@ class XavierFiller : public Filler<Dtype> {
   }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int_tp fan_in = blob->count() / blob->num();
-    int_tp fan_out = blob->count() / blob->channels();
+    int_tp fan_in = blob->count() / blob->shape(0);
+    int_tp fan_out = blob->count() / blob->shape(1);
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {
@@ -203,8 +203,8 @@ class MSRAFiller : public Filler<Dtype> {
   }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int_tp fan_in = blob->count() / blob->num();
-    int_tp fan_out = blob->count() / blob->channels();
+    int_tp fan_in = blob->count() / blob->shape(0);
+    int_tp fan_out = blob->count() / blob->shape(1);
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {

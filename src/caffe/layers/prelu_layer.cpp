@@ -14,7 +14,7 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   PReLUParameter prelu_param = this->layer_param().prelu_param();
-  int_tp channels = bottom[0]->channels();
+  int_tp channels = bottom[0]->shape(1);
   channel_shared_ = prelu_param.channel_shared();
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
@@ -72,7 +72,7 @@ void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
   const int_tp dim = bottom[0]->count(2);
-  const int_tp channels = bottom[0]->channels();
+  const int_tp channels = bottom[0]->shape(1);
   const Dtype* slope_data = this->blobs_[0]->cpu_data();
 
   // For in-place computation
@@ -99,7 +99,7 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   const int_tp count = bottom[0]->count();
   const int_tp dim = bottom[0]->count(2);
-  const int_tp channels = bottom[0]->channels();
+  const int_tp channels = bottom[0]->shape(1);
 
   // For in-place computation
   if (top[0] == bottom[0]) {
