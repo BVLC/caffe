@@ -41,7 +41,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetup) {
   LayerParameter layer_param;
   ArgMaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->channels(), 1);
 }
 
@@ -51,7 +51,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupMaxVal) {
   argmax_param->set_out_max_val(true);
   ArgMaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->channels(), 2);
 }
 
@@ -102,7 +102,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPU) {
   const TypeParam* top_data = this->blob_top_->cpu_data();
   int_tp max_ind;
   TypeParam max_val;
-  int_tp num = this->blob_bottom_->num();
+  int_tp num = this->blob_bottom_->shape(0);
   int_tp dim = this->blob_bottom_->count() / num;
   for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(top_data[i], 0);
@@ -127,7 +127,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
   const TypeParam* top_data = this->blob_top_->cpu_data();
   int_tp max_ind;
   TypeParam max_val;
-  int_tp num = this->blob_bottom_->num();
+  int_tp num = this->blob_bottom_->shape(0);
   int_tp dim = this->blob_bottom_->count() / num;
   for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(top_data[i], 0);
@@ -152,7 +152,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   int_tp max_ind;
   TypeParam max_val;
-  int_tp num = this->blob_bottom_->num();
+  int_tp num = this->blob_bottom_->shape(0);
   int_tp dim = this->blob_bottom_->count() / num;
   for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);
@@ -183,7 +183,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxValTopK) {
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   int_tp max_ind;
   TypeParam max_val;
-  int_tp num = this->blob_bottom_->num();
+  int_tp num = this->blob_bottom_->shape(0);
   int_tp dim = this->blob_bottom_->count() / num;
   for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);

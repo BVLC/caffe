@@ -140,7 +140,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     for (int_tp i = 0; i < num_features; ++i) {
       const boost::shared_ptr<Blob<Dtype> > feature_blob =
         feature_extraction_net->blob_by_name(blob_names[i]);
-      int_tp batch_size = feature_blob->num();
+      int_tp batch_size = feature_blob->shape(0);
       int_tp dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;
       for (int_tp n = 0; n < batch_size; ++n) {
