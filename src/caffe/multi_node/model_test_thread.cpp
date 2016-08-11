@@ -108,7 +108,7 @@ void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   solver_->TestAll(tested_iter_);
   
   if (param_.snapshot() &&
-    train_iter_ - snapshot_iter_ > param_.snapshot()) {
+    train_iter_ - snapshot_iter_ >= param_.snapshot()) {
     snapshot_iter_ = train_iter_;
     solver_->Snapshot(snapshot_iter_);
   }

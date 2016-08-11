@@ -10,6 +10,9 @@
 
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
+#include "boost/unordered_map.hpp"
+
+using boost::unordered_map;
 
 namespace caffe {
 /**
@@ -106,6 +109,31 @@ public:
 protected:
   inline void Dequeue() { queue_size_--; }
   
+  // init param map: map from layer_id to learnable_id
+  int InitParamMap(shared_ptr<Net<Dtype> > net);
+
+  // check whether the layer is learnable
+  bool IsLearnable(int layer_id) {
+    if (layer_id >= layer_id_to_params_.size()) {
+      return false;
+    }
+
+    return layer_id_to_params_[layer_id].size() > 0;
+  }
+
+  const vector<int>& GetLearnableIndices(int layer_id) {
+    CHECK_GT(layer_id_to_params_.size(), layer_id);
+
+    return layer_id_to_params_[layer_id];
+  }
+  
+  int GetLayerId(const string& layer_name) {
+    unordered_map<string, int>::iterator iter = layer_id_by_name_.find(layer_name);
+    CHECK(iter != layer_id_by_name_.end());
+
+    return iter->second;
+  }
+
   Solver<Dtype> *NewSolver(Solver<Dtype> *proot, const SolverParameter& solver_param) {
     boost::mutex::scoped_lock lock(new_solver_mutex_);
     const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
@@ -141,15 +169,15 @@ protected:
   }
   
   // disable bottom backward to data layer.
-  void DisableBottomBwdToData(WorkerSolver<Dtype> * solver){
+  void DisableBottomBwdToData(WorkerSolver<Dtype> * solver) {
     
     vector<Blob<Dtype>*> data_top_blobs;
     shared_ptr<Net<Dtype> > net = solver->net();
     const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
     
-    for(int layer_id = 0; layer_id < layers.size(); layer_id ++){
+    for(int layer_id = 0; layer_id < layers.size(); layer_id ++) {
       
-      if( net->bottom_vecs()[layer_id].size() == 0 ){	
+      if( net->bottom_vecs()[layer_id].size() == 0 ) {	
         const vector<Blob<Dtype>*> & top_blobs = net->top_vecs()[layer_id];
         data_top_blobs.insert(data_top_blobs.end(), top_blobs.begin(), top_blobs.end());
       }
@@ -158,19 +186,26 @@ protected:
     vector<vector<bool> >& bottom_need_bwd = 
       const_cast<vector<vector<bool> >&>(net->bottom_need_backward());
 
-    for(int layer_id = 0; layer_id < layers.size(); layer_id ++){
+    for(int layer_id = 0; layer_id < layers.size(); layer_id ++) {
       const vector<Blob<Dtype>*> & bottom_blobs = net->bottom_vecs()[layer_id];
       
-      for(int i = 0; i < bottom_blobs.size(); i ++){
+      for(int i = 0; i < bottom_blobs.size(); i ++) {
         if( std::find(data_top_blobs.begin(), data_top_blobs.end(), bottom_blobs[i])
-            != data_top_blobs.end()){
+            != data_top_blobs.end()) {
           CHECK(i < bottom_need_bwd[layer_id].size());
           bottom_need_bwd[layer_id][i] = false;
         }
       }
     }
   }
- 
+
+protected:
+  // map layer id to its indices in learnable params
+  vector<vector<int> > layer_id_to_params_;
+  
+  // get layer id from layer name
+  unordered_map<string, int> layer_id_by_name_;
+
 protected:
   int worker_id_;
   int num_workers_;

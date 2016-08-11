@@ -30,6 +30,28 @@ class SGDSolver : public Solver<Dtype> {
     ++this->iter_;
   }
 
+  void CommitGradient(int param_id) {
+    CHECK(Caffe::root_solver());
+    const Dtype clip_gradients = this->param_.clip_gradients();
+    CHECK_LT(clip_gradients, 0) << "doesn't support clip gradients";
+    
+    Dtype rate = GetLearningRate();
+
+    Normalize(param_id);
+    Regularize(param_id);
+    ComputeUpdateValue(param_id, rate);
+
+    this->net_->learnable_params()[param_id]->Update();
+  }
+  
+  void IncreaseIter() {
+    Dtype rate = GetLearningRate();
+    if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    }
+    ++this->iter_;
+  }
+
   void UpdateDiff() {
     Dtype rate = GetLearningRate();
     ClipGradients();

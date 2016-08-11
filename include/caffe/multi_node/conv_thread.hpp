@@ -99,6 +99,7 @@ public:
   ConvParamThread(const vector<int>& clocks) { 
     ps_ids_ = NodeEnv::Instance()->ps_ids();
     ps_clocks_ = clocks;
+    ps_updates_.resize(ps_ids_.size());
 
     // init PS maps
     for (int i = 0; i < ps_ids_.size(); i++) {
@@ -107,8 +108,8 @@ public:
       for (int j = 0; j < ps_layers.size(); j++) {
         const string& layer_name = ps_layers[j];
         layer_to_ps_id_[layer_name] = ps_ids_[i];
-        layer_update_map_[layer_name] = false;
       }
+      ps_updates_[i] = 0;
     }
 
     // init forward blobs and ids
@@ -163,8 +164,11 @@ protected:
   // clock at each parameter server
   vector<int> ps_clocks_;
 
-  // map whether a layer is updated to sync with PS
-  map<string, bool> layer_update_map_;
+  // number of updates from a parameter server
+  vector<int> ps_updates_;
+  
+  // number of layers which have learnable blobs
+  int num_learnable_layers_;
   
   // map a layer to the id of PS
   map<string, int> layer_to_ps_id_;

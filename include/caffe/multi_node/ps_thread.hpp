@@ -19,8 +19,8 @@ class PSThread : public WorkerThread<Dtype>
 public:
   PSThread() {
     ps_solver_ = NULL;
-    pseudo_solver_ = NULL;
     iter_ = 0;
+    updated_layers_ = 0;
     staleness_ = NodeEnv::Instance()->get_staleness();
     num_workers_ = NodeEnv::Instance()->num_workers();
   }
@@ -28,10 +28,7 @@ public:
   virtual void Run();
 
 protected:
-  void SendUpdates();
- 
-  /// return the min clock in the clients
-  int MinClock();
+  void SendUpdates(int layer_id);
 
   int GetBatchSize(shared_ptr<Net<Dtype> > net) {
     const vector<Blob<Dtype>*>& out_blobs = net->output_blobs();
@@ -39,6 +36,12 @@ protected:
 
     return out_blobs[0]->shape(0);
   }
+  
+  /// update a layer
+  void UpdateLayer(int layer_id);
+
+  /// broadcast parameters of a layer
+  void BroadcastLayer(int layer_id);
 
   /// register a new client to PS
   void RegisterNode(shared_ptr<Msg> m);
@@ -46,7 +49,7 @@ protected:
   /// BSP stype, return true if we are ready to broadcast the parameter to clients
   void UpdateParam(shared_ptr<Msg> m);
 
-  void SendParam(shared_ptr<Net<Dtype> > net, int dst, int clock);
+  void SendParam(shared_ptr<Net<Dtype> > net, const vector<string>& layer_names, int dst, int clock);
 
   virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
     Caffe::set_root_solver(false);
@@ -57,29 +60,26 @@ protected:
 
 protected:
   SGDSolver<Dtype> *ps_solver_;
-  SGDSolver<Dtype> *pseudo_solver_;
+  
   int iter_;
 
   // map from client id to its array index
   map<int, int> client_idx_map_;
 
-  // 
+  // zmq id of each client 
   vector<int> client_ids_;
 
-  // the clock at each client
-  vector<int> client_clocks_;
-
-  // whether the client needs update from PS
-  vector<bool> client_need_update_;
-  
   // store the messages from clients
-  vector<shared_ptr<Msg> > client_msgs_;
-
-  // use to store the square results
-  vector<shared_ptr<Blob<Dtype> > > sqr_blobs_;
+  vector<vector<shared_ptr<Msg> > > client_msgs_;
   
-  // blobs filled with 1.0, used to get sum by dot
-  vector<shared_ptr<Blob<Dtype> > > eye_blobs_;
+  // number of gradients updated
+  int updated_layers_;
+
+  // number of learnalbe layers
+  int num_learnable_layers_;
+
+  // clock of each message
+  vector<vector<int> > msg_clocks_;
 
   // allowed staleness of PS
   // -1 means doesn't check staleness

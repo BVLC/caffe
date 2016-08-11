@@ -151,7 +151,7 @@ WorkerSolver<Dtype> *ConvThread<Dtype>::PrepareBackwardSolver(shared_ptr<Msg> m)
 {
   int conv_id = m->conv_id();
   WorkerSolver<Dtype> *pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->FindSolver(conv_id);
-  CHECK(pconv != NULL) << "cannot find conv_id: " << conv_id;
+  CHECK(pconv != NULL) << "cannot find conv_id: " << conv_id << ", msg type: " << m->type();
   
   /*
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
@@ -171,13 +171,11 @@ void ConvThread<Dtype>::SendLayer(int layer_id)
   
   m->AppendData(&layer_id, sizeof(layer_id));
   
-  #if 1
   const string& layer_name = param_solver_->net()->layer_names()[layer_id];
   vector<string> name_vec;
   name_vec.push_back(layer_name);
   
   ParamHelper<Dtype>::CopyParamDiffToMsg(param_solver_->net(), name_vec, m);
-  #endif
   // m->AppendData(&param_solver_, sizeof(param_solver_));
 
   this->SendMsg(m);
@@ -268,7 +266,6 @@ void ConvThread<Dtype>::Run()
     for (int i = 0; i < num_sub_solvers_; i++) {
       ConvForward();
     }
-
     shared_ptr<Msg> r;
 
     // for (int i = 0; i < num_sub_solvers_; i++) {
@@ -283,7 +280,6 @@ void ConvThread<Dtype>::Run()
       }
     }
     
-    #if 1
     bool is_done = false;
     WorkerSolver<Dtype> *prev_solver = NULL;
     int prev_conv_id = 0;
@@ -306,13 +302,12 @@ void ConvThread<Dtype>::Run()
       NodeEnv::Instance()->DeleteSolver(prev_conv_id);
       NodeEnv::Instance()->PushFreeSolver(prev_solver);
     }
-    #endif
 
     // ParamHelper<Dtype>::ScalDiff(param_solver_->net(), (Dtype)0.25);
     // ParamHelper<Dtype>::PrintDiff(param_solver_->net());
     
     param_solver_->net()->ClearParamDiffs();
-
+    
     // waiting for parameter update
     shared_ptr<Msg> m = this->RecvMsg(true);
     while (m->type() != PUT_PARAM) {
@@ -328,8 +323,6 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id)
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
   const string& layer_name = root_net->layer_names()[layer_id];
   
-  layer_update_map_[layer_name] = true;
-
   // check whether the PS can be updated
   map<string, int>::iterator iter = layer_to_ps_id_.find(layer_name);
   
@@ -339,12 +332,6 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id)
   }
 
   int ps_id = iter->second;
-  const vector<string>& ps_layers = NodeEnv::Instance()->FindPSLayer(ps_id);
-  for (int i = 0; i < ps_layers.size(); i++) {
-    if (!layer_update_map_[ps_layers[i]]) {
-      return;
-    }
-  }
   
   // Put gradient to PS
   shared_ptr<Msg> ps_msg(new Msg());
@@ -353,17 +340,14 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id)
   ps_msg->set_src(NodeEnv::Instance()->ID());
   
   int ps_local_index = ps_id_map_[ps_id];
-  ps_clocks_[ps_local_index]++;
-  ps_msg->set_clock(ps_clocks_[ps_local_index]);
+  int next_clock = ps_clocks_[ps_local_index] + 1;
+  ps_msg->set_clock(next_clock);
   
-  ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, ps_layers, ps_msg);
+  vector<string> layer_vec;
+  layer_vec.push_back(layer_name);
+  ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, layer_vec, ps_msg);
   
   this->SendMsg(ps_msg);
-
-  // reset the map
-  for (int i = 0; i < ps_layers.size(); i++) {
-    layer_update_map_[ps_layers[i]] = false;
-  }
 }
 
 template <typename Dtype>
@@ -371,11 +355,6 @@ void ConvParamThread<Dtype>::SyncWithPS()
 {
   SGDSolver<Dtype> *root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   shared_ptr<Net<Dtype> > conv_net = root_solver->net();
-
-  /// update the clocks to each parameter server
-  for (int i = 0; i < ps_clocks_.size(); i++) {
-    ps_clocks_[i]++;
-  }
   
   /// send the gradient to parameter servers
   for (int i = 0; i < ps_ids_.size(); i++) {
@@ -520,6 +499,10 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m)
   // ParamHelper<Dtype>::AddDiffFromNet(root_net, psolver->net(), layer_id);
   // shared_ptr<Layer<Dtype> > l = psolver->net()->layers()[layer_id];
   
+  if (!this->IsLearnable(layer_id)) {
+    return -1;
+  }
+
   ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
   layer_updates_[layer_id]++;
   
@@ -536,18 +519,25 @@ int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
 {
   map<int, int>::iterator map_iter = ps_id_map_.find(m->src());
   CHECK(map_iter != ps_id_map_.end());
+  
+  // increase clock since we've finished a iteration of compuation
+  int ps_idx = map_iter->second;
 
   SGDSolver<Dtype> *root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
   
   ParamHelper<Dtype>::CopyParamDataFromMsg(root_net, m);
-  
-  num_param_update_++;
+  ps_updates_[ps_idx]++;
 
+  if (ps_updates_[ps_idx] >= num_learnable_layers_) {
+    ps_clocks_[ps_idx]++;
+    num_param_update_++;
+    ps_updates_[ps_idx] = 0;
+  }
+  
   if (num_param_update_ < ps_ids_.size()) {
     return -1;
   }
-
   
   // we have got all the responces from parameter servers
   // and reset the counter
@@ -561,7 +551,7 @@ int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   notify->set_type(PUT_PARAM);
   notify->set_src(ROOT_THREAD_ID);
   notify->set_dst(WORKER_BCAST);
-
+  
   notify->AppendData(&num_param_update_, sizeof(num_param_update_));
   this->SendMsg(notify);
 
@@ -579,7 +569,8 @@ void ConvParamThread<Dtype>::Run()
   SGDSolver<Dtype> *root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
   root_net->ClearParamDiffs();
-
+  
+  num_learnable_layers_ = this->InitParamMap(root_net);
   // reset the update map
   layer_updates_.resize(root_net->layers().size());
   for (int i = 0; i < layer_updates_.size(); i++) {

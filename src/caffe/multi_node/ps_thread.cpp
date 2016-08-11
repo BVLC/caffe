@@ -15,22 +15,26 @@ void PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
     return;
   }
 
+  CHECK_EQ(m->num_blobs(), 1) << "expect 1 blob";
+  const string& layer_name = m->blob_info(0).blob_name();
+  int layer_id = this->GetLayerId(layer_name);
+
   int client_idx = map_iter->second;
-  client_need_update_[client_idx] = true;
-  client_clocks_[client_idx]++;
-  client_msgs_[client_idx] = m;
+  client_msgs_[layer_id][client_idx] = m;
 
-  if (client_clocks_[client_idx] != m->clock()) {
+  if ((msg_clocks_[layer_id][client_idx] + 1) != m->clock()) {
     LOG(INFO) << "unmatched clock between ps and client " << m->src();
-    client_clocks_[client_idx] = m->clock();
   }
-
-  SendUpdates();
+  
+  // update clock
+  msg_clocks_[layer_id][client_idx] = m->clock();
+  SendUpdates(layer_id);
 }
 
 
 template <typename Dtype>
-void PSThread<Dtype>::SendParam(shared_ptr<Net<Dtype> > net, int dst, int clock)
+void PSThread<Dtype>::SendParam(shared_ptr<Net<Dtype> > net, const vector<string>& layer_names,
+                                int dst, int clock)
 {
   shared_ptr<Msg> r(new Msg());
   r->set_type(PUT_PARAM);
@@ -39,78 +43,73 @@ void PSThread<Dtype>::SendParam(shared_ptr<Net<Dtype> > net, int dst, int clock)
   r->set_clock(clock);
 
   // shared_ptr<Net<Dtype> > net = ps_solver_->net();
-  ParamHelper<Dtype>::CopyParamDataToMsg(net, net->layer_names(), r);
+  ParamHelper<Dtype>::CopyParamDataToMsg(net, layer_names, r);
   
   this->SendMsg(r);
 }
 
-
 template <typename Dtype>
-void PSThread<Dtype>::SendUpdates()
+void PSThread<Dtype>::UpdateLayer(int layer_id)
 {
-  if (staleness_ < 0) {
-    for (int i = 0; i < client_ids_.size(); i++) {
-      if (client_need_update_[i]) {
-        SendParam(ps_solver_->net(), client_ids_[i], client_clocks_[i]);
-        // mark we are waiting for clients to join
-        client_need_update_[i] = false;
-      }
-    }
-  } else {
-    int clock_bound = MinClock() + staleness_;
-    
-    int num_updates = 0;
-    ps_solver_->net()->ClearParamDiffs();
+  CHECK(this->IsLearnable(layer_id));
 
-    // update parameters from clients
-    for (int i = 0; i < client_msgs_.size(); i++) {
-      if (client_msgs_[i] != NULL && client_clocks_[i] <= clock_bound) {
-        ParamHelper<Dtype>::AddDiffFromMsg(ps_solver_->net(), client_msgs_[i]);
-        client_msgs_[i].reset();
-        num_updates++;
-        iter_++;
-      }
-    }
-    
-    if (num_updates > 0) {
-      ParamHelper<Dtype>::ScalDiff(ps_solver_->net(), (Dtype)(1.0 / (Dtype)num_updates));
-      #if 0
-      LOG(INFO) << "iter: " << iter_;
-      ParamHelper<Dtype>::PrintDiff(ps_solver_->net());
-      LOG(INFO) << "param:";
-      ParamHelper<Dtype>::PrintParam(ps_solver_->net());
-      #endif
-      ps_solver_->CommitGradient();
-    }
-
-    // send the parameters to clients
-    for (int i = 0; i < client_ids_.size(); i++) {
-      if (client_need_update_[i] && client_clocks_[i] <= clock_bound) {
-        SendParam(ps_solver_->net(), client_ids_[i], client_clocks_[i]);
-        // mark we are waiting for clients to join
-        client_need_update_[i] = false;
-      }
-    }
+  const vector<int>& learnable_indices = this->GetLearnableIndices(layer_id);
+  for (int i = 0; i < learnable_indices.size(); i++) {
+    ps_solver_->CommitGradient(learnable_indices[i]);
   }
 }
 
 template <typename Dtype>
-int PSThread<Dtype>::MinClock()
+void PSThread<Dtype>::BroadcastLayer(int layer_id)
 {
-  // clock starts from 0
-  int min_clock = 0;
+  vector<string> layer_names;
+  layer_names.push_back(ps_solver_->net()->layer_names()[layer_id]);
 
-  if (client_clocks_.size() > 0) {
-    min_clock = client_clocks_[0];
-    
-    for (int i = 1; i < client_clocks_.size(); i++) {
-      if (client_clocks_[i] < min_clock) {
-        min_clock = client_clocks_[i];
-      }
+  for (int i = 0; i < client_ids_.size(); i++) {
+    SendParam(ps_solver_->net(), layer_names, client_ids_[i], iter_ + 1);
+  }
+}
+
+template <typename Dtype>
+void PSThread<Dtype>::SendUpdates(int layer_id)
+{
+  CHECK_EQ(staleness_, 0) << "only support sync mode";
+  
+  const vector<int>& clock_vec = msg_clocks_[layer_id];
+  int clock_bound = *std::min_element(clock_vec.begin(), clock_vec.end());
+  
+  vector<shared_ptr<Msg> > *pmsg_vec = &client_msgs_[layer_id];
+  int num_updates = 0;
+
+  // update parameters from clients
+  for (int i = 0; i < pmsg_vec->size(); i++) {
+    if (pmsg_vec->at(i) != NULL && clock_vec[i] <= clock_bound) {
+      ParamHelper<Dtype>::AddDiffFromMsg(ps_solver_->net(), pmsg_vec->at(i));
+      pmsg_vec->at(i).reset();
+      num_updates++;
     }
   }
+  
+  if (num_updates > 0) {
+    ParamHelper<Dtype>::ScalDiff(ps_solver_->net(), (Dtype)(1.0 / (Dtype)num_updates), layer_id);
+    UpdateLayer(layer_id);
+    BroadcastLayer(layer_id);
+    updated_layers_++;
+  }
+  
+  if (updated_layers_ >= num_learnable_layers_) {
+    #if 0
+    LOG(INFO) << "iter: " << iter_;
+    ParamHelper<Dtype>::PrintDiff(ps_solver_->net());
+    LOG(INFO) << "param:";
+    ParamHelper<Dtype>::PrintParam(ps_solver_->net());
+    #endif
 
-  return min_clock;
+    ps_solver_->net()->ClearParamDiffs();
+    updated_layers_ = 0;
+    iter_++;
+    ps_solver_->IncreaseIter();
+  }
 }
 
 template <typename Dtype>
@@ -118,26 +117,20 @@ void PSThread<Dtype>::RegisterNode(shared_ptr<Msg> m)
 {
   LOG(INFO) << "registering node: " << m->src();
   
-  //init clock as the minimal clock among the clients
-  int clock = MinClock() + staleness_;
-  client_clocks_.push_back(clock);
-  
   int client_idx = client_ids_.size();
 
   int node_id = m->src();
   client_ids_.push_back(node_id);
   client_idx_map_[node_id] = client_idx;
 
-  // send parameters to the client by default
-  client_need_update_.push_back(true);
-  // push back a null msg for init
-  shared_ptr<Msg> null_msg;
-  client_msgs_.push_back(null_msg);
-  
   // wait for all the conv. clients
   LOG(INFO) << "total workers: " << num_workers_ << ", current workers: " << client_ids_.size();
   if (client_ids_.size() >= num_workers_) {
-    SendUpdates();
+    shared_ptr<Net<Dtype> > ps_net = ps_solver_->net();
+    for (int i = 0; i < client_ids_.size(); i++) {
+      // send the expected clock to clients 
+      SendParam(ps_net, ps_net->layer_names(), client_ids_[i], iter_);
+    }
   }
 }
 
@@ -147,30 +140,24 @@ void PSThread<Dtype>::Run()
   Caffe::set_root_solver(true);
   // use root solver as ps solver
   ps_solver_ = (SGDSolver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
-  
-  SolverParameter param;
-  param.CopyFrom(NodeEnv::Instance()->SolverParam());
-  // disable displayer in pseudo solver
-  param.set_display(0);
-  pseudo_solver_ = new SGDSolver<Dtype>(param);
+  shared_ptr<Net<Dtype> > ps_net = ps_solver_->net();
 
-  // init square blobs
-  const vector<shared_ptr<Layer<Dtype> > >& layer_vec = ps_solver_->net()->layers();
-  sqr_blobs_.resize(layer_vec.size());
-  eye_blobs_.resize(layer_vec.size());
-  
+  // init internal states
+  const vector<shared_ptr<Layer<Dtype> > >& layer_vec = ps_net->layers();
+  client_msgs_.resize(layer_vec.size());
+  msg_clocks_.resize(layer_vec.size());
+
   for (int i = 0; i < layer_vec.size(); i++) {
-    if (layer_vec[i]->blobs().size() > 0) {
-      sqr_blobs_[i].reset(new Blob<Dtype>(layer_vec[i]->blobs()[0]->shape()));
-      caffe_set(sqr_blobs_[i]->count(), (Dtype)0, sqr_blobs_[i]->mutable_cpu_diff());
-      caffe_set(sqr_blobs_[i]->count(), (Dtype)0, sqr_blobs_[i]->mutable_cpu_data());
-      
-      eye_blobs_[i].reset(new Blob<Dtype>(layer_vec[i]->blobs()[0]->shape()));
-      caffe_set(eye_blobs_[i]->count(), (Dtype)1.0, eye_blobs_[i]->mutable_cpu_diff());
-      caffe_set(eye_blobs_[i]->count(), (Dtype)1.0, eye_blobs_[i]->mutable_cpu_data());
+    client_msgs_[i].resize(num_workers_);
+    msg_clocks_[i].resize(num_workers_);
+
+    for (int j = 0; j < msg_clocks_[i].size(); j++) {
+      msg_clocks_[i][j] = iter_;
     }
   }
-  
+
+  num_learnable_layers_ = this->InitParamMap(ps_net);
+
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);
 
@@ -179,7 +166,7 @@ void PSThread<Dtype>::Run()
     } else if (m->type() == REGISTER_NODE) {
       RegisterNode(m);
     } else if (m->type() == GET_PARAM) {
-      SendParam(ps_solver_->net(), m->src(), MinClock());
+      SendParam(ps_net, ps_net->layer_names(), m->src(), iter_);
     } else {
       LOG(ERROR) << "Cannot deal with message type: " << m->type() 
         << " from: " << m->src();
