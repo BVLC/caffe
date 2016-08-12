@@ -32,10 +32,6 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void load_batch(Batch<Dtype>* batch);
 
   DataReader reader_;
-#ifdef _OPENMP
-  vector<shared_ptr<Blob<Dtype> > > transformed_datas_;
-  int previous_batch_size_;   //  To avoid realocation when not needed
-#endif
 };
 
 }  // namespace caffe

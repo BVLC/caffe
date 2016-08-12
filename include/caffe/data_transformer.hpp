@@ -27,23 +27,6 @@ class DataTransformer {
   void InitRand();
 
   /**
-   * @brief Let know data transformer about data reader used
-   *
-   *  @param data_read
-   *    pointer to data_reader that gives datums for transformations
-   */
-  void setDataReader(DataReader* data_reader);
-
-  /**
-   * @brief Mark for currently set data_reader, given datum to
-   *  be free to be used for further reading ops
-   *
-   *  @param datum_ptr
-   *    pointer to datum to be used for further data reads
-   */
-  void dataReaderPushFreeDatum(const Datum* datum_ptr);
-
-  /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data.
    *
@@ -53,7 +36,9 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
+          const int rand = -1);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -92,11 +77,10 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
-#ifndef _OPENMP
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
-#else
+
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
-          int rand = -1);
+          const int rand = -1);
+#ifdef _OPENMP
   bool getRandMirror() { return  param_.mirror() ? Rand(2) : -1; }
 #endif  // _OPENMP
 
@@ -163,7 +147,8 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
-  void Transform(const Datum& datum, Dtype* transformed_data);
+  void Transform(const Datum& datum, Dtype* transformed_data,
+          const int rand = -1);
   // Tranformation parameters
   TransformationParameter param_;
 
@@ -179,8 +164,11 @@ class DataTransformer {
 
  private:
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-  void Transform(const cv::Mat& cv_img,
-                Blob<Dtype>* transformed_blob);
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+
+  template<bool has_uint8,  bool do_mirror, bool has_mean_file,
+          bool has_mean_values>
+  void Transform(const Datum& datum, Dtype* transformed_data);
 };
 
 }  // namespace caffe
