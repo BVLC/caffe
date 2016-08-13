@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -78,6 +79,24 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_loss_;
   }
 
+  void FillItem(Dtype* blob_data, const string values) {
+    // Split values to vector of items.
+    vector<string> items;
+    std::istringstream iss(values);
+    std::copy(std::istream_iterator<string>(iss),
+              std::istream_iterator<string>(), back_inserter(items));
+    int num_items = items.size();
+    CHECK_EQ(num_items, 8);
+
+    for (int i = 0; i < 8; ++i) {
+      if (i >= 3 && i <= 6) {
+        blob_data[i] = atof(items[i].c_str());
+      } else {
+        blob_data[i] = atoi(items[i].c_str());
+      }
+    }
+  }
+
   // Fill the bottom blobs.
   void Fill(bool share_location) {
     int loc_classes = share_location ? 1 : num_classes_;
@@ -89,6 +108,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     Blob<Dtype>* fake_input = new Blob<Dtype>(num_, 3, 20, 20);
 
     // 1) Fill ground truth.
+#ifdef USE_LMDB
     string filename;
     GetTempDirname(&filename);
     DataParameter_DB backend = DataParameter_DB_LMDB;
@@ -156,6 +176,20 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     fake_top_vec.push_back(blob_bottom_gt_);
     anno_data_layer.SetUp(fake_bottom_vec, fake_top_vec);
     anno_data_layer.Forward(fake_bottom_vec, fake_top_vec);
+#else
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(fake_input);
+    vector<int> gt_shape(4, 1);
+    gt_shape[2] = 4;
+    gt_shape[3] = 8;
+    blob_bottom_gt_->Reshape(gt_shape);
+    Dtype* gt_data = blob_bottom_gt_->mutable_cpu_data();
+    FillItem(gt_data, "0 1 0 0.1 0.1 0.3 0.3 0");
+    FillItem(gt_data + 8, "2 1 0 0.1 0.1 0.3 0.3 0");
+    FillItem(gt_data + 8 * 2, "2 2 0 0.2 0.2 0.4 0.4 0");
+    FillItem(gt_data + 8 * 3, "2 2 1 0.6 0.6 0.8 0.9 1");
+#endif  // USE_LMDB
 
     // Fake layer
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
