@@ -1,7 +1,7 @@
 // This is a demo code for using a SSD model to do detection.
 // The code is modified from examples/cpp_classification/classification.cpp.
 // Usage:
-//    ssd_detection [FLAGS] model_file weights_file list_file
+//    ssd_detect [FLAGS] model_file weights_file list_file
 //
 // where model_file is the .prototxt file defining the network architecture, and
 // weights_file is the .caffemodel file containing the network parameters, and
