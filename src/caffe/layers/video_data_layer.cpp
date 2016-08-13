@@ -1,7 +1,6 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#endif  // USE_OPENCV
 
 #include <stdint.h>
 #include <algorithm>
@@ -146,3 +145,4 @@ INSTANTIATE_CLASS(VideoDataLayer);
 REGISTER_LAYER_CLASS(VideoData);
 
 }  // namespace caffe
+#endif  // USE_OPENCV
