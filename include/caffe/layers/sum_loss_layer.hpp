@@ -1,5 +1,5 @@
-#ifndef CAFFE_EUCLIDEAN_LOSS_LAYER_HPP_
-#define CAFFE_EUCLIDEAN_LOSS_LAYER_HPP_
+#ifndef CAFFE_SUM_LOSS_LAYER_HPP_
+#define CAFFE_SUM_LOSS_LAYER_HPP_
 
 #include <vector>
 
@@ -44,4 +44,4 @@ class SumLossLayer : public LossLayer<Dtype> {
 
 }  // namespace caffe
 
-
+#endif
