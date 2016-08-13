@@ -8,7 +8,6 @@
 
 #include "boost/iterator/counting_iterator.hpp"
 
-#include "caffe/3rdparty/hungarian.h"
 #include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
