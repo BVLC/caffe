@@ -187,28 +187,6 @@ void GetImageSize(const string& filename, int* height, int* width) {
   *width = cv_img.cols;
 }
 
-#endif  // USE_OPENCV
-
-bool ReadFileToDatum(const string& filename, const int label,
-    Datum* datum) {
-  std::streampos size;
-
-  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
-  if (file.is_open()) {
-    size = file.tellg();
-    std::string buffer(size, ' ');
-    file.seekg(0, ios::beg);
-    file.read(&buffer[0], size);
-    file.close();
-    datum->set_data(buffer);
-    datum->set_label(label);
-    datum->set_encoded(true);
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& labelfile, const int height, const int width,
     const int min_dim, const int max_dim, const bool is_color,
@@ -247,6 +225,28 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
     default:
       LOG(FATAL) << "Unknown annotation type.";
       return false;
+  }
+}
+
+#endif  // USE_OPENCV
+
+bool ReadFileToDatum(const string& filename, const int label,
+    Datum* datum) {
+  std::streampos size;
+
+  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
+  if (file.is_open()) {
+    size = file.tellg();
+    std::string buffer(size, ' ');
+    file.seekg(0, ios::beg);
+    file.read(&buffer[0], size);
+    file.close();
+    datum->set_data(buffer);
+    datum->set_label(label);
+    datum->set_encoded(true);
+    return true;
+  } else {
+    return false;
   }
 }
 
