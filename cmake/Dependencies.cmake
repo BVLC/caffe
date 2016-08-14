@@ -1,7 +1,8 @@
-# This list is required for static linking and exported to CaffeConfig.cmake
+# These lists are later turned into target properties on main caffe library target
 set(Caffe_LINKER_LIBS "")
 set(Caffe_INCLUDE_DIRS "")
 set(Caffe_DEFINITIONS "")
+set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
@@ -14,10 +15,18 @@ list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
 # ---[ OpenMP
 if(USE_OPENMP)
-  # TODO: use something exportable here
+  # Ideally, this should be provided by the BLAS library IMPORTED target. However,
+  # nobody does this, so we need to link to OpenMP explicitly and have the maintainer
+  # to flick the switch manually as needed.
+  #
+  # Moreover, OpenMP package does not provide an IMPORTED target as well, and the
+  # suggested way of linking to OpenMP is to append to CMAKE_{C,CXX}_FLAGS.
+  # However, this naïve method will force any user of Caffe to add the same kludge
+  # into their buildsystem again, so we put these options into per-target PUBLIC
+  # compile options and link flags, so that they will be exported properly.
   find_package(OpenMP REQUIRED)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
+  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
 endif()
 
 # ---[ Google-glog
