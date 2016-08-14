@@ -2,6 +2,7 @@
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <vector>
+#include <queue>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -10,6 +11,7 @@
 namespace caffe {
 
 class DataReader;
+
 /**
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
@@ -25,6 +27,21 @@ class DataTransformer {
    *    transformation.
    */
   void InitRand();
+  
+  class RandNumbers
+  {
+    std::queue<uint32_t> random_numbers;
+  public:
+      void push(uint32_t num) { random_numbers.push(num);}
+      int operator()(int n) {
+          CHECK(!random_numbers.empty());
+          uint32_t num = random_numbers.front();
+          random_numbers.pop();
+          return num % n;
+      }
+  };
+
+  void GenerateRandNumbers(RandNumbers& rn);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -36,9 +53,10 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-
+  
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
-          const int rand = -1);
+           RandNumbers& rand);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -78,11 +96,9 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
 
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
-          const int rand = -1);
-#ifdef _OPENMP
-  bool getRandMirror() { return  param_.mirror() ? Rand(2) : -1; }
-#endif  // _OPENMP
+        RandNumbers& rand);
 
 #endif  // USE_OPENCV
 
@@ -146,9 +162,10 @@ class DataTransformer {
    *    A uniformly random integer value from ({0, 1, ..., n-1}).
    */
   virtual int Rand(int n);
+  
+  virtual uint32_t Rand();
 
-  void Transform(const Datum& datum, Dtype* transformed_data,
-          const int rand = -1);
+  void Transform(const Datum& datum, Dtype* transformed_data, RandNumbers& rand);
   // Tranformation parameters
   TransformationParameter param_;
 
@@ -164,11 +181,12 @@ class DataTransformer {
 
  private:
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
+                                                             RandNumbers& Rand);
 
   template<bool has_uint8,  bool do_mirror, bool has_mean_file,
           bool has_mean_values>
-  void Transform(const Datum& datum, Dtype* transformed_data);
+  void Transform(const Datum& datum, Dtype* transformed_data, RandNumbers& Rand);
 };
 
 }  // namespace caffe

@@ -107,13 +107,15 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       top_label[item_id] = datum->label();
     }
 #ifdef _OPENMP
-    int rand = this->data_transformer_->getRandMirror();
-    #pragma omp task firstprivate(offset, datum, rand)
+    typename DataTransformer<Dtype>::RandNumbers precalculated_rand_numbers;
+    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+    #pragma omp task firstprivate(offset, datum, precalculated_rand_numbers)
     {
       Blob<Dtype> tmp_data;
       tmp_data.Reshape(top_shape);
       tmp_data.set_cpu_data(top_data + offset);
-      this->data_transformer_->Transform(*datum, &tmp_data, rand);
+      this->data_transformer_->Transform(*datum, &tmp_data,
+                                              precalculated_rand_numbers);
       (reader_.free()).push(datum);
     }
 #else
