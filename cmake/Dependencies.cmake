@@ -3,7 +3,7 @@ set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
 # ---[ Threads
@@ -25,7 +25,7 @@ include(cmake/ProtoBuf.cmake)
 
 # ---[ HDF5
 find_package(HDF5 COMPONENTS HL REQUIRED)
-include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 # ---[ LMDB
@@ -42,7 +42,7 @@ endif()
 # ---[ LevelDB
 if(USE_LEVELDB)
   find_package(LevelDB REQUIRED)
-  include_directories(SYSTEM ${LevelDB_INCLUDE})
+  include_directories(SYSTEM ${LevelDB_INCLUDES})
   list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
   add_definitions(-DUSE_LEVELDB)
 endif()
