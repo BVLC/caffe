@@ -28,6 +28,9 @@ target_include_directories(caffe ${Caffe_INCLUDE_DIRS}
                                  $<BUILD_INTERFACE:${Caffe_INCLUDE_DIR}>
                                  $<INSTALL_INTERFACE:include>)
 target_compile_definitions(caffe ${Caffe_DEFINITIONS})
+if(Caffe_COMPILE_OPTIONS)
+  target_compile_options(caffe ${Caffe_COMPILE_OPTIONS})
+endif()
 set_target_properties(caffe PROPERTIES
     VERSION   ${CAFFE_TARGET_VERSION}
     SOVERSION ${CAFFE_TARGET_SOVERSION}
