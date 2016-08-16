@@ -8,8 +8,7 @@
 #include "caffe/data_reader.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
+
 
 namespace caffe {
 
@@ -43,8 +42,8 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 template<typename Dtype>
 
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                         Dtype* transformed_data, RandNumbers& pre_calc_rand) {
-  const bool do_mirror = param_.mirror() && pre_calc_rand(2);
+                         Dtype* transformed_data, RandNumbers& rand_num) {
+  const bool do_mirror = param_.mirror() && rand_num(2);
   const string& data = datum.data();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_file = param_.has_mean_file();
@@ -56,33 +55,50 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   if (!has_uint8) {
     switch (transform_func_id) {
-        case 0: Transform<false, false, false, false>(datum, transformed_data, pre_calc_rand); break;
-        case 1: Transform<false, false, false, true >(datum, transformed_data, pre_calc_rand); break;
-        case 2: Transform<false, false, true , false>(datum, transformed_data, pre_calc_rand); break;
-        case 3: Transform<false, false, true , true >(datum, transformed_data, pre_calc_rand); break;
-        case 4: Transform<false, true , false, false>(datum, transformed_data, pre_calc_rand); break;
-        case 5: Transform<false, true , false, true >(datum, transformed_data, pre_calc_rand); break;
-        case 6: Transform<false, true , true , false>(datum, transformed_data, pre_calc_rand); break;
-        case 7: Transform<false, true , true , true >(datum, transformed_data, pre_calc_rand); break;
+        case 0: Transform<false, false, false, false>(datum, transformed_data,
+          rand_num); break;
+        case 1: Transform<false, false, false, true >(datum, transformed_data,
+          rand_num); break;
+        case 2: Transform<false, false, true , false>(datum, transformed_data,
+          rand_num); break;
+        case 3: Transform<false, false, true , true >(datum, transformed_data,
+          rand_num); break;
+        case 4: Transform<false, true , false, false>(datum, transformed_data,
+          rand_num); break;
+        case 5: Transform<false, true , false, true >(datum, transformed_data,
+          rand_num); break;
+        case 6: Transform<false, true , true , false>(datum, transformed_data,
+          rand_num); break;
+        case 7: Transform<false, true , true , true >(datum, transformed_data,
+          rand_num); break;
     }
   } else {
     switch (transform_func_id) {
-        case 0: Transform<true, false, false, false>(datum, transformed_data, pre_calc_rand); break;
-        case 1: Transform<true, false, false, true >(datum, transformed_data, pre_calc_rand); break;
-        case 2: Transform<true, false, true , false>(datum, transformed_data, pre_calc_rand); break;
-        case 3: Transform<true, false, true , true >(datum, transformed_data, pre_calc_rand); break;
-        case 4: Transform<true, true , false, false>(datum, transformed_data, pre_calc_rand); break;
-        case 5: Transform<true, true , false, true >(datum, transformed_data, pre_calc_rand); break;
-        case 6: Transform<true, true , true , false>(datum, transformed_data, pre_calc_rand); break;
-        case 7: Transform<true, true , true , true >(datum, transformed_data, pre_calc_rand); break;
+        case 0: Transform<true, false, false, false>(datum, transformed_data,
+          rand_num); break;
+        case 1: Transform<true, false, false, true >(datum, transformed_data,
+          rand_num); break;
+        case 2: Transform<true, false, true , false>(datum, transformed_data,
+          rand_num); break;
+        case 3: Transform<true, false, true , true >(datum, transformed_data,
+          rand_num); break;
+        case 4: Transform<true, true , false, false>(datum, transformed_data,
+          rand_num); break;
+        case 5: Transform<true, true , false, true >(datum, transformed_data,
+          rand_num); break;
+        case 6: Transform<true, true , true , false>(datum, transformed_data,
+          rand_num); break;
+        case 7: Transform<true, true , true , true >(datum, transformed_data,
+          rand_num); break;
     }
   }
 }
 
 template<typename Dtype>
-template<bool has_uint8, bool do_mirror, bool has_mean_file, bool has_mean_values>
+template<bool has_uint8, bool do_mirror, bool has_mean_file,
+  bool has_mean_values>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                         Dtype* transformed_data, RandNumbers& pre_calc_rand) {
+                         Dtype* transformed_data, RandNumbers& rand_num) {
   const string& data = datum.data();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -123,8 +139,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     width = crop_size;
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = pre_calc_rand(datum_height - crop_size + 1);
-      w_off = pre_calc_rand(datum_width - crop_size + 1);
+      h_off = rand_num(datum_height - crop_size + 1);
+      w_off = rand_num(datum_width - crop_size + 1);
     } else {
       h_off = (datum_height - crop_size) / 2;
       w_off = (datum_width - crop_size) / 2;
@@ -165,27 +181,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::GenerateRandNumbers(RandNumbers& rand)
-{
-   int count = (param_.mirror()? 1:0) + 
+void DataTransformer<Dtype>::GenerateRandNumbers(PreclcRandomNumbers& rn) {
+  int count = (param_.mirror()? 1:0) +
                   ((phase_ == TRAIN && param_.crop_size())? 2 : 0);
-   for (int i = 0; i < count; i++)
-     rand.push(Rand());
+  rn.FillRandomNumbers(count, rand_num_);
 }
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                 Blob<Dtype>* transformed_blob) {
-  RandNumbers precalculated_rand_numbers;
-  GenerateRandNumbers(precalculated_rand_numbers);
-  Transform(datum, transformed_blob, precalculated_rand_numbers);
-}
-
-template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const Datum& datum,
-               Blob<Dtype>* transformed_blob, RandNumbers& pre_calc_rand) {
+               Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
   // If datum is encoded, decoded and transform the cv::image.
-
   if (datum.encoded()) {
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
@@ -198,7 +203,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-    return Transform(cv_img, transformed_blob, pre_calc_rand); 
+    return Transform(cv_img, transformed_blob, rand_num);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -233,7 +238,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
-  Transform(datum, transformed_data, pre_calc_rand);
+  Transform(datum, transformed_data, rand_num);
 }
 
 template<typename Dtype>
@@ -278,18 +283,9 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img, 
-                                              Blob<Dtype>* transformed_blob)
-{
-  RandNumbers precalculated_rand_numbers;
-  GenerateRandNumbers(precalculated_rand_numbers);
-  Transform(cv_img, transformed_blob, precalculated_rand_numbers);
-}
-
-template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob, RandNumbers& pre_calc_rand) {
-  const bool do_mirror = param_.mirror() && pre_calc_rand(2);
+        Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
+  const bool do_mirror = param_.mirror() && rand_num(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -298,21 +294,29 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                           has_mean_values;
 
   switch (transform_func_id) {
-    case 0: Transform<false, false, false>(cv_img, transformed_blob, pre_calc_rand); break;
-    case 1: Transform<false, false, true >(cv_img, transformed_blob, pre_calc_rand); break;
-    case 2: Transform<false, true , false>(cv_img, transformed_blob, pre_calc_rand); break;
-    case 3: Transform<false, true , true >(cv_img, transformed_blob, pre_calc_rand); break;
-    case 4: Transform<true , false, false>(cv_img, transformed_blob, pre_calc_rand); break;
-    case 5: Transform<true , false, true >(cv_img, transformed_blob, pre_calc_rand); break;
-    case 6: Transform<true , true , false>(cv_img, transformed_blob, pre_calc_rand); break;
-    case 7: Transform<true , true , true >(cv_img, transformed_blob, pre_calc_rand); break;
+    case 0: Transform<false, false, false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 1: Transform<false, false, true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 2: Transform<false, true , false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 3: Transform<false, true , true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 4: Transform<true , false, false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 5: Transform<true , false, true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 6: Transform<true , true , false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 7: Transform<true , true , true >(cv_img, transformed_blob, rand_num);
+      break;
   }
 }
 
 template<typename Dtype>
 template<bool do_mirror, bool has_mean_file, bool has_mean_values>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob, RandNumbers& pre_calc_rand) {
+        Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -363,8 +367,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = pre_calc_rand(img_height - crop_size + 1);
-      w_off = pre_calc_rand(img_width - crop_size + 1);
+      h_off = rand_num(img_height - crop_size + 1);
+      w_off = rand_num(img_width - crop_size + 1);
     } else {
       h_off = (img_height - crop_size) / 2;
       w_off = (img_width - crop_size) / 2;
@@ -443,7 +447,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool do_mirror = param_.mirror() && rand_num_(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -454,8 +458,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(input_height - crop_size + 1);
-      w_off = Rand(input_width - crop_size + 1);
+      h_off = rand_num_(input_height - crop_size + 1);
+      w_off = rand_num_(input_width - crop_size + 1);
     } else {
       h_off = (input_height - crop_size) / 2;
       w_off = (input_width - crop_size) / 2;
@@ -609,24 +613,10 @@ void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
   if (needs_rand) {
-    const unsigned int rng_seed = caffe_rng_rand();
-    rng_.reset(new Caffe::RNG(rng_seed));
+    rand_num_.Init();
   } else {
-    rng_.reset();
+    rand_num_.Reset();
   }
-}
-
-template <typename Dtype>
-int DataTransformer<Dtype>::Rand(int n) {
-  CHECK_GT(n, 0);
-  return (Rand() % n);
-}
-
-template <typename Dtype>
-uint32_t DataTransformer<Dtype>::Rand() {
-  CHECK(rng_);
-  caffe::rng_t* rng = static_cast<caffe::rng_t*>(rng_->generator());
-  return (*rng)();
 }
 
 INSTANTIATE_CLASS(DataTransformer);

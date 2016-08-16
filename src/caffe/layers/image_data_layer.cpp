@@ -160,7 +160,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
     int offset = batch->data_.offset(item_id);
     std::string img_file_name = lines_[lines_id_].first;
-    typename DataTransformer<Dtype>::RandNumbers precalculated_rand_numbers;
+    PreclcRandomNumbers precalculated_rand_numbers;
     this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
     #pragma omp task firstprivate(offset, img_file_name, \
                                                     precalculated_rand_numbers)

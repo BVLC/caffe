@@ -1,16 +1,73 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
-#include <vector>
 #include <queue>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
+
+
 
 namespace caffe {
 
 class DataReader;
+
+class RandNumbers {
+ public:
+   /**
+   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
+   *
+   * @param n
+   *    The upperbound (exclusive) value of the random number.
+   * @return
+   *    A uniformly random integer value from ({0, 1, ..., n-1}).
+   */
+  int operator()(int n) {
+    CHECK_GT(n, 0);
+    return GetNextNumber() % n;
+  }
+
+  virtual uint32_t GetNextNumber() = 0;
+};
+
+class GenRandNumbers: public RandNumbers {
+ public:
+  void Init() {
+    const unsigned int rng_seed = caffe_rng_rand();
+    rng_.reset(new Caffe::RNG(rng_seed));
+  }
+  void Reset() { rng_.reset(); }
+  virtual uint32_t GetNextNumber() {
+    CHECK(rng_);
+    caffe::rng_t* rng = static_cast<caffe::rng_t*>(rng_->generator());
+    return (*rng)();
+  }
+ private:
+  shared_ptr<Caffe::RNG> rng_;
+};
+
+
+class PreclcRandomNumbers: public RandNumbers {
+ public:
+  void FillRandomNumbers(int num_count, RandNumbers& rand_gen) {
+    for (int i = 0; i < num_count; i++)
+      random_numbers.push(rand_gen.GetNextNumber());
+  }
+
+  virtual uint32_t GetNextNumber() {
+    CHECK(!random_numbers.empty());
+    uint32_t num = random_numbers.front();
+    random_numbers.pop();
+    return num;
+  }
+ private:
+  std::queue<uint32_t> random_numbers;
+};
+
 
 /**
  * @brief Applies common transformations to the input data, such as
@@ -27,21 +84,8 @@ class DataTransformer {
    *    transformation.
    */
   void InitRand();
-  
-  class RandNumbers
-  {
-    std::queue<uint32_t> random_numbers;
-  public:
-      void push(uint32_t num) { random_numbers.push(num);}
-      int operator()(int n) {
-          CHECK(!random_numbers.empty());
-          uint32_t num = random_numbers.front();
-          random_numbers.pop();
-          return num % n;
-      }
-  };
 
-  void GenerateRandNumbers(RandNumbers& rn);
+  void GenerateRandNumbers(PreclcRandomNumbers& rn);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -53,10 +97,11 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-  
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob)
+                               {Transform(datum, transformed_blob, rand_num_);}
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
-           RandNumbers& rand);
+                                                       RandNumbers& rand_num);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -96,9 +141,10 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
 
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob)
+                               {Transform(cv_img, transformed_blob, rand_num_);}
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
-        RandNumbers& rand);
+                                                         RandNumbers& rand_num);
 
 #endif  // USE_OPENCV
 
@@ -153,24 +199,13 @@ class DataTransformer {
 #endif  // USE_OPENCV
 
  protected:
-   /**
-   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
-   *
-   * @param n
-   *    The upperbound (exclusive) value of the random number.
-   * @return
-   *    A uniformly random integer value from ({0, 1, ..., n-1}).
-   */
-  virtual int Rand(int n);
-  
-  virtual uint32_t Rand();
+  GenRandNumbers rand_num_;
 
-  void Transform(const Datum& datum, Dtype* transformed_data, RandNumbers& rand);
+  void Transform(const Datum& datum, Dtype* transformed_data,
+                                                    RandNumbers& rand_num);
   // Tranformation parameters
   TransformationParameter param_;
 
-
-  shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
@@ -182,11 +217,12 @@ class DataTransformer {
  private:
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
-                                                             RandNumbers& Rand);
+                                                         RandNumbers& rand_num);
 
   template<bool has_uint8,  bool do_mirror, bool has_mean_file,
           bool has_mean_values>
-  void Transform(const Datum& datum, Dtype* transformed_data, RandNumbers& Rand);
+  void Transform(const Datum& datum, Dtype* transformed_data,
+                                                         RandNumbers& rand_num);
 };
 
 }  // namespace caffe
