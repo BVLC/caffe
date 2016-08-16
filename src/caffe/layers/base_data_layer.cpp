@@ -80,6 +80,11 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
     CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
   }
 #endif
+  
+  #ifdef USE_MKL
+  // disable multi threads in MKL
+  mkl_set_num_threads_local(1);
+  #endif
 
   try {
     while (!must_stop()) {

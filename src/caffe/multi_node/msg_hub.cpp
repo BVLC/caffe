@@ -49,6 +49,11 @@ int MsgHub<Dtype>::SetUpPoll()
 template <typename Dtype>
 int MsgHub<Dtype>::Poll()
 {
+  #ifdef USE_MKL
+  // only use 1 mkl thread to avoid contention
+  mkl_set_num_threads_local(1);
+  #endif
+
   SetUpPoll();
 
   while (true) {

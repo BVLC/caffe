@@ -563,6 +563,8 @@ void ConvParamThread<Dtype>::Run()
 {
   #ifdef USE_MKL
   mkl_set_dynamic(false);
+  // only use 1 mkl thread to avoid contention
+  mkl_set_num_threads_local(1);
   #endif
   Caffe::set_root_solver(true);
   
