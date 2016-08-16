@@ -30,7 +30,7 @@ public:
   
   
   // disable sharing data layer in different solvers
-  #ifndef TEST_ACCURACY
+  #ifndef SHARE_DATA
   virtual inline bool ShareInParallel() const { return false; }
   #endif
 

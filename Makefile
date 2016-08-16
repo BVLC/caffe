@@ -341,9 +341,9 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
-TEST_ACCURACY ?= 0
-ifeq ($(TEST_ACCURACY), 1)
-	COMMON_FLAGS += -DTEST_ACCURACY
+SHARE_DATA ?= 0
+ifeq ($(SHARE_DATA), 1)
+	COMMON_FLAGS += -DSHARE_DATA
 endif
 
 # BLAS configuration (default = ATLAS)
