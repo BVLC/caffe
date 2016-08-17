@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "caffe/data_transformer.hpp"
-#include "caffe/layers/data_layer.hpp"
 #include "caffe/common.hpp"
+#include "caffe/data_transformer.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -22,13 +22,11 @@
 namespace caffe {
 
 template <typename Dtype>
-AsyncDataLayer<Dtype>::~AsyncDataLayer<Dtype>() {
-
-}
+AsyncDataLayer<Dtype>::~AsyncDataLayer<Dtype>() { }
 
 
 template <typename Dtype>
-void AsyncDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void AsyncDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,  // NOLINT
     const vector<Blob<Dtype>*>& top) {
 
   const int batch_size = this->layer_param_.data_param().batch_size();
@@ -47,7 +45,7 @@ void AsyncDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << top[0]->num() << ","
     << top[0]->channels() << "," << top[0]->height() << ","
     << top[0]->width();
-  
+
   // label
   if (this->output_labels_) {
     vector<int> label_shape(1, batch_size);
@@ -56,7 +54,6 @@ void AsyncDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->prefetch_[i].label_.Reshape(label_shape);
     }
   }
-
 }
 
 
@@ -69,7 +66,7 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
-  
+
   #ifndef SHARE_DATA
   if (Caffe::root_solver()) {
     LOG(WARNING) << "skip reading data in AsyncData layer with root solvers";
@@ -94,7 +91,7 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
-  
+
   // process the first datum
   this->transformed_data_.set_cpu_data(top_data);
   this->data_transformer_->Transform(datum, &(this->transformed_data_));
@@ -124,15 +121,14 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   }
   timer.Stop();
   batch_timer.Stop();
-  //LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  //LOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  //LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
-
+  // LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  // LOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  // LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(AsyncDataLayer);
 REGISTER_LAYER_CLASS(AsyncData);
 
-}  // namespace caffe
+}  // end namespace caffe
 
 
