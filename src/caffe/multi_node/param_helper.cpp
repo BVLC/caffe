@@ -4,19 +4,16 @@
 namespace caffe {
 
 template <>
-void ParamHelper<float>::BlasCopy(const int N, const float* X, float* Y)
-{
+void ParamHelper<float>::BlasCopy(const int N, const float* X, float* Y) {
   cblas_scopy(N, X, 1, Y, 1);
 }
 
 template <>
-void ParamHelper<double>::BlasCopy(const int N, const double* X, double* Y)
-{
+void ParamHelper<double>::BlasCopy(const int N, const double* X, double* Y) {
   cblas_dcopy(N, X, 1, Y, 1);
 }
 
-
-} //end namespace caffe
+}  // end namespace caffe
 
 
 

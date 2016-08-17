@@ -84,7 +84,7 @@ void caffe_set<float>(const int N, const float alpha, float* Y) {
 
 template <>
 void caffe_set<double>(const int N, const double alpha, double* Y) {
-   if (alpha == 0) {
+  if (alpha == 0) {
     cblas_dscal(N, alpha, Y, 1);
   } else {
     std::fill(Y, Y + N, alpha);
