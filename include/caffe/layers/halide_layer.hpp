@@ -8,7 +8,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/halide.hpp"
 
-
+#define CHECK_DL { dlsym_error = dlerror(); \
+  if (dlsym_error) { LOG(FATAL) << "Dynamic linking error: " << dlsym_error;} }
 
 namespace caffe {
 

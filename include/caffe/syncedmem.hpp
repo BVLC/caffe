@@ -9,13 +9,16 @@
 
 #include "caffe/common.hpp"
 
+
+
 struct buffer_t;
-typedef struct buffer_t buffer_t;
+
 
 namespace caffe {
 
-// forward declare halide friend func and types
-template <typename> class Blob;
+// forward declare Blob
+template <typename Dtype> class Blob;
+
 template <typename Dtype>
 void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob, bool data = true);
 
@@ -54,9 +57,6 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
   free(ptr);
 #endif
 }
-
-// XXX need to forward declare Blob for Halide friend decl
-template <typename Dtype> class Blob;
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)

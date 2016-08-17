@@ -1,3 +1,4 @@
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -38,11 +39,13 @@ class HalideLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  
+
   void TestForwardDemo() {
     LayerParameter layer_param;
     HalideParameter* halide_param = layer_param.mutable_halide_param();
-    string library("/home/hasimir/lang/caffe/build/install/bin/libplip_wrapper.so");
+    string library = string(INSTALL_FOLDER)+string("lib/libplip_wrapper.so");
+    CHECK_EQ(library,NULL);
+
     halide_param->set_library(library);
 
     const int num = 2;
@@ -80,7 +83,7 @@ class HalideLayerTest : public MultiDeviceTest<TypeParam> {
     //     [  1.5   3.5   7.5   5.5   7.5]
     //     [ 10.5   6.5   4.5   8.5  13.5]
     //     [  3.5   5.5   9.5   7.5   9.5]
-   for (int i = 0; i < 8 * num * channels; i += 8) {
+    for (int i = 0; i < 8 * num * channels; i += 8) {
       EXPECT_EQ(blob_top_->cpu_data()[i +  0], 1.5);
       EXPECT_EQ(blob_top_->cpu_data()[i +  1], 3.5);
       EXPECT_EQ(blob_top_->cpu_data()[i +  2], 7.5);
@@ -106,9 +109,8 @@ TYPED_TEST(HalideLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   HalideParameter* halide_param = layer_param.mutable_halide_param();
-  string library("/home/hasimir/lang/caffe/build/install/bin/libplip_wrapper.so");
+  string library = string(INSTALL_FOLDER)+string("/lib/halide/libplip_wrapper.so");
   halide_param->set_library(library);
-
   HalideLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());

@@ -9,15 +9,13 @@
 
 
 
-#define CHECK_DL { dlsym_error = dlerror(); \
-  if (dlsym_error) { LOG(FATAL) << "Dynamic linking error: " << dlsym_error;} }
 
 namespace caffe {
 
 template <typename Dtype>
 void HalideLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  string library(param_.library());
+  const string library(param_.library());
 
   LOG(INFO) << library;
 
@@ -33,10 +31,11 @@ void HalideLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const char* dlsym_error;
 
   // load the symbols
-  create_ext = reinterpret_cast<create_t*>( dlsym(halide_lib_handle, "create"));
+  create_ext = reinterpret_cast<create_t*>(dlsym(halide_lib_handle, "create"));
   CHECK_DL
 
-  destroy_ext = reinterpret_cast<destroy_t*>( dlsym(halide_lib_handle, "destroy") );
+  destroy_ext = reinterpret_cast<destroy_t*>(
+        dlsym(halide_lib_handle, "destroy"));
   CHECK_DL
 
   // create an instance of the class

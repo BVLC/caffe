@@ -8,17 +8,14 @@ using namespace std;
 using namespace caffe;
 
 
-
 template< typename Dtype >
 class PlipWrapper : public DLLInterface<Dtype> {
 public:
-  // Include these for compiler to be happy
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  //virtual inline const char* type() const { return "Halide"; }
   virtual inline int ExactNumBottomBlobs();
   virtual inline int ExactNumTopBlobs();
 
@@ -49,7 +46,6 @@ private:
   buffer_t top_diff_buf_;
 
 };
-
 
 // template class specializations
 template class PlipWrapper<float>;

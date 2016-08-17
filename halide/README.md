@@ -1,47 +1,117 @@
-Halide for Caffe
+# Halide for Caffe
 
-How to get started?
+## Why use Halide?
 
-We want to use halide layer shipped for the unit tests. As the build
-process is quite complicated we have included a cmake file that should
-build this layer, and install it to the installation directory
+[Halide](http://halide-lang.org/) is described as a language for image
+processing and computational photography. It works by de-coupleing the
+definition of the algorithm from the definition from scheduling of the
+computation. This conceptual sparation allows for concise definition of the
+algorithm and the ability to easily define different schedules, for different
+architectures for example.
 
-Copy the contents of the ./test folder to the curren  directory, but
-don't overwrite the CMakeLists.txt file already there.
+In the context of caffe the Halide layer can be used to bridge the gap between
+python layers which are easy to implement and hand coded CUDA layers. This
+works by Halide compiling a computation to a CUDA kernel which can then
+accessed from caffe using the Halide layer. Halide can compile to any
+of a number of different architectures such as: x86/SSE, CUDA, OpenCL etc.
 
+
+## How is Halide called?
+
+Calling halide from caffe requires running the Halide compiler, this makes
+the build process a bit more complicated. The next section descibes the
+steps the build system needs to perform in order to produce a halide layer.
+
+To explain what is happening I will first define a few terms. The *halide
+function* is the piece of halide code that specifies the computation. This
+function is then registered to a *halide generator* which, when run, will
+generate a header file and a *halide object* file. This object will then
+be linked to a (caffe) *wrapper* which is compiled as a shared library.
+
+
+## How does the build work?
+
+To use Halide with caffe we first have to re-install it with the `BUILD_halide`
+variable activated.
+
+To better explain the build process lets look at the halide function supplied
+as part of the unit tests. First copy these to the `./halide` directory.
+
+```
 cp ./test/generator .
 cp ./test/wrapper .
+```
+
+The *halide generator class* , which contain the *halide function* can be found
+in `./generator/register_gen.cpp`. These files will be compiled to an *halide
+generator executable. The way the build process is set up in `./CMakeLists.txt`
+all *.cpp files in the `./generator` directory are included in this generator
+executable, so each *halide generator class* should register with different
+names.
+
+The next step is to run the generator executable. Given the name which a
+generator class has been registered and a target architecture this will
+generate the specified objects* and their header files.
+
+As the registered name is needed this step is a bit difficult for the build
+system. ( It cannot easily look at the source code to find these names. )
+To tell the build system to generate a particular object create an empty
+file that is named `<registered name>.gen`
+
+```
+touch ./generator/plip.gen
+```
+
+The build system will generate all of these objects.
+
+The next step is to combine halide obejcts into a wrapper. These are located in
+the ./wrappers folder. The build system is configured to turn each .cpp file in
+this folder into a wrapper shared library. Each of these libraries are linked
+with all halide objects generated previously.
 
 Now re-compile caffe with BUILD_halide on and install. You should now have
 the usable halide library file:
-./install/lib/halide/libplip_wrapper.so
+
+```
+cd ../build
+cmake .. -DBUILD_halide=ON
+make install
+file ./install/lib/halide/libplip_wrapper.so
+```
+
+As a final step we can test if this objects works, just set your install dir.
+
+```
+import tempfile
+import numpy as np
+import caffe
+from caffe import layers as L
+
+INSTALL_DIR = XXX
+
+def create_neural_net(batch_size=1):
+    library = INSTALL_DIR + "/lib/halide/libplip_wrapper.so"
+    netspec = caffe.NetSpec()
+    netspec.data = L.DummyData(shape=[dict(dim=[batch_size, 1, 3, 5])], ntop=1)
+    netspec.halide = L.Halide(netspec.data, halide_param=dict(library=library))
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as f:
+        f.write(str(netspec.to_proto()))
+        f.flush()
+        net = caffe.Net(f.name, caffe.TEST)
+    return net
+
+if __name__=='__main__':
+    caffe.set_mode_gpu()
+    net = create_neural_net()
+    net.blobs['data'].data[...]  = np.array( [[1,2,5,2,3],[9,4,1,4,8],[1,2,5,2,3] ] )
+    net.forward()
+    print(net.blobs["halide"].data)
 
 
-How does the build process work?
+```
 
-In summary:
-halide generator -> halide object -> halide wrapper
-
-We first compile a halide generator, to which halide functions have been
-registered, see ./generator/register_gen.cpp. You can append to this file
-or add arbitrary .cpp files to this directory.
-
-Secondly we need to inform the make-system which halide objects to generate
-the halide objects. As these are named in .cpp files they are not easily accessible to the build system, as a workaround just add a empty <generator_name>.gen file, eg:
-
-touch ./generator/plip.gen
-
-Third compile a wrapper layer. These are located in the ./wrappers folder.
-A new wrapper is created for each .cpp file in the ./wrappers folder. Each
-of these are linked with all previously specified halide objects. So use
-different names for all objects. So just add any new .cpp file similar to
-plip_wrapper.cpp.
-
-
-FAQ:
-
-How do I change halide targets? 
+## How do I change halide targets?
 Look at the CMakeList.txt file and change target=cuda to something different.
 
-How do I change target per object?
+## How do I change target per object?
 Append the info to the .gen file and extract it using cmake.
