@@ -8,8 +8,7 @@
 #include "caffe/data_reader.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
+
 
 namespace caffe {
 
@@ -39,33 +38,74 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
   }
 }
 
-template<typename Dtype>
-void DataTransformer<Dtype>::setDataReader(DataReader* data_reader) {
-  this->data_reader_used = data_reader;
-}
 
 template<typename Dtype>
-void DataTransformer<Dtype>::dataReaderPushFreeDatum(const Datum* datum_ptr) {
-  if (this->data_reader_used != NULL) {
-    this->data_reader_used->free().push(const_cast<Datum*>(datum_ptr));
+
+void DataTransformer<Dtype>::Transform(const Datum& datum,
+                         Dtype* transformed_data, RandNumbers& rand_num) {
+  const bool do_mirror = param_.mirror() && rand_num(2);
+  const string& data = datum.data();
+  const bool has_uint8 = data.size() > 0;
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  int transform_func_id = (do_mirror << 2) +
+                          (has_mean_file << 1) +
+                          has_mean_values;
+
+  if (!has_uint8) {
+    switch (transform_func_id) {
+        case 0: Transform<false, false, false, false>(datum, transformed_data,
+          rand_num); break;
+        case 1: Transform<false, false, false, true >(datum, transformed_data,
+          rand_num); break;
+        case 2: Transform<false, false, true , false>(datum, transformed_data,
+          rand_num); break;
+        case 3: Transform<false, false, true , true >(datum, transformed_data,
+          rand_num); break;
+        case 4: Transform<false, true , false, false>(datum, transformed_data,
+          rand_num); break;
+        case 5: Transform<false, true , false, true >(datum, transformed_data,
+          rand_num); break;
+        case 6: Transform<false, true , true , false>(datum, transformed_data,
+          rand_num); break;
+        case 7: Transform<false, true , true , true >(datum, transformed_data,
+          rand_num); break;
+    }
+  } else {
+    switch (transform_func_id) {
+        case 0: Transform<true, false, false, false>(datum, transformed_data,
+          rand_num); break;
+        case 1: Transform<true, false, false, true >(datum, transformed_data,
+          rand_num); break;
+        case 2: Transform<true, false, true , false>(datum, transformed_data,
+          rand_num); break;
+        case 3: Transform<true, false, true , true >(datum, transformed_data,
+          rand_num); break;
+        case 4: Transform<true, true , false, false>(datum, transformed_data,
+          rand_num); break;
+        case 5: Transform<true, true , false, true >(datum, transformed_data,
+          rand_num); break;
+        case 6: Transform<true, true , true , false>(datum, transformed_data,
+          rand_num); break;
+        case 7: Transform<true, true , true , true >(datum, transformed_data,
+          rand_num); break;
+    }
   }
 }
 
 template<typename Dtype>
+template<bool has_uint8, bool do_mirror, bool has_mean_file,
+  bool has_mean_values>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Dtype* transformed_data) {
+                         Dtype* transformed_data, RandNumbers& rand_num) {
   const string& data = datum.data();
-  const Datum* datum_ptr = &datum;
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
-  const bool has_mean_file = param_.has_mean_file();
-  const bool has_uint8 = data.size() > 0;
-  const bool has_mean_values = mean_values_.size() > 0;
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -78,6 +118,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     CHECK_EQ(datum_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
   }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << datum_channels;
+    if (datum_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < datum_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
 
   int height = datum_height;
   int width = datum_width;
@@ -89,336 +139,57 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     width = crop_size;
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(datum_height - crop_size + 1);
-      w_off = Rand(datum_width - crop_size + 1);
+      h_off = rand_num(datum_height - crop_size + 1);
+      w_off = rand_num(datum_width - crop_size + 1);
     } else {
       h_off = (datum_height - crop_size) / 2;
       w_off = (datum_width - crop_size) / 2;
     }
   }
 
-  // TODO: xbyak may help here as well
-  DataTransformer<Dtype>* my_data_transformer = this;
-
-  if (has_uint8 == true) {
-    const string* data_ptr = &data;
-    if (has_mean_file == true) {
-      if (do_mirror == false) {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-      {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + w;
-              Dtype datum_element = static_cast<Dtype>(
-                              static_cast<uint8_t>((*data_ptr)[data_index]));
-              transformed_data[top_index] = (datum_element - mean[data_index]) *
-                                            scale;
-            }
+  Dtype datum_element;
+  int top_index, data_index;
+  for (int c = 0; c < datum_channels; ++c) {
+    for (int h = 0; h < height; ++h) {
+      for (int w = 0; w < width; ++w) {
+        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
+        if (do_mirror) {
+          top_index = (c * height + h) * width + (width - 1 - w);
+        } else {
+          top_index = (c * height + h) * width + w;
+        }
+        if (has_uint8) {
+          datum_element =
+            static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+        } else {
+          datum_element = datum.float_data(data_index);
+        }
+        if (has_mean_file) {
+          transformed_data[top_index] =
+            (datum_element - mean[data_index]) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_data[top_index] =
+              (datum_element - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = datum_element * scale;
           }
         }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      } else {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-        {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + (width - 1 - w);
-              Dtype datum_element = static_cast<Dtype>(
-                              static_cast<uint8_t>((*data_ptr)[data_index]));
-              transformed_data[top_index] = (datum_element - mean[data_index]) *
-                                            scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      }
-    } else if (has_mean_values) {  // mean values
-        CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)
-              << "Specify either 1 mean_value or as many as channels: "
-              << datum_channels;
-        if (datum_channels > 1 && mean_values_.size() == 1) {
-          // Replicate the mean_value for simplicity
-          for (int c = 1; c < datum_channels; ++c) {
-            mean_values_.push_back(mean_values_[0]);
-          }
-        }
-       Dtype *mean_ptr =  &mean_values_[0];
-
-       if (do_mirror == false) {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, data_ptr, mean_ptr, datum_ptr, \
-                     my_data_transformer, datum_channels, datum_width, \
-                     datum_height, scale)
-#endif
-        {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-                int data_index = (c * datum_height + h_off + h) * datum_width +
-                             w_off + w;
-                int top_index = (c * height + h) * width + w;
-                Dtype datum_element = static_cast<Dtype>(
-                                static_cast<uint8_t>((*data_ptr)[data_index]));
-                transformed_data[top_index] = (datum_element - mean_ptr[c]) *
-                                              scale;
-              }
-            }
-          }
-         my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-         }
-       } else {  // do_mirror
-#ifdef _OPENMP
-         #pragma omp task default(none) \
-         firstprivate(transformed_data, h_off, w_off, height, \
-                      width, data_ptr, mean_ptr, datum_ptr, \
-                      my_data_transformer, datum_channels, datum_width, \
-                      datum_height, scale)
-#endif
-         {
-         for (int c = 0; c < datum_channels; ++c) {
-           for (int h = 0; h < height; ++h) {
-             for (int w = 0; w < width; ++w) {
-                 int data_index = (c * datum_height + h_off + h) * datum_width +
-                              w_off + w;
-                 int top_index = (c * height + h) * width + (width - 1 - w);
-                 Dtype datum_element = static_cast<Dtype>(
-                                 static_cast<uint8_t>((*data_ptr)[data_index]));
-                 transformed_data[top_index] = (datum_element - mean_ptr[c]) *
-                                               scale;
-             }
-           }
-         }
-         my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-         }
-       }
-
-      } else {  // no mean file
-        if (do_mirror == false) {
-#ifdef _OPENMP
-          #pragma omp task default(none) \
-          firstprivate(transformed_data, h_off, w_off, \
-                       height, width, data_ptr, datum_ptr, \
-                       my_data_transformer, datum_channels, datum_width, \
-                       datum_height, scale)
-#endif
-          {
-          for (int c = 0; c < datum_channels; ++c) {
-            for (int h = 0; h < height; ++h) {
-              for (int w = 0; w < width; ++w) {
-                int data_index = (c * datum_height + h_off + h) * datum_width +
-                             w_off + w;
-                int top_index = (c * height + h) * width + w;
-                Dtype datum_element = static_cast<Dtype>(
-                                static_cast<uint8_t>((*data_ptr)[data_index]));
-                transformed_data[top_index] = datum_element * scale;
-              }
-            }
-          }
-          my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-          }
-      } else {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, \
-                     height, width, data_ptr, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-      {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + (width - 1 - w);
-              Dtype datum_element = static_cast<Dtype>(
-                              static_cast<uint8_t>((*data_ptr)[data_index]));
-              transformed_data[top_index] = datum_element * scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
       }
     }
-  } else {  // float (no uint8_t)
-    if (has_mean_file == true) {
-      if (do_mirror == false) {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-{
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + w;
-              Dtype datum_element = datum_ptr->float_data(data_index);
-              transformed_data[top_index] = (datum_element - mean[data_index]) *
-                                            scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      } else {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-      {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + (width - 1 - w);
-              Dtype datum_element = datum_ptr->float_data(data_index);
-              transformed_data[top_index] = (datum_element - mean[data_index]) *
-                                            scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      }
-
-    } else if (has_mean_values) {  // mean values
-      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)
-            << "Specify either 1 mean_value or as many as channels: "
-            << datum_channels;
-      if (datum_channels > 1 && mean_values_.size() == 1) {
-        // Replicate the mean_value for simplicity
-        for (int c = 1; c < datum_channels; ++c) {
-          mean_values_.push_back(mean_values_[0]);
-        }
-      }
-      Dtype *mean_ptr =  &mean_values_[0];
-
-      if (do_mirror == false) {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, height, \
-                     width, datum_ptr, mean_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-        {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-                int data_index = (c * datum_height + h_off + h) * datum_width +
-                             w_off + w;
-                int top_index = (c * height + h) * width + w;
-                Dtype datum_element = datum_ptr->float_data(data_index);
-                transformed_data[top_index] = (datum_element - mean_ptr[c]) *
-                                              scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      } else {  // do_mirror
-#ifdef _OPENMP
-         #pragma omp task default(none) \
-         firstprivate(transformed_data, h_off, \
-                      w_off, height, width, datum_ptr, mean_ptr, \
-                      my_data_transformer, datum_channels, datum_width, \
-                      datum_height, scale)
-#endif
-        {
-         for (int c = 0; c < datum_channels; ++c) {
-           for (int h = 0; h < height; ++h) {
-             for (int w = 0; w < width; ++w) {
-                 int data_index = (c * datum_height + h_off + h) * datum_width +
-                              w_off + w;
-                 int top_index = (c * height + h) * width + (width - 1 - w);
-                 Dtype datum_element = datum_ptr->float_data(data_index);
-                 transformed_data[top_index] = (datum_element - mean_ptr[c]) *
-                                               scale;
-             }
-           }
-         }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-       }
-
-    } else {  // no mean file
-      if (do_mirror == false) {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, \
-                     height, width, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-      {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + w;
-              Dtype datum_element = datum_ptr->float_data(data_index);
-              transformed_data[top_index] = datum_element * scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      } else {
-#ifdef _OPENMP
-        #pragma omp task default(none) \
-        firstprivate(transformed_data, h_off, w_off, \
-                     height, width, datum_ptr, my_data_transformer, \
-                     datum_channels, datum_width, datum_height, scale)
-#endif
-        {
-        for (int c = 0; c < datum_channels; ++c) {
-          for (int h = 0; h < height; ++h) {
-            for (int w = 0; w < width; ++w) {
-              int data_index = (c * datum_height + h_off + h) * datum_width +
-                           w_off + w;
-              int top_index = (c * height + h) * width + (width - 1 - w);
-              Dtype datum_element = datum_ptr->float_data(data_index);
-              transformed_data[top_index] = datum_element * scale;
-            }
-          }
-        }
-       my_data_transformer->dataReaderPushFreeDatum(datum_ptr);
-       }
-      }
-    }
-  }  // no mean_values
+  }
 }
 
+template<typename Dtype>
+void DataTransformer<Dtype>::GenerateRandNumbers(PreclcRandomNumbers& rn) {
+  int count = (param_.mirror()? 1:0) +
+                  ((phase_ == TRAIN && param_.crop_size())? 2 : 0);
+  rn.FillRandomNumbers(count, rand_num_);
+}
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Blob<Dtype>* transformed_blob) {
+               Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -432,9 +203,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-    Transform(cv_img, transformed_blob);
-    this->dataReaderPushFreeDatum(&datum);
-    return;
+    return Transform(cv_img, transformed_blob, rand_num);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -469,7 +238,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
-  Transform(datum, transformed_data);
+  Transform(datum, transformed_data, rand_num);
 }
 
 template<typename Dtype>
@@ -513,12 +282,41 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
   }
 }
 
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
+        Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
+  const bool do_mirror = param_.mirror() && rand_num(2);
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
 
+  int transform_func_id = (do_mirror << 2) +
+                          (has_mean_file << 1) +
+                          has_mean_values;
+
+  switch (transform_func_id) {
+    case 0: Transform<false, false, false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 1: Transform<false, false, true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 2: Transform<false, true , false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 3: Transform<false, true , true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 4: Transform<true , false, false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 5: Transform<true , false, true >(cv_img, transformed_blob, rand_num);
+      break;
+    case 6: Transform<true , true , false>(cv_img, transformed_blob, rand_num);
+      break;
+    case 7: Transform<true , true , true >(cv_img, transformed_blob, rand_num);
+      break;
+  }
+}
 
 template<typename Dtype>
 template<bool do_mirror, bool has_mean_file, bool has_mean_values>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob) {
+        Blob<Dtype>* transformed_blob, RandNumbers& rand_num) {
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -569,8 +367,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(img_height - crop_size + 1);
-      w_off = Rand(img_width - crop_size + 1);
+      h_off = rand_num(img_height - crop_size + 1);
+      w_off = rand_num(img_width - crop_size + 1);
     } else {
       h_off = (img_height - crop_size) / 2;
       w_off = (img_width - crop_size) / 2;
@@ -614,36 +412,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 }
-
-
-template<typename Dtype>
-#ifdef _OPENMP
-void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob, const int rand) {
-  const bool do_mirror = param_.mirror() && (rand >= 0 ? rand: Rand(2));
-#else
-void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-        Blob<Dtype>* transformed_blob) {
-  const bool do_mirror = param_.mirror() && Rand(2);
-#endif  // _OPENMP
-  const bool has_mean_file = param_.has_mean_file();
-  const bool has_mean_values = mean_values_.size() > 0;
-
-  int transform_func_id = (do_mirror << 2) +
-                          (has_mean_file << 1) +
-                          has_mean_values;
-
-  switch (transform_func_id) {
-      case 0: Transform<false, false, false>(cv_img, transformed_blob); break;
-      case 1: Transform<false, false, true >(cv_img, transformed_blob); break;
-      case 2: Transform<false, true , false>(cv_img, transformed_blob); break;
-      case 3: Transform<false, true , true >(cv_img, transformed_blob); break;
-      case 4: Transform<true , false, false>(cv_img, transformed_blob); break;
-      case 5: Transform<true , false, true >(cv_img, transformed_blob); break;
-      case 6: Transform<true , true , false>(cv_img, transformed_blob); break;
-      case 7: Transform<true , true , true >(cv_img, transformed_blob); break;
-  }
-}
 #endif  // USE_OPENCV
 
 template<typename Dtype>
@@ -679,7 +447,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool do_mirror = param_.mirror() && rand_num_(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -690,8 +458,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(input_height - crop_size + 1);
-      w_off = Rand(input_width - crop_size + 1);
+      h_off = rand_num_(input_height - crop_size + 1);
+      w_off = rand_num_(input_width - crop_size + 1);
     } else {
       h_off = (input_height - crop_size) / 2;
       w_off = (input_width - crop_size) / 2;
@@ -845,20 +613,10 @@ void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
   if (needs_rand) {
-    const unsigned int rng_seed = caffe_rng_rand();
-    rng_.reset(new Caffe::RNG(rng_seed));
+    rand_num_.Init();
   } else {
-    rng_.reset();
+    rand_num_.Reset();
   }
-}
-
-template <typename Dtype>
-int DataTransformer<Dtype>::Rand(int n) {
-  CHECK(rng_);
-  CHECK_GT(n, 0);
-  caffe::rng_t* rng =
-      static_cast<caffe::rng_t*>(rng_->generator());
-  return ((*rng)() % n);
 }
 
 INSTANTIATE_CLASS(DataTransformer);
