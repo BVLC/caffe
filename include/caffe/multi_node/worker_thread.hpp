@@ -3,14 +3,18 @@
 #define MULTI_NODE_WORKER_THREAD_H_
 
 
+#include <boost/atomic.hpp>
+#include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
+
+#include <string>
+#include <vector>
+
+#include "caffe/caffe.hpp"
 #include "caffe/multi_node/msg.hpp"
 #include "caffe/multi_node/sk_server.hpp"
-#include "caffe/caffe.hpp"
 #include "caffe/sgd_solvers.hpp"
 
-#include <boost/thread.hpp>
-#include <boost/atomic.hpp>
-#include "boost/unordered_map.hpp"
 
 using boost::unordered_map;
 
@@ -20,9 +24,8 @@ namespace caffe {
 * Set up the communication enviroment with routing thread
 */
 template <typename Dtype>
-class WorkerThread : public InternalThread
-{
-public:
+class WorkerThread : public InternalThread {
+ public:
   WorkerThread() {
     worker_id_ = -1;
     queue_size_ = 0;
@@ -42,23 +45,18 @@ public:
 
   void SetClientAddr(const string& addr) { client_addr_ = addr; }
   void SetPriorAddr(const string& addr) { prior_addr_ = addr; }
-  
+
   int SendMsg(shared_ptr<Msg> msg) {
     return sk_client_->SendMsg(msg);
   }
-  
+
   void SetOMPThreads(int nthreads) {
     omp_threads_ = nthreads;
   }
 
   shared_ptr<Msg> RecvMsg(bool blocked) {
-    /*
-    shared_ptr<Msg> m = sk_client_->RecvMsg(blocked);
-    Dequeue();
-    */
-    
     shared_ptr<Msg> m;
-    
+
     if (blocked) {
       zmq_poll(poll_table_, NUM_SUB_SOCKS, -1);
     } else {
@@ -99,16 +97,16 @@ public:
 
     Run();
   }
-  
+
   /// should be reimplented in the working threads
   virtual void Run() = 0;
-  
+
   inline void Enqueue() { queue_size_++; }
   inline int QueueSize() { return queue_size_; }
 
-protected:
+ protected:
   inline void Dequeue() { queue_size_--; }
-  
+
   // init param map: map from layer_id to learnable_id
   int InitParamMap(shared_ptr<Net<Dtype> > net);
 
@@ -126,15 +124,18 @@ protected:
 
     return layer_id_to_params_[layer_id];
   }
-  
+
   int GetLayerId(const string& layer_name) {
-    unordered_map<string, int>::iterator iter = layer_id_by_name_.find(layer_name);
+    unordered_map<string, int>::iterator iter = layer_id_by_name_.end();
+    iter = layer_id_by_name_.find(layer_name);
+
     CHECK(iter != layer_id_by_name_.end());
 
     return iter->second;
   }
 
-  Solver<Dtype> *NewSolver(Solver<Dtype> *proot, const SolverParameter& solver_param) {
+  Solver<Dtype> *NewSolver(Solver<Dtype> *proot,
+                           const SolverParameter& solver_param) {
     boost::mutex::scoped_lock lock(new_solver_mutex_);
     const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
 
@@ -144,8 +145,9 @@ protected:
     }
 
     new_solver_cnt_++;
-    
-    const vector<Blob<Dtype>*>& new_params = new_solver->net()->learnable_params();
+
+    const vector<Blob<Dtype>*>& new_params =
+                                        new_solver->net()->learnable_params();
     /// share parameters with root solver
     for (int i = 0; i < new_params.size(); i++) {
       CHECK_EQ(new_params[i]->count(), root_params[i]->count());
@@ -153,45 +155,46 @@ protected:
     }
 
     LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers";
-    
     return new_solver;
   }
 
-  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
+  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
+                                      const SolverParameter& solver_param) {
     Caffe::set_root_solver(false);
     SGDSolver<Dtype> *proot = (SGDSolver<Dtype> *)root_solver;
-    WorkerSolver<Dtype> * solver = new WorkerSolver<Dtype>(solver_param, proot);
-    
-    //Disable bottom backward to data layer.
+    WorkerSolver<Dtype> *solver = new WorkerSolver<Dtype>(solver_param, proot);
+
+    // Disable bottom backward to data layer.
     DisableBottomBwdToData(solver);
-    
+
     return solver;
   }
-  
+
   // disable bottom backward to data layer.
   void DisableBottomBwdToData(WorkerSolver<Dtype> * solver) {
-    
     vector<Blob<Dtype>*> data_top_blobs;
     shared_ptr<Net<Dtype> > net = solver->net();
     const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
-    
-    for(int layer_id = 0; layer_id < layers.size(); layer_id ++) {
-      
-      if( net->bottom_vecs()[layer_id].size() == 0 ) {	
+
+    for (int layer_id = 0; layer_id < layers.size(); layer_id ++) {
+      if (net->bottom_vecs()[layer_id].size() == 0) {
         const vector<Blob<Dtype>*> & top_blobs = net->top_vecs()[layer_id];
-        data_top_blobs.insert(data_top_blobs.end(), top_blobs.begin(), top_blobs.end());
+        data_top_blobs.insert(data_top_blobs.end(),
+                              top_blobs.begin(),
+                              top_blobs.end());
       }
     }
-    
-    vector<vector<bool> >& bottom_need_bwd = 
+
+    vector<vector<bool> >& bottom_need_bwd =
       const_cast<vector<vector<bool> >&>(net->bottom_need_backward());
 
-    for(int layer_id = 0; layer_id < layers.size(); layer_id ++) {
+    for (int layer_id = 0; layer_id < layers.size(); layer_id ++) {
       const vector<Blob<Dtype>*> & bottom_blobs = net->bottom_vecs()[layer_id];
-      
-      for(int i = 0; i < bottom_blobs.size(); i ++) {
-        if( std::find(data_top_blobs.begin(), data_top_blobs.end(), bottom_blobs[i])
-            != data_top_blobs.end()) {
+
+      for (int i = 0; i < bottom_blobs.size(); i ++) {
+        if (std::find(data_top_blobs.begin(),
+                     data_top_blobs.end(),
+                     bottom_blobs[i]) != data_top_blobs.end()) {
           CHECK(i < bottom_need_bwd[layer_id].size());
           bottom_need_bwd[layer_id][i] = false;
         }
@@ -199,14 +202,14 @@ protected:
     }
   }
 
-protected:
+ protected:
   // map layer id to its indices in learnable params
   vector<vector<int> > layer_id_to_params_;
-  
+
   // get layer id from layer name
   unordered_map<string, int> layer_id_by_name_;
 
-protected:
+ protected:
   int worker_id_;
   int num_workers_;
 
@@ -226,21 +229,20 @@ protected:
 
   // rough count of the queue's length
   boost::atomic_int queue_size_;
-  
+
   // number of OpenMP threads it has
   int omp_threads_;
 
-protected:
+ protected:
   // serialize creating new solver within a process
-  static boost::mutex       new_solver_mutex_;
+  static boost::mutex  new_solver_mutex_;
   // number of solvers created
   static boost::atomic_int  new_solver_cnt_;
 
 DISABLE_COPY_AND_ASSIGN(WorkerThread);
 };
 
-
-} // end caffe
+}  // end namespace caffe
 
 
 #endif

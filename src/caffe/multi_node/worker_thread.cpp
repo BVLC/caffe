@@ -1,7 +1,9 @@
 
+#include <string>
+#include <vector>
 
-#include "caffe/multi_node/worker_thread.hpp"
 #include "caffe/multi_node/node_env.hpp"
+#include "caffe/multi_node/worker_thread.hpp"
 
 namespace caffe {
 template <typename Dtype>
@@ -23,16 +25,16 @@ int WorkerThread<Dtype>::InitParamMap(shared_ptr<Net<Dtype> > net) {
 
   layer_id_to_params_.resize(layers.size());
   int nlearn_layers = 0;
- 
+
   for (int i = 0; i < layers.size(); i++) {
     shared_ptr<Layer<Dtype> > l = layers[i];
     vector<shared_ptr<Blob<Dtype> > >& layer_params = l->blobs();
 
     for (int j = 0; j < layer_params.size(); j++) {
       Blob<Dtype> *pblob = layer_params[j].get();
-      unordered_map<void *, int>::iterator iter = 
+      unordered_map<void *, int>::iterator iter =
                                   blob_to_idx.find(pblob);
-      CHECK(iter != blob_to_idx.end()) 
+      CHECK(iter != blob_to_idx.end())
                 << "cannot find learnable params for layer: " << i;
 
       layer_id_to_params_[i].push_back(iter->second);
@@ -52,6 +54,6 @@ int WorkerThread<Dtype>::InitParamMap(shared_ptr<Net<Dtype> > net) {
 INSTANTIATE_CLASS(WorkerThread);
 
 
-} // end caffe
+}  // end namespace caffe
 
 
