@@ -27,7 +27,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   // Read a data point, and use it to initialize the top blob.
-  Datum& datum = *(reader_.full().peek());
+  Datum datum;
+  datum.ParseFromString(*(reader_.full().peek()));
 
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
@@ -70,7 +71,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  Datum& datum = *(reader_.full().peek());
+  Datum datum;
+  datum.ParseFromString(*(reader_.full().peek()));
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
 #ifndef _OPENMP
@@ -95,33 +97,41 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a datum
-    Datum* datum = (reader_.full().pop("Waiting for data"));
+    string* data = (reader_.full().pop("Waiting for data"));
     timer.Stop();
     read_time += timer.MicroSeconds();
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
 
-    // Copy label. We need to copy it before we release datum
-    // which happens in transform threads
-    if (this->output_labels_) {
-      top_label[item_id] = datum->label();
-    }
 #ifdef _OPENMP
     PreclcRandomNumbers precalculated_rand_numbers;
     this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
-    #pragma omp task firstprivate(offset, datum, precalculated_rand_numbers)
+    #pragma omp task firstprivate(offset, precalculated_rand_numbers, data, item_id)
     {
+      Datum datum;
+      datum.ParseFromString(*data);
+      (reader_.free()).push(data);    
+      // Copy label. We need to copy it before we release datum
+      if (this->output_labels_) {
+        top_label[item_id] = datum.label();
+      }
       Blob<Dtype> tmp_data;
       tmp_data.Reshape(top_shape);
       tmp_data.set_cpu_data(top_data + offset);
-      this->data_transformer_->Transform(*datum, &tmp_data,
+      this->data_transformer_->Transform(datum, &tmp_data,
                                               precalculated_rand_numbers);
-      (reader_.free()).push(datum);
     }
 #else
+    Datum datum;
+    datum.ParseFromString(*data);
+    (reader_.free()).push(data);
+    // Copy label. We need to copy it before we release datum
+    if (this->output_labels_) {
+        top_label[item_id] = datum.label();
+    }
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(*datum, &(this->transformed_data_));
-    (reader_.free()).push(datum);
+    this->data_transformer_->Transform(datum, &(this->transformed_data_));
+   
 #endif
   }
   trans_timer.Stop();
