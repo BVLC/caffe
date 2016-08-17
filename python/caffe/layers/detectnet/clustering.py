@@ -12,10 +12,10 @@ class ClusterGroundtruth(caffe.Layer):
     """
     * converts ground truth labels from grid format to list
     * bottom[0] - coverage-label
-        [ batch_size x grid_sz_x x grid_sz_y x 1 ]
+        [ batch_size x num_classes x grid_sz_x x grid_sz_y ]
     * bottom[1] - bbox-label
-        [batch_size x grid_sz_x x grid_sz_y x 4 (xl, yt, xr, yb)]
-    * top [0] - list of groundtruth bbox
+        [batch_size x 4 x grid_sz_x x grid_sz_y (xl, yt, xr, yb)]
+    * top [i] - list of groundtruth bbox for each class
         [ batch_size x max_bbox_per_image x 5 (xl, yt, xr, yb, 0)]
 
     Example prototxt definition:
@@ -24,14 +24,15 @@ class ClusterGroundtruth(caffe.Layer):
         type: 'Python'
         name: 'cluster_gt'
         # gt_bbox_list is a batch_size x MAX_BOXES x 5 blob
-        top: 'gt_bbox_list'
+        top: 'gt_bbox_list-class0'
+        top: 'gt_bbox_list-class1'
         bottom: 'coverage-label'
         bottom: 'bbox-label'
         python_param {
             module: 'caffe.layers.detectnet.clustering'
             layer: 'ClusterGroundtruth'
-            # parameters - img_size_x, img_size_y, stride,
-            param_str : '1248,352,16'
+            # parameters - img_size_x, img_size_y, stride, num_classes
+            param_str : '1248,352,16,2'
         }
         include: { phase: TEST }
     }
@@ -44,17 +45,26 @@ class ClusterGroundtruth(caffe.Layer):
             self.image_size_x = int(plist[0])
             self.image_size_y = int(plist[1])
             self.stride = int(plist[2])
+            self.num_classes = int(plist[3])
         except ValueError:
             raise ValueError("Parameter string missing or data type is wrong!")
+        if len(top) != self.num_classes:
+            raise ValueError("Unexpected number of tops: %d != %d" % (len(top), self.num_classes))
 
     def reshape(self, bottom, top):
         n_images = bottom[0].data.shape[0]
-        # Assuming that max booxes per image are MAX_BOXES
-        top[0].reshape(n_images, MAX_BOXES, 5)
+        num_classes = bottom[0].data.shape[1]
+        if num_classes != self.num_classes:
+            raise ValueError("Unexpected number of classes: %d != %d, bottom[0] shape=%s" % (num_classes, self.num_classes, repr(bottom[0].data.shape)))
+        for i in xrange(num_classes):
+            # Assuming that max booxes per image are MAX_BOXES
+            top[i].reshape(n_images, MAX_BOXES, 5)
 
     def forward(self, bottom, top):
-        bbox = cluster(self, bottom[0].data, bottom[1].data)
-        top[0].data[...] = bbox
+        for i in xrange(self.num_classes):
+            data0 = bottom[0].data[:,i:i+1,:,:]
+            bbox = cluster(self, data0, bottom[1].data)
+            top[i].data[...] = bbox
 
     def backward(self, top, propagate_down, bottom):
         pass
@@ -64,10 +74,10 @@ class ClusterDetections(caffe.Layer):
     """
     * convert network output in grid format to list using group rectangles clustering
     * bottom[0] - predicted coverage
-        [ batch_size x grid_sz_x x grid_sz_y x 1 ]
+        [ batch_size x num_classes x grid_sz_x x grid_sz_y ]
     * bottom[1] - predicted bbox
         [batch_size x grid_sz_x x grid_sz_y x 4 (xl, yt, xr, yb)]
-    * top [0] - list of predicted bbox
+    * top [i] - list of predicted bbox for each class
         [ batch_size x max_bbox_per_image x 5 (xl, yt, xr, yb, confidence) ]
 
     Example prototxt definition:
@@ -76,15 +86,16 @@ class ClusterDetections(caffe.Layer):
         type: 'Python'
         name: 'cluster'
         # det_bbox_list is a batch_size x MAX_BOXES x 5 blob
-        top: 'det_bbox_list'
+        top: 'det_bbox_list-class0'
+        top: 'det_bbox_list-class1'
         bottom: 'coverage'
         bottom: 'bbox/regressor'
         python_param {
             module: 'caffe.layers.detectnet.clustering'
             layer: 'ClusterDetections'
             # parameters - img_size_x, img_size_y, stride,
-            # gridbox_cvg_threshold,gridbox_rect_threshold,gridbox_rect_eps,min_height
-            param_str : '1248,352,16,0.05,1,0.025,22'
+            # gridbox_cvg_threshold,gridbox_rect_threshold,gridbox_rect_eps,min_height,num_classes
+            param_str : '1248,352,16,0.05,1,0.025,22,2'
         }
         include: { phase: TEST }
     }
@@ -101,17 +112,26 @@ class ClusterDetections(caffe.Layer):
             self.gridbox_rect_thresh = int(plist[4])
             self.gridbox_rect_eps = float(plist[5])
             self.min_height = int(plist[6])
+            self.num_classes = int(plist[7])
         except ValueError:
             raise ValueError("Parameter string missing or data type is wrong!")
+        if len(top) != self.num_classes:
+            raise ValueError("Unexpected number of tops: %d != %d" % (len(top), self.num_classes))
 
     def reshape(self, bottom, top):
         n_images = bottom[0].data.shape[0]
-        # Assuming that max booxes per image are MAX_BOXES
-        top[0].reshape(n_images, MAX_BOXES, 5)
+        num_classes = bottom[0].data.shape[1]
+        if num_classes != self.num_classes:
+            raise ValueError("Unexpected number of classes: %d != %d, bottom[0] shape=%s" % (num_classes, self.num_classes, repr(bottom[0].data.shape)))
+        for i in xrange(num_classes):
+            # Assuming that max booxes per image are MAX_BOXES
+            top[i].reshape(n_images, MAX_BOXES, 5)
 
     def forward(self, bottom, top):
-        bbox = cluster(self, bottom[0].data, bottom[1].data)
-        top[0].data[...] = bbox
+        for i in xrange(self.num_classes):
+            data0 = bottom[0].data[:,i:i+1,:,:]
+            bbox = cluster(self, data0, bottom[1].data)
+            top[i].data[...] = bbox
 
     def backward(self, top, propagate_down, bottom):
         pass

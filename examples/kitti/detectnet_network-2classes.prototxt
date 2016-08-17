@@ -79,7 +79,8 @@ layer {
     image_size_x: 1248
     image_size_y: 384
     crop_bboxes: true
-    object_class: { src: 1 dst: 0} # obj class 1 -> cvg index 0
+    object_class: { src: 1 dst: 0} # cars -> 0
+    object_class: { src: 8 dst: 1} # pedestrians -> 1
   }
    detectnet_augmentation_param: {
     crop_prob: 1
@@ -118,7 +119,8 @@ layer {
     image_size_x: 1248
     image_size_y: 384
     crop_bboxes: false
-    object_class: { src: 1 dst: 0} # obj class 1 -> cvg index 0
+    object_class: { src: 1 dst: 0} # cars -> 0
+    object_class: { src: 8 dst: 1} # pedestrians -> 1
   }
   transform_param: {
     mean_value: 127
@@ -2383,7 +2385,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 1
+    num_output: 2
     kernel_size: 1
     weight_filler {
       type: "xavier"
@@ -2497,11 +2499,12 @@ layer {
     name: 'cluster'
     bottom: 'coverage'
     bottom: 'bboxes'
-    top: 'bbox-list'
+    top: 'bbox-list-class0'
+    top: 'bbox-list-class1'
     python_param {
         module: 'caffe.layers.detectnet.clustering'
         layer: 'ClusterDetections'
-        param_str : '1248, 352, 16, 0.6, 3, 0.02, 22, 1'
+        param_str : '1248, 352, 16, 0.6, 3, 0.02, 22, 2'
     }
     include: { phase: TEST }
 }
@@ -2512,20 +2515,21 @@ layer {
   name: 'cluster_gt'
   bottom: 'coverage-label'
   bottom: 'bbox-label'
-  top: 'bbox-list-label'
+  top: 'bbox-list-label-class0'
+  top: 'bbox-list-label-class1'
   python_param {
       module: 'caffe.layers.detectnet.clustering'
       layer: 'ClusterGroundtruth'
-      param_str : '1248, 352, 16, 1'
+      param_str : '1248, 352, 16, 2'
   }
   include: { phase: TEST stage: "val" }
 }
 layer {
     type: 'Python'
-    name: 'score'
-    bottom: 'bbox-list-label'
-    bottom: 'bbox-list'
-    top: 'bbox-list-scored'
+    name: 'score-class0'
+    bottom: 'bbox-list-label-class0'
+    bottom: 'bbox-list-class0'
+    top: 'bbox-list-scored-class0'
     python_param {
         module: 'caffe.layers.detectnet.mean_ap'
         layer: 'ScoreDetections'
@@ -2534,11 +2538,38 @@ layer {
 }
 layer {
     type: 'Python'
-    name: 'mAP'
-    bottom: 'bbox-list-scored'
-    top: 'mAP'
-    top: 'precision'
-    top: 'recall'
+    name: 'mAP-class0'
+    bottom: 'bbox-list-scored-class0'
+    top: 'mAP-class0'
+    top: 'precision-class0'
+    top: 'recall-class0'
+    python_param {
+        module: 'caffe.layers.detectnet.mean_ap'
+        layer: 'mAP'
+        param_str : '1248, 352, 16'
+    }
+    include: { phase: TEST stage: "val" }
+}
+
+layer {
+    type: 'Python'
+    name: 'score-class1'
+    bottom: 'bbox-list-label-class1'
+    bottom: 'bbox-list-class1'
+    top: 'bbox-list-scored-class1'
+    python_param {
+        module: 'caffe.layers.detectnet.mean_ap'
+        layer: 'ScoreDetections'
+    }
+    include: { phase: TEST stage: "val" }
+}
+layer {
+    type: 'Python'
+    name: 'mAP-class1'
+    bottom: 'bbox-list-scored-class1'
+    top: 'mAP-class1'
+    top: 'precision-class1'
+    top: 'recall-class1'
     python_param {
         module: 'caffe.layers.detectnet.mean_ap'
         layer: 'mAP'
