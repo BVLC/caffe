@@ -14,7 +14,6 @@ FindLibrary()
 }
 # MKL
 DST=`dirname $0`
-SET_ENV_SCRIPT=$DST/"set_env_up.sh"
 OMP=0 
 MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_contained_BU1/mklml_lnx_2017.0.b1.20160513.1.tgz"
 if [ $MKLROOT ]; then
@@ -43,14 +42,6 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160514 ]; then
   # this will help us export MKL env to existing shell
   
   MKLROOT=$PWD/`echo $LOCALMKL | sed -e 's/lib.*$//'`
-
-  # TODO: Remove next 5 lines,as soon as QB is ready to do so
-  echo '#!/bin/sh' > $SET_ENV_SCRIPT
-  echo "export MKLROOT=$MKLROOT" >> $SET_ENV_SCRIPT
-  echo "export LD_LIBRARY_PATH=$MKLROOT/lib:\${LD_LIBRARY_PATH}" >> $SET_ENV_SCRIPT
-  echo "export CPATH=\${CPATH}:${MKLROOT}/include/" >> $SET_ENV_SCRIPT
-  chmod 755 $SET_ENV_SCRIPT
-  
 fi
 
 # Check what MKL lib we have in MKLROOT
