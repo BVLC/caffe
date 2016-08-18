@@ -107,6 +107,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     PreclcRandomNumbers precalculated_rand_numbers;
     this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
     #pragma omp task firstprivate(offset, precalculated_rand_numbers, data, item_id)
+#endif
     {
       Datum datum;
       datum.ParseFromString(*data);
@@ -115,24 +116,17 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       if (this->output_labels_) {
         top_label[item_id] = datum.label();
       }
+#ifdef _OPENMP
       Blob<Dtype> tmp_data;
       tmp_data.Reshape(top_shape);
       tmp_data.set_cpu_data(top_data + offset);
       this->data_transformer_->Transform(datum, &tmp_data,
                                               precalculated_rand_numbers);
-    }
 #else
-    Datum datum;
-    datum.ParseFromString(*data);
-    (reader_.free()).push(data);
-    // Copy label. We need to copy it before we release datum
-    if (this->output_labels_) {
-        top_label[item_id] = datum.label();
-    }
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-   
+      this->transformed_data_.set_cpu_data(top_data + offset);
+      this->data_transformer_->Transform(datum, &(this->transformed_data_));
 #endif
+    }
   }
   trans_timer.Stop();
   batch_timer.Stop();
