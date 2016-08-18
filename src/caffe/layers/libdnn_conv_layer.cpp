@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 #include "caffe/greentea/greentea.hpp"
-#if defined(USE_GREENTEA) && defined(USE_LIBDNN)
+#ifdef USE_LIBDNN
 
 #include "caffe/layers/libdnn_conv_layer.hpp"
 
