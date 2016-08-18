@@ -130,13 +130,3 @@ caffe_print_configuration_summary()
 
 # ---[ Export configs generation
 caffe_generate_export_configs()
-
-if( ${MKL_EXTERNAL} EQUAL 1 )
-  message(STATUS "")
-  message(STATUS "")
-  message(STATUS "")
-  message(STATUS  "	To use IntelCaffe with MKL. please execute:")
-  message(STATUS  "")
-  message(STATUS  "			source ./external/mkl/set_env_up.sh")
-  message(STATUS  "")
-endif()
