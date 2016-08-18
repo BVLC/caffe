@@ -24,7 +24,7 @@ inline int SkSock::SendHeader(shared_ptr<Msg> msg)
 {
   //ataching meta data, including type, src, dst etc.
   string header_str;
-  msg->SerializeHeader(header_str);
+  msg->SerializeHeader(&header_str);
 
   zmq_msg_t header_msg;
   zmq_msg_init_size (&header_msg, header_str.length());

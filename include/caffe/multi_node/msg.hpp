@@ -2,20 +2,24 @@
 #ifndef MULTI_NODE_MSG_H_
 #define MULTI_NODE_MSG_H_
 
-#include <vector>
-#include <string>
-#include <glog/logging.h>
-#include <stdlib.h>
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
+#include <glog/logging.h>
+#include <stdlib.h>
 
 #include <zmq.h>
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include "caffe/proto/multi_node.pb.h"
 
-using std::vector;
-using std::string;
 using std::map;
+using std::string;
+using std::vector;
+
+using boost::shared_ptr;
 
 const int REQ_SERVER_ID = 3;
 const int ROOT_THREAD_ID = 2;
@@ -23,21 +27,18 @@ const int WORKER_BCAST = 1;
 const int INVALID_ID = -1;
 const int INVALID_CLOCK = -1;
 
-/// overlapping computation and communication 
+/// overlapping computation and communication
 /// by splitting the solver into sub-solvers
 /// const int NUM_SUB_SOLVERS = 4;
 
-using boost::shared_ptr;
 
 namespace caffe {
 
 class Msg {
+ public:
+  Msg() { }
 
-public:
-  Msg() {
-  }
-  
-  Msg(shared_ptr<Msg> m) {
+  explicit Msg(shared_ptr<Msg> m) {
     set_src(m->src());
     set_dst(m->dst());
     set_msg_id(m->msg_id());
@@ -48,7 +49,7 @@ public:
     set_is_partial(m->is_partial());
   }
 
-  Msg(Msg *p) {
+  explicit Msg(Msg *p) {
     set_src(p->src());
     set_dst(p->dst());
     set_msg_id(p->msg_id());
@@ -81,7 +82,7 @@ public:
   int dst() const {
     return header_.dst();
   }
-  
+
   int clock() const {
     return header_.clock();
   }
@@ -105,7 +106,7 @@ public:
   MsgType type() const {
     return header_.type();
   }
-  
+
   inline int data_offset() const {
     return header_.data_offset();
   }
@@ -113,7 +114,7 @@ public:
   inline void set_data_offset(int offset) {
     header_.set_data_offset(offset);
   }
-  
+
   inline bool is_partial() const {
     return header_.is_partial();
   }
@@ -131,7 +132,7 @@ public:
   }
 
   void add_blob_info(const BlobInfo& b) {
-    CHECK( !has_blob(b.blob_name()) );
+    CHECK(!has_blob(b.blob_name()));
     blob_name_index_[b.blob_name()] = header_.blobs_size();
     header_.add_blobs()->CopyFrom(b);
   }
@@ -141,7 +142,7 @@ public:
 
     return zmsg_vec_.size() - 1;
   }
-  
+
   int conv_id() {
     return header_.conv_id();
   }
@@ -150,52 +151,56 @@ public:
     header_.set_conv_id(id);
   }
 
-  //return the data index
+  // return the data index
   int AppendData(const void *p, int len) {
     zmq_msg_t *m = new zmq_msg_t;
     zmq_msg_init_size(m, len);
 
-    memcpy(zmq_msg_data (m), p, len);
+    memcpy(zmq_msg_data(m), p, len);   // NOLINT
     zmsg_vec_.push_back(m);
 
     return zmsg_vec_.size() - 1;
   }
-  
+
   int MergeMsg(shared_ptr<Msg> m);
 
   shared_ptr<Msg> ExtractMsg(const string& blob_name);
 
-  //clear messages without releasing the content
+  // clear messages without releasing the content
   void ClearMsg() {
     header_.clear_blobs();
     zmsg_vec_.clear();
   }
-  
+
   void PrintHeader() {
     LOG(INFO) << "message header: " << std::endl << header_.DebugString();
   }
 
-  void SerializeHeader(string& str) {
-    header_.SerializeToString(&str);
+  void SerializeHeader(string *pstr) {
+    header_.SerializeToString(pstr);
   }
 
-  void ParseHeader(string& str) {
+  void ParseHeader(const string& str) {
     header_.ParseFromString(str);
 
-    //init the blob name map
+    // init the blob name map
     for (int i = 0; i < header_.blobs_size(); i++) {
       const string& blob_name = header_.blobs(i).blob_name();
-      
+
       CHECK(blob_name_index_.find(blob_name) == blob_name_index_.end());
       blob_name_index_[blob_name] = i;
     }
   }
-  
+
   bool has_blob(const string& blob_name) {
-    return (blob_name_index_.find(blob_name) == blob_name_index_.end()) ? false : true;
+    if (blob_name_index_.find(blob_name) == blob_name_index_.end()) {
+      return false;
+    } else {
+      return true;
+    }
   }
-  
-  //return -1 if didn't find the blob
+
+  // return -1 if didn't find the blob
   int blob_index_by_name(const string& blob_name) {
     if (!has_blob(blob_name)) {
       return -1;
@@ -211,7 +216,7 @@ public:
     if (blob_idx < 0) {
       return msg_indices;
     }
-    
+
     const BlobInfo& bi = blob_info(blob_idx);
     for (int i = 0; i < bi.msg_index_size(); i++) {
       msg_indices.push_back(bi.msg_index(i));
@@ -221,17 +226,22 @@ public:
   }
 
   void *ZmsgData(int i) {
-    CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is " << zmsg_vec_.size() << " index is " << i;
+    CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is "
+                                  << zmsg_vec_.size()
+                                  << " index is " << i;
     return zmq_msg_data(zmsg_vec_[i]);
   }
 
   void AddNewBlob(const string& blob_name, const void *data, int sz);
-  
+
   // add new blob with shape
-  void AddNewBlob(const string& blob_name, const void *data, int sz, const vector<int>& shape);
-  
+  void AddNewBlob(const string& blob_name,
+                  const void *data,
+                  int sz,
+                  const vector<int>& shape);
+
   void CopyBlob(const string& blob_name, void *data, int sz);
-  
+
   // return the pointer to the allocated blob
   void *AllocBlob(const string& blob_name, int sz);
 
@@ -240,13 +250,17 @@ public:
   void AppendBlob(const string& blob_name, const void *data, int sz);
 
   int ZmsgSize(int i) {
-    CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is " << zmsg_vec_.size() << " index is " << i;
+    CHECK_LT(i, zmsg_vec_.size()) << "ERROR: vector size is "
+                                  << zmsg_vec_.size()
+                                  << " index is " << i;
     return zmq_msg_size(zmsg_vec_[i]);
   }
 
   zmq_msg_t *GetZmsg(int i) {
-    CHECK(i < zmsg_vec_.size()) << "Getting index " << i << " from a vector with size of: " << zmsg_vec_.size();
-    
+    CHECK(i < zmsg_vec_.size()) << "Getting index " << i
+                                << " from a vector with size of: "
+                                << zmsg_vec_.size();
+
     return zmsg_vec_[i];
   }
 
@@ -254,17 +268,17 @@ public:
     return zmsg_vec_.size();
   }
 
-protected:
+ protected:
   MsgHeader header_;
 
   vector<zmq_msg_t *> zmsg_vec_;
-  
-  //map blob name to the blob info index where it is stored.
+
+  // map blob name to the blob info index where it is stored.
   map<string, int> blob_name_index_;
 };
 
-}
+}  // end namespace caffe
 
-#endif // MULTI_NODE_MSG_H_
+#endif  // MULTI_NODE_MSG_H_
 
 
