@@ -1,17 +1,18 @@
 
+#include <string>
+#include <vector>
 
 #include "caffe/multi_node/model_test_thread.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-void TestThread<Dtype>::Run()
-{
+void TestThread<Dtype>::Run() {
   SendParamRquest();
-  
+
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);
-      
+
     if (m->type() == TRAIN_ITER) {
       UpdateTrainIter(m);
     } else if (m->type() == PUT_PARAM) {
@@ -23,14 +24,13 @@ void TestThread<Dtype>::Run()
 }
 
 template <typename Dtype>
-void TestThread<Dtype>::SendParamRquest()
-{
+void TestThread<Dtype>::SendParamRquest() {
   for (int i = 0; i < ps_ids_.size(); i++) {
     shared_ptr<Msg> m(new Msg());
     m->set_type(GET_PARAM);
     m->set_dst(ps_ids_[i]);
     m->set_src(NodeEnv::Instance()->ID());
-    
+
     // append something, avoid send packets withou payload
     m->AppendData(&i, sizeof(i));
 
@@ -42,7 +42,7 @@ void TestThread<Dtype>::SendParamRquest()
     m->set_type(GET_PARAM);
     m->set_dst(fc_ids_[i]);
     m->set_src(NodeEnv::Instance()->ID());
-    
+
     // append something, avoid send packets withou payload
     m->AppendData(&i, sizeof(i));
 
@@ -51,9 +51,8 @@ void TestThread<Dtype>::SendParamRquest()
 }
 
 template <typename Dtype>
-void TestThread<Dtype>::UpdateTrainIter(shared_ptr<Msg> m)
-{
-  int iter_in_msg = *((int *)m->ZmsgData(0));
+void TestThread<Dtype>::UpdateTrainIter(shared_ptr<Msg> m) {
+  int iter_in_msg = *(reinterpret_cast<int *>(m->ZmsgData(0)));
   if (iter_in_msg > train_iter_) {
     train_iter_ = iter_in_msg;
   }
@@ -65,15 +64,8 @@ void TestThread<Dtype>::UpdateTrainIter(shared_ptr<Msg> m)
 }
 
 template <typename Dtype>
-void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
-{
+void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   ParamHelper<Dtype>::CopyParamDataFromMsg(solver_->net(), m);
-  #if 0
-  for (int i = 0; i < m->ZmsgCnt(); i++) {
-    Dtype *p = (Dtype *)m->ZmsgData(i);
-    LOG(INFO) << "msg: " << i << " data: " << p[0];
-  }
-  #endif
 
   updated_map_[m->src()] = true;
 
@@ -88,10 +80,10 @@ void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
       return;
     }
   }
-  
+
   LOG(INFO) << "param updated";
   ResetUpdateMap();
-  
+
   // print net parameters
   #if 0
   const vector<shared_ptr<Layer<Dtype> > >& layers = solver_->net()->layers();
@@ -106,7 +98,7 @@ void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   #endif
 
   solver_->TestAll(tested_iter_);
-  
+
   if (param_.snapshot() &&
     train_iter_ - snapshot_iter_ >= param_.snapshot()) {
     snapshot_iter_ = train_iter_;
@@ -116,6 +108,6 @@ void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
 
 INSTANTIATE_CLASS(TestThread);
 
-}  // end caffe
+}  // end namespace caffe
 
 
