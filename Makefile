@@ -406,6 +406,7 @@ endif
 # BLAS configuration (default = MKL)
 MKL_EXTERNAL := 0
 BLAS ?= mkl
+MKL_LDFLAGS=
 ifeq ($(BLAS), mkl)
 	# MKL
 	ICC_ON=0
@@ -414,12 +415,14 @@ ifeq ($(BLAS), mkl)
 	endif
 	RETURN_STRING=$(shell ./external/mkl/prepare_mkl.sh $(ICC_ON))
 	MKLROOT=$(firstword $(RETURN_STRING))
-	LIBRARIES+=$(word 2, $(RETURN_STRING))
+	MKL_LDFLAGS=-l$(word 2, $(RETURN_STRING))
 	MKL_EXTERNAL=$(lastword $(RETURN_STRING))
+ifeq ($(MKL_EXTERNAL), 1)
+	MKL_LDFLAGS+=-Wl,-rpath,$(MKLROOT)/lib
+endif
 
 #$(info "RETURN_STRING: "$(RETURN_STRING))
 #$(info "MKLROOT: "$(MKLROOT))
-#$(info "LIBRARIES: "$(LIBRARIES))
 
 	COMMON_FLAGS += -DUSE_MKL
 	BLAS_INCLUDE ?= $(MKLROOT)/include
@@ -551,21 +554,10 @@ endif
 
 # set_env should be at the end
 all: lib tools examples
-ifeq ($(MKL_EXTERNAL), 1)
-	$(MAKE) set_env
-endif
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
-
-# TODO: Make it conditional, if MKLROOT exists outside do not call set_env.sh
-set_env: 
-	@echo ""
-	@echo "	To use IntelCaffe with MKL. please execute:"
-	@echo ""
-	@echo "			source ./external/mkl/set_env_up.sh"
-	@echo ""
 
 linecount:
 	cloc --read-lang-def=$(PROJECT).cloc \
@@ -680,7 +672,7 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 
 $(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
-	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_SHARED_HARDENING_FLAGS) $(LDFLAGS)
+	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(MKL_LDFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_SHARED_HARDENING_FLAGS) $(LDFLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
@@ -712,7 +704,7 @@ $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJS) \
 		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo CXX/LD -o $@ $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJS) \
-		-o $@ $(LINKFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
+		-o $@ $(LINKFLAGS) $(MKL_LDFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
 
 $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(GTEST_OBJS) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
@@ -724,7 +716,7 @@ $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 	$(GTEST_OBJS) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo LD $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJS) \
-		-o $@ $(LINKFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
+		-o $@ $(LINKFLAGS) $(MKL_LDFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
 
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.
 $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
