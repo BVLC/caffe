@@ -102,6 +102,12 @@ elseif(APPLE)
   find_package(vecLib REQUIRED)
   include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
+
+  if(VECLIB_FOUND)
+    if(NOT vecLib_INCLUDE_DIR MATCHES "^/System/Library/Frameworks/vecLib.framework.*")
+      add_definitions(-DUSE_ACCELERATE)
+    endif()
+  endif()
 endif()
 
 # ---[ Python
