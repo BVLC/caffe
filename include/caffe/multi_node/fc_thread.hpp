@@ -2,17 +2,17 @@
 #ifndef MULTI_NODE_FC_THREAD_H_
 #define MULTI_NODE_FC_THREAD_H_
 
+#include <vector>
+
 #include "caffe/multi_node/node_env.hpp"
 #include "caffe/multi_node/worker_thread.hpp"
 #include "caffe/sgd_solvers.hpp"
 
 namespace caffe {
 
-
 template <typename Dtype>
-class ParamBuf
-{
-public:
+class ParamBuf {
+ public:
   ParamBuf() { platest_param_ = NULL; }
   ~ParamBuf() { }
 
@@ -25,32 +25,33 @@ public:
   // associate the param with a solver pointer
   // increase reference count of a pointer by 1
   vector<Blob<Dtype>*> *RefParam(void *psolver, int clock);
- 
+
   // decrease the reference count of a point by 1
   int DeRefParam(void *psolver);
-  
 
   // get the clock of a solver
   int GetClock(void *psolver) {
     boost::mutex::scoped_lock lock(ref_mutex_);
 
     unordered_map<void *, int>::iterator iter = psolver_to_clock_.find(psolver);
-    CHECK(iter != psolver_to_idx_.end()) << "cannot find index to pointer: " << psolver;
+    CHECK(iter != psolver_to_idx_.end()) << "cannot find index to pointer: "
+                                         << psolver;
 
     return iter->second;
   }
-  
+
   void RemoveClock(int clock) {
     boost::mutex::scoped_lock lock(ref_mutex_);
-    
+
     unordered_map<int, int>::iterator iter = clock_to_idx_.find(clock);
-    CHECK(iter != clock_to_idx_.end()) << "cannot find clock in map: " << clock;
+    CHECK(iter != clock_to_idx_.end()) << "cannot find clock in map: "
+                                       << clock;
 
     clock_to_idx_.erase(iter);
   }
 
   void InitParamBuf(const vector<Blob<Dtype>*>& params);
-  
+
   // create new parameter using a template
   vector<Blob<Dtype>*> *CreateParam(const vector<Blob<Dtype>*>& params);
 
@@ -60,8 +61,8 @@ public:
   // find a param with reference count 0
   // return NULL if fail to find
   vector<Blob<Dtype>*> *FindFreeParam();
- 
-protected:
+
+ protected:
   // a vetor of paramters
   vector<vector<Blob<Dtype>*>* > param_vec_;
 
@@ -74,16 +75,16 @@ protected:
 
   // map a param pointer to ref index
   unordered_map<void *, int> pointer_to_idx_;
-  
+
   // map a solver pointer to ref index
   unordered_map<void *, int> psolver_to_idx_;
 
   // map solver to clock
   unordered_map<void *, int> psolver_to_clock_;
-  
+
   // bind a clock to a parameter index
   unordered_map<int, int> clock_to_idx_;
-  
+
   // mutex which protects reference count
   boost::mutex ref_mutex_;
 
@@ -92,11 +93,9 @@ DISABLE_COPY_AND_ASSIGN(ParamBuf);
 
 
 template <typename Dtype>
-class FcWorker : public WorkerThread<Dtype>
-{
-public:
-  FcWorker() {
-  }
+class FcWorker : public WorkerThread<Dtype> {
+ public:
+  FcWorker() { }
 
   virtual ~FcWorker() { }
 
@@ -106,14 +105,12 @@ public:
     return pbuf_;
   }
 
-protected:
-
-private:
+ private:
   static void CreateParamBuf() {
     pbuf_ = new ParamBuf<Dtype>();
   }
 
-private:
+ private:
   static ParamBuf<Dtype> *pbuf_;
   static boost::once_flag once_;
 
@@ -122,10 +119,9 @@ DISABLE_COPY_AND_ASSIGN(FcWorker);
 
 
 template <typename Dtype>
-class FcThread : public FcWorker<Dtype>
-{
-public:
-  FcThread() { 
+class FcThread : public FcWorker<Dtype> {
+ public:
+  FcThread() {
     clock_ = 0;
     staleness_ = 0;
   }
@@ -133,23 +129,25 @@ public:
 
   virtual void Run();
 
-
-protected:
+ protected:
   shared_ptr<Msg> FcForward(shared_ptr<Msg> m);
-  void FcBackward(shared_ptr<Msg> m, vector<shared_ptr<Msg> >& replies, bool copy_diff);
+  void FcBackward(shared_ptr<Msg> m,
+                  vector<shared_ptr<Msg> > *preplies,
+                  bool copy_diff);
 
   // copy Input data from Message
   void CopyInputDataFromMsg(shared_ptr<Net<Dtype> > fc_net, shared_ptr<Msg> m);
 
   // Copy Output Diff from Message
-  void CopyOutputDiffFromMsg(shared_ptr<Net<Dtype> > fc_net, shared_ptr<Msg> m);
-  
+  void CopyOutputDiffFromMsg(shared_ptr<Net<Dtype> > fc_net,
+                             shared_ptr<Msg> m);
+
   virtual void ProcessMsg(shared_ptr<Msg> m);
 
-protected:
+ protected:
   // the clock of the node
   int clock_;
-  
+
   // staleness of allowed clock
   int staleness_;
 
@@ -162,16 +160,15 @@ DISABLE_COPY_AND_ASSIGN(FcThread);
 
 // the last part of FC layers
 template <typename Dtype>
-class FcLossThread : public FcThread<Dtype>
-{
-public:
+class FcLossThread : public FcThread<Dtype> {
+ public:
   FcLossThread() { }
   virtual ~FcLossThread() { }
 
-protected:
+ protected:
   virtual void ProcessMsg(shared_ptr<Msg> m);
 
-protected:
+ protected:
   static boost::atomic_int iter_;
 
 DISABLE_COPY_AND_ASSIGN(FcLossThread);
@@ -180,9 +177,8 @@ DISABLE_COPY_AND_ASSIGN(FcLossThread);
 
 // for updating FC parameters
 template <typename Dtype>
-class FcParamThread : public FcWorker<Dtype>
-{
-public:
+class FcParamThread : public FcWorker<Dtype> {
+ public:
   FcParamThread() {
     train_iter_ = 0;
     test_node_id_ = -1;
@@ -194,31 +190,32 @@ public:
 
   virtual void Run();
 
-protected:
+ protected:
   void SendParam(shared_ptr<Msg> m);
 
   void UpdateParam(shared_ptr<Msg> m);
-  
-  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
+
+  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
+                                      const SolverParameter& solver_param) {
     return NULL;
   }
-  
+
   void SendNotify();
 
   int GetGroupIndex(void *psolver, int64_t msg_id);
 
   void ClearGroup(int grp_idx);
-  
+
   // send clock update to workers
   void UpdateClock();
 
-protected:
+ protected:
   // map a clock to vector index where the solver is stored
   unordered_map<int, int> clock_to_group_idx_;
-  
+
   // a group solver collects all the gradients of the same clock
   vector<void *> group_solvers_;
-   
+
   // number of gradients updates in a solver
   vector<int> grad_updates_vec_;
 
@@ -234,13 +231,13 @@ protected:
   int train_iter_;
 
   int test_node_id_;
-  
+
   // number of conv. clients
   int num_workers_;
-  
+
   // number of overlapping solvers
   int num_sub_solvers_;
-  
+
   // number of sub batches the param thread processed
   int sub_batches_;
 
@@ -250,7 +247,7 @@ protected:
 DISABLE_COPY_AND_ASSIGN(FcParamThread);
 };
 
-} //end caffe
+}  // end namespace caffe
 
 #endif
 
