@@ -1,5 +1,5 @@
-#ifndef CAFFE_MVN_LAYER_HPP_
-#define CAFFE_MVN_LAYER_HPP_
+#ifndef CAFFE_NORMALIZE_LAYER_HPP_
+#define CAFFE_NORMALIZE_LAYER_HPP_
 
 #include <vector>
 
