@@ -2,21 +2,18 @@
 #ifndef MULTI_NODE_TEST_NODE_H_
 #define MULTI_NODE_TEST_NODE_H_
 
+#include "caffe/multi_node/msg_hub.hpp"
 #include "caffe/multi_node/model_test_thread.hpp"
 #include "caffe/multi_node/node_env.hpp"
-#include "caffe/multi_node/msg_hub.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-class TestClient : public MsgHub<Dtype>
-{
-
-public:
+class TestClient : public MsgHub<Dtype>{
+ public:
   // we only use 1 test client thread
   TestClient()
-    : MsgHub<Dtype>(1, 1)
-  {
+    : MsgHub<Dtype>(1, 1) {
     node_id_ = NodeEnv::Instance()->ID();
     ps_addrs_ = NodeEnv::Instance()->ps_addrs();
     ps_ids_ = NodeEnv::Instance()->ps_ids();
@@ -26,15 +23,15 @@ public:
 
   virtual ~TestClient() { }
 
-public:
+ public:
   virtual int Init();
 
   virtual int RouteMsg();
 
-protected:
+ protected:
   virtual int SetUpPoll();
-  
-protected:
+
+ protected:
   vector<string> ps_addrs_;
 
   vector<int> ps_ids_;
@@ -53,7 +50,7 @@ protected:
 };
 
 
-} // end caffe
+}  // end namespace caffe
 
 
 #endif

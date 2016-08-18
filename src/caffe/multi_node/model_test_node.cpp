@@ -5,10 +5,9 @@
 namespace caffe {
 
 template <typename Dtype>
-int TestClient<Dtype>::Init()
-{
+int TestClient<Dtype>::Init() {
   CHECK_EQ(ps_ids_.size(), ps_addrs_.size());
-  
+
   for (int i = 0; i < ps_ids_.size(); i++) {
     shared_ptr<SkSock> sk(new SkSock(ZMQ_DEALER));
     sk->SetId(node_id_);
@@ -33,39 +32,39 @@ int TestClient<Dtype>::Init()
 }
 
 template <typename Dtype>
-int TestClient<Dtype>::SetUpPoll()
-{
+int TestClient<Dtype>::SetUpPoll() {
   this->num_poll_items_ = this->nthreads_ + ps_ids_.size() + fc_ids_.size();
   this->poll_items_ = new zmq_pollitem_t[this->num_poll_items_];
 
   int poll_idx = this->nthreads_;
-  
+
   for (int i = 0; i < ps_socks_.size(); i++, poll_idx++) {
     this->poll_items_[poll_idx].socket = ps_socks_[i]->GetSock();
     this->poll_items_[poll_idx].events = ZMQ_POLLIN;
     this->poll_items_[poll_idx].fd = 0;
     this->poll_items_[poll_idx].revents = 0;
   }
-  
+
   for (int i = 0; i < fc_socks_.size(); i++, poll_idx++) {
     this->poll_items_[poll_idx].socket = fc_socks_[i]->GetSock();
     this->poll_items_[poll_idx].events = ZMQ_POLLIN;
     this->poll_items_[poll_idx].fd = 0;
     this->poll_items_[poll_idx].revents = 0;
   }
- 
+
   return MsgHub<Dtype>::SetUpPoll();
 }
 
 template <typename Dtype>
-int TestClient<Dtype>::RouteMsg()
-{
+int TestClient<Dtype>::RouteMsg() {
   for (int i = 0; i < this->nthreads_; i++) {
     if (this->poll_items_[i].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = this->sockp_arr_[i]->RecvMsg(true);
-      unordered_map<int, shared_ptr<SkSock> >::iterator iter = node_id_to_sock_.find(m->dst());
+      unordered_map<int, shared_ptr<SkSock> >::iterator iter =
+                                            node_id_to_sock_.find(m->dst());
 
-      CHECK(iter != node_id_to_sock_.end()) << "Cannot find route to node id: " << m->dst();
+      CHECK(iter != node_id_to_sock_.end()) << "Cannot find route to node id: "
+                                            << m->dst();
       iter->second->SendMsg(m);
     }
   }
@@ -90,7 +89,7 @@ int TestClient<Dtype>::RouteMsg()
 
 INSTANTIATE_CLASS(TestClient);
 
-} // end caffe
+}  // end namespace caffe
 
 
 
