@@ -67,8 +67,8 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
   this->transformed_data_.Reshape(top_shape_);
   top_shape_[0] = batch_size;
   top[0]->Reshape(top_shape_);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].data_.Reshape(top_shape_);
+  for (int i = 0; i < this->prefetch_.size(); ++i) {
+    this->prefetch_[i]->data_.Reshape(top_shape_);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","

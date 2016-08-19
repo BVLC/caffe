@@ -535,7 +535,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
       const vector<NormalizedBBox>& label_loc_preds =
           all_loc_preds[i].find(label)->second;
       DecodeBBoxes(prior_bboxes, prior_variances,
-                   code_type, variance_encoded_in_target,
+                   code_type, variance_encoded_in_target, false,
                    label_loc_preds, &(decode_bboxes[label]));
     }
   }
@@ -852,7 +852,7 @@ void MineHardExamples(const Blob<Dtype>& conf_blob,
   const int sample_size = multibox_loss_param.sample_size();
   // Compute confidence losses based on matching results.
   vector<vector<float> > all_conf_loss;
-#ifdef CPU_ONLY
+#ifndef USE_CUDA
   ComputeConfLoss(conf_blob.cpu_data(), num, num_priors, num_classes,
       background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
       &all_conf_loss);
@@ -1399,16 +1399,6 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
     all_conf_loss->push_back(conf_loss);
   }
 }
-
-// Explicit initialization.
-template void ComputeConfLoss(const float* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const ConfLossType loss_type,
-      vector<vector<float> >* all_conf_loss);
-template void ComputeConfLoss(const double* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const ConfLossType loss_type,
-      vector<vector<float> >* all_conf_loss);
 
 template <typename Dtype>
 void ComputeConfLoss(const Dtype* conf_data, const int num,

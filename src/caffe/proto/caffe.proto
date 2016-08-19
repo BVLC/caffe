@@ -210,7 +210,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 43 (last added: ap_version)
+// SolverParameter next available ID: 42 (last added: plateau_winsize)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -286,6 +286,8 @@ message SolverParameter {
   //      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
   //    - sigmoid: the effective learning rate follows a sigmod decay
   //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
+  //    - plateau: decreases lr
+  //              if the minimum loss isn't updated for 'plateau_winsize' iters
   //
   // where base_lr, max_iter, gamma, step, stepvalue and power are defined
   // in the solver parameter protocol buffer, and iter is the current iteration.
@@ -300,7 +302,9 @@ message SolverParameter {
   // the stepsize for learning rate policy "step"
   optional int64 stepsize = 13;
   // the stepsize for learning rate policy "multistep"
-  repeated int64 stepvalue = 34;
+  repeated int32 stepvalue = 34;
+  // the stepsize for learning rate policy "plateau"
+  repeated int32 plateau_winsize = 243;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -369,7 +373,9 @@ message SolverState {
   optional int64 iter = 1; // The current iteration
   optional string learned_net = 2; // The file that stores the learned net.
   repeated BlobProto history = 3; // The history for sgd solvers
-  optional int64 current_step = 4 [default = 0]; // The current step for learning rate
+  optional int32 current_step = 4 [default = 0]; // The current step for learning rate
+  optional float minimum_loss = 5 [default = 1E38]; // Historical minimum loss
+  optional int32 iter_last_event = 6 [default = 0]; // The iteration when last lr-update or min_loss-update happend
 }
 
 enum Phase {
