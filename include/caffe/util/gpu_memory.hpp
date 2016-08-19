@@ -1,6 +1,7 @@
 #ifndef CAFFE_UTIL_GPU_MEMORY_HPP_
 #define CAFFE_UTIL_GPU_MEMORY_HPP_
 
+#include <boost/thread.hpp>
 #include <vector>
 #include "caffe/common.hpp"
 #ifndef CPU_ONLY
@@ -67,7 +68,10 @@ struct GPUMemory {
     }
     ~Workspace() { mgr_.deallocate(ptr_, device_, stream_); }
 
-    void* data() const { return ptr_; }
+    void* data() const {
+      CHECK_NOTNULL(ptr_);
+      return ptr_;
+    }
     size_t size() const { return size_; }
     int device() const { return device_; }
 
@@ -82,6 +86,7 @@ struct GPUMemory {
         }
         status = mgr_.try_allocate(&ptr_, size, device_, stream_);
         if (status) {
+          CHECK_NOTNULL(ptr_);
           size_ = size;
         }
       }
@@ -137,7 +142,7 @@ struct GPUMemory {
 
    private:
     shared_ptr<Workspace> current_workspace() const;
-    mutable vector<shared_ptr<Workspace> > ws_;
+    mutable boost::thread_specific_ptr<vector<shared_ptr<Workspace> > > vws_;
   };
 
  private:
