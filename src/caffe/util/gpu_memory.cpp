@@ -187,16 +187,21 @@ void GPUMemory::Manager::GetInfo(size_t* free_mem, size_t* total_mem) {
 
 shared_ptr<GPUMemory::Workspace>
 GPUMemory::MultiWorkspace::current_workspace() const {
+  if (!vws_.get()) {
+    vws_.reset(new vector<shared_ptr<Workspace> >);
+  }
+  vector<shared_ptr<Workspace> >& v = *vws_.get();
+
   int current_device;
   CUDA_CHECK(cudaGetDevice(&current_device));
-  if (current_device + 1 > ws_.size()) {
-    ws_.resize(current_device + 1);
+  if (current_device + 1 > v.size()) {
+    v.resize(current_device + 1);
   }
-  if (!ws_[current_device]) {  // In case if --gpu=1,0
-    ws_[current_device].reset(
+  if (!v[current_device]) {  // In case if --gpu=1,0
+    v[current_device].reset(
         new GPUMemory::Workspace(0, current_device));
   }
-  return ws_[current_device];
+  return v[current_device];
 }
 
 }  // namespace caffe
