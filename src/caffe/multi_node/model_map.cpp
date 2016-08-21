@@ -1,12 +1,14 @@
 
+#include <map>
+#include <string>
+#include <vector>
 
 #include "caffe/multi_node/model_map.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-int ModelMap<Dtype>::FindLayer(const string& name)
-{
+int ModelMap<Dtype>::FindLayer(const string& name) {
   map<string, int>::iterator iter = layer_name_idx_.find(name);
   if (iter != layer_name_idx_.end()) {
     return iter->second;
@@ -17,8 +19,7 @@ int ModelMap<Dtype>::FindLayer(const string& name)
 
 
 template <typename Dtype>
-void ModelMap<Dtype>::BuildNetGraph()
-{
+void ModelMap<Dtype>::BuildNetGraph() {
   int nlayers = net_param_.layer_size();
 
   requests_.resize(nlayers);
@@ -34,7 +35,7 @@ void ModelMap<Dtype>::BuildNetGraph()
   sub_forward_graph_.resize(nlayers);
   sub_backward_graph_.resize(nlayers);
   route_nodes_.resize(nlayers);
-  
+
   sub_solver_layer_names_.resize(nlayers);
 
   for (int i = 0; i < nlayers; i++) {
@@ -45,25 +46,25 @@ void ModelMap<Dtype>::BuildNetGraph()
     request_filled_[i] = false;
     request_parsed_[i] = false;
   }
-  
+
   map<string, int> top_blob_to_layer;
   for (int i = 0; i < nlayers; i++) {
     const LayerParameter& layer_param = layer_params_[i];
-    
+
     // set the nearest top blob as input
     for (int j = 0; j < layer_param.bottom_size(); j++) {
-      map<string, int>::iterator iter = top_blob_to_layer.find(layer_param.bottom(j));
+      map<string, int>::iterator iter =
+                                top_blob_to_layer.find(layer_param.bottom(j));
       CHECK(iter != top_blob_to_layer.end());
       net_forward_graph_[iter->second].push_back(i);
       net_backward_graph_[i].push_back(iter->second);
     }
-   
+
     for (int j = 0; j < layer_param.top_size(); j++) {
       top_blob_to_layer[layer_param.top(j)] = i;
     }
-
   }
-  
+
   LOG(INFO) << "net graph inited.";
   // print the graph
   for (int i = 0; i < layer_params_.size(); i++) {
@@ -76,12 +77,10 @@ void ModelMap<Dtype>::BuildNetGraph()
 
     LOG(INFO) << debug_str;
   }
-
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::ParseInputOutput(int node_idx)
-{
+void ModelMap<Dtype>::ParseInputOutput(int node_idx) {
   const vector<int>& all_layers = sub_solver_layers_[node_idx];
 
   map<string, bool> top_blob_is_used;
@@ -90,14 +89,14 @@ void ModelMap<Dtype>::ParseInputOutput(int node_idx)
 
     for (int j = 0; j < param.bottom_size(); j++) {
       const string& bottom_blob = param.bottom(j);
-      
+
       if (top_blob_is_used.find(bottom_blob) == top_blob_is_used.end()) {
         sub_input_blobs_[node_idx].push_back(bottom_blob);
       } else {
         top_blob_is_used[bottom_blob] = true;
       }
     }
-    
+
     for (int j = 0; j < param.top_size(); j++) {
       const string& top_blob = param.top(j);
       top_blob_is_used[top_blob] = false;
@@ -105,7 +104,9 @@ void ModelMap<Dtype>::ParseInputOutput(int node_idx)
   }
 
   map<string, bool>::iterator iter;
-  for (iter = top_blob_is_used.begin(); iter != top_blob_is_used.end(); iter++) {
+  for (iter = top_blob_is_used.begin();
+       iter != top_blob_is_used.end();
+       iter++) {
     if (!iter->second) {
       sub_output_blobs_[node_idx].push_back(iter->first);
     }
@@ -113,12 +114,11 @@ void ModelMap<Dtype>::ParseInputOutput(int node_idx)
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddLayers(NetParameter *pnet, int node_idx)
-{
+void ModelMap<Dtype>::AddLayers(NetParameter *pnet, int node_idx) {
   for (int i = 0; i < sub_solver_layers_[node_idx].size(); i++) {
     int l = sub_solver_layers_[node_idx][i];
     LayerParameter layer_param = layer_params_[l];
-    
+
     if (layer_param.type() == "Data") {
       layer_param.set_type(string("AsyncData"));
     }
@@ -129,17 +129,17 @@ void ModelMap<Dtype>::AddLayers(NetParameter *pnet, int node_idx)
       int num_splits = requests_[node_idx].size();
 
       CHECK_EQ(num_output % num_splits, 0);
-      layer_param.mutable_inner_product_param()->set_num_output(num_output / num_splits);
+      layer_param.mutable_inner_product_param()->set_num_output(
+                                                 num_output / num_splits);
     }
-    
+
     pnet->add_layer()->CopyFrom(layer_param);
   }
 }
 
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddInputs(NetParameter *pnet, int node_idx)
-{
+void ModelMap<Dtype>::AddInputs(NetParameter *pnet, int node_idx) {
   for (int i = 0; i < sub_input_blobs_[node_idx].size(); i++) {
     const string& input_blob = sub_input_blobs_[node_idx][i];
     pnet->add_input(input_blob);
@@ -154,9 +154,8 @@ void ModelMap<Dtype>::AddInputs(NetParameter *pnet, int node_idx)
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddSolver(RouteInfo *proute, int node_idx)
-{
-  //generate solver
+void ModelMap<Dtype>::AddSolver(RouteInfo *proute, int node_idx) {
+  // generate solver
   SolverParameter new_solver;
   new_solver.CopyFrom(clear_solver_);
 
@@ -164,22 +163,21 @@ void ModelMap<Dtype>::AddSolver(RouteInfo *proute, int node_idx)
   AddInputs(new_solver.mutable_net_param(), node_idx);
 
   proute->mutable_solver_param()->CopyFrom(new_solver);
-  
+
   // set number of workers
   proute->set_num_workers(num_workers_);
   proute->set_num_sub_solvers(num_sub_solvers_);
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddRoutes(RouteInfo *proute, int node_idx)
-{
+void ModelMap<Dtype>::AddRoutes(RouteInfo *proute, int node_idx) {
   for (int i = 0; i < sub_forward_graph_[node_idx].size(); i++) {
     int fwd_idx = sub_forward_graph_[node_idx][i];
     for (int j = 0; j < requests_[fwd_idx].size(); j++) {
       proute->add_bcast_nodes()->CopyFrom(route_nodes_[fwd_idx][j]);
     }
   }
-  
+
   for (int i = 0; i < sub_backward_graph_[node_idx].size(); i++) {
     int bwd_id = sub_backward_graph_[node_idx][i];
     for (int j = 0; j < requests_[bwd_id].size(); j++) {
@@ -189,8 +187,7 @@ void ModelMap<Dtype>::AddRoutes(RouteInfo *proute, int node_idx)
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareFCMsg()
-{
+void ModelMap<Dtype>::PrepareFCMsg() {
   if (status_ != INITED) {
     return;
   }
@@ -201,13 +198,13 @@ void ModelMap<Dtype>::PrepareFCMsg()
       shared_ptr<Msg> m(new Msg());
       m->set_type(GET_TRAIN_MODEL);
       m->set_dst(requests_[node_idx][j]->node_info().node_id());
-      
+
       RouteInfo rt;
       rt.mutable_node_info()->CopyFrom(requests_[node_idx][j]->node_info());
 
       AddSolver(&rt, node_idx);
       AddRoutes(&rt, node_idx);
-      
+
       // rt.mutable_solver_param()->set_base_lr(0.05);
 
       NetParameter *pnet = rt.mutable_solver_param()->mutable_net_param();
@@ -227,21 +224,19 @@ void ModelMap<Dtype>::PrepareFCMsg()
       string rt_str;
       rt.SerializeToString(&rt_str);
       m->AppendData(rt_str.data(), rt_str.length());
-      
+
       int num_splits = requests_[node_idx].size();
       // Copy parameters should behind add rout info
-      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(), 
-                                              sub_solver_layer_names_[node_idx], 
+      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(),
+                                             sub_solver_layer_names_[node_idx],
                                               m, j, num_splits);
-     
       replies_.push_back(m);
     }
   }
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PreparePSMsg()
-{
+void ModelMap<Dtype>::PreparePSMsg() {
   if (status_ != INITED) {
     return;
   }
@@ -258,10 +253,12 @@ void ModelMap<Dtype>::PreparePSMsg()
       string rt_str;
       rt.SerializeToString(&rt_str);
       m->AppendData(rt_str.data(), rt_str.length());
-      
+
       // Copy parameters
-      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(), sub_solver_layer_names_[node_idx], m);
-     
+      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(),
+                                             sub_solver_layer_names_[node_idx],
+                                             m);
+
       replies_.push_back(m);
     }
   }
@@ -269,8 +266,7 @@ void ModelMap<Dtype>::PreparePSMsg()
 
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareTestMsg()
-{
+void ModelMap<Dtype>::PrepareTestMsg() {
   if (status_ != INITED) {
     return;
   }
@@ -288,7 +284,7 @@ void ModelMap<Dtype>::PrepareTestMsg()
         rt.add_ps_nodes()->CopyFrom(route_nodes_[ps_idx][k]);
       }
     }
-    
+
     for (int j = 0; j < fc_nodes_.size(); j++) {
       int fc_idx = fc_nodes_[j];
       for (int k = 0; k < route_nodes_[fc_idx].size(); k++) {
@@ -297,7 +293,7 @@ void ModelMap<Dtype>::PrepareTestMsg()
     }
 
     rt.mutable_solver_param()->CopyFrom(test_solver_);
-    
+
     string rt_str;
     rt.SerializeToString(&rt_str);
     m->AppendData(rt_str.data(), rt_str.length());
@@ -307,8 +303,7 @@ void ModelMap<Dtype>::PrepareTestMsg()
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareConvMsg()
-{
+void ModelMap<Dtype>::PrepareConvMsg() {
   if (status_ != INITED) {
     return;
   }
@@ -320,7 +315,7 @@ void ModelMap<Dtype>::PrepareConvMsg()
 
     // add solver for conv nodes
     RouteInfo rt;
-    
+
     rt.set_num_sub_solvers(num_sub_solvers_);
     // add ps nodes
     for (int j = 0; j < ps_nodes_.size(); j++) {
@@ -348,7 +343,7 @@ void ModelMap<Dtype>::PrepareConvMsg()
 
     // add conv solver
     rt.mutable_solver_param()->CopyFrom(conv_solver_);
-    
+
     string rt_str;
     rt.SerializeToString(&rt_str);
     m->AppendData(rt_str.data(), rt_str.length());
@@ -360,8 +355,7 @@ void ModelMap<Dtype>::PrepareConvMsg()
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrintRouteInfo()
-{
+void ModelMap<Dtype>::PrintRouteInfo() {
   // print fc node route info
   LOG(INFO) << "forward route: ";
   for (int i = 0; i < fc_nodes_.size(); i++) {
@@ -370,29 +364,29 @@ void ModelMap<Dtype>::PrintRouteInfo()
     for (int j = 0; j < requests_[node_idx].size(); j++) {
       dbg_str += requests_[node_idx][j]->node_info().ip();
       dbg_str += ":";
-      dbg_str += boost::lexical_cast<string>(requests_[node_idx][j]->node_info().router_port());
+      dbg_str += boost::lexical_cast<string>(
+                        requests_[node_idx][j]->node_info().router_port());
       dbg_str += ", ";
     }
-    
+
     dbg_str += " to: ";
     for (int j = 0; j < sub_forward_graph_[node_idx].size(); j++) {
       int to_id = sub_forward_graph_[node_idx][j];
       for (int k = 0; k < requests_[to_id].size(); k++) {
         dbg_str += requests_[to_id][k]->node_info().ip();
         dbg_str += ":";
-        dbg_str += boost::lexical_cast<string>(requests_[to_id][k]->node_info().router_port());
+        dbg_str += boost::lexical_cast<string>(
+                          requests_[to_id][k]->node_info().router_port());
         dbg_str += ", ";
       }
     }
 
     LOG(INFO) << dbg_str;
   }
-
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareConvSolver()
-{
+void ModelMap<Dtype>::PrepareConvSolver() {
   if (!(status_ == WAIT_FC_GATEWAY || status_ == INITED)) {
     return;
   }
@@ -404,7 +398,7 @@ void ModelMap<Dtype>::PrepareConvSolver()
     if (!request_parsed_[i]) {
       continue;
     }
-    
+
     CHECK_GT(requests_[i].size(), 0);
     CHECK_GT(route_nodes_[i].size(), 0);
 
@@ -417,7 +411,7 @@ void ModelMap<Dtype>::PrepareConvSolver()
     for (int j = 0; j < route_nodes_[i][0].layers_size(); j++) {
       int layer_idx = FindLayer(route_nodes_[i][0].layers(j));
       LayerParameter layer_param = layer_params_[layer_idx];
-    
+
       // remove sync data layer
       if (layer_param.type() == "Data") {
         layer_param.set_type(string("AsyncData"));
@@ -430,8 +424,7 @@ void ModelMap<Dtype>::PrepareConvSolver()
 
 
 template <typename Dtype>
-int ModelMap<Dtype>::PrepareRoutes()
-{
+int ModelMap<Dtype>::PrepareRoutes() {
   for (int i = 0; i < requests_.size(); i++) {
     if (requests_[i].size() > 0) {
       NodeRole role = requests_[i][0]->node_info().node_role();
@@ -444,31 +437,31 @@ int ModelMap<Dtype>::PrepareRoutes()
       }
     }
   }
-  
+
   for (int i = 0; i < fc_nodes_.size(); i++) {
     ParseInputOutput(fc_nodes_[i]);
   }
-  
+
   for (int i = 0; i < ps_nodes_.size(); i++) {
     ParseInputOutput(ps_nodes_[i]);
   }
-  
+
   // FC nodes that need blobs from conv. nodes
   vector<int> fwd_nodes;
   // the corresponding name of blob
   vector<vector<string> > fwd_blobs;
   fwd_blobs.resize(fc_nodes_.size());
-  //
+
   map<int, int> node_id_map;
-  
-  //generate forward map and backward map for fc nodes
+
+  // generate forward map and backward map for fc nodes
   map<string, int> nearest_top_blob_idx;
   for (int i = 0; i < fc_nodes_.size(); i++) {
     int node_idx = fc_nodes_[i];
     for (int j = 0; j < sub_input_blobs_[node_idx].size(); j++) {
       const string& input_blob = sub_input_blobs_[node_idx][j];
       map<string, int>::iterator iter = nearest_top_blob_idx.find(input_blob);
-      
+
       if (iter != nearest_top_blob_idx.end()) {
         sub_backward_graph_[node_idx].push_back(iter->second);
         sub_forward_graph_[iter->second].push_back(node_idx);
@@ -492,11 +485,11 @@ int ModelMap<Dtype>::PrepareRoutes()
       nearest_top_blob_idx[output_blob] = node_idx;
     }
   }
-  
+
   // filter gateway nodes and fwd nodes
   for (int i = 0; i < fwd_nodes.size(); i++) {
-    int node_idx = fwd_nodes[i]; 
-    
+    int node_idx = fwd_nodes[i];
+
     for (int j = 0; j < route_nodes_[node_idx].size(); j++) {
       for (int k = 0; k < fwd_blobs[i].size(); k++) {
         route_nodes_[node_idx][j].add_input_blobs(fwd_blobs[i][k]);
@@ -511,34 +504,33 @@ int ModelMap<Dtype>::PrepareRoutes()
   }
 
   CHECK_GT(fc_gateways_.size(), 0) << "ERROR: no root fc nodes are found";
-  
+
   // set as gateway nodes
   for (int i = 0; i < fc_gateways_.size(); i++) {
     int gw_id = fc_gateways_[i];
     for (int j = 0; j < requests_[gw_id].size(); j++) {
       requests_[gw_id][j]->mutable_node_info()->set_node_role(FC_GATEWAY);
-      LOG(INFO) << "Gateway node ip: " << requests_[gw_id][j]->node_info().ip() 
+      LOG(INFO) << "Gateway node ip: " << requests_[gw_id][j]->node_info().ip()
         << ", node id: " << requests_[gw_id][j]->node_info().node_id();
     }
   }
 
   status_ = INITED;
- 
+
   PrintRouteInfo();
 
   return 0;
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::ParseRequest(int start_idx)
-{
+void ModelMap<Dtype>::ParseRequest(int start_idx) {
   if (request_parsed_[start_idx]) {
     return;
   }
 
-  LOG(INFO) << "inputs: " << layer_inputs_[start_idx] 
+  LOG(INFO) << "inputs: " << layer_inputs_[start_idx]
     << ", bottom size: " << layer_params_[start_idx].bottom_size();
-  
+
   if (layer_inputs_[start_idx] < layer_params_[start_idx].bottom_size()) {
     return;
   }
@@ -547,9 +539,10 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
   map<int, bool> end_layer_map;
   for (int i = 0; i < rq->end_layers_size(); i++) {
     int l = FindLayer(rq->end_layers(i));
-    CHECK_GE(l, 0) << "cannot find layer: " << rq->end_layers(i) << " in request: "
-      << std::endl << rq->DebugString();
-    
+    CHECK_GE(l, 0) << "cannot find layer: "
+                   << rq->end_layers(i) << " in request: "
+                   << std::endl << rq->DebugString();
+
     // add end layers
     end_layer_map[l] = true;
   }
@@ -564,13 +557,13 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
     visited[i] = false;
   }
   vector<int> bfs_vec;
-  for (map<int, bool>::iterator iter = end_layer_map.begin(); 
+  for (map<int, bool>::iterator iter = end_layer_map.begin();
         iter != end_layer_map.end(); iter++) {
     bfs_vec.push_back(iter->first);
     visited[iter->first] = true;
   }
   int bfs_idx = 0;
-  
+
   // store all the backwarding layers
   map<int, bool> backward_layers;
   // add all the layers from backward to forward
@@ -579,7 +572,7 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
     visited[layer_idx] = true;
     backward_layers[layer_idx] = true;
     visited[layer_idx] = true;
-    
+
     // we stop at the start_idx
     if (layer_idx != start_idx) {
       for (int i = 0; i < net_backward_graph_[layer_idx].size(); i++) {
@@ -603,9 +596,9 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
     CHECK(!layers_filled_[layer_idx]) << "layer: " << layer_idx
       << " is filled by multiple nodes "
       << std::endl << layer_params_[layer_idx].DebugString();
-    
+
     layers_filled_[layer_idx] = true;
-    
+
     sub_solver_layers_[start_idx].push_back(layer_idx);
     const string& layer_name = layer_params_[layer_idx].name();
     sub_solver_layer_names_[start_idx].push_back(layer_name);
@@ -621,13 +614,13 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
     // if the current layer is not end layer, put its child to the bfs vector
     for (int i = 0; i < net_forward_graph_[layer_idx].size(); i++) {
       int next_layer = net_forward_graph_[layer_idx][i];
-    
+
       layer_inputs_[next_layer]++;
       int num_inputs = layer_params_[next_layer].bottom_size();
       if (layer_inputs_[next_layer] < num_inputs) {
         continue;
       }
-      
+
       // if the layer is the last layer specified by the request file
       if (end_layer_map.find(layer_idx) != end_layer_map.end()) {
         continue;
@@ -646,10 +639,9 @@ void ModelMap<Dtype>::ParseRequest(int start_idx)
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
-{
+void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq) {
   int start_idx = FindLayer(rq->start_layer());
-  
+
   int sub_model_position = rq->node_info().position();
   // num splits means we split the layer into how many parts
   CHECK_GT(rq->num_splits(), sub_model_position);
@@ -662,7 +654,7 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
     CHECK_EQ(rq->num_splits(), requests_[start_idx].size())
       << "un-match splittings found in layer:" << std::endl
       << layer_params_[start_idx].DebugString();
-    
+
     CHECK(requests_[start_idx][sub_model_position] == NULL)
       << "overlapped model requests:" << std::endl
       << requests_[start_idx][sub_model_position]->DebugString() << std::endl
@@ -670,16 +662,16 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
 
     requests_[start_idx][sub_model_position] = rq;
   }
-  
+
   // need to wait for more requests
   for (int i = 0; i < requests_[start_idx].size(); i++) {
     if (requests_[start_idx][i] == NULL) {
       return;
     }
   }
-  
+
   request_filled_[start_idx] = true;
-  
+
   // requests are stored in the index of the start layer
   for (int i = 0; i < request_filled_.size(); i++) {
     if (request_filled_[i]) {
@@ -689,8 +681,7 @@ void ModelMap<Dtype>::AddModelRequest(shared_ptr<ModelRequest> rq)
 }
 
 template <typename Dtype>
-bool ModelMap<Dtype>::CheckIntegrity()
-{
+bool ModelMap<Dtype>::CheckIntegrity() {
   for (int i = 0; i < layers_filled_.size(); i++) {
     if (!layers_filled_[i]) {
       return false;
@@ -702,10 +693,10 @@ bool ModelMap<Dtype>::CheckIntegrity()
 
 
 template <typename Dtype>
-int ModelMap<Dtype>::ProcessTests(shared_ptr<Msg> m)
-{
+int ModelMap<Dtype>::ProcessTests(shared_ptr<Msg> m) {
   shared_ptr<ModelRequest> rq(new ModelRequest());
-  rq->ParseFromString( string( (char *)m->ZmsgData(0), m->ZmsgSize(0) ) );
+  rq->ParseFromString(string(reinterpret_cast<char *>(m->ZmsgData(0)),
+                             m->ZmsgSize(0)));
 
   test_requests_.push_back(rq);
 
@@ -719,10 +710,10 @@ int ModelMap<Dtype>::ProcessTests(shared_ptr<Msg> m)
 }
 
 template <typename Dtype>
-int ModelMap<Dtype>::ProcessConv(shared_ptr<Msg> m)
-{
+int ModelMap<Dtype>::ProcessConv(shared_ptr<Msg> m) {
   shared_ptr<ModelRequest> rq(new ModelRequest());
-  rq->ParseFromString( string( (char *)m->ZmsgData(0), m->ZmsgSize(0) ) );
+  rq->ParseFromString(string(reinterpret_cast<char *>(m->ZmsgData(0)),
+                             m->ZmsgSize(0)));
 
   conv_requests_.push_back(rq);
 
@@ -737,25 +728,25 @@ int ModelMap<Dtype>::ProcessConv(shared_ptr<Msg> m)
 
 
 template <typename Dtype>
-int ModelMap<Dtype>::ProcessModels(shared_ptr<Msg> m)
-{
+int ModelMap<Dtype>::ProcessModels(shared_ptr<Msg> m) {
   shared_ptr<ModelRequest> rq(new ModelRequest());
-  rq->ParseFromString( string( (char *)m->ZmsgData(0), m->ZmsgSize(0) ) );
-  
+  rq->ParseFromString(string(reinterpret_cast<char *>(m->ZmsgData(0)),
+                             m->ZmsgSize(0)));
+
   AddModelRequest(rq);
 
   if (!CheckIntegrity()) {
     return 0;
   }
-  
+
   if (PrepareRoutes() < 0) {
     return -1;
   }
-  
+
   // we have all the fc nodes and ps nodes
   PrepareFCMsg();
   PreparePSMsg();
-  
+
   // send messages to conv nodes and test nodes
   if (status_ == INITED) {
     PrepareConvSolver();
@@ -768,17 +759,17 @@ int ModelMap<Dtype>::ProcessModels(shared_ptr<Msg> m)
 }
 
 template <typename Dtype>
-int ModelMap<Dtype>::GetModel(shared_ptr<Msg> m)
-{
+int ModelMap<Dtype>::GetModel(shared_ptr<Msg> m) {
   CHECK_GT(m->ZmsgCnt(), 0);
 
   shared_ptr<ModelRequest> rq(new ModelRequest());
-  //route request is stored in the first message
-  rq->ParseFromString( string( (char *)m->ZmsgData(0), m->ZmsgSize(0) ) );
+  // route request is stored in the first message
+  rq->ParseFromString(string(reinterpret_cast<char *>(m->ZmsgData(0)),
+                             m->ZmsgSize(0)));
 
   LOG(INFO) << "Get Model Request: " << std::endl << rq->DebugString();
 
-  //CHECK the node ID has been inited
+  // CHECK the node ID has been inited
   CHECK_GT(rq->node_info().node_id(), 0);
   NodeRole role = rq->node_info().node_role();
 
@@ -800,5 +791,5 @@ int ModelMap<Dtype>::GetModel(shared_ptr<Msg> m)
 
 INSTANTIATE_CLASS(ModelMap);
 
-} //end caffe
+}  // end namespace caffe
 
