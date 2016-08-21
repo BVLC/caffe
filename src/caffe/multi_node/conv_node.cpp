@@ -1,4 +1,6 @@
 
+#include <string>
+#include <vector>
 
 #include "caffe/multi_node/conv_node.hpp"
 #include "caffe/multi_node/conv_thread.hpp"
@@ -6,13 +8,12 @@
 namespace caffe {
 
 template <typename Dtype>
-int ConvClient<Dtype>::Init()
-{
-  //at leaset two threads
+int ConvClient<Dtype>::Init() {
+  // at leaset two threads
   CHECK_GE(this->nthreads_, 2);
-  
+
   LOG(INFO) << "Initing conv client";
-  
+
   // connect client socks
   for (int i = 0; i < gateway_num_; i++) {
     fc_clients_[i]->Connect(fc_gateway_addrs_[i]);
@@ -34,11 +35,12 @@ int ConvClient<Dtype>::Init()
 
   // create solver
   Caffe::set_root_solver(true);
-  
+
   #ifdef USE_FULL_SOLVER
-  SGDSolver<Dtype> *full_solver = new SGDSolver<Dtype>(NodeEnv::Instance()->SolverParam());
+  SGDSolver<Dtype> *full_solver = new SGDSolver<Dtype>(
+                                      NodeEnv::Instance()->SolverParam());
   #endif
-  
+
   // change the batch size according to thread number
   SolverParameter *psolver_param = NodeEnv::Instance()->mutable_SolverParam();
 
@@ -49,19 +51,20 @@ int ConvClient<Dtype>::Init()
 
     if (layer_type == "Data" || layer_type == "AsyncData") {
       int batch_size = player->data_param().batch_size();
-      CHECK_EQ(batch_size % this->nworkers_, 0) << "batch size should be a multiple of threads";
+      CHECK_EQ(batch_size % this->nworkers_, 0)
+              << "batch size should be a multiple of threads";
 
-      player->mutable_data_param()->set_batch_size(batch_size / this->nworkers_);
+      player->mutable_data_param()->set_batch_size(
+                                    batch_size / this->nworkers_);
     }
   }
-  
 
-  SGDSolver<Dtype> *root_solver = new SGDSolver<Dtype>( *psolver_param );
+  SGDSolver<Dtype> *root_solver = new SGDSolver<Dtype>(*psolver_param);
 
   // parameter server will assign a clock when register
   vector<int> ps_clocks;
   ps_clocks.resize(ps_num_);
-  
+
   // register node to parameter server
   for (int i = 0; i < ps_num_; i++) {
     shared_ptr<Msg> ps_msg(new Msg());
@@ -78,7 +81,7 @@ int ConvClient<Dtype>::Init()
   for (int i = 0; i < ps_num_; i++) {
     LOG(INFO) << "waiting for parameter server : " << ps_addrs_[i];
     shared_ptr<Msg> m = ps_clients_[i]->RecvMsg(true);
-    
+
     // copy initial clock and parameter
     ps_clocks[i] = m->clock();
     LOG(INFO) << "got clock: " << ps_clocks[i];
@@ -86,14 +89,16 @@ int ConvClient<Dtype>::Init()
   }
 
   LOG(INFO) << "parameters inited";
-  
+
   // push as root solver
   NodeEnv::Instance()->PushFreeSolver(root_solver);
-  
+
   #ifdef USE_FULL_SOLVER
-  const vector<Blob<Dtype>*>& root_params = root_solver->net()->learnable_params();
+  const vector<Blob<Dtype>*>& root_params =
+                              root_solver->net()->learnable_params();
   // full solver share parameters with root solver
-  const vector<Blob<Dtype>*>& full_params = full_solver->net()->learnable_params();
+  const vector<Blob<Dtype>*>& full_params =
+                              full_solver->net()->learnable_params();
   for (int i = 0; i < root_params.size(); i++) {
     CHECK_EQ(full_params[i]->count(), root_params[i]->count());
     full_params[i]->ShareData(*root_params[i]);
@@ -108,17 +113,17 @@ int ConvClient<Dtype>::Init()
     this->threads_[i].reset(new ConvThread<Dtype>());
   }
 
-  this->threads_[ps_thread_index_].reset(new ConvParamThread<Dtype>(ps_clocks));
+  this->threads_[ps_thread_index_].reset(
+                                   new ConvParamThread<Dtype>(ps_clocks));
 
   return this->StartThreads();
 }
 
 template <typename Dtype>
-int ConvClient<Dtype>::SetUpPoll()
-{
+int ConvClient<Dtype>::SetUpPoll() {
   this->num_poll_items_ = this->nthreads_ + gateway_num_ + ps_num_;
   this->poll_items_ = new zmq_pollitem_t[this->num_poll_items_];
-  
+
   // 1 socket to communicate fc_gateway
   for (int i = 0; i < gateway_num_; i++) {
     this->poll_items_[fc_sock_index_ + i].socket = fc_clients_[i]->GetSock();
@@ -139,14 +144,13 @@ int ConvClient<Dtype>::SetUpPoll()
 }
 
 template <typename Dtype>
-void ConvClient<Dtype>::SendOutMsg(shared_ptr<Msg> m)
-{
+void ConvClient<Dtype>::SendOutMsg(shared_ptr<Msg> m) {
   // broadcast the message to gateways
   if (m->dst() < 0) {
     for (int i = 0; i < fc_clients_.size(); i++) {
       fc_clients_[i]->SendMsg(m);
     }
-  } else if(m->dst() == ROOT_THREAD_ID) {
+  } else if (m->dst() == ROOT_THREAD_ID) {
     this->Enqueue(ps_thread_index_, m);
   } else if (m->dst() == WORKER_BCAST) {
     // broadcast the message to all the workers
@@ -157,7 +161,8 @@ void ConvClient<Dtype>::SendOutMsg(shared_ptr<Msg> m)
     }
   } else {
     // look up the routing table
-    unordered_map<int, shared_ptr<SkSock> >::iterator iter = node_to_sock_.find(m->dst());
+    unordered_map<int, shared_ptr<SkSock> >::iterator iter =
+                                             node_to_sock_.find(m->dst());
     CHECK(iter != node_to_sock_.end())
           << "cannot find socket for id: " << m->dst();
     iter->second->SendMsg(m);
@@ -165,16 +170,15 @@ void ConvClient<Dtype>::SendOutMsg(shared_ptr<Msg> m)
 }
 
 template <typename Dtype>
-int ConvClient<Dtype>::RouteMsg()
-{
+int ConvClient<Dtype>::RouteMsg() {
   for (int i = 0; i < this->nworkers_; i++) {
     if (this->poll_items_[i].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = this->sockp_arr_[i]->RecvMsg(true);
-      
+
       SendOutMsg(m);
     }
   }
-  
+
   // from the parameter client thread to PS server
   if (this->poll_items_[ps_thread_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = this->sockp_arr_[ps_thread_index_]->RecvMsg(true);
@@ -191,18 +195,18 @@ int ConvClient<Dtype>::RouteMsg()
     int fc_poll_idx = fc_sock_index_ + i;
     if (this->poll_items_[fc_poll_idx].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = fc_clients_[i]->RecvMsg(true);
-    
+
       this->Enqueue(ps_thread_index_, m);
     }
   }
-  
+
   // incoming packet from parameter server
   for (int i = 0; i < ps_num_; i++) {
     int ps_poll_index = ps_sock_index_ + i;
 
     if (this->poll_items_[ps_poll_index].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = ps_clients_[i]->RecvMsg(true);
-    
+
       // forwarding the message to Param thread
       this->sockp_arr_[ps_thread_index_]->SendMsg(m);
     }
@@ -213,6 +217,6 @@ int ConvClient<Dtype>::RouteMsg()
 
 INSTANTIATE_CLASS(ConvClient);
 
-}
+}  // end namespace caffe
 
 
