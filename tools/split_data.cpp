@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < num_dbs; i++) {
         char db_name[500];
-        sprintf(db_name, "%s_%d", argv[1], i);
+        snprintf(db_name, sizeof(db_name), "%s_%d", argv[1], i);
 
         scoped_ptr<db::DB> new_db(db::GetDB("lmdb"));
         new_db->Open(db_name, db::NEW);

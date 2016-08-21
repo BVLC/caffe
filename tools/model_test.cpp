@@ -1,6 +1,9 @@
 
 
-#include "boost/unordered_map.hpp"
+#include <boost/unordered_map.hpp>
+
+#include <string>
+
 #include "caffe/caffe.hpp"
 #include "caffe/multi_node/conv_node.hpp"
 

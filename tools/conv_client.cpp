@@ -1,4 +1,5 @@
 
+#include <string>
 
 #include "caffe/caffe.hpp"
 #include "caffe/multi_node/msg_hub.hpp"

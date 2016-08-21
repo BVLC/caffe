@@ -1,6 +1,8 @@
 
+#include <boost/thread/thread.hpp>
 
-#include "boost/thread/thread.hpp"
+#include <vector>
+
 #include "caffe/multi_node/model_map.hpp"
 #include "caffe/multi_node/model_test_node.hpp"
 #include "caffe/multi_node/sk_server.hpp"
@@ -17,7 +19,7 @@ DEFINE_string(weights, "",
 
 DEFINE_int32(workers, 0, "number of convolutional workers in fc server");
 
-DEFINE_int32(sub_solvers, 1, 
+DEFINE_int32(sub_solvers, 1,
         "number of overlapping sub-solvers in conv clients");
 
 using caffe::ModelMap;

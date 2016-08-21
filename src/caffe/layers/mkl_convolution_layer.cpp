@@ -572,7 +572,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 
 
   if (propagate_down[0]) {
-   // LOG(INFO) << "propagate_down";
+    // LOG(INFO) << "propagate_down";
     void *res_convolutionBwdData[dnnResourceNumber];
 
     res_convolutionBwdData[dnnResourceDiffDst] =

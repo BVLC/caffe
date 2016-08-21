@@ -1,4 +1,6 @@
 
+#include <string>
+
 #include "caffe/caffe.hpp"
 #include "caffe/multi_node/ps_node.hpp"
 

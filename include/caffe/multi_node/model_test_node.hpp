@@ -2,8 +2,11 @@
 #ifndef MULTI_NODE_TEST_NODE_H_
 #define MULTI_NODE_TEST_NODE_H_
 
-#include "caffe/multi_node/msg_hub.hpp"
+#include <string>
+#include <vector>
+
 #include "caffe/multi_node/model_test_thread.hpp"
+#include "caffe/multi_node/msg_hub.hpp"
 #include "caffe/multi_node/node_env.hpp"
 
 namespace caffe {
