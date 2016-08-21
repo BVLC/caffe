@@ -3,26 +3,28 @@
 #ifndef MULTI_NODE_CONV_THREAD_H_
 #define MULTI_NODE_CONV_THREAD_H_
 
+#include <boost/thread/barrier.hpp>
+
+#include <map>
+#include <string>
+#include <vector>
+
+#include "caffe/multi_node/node_env.hpp"
 #include "caffe/multi_node/worker_thread.hpp"
 #include "caffe/sgd_solvers.hpp"
-#include "caffe/multi_node/node_env.hpp"
-#include <boost/thread/barrier.hpp>
 
 namespace caffe {
 
-template <typename Dtype>
-class ConvThread : public WorkerThread<Dtype>
-{
 
-public:
+template <typename Dtype>
+class ConvThread : public WorkerThread<Dtype> {
+ public:
   ConvThread() {
     param_solver_ = NULL;
     num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
   }
 
-  virtual ~ConvThread() {
-
-  }
+  virtual ~ConvThread() { }
 
   virtual void Run();
 
@@ -38,46 +40,50 @@ public:
     pconv_barrier_ = new boost::barrier(num_threads);
   }
 
-protected:
+ protected:
   void ConvForward();
 
   int NewConvId() {
     boost::mutex::scoped_lock lock(conv_id_mutex_);
-     
+
     int orig_id = conv_id_;
     conv_id_++;
 
     return orig_id;
   }
-  
+
   // get the solver according to message id
-  WorkerSolver<Dtype> *PrepareBackwardSolver(shared_ptr<Msg> m);
+  WorkerSolver<Dtype> *PrepareBwdSolver(shared_ptr<Msg> m);
 
   // backward and sync, return true if backward is done
   bool ConvBackward(WorkerSolver<Dtype> *pconv, bool peek_next);
 
-  bool SyncedBackward(WorkerSolver<Dtype> *prev_solver, int prev_idx, shared_ptr<Msg> m);
+  bool SyncedBackward(WorkerSolver<Dtype> *prev_solver,
+                      int prev_idx,
+                      shared_ptr<Msg> m);
 
   // inform the parameter thread to update layer i
   void SendLayer(int layer_id);
-  
+
   // do forward to a layer
   void ForwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
-  
+
   // do backward to a layer
   void BackwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
 
-protected:
+ protected:
+  typedef unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > >
+                                                                      MsgMap;
   // store and merge backward messages from multiple gateways
-  unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > > msg_id_to_buf_;
+  MsgMap msg_id_to_buf_;
 
   // the pointer of solver which is used to store gradients
   WorkerSolver<Dtype> *param_solver_;
 
-protected:
+ protected:
   int num_sub_solvers_;
 
-protected:
+ protected:
   static int conv_id_;
   static boost::mutex conv_id_mutex_;
 
@@ -90,13 +96,11 @@ DISABLE_COPY_AND_ASSIGN(ConvThread);
 };
 
 
-//for collect and update parameters in conv threads
+// for collect and update parameters in conv threads
 template <typename Dtype>
-class ConvParamThread : public WorkerThread<Dtype>
-{
-
-public:
-  ConvParamThread(const vector<int>& clocks) { 
+class ConvParamThread : public WorkerThread<Dtype> {
+ public:
+  explicit ConvParamThread(const vector<int>& clocks) {
     ps_ids_ = NodeEnv::Instance()->ps_ids();
     ps_clocks_ = clocks;
     ps_updates_.resize(ps_ids_.size());
@@ -104,7 +108,8 @@ public:
     // init PS maps
     for (int i = 0; i < ps_ids_.size(); i++) {
       ps_id_map_[ps_ids_[i]] = i;
-      const vector<string>& ps_layers = NodeEnv::Instance()->FindPSLayer(ps_ids_[i]);
+      const vector<string>& ps_layers =
+                            NodeEnv::Instance()->FindPSLayer(ps_ids_[i]);
       for (int j = 0; j < ps_layers.size(); j++) {
         const string& layer_name = ps_layers[j];
         layer_to_ps_id_[layer_name] = ps_ids_[i];
@@ -120,14 +125,12 @@ public:
     gateway_blobs_ = NodeEnv::Instance()->gateway_blobs();
     num_param_update_ = 0;
   }
-  
-  virtual ~ConvParamThread() {
 
-  }
-  
+  virtual ~ConvParamThread() { }
+
   // get a new version of parameters from PS
   void SyncWithPS();
-  
+
   // process the forward messages sent by conv threads
   void ProcessForward(shared_ptr<Msg> m);
 
@@ -136,25 +139,26 @@ public:
 
   // merge the activations as a single message
   void SendActivations();
-  
+
   // sync one layer with PS
   void SyncLayer(int layer_id);
 
   virtual void Run();
 
-protected:
-  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) {
+ protected:
+  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
+                                      const SolverParameter& solver_param) {
     return NULL;
   }
 
-protected:
+ protected:
   // update gradient
   int PutGradient(shared_ptr<Msg> m);
-  
+
   // update parameter got from parameter server
   int UpdateParam(shared_ptr<Msg> m);
 
-protected:
+ protected:
   /// id of parameter servers
   vector<int> ps_ids_;
 
@@ -166,10 +170,10 @@ protected:
 
   // number of updates from a parameter server
   vector<int> ps_updates_;
-  
+
   // number of layers which have learnable blobs
   int num_learnable_layers_;
-  
+
   // map a layer to the id of PS
   map<string, int> layer_to_ps_id_;
 
@@ -178,25 +182,27 @@ protected:
 
   vector<int> gateway_ids_;
   vector<vector<string> > gateway_blobs_;
-  
+
   // record the number of updates from conv. workers
   vector<int> layer_updates_;
 
   vector<shared_ptr<Msg> > fwd_msgs_;
-  
+
   // number of parameter update got from parameter server
   int num_param_update_;
-  
+
+  typedef unordered_map<int, shared_ptr<vector<shared_ptr<Msg> > > > ConvIdMap;
+
   // find the array of forward messages with a conv_id
-  unordered_map<int, shared_ptr<vector<shared_ptr<Msg> > > > conv_id_to_vec_;
-  
+  ConvIdMap conv_id_to_vec_;
+
   // find the array of backward messages with a conv_id
-  unordered_map<int, shared_ptr<vector<shared_ptr<Msg> > > > bwd_id_to_vec_;
- 
+  ConvIdMap bwd_id_to_vec_;
+
 DISABLE_COPY_AND_ASSIGN(ConvParamThread);
 };
 
-} //end caffe
+}  // end namespace caffe
 
 #endif
 
