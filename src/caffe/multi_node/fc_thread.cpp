@@ -298,6 +298,7 @@ void FcThread<Dtype>::Run() {
         if (msg_buf_[i]->clock() <= clock_bound) {
           ProcessMsg(msg_buf_[i]);
         } else {
+          LOG(WARNING) << "Wait for param thread";
           msgs.push_back(msg_buf_[i]);
         }
       }
@@ -501,6 +502,16 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   }
   grad_updates_vec_[group_id]++;
 
+  // total number of gradients in the system
+  int total_grads = grad_updates_vec_[group_id] + this->QueueSize();
+  int batch_size = num_workers_ * this->num_sub_solvers_;
+  if (total_grads >= batch_size) {
+    #ifdef USE_MKL
+    // use all the availble threads to accerate computing
+    mkl_set_num_threads_local(total_omp_threads_);
+    #endif
+  }
+
   if (pgroup_solver != psolver) {
     ParamHelper<Dtype>::AddDiffFromNet(pgroup_solver->net(), psolver->net());
 
@@ -516,7 +527,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
     // LOG(INFO) << "keep solver for group id: " << group_id;
   }
 
-  if (grad_updates_vec_[group_id] < num_workers_ * this->num_sub_solvers_) {
+  if (grad_updates_vec_[group_id] < batch_size) {
     return;
   }
 
@@ -558,6 +569,11 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
 
   // switch the working param
   this->GetParamBuf()->ReplaceParam(param);
+
+  #ifdef USE_MKL
+  // reset mkl threads
+  mkl_set_num_threads_local(this->omp_threads_);
+  #endif
 
   #if 0
   ParamHelper<Dtype>::PrintParam(proot->net());
@@ -625,11 +641,16 @@ void FcParamThread<Dtype>::SendParam(shared_ptr<Msg> m) {
 template <typename Dtype>
 void FcParamThread<Dtype>::Run() {
   #ifdef USE_MKL
+  // get the number of omp threads in each worker
+  int worker_omp_threads = mkl_get_max_threads();
   if (this->omp_threads_ > 0) {
     mkl_set_num_threads_local(this->omp_threads_);
   }
   int n = mkl_get_max_threads();
   LOG(INFO) << "max mkl threads in param thread: " << n;
+
+  this->omp_threads_ = n;
+  total_omp_threads_ = worker_omp_threads * num_workers_ + n;
   mkl_set_dynamic(false);
   #endif
 

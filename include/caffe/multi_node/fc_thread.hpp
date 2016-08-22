@@ -182,6 +182,7 @@ class FcParamThread : public FcWorker<Dtype> {
   FcParamThread() {
     train_iter_ = 0;
     test_node_id_ = -1;
+    total_omp_threads_ = 0;
     num_workers_ = NodeEnv::Instance()->num_workers();
     num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
     sub_batches_ = 0;
@@ -234,6 +235,9 @@ class FcParamThread : public FcWorker<Dtype> {
 
   // number of conv. clients
   int num_workers_;
+
+  // total number of omp threads the process has
+  int total_omp_threads_;
 
   // number of overlapping solvers
   int num_sub_solvers_;
