@@ -179,11 +179,12 @@ DISABLE_COPY_AND_ASSIGN(FcLossThread);
 template <typename Dtype>
 class FcParamThread : public FcWorker<Dtype> {
  public:
-  FcParamThread() {
+  FcParamThread(int fc_threads) {
     train_iter_ = 0;
     test_node_id_ = -1;
     total_omp_threads_ = 0;
-    num_workers_ = NodeEnv::Instance()->num_workers();
+    fc_threads_ = fc_threads;
+    num_conv_workers_ = NodeEnv::Instance()->num_workers();
     num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
     sub_batches_ = 0;
     sub_loss_ = 0;
@@ -234,7 +235,10 @@ class FcParamThread : public FcWorker<Dtype> {
   int test_node_id_;
 
   // number of conv. clients
-  int num_workers_;
+  int num_conv_workers_;
+
+  // number of fc threads
+  int fc_threads_;
 
   // total number of omp threads the process has
   int total_omp_threads_;

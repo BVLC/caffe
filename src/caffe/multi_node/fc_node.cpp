@@ -66,7 +66,8 @@ int FcNode<Dtype>::Init() {
   }
 
   // the last slot for param thread
-  this->threads_[param_thread_index_].reset(new FcParamThread<Dtype>());
+  this->threads_[param_thread_index_].reset(
+                              new FcParamThread<Dtype>(this->nworkers_));
   this->threads_[param_thread_index_]->SetOMPThreads(omp_param_threads_);
 
   // wait for the downstream nodes to connect

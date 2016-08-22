@@ -105,7 +105,7 @@ class FcNode : public MsgHub<Dtype> {
   int node_id_;
 
   typedef unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > >
-                                                                      MsgMap;
+                                                                  MsgMap;
 
   // map msg id to a vector of partial message
   MsgMap msg_id_to_buf_;

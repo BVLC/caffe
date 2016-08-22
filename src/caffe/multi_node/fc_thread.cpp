@@ -483,7 +483,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   NodeEnv::Instance()->PushFreeSolver(psolver);
 
   sub_batches_++;
-  if (sub_batches_ < num_workers_ * this->num_sub_solvers_) {
+  if (sub_batches_ < num_conv_workers_ * this->num_sub_solvers_) {
     return;
   }
   #endif
@@ -504,7 +504,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
 
   // total number of gradients in the system
   int total_grads = grad_updates_vec_[group_id] + this->QueueSize();
-  int batch_size = num_workers_ * this->num_sub_solvers_;
+  int batch_size = num_conv_workers_ * this->num_sub_solvers_;
   if (total_grads >= batch_size) {
     #ifdef USE_MKL
     // use all the availble threads to accerate computing
@@ -554,7 +554,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), pgroup_solver->net());
 
   // scaling gradients
-  Dtype s = (Dtype)(1.0 / (Dtype)(num_workers_ * this->num_sub_solvers_));
+  Dtype s = (Dtype)(1.0 / (Dtype)(num_conv_workers_ * this->num_sub_solvers_));
   ParamHelper<Dtype>::ScalDiff(proot->net(), s);
 
   proot->CommitGradient();
@@ -642,7 +642,7 @@ template <typename Dtype>
 void FcParamThread<Dtype>::Run() {
   #ifdef USE_MKL
   // get the number of omp threads in each worker
-  int worker_omp_threads = mkl_get_max_threads();
+  int fc_omp_threads = mkl_get_max_threads();
   if (this->omp_threads_ > 0) {
     mkl_set_num_threads_local(this->omp_threads_);
   }
@@ -650,7 +650,7 @@ void FcParamThread<Dtype>::Run() {
   LOG(INFO) << "max mkl threads in param thread: " << n;
 
   this->omp_threads_ = n;
-  total_omp_threads_ = worker_omp_threads * num_workers_ + n;
+  total_omp_threads_ = fc_omp_threads * fc_threads_ + n;
   mkl_set_dynamic(false);
   #endif
 
