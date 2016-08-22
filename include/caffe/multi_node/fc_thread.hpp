@@ -179,7 +179,7 @@ DISABLE_COPY_AND_ASSIGN(FcLossThread);
 template <typename Dtype>
 class FcParamThread : public FcWorker<Dtype> {
  public:
-  FcParamThread(int fc_threads) {
+  explicit FcParamThread(int fc_threads) {
     train_iter_ = 0;
     test_node_id_ = -1;
     total_omp_threads_ = 0;
