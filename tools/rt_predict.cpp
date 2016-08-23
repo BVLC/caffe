@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+//#include <future>
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/blob.hpp"
@@ -88,10 +89,17 @@ bool check_args() {
 
 void crop_image_memory(std::vector<cv::Mat>& crop_set,std::string image_path) {
     cv::Mat image = imread(image_path,CV_LOAD_IMAGE_COLOR);
-
     if (image.empty()) {
         LOG(ERROR)<< " imread "<<image_path<<" error";
     }
+    // now it's hardcode for jpeg encode
+    vector<int> param(2);
+    param[0] = CV_IMWRITE_JPEG_QUALITY;
+    param[1] = 51;
+    vector<uchar> buff;
+    imencode(".jpg",image,buff,param);
+    image = imdecode(Mat(buff),CV_LOAD_IMAGE_COLOR);
+
     cv::Rect roi;
     roi.width = FLAGS_width;
     roi.height = FLAGS_height;
@@ -104,6 +112,24 @@ void crop_image_memory(std::vector<cv::Mat>& crop_set,std::string image_path) {
             crop_set.push_back(image(roi));
         }
     }
+}
+std::vector<int> crop_image_predict(Net<float>& caffe_test_net,
+                        const std::vector<cv::Mat>& tmpSlice,
+                        int bsize)
+{
+        float loss = 0.0;
+        std::vector<int> predictResult;
+        std::vector<int> dvl(tmpSlice.size(),0);
+        boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
+                caffe_test_net.layers()[0])->AddMatVector(tmpSlice,dvl);
+        const vector<Blob<float>*>& result =  caffe_test_net.Forward(&loss);
+        const float* argmaxs = result[2]->cpu_data();
+        for(size_t j = 0; j<bsize ; ++j) {
+            const float* p_argmaxs = argmaxs + j*FLAGS_classnum;
+            int argMax = std::distance(p_argmaxs, std::max_element(p_argmaxs,p_argmaxs+FLAGS_classnum));
+            predictResult.push_back(argMax);
+        }
+        return predictResult;
 }
 
 int main(int argc, char** argv) {
@@ -141,24 +167,30 @@ int main(int argc, char** argv) {
     std::vector<int> predictResult;
     int bsize = FLAGS_batchsize;
     int opMax = dv.size()/bsize;
-    for (size_t i = 0 ; i<opMax; i++ ) {
+    for (size_t i = 0 ; i<opMax; i+=3 ) {
         LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
-        std::vector<cv::Mat> tmpSlice(dv.begin()+i*bsize,dv.begin()+(i+1)*bsize);
-        float loss = 0.0;
-        std::vector<int> dvl(tmpSlice.size(),0);
-        boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
-                caffe_test_net.layers()[0])->AddMatVector(tmpSlice,dvl);
-        const vector<Blob<float>*>& result =  caffe_test_net.Forward(&loss);
-        // Now result will contain the argmax results.
-        const float* argmaxs = result[2]->cpu_data();
-        for(size_t j = 0; j<bsize ; ++j) {
-            const float* p_argmaxs = argmaxs + j*FLAGS_classnum;
-            int argMax = std::distance(p_argmaxs, std::max_element(p_argmaxs,p_argmaxs+FLAGS_classnum));
-            predictResult.push_back(argMax);
-            //cout<<argMax<<endl;
+        vector<vector<int> > tmpResult(3);
+        for (size_t j = 0; j<3 ; j++){
+            std::vector<cv::Mat> tmpSlice(dv.begin()+(i+j)*bsize,dv.begin()+(i+1+j)*bsize);
+            //auto handle = std::async(crop_image_predict,caffe_test_net,tmpSlice,bsize);
+            tmpResult[j] = crop_image_predict(caffe_test_net,tmpSlice,bsize);
+            predictResult.insert(predictResult.end(),tmpResult[j].begin(),tmpResult[j].end());
         }
-        tmpSlice.clear();
-        dvl.clear();
+
     }
+    vector<int> countRank(FLAGS_classnum,0);
+
+    for (size_t i = 0 ; i < predictResult.size() ; ++i) {
+        countRank[predictResult[i]]++;
+    }
+
+    for(size_t i = 0 ; i< FLAGS_classnum ; ++i) {
+        LOG(INFO) << " i : " << i<<" "<<countRank[i];
+    }
+
+    int maxRank = std::distance(countRank.begin(),
+                                std::max_element(countRank.begin(),countRank.end()));
+    LOG(INFO) << "predict JND : " << maxRank;
+
     return 0;
 }
