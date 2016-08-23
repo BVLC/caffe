@@ -2,5 +2,6 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(null_kernel,Dtype)(void) {
+__kernel void TEMPLATE(null_kernel,Dtype)(Dtype arg) {
+  Dtype out = arg;
 }

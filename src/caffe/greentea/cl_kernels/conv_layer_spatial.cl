@@ -2,8 +2,8 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(void) {
-
+__kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
+  Dtype out = arg;
 }
 
 #define __CAT(x, y) x##y
