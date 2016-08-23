@@ -403,6 +403,18 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+# MKLDNN configuration
+# detect support for mkl-dnn primitives
+MKLDNN_INCLUDE ?= $(MKLDNNROOT)/include
+ifneq ("$(wildcard $(MKLDNN_INCLUDE)/mkldnn.hpp)","")
+	CXXFLAGS += -DMKLDNN_SUPPORTED
+	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
+	CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
+	endif
+	LIBRARIES += mkldnn
+	MKLDNN_LIB ?= $(MKLDNNROOT)/build/src
+endif
+
 # BLAS configuration (default = MKL)
 MKL_EXTERNAL := 0
 BLAS ?= mkl
@@ -462,6 +474,9 @@ else
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
+
+INCLUDE_DIRS += $(MKLDNN_INCLUDE)
+LIBRARY_DIRS += $(MKLDNN_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 

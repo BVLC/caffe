@@ -669,6 +669,7 @@ message ConvolutionParameter {
     CAFFE = 1;
     CUDNN = 2;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 15 [default = DEFAULT];
 
@@ -925,6 +926,13 @@ message InnerProductParameter {
   // of the weight matrix. The weight matrix itself is not going to be transposed
   // but rather the transfer flag of operations will be toggled accordingly.
   optional bool transpose = 6 [default = false];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+    MKLDNN = 3;
+  }
+  optional Engine engine = 7 [default = DEFAULT];
 }
 
 message InputParameter {
@@ -961,6 +969,7 @@ message LRNParameter {
     CAFFE = 1;
     CUDNN = 2;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 6 [default = DEFAULT];
 }
@@ -1010,6 +1019,7 @@ message PoolingParameter {
     CAFFE = 1;
     CUDNN = 2;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 11 [default = DEFAULT];
   // If global_pooling then it will pool over the size of the bottom by doing
@@ -1099,6 +1109,7 @@ message ReLUParameter {
     CAFFE = 1;
     CUDNN = 2;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 2 [default = DEFAULT];
 }
