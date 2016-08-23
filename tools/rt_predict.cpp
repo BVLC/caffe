@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <cstdio>
  
 #include <string>
 #include <iostream>
@@ -14,6 +15,7 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <algorithm>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/pointer_cast.hpp>
@@ -32,12 +34,16 @@ DEFINE_string(weights, "",
     "separated by ','. Cannot be set simultaneously with snapshot.");
 DEFINE_string(model, "",
     "The model definition protocol buffer text file.");
-
 DEFINE_int32(classnum, -1,
     "The class of label");
-
 DEFINE_string(image, "",
     "test image path");
+DEFINE_int32(height,64,
+    "crop image height");
+DEFINE_int32(width,64,
+    "crop image width");
+DEFINE_int32(batchsize,1,
+    "batch size in test phase");
 
 // Parse GPU ids or use all available devices
 void get_gpus(vector<int>* gpus) {
@@ -74,11 +80,30 @@ int device_query() {
   return 0;
 }
 
-
 bool check_args() {
     if ( FLAGS_model.size()==0 || FLAGS_classnum == -1 || FLAGS_weights.size() == 0)
         return false;
     return true;
+}
+
+void crop_image_memory(std::vector<cv::Mat>& crop_set,std::string image_path) {
+    cv::Mat image = imread(image_path,CV_LOAD_IMAGE_COLOR);
+
+    if (image.empty()) {
+        LOG(ERROR)<< " imread "<<image_path<<" error";
+    }
+    cv::Rect roi;
+    roi.width = FLAGS_width;
+    roi.height = FLAGS_height;
+    int img_y = image.size().height;
+    int img_x = image.size().width;
+    for (int x = 0 ; x <= img_x-FLAGS_height ; x+= FLAGS_height) {
+        for (int y = 0; y <= img_y -FLAGS_width ; y+=FLAGS_width) {
+            roi.x = x;
+            roi.y = y;
+            crop_set.push_back(image(roi));
+        }
+    }
 }
 
 int main(int argc, char** argv) {
@@ -97,34 +122,43 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
  
     caffe::GlobalInit(&argc, &argv);
-
     if (!check_args()) {
         gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/rt-predict");
         cout<<FLAGS_image<<" "<<FLAGS_model<<endl;
         exit(1);
     }
-    device_query(); 
+    if(FLAGS_gpu.size())
+        device_query(); 
+    else 
+        caffe::Caffe::set_mode(Caffe::CPU);
+
     //get the net
     Net<float> caffe_test_net(FLAGS_model,caffe::TEST);
     //get trained net
     caffe_test_net.CopyTrainedLayersFrom(FLAGS_weights);
-    cv::Mat image = imread(FLAGS_image,CV_LOAD_IMAGE_COLOR);
-    std::vector<cv::Mat> dv;
-    dv.push_back(image);
-    std::vector<int> dvl;
-    dvl.push_back(0);
-    // Run ForwardPrefilled 
-    float loss = 0.0;
-    boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
-            caffe_test_net.layers()[0])->AddMatVector(dv,dvl);
-    const vector<Blob<float>*>& result =  caffe_test_net.Forward(&loss);
-     
-    // Now result will contain the argmax results.
-    const float* argmaxs = result[2]->cpu_data();
-    cout<<"result 0 len : "<<result[0]->num()<<" "<<result[0]->count()<<" "<<result.size()<< endl;
-    for (int i = 0; i < 8; ++i) {
-        LOG(INFO) << " Image: "<< i << " class:" << argmaxs[i];
+    std::vector<cv::Mat> dv ;
+    crop_image_memory(dv,FLAGS_image);
+    std::vector<int> predictResult;
+    int bsize = FLAGS_batchsize;
+    int opMax = dv.size()/bsize;
+    for (size_t i = 0 ; i<opMax; i++ ) {
+        LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
+        std::vector<cv::Mat> tmpSlice(dv.begin()+i*bsize,dv.begin()+(i+1)*bsize);
+        float loss = 0.0;
+        std::vector<int> dvl(tmpSlice.size(),0);
+        boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
+                caffe_test_net.layers()[0])->AddMatVector(tmpSlice,dvl);
+        const vector<Blob<float>*>& result =  caffe_test_net.Forward(&loss);
+        // Now result will contain the argmax results.
+        const float* argmaxs = result[2]->cpu_data();
+        for(size_t j = 0; j<bsize ; ++j) {
+            const float* p_argmaxs = argmaxs + j*FLAGS_classnum;
+            int argMax = std::distance(p_argmaxs, std::max_element(p_argmaxs,p_argmaxs+FLAGS_classnum));
+            predictResult.push_back(argMax);
+            //cout<<argMax<<endl;
+        }
+        tmpSlice.clear();
+        dvl.clear();
     }
-  
     return 0;
 }
