@@ -397,7 +397,7 @@ bool CuDNNConvolutionLayer<Dtype>::IsBottomDescChanged(
       &cached_stride_h, &cached_stride_w));
     const vector<int>& shape = bottom[i]->shape();
     n = shape[0];
-    c = shape[1];
+    c = shape[1] / this->group_;
     h = shape[2];
     w = shape[3];
 
