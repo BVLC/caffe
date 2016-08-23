@@ -43,7 +43,7 @@ limit execution of OpenMP threads to specified cores only.
 Intel Caffe multinode allows you to execute deep neural network training on multiple machines.
 
 You should read our Wiki to understand how it works.
-For quick start read [[Multinode quickstart guide|Multinode quickstart guide]], next [[Multinode How to ...?|Multinode---How-to-...?]]
+For quick start read [Multinode quickstart guide](https://github.com/intelcaffe/caffe/wiki/Multinode-quickstart-guide), next [Multinode How to ...?](https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F)
 
 Please see also prepared examples for cifar10 and Googlenet.
 
