@@ -12,13 +12,7 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
-    int initial_device;
-    cudaGetDevice(&initial_device);
-    if (gpu_device_ != -1) {
-      CUDA_CHECK(cudaSetDevice(gpu_device_));
-    }
-    GPUMemory::deallocate(gpu_ptr_);
-    cudaSetDevice(initial_device);
+    GPUMemory::deallocate(gpu_ptr_, gpu_device_, stream_);
   }
 #endif  // CPU_ONLY
 }
@@ -54,7 +48,8 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    GPUMemory::allocate(&gpu_ptr_, size_);
+    stream_ = GPUMemory::device_stream(gpu_device_);
+    GPUMemory::allocate(&gpu_ptr_, size_, gpu_device_, stream_);
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
     own_gpu_data_ = true;
@@ -62,7 +57,8 @@ inline void SyncedMemory::to_gpu() {
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
       CUDA_CHECK(cudaGetDevice(&gpu_device_));
-      GPUMemory::allocate(&gpu_ptr_, size_);
+      stream_ = GPUMemory::device_stream(gpu_device_);
+      GPUMemory::allocate(&gpu_ptr_, size_, gpu_device_, stream_);
       own_gpu_data_ = true;
     }
     caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
@@ -105,14 +101,8 @@ const void* SyncedMemory::gpu_data() {
 void SyncedMemory::set_gpu_data(void* data) {
 #ifndef CPU_ONLY
   CHECK(data);
-  if (own_gpu_data_) {
-    int initial_device;
-    cudaGetDevice(&initial_device);
-    if (gpu_device_ != -1) {
-      CUDA_CHECK(cudaSetDevice(gpu_device_));
-    }
-    GPUMemory::deallocate(gpu_ptr_);
-    cudaSetDevice(initial_device);
+  if (gpu_ptr_ && own_gpu_data_) {
+    GPUMemory::deallocate(gpu_ptr_, gpu_device_, stream_);
   }
   gpu_ptr_ = data;
   head_ = HEAD_AT_GPU;
@@ -144,7 +134,8 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
     CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    GPUMemory::allocate(&gpu_ptr_, size_);
+    stream_ = stream;
+    GPUMemory::allocate(&gpu_ptr_, size_, gpu_device_, stream);
     own_gpu_data_ = true;
   }
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;

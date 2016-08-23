@@ -56,6 +56,12 @@ void GPUMemory::Manager::init(const vector<int>& gpus, Mode m, bool debug) {
 GPUMemory::Manager::~Manager() {
   switch (mode_) {
   case CUB_ALLOCATOR:
+    {
+      vector<cudaStream_t>::iterator it = device_streams_.begin();
+      while (it != device_streams_.end()) {
+        cudaStreamDestroy(*it++);
+      }
+    }
     delete cub_allocator_;
     break;
   default:
@@ -150,12 +156,11 @@ void GPUMemory::Manager::update_dev_info(int device) {
              << dev_info_[device].free_ << " Total="
              << dev_info_[device].total_;
 
-  // Make sure we don't have more that total device memory
+  // Make sure we don't have more than total device memory.
   dev_info_[device].total_ = std::min(props.totalGlobalMem,
       dev_info_[device].total_);
-  // Here we are adding existing 'busy' allocations to CUDA free memory
   dev_info_[device].free_ = std::min(dev_info_[device].total_,
-      dev_info_[device].free_ + cub_allocator_->cached_bytes[device].live);
+      dev_info_[device].free_);
   CUDA_CHECK(cudaSetDevice(initial_device));
 }
 
@@ -174,10 +179,12 @@ void GPUMemory::Manager::GetInfo(size_t* free_mem, size_t* total_mem) {
     int cur_device;
     CUDA_CHECK(cudaGetDevice(&cur_device));
     *total_mem = dev_info_[cur_device].total_;
-    // Free memory is initial free memory minus outstanding allocations.
-    // Assuming we only allocate via GPUMemoryManager since its construction.
-    *free_mem = dev_info_[cur_device].free_ -
-        cub_allocator_->cached_bytes[cur_device].live;
+    // Free memory is free GPU memory plus free cached memory in the pool.
+    *free_mem = dev_info_[cur_device].free_ +
+        cub_allocator_->cached_bytes[cur_device].free;
+    if (*free_mem > *total_mem) {  // sanity check
+      *free_mem = *total_mem;
+    }
     break;
   default:
     CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
@@ -186,17 +193,28 @@ void GPUMemory::Manager::GetInfo(size_t* free_mem, size_t* total_mem) {
 }
 
 shared_ptr<GPUMemory::Workspace>
-GPUMemory::MultiWorkspace::current_workspace() const {
-  int current_device;
-  CUDA_CHECK(cudaGetDevice(&current_device));
-  if (current_device + 1 > ws_.size()) {
-    ws_.resize(current_device + 1);
+GPUMemory::MultiWorkspace::current_workspace(int device) const {
+  if (device + 1 > workspaces_.size()) {
+    workspaces_.resize(device + 1);
   }
-  if (!ws_[current_device]) {  // In case if --gpu=1,0
-    ws_[current_device].reset(
-        new GPUMemory::Workspace);
+  shared_ptr<GPUMemory::Workspace>& ws = workspaces_[device];
+  if (!ws) {  // In case if --gpu=1,0
+    ws.reset(new GPUMemory::Workspace);
   }
-  return ws_[current_device];
+  return ws;
+}
+
+cudaStream_t
+GPUMemory::Manager::device_stream(int device) {
+  if (device + 1 > device_streams_.size()) {
+    device_streams_.resize(device + 1);
+  }
+  cudaStream_t& stream = device_streams_[device];
+  if (!stream) {
+    // Here we assume that device is current.
+    CUDA_CHECK(cudaStreamCreate(&stream));
+  }
+  return stream;
 }
 
 }  // namespace caffe

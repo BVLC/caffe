@@ -51,7 +51,7 @@ class SyncedMemory {
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1), stream_(cudaStreamDefault) {}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -78,6 +78,7 @@ class SyncedMemory {
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
+  cudaStream_t stream_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

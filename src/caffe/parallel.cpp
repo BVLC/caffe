@@ -90,8 +90,9 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   // Allocate device buffers
   CUDA_CHECK(cudaSetDevice(device));
   buffer_device_ = device;
+  stream_ = GPUMemory::device_stream(buffer_device_);
   GPUMemory::allocate(reinterpret_cast<void **>(&data_),
-      size_ * sizeof(Dtype));
+      size_ * sizeof(Dtype), device, stream_);
 
   // Copy blob values
   const vector<Blob<Dtype>*>& net =
@@ -99,7 +100,7 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   apply_buffers(net, data_, size_, copy);
 
   GPUMemory::allocate(reinterpret_cast<void **>(&diff_),
-      size_ * sizeof(Dtype));
+      size_ * sizeof(Dtype), device, stream_);
   caffe_gpu_set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
@@ -111,14 +112,8 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 template<typename Dtype>
 GPUParams<Dtype>::~GPUParams() {
 #ifndef CPU_ONLY
-  int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
-  CUDA_CHECK(cudaSetDevice(buffer_device_));
-  GPUMemory::deallocate(data_);
-  GPUMemory::deallocate(diff_);
-  data_ = NULL;
-  diff_ = NULL;
-  CUDA_CHECK(cudaSetDevice(initial_device));
+  GPUMemory::deallocate(data_, buffer_device_, stream_);
+  GPUMemory::deallocate(diff_, buffer_device_, stream_);
 #endif
 }
 
