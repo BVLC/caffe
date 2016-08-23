@@ -2,8 +2,8 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(fft_phony,Dtype)(void) {
-
+__kernel void TEMPLATE(fft_phony,Dtype)(Dtype arg) {
+  Dtype out = arg;
 }
 
 #ifdef FFT
