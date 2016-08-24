@@ -190,6 +190,12 @@ bool device::CheckCapability(std::string cap) {
     std::string extsstr(&(exts[0]));
     return extsstr.find(cap) != std::string::npos;
 #endif
+  } else {
+    if (cap == "cl_khr_int32_base_atomics" ||
+        cap == "cl_khr_int64_base_atomics" ||
+        cap == "cl_khr_global_int32_base_atomics") {
+      return true;
+    }
   }
   return false;
 }
