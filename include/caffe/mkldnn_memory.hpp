@@ -17,8 +17,8 @@ using namespace mkldnn;
 namespace caffe {
 
 template <typename Dtype>
-class MKLDNNMemoryDescriptorBase : PrvMemDescr
-        , boost::enable_shared_from_this<MKLDNNMemoryDescriptorBase<Dtype> >
+class MKLDNNMemoryDescriptorBase : public PrvMemDescr
+        , public boost::enable_shared_from_this<MKLDNNMemoryDescriptorBase<Dtype> >
 {
 public:
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
