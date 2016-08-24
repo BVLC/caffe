@@ -21,6 +21,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/pointer_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <omp.h>
  
 using namespace caffe;
 using namespace std;
@@ -87,30 +88,37 @@ bool check_args() {
     return true;
 }
 
-void crop_image_memory(std::vector<cv::Mat>& crop_set,std::string image_path) {
+void crop_image_memory(vector<vector<cv::Mat> > & crop_set,std::string image_path) {
     cv::Mat image = imread(image_path,CV_LOAD_IMAGE_COLOR);
     if (image.empty()) {
         LOG(ERROR)<< " imread "<<image_path<<" error";
     }
     // now it's hardcode for jpeg encode
-    vector<int> param(2);
-    param[0] = CV_IMWRITE_JPEG_QUALITY;
-    param[1] = 51;
-    vector<uchar> buff;
-    imencode(".jpg",image,buff,param);
-    image = imdecode(Mat(buff),CV_LOAD_IMAGE_COLOR);
-
-    cv::Rect roi;
-    roi.width = FLAGS_width;
-    roi.height = FLAGS_height;
     int img_y = image.size().height;
     int img_x = image.size().width;
-    for (int x = 0 ; x <= img_x-FLAGS_height ; x+= FLAGS_height) {
-        for (int y = 0; y <= img_y -FLAGS_width ; y+=FLAGS_width) {
-            roi.x = x;
-            roi.y = y;
-            crop_set.push_back(image(roi));
+    crop_set.resize(100);
+
+    #pragma omp parallel for
+    for (size_t i= 1; i<= 100 ; ++i ) {
+        vector<int> param(2);
+        param[0] = CV_IMWRITE_JPEG_QUALITY;
+        param[1] = i;
+        vector<uchar> buff;
+        vector<cv::Mat> crop_jpeg_set;
+        imencode(".jpg",image,buff,param);
+        cv::Mat image_jpeg = imdecode(Mat(buff),CV_LOAD_IMAGE_COLOR);
+        cv::Rect roi;
+        roi.width = FLAGS_width;
+        roi.height = FLAGS_height;
+
+        for (int x = 0 ; x <= img_x-FLAGS_height ; x+= FLAGS_height) {
+            for (int y = 0; y <= img_y -FLAGS_width ; y+=FLAGS_width) {
+                roi.x = x;
+                roi.y = y;
+                crop_jpeg_set.push_back(image_jpeg(roi));
+            }
         }
+        crop_set[i-1] = crop_jpeg_set;
     }
 }
 std::vector<int> crop_image_predict(Net<float>& caffe_test_net,
@@ -128,6 +136,29 @@ std::vector<int> crop_image_predict(Net<float>& caffe_test_net,
             const float* p_argmaxs = argmaxs + j*FLAGS_classnum;
             int argMax = std::distance(p_argmaxs, std::max_element(p_argmaxs,p_argmaxs+FLAGS_classnum));
             predictResult.push_back(argMax);
+        }
+        return predictResult;
+}
+
+std::vector<float> crop_image_predict_prob(Net<float>& caffe_test_net,
+                        const std::vector<cv::Mat>& tmpSlice,
+                        int bsize)
+{
+        float loss = 0.0;
+        std::vector<float> predictResult(FLAGS_classnum,0.0);
+        std::vector<int> dvl(tmpSlice.size(),0);
+        boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
+                caffe_test_net.layers()[0])->set_batch_size(bsize);
+        boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float> >(
+                caffe_test_net.layers()[0])->AddMatVector(tmpSlice,dvl);
+
+        const vector<Blob<float>*>& result =  caffe_test_net.Forward(&loss);
+        const float* argmaxs = result[2]->cpu_data();
+        for(size_t j = 0; j<bsize ; ++j) {
+            const float* p_argmaxs = argmaxs + j*FLAGS_classnum;
+            for(size_t p = 0 ; p<FLAGS_classnum ; ++p) {
+                predictResult[p]+= *(p_argmaxs+p) ;
+            }
         }
         return predictResult;
 }
@@ -153,44 +184,58 @@ int main(int argc, char** argv) {
         cout<<FLAGS_image<<" "<<FLAGS_model<<endl;
         exit(1);
     }
-    if(FLAGS_gpu.size())
+    if(FLAGS_gpu.size()){
+        caffe::Caffe::set_mode(Caffe::GPU);
         device_query(); 
-    else 
+    } else {
         caffe::Caffe::set_mode(Caffe::CPU);
+    }
+    int max_threads_num = omp_get_max_threads();
+    vector<Net<float>* > caffe_test_net_set(max_threads_num);
 
-    //get the net
     Net<float> caffe_test_net(FLAGS_model,caffe::TEST);
-    //get trained net
     caffe_test_net.CopyTrainedLayersFrom(FLAGS_weights);
-    std::vector<cv::Mat> dv ;
-    crop_image_memory(dv,FLAGS_image);
-    std::vector<int> predictResult;
+
+    vector<vector<Mat> > crop_set; 
+    crop_image_memory(crop_set,FLAGS_image);
+    const float labelOrder[] = {0,1,2,3,4,5,6,7};
     int bsize = FLAGS_batchsize;
-    int opMax = dv.size()/bsize;
-    for (size_t i = 0 ; i<opMax; i+=3 ) {
-        LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
-        vector<vector<int> > tmpResult(3);
-        for (size_t j = 0; j<3 ; j++){
-            std::vector<cv::Mat> tmpSlice(dv.begin()+(i+j)*bsize,dv.begin()+(i+1+j)*bsize);
-            //auto handle = std::async(crop_image_predict,caffe_test_net,tmpSlice,bsize);
-            tmpResult[j] = crop_image_predict(caffe_test_net,tmpSlice,bsize);
-            predictResult.insert(predictResult.end(),tmpResult[j].begin(),tmpResult[j].end());
+    vector<float> jnd_jpeg(100);
+
+    //#pragma omp parallel for
+    for(size_t factor = 0 ; factor < crop_set.size(); factor++ ) {
+        if(!(factor%10)) {
+            LOG(INFO)<<"Now "<<factor<<"/100";
         }
-
+        vector<Mat> dv = crop_set[factor];
+        float* predictResult = new float[FLAGS_classnum];
+        std::fill_n(predictResult,FLAGS_classnum,0.0);
+        size_t roiSize = dv.size();
+        int opMax = roiSize/bsize;
+        
+        for (size_t i = 0 ; i<opMax; i++ ) {
+            //LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
+            vector<Mat> tmpSlice(dv.begin()+(i)*bsize,dv.begin()+(i+1)*bsize);
+            vector<float> tmpProb = 
+                crop_image_predict_prob(
+                        caffe_test_net,
+                        tmpSlice,
+                        bsize);
+            for(size_t p = 0; p< FLAGS_classnum ; ++p) {
+                predictResult[p]+=tmpProb[p];
+            }
+        }
+        for(size_t i=0; i<FLAGS_classnum ; ++i) {
+            predictResult[i]/=roiSize;
+            //LOG(INFO)<<"i="<<i<<" prob="<<predictResult[i];
+        }
+        jnd_jpeg[factor] = caffe::caffe_cpu_dot(FLAGS_classnum,labelOrder,predictResult);
+        //LOG(INFO)<<"factor "<<factor<<",predict : "<< jnd_jpeg[factor];
+        delete[] predictResult;
     }
-    vector<int> countRank(FLAGS_classnum,0);
-
-    for (size_t i = 0 ; i < predictResult.size() ; ++i) {
-        countRank[predictResult[i]]++;
+    for(size_t i = 0; i<crop_set.size() ;++i) {
+        LOG(INFO)<<"JND "<<i<<",predict="<<jnd_jpeg[i];
     }
-
-    for(size_t i = 0 ; i< FLAGS_classnum ; ++i) {
-        LOG(INFO) << " i : " << i<<" "<<countRank[i];
-    }
-
-    int maxRank = std::distance(countRank.begin(),
-                                std::max_element(countRank.begin(),countRank.end()));
-    LOG(INFO) << "predict JND : " << maxRank;
 
     return 0;
 }
