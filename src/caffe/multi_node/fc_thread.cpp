@@ -157,6 +157,9 @@ shared_ptr<Msg> FcThread<Dtype>::FcForward(shared_ptr<Msg> m) {
   Solver<Dtype> *pfc = (Solver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
   Solver<Dtype> *proot = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
 
+  MLOG(INFO) << "Begin forward for src: " << m->src()
+             << ", ID: " << m->conv_id();
+
   if (NULL == pfc) {
     const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
 
@@ -218,6 +221,9 @@ void FcThread<Dtype>::FcBackward(shared_ptr<Msg> m,
   Solver<Dtype> *pfc =
                 (Solver<Dtype> *)NodeEnv::Instance()->FindSolver(m->msg_id());
   CHECK(pfc != NULL);
+
+  MLOG(INFO) << "Begin backward for src: " << m->src()
+             << ", ID: " << m->conv_id();
 
   shared_ptr<Net<Dtype> > fc_net = pfc->net();
   if (copy_diff) {

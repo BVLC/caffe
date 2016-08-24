@@ -346,6 +346,9 @@ ifeq ($(SHARE_DATA), 1)
 	COMMON_FLAGS += -DSHARE_DATA
 endif
 
+MULTI_NODE_DEBUG ?= 0
+COMMON_FLAGS += -DMULTI_NODE_DEBUG=$(MULTI_NODE_DEBUG)
+
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)

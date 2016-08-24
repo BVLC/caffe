@@ -28,8 +28,12 @@ void PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   client_msgs_[layer_id][client_idx] = m;
 
   if ((msg_clocks_[layer_id][client_idx] + 1) != m->clock()) {
-    LOG(INFO) << "unmatched clock between ps and client " << m->src();
+    LOG(WARNING) << "unmatched clock between ps and client " << m->src();
   }
+
+  MLOG(INFO) << "Recv gradients from: " << m->src()
+             << ", layer: " << layer_name
+             << ", clock: " << m->clock();
 
   // update clock
   msg_clocks_[layer_id][client_idx] = m->clock();

@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "caffe/multi_node/debug.hpp"
 #include "caffe/proto/multi_node.pb.h"
 
 using std::map;

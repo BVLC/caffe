@@ -391,6 +391,8 @@ void ConvParamThread<Dtype>::SendActivations() {
     this->SendMsg(f);
   }
 
+  MLOG(INFO) << "Send Forward from: " << m->src() << ", ID: " << m->conv_id();
+
   // backup the messages to vector
   shared_ptr<vector<shared_ptr<Msg> > > pvec;
   pvec.reset(new vector<shared_ptr<Msg> >(fwd_msgs_));
@@ -456,6 +458,8 @@ void ConvParamThread<Dtype>::ProcessBackward(shared_ptr<Msg> m) {
     this->SendMsg(m);
   }
 
+  MLOG(INFO) << "Recv Backward src: " << m->src() << ", ID: " << m->conv_id();
+
   conv_id_to_vec_.erase(iter);
 
   back_iter = bwd_id_to_vec_.find(conv_id);
@@ -481,6 +485,9 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
   if (layer_updates_[layer_id] == this->GetWorkerNum()) {
     SyncLayer(layer_id);
     layer_updates_[layer_id] = 0;
+
+    MLOG(INFO) << "Send Gradients for layer: "
+               << root_net->layer_names()[layer_id];
   }
 
   return 0;
@@ -510,6 +517,8 @@ int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   if (num_param_update_ < ps_ids_.size()) {
     return -1;
   }
+
+  MLOG(INFO) << "All params Updated";
 
   // we have got all the responces from parameter servers
   // and reset the counter
