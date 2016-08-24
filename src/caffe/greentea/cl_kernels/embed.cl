@@ -20,6 +20,7 @@ __kernel void TEMPLATE(embed_forward,Dtype)(const int_tp nthreads,
 
 // atomic_add from: http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html
 #if (TYPE == TYPE_FLOAT)
+#ifdef ATOMICS_32_AVAILABLE
 inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {
     union {
         uint_tp intVal;
@@ -48,6 +49,7 @@ __kernel void TEMPLATE(embed_backward,Dtype)(const int_tp nthreads, __global con
     TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));
   }
 }
+#endif
 #endif
 
 #if (TYPE == TYPE_DOUBLE)
