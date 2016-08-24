@@ -5,14 +5,15 @@ namespace caffe {
 
 template <typename Dtype>
 MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd )
-                                    : _usr_memory_pd(NULL), _prv_memory_pd(NULL)
-                                    ,_reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
+                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd
+                                                            , shared_ptr<primitive> mkldnn_primitive)
+                                    : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
                                     ,_prv_memory(NULL), _internal_ptr(NULL)
                                     , name("MKLDNNMemoryDescriptorBase")
 {
     set_usr_memory_pd(usr_memory_pd);
     set_prv_memory_pd(prv_memory_pd);
+    _mkldnn_primitive = mkldnn_primitive;
 }
 
 template <typename Dtype>

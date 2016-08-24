@@ -22,7 +22,8 @@ class MKLDNNMemoryDescriptorBase : PrvMemDescr
 {
 public:
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                ,shared_ptr<memory::primitive_desc> prv_memory_pd );
+                                ,shared_ptr<memory::primitive_desc> prv_memory_pd
+                                ,shared_ptr<primitive> mkldnn_primitive = NULL);
     ~MKLDNNMemoryDescriptorBase() {}
     // ---- PrvMemDescr virtual functions -----
     virtual void convert_from_prv(void* cpu_ptr);
@@ -57,12 +58,6 @@ public:
     std::string name;  // for debugging purposes
 private:
     void check_usr_with_prv_descriptors();
-    shared_ptr<memory::primitive_desc> _usr_memory_pd;
-    shared_ptr<memory::primitive_desc> _prv_memory_pd;
-    shared_ptr<reorder::primitive_desc> _reorder_usr2prv_pd;
-    shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
-    shared_ptr<memory> _prv_memory;
-    Dtype* _internal_ptr;
     void allocate() {
         if (_prv_memory == NULL) {
             _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd));
@@ -86,14 +81,22 @@ private:
     }
     void create_reorders();
 
+    shared_ptr<memory::primitive_desc> _usr_memory_pd;
+    shared_ptr<memory::primitive_desc> _prv_memory_pd;
+    shared_ptr<reorder::primitive_desc> _reorder_usr2prv_pd;
+    shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
+    shared_ptr<memory> _prv_memory;
+    Dtype* _internal_ptr;
+    shared_ptr<primitive> _mkldnn_primitive;
 };
 
 template <typename Dtype, bool is_diff>
 class MKLDNNMemoryDescriptor : public MKLDNNMemoryDescriptorBase<Dtype> {
 public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
-                        , shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
+                        , shared_ptr<memory::primitive_desc> prv_memory_pd
+                        , shared_ptr<primitive> mkldnn_primitive = NULL )
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
     Dtype* get_blob_data_ptr(Blob<Dtype> * blob, bool set_prv_ptr,
@@ -108,8 +111,9 @@ class MKLDNNData : public MKLDNNMemoryDescriptor<Dtype, false>
 {
 public:
     MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
-                ,shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd ) {}
+                ,shared_ptr<memory::primitive_desc> prv_memory_pd
+                , shared_ptr<primitive> mkldnn_primitive = NULL )
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
 };
 
 template <typename Dtype>
@@ -117,8 +121,9 @@ class MKLDNNDiff : public MKLDNNMemoryDescriptor<Dtype, true>
 {
 public:
     MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
-                ,shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd ) {}
+                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                , shared_ptr<primitive> mkldnn_primitive = NULL )
+        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
 };
 
 }  // namespace caffe
