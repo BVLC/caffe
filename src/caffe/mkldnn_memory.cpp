@@ -153,14 +153,14 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_blob_prv_data(Blob<Dtype>* blo
 }
 
 template <typename Dtype, bool is_diff>
-shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input_memory(Blob<Dtype> * blob)
+shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(Blob<Dtype> * blob)
 {
-    shared_ptr<memory> imem;
+    shared_ptr<primitive> pres;
     if (this->conversion_needed())
-        imem.reset(new memory(*this->prv_memory_pd(), this->get_blob_data_ptr(blob, false)));
+        pres.reset(new memory(*this->prv_memory_pd(), this->get_blob_data_ptr(blob, false)));
     else
-        imem.reset(new memory(*this->usr_memory_pd(), const_cast<Dtype*>(is_diff ?  blob->cpu_diff() : blob->cpu_data())));
-    return imem;
+        pres.reset(new memory(*this->usr_memory_pd(), const_cast<Dtype*>(is_diff ?  blob->cpu_diff() : blob->cpu_data())));
+    return pres;
 }
 
 template <typename Dtype, bool is_diff>

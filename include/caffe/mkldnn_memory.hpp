@@ -99,7 +99,7 @@ public:
     Dtype* get_blob_data_ptr(Blob<Dtype> * blob, bool set_prv_ptr,
           MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
     void sync_blob_prv_data(Blob<Dtype> * blob);
-    shared_ptr<memory> create_input_memory(Blob<Dtype> * blob);
+    shared_ptr<primitive> create_input(Blob<Dtype> * blob);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
 };
 

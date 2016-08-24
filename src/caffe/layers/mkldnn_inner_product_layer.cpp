@@ -20,16 +20,10 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
             : InnerProductLayer<Dtype>(param)
-            , fwd_bottom_data(NULL)
-            , fwd_top_data(NULL)
-            , fwd_weights_data(NULL)
-            , fwd_bias_data(NULL)
-            , ipFwd_pd(NULL)
-            , ipFwd(NULL)
-            , input_memory(NULL)
-            , weights_memory(NULL)
-            , bias_memory(NULL)
-            , output_memory(NULL)
+            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
+            , ipFwd_pd(NULL), ipFwd(NULL)
+            , input_primitive(NULL), weights_memory(NULL), bias_memory(NULL), output_memory(NULL)
+            , w_(0), h_(0)
 {
 }
 
@@ -105,20 +99,20 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
     // Create priv memory primitive descriptors stored as class members
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(prv_input_md, cpu_engine));
+    shared_ptr<MemPD> prv_input_primitive_pd(new MemPD(prv_input_md, cpu_engine));
     shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(prv_bias_md, cpu_engine));
     shared_ptr<MemPD> prv_output_memory_pd(new MemPD(prv_output_md, cpu_engine));
     shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(prv_weights_md, cpu_engine));
 
     // Create usr memory primitive descriptors stored as class members
     memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
-    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, input_mfmt}, cpu_engine));
+    shared_ptr<MemPD> usr_input_primitive_pd(new MemPD({{input_tz}, mpcsn, input_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
     shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, memory::format::nc}, cpu_engine));
     memory::format weights_mfmt = has_spatial ? memory::format::oihw : memory::format::oi;
     shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_memory_pd, prv_input_memory_pd));
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_primitive_pd, prv_input_primitive_pd));
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_memory_pd, prv_output_memory_pd));
     fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_memory_pd, prv_weights_memory_pd));
     if (this->bias_term_) {
@@ -132,7 +126,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 
     // ---- Create memory  ---------------------
-    input_memory.reset(new memory(*fwd_bottom_data->prv_memory_pd()
+    input_primitive.reset(new memory(*fwd_bottom_data->prv_memory_pd()
                         ,fwd_bottom_data->get_blob_data_ptr(bottom[0], false)));
     weights_memory.reset(new memory(*fwd_weights_data->prv_memory_pd()
                             ,fwd_weights_data->get_blob_data_ptr(this->blobs_[0].get(), true)));
@@ -145,7 +139,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
 
     // Create inner_product
     ipFwd.reset(new inner_product(prop_kind::forward
-                            , *input_memory, *weights_memory
+                            , *input_primitive, *weights_memory
                             , *bias_memory, *output_memory));
 
 }

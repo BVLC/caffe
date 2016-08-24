@@ -212,13 +212,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---- Create memory  ---------------------
-    input_memory = fwd_bottom_data->create_input_memory(bottom[0]);
+    input_primitive = fwd_bottom_data->create_input(bottom[0]);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
     output_memory = fwd_top_data->create_output_memory(top[0]);
 
     // ---- Create pooling  --------------------
-    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_memory, *indices_memory, *output_memory));
+    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first

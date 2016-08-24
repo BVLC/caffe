@@ -16,12 +16,11 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
             : ConvolutionLayer<Dtype>(param)
-            , fwd_bottom_data(NULL)
-            , fwd_top_data(NULL)
-            , fwd_weights_data(NULL)
-            , fwd_bias_data(NULL)
-            , convFwd_pd(NULL)
-            , convFwd(NULL)
+            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
+            , convFwd_pd(NULL), convFwd(NULL)
+            , weights_memory(NULL), bias_memory(NULL), output_memory(NULL), input_primitive(NULL)
+            , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
+            , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
 {
 }
 
@@ -127,7 +126,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(prv_input_md, cpu_engine));
+    shared_ptr<MemPD> prv_input_primitive_pd(new MemPD(prv_input_md, cpu_engine));
     shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(prv_bias_md, cpu_engine));
     shared_ptr<MemPD> prv_output_memory_pd(new MemPD(prv_output_md, cpu_engine));
     shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(prv_weights_md, cpu_engine));
@@ -135,12 +134,12 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
     memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_input_primitive_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
     shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_memory_pd, prv_input_memory_pd));
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_primitive_pd, prv_input_primitive_pd));
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_memory_pd, prv_output_memory_pd));
     fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_memory_pd, prv_weights_memory_pd));
     if (this->bias_term_) {
@@ -153,7 +152,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
     // ---- Create memory  ---------------------
-    input_memory.reset(new memory(*fwd_bottom_data->prv_memory_pd()
+    input_primitive.reset(new memory(*fwd_bottom_data->prv_memory_pd()
                                     ,fwd_bottom_data->get_blob_data_ptr(bottom[0], false)));
     weights_memory.reset(new memory(*fwd_weights_data->prv_memory_pd()
                                     ,fwd_weights_data->get_blob_data_ptr(this->blobs_[0].get(), true)));
@@ -166,7 +165,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
 
     // ---- Create convolution --------------------
     convFwd.reset(new convolution(*convFwd_pd
-                        , *input_memory, *weights_memory
+                        , *input_primitive, *weights_memory
                         , *bias_memory, *output_memory));
 }
 
