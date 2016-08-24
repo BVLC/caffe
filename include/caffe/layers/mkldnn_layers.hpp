@@ -113,11 +113,12 @@ class MKLDNNLRNLayer : public Layer<Dtype> {
 public:
     explicit MKLDNNLRNLayer(const LayerParameter& param)
         : Layer<Dtype>(param)
+        , fwd_top_data(NULL)
+        , fwd_bottom_data(NULL)
+        , lrnFwd_pd(NULL)
         , lrnFwd(NULL)
         , input_memory(NULL)
         , output_memory(NULL)
-        , fwd_top_data    (NULL)
-        , fwd_bottom_data (NULL)
         , scratch_(NULL) {}
     virtual ~MKLDNNLRNLayer() {}
 protected:
@@ -154,13 +155,13 @@ class MKLDNNPoolingLayer : public Layer<Dtype> {
 public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
             : Layer<Dtype>(param)
+            , fwd_top_data(NULL)
+            , fwd_bottom_data(NULL)
             , poolingFwd_pd(NULL)
             , poolingFwd(NULL)
             , indices_memory(NULL)
             , input_memory(NULL)
             , output_memory(NULL)
-            , fwd_bottom_data(NULL)
-            , fwd_top_data(NULL)
             , indices_pd(NULL)
             {}
     ~MKLDNNPoolingLayer() {}
@@ -197,10 +198,10 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<pooling::primitive_desc> poolingFwd_pd;
+    shared_ptr<pooling> poolingFwd;
+    shared_ptr<memory> indices_memory, input_memory, output_memory;
     shared_ptr<memory::primitive_desc> indices_pd;
 
-    shared_ptr<memory> indices_memory, input_memory, output_memory;
-    shared_ptr<pooling> poolingFwd;
 };
 
 // =====  MKLDNNReLULayer =======================================

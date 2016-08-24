@@ -116,7 +116,7 @@ Dtype* MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_data_ptr(Blob<Dtype>* bl
             NOT_IMPLEMENTED;
         }
 
-        convert_to_prv(const_cast<Dtype*>(is_diff ? blob->cpu_diff() : blob->cpu_data()));
+        this->convert_to_prv(const_cast<Dtype*>(is_diff ? blob->cpu_diff() : blob->cpu_data()));
 
         if (set_prv_ptr) {
             if (is_diff)
