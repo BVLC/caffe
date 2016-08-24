@@ -27,6 +27,10 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->height_ = bottom[0]->height();
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
+
+    if( reluFwd_pd == NULL) {
+        InitReLU(bottom, top);
+    }
 }
 
 
@@ -84,14 +88,11 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-
-    if( reluFwd_pd == NULL) {
-        InitReLU(bottom, top);
-    } else {
-        fwd_bottom_data->sync_blob_prv_data(bottom[0]);
-        if (fwd_top_data->conversion_needed())
-            top[0]->set_prv_data_descriptor(fwd_top_data);
-    }
+    // making reorders if needed.
+    fwd_bottom_data->sync_blob_prv_data(bottom[0]);
+    // update top that head at prv
+    if (fwd_top_data->conversion_needed())
+        top[0]->set_prv_data_descriptor(fwd_top_data);
 
     stream().submit({*reluFwd}).wait();
 }

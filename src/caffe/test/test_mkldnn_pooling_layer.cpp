@@ -395,7 +395,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestSetupPadded) {
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   pooling_param->set_pad(1);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   MKLDNNPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -409,7 +409,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestSetupGlobalPooling) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_global_pooling(true);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   MKLDNNPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
