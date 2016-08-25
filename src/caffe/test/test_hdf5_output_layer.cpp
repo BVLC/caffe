@@ -77,10 +77,12 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
                           H5P_DEFAULT);
   ASSERT_GE(file_id, 0)<< "Failed to open HDF5 file" <<
       this->input_file_name_;
+  // Allow reshape here as we are loading data not params
+  bool reshape = true;
   hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       this->blob_data_);
+                       this->blob_data_, reshape);
   hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       this->blob_label_);
+                       this->blob_label_, reshape);
   herr_t status = H5Fclose(file_id);
   EXPECT_GE(status, 0)<< "Failed to close HDF5 file " <<
       this->input_file_name_;
@@ -105,12 +107,12 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 
   Blob<Dtype>* blob_data = new Blob<Dtype>();
   hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       blob_data);
+                       blob_data, reshape);
   this->CheckBlobEqual(*(this->blob_data_), *blob_data);
 
   Blob<Dtype>* blob_label = new Blob<Dtype>();
   hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       blob_label);
+                       blob_label, reshape);
   this->CheckBlobEqual(*(this->blob_label_), *blob_label);
 
   status = H5Fclose(file_id);
