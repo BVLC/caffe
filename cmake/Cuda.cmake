@@ -145,11 +145,11 @@ macro(caffe_cuda_compile objlist_variable)
   endforeach()
 
   if(UNIX OR APPLE)
-    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC -std=c++11)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC -std c++11)
   endif()
 
   if(APPLE)
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11 -Xcompiler -Wno-unused-function)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -Wno-unused-function)
   endif()
 
   cuda_compile(cuda_objcs ${ARGN})
