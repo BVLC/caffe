@@ -53,6 +53,8 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     }
     if( lrnFwd_pd == NULL) {
         InitLRN(bottom, top);
+    } else {
+        VLOG(1) << " Reshape: second call";
     }
 }
 
@@ -118,6 +120,8 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
 
     // ---- Create lrn --------------------
     lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    fwd_bottom_data->set_primitives(lrnFwd, bottom[0]);
+    fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }
 
 

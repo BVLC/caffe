@@ -22,8 +22,7 @@ class MKLDNNMemoryDescriptorBase : public PrvMemDescr
 {
 public:
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                ,shared_ptr<memory::primitive_desc> prv_memory_pd
-                                ,shared_ptr<primitive> mkldnn_primitive = NULL);
+                                ,shared_ptr<memory::primitive_desc> prv_memory_pd);
     ~MKLDNNMemoryDescriptorBase() {}
     // ---- PrvMemDescr virtual functions -----
     virtual void convert_from_prv(void* cpu_ptr);
@@ -87,16 +86,14 @@ private:
     shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
-    shared_ptr<primitive> _mkldnn_primitive;
 };
 
 template <typename Dtype, bool is_diff>
 class MKLDNNMemoryDescriptor : public MKLDNNMemoryDescriptorBase<Dtype> {
 public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
-                        , shared_ptr<memory::primitive_desc> prv_memory_pd
-                        , shared_ptr<primitive> mkldnn_primitive = NULL )
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
+                        , shared_ptr<memory::primitive_desc> prv_memory_pd )
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
     Dtype* get_blob_data_ptr(Blob<Dtype> * blob, bool set_prv_ptr,
@@ -104,6 +101,14 @@ public:
     void sync_blob_prv_data(Blob<Dtype> * blob);
     shared_ptr<primitive> create_input(Blob<Dtype> * blob);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
+    void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }
+    void set_linked_primitive(shared_ptr<primitive> primitive) { _linked_primitive = primitive;  }
+    void set_primitives(shared_ptr<primitive> primitive, Blob<Dtype> * blob);
+    shared_ptr<primitive>  mkldnn_primitive() const { return _mkldnn_primitive;  }
+    shared_ptr<primitive>  linked_primitive() const { return _linked_primitive;  }
+private:
+    shared_ptr<primitive> _mkldnn_primitive;
+    shared_ptr<primitive> _linked_primitive;
 };
 
 template <typename Dtype>
@@ -111,9 +116,8 @@ class MKLDNNData : public MKLDNNMemoryDescriptor<Dtype, false>
 {
 public:
     MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
-                ,shared_ptr<memory::primitive_desc> prv_memory_pd
-                , shared_ptr<primitive> mkldnn_primitive = NULL )
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
+                ,shared_ptr<memory::primitive_desc> prv_memory_pd )
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd ) {}
 };
 
 template <typename Dtype>
@@ -121,9 +125,8 @@ class MKLDNNDiff : public MKLDNNMemoryDescriptor<Dtype, true>
 {
 public:
     MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
-                , shared_ptr<memory::primitive_desc> prv_memory_pd
-                , shared_ptr<primitive> mkldnn_primitive = NULL )
-        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd, mkldnn_primitive ) {}
+                , shared_ptr<memory::primitive_desc> prv_memory_pd )
+        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd ) {}
 };
 
 }  // namespace caffe

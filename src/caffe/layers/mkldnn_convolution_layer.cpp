@@ -67,6 +67,8 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     init_properties(bottom, top);
     if( convFwd_pd == NULL) {
         InitConvolution(bottom, top);
+    } else {
+        VLOG(1) << " Reshape: second call";
     }
 }
 
@@ -167,6 +169,8 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     convFwd.reset(new convolution(*convFwd_pd
                         , *input_primitive, *weights_memory
                         , *bias_memory, *output_memory));
+    fwd_bottom_data->set_primitives(convFwd, bottom[0]);
+    fwd_top_data->set_mkldnn_primitive(convFwd);
 }
 
 template <typename Dtype>

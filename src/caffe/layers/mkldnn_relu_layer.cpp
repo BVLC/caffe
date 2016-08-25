@@ -30,6 +30,8 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 
     if( reluFwd_pd == NULL) {
         InitReLU(bottom, top);
+    } else {
+        VLOG(1) << " Reshape: second call";
     }
 }
 
@@ -80,6 +82,8 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
 
     // ---- Create relu --------------------
     reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
+    fwd_bottom_data->set_primitives(reluFwd, bottom[0]);
+    fwd_top_data->set_mkldnn_primitive(reluFwd);
 }
 
 

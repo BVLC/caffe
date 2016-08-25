@@ -51,6 +51,8 @@ void MKLDNNInnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->h_ = bottom[0]->height();
     if( ipFwd_pd == NULL) {
         InitInnerProduct(bottom, top);
+    } else {
+        VLOG(1) << " Reshape: second call";
     }
 }
 
@@ -141,7 +143,8 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     ipFwd.reset(new inner_product(prop_kind::forward
                             , *input_primitive, *weights_memory
                             , *bias_memory, *output_memory));
-
+    fwd_bottom_data->set_primitives(ipFwd, bottom[0]);
+    fwd_top_data->set_mkldnn_primitive(ipFwd);
 }
 
 template <typename Dtype>

@@ -118,6 +118,8 @@ void MKLDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     }
     if (NULL == poolingFwd_pd) {
         InitPooling(bottom, top);
+    } else {
+        VLOG(1) << " Reshape: second call";
     }
 
 }
@@ -219,6 +221,8 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     // ---- Create pooling  --------------------
     poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
+    fwd_bottom_data->set_primitives(poolingFwd, bottom[0]);
+    fwd_top_data->set_mkldnn_primitive(poolingFwd);
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
