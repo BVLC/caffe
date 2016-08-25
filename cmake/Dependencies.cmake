@@ -143,6 +143,14 @@ if (USE_ISAAC)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAS)
 endif()
 
+# ---[ CLBlast
+if (USE_CLBLAST)
+  find_package(CLBlast REQUIRED)
+  message(STATUS "CLBlast found")
+  list(APPEND Caffe_LINKER_LIBS PUBLIC clblast)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAST)
+endif()
+
 # ---[ OpenCV
 if(USE_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
