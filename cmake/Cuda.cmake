@@ -1,4 +1,4 @@
-if(CPU_ONLY OR NOT USE_CUDA)
+if(NOT USE_CUDA)
   return()
 endif()
 
