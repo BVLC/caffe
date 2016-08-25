@@ -7,38 +7,11 @@
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
-/* 64 bit indexing */
-#cmakedefine USE_INDEX_64
-
-/* NVIDA Cuda */
-#cmakedefine HAVE_CUDA
-#cmakedefine USE_CUDA
-
-/* OpenCl kernels */
-#cmakedefine USE_GREENTEA
-#cmakedefine VIENNACL_WITH_OPENCL
-#cmakedefine USE_LIBDNN
-#cmakedefine USE_INTEL_SPATIAL
-
-/* clBLAS */
-#cmakedefine HAVE_CLBLAS
-#cmakedefine USE_CLBLAS
-
-/* NVIDA cuDNN */
-#cmakedefine HAVE_CUDNN
-#cmakedefine USE_CUDNN
-
-/* Disable CUDA and OpenCL */
-#cmakedefine CPU_ONLY
-
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
 
 #define CMAKE_SOURCE_DIR "src/"
 #define EXAMPLES_SOURCE_DIR "examples/"
 #define CMAKE_EXT ""
-
-/* Matlab */
-#cmakedefine HAVE_MATLAB
 
 #endif  // CAFFE_CONFIG_HPP_
