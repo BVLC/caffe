@@ -15,7 +15,7 @@ FindLibrary()
 # MKL
 DST=`dirname $0`
 OMP=0 
-MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_contained_BU1/mklml_lnx_2017.0.b1.20160513.1.tgz"
+MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_containted_GOLD/mklml_lnx_2017.0.0.20160801.tgz "
 if [ $MKLROOT ]; then
   VERSION_LINE=`grep __INTEL_MKL_BUILD_DATE $MKLROOT/include/mkl_version.h 2>/dev/null | sed -e 's/.* //'`
 fi
@@ -30,7 +30,7 @@ else
   fi
 fi
 # Check if MKL_ROOT is set if positive then set one will be used..
-if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160514 ]; then
+if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160706 ]; then
 	# ..if MKLROOT is not set then check if we have MKL downloaded..
     if [ -z $LOCALMKL ] || [ ! -f $LOCALMKL ]; then
       #...If it is not then downloaded and unpacked
