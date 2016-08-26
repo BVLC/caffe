@@ -81,7 +81,7 @@ void DetectNetTransformationLayer<Dtype>::retrieveMeanImage(Size dimensions) {
 
   // resize, if dimensions were defined:
   if (dimensions.area() > 0) {
-    resize(data_mean_, data_mean_, dimensions, cv::INTER_CUBIC);
+    cv::resize(data_mean_, data_mean_, dimensions, 0, 0, cv::INTER_CUBIC);
   }
   // scale from 0..255 to 0..1:
   data_mean_ /= Dtype(UINT8_MAX);
@@ -438,9 +438,7 @@ void DetectNetTransformationLayer<Dtype>::transform_scale(
   if (size.height != img.rows || size.width != img.cols) {
     Dtype scale_x = (Dtype)size.width / img.cols;
     Dtype scale_y = (Dtype)size.height / img.rows;
-
-    resize(img, *img_temp, size, cv::INTER_CUBIC);
-
+    cv::resize(img, *img_temp, size, 0, 0, cv::INTER_CUBIC);
     vector<BboxLabel > bboxList_aug;
     foreach_(BboxLabel label, bboxList) {  // for every bbox:
       // resize by scale
