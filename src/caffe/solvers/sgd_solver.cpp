@@ -62,8 +62,6 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
     if (this->smoothed_loss_ < this->minimum_loss_) {
       this->minimum_loss_ = this->smoothed_loss_;
       this->iter_last_event_ = this->iter_;
-      LOG(INFO) << "Plateau Status: Iteration " << this->iter_
-                << ", updated minimum_loss = " << this->minimum_loss_;
     }
 
     // If sufficient iters have passed after the last event, then lower LR
@@ -78,6 +76,12 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
         LOG(INFO) << "Plateau Status: Iteration " << this->iter_
                   << ", step = " << this->current_step_;
       }
+    }
+
+    if (this->param_.display() && this->iter_ % this->param_.display() == 0
+        && this->iter_last_event_ > (this->iter_ - this->param_.display())) {
+      LOG(INFO) << "Plateau Status: Iteration " << this->iter_
+                << ", current minimum_loss = " << this->minimum_loss_;
     }
 
     rate = this->param_.base_lr() *
