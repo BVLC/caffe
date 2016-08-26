@@ -10,6 +10,7 @@
 #include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/layers/concat_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
@@ -18,6 +19,9 @@
 #include "caffe/layers/tanh_layer.hpp"
 #ifdef MKL2017_SUPPORTED
 #include "caffe/layers/mkl_layers.hpp"
+#endif
+#ifdef MKLDNN_SUPPORTED
+#include "caffe/layers/mkldnn_layers.hpp"
 #endif
 #include "caffe/proto/caffe.pb.h"
 
@@ -44,7 +48,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
-#if defined(USE_CUDNN) || defined(USE_MKL2017_AS_DEFAULT_ENGINE)
+#if defined(USE_CUDNN) || defined(USE_MKL2017_AS_DEFAULT_ENGINE) || defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
   bool use_dilation = false;
   for (int i = 0; i < conv_param.dilation_size(); ++i) {
     if (conv_param.dilation(i) > 1) {
@@ -62,6 +66,10 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     if (!use_dilation) {
       engine = ConvolutionParameter_Engine_MKL2017;
     }
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    if (!use_dilation) {
+      engine = ConvolutionParameter_Engine_MKLDNN;
+    }
 #endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
@@ -78,12 +86,53 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   } else if (engine == ConvolutionParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLConvolutionLayer<Dtype>(param));
 #endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == ConvolutionParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNConvolutionLayer<Dtype>(param));
+#endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
+
+// Get inner_product layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetInnerProductLayer(
+    const LayerParameter& param) {
+  InnerProductParameter ip_param = param.inner_product_param();
+  InnerProductParameter_Engine engine = ip_param.engine();
+  if (engine == InnerProductParameter_Engine_DEFAULT) {
+    engine = InnerProductParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = InnerProductParameter_Engine_CUDNN;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    if (!ip_param.transpose()) {
+      engine = InnerProductParameter_Engine_MKLDNN;
+    }
+#endif
+  }
+  if (engine == InnerProductParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new InnerProductLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == InnerProductParameter_Engine_CUDNN) {
+    return shared_ptr<Layer<Dtype> >(new CuDNNInnerProductLayer<Dtype>(param));
+#endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == InnerProductParameter_Engine_MKLDNN) {
+    if (ip_param.transpose()) {
+      LOG(FATAL) << "MKL-DNN doesn't support transposed weights at Layer "
+                 << param.name();
+    }
+    return shared_ptr<Layer<Dtype> >(new MKLDNNInnerProductLayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(InnerProduct, GetInnerProductLayer);
 
 // Get pooling layer according to engine.
 template <typename Dtype>
@@ -97,6 +146,10 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     PoolingParameter_PoolMethod method = param.pooling_param().pool();
     if (method == PoolingParameter_PoolMethod_MAX)
       engine = PoolingParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    PoolingParameter_PoolMethod method = param.pooling_param().pool();
+    if (method == PoolingParameter_PoolMethod_MAX)
+      engine = PoolingParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
@@ -123,6 +176,10 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   } else if (engine == PoolingParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLPoolingLayer<Dtype>(param));
 #endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == PoolingParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNPoolingLayer<Dtype>(param));
+#endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
@@ -143,6 +200,10 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
     if (param.lrn_param().norm_region()
             == LRNParameter_NormRegion_ACROSS_CHANNELS)
       engine = LRNParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    if (param.lrn_param().norm_region()
+            == LRNParameter_NormRegion_ACROSS_CHANNELS)
+      engine = LRNParameter_Engine_MKLDNN;
 #endif
   }
 
@@ -166,6 +227,10 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
 #ifdef MKL2017_SUPPORTED
   } else if (engine == LRNParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLLRNLayer<Dtype>(param));
+#endif
+#if MKLDNN_SUPPORTED
+  } else if (engine == LRNParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNLRNLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -236,6 +301,8 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     engine = ReLUParameter_Engine_CUDNN;
 #elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = ReLUParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    engine = ReLUParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == ReLUParameter_Engine_CAFFE) {
@@ -247,6 +314,10 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
 #ifdef MKL2017_SUPPORTED
   } else if (engine == ReLUParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLReLULayer<Dtype>(param));
+#endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == ReLUParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNReLULayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
