@@ -65,6 +65,12 @@ bool NetNeedsInputUpgrade(const NetParameter& net_param);
 // Perform all necessary transformations to upgrade input fields into layers.
 void UpgradeNetInput(NetParameter* net_param);
 
+// Return true iff the Net contains any deprecated weight fillers.
+bool NetNeedsWeightFillerUpgrade(const NetParameter& net_param);
+
+// Perform all necessary transformations to upgrade deprecated weight fillers.
+void UpgradeNetWeightFiller(NetParameter* net_param);
+
 // Return true iff the solver contains any old solver_type specified as enums
 bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
 
