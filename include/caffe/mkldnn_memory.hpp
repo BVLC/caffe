@@ -50,11 +50,6 @@ public:
         if (_prv_memory == NULL) allocate();
         return _prv_memory;
     }
-    void  set_prv_memory(shared_ptr<memory> memory)
-    {
-        _prv_memory = memory;
-        _internal_ptr = (Dtype *)(_prv_memory->get_data_handle());
-    }
     Dtype* get_prv_ptr() {
         if (_prv_memory == NULL) allocate();
         return _internal_ptr;

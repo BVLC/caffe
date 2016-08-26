@@ -168,7 +168,16 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
 {
     shared_ptr<memory> omem;
     if (this->conversion_needed()) {
-        omem = this->get_prv_memory();
+        if(blob->get_prv_data_descriptor() != NULL) {
+            shared_ptr<PrvMemDescr> prv_mem_descriptor = is_diff ?
+                (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
+            CHECK_EQ(prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
+            shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr =
+                boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(prv_mem_descriptor);
+            omem = current_descr->get_prv_memory();
+        } else {
+            omem = this->get_prv_memory();
+        }
     } else {
         omem.reset(new memory(*this->usr_memory_pd(), is_diff ? blob->mutable_cpu_diff() : blob->mutable_cpu_data()));
     }
