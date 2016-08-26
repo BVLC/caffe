@@ -12,6 +12,9 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#ifndef CPU_ONLY
+#include "caffe/util/gpu_memory.hpp"
+#endif
 
 namespace caffe {
 
@@ -21,7 +24,24 @@ class CoverageGenerator;
 template<typename Dtype>
 struct BboxLabel_;
 
-struct AugmentSelection;
+struct AugmentSelection {
+  // Color augmentations
+  float hue_rotation;
+  float saturation;
+  // Spatial augmentations
+  bool flip;
+  cv::Size scale;
+  float rotation;
+  cv::Point crop_offset;
+
+  bool doHueRotation() const { return std::abs(hue_rotation) > FLT_EPSILON; }
+  bool doDesaturation() const { return saturation < (1.0 - 1.0/UINT8_MAX); }
+  bool doScale(const cv::Size& s) const {
+    return s.height != scale.height || s.width != scale.width;
+  }
+  bool doRotation() const { return std::abs(rotation) > FLT_EPSILON; }
+};
+
 
 /**
  * @brief Applies common transformations to the input data, such as
@@ -58,9 +78,15 @@ class DetectNetTransformationLayer : public Layer<Dtype> {
   virtual void Forward_cpu(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
+  virtual void Forward_gpu(
+      const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
 
   virtual void Backward_cpu(
+      const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_gpu(
       const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {}
@@ -71,58 +97,32 @@ class DetectNetTransformationLayer : public Layer<Dtype> {
       Mat3v* outputImage,
       Dtype* outputLabel);
 
+  AugmentSelection get_augmentations(cv::Size);
+
+  // Image transformations
+  Mat3v transform_image_cpu(const Mat3v&, const AugmentSelection&);
+  Mat3v transform_hsv_cpu(const Mat3v&, const AugmentSelection&);
+  Mat3v rotate_image_cpu(const Mat3v&, const float);
+  Mat3v crop_image_cpu(const Mat3v&, const cv::Size&, const cv::Point&);
+
+  // Label transformations
+  void transform_label_cpu(vector<BboxLabel>, Dtype*,
+      const AugmentSelection&, const cv::Size&);
+  vector<BboxLabel> flip_label_cpu(const vector<BboxLabel>&,
+      const cv::Size&);
+  vector<BboxLabel> scale_label_cpu(const vector<BboxLabel>&,
+      const cv::Size&, const cv::Size&);
+  vector<BboxLabel> rotate_label_cpu(const vector<BboxLabel>&,
+      const cv::Size&, const float);
+  vector<BboxLabel> crop_label_cpu(const vector<BboxLabel>&, const cv::Point&);
 
   /**
    * @return a Dtype from [0..1].
    */
   Dtype randDouble();
 
-  bool augmentation_flip(
-      const Mat3v& img,
-      Mat3v* img_aug,
-      const vector<BboxLabel>& bboxlist,
-      vector<BboxLabel>*);
-  float augmentation_rotate(
-      const Mat3v& img_src,
-      Mat3v* img_aug,
-      const vector<BboxLabel>& bboxlist,
-      vector<BboxLabel>*);
-  float augmentation_scale(
-      const Mat3v& img,
-      Mat3v* img_temp,
-      const vector<BboxLabel>& bboxlist,
-      vector<BboxLabel>*);
-  void transform_scale(
-      const Mat3v& img,
-      Mat3v* img_temp,
-      const vector<BboxLabel>& bboxList,
-      vector<BboxLabel>* bboxList_aug,
-      const Size2i& size);
-  Point2i augmentation_crop(
-      const Mat3v& img_temp,
-      Mat3v* img_aug,
-      const vector<BboxLabel>& bboxlist,
-      vector<BboxLabel>*);
-
-  void transform_crop(
-      const Mat3v& img_temp,
-      Mat3v* img_aug,
-      const vector<BboxLabel>& bboxlist,
-      vector<BboxLabel>* bboxlist_aug,
-      Rect inner,
-      Size2i outer_area,
-      Point2i outer_offset) const;
-
-  float augmentation_hueRotation(
-      const Mat3v& img,
-      Mat3v* result);
-
-  float augmentation_desaturation(
-      const Mat3v& img,
-      Mat3v* result);
-
   Mat1v getTransformationMatrix(Rect region, Dtype rotation) const;
-  Rect getBoundingRect(Rect region, Dtype rotation) const;
+  cv::Size getRotatedSize(cv::Size, float rotation) const;
   void matToBlob(const Mat3v& source, Dtype* destination) const;
   void matsToBlob(const vector<Mat3v>& source, Blob<Dtype>* destination) const;
   vector<Mat3v> blobToMats(const Blob<Dtype>& image) const;
@@ -146,6 +146,11 @@ class DetectNetTransformationLayer : public Layer<Dtype> {
   Phase phase_;
 
   Mat3v data_mean_;
+#ifndef CPU_ONLY
+  Blob<Dtype> mean_blob_;
+  GPUMemory::MultiWorkspace gpu_workspace_augmentations_;
+  GPUMemory::MultiWorkspace gpu_workspace_tmpdata_;
+#endif
   boost::array<Dtype, 3> mean_values_;
   shared_ptr<Caffe::RNG> rng_;
 };
