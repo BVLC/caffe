@@ -61,7 +61,8 @@ struct PrvMemDescr {
   virtual size_t prv_size() = 0;  // TODO: do we need both count() and size()?
   // This might help using prv_ptr_ by different accelerators/engines
   enum PrvDescrType {
-    PRV_DESCR_MKL2017
+    PRV_DESCR_MKL2017,
+    PRV_DESCR_MKLDNN
   };
   virtual PrvDescrType get_descr_type() = 0;
 };
