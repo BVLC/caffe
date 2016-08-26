@@ -4,10 +4,9 @@
 #include <cstdlib>
 #include <vector>
 #include <cstdio>
- 
+#include <cmath>
 #include <string>
 #include <iostream>
-#include <stdio.h>
 //#include <future>
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
@@ -163,6 +162,50 @@ std::vector<float> crop_image_predict_prob(Net<float>& caffe_test_net,
         return predictResult;
 }
 
+void image_tsigma_distribution(const vector<float>& y)
+{
+    size_t y_len = y.size();
+    float mu = std::accumulate(y.begin(),y.end(),0.0)/y_len;
+    vector<float> y_squre_error(y_len);
+    for (size_t i = 0; i<y_len; ++i) {
+        y_squre_error[i] = (pow(y[i]-mu,2.0));
+    }
+    float max_jnd_value = *std::max_element(y.begin(),y.end());
+    float min_jnd_value = *std::min_element(y.begin(),y.end());
+
+    float sigma = sqrt(std::accumulate(y_squre_error.begin(),
+                                       y_squre_error.end(), 0.0)/y_len)/(max_jnd_value - min_jnd_value);
+    float slice = (max_jnd_value - min_jnd_value) / (FLAGS_classnum - 1);
+    vector<int> jnd_predict(FLAGS_classnum);
+    jnd_predict[0] = 100;
+    for (size_t i = 1; i<FLAGS_classnum ; ++i) {
+        //float tsigma = mu - sigma;
+        float tsigma = min_jnd_value + i*slice;
+        size_t min_index = -1;
+        float  min_dist = 0;
+        for (size_t j = 0 ; j<y_len; ++j) {
+            float dist = fabs(y[j] - tsigma);
+            if( min_index == -1 ) {
+                min_dist = dist;
+                min_index = j;
+            }
+            else if( min_dist > dist ) {
+                min_index = j;
+                min_dist = dist;
+            }
+            jnd_predict[i] = min_index+1;
+        }
+    }
+    LOG(INFO)<<"mu = "<<mu<<", sigma = "<<sigma;
+    for (size_t i = 0; i<FLAGS_classnum; ++i) {
+        LOG(INFO)<<"JND="<<i<<",predicted value : "<<jnd_predict[i];
+    }
+
+//    return tsigma;
+
+}
+                                
+
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
@@ -234,8 +277,9 @@ int main(int argc, char** argv) {
         delete[] predictResult;
     }
     for(size_t i = 0; i<crop_set.size() ;++i) {
-        LOG(INFO)<<"JND "<<i<<",predict="<<jnd_jpeg[i];
+        LOG(INFO)<<"JPEG QoF="<<i+1<<",predict="<<jnd_jpeg[i];
     }
+    image_tsigma_distribution(jnd_jpeg);
 
     return 0;
 }
