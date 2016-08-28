@@ -27,11 +27,9 @@ namespace caffe {
  * param {lr_mult: 0} three times in the layer definition.
  *
  * Note that the original paper also included a per-channel learned bias and
- * scaling factor.  It is possible (though a bit cumbersome) to implement
- * this in caffe using a single-channel DummyDataLayer filled with zeros,
- * followed by a Convolution layer with output the same size as the current.
- * This produces a channel-specific value that can be added or multiplied by
- * the BatchNorm layer's output.
+ * scaling factor. To implement this in Caffe, define a `ScaleLayer` configured
+ * with `bias_term: true` after each `BatchNormLayer` to handle both the bias
+ * and scaling factor.
  *
  * [1] S. Ioffe and C. Szegedy, "Batch Normalization: Accelerating Deep Network
  *     Training by Reducing Internal Covariate Shift." arXiv preprint
