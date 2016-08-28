@@ -9,9 +9,16 @@ SyncedMemory::~SyncedMemory() {
   if (cpu_ptr_ && own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
   }
-
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
+#ifdef DEBUG
+    cudaPointerAttributes attr;
+    cudaError_t status = cudaPointerGetAttributes(&attr, gpu_ptr_);
+    if (status == cudaSuccess) {
+      CHECK_EQ(attr.memoryType, cudaMemoryTypeDevice);
+      CHECK_EQ(attr.device, gpu_device_);
+    }
+#endif
     GPUMemory::deallocate(gpu_ptr_, gpu_device_, stream_);
   }
 #endif  // CPU_ONLY
@@ -130,16 +137,16 @@ void* SyncedMemory::mutable_gpu_data() {
 }
 
 #ifndef CPU_ONLY
-void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
+void SyncedMemory::async_gpu_push() {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
     CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    stream_ = stream;
-    GPUMemory::allocate(&gpu_ptr_, size_, gpu_device_, stream);
+    stream_ = GPUMemory::device_stream(gpu_device_);
+    GPUMemory::allocate(&gpu_ptr_, size_, gpu_device_, stream_);
     own_gpu_data_ = true;
   }
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
-  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream_));
   // Assume caller will synchronize on the stream before use
   head_ = SYNCED;
 }
