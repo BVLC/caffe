@@ -231,9 +231,13 @@ class NetSpec(object):
                         subtop._to_proto(layers, names, autonames)
                         first = subtop
                     else:
-                        names[subtop.fn] = names[first.fn]
-                        for firsttop, nexttop in zip(first.fn.tops, subtop.fn.tops):
-                            names[nexttop] = names[firsttop]
+                        names[subtop] = names[first]
+                        if (isinstance(first, Top)):
+                            for firsttop, nexttop in zip(first.fn.tops, subtop.fn.tops):
+                                names[nexttop] = names[firsttop]
+                        elif (isinstance(first, Function)):
+                            for firsttop, nexttop in zip(first.tops, subtop.tops):
+                                names[nexttop] = names[firsttop]
                         subtop._to_proto(layers, names, autonames)
             else:
                 top._to_proto(layers, names, autonames)
