@@ -1,3 +1,17 @@
+/*!
+ *  \brief     The Caffe layer that implements the CRF-RNN described in the paper:
+ *             Conditional Random Fields as Recurrent Neural Networks. IEEE ICCV 2015.
+ *
+ *  \authors   Sadeep Jayasumana, Bernardino Romera-Paredes, Shuai Zheng, Zhizhong Su.
+ *  \version   1.0
+ *  \date      2015
+ *  \copyright Torr Vision Group, University of Oxford.
+ *  \details   If you use this code, please consider citing the paper:
+ *             Shuai Zheng, Sadeep Jayasumana, Bernardino Romera-Paredes, Vibhav Vineet, Zhizhong Su, Dalong Du,
+ *             Chang Huang, Philip H. S. Torr. Conditional Random Fields as Recurrent Neural Networks. IEEE ICCV 2015.
+ *
+ *             For more information about CRF-RNN, please visit the project website http://crfasrnn.torr.vision.
+ */
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
@@ -5,7 +19,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/layers/meanfield_layers.hpp"
- #include "caffe/util/tvg_common_utils.hpp"
+#include "caffe/util/tvg_common_utils.hpp"
+
 namespace caffe {
 
 /*
@@ -117,6 +132,7 @@ void MultiStageMeanfieldLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
  * bottom[0] - Unary terms
  * bottom[1] - Softmax input (a copy of the unary terms)
  * bottom[2] - RGB images
+ *
  * top[0] - Output of the mean field inference (not normalized).
  */
 template <typename Dtype>
@@ -259,7 +275,6 @@ void MultiStageMeanfieldLayer<Dtype>::init_spatial_lattice(void) {
     init_cpu_ = true;
 
   }else if( Caffe::mode() == Caffe::GPU){
-    printf("hello\n");
     float* spatial_kernel_gpu;
     Dtype* norm_data_gpu;
 
