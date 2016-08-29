@@ -98,7 +98,7 @@ public:
     // in backward a conversion done already in the forward direction.
     Dtype* get_blob_data_ptr(Blob<Dtype> * blob, bool set_prv_ptr,
           MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
-    void sync_blob_prv_data(Blob<Dtype> * blob);
+    void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<primitive> create_input(Blob<Dtype> * blob);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
     void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }

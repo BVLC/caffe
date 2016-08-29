@@ -154,9 +154,9 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 
     // making reorders if needed.
-    fwd_bottom_data->sync_blob_prv_data(bottom[0]);
-    fwd_weights_data->sync_blob_prv_data(this->blobs_[0].get());
-    fwd_bias_data->sync_blob_prv_data(this->blobs_[1].get());
+    fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
+    fwd_weights_data->sync_blob_prv_data(this->blobs_[0].get(), true);
+    fwd_bias_data->sync_blob_prv_data(this->blobs_[1].get(), true);
     // update top that head at prv
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);

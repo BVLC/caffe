@@ -146,9 +146,9 @@ Dtype* MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_data_ptr(Blob<Dtype>* bl
 }
 
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_blob_prv_data(Blob<Dtype>* blob)
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_blob_prv_data(Blob<Dtype>* blob, bool set_prv_ptr)
 {
-    get_blob_data_ptr(blob, false);
+    get_blob_data_ptr(blob, set_prv_ptr);
 }
 
 template <typename Dtype, bool is_diff>
