@@ -67,8 +67,8 @@ private:
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
     shared_ptr<convolution::primitive_desc> convFwd_pd;
     shared_ptr<convolution> convFwd;
-    shared_ptr<memory> weights_memory, bias_memory, output_memory;
-    shared_ptr<primitive> input_primitive;
+    shared_ptr<memory> output_memory;
+    shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
     uint32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
 };
@@ -95,8 +95,8 @@ private:
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
     shared_ptr<inner_product::primitive_desc> ipFwd_pd;
     shared_ptr<inner_product> ipFwd;
-    shared_ptr<memory> weights_memory, bias_memory, output_memory;
-    shared_ptr<primitive> input_primitive;
+    shared_ptr<memory> output_memory;
+    shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
     uint32_t w_, h_;
 };
 

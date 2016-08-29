@@ -113,7 +113,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     scratch_.reset(new memory(scratch_mpd));
 
     // ---- Create memory  ---------------------
-    input_primitive = fwd_bottom_data->create_input(bottom[0]);
+    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
     output_memory = fwd_top_data->create_output_memory(top[0]);

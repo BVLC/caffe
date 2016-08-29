@@ -214,7 +214,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---- Create memory  ---------------------
-    input_primitive = fwd_bottom_data->create_input(bottom[0]);
+    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
     output_memory = fwd_top_data->create_output_memory(top[0]);

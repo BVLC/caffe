@@ -54,6 +54,8 @@ public:
         if (_prv_memory == NULL) allocate();
         return _internal_ptr;
     }
+    shared_ptr<reorder>  reorder_usr2prv() { return _reorder_usr2prv; }
+    shared_ptr<reorder>  reorder_prv2usr() { return _reorder_prv2usr; }
     std::string name;  // for debugging purposes
 private:
     void check_usr_with_prv_descriptors();
@@ -84,8 +86,12 @@ private:
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
     shared_ptr<reorder::primitive_desc> _reorder_usr2prv_pd;
     shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
+    shared_ptr<reorder> _reorder_usr2prv;
+    shared_ptr<reorder> _reorder_prv2usr;
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
+    shared_ptr<memory> _usr_memory;
+    void* _cpu_ptr;
 };
 
 template <typename Dtype, bool is_diff>
@@ -96,10 +102,10 @@ public:
         : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
-    Dtype* get_blob_data_ptr(Blob<Dtype> * blob, bool set_prv_ptr,
-          MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
+    shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr,
+            MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
     void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
-    shared_ptr<primitive> create_input(Blob<Dtype> * blob);
+    shared_ptr<primitive> create_input(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
     void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }
     void set_linked_primitive(shared_ptr<primitive> primitive) { _linked_primitive = primitive;  }

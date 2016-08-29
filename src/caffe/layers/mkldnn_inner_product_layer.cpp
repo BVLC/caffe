@@ -22,7 +22,7 @@ MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& pa
             : InnerProductLayer<Dtype>(param)
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
             , ipFwd_pd(NULL), ipFwd(NULL)
-            , input_primitive(NULL), weights_memory(NULL), bias_memory(NULL), output_memory(NULL)
+            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
             , w_(0), h_(0)
 {
 }
@@ -128,12 +128,9 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 
     // ---- Create memory  ---------------------
-    input_primitive.reset(new memory(*fwd_bottom_data->prv_memory_pd()
-                        ,fwd_bottom_data->get_blob_data_ptr(bottom[0], false)));
-    weights_memory.reset(new memory(*fwd_weights_data->prv_memory_pd()
-                            ,fwd_weights_data->get_blob_data_ptr(this->blobs_[0].get(), true)));
-    bias_memory.reset(new memory(*fwd_bias_data->prv_memory_pd()
-                        ,fwd_bias_data->get_blob_data_ptr(this->blobs_[1].get(), true)));
+    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
+    weights_primitive = fwd_weights_data->create_input(this->blobs_[0].get(), true);
+    bias_primitive = fwd_bias_data->create_input(this->blobs_[1].get(), true);
 
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
@@ -141,8 +138,8 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
 
     // Create inner_product
     ipFwd.reset(new inner_product(prop_kind::forward
-                            , *input_primitive, *weights_memory
-                            , *bias_memory, *output_memory));
+                            , *input_primitive, *weights_primitive
+                            , *bias_primitive, *output_memory));
     fwd_bottom_data->set_primitives(ipFwd, bottom[0]);
     fwd_top_data->set_mkldnn_primitive(ipFwd);
 }
