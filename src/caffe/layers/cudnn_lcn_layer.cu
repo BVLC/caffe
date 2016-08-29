@@ -10,12 +10,8 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-
-  int device;
-  CUDA_CHECK(cudaGetDevice(&device));
-  cudaStream_t stream = GPUMemory::device_stream(device);
-  temp1_.reserve(tempDataSize_, device, stream);
-  temp2_.reserve(tempDataSize_, device, stream);
+  temp1_.reserve(tempDataSize_);
+  temp2_.reserve(tempDataSize_);
 
   CUDNN_CHECK(cudnnDivisiveNormalizationForward(
         Caffe::cudnn_handle(), norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
@@ -37,12 +33,8 @@ void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-
-  int device;
-  CUDA_CHECK(cudaGetDevice(&device));
-  cudaStream_t stream = GPUMemory::device_stream(device);
-  temp1_.reserve(tempDataSize_, device, stream);
-  temp2_.reserve(tempDataSize_, device, stream);
+  temp1_.reserve(tempDataSize_);
+  temp2_.reserve(tempDataSize_);
 
   CUDNN_CHECK(cudnnDivisiveNormalizationBackward(
         Caffe::cudnn_handle(), norm_desc_,

@@ -41,7 +41,7 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   Dtype alpha_, beta_, k_;
 
   size_t tempDataSize_;
-  GPUMemory::Workspace temp1_, temp2_;
+  GPUMemory::MultiWorkspace temp1_, temp2_;
 };
 #endif
 

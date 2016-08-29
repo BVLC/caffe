@@ -24,7 +24,6 @@ struct GPUMemory {
   static void allocate(Any** ptr, size_t size, int device,
       cudaStream_t stream) {
     if (!try_allocate(reinterpret_cast<void**>(ptr), size, device, stream)) {
-      CUDA_CHECK(cudaGetDevice(&device));
       LOG(FATAL) << "Out of memory: failed to allocate " << size
           << " bytes on device " << device;
     }
@@ -92,7 +91,6 @@ struct GPUMemory {
 
     void reserve(size_t size, int device, cudaStream_t stream) {
       if (!try_reserve(size, device, stream)) {
-        CUDA_CHECK(cudaGetDevice(&device));
         LOG(FATAL) << "Out of memory: failed to allocate " << size
             << " bytes on device " << device;
       }
@@ -119,12 +117,12 @@ struct GPUMemory {
   // This implementation maintains workspaces on per-GPU basis.
   struct MultiWorkspace {
     bool try_reserve(size_t size) {
-      int device = current_device();
+      const int device = current_device();
       cudaStream_t stream = device_stream(device);
       return current_workspace(device)->try_reserve(size, device, stream);
     }
     void reserve(size_t size) {
-      int device = current_device();
+      const int device = current_device();
       cudaStream_t stream = device_stream(device);
       current_workspace(device)->reserve(size, device, stream);
     }
@@ -139,11 +137,6 @@ struct GPUMemory {
     }
 
    private:
-    int current_device() const {
-      int device;
-      CUDA_CHECK(cudaGetDevice(&device));
-      return device;
-    }
     shared_ptr<Workspace> current_workspace(int device) const;
     mutable vector<shared_ptr<Workspace> > workspaces_;
   };
@@ -185,9 +178,13 @@ struct GPUMemory {
   };
 
   static Manager mgr_;
-
- public:
   static const int INVALID_DEVICE;  ///< Default is invalid: CUB takes care
+
+  static int current_device() {
+    int device;
+    CUDA_CHECK(cudaGetDevice(&device));
+    return device;
+  }
 };
 
 }  // namespace caffe
