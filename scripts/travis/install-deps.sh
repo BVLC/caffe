@@ -56,7 +56,7 @@ else
       dh-autoreconf \
       unzip
 
-    wget https://github.com/google/protobuf/archive/v3.0.0-beta-3.tar.gz -O protobuf3.tar.gz
+    wget https://github.com/google/protobuf/archive/3.0.0-GA.tar.gz -O protobuf3.tar.gz
     tar -xzf protobuf3.tar.gz -C $PROTOBUF3_DIR --strip 1
     rm protobuf3.tar.gz
     cd $PROTOBUF3_DIR
