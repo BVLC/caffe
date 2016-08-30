@@ -25,8 +25,9 @@ It is therefore recommended to install another OpenCL implementation after insta
 
 ### OpenCL for Intel platform for Linux.
 
-For 4th or 5th generation Intel Cores and Intel® Xeon® v3, or Intel® Xeon® v4 processor.
+For 5th and 6th generation Intel Cores and Intel® Xeon® v3, or Intel® Xeon® v4 processor.
 We recommend the driver at the following link: https://software.intel.com/en-us/articles/opencl-drivers#latest_linux_driver.
+The download link is http://registrationcenter-download.intel.com/akdlm/irc_nas/9418/intel-opencl-2.0-2.0-54425.tar.gz
 For 3th generation cores and atom, we recommend Beignet: https://www.freedesktop.org/wiki/Software/Beignet/.
 
 The spatial domain convolution kernel supports all OpenCL platforms now. This convolution kernel
