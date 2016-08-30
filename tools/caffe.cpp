@@ -411,7 +411,7 @@ int time() {
   float initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
-  if(!FLAGS_forward_only){
+  if (!FLAGS_forward_only){
     LOG(INFO) << "Performing Backward";
     caffe_net.Backward();
   }
@@ -442,7 +442,7 @@ int time() {
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
-	if (!FLAGS_forward_only) {
+    if (!FLAGS_forward_only) {
       backward_timer.Start();
       for (int i = layers.size() - 1; i >= 0; --i) {
         timer.Start();
@@ -453,10 +453,10 @@ int time() {
       backward_time += backward_timer.MicroSeconds();
       LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
         << iter_timer.MilliSeconds() << " ms.";
-	} else {
-	  LOG(INFO) << "Iteration: " << j + 1 << " forward time: "
+    } else {
+      LOG(INFO) << "Iteration: " << j + 1 << " forward time: "
         << iter_timer.MilliSeconds() << " ms.";
-	}
+    }
   }
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
@@ -464,16 +464,16 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
-	if(!FLAGS_forward_only) {
+    if (!FLAGS_forward_only) {
       LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
         "\tbackward: " << backward_time_per_layer[i] / 1000 /
         FLAGS_iterations << " ms.";
-	  }
+    }
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";
-  if(!FLAGS_forward_only) {
+  if (!FLAGS_forward_only) {
     LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
       FLAGS_iterations << " ms.";
     LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
