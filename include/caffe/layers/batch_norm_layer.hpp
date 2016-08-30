@@ -22,10 +22,8 @@ namespace caffe {
  * mean/variance statistics via a running average, which is then used at test
  * time to allow deterministic outputs for each input. You can manually toggle
  * whether the network is accumulating or using the statistics via the
- * use_global_stats option. IMPORTANT: for this feature to work, you MUST set
- * the learning rate to zero for all three blobs, i.e., param {lr_mult: 0} three
- * times in the layer definition. For reference, these three blobs are (0)
- * mean, (1) variance, and (2) the moving average factor.
+ * use_global_stats option. For reference, these statistics are kept in the
+ * layer's three blobs: (0) mean, (1) variance, and (2) moving average factor.
  *
  * Note that the original paper also included a per-channel learned bias and
  * scaling factor. To implement this in Caffe, define a `ScaleLayer` configured
