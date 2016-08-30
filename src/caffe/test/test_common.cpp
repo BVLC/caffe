@@ -6,6 +6,10 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifndef CPU_ONLY
+#include "cub/util_allocator.cuh"
+#endif
+
 namespace caffe {
 
 class CommonTest : public ::testing::Test {};
@@ -58,6 +62,32 @@ TEST_F(CommonTest, TestRandSeedGPU) {
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
         ((const unsigned int*)(data_b.cpu_data()))[i]);
+  }
+}
+
+size_t pow2(unsigned int p) {
+  return p > 0 ? (2ULL << (p-1)) : 1;
+}
+
+TEST_F(CommonTest, TestCUBNearestPowerOf2) {
+  size_t rounded_bytes;
+  unsigned int power;
+  for (int p = 0; p < sizeof(size_t) * CHAR_BIT; ++p) {
+    size_t value = pow2(p);
+    ++value;
+    cub::CachingDeviceAllocator::NearestPowerOf(power, rounded_bytes, 2, value);
+    EXPECT_EQ(p + 1, power);
+    EXPECT_EQ(pow2(power), rounded_bytes);
+    --value;
+    cub::CachingDeviceAllocator::NearestPowerOf(power, rounded_bytes, 2, value);
+    EXPECT_EQ(p, power);
+    EXPECT_EQ(pow2(power), rounded_bytes);
+    --value;
+    cub::CachingDeviceAllocator::NearestPowerOf(power, rounded_bytes, 2, value);
+    // Exclusion: for zero size we return 1 as rounded bytes (per original CUB
+    // design)
+    EXPECT_EQ(p == 1 ? 0 : p, power);  // because 2^1 - 1 == 2^0
+    EXPECT_EQ(pow2(power), rounded_bytes);
   }
 }
 

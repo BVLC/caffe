@@ -93,6 +93,3 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
-
-# Third party source code
-3rdparty/cub/
