@@ -434,9 +434,6 @@ ifeq ($(MKL_EXTERNAL), 1)
 	MKL_LDFLAGS+=-Wl,-rpath,$(MKLROOT)/lib
 endif
 
-#$(info "RETURN_STRING: "$(RETURN_STRING))
-#$(info "MKLROOT: "$(MKLROOT))
-
 	COMMON_FLAGS += -DUSE_MKL
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
@@ -557,7 +554,6 @@ ifeq ($(USE_OPENMP), 1)
     endif
   endif
 endif
-
 
 # MPI support
 ifeq ($(USE_MPI), 1)

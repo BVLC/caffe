@@ -12,35 +12,40 @@ FindLibrary()
   esac
 
 }
+
+GetVersionName()
+{
+VERSION_LINE=0
+if [ $1 ]; then
+  VERSION_LINE=`grep __INTEL_MKL_BUILD_DATE $1/include/mkl_version.h 2>/dev/null | sed -e 's/.* //'`
+fi
+if [ -z $VERSION_LINE ]; then
+  VERSION_LINE=0
+fi
+echo $VERSION_LINE  # Return Version Line
+}
+
 # MKL
 DST=`dirname $0`
 OMP=0 
-MKLURL="https://github.com/intelcaffe/caffe/releases/download/self_containted_GOLD/mklml_lnx_2017.0.0.20160801.tgz "
-if [ $MKLROOT ]; then
-  VERSION_LINE=`grep __INTEL_MKL_BUILD_DATE $MKLROOT/include/mkl_version.h 2>/dev/null | sed -e 's/.* //'`
-fi
+VERSION_MATCH=20160801
+ARCHIVE_BASENAME=mklml_lnx_2017.0.0.$VERSION_MATCH.tgz
+MKL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
+GITHUB_RELEASE_TAG=self_containted_MKLGOLD
+MKLURL="https://github.com/intel/caffe/releases/download/$GITHUB_RELEASE_TAG/$ARCHIVE_BASENAME"
 # there are diffrent MKL lib to be used for GCC and for ICC
-FindLibrary $1
 reg='^[0-9]+$'
-if [ -z $VERSION_LINE ]; then
-  VERSION_LINE=0
-else
-  if ! [[ $VERSION_LINE =~ $reg ]]; then
-    VERSION_LINE=0
-  fi
-fi
-# Check if MKL_ROOT is set if positive then set one will be used..
+VERSION_LINE=`GetVersionName $MKLROOT`
+# Check if MKLROOT is set if positive then set one will be used..
 if [ -z $MKLROOT ] || [ $VERSION_LINE -lt 20160706 ]; then
-	# ..if MKLROOT is not set then check if we have MKL downloaded..
-    if [ -z $LOCALMKL ] || [ ! -f $LOCALMKL ]; then
+	# ..if MKLROOT is not set then check if we have MKL downloaded in proper version
+    VERSION_LINE=`GetVersionName $DST/$MKL_CONTENT_DIR`
+    if [ $VERSION_LINE -lt 20160706 ] ; then
       #...If it is not then downloaded and unpacked
-      wget --no-check-certificate -P $DST $MKLURL
-      tar -xzf $DST/mklml_lnx*.tgz -C $DST
-	  FindLibrary $1
+      wget --no-check-certificate -P $DST $MKLURL -O $DST/$ARCHIVE_BASENAME
+      tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
     fi
-  # set MKL env vars are to be done via generated script
-  # this will help us export MKL env to existing shell
-  
+  FindLibrary $1
   MKLROOT=$PWD/`echo $LOCALMKL | sed -e 's/lib.*$//'`
 fi
 
