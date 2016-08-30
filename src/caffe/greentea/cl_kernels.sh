@@ -52,7 +52,7 @@ do
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
-	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g' | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
 echo "#else" >> $SOURCE
@@ -64,7 +64,7 @@ do
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
-	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g' | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
 echo "#endif" >> $SOURCE
@@ -83,7 +83,7 @@ do
     COUNTER=$((COUNTER + 1))
 	CL_KERNEL_STR=`cat $CL_KERNEL`
     echo -n "    \"" >> $SOURCE
-	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g'| sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 
     if (($COUNTER == $TOTALCOUNTER)) ; then
         echo "\"   // NOLINT" >> $SOURCE
