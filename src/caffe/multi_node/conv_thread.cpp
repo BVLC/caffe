@@ -327,6 +327,9 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id) {
   ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, layer_vec, ps_msg);
 
   this->SendMsg(ps_msg);
+
+  MLOG(INFO) << "Send Gradients for layer: " << layer_name
+             << ", clock: " << ps_msg->clock();
 }
 
 template <typename Dtype>
@@ -485,9 +488,6 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
   if (layer_updates_[layer_id] == this->GetWorkerNum()) {
     SyncLayer(layer_id);
     layer_updates_[layer_id] = 0;
-
-    MLOG(INFO) << "Send Gradients for layer: "
-               << root_net->layer_names()[layer_id];
   }
 
   return 0;

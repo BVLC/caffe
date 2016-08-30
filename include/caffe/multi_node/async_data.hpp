@@ -30,7 +30,7 @@ class AsyncDataLayer : public BasePrefetchingDataLayer<Dtype> {
     }
 
   // disable sharing data layer in different solvers
-  #ifndef SHARE_DATA
+  #ifndef SHARE_DATA_LAYER
   virtual inline bool ShareInParallel() const { return false; }
   #endif
 

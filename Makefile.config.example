@@ -10,7 +10,8 @@ CPU_ONLY := 1
 # Uncomment to use optimized MKL2017 primitives by default for supported layers
 USE_MKL2017_AS_DEFAULT_ENGINE := 1
 
-SHARE_DATA := 1
+# share data layer among the sub solvers in conv_clients
+SHARE_DATA_LAYER := 1
 
 # enable debug logs for multi node
 MULTI_NODE_DEBUG := 0

@@ -67,7 +67,7 @@ void AsyncDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
 
-  #ifndef SHARE_DATA
+  #ifndef SHARE_DATA_LAYER
   if (Caffe::root_solver()) {
     LOG(WARNING) << "skip reading data in AsyncData layer with root solvers";
     return;
