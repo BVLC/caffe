@@ -16,6 +16,56 @@ using namespace mkldnn;
 
 namespace caffe {
 
+
+// =====  MKLDNNStream =======================================
+class MKLDNNStream {
+public:
+    explicit MKLDNNStream():_ready(false) { prepare(); }
+    virtual ~MKLDNNStream() {}
+    MKLDNNStream  &submit(std::vector<primitive> primitives) { _stream->submit(primitives); return *this; }
+    bool wait(bool block = true) {
+        _ready = false;
+        return _stream->wait(block);
+    }
+    bool ready() { return _ready; }
+    void prepare() {
+        if(_ready == false) {
+            // stream just created or already executed
+            // !! TODO: change below if stream will have method to reset its state
+            _stream.reset(new stream());
+        }
+        _ready = true;
+    }
+protected:
+private:
+    bool _ready;
+    shared_ptr<stream> _stream;
+};
+
+// =====  MKLDNNLayer =======================================
+template <typename Dtype>
+class MKLDNNLayer {
+public:
+    explicit MKLDNNLayer():_mkldnn_stream(NULL), _previous_mkldnn_layer(NULL) {}
+    virtual ~MKLDNNLayer() {}
+    shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
+    shared_ptr<MKLDNNStream> get_mkldnn_stream() {
+        if(_mkldnn_stream == NULL || !_mkldnn_stream->ready()) {
+            _mkldnn_stream.reset(new MKLDNNStream());
+        }
+        return _mkldnn_stream;
+    }
+    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
+    MKLDNNLayer<Dtype>* get_mkldnn_layer(Blob<Dtype>* blob);
+    void init_mkldnn_stream();
+protected:
+    MKLDNNLayer<Dtype>* _previous_mkldnn_layer;
+private:
+    shared_ptr<MKLDNNStream> _mkldnn_stream;
+};
+
+
+
 template <typename Dtype>
 class MKLDNNMemoryDescriptorBase : public PrvMemDescr
         , public boost::enable_shared_from_this<MKLDNNMemoryDescriptorBase<Dtype> >
@@ -25,8 +75,6 @@ public:
                                 ,shared_ptr<memory::primitive_desc> prv_memory_pd);
     ~MKLDNNMemoryDescriptorBase() {}
     // ---- PrvMemDescr virtual functions -----
-    virtual void convert_from_prv(void* cpu_ptr);
-    virtual void convert_to_prv(void* cpu_ptr);
     virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
     virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
     virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;}
@@ -57,7 +105,11 @@ public:
     shared_ptr<reorder>  reorder_usr2prv() { return _reorder_usr2prv; }
     shared_ptr<reorder>  reorder_prv2usr() { return _reorder_prv2usr; }
     std::string name;  // for debugging purposes
-private:
+    
+    void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
+    MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
+
+protected:
     void check_usr_with_prv_descriptors();
     void allocate() {
         if (_prv_memory == NULL) {
@@ -92,6 +144,8 @@ private:
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
     void* _cpu_ptr;
+
+    MKLDNNLayer<Dtype>* _mkldnn_layer;
 };
 
 template <typename Dtype, bool is_diff>
@@ -100,6 +154,10 @@ public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd )
         : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
+
+    virtual void convert_from_prv(void* cpu_ptr);
+    virtual void convert_to_prv(void* cpu_ptr);
+
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
     shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr,
@@ -107,14 +165,17 @@ public:
     void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<primitive> create_input(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
+
     void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }
     void set_linked_primitive(shared_ptr<primitive> primitive) { _linked_primitive = primitive;  }
     void set_primitives(shared_ptr<primitive> primitive, Blob<Dtype> * blob);
     shared_ptr<primitive>  mkldnn_primitive() const { return _mkldnn_primitive;  }
     shared_ptr<primitive>  linked_primitive() const { return _linked_primitive;  }
+    
 private:
     shared_ptr<primitive> _mkldnn_primitive;
     shared_ptr<primitive> _linked_primitive;
+    
 };
 
 template <typename Dtype>

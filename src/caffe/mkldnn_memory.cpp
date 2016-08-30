@@ -4,6 +4,36 @@
 namespace caffe {
 
 template <typename Dtype>
+MKLDNNLayer<Dtype>* MKLDNNLayer<Dtype>::get_mkldnn_layer(Blob<Dtype>* blob) {
+    CHECK(blob);
+    MKLDNNLayer<Dtype>* mkldnn_layer(NULL);
+    const Dtype* prv_ptr = blob->prv_data();
+    if (prv_ptr != NULL) {
+        shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = blob->get_prv_data_descriptor();
+        CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > blob_prv_mkldnn_mem_descr =
+            boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, false> >(blob_prv_mem_descriptor);
+        // TODO:    CHECK(blob_prv_mkldnn_mem_descr->mkldnn_primitive());
+        mkldnn_layer =  blob_prv_mkldnn_mem_descr->mkldnn_layer();
+    }
+    return mkldnn_layer;
+}
+
+template <typename Dtype>
+void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
+    if (_mkldnn_stream != NULL) {
+        _mkldnn_stream->prepare();
+        return;
+    }
+    if (_previous_mkldnn_layer == NULL
+        || _previous_mkldnn_layer->mkldnn_stream() == NULL
+        || !_previous_mkldnn_layer->mkldnn_stream()->ready())
+        _mkldnn_stream.reset(new MKLDNNStream());
+    else
+        _mkldnn_stream = _previous_mkldnn_layer->mkldnn_stream();
+}
+
+template <typename Dtype>
 MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
                                                             , shared_ptr<memory::primitive_desc> prv_memory_pd)
                                     : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
@@ -53,42 +83,42 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorders()
     }
 }
 
-template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr)
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
-    CHECK(_usr_memory_pd);
-    CHECK(_prv_memory_pd);
-    CHECK(_reorder_prv2usr_pd);
-    if (_cpu_ptr == NULL)
-        _cpu_ptr = cpu_ptr;
+    CHECK(this->_usr_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_prv2usr_pd);
+    if (this->_cpu_ptr == NULL)
+        this->_cpu_ptr = cpu_ptr;
     else
-        CHECK_EQ(_cpu_ptr, cpu_ptr);
-    if(_usr_memory == NULL)
-        _usr_memory.reset(new memory(*_usr_memory_pd, cpu_ptr));
-    if(_reorder_prv2usr == NULL)
-        _reorder_prv2usr.reset(new reorder(*_reorder_prv2usr_pd, *this->get_prv_memory(), *_usr_memory));
+        CHECK_EQ(this->_cpu_ptr, cpu_ptr);
+    if(this->_usr_memory == NULL)
+        this->_usr_memory.reset(new memory(*this->_usr_memory_pd, cpu_ptr));
+    if(this->_reorder_prv2usr == NULL)
+        this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->get_prv_memory(), *this->_usr_memory));
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
-    stream().submit({*_reorder_prv2usr}).wait();
+    stream().submit({*this->_reorder_prv2usr});
 }
 
-template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr)
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
-    CHECK(_usr_memory_pd);
-    CHECK(_prv_memory_pd);
-    CHECK(_reorder_usr2prv_pd);
-    if (_cpu_ptr == NULL)
-        _cpu_ptr = cpu_ptr;
+    CHECK(this->_usr_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_usr2prv_pd);
+    if (this->_cpu_ptr == NULL)
+        this->_cpu_ptr = cpu_ptr;
     else
-        CHECK_EQ(_cpu_ptr, cpu_ptr);
-    if(_usr_memory == NULL)
-        _usr_memory.reset(new memory(*_usr_memory_pd, cpu_ptr));
-    if(_reorder_usr2prv == NULL)
-        _reorder_usr2prv.reset(new reorder(*_reorder_usr2prv_pd, *_usr_memory, *this->get_prv_memory()));
+        CHECK_EQ(this->_cpu_ptr, cpu_ptr);
+    if(this->_usr_memory == NULL)
+        this->_usr_memory.reset(new memory(*this->_usr_memory_pd, cpu_ptr));
+    if(this->_reorder_usr2prv == NULL)
+        this->_reorder_usr2prv.reset(new reorder(*this->_reorder_usr2prv_pd, *this->_usr_memory, *this->get_prv_memory()));
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
-    stream().submit({*_reorder_usr2prv}).wait();
+    stream().submit({*this->_reorder_usr2prv});
 }
 
 template <typename Dtype>
@@ -211,6 +241,8 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::set_primitives(shared_ptr<primitive
     }
 }
 
+template class MKLDNNLayer<double>;
+template class MKLDNNLayer<float>;
 
 template class MKLDNNMemoryDescriptor<double, true>;
 template class MKLDNNMemoryDescriptor<float, true>;

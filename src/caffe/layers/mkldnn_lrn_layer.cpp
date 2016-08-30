@@ -112,6 +112,9 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     memory::primitive_desc scratch_mpd(memory::desc(lrnFwd_pd->data.scratch_primitive_desc.memory_desc), cpu_engine);
     scratch_.reset(new memory(scratch_mpd));
 
+    // ---  link layers -----------------------
+    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    fwd_top_data->set_mkldnn_layer(this);
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     if (fwd_top_data->conversion_needed())
@@ -136,7 +139,8 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
 
-    stream().submit({*lrnFwd}).wait();
+    this->init_mkldnn_stream();
+    this->get_mkldnn_stream()->submit({*lrnFwd});
 }
 
 template <typename Dtype>

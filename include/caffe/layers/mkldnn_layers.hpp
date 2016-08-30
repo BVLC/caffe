@@ -42,10 +42,9 @@ protected:
 private:
     engine _cpu_engine;
 };
-
 // =====  MKLDNNConvolutionLayer =======================================
 template <typename Dtype>
-class MKLDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+class MKLDNNConvolutionLayer : public ConvolutionLayer<Dtype>, public MKLDNNLayer<Dtype> {
 public:
     explicit MKLDNNConvolutionLayer(const LayerParameter& param);
     virtual ~MKLDNNConvolutionLayer() {}
@@ -75,7 +74,7 @@ private:
 
 // =====  MKLDNNInnerProductLayer =======================================
 template <typename Dtype>
-class MKLDNNInnerProductLayer : public InnerProductLayer<Dtype> {
+class MKLDNNInnerProductLayer : public InnerProductLayer<Dtype>, public MKLDNNLayer<Dtype>  {
 public:
     explicit MKLDNNInnerProductLayer(const LayerParameter& param);
     virtual ~MKLDNNInnerProductLayer();
@@ -107,10 +106,10 @@ private:
 
 // =====  MKLDNNLRNLayer =======================================
 template <typename Dtype>
-class MKLDNNLRNLayer : public Layer<Dtype> {
+class MKLDNNLRNLayer : public Layer<Dtype>, public MKLDNNLayer<Dtype>  {
 public:
     explicit MKLDNNLRNLayer(const LayerParameter& param)
-        : Layer<Dtype>(param)
+        : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
         , fwd_top_data(NULL), fwd_bottom_data (NULL)
         , lrnFwd_pd(NULL), lrnFwd(NULL)
         , input_primitive(NULL), output_memory(NULL) , scratch_(NULL)
@@ -145,10 +144,10 @@ private:
 
 // ===== MKLDNNPoolingLayer =======================================
 template <typename Dtype>
-class MKLDNNPoolingLayer : public Layer<Dtype> {
+class MKLDNNPoolingLayer : public Layer<Dtype>, public MKLDNNLayer<Dtype>  {
 public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
-            : Layer<Dtype>(param)
+            : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_bottom_data(NULL), fwd_top_data(NULL)
             , poolingFwd_pd(NULL), poolingFwd(NULL)
             , indices_memory(NULL), input_primitive(NULL), output_memory(NULL)
@@ -197,7 +196,7 @@ private:
 
 // =====  MKLDNNReLULayer =======================================
 template <typename Dtype>
-class MKLDNNReLULayer : public NeuronLayer<Dtype> {
+class MKLDNNReLULayer : public NeuronLayer<Dtype>, public MKLDNNLayer<Dtype>  {
 public:
     /**
     * @param param provides ReLUParameter relu_param,
@@ -206,7 +205,7 @@ public:
     *     the value @f$ \nu @f$ by which negative values are multiplied.
     */
     explicit MKLDNNReLULayer(const LayerParameter& param)
-            : NeuronLayer<Dtype>(param)
+            : NeuronLayer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_top_data(NULL), fwd_bottom_data (NULL)
             , reluFwd_pd(NULL), reluFwd(NULL)
             , input_primitive(NULL), output_memory(NULL)

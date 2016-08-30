@@ -15,7 +15,7 @@ namespace caffe {
 
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
-            : ConvolutionLayer<Dtype>(param)
+            : ConvolutionLayer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
             , convFwd_pd(NULL), convFwd(NULL)
             , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
@@ -153,6 +153,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+    // ---  link layers -----------------------
+    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    fwd_top_data->set_mkldnn_layer(this);
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     weights_primitive = fwd_weights_data->create_input(this->blobs_[0].get(), true);
@@ -184,7 +187,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
 
-    stream().submit({*convFwd}).wait();
+    this->init_mkldnn_stream();
+    this->get_mkldnn_stream()->submit({*convFwd});
 }
 
 template <typename Dtype>

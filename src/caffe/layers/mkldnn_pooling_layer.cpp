@@ -213,6 +213,9 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
+    // ---  link layers -----------------------
+    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    fwd_top_data->set_mkldnn_layer(this);
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     if (fwd_top_data->conversion_needed())
@@ -238,7 +241,8 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
 
-    stream().submit({*poolingFwd}).wait();
+    this->init_mkldnn_stream();
+    this->get_mkldnn_stream()->submit({*poolingFwd});
 }
 
 template <typename Dtype>
