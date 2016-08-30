@@ -99,7 +99,11 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
     if(this->_reorder_prv2usr == NULL)
         this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->get_prv_memory(), *this->_usr_memory));
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
-    stream().submit({*this->_reorder_prv2usr});
+    CHECK(this->mkldnn_layer());
+    CHECK(this->mkldnn_layer()->mkldnn_stream());
+    if (this->mkldnn_layer()->mkldnn_stream()->ready())
+        this->mkldnn_layer()->mkldnn_stream()->wait();
+    stream().submit({*this->_reorder_prv2usr}).wait();
 }
 
 template <typename Dtype, bool is_diff>
@@ -118,7 +122,8 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     if(this->_reorder_usr2prv == NULL)
         this->_reorder_usr2prv.reset(new reorder(*this->_reorder_usr2prv_pd, *this->_usr_memory, *this->get_prv_memory()));
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
-    stream().submit({*this->_reorder_usr2prv});
+//    CHECK(this->_mkldnn_layer);
+    stream().submit({*this->_reorder_usr2prv}).wait();
 }
 
 template <typename Dtype>
@@ -162,6 +167,7 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
             else
                 blob->set_prv_data_descriptor(this->get_shared_ptr(), true);
         }
+//        CHECK(this->_mkldnn_layer);
         return this->reorder_usr2prv();
     } else {
         shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
@@ -215,6 +221,7 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
             shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr =
                 boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(prv_mem_descriptor);
             omem = current_descr->get_prv_memory();
+            this->set_prv_memory(omem);
         } else {
             omem = this->get_prv_memory();
         }
@@ -229,10 +236,9 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::set_primitives(shared_ptr<primitive
 {
     set_mkldnn_primitive(primitive);
     CHECK(blob);
-    const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
-    if (prv_ptr != NULL) {
-        shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
-                (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
+    shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
+            (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
+    if (blob_prv_mem_descriptor != NULL) {
         CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr =
                 boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(blob_prv_mem_descriptor);

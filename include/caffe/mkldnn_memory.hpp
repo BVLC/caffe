@@ -111,6 +111,12 @@ public:
 
 protected:
     void check_usr_with_prv_descriptors();
+    void set_prv_memory(shared_ptr<memory> memory)
+    {
+        _prv_memory = memory;
+        _internal_ptr = (Dtype *)(_prv_memory->get_data_handle());
+    }
+
     void allocate() {
         if (_prv_memory == NULL) {
             _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd));

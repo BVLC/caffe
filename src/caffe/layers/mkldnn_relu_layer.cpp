@@ -79,9 +79,9 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     fwd_top_data->set_mkldnn_layer(this);
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
+    output_memory = fwd_top_data->create_output_memory(top[0]);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
 
     // ---- Create relu --------------------
     reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
