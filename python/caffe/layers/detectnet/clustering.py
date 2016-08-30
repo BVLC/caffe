@@ -45,7 +45,7 @@ class ClusterGroundtruth(caffe.Layer):
             self.image_size_x = int(plist[0])
             self.image_size_y = int(plist[1])
             self.stride = int(plist[2])
-            self.num_classes = int(plist[3])
+            self.num_classes = int(plist[3]) if len(plist) > 3 else 1
         except ValueError:
             raise ValueError("Parameter string missing or data type is wrong!")
         if len(top) != self.num_classes:
@@ -112,7 +112,7 @@ class ClusterDetections(caffe.Layer):
             self.gridbox_rect_thresh = int(plist[4])
             self.gridbox_rect_eps = float(plist[5])
             self.min_height = int(plist[6])
-            self.num_classes = int(plist[7])
+            self.num_classes = int(plist[7]) if len(plist) > 7 else 1
         except ValueError:
             raise ValueError("Parameter string missing or data type is wrong!")
         if len(top) != self.num_classes:
