@@ -109,9 +109,9 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
 
     // ---- Create memory  ---------------------
     input_memory = fwd_bottom_data->create_input_memory(bottom[0]);
+    output_memory = fwd_top_data->create_output_memory(top[0]);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
 
     // ---- Create lrn --------------------
     lrnFwd.reset(new lrn(*lrnFwd_pd, *input_memory, *scratch_, *output_memory));

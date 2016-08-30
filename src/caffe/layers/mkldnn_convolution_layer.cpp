@@ -157,9 +157,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     bias_memory.reset(new memory(*fwd_bias_data->prv_memory_pd()
                                     ,fwd_bias_data->get_blob_data_ptr(this->blobs_[1].get(), true)));
 
+    output_memory = fwd_top_data->create_output_memory(top[0]);
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
 
     // ---- Create convolution --------------------
     convFwd.reset(new convolution(*convFwd_pd

@@ -175,6 +175,7 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
             shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr =
                 boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(prv_mem_descriptor);
             omem = current_descr->get_prv_memory();
+            this->set_prv_memory(omem);
         } else {
             omem = this->get_prv_memory();
         }
