@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 150 (last added: ctc_decoder_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -366,6 +366,8 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
+  optional CTCDecoderParameter ctc_decoder_param = 149;
+  optional CTCLossParameter ctc_loss_param = 148;
   optional DataParameter data_param = 107;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
@@ -394,6 +396,7 @@ message LayerParameter {
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
+  optional ReverseParameter reverse_param = 147;
   optional ScaleParameter scale_param = 142;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
@@ -622,6 +625,47 @@ message CropParameter {
   // axis).
   optional int32 axis = 1 [default = 2];
   repeated uint32 offset = 2;
+}
+
+message CTCDecoderParameter {
+  // The index of the blank index in the labels. A negative (default)
+  // value will use the last index
+  optional int32 blank_index = 1 [default = -1];
+
+  // Collapse the repeated labels during the ctc calculation
+  // e.g. collapse [0bbb11bb11bb0b2] to [01102] instead of [0111102],
+  // where b means blank label.
+  // The default behaviour is to merge repeated labels.
+  // Note: blank labels will be removed in any case.
+  optional bool ctc_merge_repeated = 2 [default = true];
+}
+
+message CTCLossParameter {
+  // Adds delayed output to the CTC loss calculation (untested!)
+  optional int32 output_delay = 1 [default = 0];
+
+  // The index of the blank index in the labels. A negative (default)
+  // value will use the last index
+  optional int32 blank_index = 2 [default = -1];
+
+  // Collapse repeating labels of the target sequence before calculating
+  // the loss and the gradients (e.g. collapse [01102] to [0102])
+  // The default behaviour is to keep repeated labels. Elsewise the
+  // network will not learn to predict repetitions.
+  optional bool preprocess_collapse_repeated = 3 [default = false];
+
+  // Collapse the repeated labels during the ctc calculation
+  // e.g collapse [0bbb11bb11bb0b2] to [01102] instead of [0111102],
+  // where b means blank label.
+  // The default behaviour is to merge repeated labels.
+  // Note: blank labels will be removed in any case.
+  optional bool ctc_merge_repeated = 4 [default = true];
+
+  /// This parameter is for test cases only!
+  /// The time for which to calculate the loss (see Graves Eq. (7.27) )
+  /// Note that the result must be the same for each 0 <= t < T
+  /// Therefore you can chose an arbitrary value, default 0
+  optional int32 loss_calculation_t = 5 [default = 0];
 }
 
 message DataParameter {
@@ -1055,6 +1099,21 @@ message ReshapeParameter {
   //
   optional int32 axis = 2 [default = 0];
   optional int32 num_axes = 3 [default = -1];
+}
+
+message ReverseParameter {
+  // axis controls the data axis which shall be inverted.
+  // The layout of the content will not be inverted
+  //
+  // The default axis is 0 that means:
+  //   data_previous[n] == data_afterwards[N - n -1]
+  // where N is the shape of axis(n)
+  //
+  // Usually this layer will be used with recurrent layers to invert the
+  // time axis which is axis 0
+  // This layer will therefore swap the order in time but not the
+  // order of the actual data.
+  optional int32 axis = 1 [default = 0];
 }
 
 message ScaleParameter {

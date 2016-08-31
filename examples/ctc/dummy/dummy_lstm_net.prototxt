@@ -1,0 +1,55 @@
+
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "data"
+  top: "seq_ind"
+  top: "labels"
+  hdf5_data_param {
+    source: "dummy_data.txt"
+    batch_size: 40
+  }
+}
+
+layer {
+  name: "lstm1"
+  type: "LSTM"
+  bottom: "data"
+  bottom: "seq_ind"
+  top: "lstm1"
+  recurrent_param {
+    # num + 1 for blank label! (last one)
+    num_output: 40
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "lstm1"
+  top: "ip1"
+  inner_product_param {
+    num_output: 6
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    axis: 2
+  }
+}
+
+layer {
+  name: "loss"
+  type: "CTCLoss"
+  bottom: "ip1"
+  bottom: "seq_ind"
+  bottom: "labels"
+  top: "ctc_loss"
+}
