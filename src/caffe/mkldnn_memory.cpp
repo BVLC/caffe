@@ -72,7 +72,7 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 }
 
 template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::create_reorders()
+void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors()
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
@@ -82,23 +82,6 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorders()
         _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd));
     }
-}
-
-template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_ptr)
-{
-    CHECK(cpu_ptr);
-    CHECK(this->_usr_memory_pd);
-    CHECK(this->_prv_memory_pd);
-    CHECK(this->_reorder_prv2usr_pd);
-    if (this->_cpu_ptr == NULL)
-        this->_cpu_ptr = cpu_ptr;
-    else
-        CHECK_EQ(this->_cpu_ptr, cpu_ptr);
-    if(this->_usr_memory == NULL)
-        this->_usr_memory.reset(new memory(*this->_usr_memory_pd, cpu_ptr));
-    if(this->_reorder_prv2usr == NULL)
-        this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->get_prv_memory(), *this->_usr_memory));
 }
 
 template <typename Dtype, bool is_diff>
@@ -118,23 +101,6 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_to_prv(void* cpu_ptr
         this->_reorder_usr2prv.reset(new reorder(*this->_reorder_usr2prv_pd, *this->_usr_memory, *this->get_prv_memory()));
 }
 
-
-template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
-{
-    CHECK(cpu_ptr);
-    CHECK(this->mkldnn_layer());
-    CHECK(this->mkldnn_layer()->mkldnn_stream());
-    if (this->mkldnn_layer()->mkldnn_stream()->ready())
-        this->mkldnn_layer()->mkldnn_stream()->wait();
-    if(this->_reorder_prv2usr_pd == NULL)
-        return;
-    create_reorder_from_prv(cpu_ptr);
-    VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
-    CHECK(this->mkldnn_layer()->mkldnn_stream());
-    stream().submit({*this->_reorder_prv2usr}).wait();
-}
-
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
 {
@@ -147,6 +113,47 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     }
     this->_mkldnn_stream->submit({*this->_reorder_usr2prv});
 //  stream().submit({*this->_reorder_usr2prv}).wait();
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_ptr)
+{
+    CHECK(cpu_ptr);
+    CHECK(this->_usr_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_prv2usr_pd);
+    if (this->_cpu_ptr == NULL)
+        this->_cpu_ptr = cpu_ptr;
+    else
+        CHECK_EQ(this->_cpu_ptr, cpu_ptr);
+    if(this->_usr_memory == NULL)
+        this->_usr_memory.reset(new memory(*this->_usr_memory_pd, cpu_ptr));
+    if(this->_reorder_prv2usr == NULL) {
+        CHECK(this->mkldnn_primitive());
+        this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->mkldnn_primitive(), *this->_usr_memory));
+//        this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->get_prv_memory(), *this->_usr_memory));
+    }
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
+{
+    CHECK(cpu_ptr);
+    CHECK(this->mkldnn_layer());
+    CHECK(this->mkldnn_layer()->mkldnn_stream());
+    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_reorder_prv2usr_pd == NULL) {
+        // execute stream if doesn't need reorder
+        this->mkldnn_layer()->mkldnn_stream()->wait();
+    }
+    if(this->_reorder_prv2usr_pd == NULL)
+        return;
+    create_reorder_from_prv(cpu_ptr);
+    VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
+    if (this->_mkldnn_stream == NULL) {
+        this->_mkldnn_stream = this->mkldnn_layer()->mkldnn_stream();
+    }
+    this->_mkldnn_stream->submit({*this->_reorder_prv2usr});
+//    stream().submit({*this->_reorder_prv2usr}).wait();
 }
 
 template <typename Dtype>

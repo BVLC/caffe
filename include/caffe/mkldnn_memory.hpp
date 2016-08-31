@@ -129,17 +129,17 @@ protected:
         _prv_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorders();
+            this->create_reorder_descriptors();
         }
     }
     void set_usr_memory_pd(shared_ptr<memory::primitive_desc> memory_pd) {
         _usr_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorders();
+            this->create_reorder_descriptors();
         }
     }
-    void create_reorders();
+    void create_reorder_descriptors();
 
     shared_ptr<memory::primitive_desc> _usr_memory_pd;
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
