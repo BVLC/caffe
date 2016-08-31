@@ -55,6 +55,11 @@ public:
         return _internal_ptr;
     }
     std::string name;  // for debugging purposes
+protected:
+    void set_prv_memory(shared_ptr<memory> prv_memory) {
+        _prv_memory = prv_memory;
+        _internal_ptr = (Dtype *)(_prv_memory->get_data_handle());
+    }
 private:
     void check_usr_with_prv_descriptors();
     shared_ptr<memory::primitive_desc> _usr_memory_pd;
