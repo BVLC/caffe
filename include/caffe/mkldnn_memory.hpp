@@ -91,7 +91,7 @@ public:
         return _usr_memory_pd;
     }
     inline bool conversion_needed() const { return (_reorder_usr2prv_pd != NULL); }
-    virtual void* prv_ptr() { CHECK(_prv_memory); return _internal_ptr;  }
+    virtual void* prv_ptr() { return _internal_ptr;  }
 
     shared_ptr<memory>  get_prv_memory()
     {
@@ -108,6 +108,7 @@ public:
     
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
+    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
 
 protected:
     void check_usr_with_prv_descriptors();
@@ -151,6 +152,8 @@ protected:
     shared_ptr<memory> _usr_memory;
     void* _cpu_ptr;
 
+    shared_ptr<MKLDNNStream> _mkldnn_stream;
+
     MKLDNNLayer<Dtype>* _mkldnn_layer;
 };
 
@@ -164,9 +167,12 @@ public:
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
 
+    virtual void create_reorder_from_prv(void* cpu_ptr);
+    virtual void create_reorder_to_prv(void* cpu_ptr);
+
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
-    shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr,
+    shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr, bool convert = true,
             MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
     void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<primitive> create_input(Blob<Dtype> * blob, bool set_prv_ptr);

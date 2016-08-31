@@ -129,15 +129,18 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
 
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
+    fwd_weights_data->set_mkldnn_layer(this);
+    fwd_bias_data->set_mkldnn_layer(this);
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     weights_primitive = fwd_weights_data->create_input(this->blobs_[0].get(), true);
     bias_primitive = fwd_bias_data->create_input(this->blobs_[1].get(), true);
 
     output_memory = fwd_top_data->create_output_memory(top[0]);
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+//    if (fwd_top_data->conversion_needed())
+        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     // Create inner_product
     ipFwd.reset(new inner_product(prop_kind::forward
@@ -153,6 +156,7 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 
+    this->init_mkldnn_stream();
     // making reorders if needed.
     fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
     fwd_weights_data->sync_blob_prv_data(this->blobs_[0].get(), true);
@@ -161,7 +165,6 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     if (fwd_top_data->conversion_needed())
         top[0]->set_prv_data_descriptor(fwd_top_data);
 
-    this->init_mkldnn_stream();
     this->get_mkldnn_stream()->submit({*ipFwd});
 }
 
