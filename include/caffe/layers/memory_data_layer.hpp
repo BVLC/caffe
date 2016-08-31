@@ -25,8 +25,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MemoryData"; }
-  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
-  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
 #ifdef USE_OPENCV
@@ -61,6 +61,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
+  bool has_label_;
 };
 
 }  // namespace caffe
