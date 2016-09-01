@@ -37,8 +37,8 @@ public:
 
     engine & get_engine() { return _cpu_engine; }
 protected:
-//    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
-    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
+    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
+//    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
     ~CpuEngine() {}
 private:
     engine _cpu_engine;

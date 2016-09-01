@@ -210,7 +210,9 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---  link layers -----------------------
-    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+//    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    this->find_bottom_mkldnn_layers(bottom);
+
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
 

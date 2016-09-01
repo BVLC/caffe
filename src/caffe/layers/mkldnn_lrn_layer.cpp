@@ -110,7 +110,8 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     scratch_.reset(new memory(scratch_mpd));
 
     // ---  link layers -----------------------
-    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+//    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    this->find_bottom_mkldnn_layers(bottom);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
 

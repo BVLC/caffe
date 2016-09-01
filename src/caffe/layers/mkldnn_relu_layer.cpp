@@ -72,7 +72,9 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
     // ---  link layers -----------------------
-    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+//    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    this->find_bottom_mkldnn_layers(bottom);
+
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
 

@@ -21,17 +21,33 @@ MKLDNNLayer<Dtype>* MKLDNNLayer<Dtype>::get_mkldnn_layer(Blob<Dtype>* blob) {
 }
 
 template <typename Dtype>
+void MKLDNNLayer<Dtype>::find_bottom_mkldnn_layers(const vector<Blob<Dtype>*>& bottom) {
+    if(_bottom_mkldnn_layers)
+        return;
+    _bottom_mkldnn_layers.reset(new vector<MKLDNNLayer<Dtype>* >);
+    for (int i = 0; i< bottom.size(); i++) {
+        _bottom_mkldnn_layers->push_back(this->get_mkldnn_layer(bottom[i]));
+    }
+}
+
+template <typename Dtype>
 void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
     if (_mkldnn_stream != NULL) {
         _mkldnn_stream->prepare();
         return;
     }
-    if (_previous_mkldnn_layer == NULL
-        || _previous_mkldnn_layer->mkldnn_stream() == NULL
-        || !_previous_mkldnn_layer->mkldnn_stream()->ready())
+    shared_ptr<MKLDNNStream> common_stream(NULL);
+    if ( _bottom_mkldnn_layers->size() > 0)
+        if((*_bottom_mkldnn_layers)[0] != NULL)
+            common_stream = (*_bottom_mkldnn_layers)[0]->mkldnn_stream();
+    for(int i = 1; i < _bottom_mkldnn_layers->size(); i++) {
+        if ((*_bottom_mkldnn_layers)[i] == NULL || (*_bottom_mkldnn_layers)[i]->mkldnn_stream() != common_stream )
+            common_stream = NULL;
+    }
+    if (common_stream == NULL)
         _mkldnn_stream.reset(new MKLDNNStream());
     else
-        _mkldnn_stream = _previous_mkldnn_layer->mkldnn_stream();
+        _mkldnn_stream = common_stream;
 }
 
 template <typename Dtype>

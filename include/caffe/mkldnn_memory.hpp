@@ -46,7 +46,7 @@ private:
 template <typename Dtype>
 class MKLDNNLayer {
 public:
-    explicit MKLDNNLayer():_mkldnn_stream(NULL), _previous_mkldnn_layer(NULL) {}
+    explicit MKLDNNLayer():_mkldnn_stream(NULL), _bottom_mkldnn_layers(NULL) {}
     virtual ~MKLDNNLayer() {}
     shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
     shared_ptr<MKLDNNStream> get_mkldnn_stream() {
@@ -59,7 +59,8 @@ public:
     MKLDNNLayer<Dtype>* get_mkldnn_layer(Blob<Dtype>* blob);
     void init_mkldnn_stream();
 protected:
-    MKLDNNLayer<Dtype>* _previous_mkldnn_layer;
+    shared_ptr<vector<MKLDNNLayer<Dtype>* > > _bottom_mkldnn_layers;
+    void find_bottom_mkldnn_layers(const vector<Blob<Dtype>*>& bottom);
 private:
     shared_ptr<MKLDNNStream> _mkldnn_stream;
 };
