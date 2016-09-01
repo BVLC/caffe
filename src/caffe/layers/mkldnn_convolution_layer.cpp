@@ -65,11 +65,8 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
     BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
     init_properties(bottom, top);
-    if( convFwd_pd == NULL) {
+    if( convFwd_pd == NULL)
         InitConvolution(bottom, top);
-    } else {
-        VLOG(1) << " Reshape: second call";
-    }
 }
 
 template <typename Dtype>
@@ -153,12 +150,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
+    // TODOD: may be not needed ??
+    this->blobs_[0]->set_prv_data_descriptor(NULL);
+    this->blobs_[1]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
     fwd_weights_data->set_mkldnn_layer(this);
     fwd_bias_data->set_mkldnn_layer(this);
+
+    fwd_top_data->set_stream_finish(true);
+
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     weights_primitive = fwd_weights_data->create_input(this->blobs_[0].get(), false);
@@ -174,6 +182,8 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                         , *bias_primitive, *output_memory));
     fwd_bottom_data->set_primitives(convFwd, bottom[0]);
     fwd_top_data->set_mkldnn_primitive(convFwd);
+    fwd_weights_data->set_mkldnn_primitive(convFwd);
+    fwd_bias_data->set_mkldnn_primitive(convFwd);
 }
 
 template <typename Dtype>
@@ -181,7 +191,6 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-
     // making reorders if needed.
     this->init_mkldnn_stream();
     fwd_bottom_data->sync_blob_prv_data(bottom[0], false);

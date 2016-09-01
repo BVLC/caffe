@@ -39,7 +39,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                     : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
                                     , _reorder_usr2prv(NULL), _reorder_prv2usr(NULL)
                                     ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
-                                    , _mkldnn_layer(NULL), _mkldnn_stream(NULL)
+                                    , _mkldnn_layer(NULL), _mkldnn_stream(NULL), _stream_finish(false)
                                     , name("MKLDNNMemoryDescriptorBase")
 {
     set_usr_memory_pd(usr_memory_pd);
@@ -141,7 +141,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
     CHECK(cpu_ptr);
     CHECK(this->mkldnn_layer());
     CHECK(this->mkldnn_layer()->mkldnn_stream());
-    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_reorder_prv2usr_pd == NULL) {
+    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_reorder_prv2usr_pd == NULL && this->_stream_finish) {
         // execute stream if doesn't need reorder
         this->mkldnn_layer()->mkldnn_stream()->wait();
     }
@@ -154,6 +154,22 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
     }
     this->_mkldnn_stream->submit({*this->_reorder_prv2usr});
 //    stream().submit({*this->_reorder_prv2usr}).wait();
+
+    // it should be final step, so call stream execution
+    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_stream_finish)
+        this->_mkldnn_stream->wait();
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::check_stream(void* cpu_ptr)
+{
+    CHECK(cpu_ptr);
+    CHECK(this->mkldnn_layer());
+    CHECK(this->mkldnn_layer()->mkldnn_stream());
+    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_stream_finish) {
+        VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::check_stream: stream.wait() - " << this->name;
+        this->mkldnn_layer()->mkldnn_stream()->wait();
+    }
 }
 
 template <typename Dtype>

@@ -28,11 +28,8 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
 
-    if( reluFwd_pd == NULL) {
+    if( reluFwd_pd == NULL)
         InitReLU(bottom, top);
-    } else {
-        VLOG(1) << " Reshape: second call";
-    }
 }
 
 
@@ -74,10 +71,18 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     // ---- Initialize relu primitive descriptor -------------
     relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
+
+    fwd_top_data->set_stream_finish(true);
+
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     output_memory = fwd_top_data->create_output_memory(top[0]);

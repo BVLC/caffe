@@ -116,12 +116,8 @@ void MKLDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     if (top.size() == 1) {
         max_idx_.Reshape(bottom[0]->num(), channels_, height_out_, width_out_);
     }
-    if (NULL == poolingFwd_pd) {
+    if (NULL == poolingFwd_pd)
         InitPooling(bottom, top);
-    } else {
-        VLOG(1) << " Reshape: second call";
-    }
-
 }
 
 template <typename Dtype>
@@ -213,10 +209,18 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
+
+    fwd_top_data->set_stream_finish(true);
+
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     output_memory = fwd_top_data->create_output_memory(top[0]);

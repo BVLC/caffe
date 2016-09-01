@@ -109,6 +109,7 @@ public:
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
     void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
+    void set_stream_finish(bool stream_finish) { _stream_finish = stream_finish; }
 
 protected:
     void check_usr_with_prv_descriptors();
@@ -153,6 +154,7 @@ protected:
     void* _cpu_ptr;
 
     shared_ptr<MKLDNNStream> _mkldnn_stream;
+    bool _stream_finish;
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
 };
@@ -166,6 +168,7 @@ public:
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
+    virtual void check_stream(void* cpu_ptr);
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);
