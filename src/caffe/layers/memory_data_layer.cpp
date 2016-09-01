@@ -108,7 +108,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
     added_label_shape[0] = num;
     added_label_.Reshape(added_label_shape);
     // Copy Labels
-    Dtype* top_label = added_label_.mutable_cpu_data();
+    top_label = added_label_.mutable_cpu_data();
     for (int_tp item_id = 0; item_id < num; ++item_id) {
       top_label[item_id] = labels[item_id];
     }
