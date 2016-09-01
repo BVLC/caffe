@@ -183,7 +183,6 @@ public:
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
 
     void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }
-    void set_primitives(shared_ptr<primitive> primitive, Blob<Dtype> * blob);
     shared_ptr<primitive>  mkldnn_primitive() const { return _mkldnn_primitive;  }
 private:
     shared_ptr<primitive> _mkldnn_primitive;

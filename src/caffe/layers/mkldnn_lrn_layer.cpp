@@ -125,12 +125,11 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     output_memory = fwd_top_data->create_output_memory(top[0]);
-//    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     // ---- Create lrn --------------------
     lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
-    fwd_bottom_data->set_primitives(lrnFwd, bottom[0]);
+    fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }
 
@@ -144,8 +143,6 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // making reorders if needed.
     fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
     // update top that head at prv
-//    if (fwd_top_data->conversion_needed())
-//        top[0]->set_prv_data_descriptor(fwd_top_data);
     top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*lrnFwd});

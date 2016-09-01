@@ -299,20 +299,6 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
     return omem;
 }
 
-template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::set_primitives(shared_ptr<primitive> primitive, Blob<Dtype> * blob)
-{
-    set_mkldnn_primitive(primitive);
-    CHECK(blob);
-    shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
-            (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
-    if (blob_prv_mem_descriptor != NULL) {
-        CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr =
-                boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(blob_prv_mem_descriptor);
-    }
-}
-
 template class MKLDNNLayer<double>;
 template class MKLDNNLayer<float>;
 

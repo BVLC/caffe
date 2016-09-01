@@ -151,7 +151,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
     // ---  link layers -----------------------
-//    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     this->find_bottom_mkldnn_layers(bottom);
 
     fwd_bottom_data->set_mkldnn_layer(this);
@@ -176,14 +175,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     bias_primitive = fwd_bias_data->create_input(this->blobs_[1].get(), false);
 
     output_memory = fwd_top_data->create_output_memory(top[0]);
-//    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     // ---- Create convolution --------------------
     convFwd.reset(new convolution(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
-    fwd_bottom_data->set_primitives(convFwd, bottom[0]);
+    fwd_bottom_data->set_mkldnn_primitive(convFwd);
     fwd_top_data->set_mkldnn_primitive(convFwd);
     fwd_weights_data->set_mkldnn_primitive(convFwd);
     fwd_bias_data->set_mkldnn_primitive(convFwd);
@@ -200,8 +198,6 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     fwd_weights_data->sync_blob_prv_data(this->blobs_[0].get(), true);
     fwd_bias_data->sync_blob_prv_data(this->blobs_[1].get(), true);
     // update top that head at prv
-//    if (fwd_top_data->conversion_needed())
-//        top[0]->set_prv_data_descriptor(fwd_top_data);
     top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*convFwd});
