@@ -294,8 +294,6 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::set_primitives(shared_ptr<primitive
         CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr =
                 boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(blob_prv_mem_descriptor);
-        blob_prv_mkldnn_mem_descr->set_linked_primitive(this->mkldnn_primitive());
-        this->set_linked_primitive(blob_prv_mkldnn_mem_descr->mkldnn_primitive());
     }
 }
 

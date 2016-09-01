@@ -37,15 +37,15 @@ public:
 
     engine & get_engine() { return _cpu_engine; }
 protected:
-    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
-//    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
+//    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
+    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
     ~CpuEngine() {}
 private:
     engine _cpu_engine;
 };
 // =====  MKLDNNConvolutionLayer =======================================
 template <typename Dtype>
-class MKLDNNConvolutionLayer : public ConvolutionLayer<Dtype>, public MKLDNNLayer<Dtype> {
+class MKLDNNConvolutionLayer : public MKLDNNLayer<Dtype> , public ConvolutionLayer<Dtype> {
 public:
     explicit MKLDNNConvolutionLayer(const LayerParameter& param);
     virtual ~MKLDNNConvolutionLayer() {}
@@ -75,7 +75,7 @@ private:
 
 // =====  MKLDNNInnerProductLayer =======================================
 template <typename Dtype>
-class MKLDNNInnerProductLayer : public InnerProductLayer<Dtype>, public MKLDNNLayer<Dtype>  {
+class MKLDNNInnerProductLayer : public MKLDNNLayer<Dtype> , public InnerProductLayer<Dtype>  {
 public:
     explicit MKLDNNInnerProductLayer(const LayerParameter& param);
     virtual ~MKLDNNInnerProductLayer();
@@ -107,7 +107,7 @@ private:
 
 // =====  MKLDNNLRNLayer =======================================
 template <typename Dtype>
-class MKLDNNLRNLayer : public Layer<Dtype>, public MKLDNNLayer<Dtype>  {
+class MKLDNNLRNLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype>  {
 public:
     explicit MKLDNNLRNLayer(const LayerParameter& param)
         : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
@@ -145,7 +145,7 @@ private:
 
 // ===== MKLDNNPoolingLayer =======================================
 template <typename Dtype>
-class MKLDNNPoolingLayer : public Layer<Dtype>, public MKLDNNLayer<Dtype>  {
+class MKLDNNPoolingLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype>  {
 public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
             : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
@@ -197,7 +197,7 @@ private:
 
 // =====  MKLDNNReLULayer =======================================
 template <typename Dtype>
-class MKLDNNReLULayer : public NeuronLayer<Dtype>, public MKLDNNLayer<Dtype>  {
+class MKLDNNReLULayer : public MKLDNNLayer<Dtype> , public NeuronLayer<Dtype>  {
 public:
     /**
     * @param param provides ReLUParameter relu_param,
