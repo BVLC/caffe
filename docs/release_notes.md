@@ -194,18 +194,16 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 * Intel MKL 2017 GOLD DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
 Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
 
-* Itersize parameter value different from 1 in prototxt is not supported in Intel MKL2017 GOLD and will lead to incorrect results.
-
 * Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
 
 * Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
 Workaround: We recommend to always use LMDB Data Layer
 
-* LeNet and Cifar are not optimized in terms of performance in Intel MKL2017 GOLD
+* LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017 GOLD
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
-* We observe convergence problems with some publicly presented hyper parameters (especialy learning rate).
+* We observe convergence problems with some publicly presented hyper parameters (for Googlenet and ResNet50).
 Workaround: For CPU it is recommended to set learning rate in rage of 0.002-0.005
 
 
@@ -218,7 +216,7 @@ Workaround: For CPU it is recommended to set learning rate in rage of 0.002-0.00
 
 * It is recommended to use newest XPPSL software for Intel Xeon Phi™ product family: [https://mic-bld.pdx.intel.com/release/external/XPPSL/] (https://mic-bld.pdx.intel.com/release/external/XPPSL/)
 
-* For best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
+* Some Linux distributions security settings can affect performance (for example Centos 7.2). If this is your case for best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
 
 * Make sure that your hardware configurations includes fast SSD (M.2) drive. If during trainings you will observe in logs "waiting for data" - you should install better SSD or reduce batchsize.
 
