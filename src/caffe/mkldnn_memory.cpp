@@ -7,9 +7,10 @@ template <typename Dtype>
 MKLDNNLayer<Dtype>* MKLDNNLayer<Dtype>::get_mkldnn_layer(Blob<Dtype>* blob) {
     CHECK(blob);
     MKLDNNLayer<Dtype>* mkldnn_layer(NULL);
-    const Dtype* prv_ptr = blob->prv_data();
-    if (prv_ptr != NULL) {
-        shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = blob->get_prv_data_descriptor();
+//    const Dtype* prv_ptr = blob->prv_data();
+//    if (prv_ptr != NULL) {
+    shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = blob->get_prv_data_descriptor();
+    if (blob_prv_mem_descriptor != NULL) {
         CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > blob_prv_mkldnn_mem_descr =
             boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, false> >(blob_prv_mem_descriptor);
@@ -165,7 +166,9 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::check_stream(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
     CHECK(this->mkldnn_layer());
-    CHECK(this->mkldnn_layer()->mkldnn_stream());
+    if (this->mkldnn_layer()->mkldnn_stream() == NULL)
+        return;
+//    CHECK(this->mkldnn_layer()->mkldnn_stream());
     if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_stream_finish) {
         VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::check_stream: stream.wait() - " << this->name;
         this->mkldnn_layer()->mkldnn_stream()->wait();

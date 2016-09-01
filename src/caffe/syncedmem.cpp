@@ -58,6 +58,12 @@ inline void SyncedMemory::to_cpu() {
     head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
+    if(prv_descriptor_.get()) {
+//    prv_descriptor_->convert_from_prv(cpu_ptr_);
+        prv_descriptor_->check_stream(cpu_ptr_);
+        head_ = SYNCED;
+    }
+    break;
   case SYNCED:
     break;
   }

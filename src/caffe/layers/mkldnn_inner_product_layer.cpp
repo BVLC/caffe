@@ -124,14 +124,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
     fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
-    // TODO: may be not needed??
-    this->blobs_[0]->set_prv_data_descriptor(NULL);
-    this->blobs_[1]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
@@ -140,6 +132,14 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     fwd_bias_data->set_mkldnn_layer(this);
 
     fwd_top_data->set_stream_finish(true);
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
+    // TODO: may be not needed??
+    this->blobs_[0]->set_prv_data_descriptor(NULL);
+    this->blobs_[1]->set_prv_data_descriptor(NULL);
 
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
@@ -171,8 +171,9 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     fwd_weights_data->sync_blob_prv_data(this->blobs_[0].get(), true);
     fwd_bias_data->sync_blob_prv_data(this->blobs_[1].get(), true);
     // update top that head at prv
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+//    if (fwd_top_data->conversion_needed())
+//        top[0]->set_prv_data_descriptor(fwd_top_data);
+    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*ipFwd});
 }

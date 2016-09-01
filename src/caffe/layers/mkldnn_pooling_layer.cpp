@@ -209,17 +209,18 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
 
     fwd_top_data->set_stream_finish(true);
+
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
 
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
@@ -244,8 +245,9 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // making reorders if needed.
     fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
     // update top that head at prv
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+//    if (fwd_top_data->conversion_needed())
+//        top[0]->set_prv_data_descriptor(fwd_top_data);
+        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*poolingFwd});
 }

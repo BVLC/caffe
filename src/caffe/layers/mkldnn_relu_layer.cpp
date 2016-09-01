@@ -71,23 +71,24 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     // ---- Initialize relu primitive descriptor -------------
     relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
     // ---  link layers -----------------------
     this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
     fwd_bottom_data->set_mkldnn_layer(this);
     fwd_top_data->set_mkldnn_layer(this);
 
     fwd_top_data->set_stream_finish(true);
+    // --- reset blob decriptors --------------
+    if (bottom[0]->data()->cpu_ptr())
+        bottom[0]->set_prv_data_descriptor(NULL);
+    if (top[0]->data()->cpu_ptr())
+        top[0]->set_prv_data_descriptor(NULL);
 
     // ---- Create memory  ---------------------
     input_primitive = fwd_bottom_data->create_input(bottom[0], false);
     output_memory = fwd_top_data->create_output_memory(top[0]);
 //    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+      top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+//    top[0]->set_prv_data_descriptor(fwd_top_data, true);
 
     // ---- Create relu --------------------
     reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
@@ -105,8 +106,9 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // making reorders if needed.
     fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
     // update top that head at prv
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+//    if (fwd_top_data->conversion_needed())
+//        top[0]->set_prv_data_descriptor(fwd_top_data);
+        top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*reluFwd});
 }
