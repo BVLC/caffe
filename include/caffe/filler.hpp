@@ -250,7 +250,7 @@ class BilinearFiller : public Filler<Dtype> {
     CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
     Dtype* data = blob->mutable_cpu_data();
     int f = ceil(blob->width() / 2.);
-    float c = (2 * f - 1 - f % 2) / (2. * f);
+    float c = (2 * f - 1 - blod->width() % 2) / (2. * f);
     for (int i = 0; i < blob->count(); ++i) {
       float x = i % blob->width();
       float y = (i / blob->width()) % blob->height();
