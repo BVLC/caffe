@@ -23,7 +23,7 @@ title: Release Notes
 
 # Introduction
 
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xenon Phi)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (Haswell, Broadwell, Xenon Phi)
 
 # Installation
 
@@ -88,7 +88,7 @@ This Caffe version is seflcontained. This means that newest version of Intel MKL
 * Set `BLAS := mkl` in `Makefile.config`
 * If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
 
-[Intel MKL 2017 GOLD] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
+[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
 
 * As default and recommended configuration Caffe is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
 * Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
@@ -182,16 +182,16 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 # Change log
 1-09-2016
 * added RNN support
-* moved form MKL2017 beta update 1 engine to MKL2017 GOLD (providing better performance solution)
+* moved form MKL2017 beta update 1 engine to MKL2017 (providing better performance solution)
 * added official support for ResNet50, GoogleNet v2, VGG-19. (List of currenlty supported topologies: AlexNet, GoogleNet, GoogleNet v2, ResNet50, VGG-19)
-* added official support for multinode on GoogleNet, AlexNet with MKL2017 engine
+* added official support for multinode on GoogleNet with MKL2017 engine
 * added DataLayer optimizations
 * added support for compressed LMDB
-* initial integration with MKLDNN engine 
+* initial integration with MKLDNN 
 
 
 # Known issues and limitations
-* Intel MKL 2017 GOLD DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
+* Intel MKL 2017 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
 Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
 
 * Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
@@ -200,7 +200,7 @@ Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine
 * Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
 Workaround: We recommend to always use LMDB Data Layer
 
-* LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017 GOLD
+* LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
 * We observe convergence problems with some publicly presented hyper parameters (for Googlenet and ResNet50).
