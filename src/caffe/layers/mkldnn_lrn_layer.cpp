@@ -132,7 +132,6 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv
     fwd_top_data->sync_before_write();
-//    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*lrnFwd});
 }

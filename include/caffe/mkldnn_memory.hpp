@@ -43,6 +43,32 @@ private:
     shared_ptr<stream> _stream;
 };
 
+// =====  StreamHolder =======================================
+// singleton
+class StreamHolder
+{
+public:
+    static StreamHolder & Instance()
+    {
+        // I's thread-safe in C++11.
+        static StreamHolder myInstance;
+        return myInstance;
+    }
+    StreamHolder(StreamHolder const&) = delete;             // Copy construct
+    StreamHolder(StreamHolder&&) = delete;                  // Move construct
+    StreamHolder& operator=(StreamHolder const&) = delete;  // Copy assign
+    StreamHolder& operator=(StreamHolder &&) = delete;      // Move assign
+
+    shared_ptr<MKLDNNStream> get_stream();
+    shared_ptr<MKLDNNStream> current_stream() { return _current_stream; }
+protected:
+    StreamHolder() : _current_stream(NULL) {}
+    ~StreamHolder() {}
+private:
+    shared_ptr<MKLDNNStream> _current_stream;
+};
+
+
 // =====  MKLDNNLayer =======================================
 template <typename Dtype>
 class MKLDNNLayer {
@@ -50,12 +76,7 @@ public:
     explicit MKLDNNLayer():_mkldnn_stream(NULL), _bottom_mkldnn_layers(NULL) {}
     virtual ~MKLDNNLayer() {}
     shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
-    shared_ptr<MKLDNNStream> get_mkldnn_stream() {
-        if(_mkldnn_stream == NULL || !_mkldnn_stream->ready()) {
-            _mkldnn_stream.reset(new MKLDNNStream());
-        }
-        return _mkldnn_stream;
-    }
+    shared_ptr<MKLDNNStream> get_mkldnn_stream();
     void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
     MKLDNNLayer<Dtype>* get_mkldnn_layer(Blob<Dtype>* blob);
     void init_mkldnn_stream();

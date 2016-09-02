@@ -3,6 +3,15 @@
 
 namespace caffe {
 
+
+shared_ptr<MKLDNNStream> StreamHolder::get_stream()
+{
+    if (this->_current_stream == NULL || !this->_current_stream->ready()) {
+        _current_stream.reset(new MKLDNNStream());
+    }
+    return _current_stream;
+}
+
 template <typename Dtype>
 MKLDNNLayer<Dtype>* MKLDNNLayer<Dtype>::get_mkldnn_layer(Blob<Dtype>* blob) {
     CHECK(blob);
@@ -31,7 +40,16 @@ void MKLDNNLayer<Dtype>::find_bottom_mkldnn_layers(const vector<Blob<Dtype>*>& b
 }
 
 template <typename Dtype>
+shared_ptr<MKLDNNStream>  MKLDNNLayer<Dtype>::get_mkldnn_stream() {
+    if(_mkldnn_stream == NULL || !_mkldnn_stream->ready()) {
+        _mkldnn_stream = StreamHolder::Instance().get_stream();
+    }
+    return _mkldnn_stream;
+}
+
+template <typename Dtype>
 void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
+/*
     if (_mkldnn_stream != NULL) {
         _mkldnn_stream->prepare();
         return;
@@ -48,6 +66,7 @@ void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
         _mkldnn_stream.reset(new MKLDNNStream());
     else
         _mkldnn_stream = common_stream;
+*/
 }
 
 template <typename Dtype>
@@ -144,12 +163,10 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     CHECK(cpu_ptr);
     create_reorder_to_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
-    CHECK(this->mkldnn_layer()->mkldnn_stream());
-    if (this->_mkldnn_stream == NULL) {
-        this->_mkldnn_stream = this->mkldnn_layer()->mkldnn_stream();
+    if (this->_mkldnn_stream == NULL || !this->_mkldnn_stream->ready()) {
+        this->_mkldnn_stream = StreamHolder::Instance().get_stream();
     }
     this->_mkldnn_stream->submit({*this->_reorder_usr2prv});
-//  stream().submit({*this->_reorder_usr2prv}).wait();
 }
 
 template <typename Dtype, bool is_diff>
@@ -168,7 +185,6 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_p
     if(this->_reorder_prv2usr == NULL) {
         CHECK(this->mkldnn_primitive());
         this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->mkldnn_primitive(), *this->_usr_memory));
-//        this->_reorder_prv2usr.reset(new reorder(*this->_reorder_prv2usr_pd, *this->get_prv_memory(), *this->_usr_memory));
     }
 }
 
@@ -177,23 +193,16 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
     CHECK(this->mkldnn_layer());
-    CHECK(this->mkldnn_layer()->mkldnn_stream());
-    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_reorder_prv2usr_pd == NULL && this->_stream_finish) {
-        // execute stream if doesn't need reorder
-        this->mkldnn_layer()->mkldnn_stream()->wait();
+    if(this->_reorder_prv2usr_pd != NULL) {
+        create_reorder_from_prv(cpu_ptr);
+        VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
+        if (this->_mkldnn_stream == NULL || !this->_mkldnn_stream->ready()) {
+            this->_mkldnn_stream = StreamHolder::Instance().get_stream();
+        }
+        this->_mkldnn_stream->submit({*this->_reorder_prv2usr});
     }
-    if(this->_reorder_prv2usr_pd == NULL)
-        return;
-    create_reorder_from_prv(cpu_ptr);
-    VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
-    if (this->_mkldnn_stream == NULL) {
-        this->_mkldnn_stream = this->mkldnn_layer()->mkldnn_stream();
-    }
-    this->_mkldnn_stream->submit({*this->_reorder_prv2usr});
-//    stream().submit({*this->_reorder_prv2usr}).wait();
-
     // it should be final step, so call stream execution
-    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_stream_finish)
+    if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready() && this->_stream_finish)
         this->_mkldnn_stream->wait();
 }
 
@@ -204,8 +213,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::check_stream(void* cpu_ptr)
     CHECK(this->mkldnn_layer());
     if (this->mkldnn_layer()->mkldnn_stream() == NULL)
         return;
-//    CHECK(this->mkldnn_layer()->mkldnn_stream());
-    if (this->mkldnn_layer()->mkldnn_stream()->ready() && this->_stream_finish) {
+    if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready() && this->_stream_finish) {
         VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::check_stream: stream.wait() - " << this->name;
         this->mkldnn_layer()->mkldnn_stream()->wait();
     }
