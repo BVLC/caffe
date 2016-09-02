@@ -52,7 +52,8 @@ void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
 
 template <typename Dtype>
 MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd)
+                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd
+                                                            )
                                     : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
                                     , _reorder_usr2prv(NULL), _reorder_prv2usr(NULL)
                                     ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
@@ -61,6 +62,25 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
 {
     set_usr_memory_pd(usr_memory_pd);
     set_prv_memory_pd(prv_memory_pd);
+}
+
+template <typename Dtype>
+MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
+                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd
+                                                            , Blob<Dtype>* blob
+                                                            , MKLDNNLayer<Dtype>* mkldnn_layer)
+                                    : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
+                                    , _reorder_usr2prv(NULL), _reorder_prv2usr(NULL)
+                                    ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
+                                    , _mkldnn_layer(NULL), _mkldnn_stream(NULL), _stream_finish(false)
+                                    , name("MKLDNNMemoryDescriptorBase")
+{
+    set_usr_memory_pd(usr_memory_pd);
+    set_prv_memory_pd(prv_memory_pd);
+    set_mkldnn_layer(mkldnn_layer);
+    this->_blob = blob;
+    if (_blob->data()->cpu_ptr())
+        _blob->set_prv_data_descriptor(NULL);
 }
 
 template <typename Dtype>
@@ -266,6 +286,18 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_blob_prv_data(Blob<Dtype>* blo
 }
 
 template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read(bool set_prv_ptr)
+{
+    get_blob_prv_primitive(this->_blob, set_prv_ptr);
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_write()
+{
+    this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+}
+
+template <typename Dtype, bool is_diff>
 shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(Blob<Dtype> * blob, bool set_prv_ptr)
 {
     shared_ptr<primitive> pres;
@@ -298,6 +330,22 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
     }
     return omem;
 }
+
+template <typename Dtype, bool is_diff>
+shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(bool set_prv_ptr)
+{
+    return create_input(this->_blob, set_prv_ptr);
+}
+
+template <typename Dtype, bool is_diff>
+shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory()
+{
+    this->set_stream_finish(true);
+    shared_ptr<memory> omem = create_output_memory(this->_blob);
+//    this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+    return omem;
+}
+
 
 template class MKLDNNLayer<double>;
 template class MKLDNNLayer<float>;

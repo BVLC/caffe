@@ -32,6 +32,7 @@ public:
         if(_ready == false) {
             // stream just created or already executed
             // !! TODO: change below if stream will have method to reset its state
+            VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : create new stream";
             _stream.reset(new stream());
         }
         _ready = true;
@@ -74,6 +75,10 @@ class MKLDNNMemoryDescriptorBase : public PrvMemDescr
 public:
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
                                 ,shared_ptr<memory::primitive_desc> prv_memory_pd);
+    MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
+                                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer);
+
     ~MKLDNNMemoryDescriptorBase() {}
     // ---- PrvMemDescr virtual functions -----
     virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
@@ -106,7 +111,7 @@ public:
     shared_ptr<reorder>  reorder_usr2prv() { return _reorder_usr2prv; }
     shared_ptr<reorder>  reorder_prv2usr() { return _reorder_prv2usr; }
     std::string name;  // for debugging purposes
-    
+
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
     void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
@@ -158,6 +163,7 @@ protected:
     bool _stream_finish;
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
+    Blob<Dtype>* _blob;
 };
 
 template <typename Dtype, bool is_diff>
@@ -166,6 +172,10 @@ public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd )
         : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
+    MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
+                        , shared_ptr<memory::primitive_desc> prv_memory_pd
+                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
@@ -179,10 +189,16 @@ public:
     shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr, bool convert = true,
             MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
     void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
+
+    void sync_before_read(bool set_prv_ptr);
+    void sync_before_write();
+
     shared_ptr<primitive> create_input(Blob<Dtype> * blob, bool set_prv_ptr);
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
+    shared_ptr<primitive> create_input(bool set_prv_ptr);
+    shared_ptr<memory> create_output_memory();
 
-    void set_mkldnn_primitive(shared_ptr<primitive> primitive) { _mkldnn_primitive = primitive;  }
+    void set_mkldnn_primitive(shared_ptr<primitive> primitive) { CHECK(primitive); _mkldnn_primitive = primitive;  }
     shared_ptr<primitive>  mkldnn_primitive() const { return _mkldnn_primitive;  }
 private:
     shared_ptr<primitive> _mkldnn_primitive;
@@ -193,8 +209,12 @@ class MKLDNNData : public MKLDNNMemoryDescriptor<Dtype, false>
 {
 public:
     MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
-                ,shared_ptr<memory::primitive_desc> prv_memory_pd )
+                , shared_ptr<memory::primitive_desc> prv_memory_pd )
         : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd ) {}
+    MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
+                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
 };
 
 template <typename Dtype>
@@ -204,6 +224,10 @@ public:
     MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
                 , shared_ptr<memory::primitive_desc> prv_memory_pd )
         : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd ) {}
+    MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
+                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
+        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer ) {}
 };
 
 }  // namespace caffe

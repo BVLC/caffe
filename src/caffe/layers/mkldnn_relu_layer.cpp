@@ -65,31 +65,21 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
 
     // ---- Initialize relu primitive descriptor -------------
     relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
-    // ---  link layers -----------------------
+
+    // ---  init primitive and prv_memory descriptors ----------------------
     this->find_bottom_mkldnn_layers(bottom);
 
-    fwd_bottom_data->set_mkldnn_layer(this);
-    fwd_top_data->set_mkldnn_layer(this);
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
 
-    fwd_top_data->set_stream_finish(true);
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
-
-    // ---- Create memory  ---------------------
-    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
     top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
-    // ---- Create relu --------------------
     reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(reluFwd);
     fwd_top_data->set_mkldnn_primitive(reluFwd);
@@ -103,9 +93,9 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
     this->init_mkldnn_stream();
     // making reorders if needed.
-    fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
+    fwd_bottom_data->sync_before_read(false);
     // update top that head at prv
-    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+    fwd_top_data->sync_before_write();
 
     this->get_mkldnn_stream()->submit({*reluFwd});
 }

@@ -182,14 +182,11 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_output_mpd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> prv_input_mpd(NULL);
+    shared_ptr<MemPD> prv_output_mpd(NULL);
     if (bottom_data_is_prv) {
-        shared_ptr<MemPD> prv_input_mpd(new MemPD(*input_md, cpu_engine));
-        shared_ptr<MemPD> prv_output_mpd(new MemPD(*output_md, cpu_engine));
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd));
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd));
-    } else {
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, NULL));
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, NULL));
+        prv_input_mpd.reset(new MemPD(*input_md, cpu_engine));
+        prv_output_mpd.reset(new MemPD(*output_md, cpu_engine));
     }
 
     // ---- Initialize pooling primitive descriptor -------------
@@ -209,26 +206,16 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
-    // ---  link layers -----------------------
+    // ---  init primitive and prv_memory descriptors ----------------------
     this->find_bottom_mkldnn_layers(bottom);
 
-    fwd_bottom_data->set_mkldnn_layer(this);
-    fwd_top_data->set_mkldnn_layer(this);
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
 
-    fwd_top_data->set_stream_finish(true);
-
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
-
-    // ---- Create memory  ---------------------
-    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
     top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
-    // ---- Create pooling  --------------------
     poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(poolingFwd);
     fwd_top_data->set_mkldnn_primitive(poolingFwd);
@@ -243,9 +230,9 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
     this->init_mkldnn_stream();
     // making reorders if needed.
-    fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
+    fwd_bottom_data->sync_before_read(false);
     // update top that head at prv
-    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+    fwd_top_data->sync_before_write();
 
     this->get_mkldnn_stream()->submit({*poolingFwd});
 }

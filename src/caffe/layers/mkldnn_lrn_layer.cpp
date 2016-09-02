@@ -98,9 +98,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-
     // ---- Initialize LRN primitive descriptor -------------
     lrn::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
                             ,*output_md, alpha_, beta_, size_);
@@ -109,25 +106,16 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     memory::primitive_desc scratch_mpd(memory::desc(lrnFwd_pd->data.scratch_primitive_desc.memory_desc), cpu_engine);
     scratch_.reset(new memory(scratch_mpd));
 
-    // ---  link layers -----------------------
-//    this->_previous_mkldnn_layer = this->get_mkldnn_layer(bottom[0]);
+    // ---  init primitive and prv_memory descriptors ----------------------
     this->find_bottom_mkldnn_layers(bottom);
-    fwd_bottom_data->set_mkldnn_layer(this);
-    fwd_top_data->set_mkldnn_layer(this);
 
-    fwd_top_data->set_stream_finish(true);
-    // --- reset blob decriptors --------------
-    if (bottom[0]->data()->cpu_ptr())
-        bottom[0]->set_prv_data_descriptor(NULL);
-    if (top[0]->data()->cpu_ptr())
-        top[0]->set_prv_data_descriptor(NULL);
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
 
-    // ---- Create memory  ---------------------
-    input_primitive = fwd_bottom_data->create_input(bottom[0], false);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
     top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
-    // ---- Create lrn --------------------
     lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
@@ -141,9 +129,10 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
     this->init_mkldnn_stream();
     // making reorders if needed.
-    fwd_bottom_data->sync_blob_prv_data(bottom[0], false);
+    fwd_bottom_data->sync_before_read(false);
     // update top that head at prv
-    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
+    fwd_top_data->sync_before_write();
+//    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     this->get_mkldnn_stream()->submit({*lrnFwd});
 }
