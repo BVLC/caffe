@@ -77,7 +77,7 @@ public:
     virtual ~MKLDNNLayer() {}
     shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
     shared_ptr<MKLDNNStream> get_mkldnn_stream();
-    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
+//    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
 protected:
     shared_ptr<vector<MKLDNNLayer<Dtype>* > > _bottom_mkldnn_layers;
 private:
@@ -134,6 +134,7 @@ public:
     void set_stream_finish(bool stream_finish) { _stream_finish = stream_finish; }
 
 protected:
+    shared_ptr<MKLDNNStream> get_mkldnn_stream();
     void check_usr_with_prv_descriptors();
     void set_prv_memory(shared_ptr<memory> memory)
     {
@@ -192,7 +193,7 @@ public:
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
-    virtual void check_stream(void* cpu_ptr);
+    virtual void on_to_cpu();
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);
