@@ -112,8 +112,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    this->find_bottom_mkldnn_layers(bottom);
-
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_primitive_pd, prv_input_primitive_pd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
 
@@ -148,7 +146,6 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    this->init_mkldnn_stream();
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     fwd_weights_data->sync_before_read(true);

@@ -13,74 +13,11 @@ shared_ptr<MKLDNNStream> StreamHolder::get_stream()
 }
 
 template <typename Dtype>
-MKLDNNLayer<Dtype>* MKLDNNLayer<Dtype>::get_mkldnn_layer(Blob<Dtype>* blob) {
-    CHECK(blob);
-    MKLDNNLayer<Dtype>* mkldnn_layer(NULL);
-//    const Dtype* prv_ptr = blob->prv_data();
-//    if (prv_ptr != NULL) {
-    shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = blob->get_prv_data_descriptor();
-    if (blob_prv_mem_descriptor != NULL) {
-        CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > blob_prv_mkldnn_mem_descr =
-            boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, false> >(blob_prv_mem_descriptor);
-        // TODO:    CHECK(blob_prv_mkldnn_mem_descr->mkldnn_primitive());
-        mkldnn_layer =  blob_prv_mkldnn_mem_descr->mkldnn_layer();
-    }
-    return mkldnn_layer;
-}
-
-template <typename Dtype>
-void MKLDNNLayer<Dtype>::find_bottom_mkldnn_layers(const vector<Blob<Dtype>*>& bottom) {
-    if(_bottom_mkldnn_layers)
-        return;
-    _bottom_mkldnn_layers.reset(new vector<MKLDNNLayer<Dtype>* >);
-    for (int i = 0; i< bottom.size(); i++) {
-        _bottom_mkldnn_layers->push_back(this->get_mkldnn_layer(bottom[i]));
-    }
-}
-
-template <typename Dtype>
 shared_ptr<MKLDNNStream>  MKLDNNLayer<Dtype>::get_mkldnn_stream() {
     if(_mkldnn_stream == NULL || !_mkldnn_stream->ready()) {
         _mkldnn_stream = StreamHolder::Instance().get_stream();
     }
     return _mkldnn_stream;
-}
-
-template <typename Dtype>
-void MKLDNNLayer<Dtype>::init_mkldnn_stream() {
-/*
-    if (_mkldnn_stream != NULL) {
-        _mkldnn_stream->prepare();
-        return;
-    }
-    shared_ptr<MKLDNNStream> common_stream(NULL);
-    if ( _bottom_mkldnn_layers->size() > 0)
-        if((*_bottom_mkldnn_layers)[0] != NULL)
-            common_stream = (*_bottom_mkldnn_layers)[0]->mkldnn_stream();
-    for(int i = 1; i < _bottom_mkldnn_layers->size(); i++) {
-        if ((*_bottom_mkldnn_layers)[i] == NULL || (*_bottom_mkldnn_layers)[i]->mkldnn_stream() != common_stream )
-            common_stream = NULL;
-    }
-    if (common_stream == NULL)
-        _mkldnn_stream.reset(new MKLDNNStream());
-    else
-        _mkldnn_stream = common_stream;
-*/
-}
-
-template <typename Dtype>
-MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd
-                                                            )
-                                    : _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
-                                    , _reorder_usr2prv(NULL), _reorder_prv2usr(NULL)
-                                    ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
-                                    , _mkldnn_layer(NULL), _mkldnn_stream(NULL), _stream_finish(false)
-                                    , name("MKLDNNMemoryDescriptorBase")
-{
-    set_usr_memory_pd(usr_memory_pd);
-    set_prv_memory_pd(prv_memory_pd);
 }
 
 template <typename Dtype>

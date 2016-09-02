@@ -207,8 +207,6 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    this->find_bottom_mkldnn_layers(bottom);
-
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
 
@@ -228,7 +226,6 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                             ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    this->init_mkldnn_stream();
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv

@@ -107,8 +107,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     scratch_.reset(new memory(scratch_mpd));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    this->find_bottom_mkldnn_layers(bottom);
-
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
 
@@ -127,7 +125,6 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    this->init_mkldnn_stream();
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv

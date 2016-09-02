@@ -78,11 +78,8 @@ public:
     shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
     shared_ptr<MKLDNNStream> get_mkldnn_stream();
     void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
-    MKLDNNLayer<Dtype>* get_mkldnn_layer(Blob<Dtype>* blob);
-    void init_mkldnn_stream();
 protected:
     shared_ptr<vector<MKLDNNLayer<Dtype>* > > _bottom_mkldnn_layers;
-    void find_bottom_mkldnn_layers(const vector<Blob<Dtype>*>& bottom);
 private:
     shared_ptr<MKLDNNStream> _mkldnn_stream;
 };
@@ -94,8 +91,6 @@ class MKLDNNMemoryDescriptorBase : public PrvMemDescr
         , public boost::enable_shared_from_this<MKLDNNMemoryDescriptorBase<Dtype> >
 {
 public:
-    MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                ,shared_ptr<memory::primitive_desc> prv_memory_pd);
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
                                 , shared_ptr<memory::primitive_desc> prv_memory_pd
                                 , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer);
@@ -191,9 +186,6 @@ template <typename Dtype, bool is_diff>
 class MKLDNNMemoryDescriptor : public MKLDNNMemoryDescriptorBase<Dtype> {
 public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
-                        , shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd ) {}
-    MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd
                         , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
         : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
@@ -230,9 +222,6 @@ class MKLDNNData : public MKLDNNMemoryDescriptor<Dtype, false>
 {
 public:
     MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
-                , shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd ) {}
-    MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
                 , shared_ptr<memory::primitive_desc> prv_memory_pd
                 , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
         : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
@@ -242,9 +231,6 @@ template <typename Dtype>
 class MKLDNNDiff : public MKLDNNMemoryDescriptor<Dtype, true>
 {
 public:
-    MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
-                , shared_ptr<memory::primitive_desc> prv_memory_pd )
-        : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd ) {}
     MKLDNNDiff(shared_ptr<memory::primitive_desc> usr_memory_pd
                 , shared_ptr<memory::primitive_desc> prv_memory_pd
                 , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)

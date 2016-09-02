@@ -71,8 +71,6 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    this->find_bottom_mkldnn_layers(bottom);
-
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
 
@@ -91,7 +89,6 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    this->init_mkldnn_stream();
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv
