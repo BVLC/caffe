@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: smooth_l1_loss_param)
+// LayerParameter next available layer-specific ID: 151 (last added: box_annotator_ohem_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -361,6 +361,7 @@ message LayerParameter {
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
+  optional BoxAnnotatorOHEMParameter box_annotator_ohem_param = 150;
   optional BiasParameter bias_param = 141;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
@@ -389,6 +390,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
+  optional PSROIPoolingParameter psroi_pooling_param = 149;
   optional PythonParameter python_param = 130;
   optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
@@ -449,14 +451,18 @@ message LossParameter {
     VALID = 1;
     // Divide by the batch size.
     BATCH_SIZE = 2;
+    // Divide by pre-fixed normalizer
+    PRE_FIXED = 3;
     // Do not normalize the loss.
-    NONE = 3;
+    NONE = 4;
   }
   optional NormalizationMode normalization = 3 [default = VALID];
   // Deprecated.  Ignored if normalization is specified.  If normalization
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+  //pre-fixed normalizer
+  optional float pre_fixed_normalizer = 4 [default = 1];
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -511,6 +517,11 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+}
+
+message BoxAnnotatorOHEMParameter {
+  required uint32 roi_per_img = 1; // number of rois for training
+  optional int32 ignore_label = 2 [default = -1]; // ignore_label in scoring
 }
 
 message BiasParameter {
@@ -919,6 +930,12 @@ message PowerParameter {
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
 }
+
+message PSROIPoolingParameter {
+   required float spatial_scale = 1; 
+   required int32 output_dim = 2; // output channel number
+   required int32 group_size = 3; // number of groups to encode position-sensitive score maps
+ }
 
 message PythonParameter {
   optional string module = 1;

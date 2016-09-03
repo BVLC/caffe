@@ -89,7 +89,10 @@ void ScaleLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   scale_dim_ = scale->count();
   inner_dim_ = bottom[0]->count(axis_ + scale->num_axes());
   if (bottom[0] == top[0]) {  // in-place computation
-    temp_.ReshapeLike(*bottom[0]);
+    const bool scale_param = (bottom.size() == 1);
+    if (!scale_param || (scale_param && this->param_propagate_down_[0])) {
+      temp_.ReshapeLike(*bottom[0]);
+    }
   } else {
     top[0]->ReshapeLike(*bottom[0]);
   }

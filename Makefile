@@ -316,10 +316,10 @@ endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS += -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -g -O0 -std=c++11
 	NVCCFLAGS += -G
 else
-	COMMON_FLAGS += -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2 -std=c++11
 endif
 
 # cuDNN acceleration configuration.
@@ -406,6 +406,8 @@ CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
+MATLAB_INCLUDE := -I$(MATLAB_DIR)/toolbox/distcomp/gpu/extern/include
+MATLAB_LIBS := -lmwgpu
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 
 USE_PKG_CONFIG ?= 0
@@ -514,7 +516,8 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	$(Q)$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
-			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
+            INCLUDE="\$$INCLUDE $(MATLAB_INCLUDE)" \
+			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS) $(MATLAB_LIBS)" -output $@
 	@ if [ -f "$(PROJECT)_.d" ]; then \
 		mv -f $(PROJECT)_.d $(BUILD_DIR)/${MAT$(PROJECT)_SO:.$(MAT_SO_EXT)=.d}; \
 	fi
