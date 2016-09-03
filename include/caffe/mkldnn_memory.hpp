@@ -9,84 +9,11 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "mkldnn.hpp"
+#include "mkldnn_base.hpp"
 
 using namespace mkldnn;
 
 namespace caffe {
-
-// =====  MKLDNNStream =======================================
-class MKLDNNStream {
-public:
-    explicit MKLDNNStream():_ready(false) { prepare(); }
-    virtual ~MKLDNNStream() {}
-    MKLDNNStream  &submit(std::vector<primitive> primitives) { _stream->submit(primitives); return *this; }
-    bool wait(bool block = true) {
-        VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : execute stream (wait) ";
-        _ready = false;
-        return _stream->wait(block);
-    }
-    bool ready() { return _ready; }
-    void prepare() {
-        if(_ready == false) {
-            // stream just created or already executed
-            // !! TODO: change below if stream will have method to reset its state
-            VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : create new stream";
-            _stream.reset(new stream());
-        }
-        _ready = true;
-    }
-protected:
-private:
-    bool _ready;
-    shared_ptr<stream> _stream;
-};
-
-// =====  StreamHolder =======================================
-// singleton
-class StreamHolder
-{
-public:
-    static StreamHolder & Instance()
-    {
-        // I's thread-safe in C++11.
-        static StreamHolder myInstance;
-        return myInstance;
-    }
-    StreamHolder(StreamHolder const&) = delete;             // Copy construct
-    StreamHolder(StreamHolder&&) = delete;                  // Move construct
-    StreamHolder& operator=(StreamHolder const&) = delete;  // Copy assign
-    StreamHolder& operator=(StreamHolder &&) = delete;      // Move assign
-
-    shared_ptr<MKLDNNStream> get_stream();
-    shared_ptr<MKLDNNStream> current_stream() { return _current_stream; }
-protected:
-    StreamHolder() : _current_stream(NULL) {}
-    ~StreamHolder() {}
-private:
-    shared_ptr<MKLDNNStream> _current_stream;
-};
-
-
-// =====  MKLDNNLayer =======================================
-template <typename Dtype>
-class MKLDNNLayer {
-public:
-    explicit MKLDNNLayer() {}
-    virtual ~MKLDNNLayer() {}
-};
-
-// =====  MKLDNNPrimitive =======================================
-template <typename Dtype>
-class MKLDNNPrimitive {
-public:
-    explicit MKLDNNPrimitive():primitive(NULL), mkldnn_stream(NULL) {}
-    virtual ~MKLDNNPrimitive() {}
-    shared_ptr<primitive> primitive;
-    shared_ptr<MKLDNNStream> mkldnn_stream;
-    shared_ptr<MKLDNNStream> get_mkldnn_stream();
-    shared_ptr<MKLDNNStream> submit();
-private:
-};
 
 // =====  MKLDNNMemoryDescriptorBase =======================================
 template <typename Dtype>
@@ -127,17 +54,15 @@ public:
         if (_prv_memory == NULL) allocate();
         return _internal_ptr;
     }
-    shared_ptr<primitive>  reorder_usr2prv() { return _reorder_usr2prv.primitive; }
-    shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.primitive; }
-    std::string name;  // for debugging purposes
+    shared_ptr<primitive>  reorder_usr2prv() { return _reorder_usr2prv.aprimitive; }
+    shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.aprimitive; }
 
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
-    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
     void set_stream_finish(bool stream_finish) { _stream_finish = stream_finish; }
 
+    std::string name;  // for debugging purposes
 protected:
-    shared_ptr<MKLDNNStream> get_mkldnn_stream();
     void check_usr_with_prv_descriptors();
     void set_prv_memory(shared_ptr<memory> memory)
     {
@@ -177,13 +102,12 @@ protected:
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
-    void* _cpu_ptr;
-
-    shared_ptr<MKLDNNStream> _mkldnn_stream;
-    bool _stream_finish;
+    void* _cpu_ptr; // TODO: ?? 
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
+    // TODO: !! does _stream_finish really need??
+    bool _stream_finish;
 };
 
 template <typename Dtype, bool is_diff>
@@ -215,9 +139,9 @@ public:
     shared_ptr<primitive> create_input(bool set_prv_ptr);
     shared_ptr<memory> create_output_memory();
 
-    void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.primitive); _mkldnn_primitive = mprimitive;  }
+    void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.aprimitive); _mkldnn_primitive = mprimitive;  }
     MKLDNNPrimitive<Dtype>&  mkldnn_primitive() { return _mkldnn_primitive; }
-    shared_ptr<primitive> primitive() const { return _mkldnn_primitive.primitive; }
+    shared_ptr<primitive> aprimitive() const { return _mkldnn_primitive.aprimitive; }
 private:
     MKLDNNPrimitive<Dtype> _mkldnn_primitive;
 };

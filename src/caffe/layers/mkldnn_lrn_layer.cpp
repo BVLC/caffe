@@ -111,7 +111,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    lrnFwd.primitive.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }

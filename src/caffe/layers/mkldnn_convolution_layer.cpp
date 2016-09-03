@@ -15,10 +15,10 @@ namespace caffe {
 
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
-            : ConvolutionLayer<Dtype>(param), MKLDNNLayer<Dtype>()
+            : MKLDNNLayer<Dtype>(), ConvolutionLayer<Dtype>(param)
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , convFwd_pd(NULL)
-            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
+            , convFwd_pd(NULL), output_memory(NULL)
+            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL)
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
             , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
 {
@@ -151,7 +151,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    convFwd.primitive.reset(new convolution(*convFwd_pd
+    convFwd.reset(new convolution(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(convFwd);

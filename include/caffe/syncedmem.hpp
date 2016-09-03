@@ -77,12 +77,12 @@ struct PrvMemDescr {
 class SyncedMemory {
  public:
   SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL),
+      : prv_descriptor_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(0), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
-        prv_descriptor_(NULL), gpu_device_(-1) {}
+        gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL),
+      : prv_descriptor_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(size), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
@@ -96,10 +96,10 @@ class SyncedMemory {
 
   const void* cpu_ptr() const { return cpu_ptr_; }
 
+  shared_ptr<PrvMemDescr> prv_descriptor_;
   void set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data);
   const void* prv_data();
   void* mutable_prv_data();
-  shared_ptr<PrvMemDescr> prv_descriptor_;
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED,
                     HEAD_AT_PRV, SYNCED_PRV};
   SyncedHead head() { return head_; }

@@ -19,30 +19,6 @@ using namespace mkldnn;
 
 namespace caffe {
 
-// =====  CpuEngine =======================================
-// cpu_engine singleton
-class CpuEngine
-{
-public:
-    static CpuEngine & Instance()
-    {
-        // I's thread-safe in C++11.
-        static CpuEngine myInstance;
-        return myInstance;
-    }
-    CpuEngine(CpuEngine const&) = delete;             // Copy construct
-    CpuEngine(CpuEngine&&) = delete;                  // Move construct
-    CpuEngine& operator=(CpuEngine const&) = delete;  // Copy assign
-    CpuEngine& operator=(CpuEngine &&) = delete;      // Move assign
-
-    engine & get_engine() { return _cpu_engine; }
-protected:
-//    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
-    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
-    ~CpuEngine() {}
-private:
-    engine _cpu_engine;
-};
 // =====  MKLDNNConvolutionLayer =======================================
 template <typename Dtype>
 class MKLDNNConvolutionLayer : public MKLDNNLayer<Dtype> , public ConvolutionLayer<Dtype> {
@@ -110,10 +86,10 @@ template <typename Dtype>
 class MKLDNNLRNLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype>  {
 public:
     explicit MKLDNNLRNLayer(const LayerParameter& param)
-        : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
+        : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
         , fwd_top_data(NULL), fwd_bottom_data (NULL)
         , lrnFwd_pd(NULL)
-        , input_primitive(NULL), output_memory(NULL) , scratch_(NULL)
+        , output_memory(NULL), scratch_(NULL), input_primitive(NULL)
         , alpha_(0.), beta_(0.), k_(0.)
         , size_(0), num_(0), width_(0), height_(0), channels_(0)
         {}
@@ -148,11 +124,11 @@ template <typename Dtype>
 class MKLDNNPoolingLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype>  {
 public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
-            : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
+            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
             , fwd_bottom_data(NULL), fwd_top_data(NULL)
             , poolingFwd_pd(NULL)
-            , indices_memory(NULL), input_primitive(NULL), output_memory(NULL)
             , indices_pd(NULL)
+            , indices_memory(NULL), output_memory(NULL), input_primitive(NULL)
             , num_(0), channels_(0), width_(0), height_(0), width_out_(0), height_out_(0)
             , kernel_w_(0), kernel_h_(0), stride_w_(0), stride_h_(0)
             , pad_w_(0), pad_h_(0)
@@ -182,7 +158,7 @@ protected:
 private:
     void InitPooling(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
-    shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data;
     shared_ptr<pooling::primitive_desc> poolingFwd_pd;
     MKLDNNPrimitive<Dtype> poolingFwd;
     shared_ptr<memory::primitive_desc> indices_pd;
@@ -206,10 +182,10 @@ public:
     *     the value @f$ \nu @f$ by which negative values are multiplied.
     */
     explicit MKLDNNReLULayer(const LayerParameter& param)
-            : NeuronLayer<Dtype>(param), MKLDNNLayer<Dtype>()
+            : MKLDNNLayer<Dtype>(), NeuronLayer<Dtype>(param)
             , fwd_top_data(NULL), fwd_bottom_data (NULL)
-            , reluFwd_pd(NULL)
-            , input_primitive(NULL), output_memory(NULL)
+            , reluFwd_pd(NULL), output_memory(NULL)
+            , input_primitive(NULL)
             , num_(0), width_(0), height_(0), channels_(0)
             {}
     ~MKLDNNReLULayer() {}

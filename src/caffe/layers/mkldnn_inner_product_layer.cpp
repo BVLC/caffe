@@ -19,10 +19,10 @@ using namespace mkldnn;
 namespace caffe {
 template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
-            : InnerProductLayer<Dtype>(param), MKLDNNLayer<Dtype>()
+            : MKLDNNLayer<Dtype>(), InnerProductLayer<Dtype>(param)
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , ipFwd_pd(NULL)
-            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
+            , ipFwd_pd(NULL), output_memory(NULL)
+            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL)
             , w_(0), h_(0)
 {
 }
@@ -124,7 +124,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    ipFwd.primitive.reset(new inner_product(prop_kind::forward
+    ipFwd.reset(new inner_product(prop_kind::forward
                             , *input_primitive, *weights_primitive
                             , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);
