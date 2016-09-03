@@ -99,7 +99,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
-
+ 
 // This function is called on prefetch thread
 template <typename Dtype>
 void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
