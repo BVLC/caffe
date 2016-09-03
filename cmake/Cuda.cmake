@@ -247,7 +247,7 @@ endif()
 
 # setting nvcc arch flags
 caffe_select_nvcc_arch_flags(NVCC_FLAGS_EXTRA)
-list(APPEND CUDA_NVCC_FLAGS ${NVCC_FLAGS_EXTRA})
+list(APPEND CUDA_NVCC_FLAGS "-std=c++11" ${NVCC_FLAGS_EXTRA})
 message(STATUS "Added CUDA NVCC flags for: ${NVCC_FLAGS_EXTRA_readable}")
 
 # Boost 1.55 workaround, see https://svn.boost.org/trac/boost/ticket/9392 or
