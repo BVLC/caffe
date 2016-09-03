@@ -21,7 +21,7 @@ template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
             : InnerProductLayer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , ipFwd_pd(NULL), ipFwd(NULL)
+            , ipFwd_pd(NULL)
             , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
             , w_(0), h_(0)
 {
@@ -126,7 +126,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    ipFwd.reset(new inner_product(prop_kind::forward
+    ipFwd.primitive.reset(new inner_product(prop_kind::forward
                             , *input_primitive, *weights_primitive
                             , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);
@@ -153,7 +153,7 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
-    this->get_mkldnn_stream()->submit({*ipFwd});
+    ipFwd.submit();
 }
 
 template <typename Dtype>

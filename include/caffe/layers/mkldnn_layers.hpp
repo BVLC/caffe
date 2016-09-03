@@ -37,8 +37,8 @@ public:
 
     engine & get_engine() { return _cpu_engine; }
 protected:
-//    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
-    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
+    CpuEngine() : _cpu_engine(engine::cpu, 0) {}
+//    CpuEngine() : _cpu_engine(engine::cpu_lazy, 0) {}
     ~CpuEngine() {}
 private:
     engine _cpu_engine;
@@ -66,7 +66,7 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
     shared_ptr<convolution::primitive_desc> convFwd_pd;
-    shared_ptr<convolution> convFwd;
+    MKLDNNPrimitive<Dtype> convFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
     uint32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
@@ -94,7 +94,7 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
     shared_ptr<inner_product::primitive_desc> ipFwd_pd;
-    shared_ptr<inner_product> ipFwd;
+    MKLDNNPrimitive<Dtype> ipFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
     uint32_t w_, h_;
@@ -112,7 +112,7 @@ public:
     explicit MKLDNNLRNLayer(const LayerParameter& param)
         : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
         , fwd_top_data(NULL), fwd_bottom_data (NULL)
-        , lrnFwd_pd(NULL), lrnFwd(NULL)
+        , lrnFwd_pd(NULL)
         , input_primitive(NULL), output_memory(NULL) , scratch_(NULL)
         , alpha_(0.), beta_(0.), k_(0.)
         , size_(0), num_(0), width_(0), height_(0), channels_(0)
@@ -136,7 +136,7 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<lrn::primitive_desc> lrnFwd_pd;
-    shared_ptr<lrn> lrnFwd;
+    MKLDNNPrimitive<Dtype> lrnFwd;
     shared_ptr<memory> output_memory, scratch_;
     shared_ptr<primitive> input_primitive;
     Dtype alpha_, beta_, k_;
@@ -150,7 +150,7 @@ public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
             : Layer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_bottom_data(NULL), fwd_top_data(NULL)
-            , poolingFwd_pd(NULL), poolingFwd(NULL)
+            , poolingFwd_pd(NULL)
             , indices_memory(NULL), input_primitive(NULL), output_memory(NULL)
             , indices_pd(NULL)
             , num_(0), channels_(0), width_(0), height_(0), width_out_(0), height_out_(0)
@@ -184,7 +184,7 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<pooling::primitive_desc> poolingFwd_pd;
-    shared_ptr<pooling> poolingFwd;
+    MKLDNNPrimitive<Dtype> poolingFwd;
     shared_ptr<memory::primitive_desc> indices_pd;
     shared_ptr<memory> indices_memory, output_memory;
     shared_ptr<primitive> input_primitive;
@@ -208,7 +208,7 @@ public:
     explicit MKLDNNReLULayer(const LayerParameter& param)
             : NeuronLayer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_top_data(NULL), fwd_bottom_data (NULL)
-            , reluFwd_pd(NULL), reluFwd(NULL)
+            , reluFwd_pd(NULL)
             , input_primitive(NULL), output_memory(NULL)
             , num_(0), width_(0), height_(0), channels_(0)
             {}
@@ -228,7 +228,7 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<relu::primitive_desc> reluFwd_pd;
-    shared_ptr<relu> reluFwd;
+    MKLDNNPrimitive<Dtype> reluFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive;
     uint32_t num_, width_, height_, channels_;

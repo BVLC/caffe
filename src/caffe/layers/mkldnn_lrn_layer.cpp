@@ -112,9 +112,8 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
-//    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
-    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    lrnFwd.primitive.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }
@@ -130,7 +129,7 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
-    this->get_mkldnn_stream()->submit({*lrnFwd});
+    lrnFwd.submit();
 }
 
 template <typename Dtype>

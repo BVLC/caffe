@@ -76,9 +76,8 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
-//    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
-    reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
+    reluFwd.primitive.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(reluFwd);
     fwd_top_data->set_mkldnn_primitive(reluFwd);
 }
@@ -94,7 +93,7 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
-    this->get_mkldnn_stream()->submit({*reluFwd});
+    reluFwd.submit();
 }
 
 template <typename Dtype>

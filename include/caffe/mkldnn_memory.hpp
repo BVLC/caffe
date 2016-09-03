@@ -10,12 +10,9 @@
 #include "caffe/util/math_functions.hpp"
 #include "mkldnn.hpp"
 
-
-
 using namespace mkldnn;
 
 namespace caffe {
-
 
 // =====  MKLDNNStream =======================================
 class MKLDNNStream {
@@ -73,19 +70,24 @@ private:
 template <typename Dtype>
 class MKLDNNLayer {
 public:
-    explicit MKLDNNLayer():_mkldnn_stream(NULL), _bottom_mkldnn_layers(NULL) {}
+    explicit MKLDNNLayer() {}
     virtual ~MKLDNNLayer() {}
-    shared_ptr<MKLDNNStream> mkldnn_stream() { return _mkldnn_stream; }
-    shared_ptr<MKLDNNStream> get_mkldnn_stream();
-//    void set_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) { _mkldnn_stream = mkldnn_stream; }
-protected:
-    shared_ptr<vector<MKLDNNLayer<Dtype>* > > _bottom_mkldnn_layers;
-private:
-    shared_ptr<MKLDNNStream> _mkldnn_stream;
 };
 
+// =====  MKLDNNPrimitive =======================================
+template <typename Dtype>
+class MKLDNNPrimitive {
+public:
+    explicit MKLDNNPrimitive():primitive(NULL), mkldnn_stream(NULL) {}
+    virtual ~MKLDNNPrimitive() {}
+    shared_ptr<primitive> primitive;
+    shared_ptr<MKLDNNStream> mkldnn_stream;
+    shared_ptr<MKLDNNStream> get_mkldnn_stream();
+    shared_ptr<MKLDNNStream> submit();
+private:
+};
 
-
+// =====  MKLDNNMemoryDescriptorBase =======================================
 template <typename Dtype>
 class MKLDNNMemoryDescriptorBase : public PrvMemDescr
         , public boost::enable_shared_from_this<MKLDNNMemoryDescriptorBase<Dtype> >
@@ -124,8 +126,8 @@ public:
         if (_prv_memory == NULL) allocate();
         return _internal_ptr;
     }
-    shared_ptr<reorder>  reorder_usr2prv() { return _reorder_usr2prv; }
-    shared_ptr<reorder>  reorder_prv2usr() { return _reorder_prv2usr; }
+    shared_ptr<primitive>  reorder_usr2prv() { return _reorder_usr2prv.primitive; }
+    shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.primitive; }
     std::string name;  // for debugging purposes
 
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
@@ -169,8 +171,8 @@ protected:
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
     shared_ptr<reorder::primitive_desc> _reorder_usr2prv_pd;
     shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
-    shared_ptr<reorder> _reorder_usr2prv;
-    shared_ptr<reorder> _reorder_prv2usr;
+    MKLDNNPrimitive<Dtype> _reorder_usr2prv;
+    MKLDNNPrimitive<Dtype> _reorder_prv2usr;
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
@@ -212,10 +214,11 @@ public:
     shared_ptr<primitive> create_input(bool set_prv_ptr);
     shared_ptr<memory> create_output_memory();
 
-    void set_mkldnn_primitive(shared_ptr<primitive> primitive) { CHECK(primitive); _mkldnn_primitive = primitive;  }
-    shared_ptr<primitive>  mkldnn_primitive() const { return _mkldnn_primitive;  }
+    void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.primitive); _mkldnn_primitive = mprimitive;  }
+    MKLDNNPrimitive<Dtype>&  mkldnn_primitive() { return _mkldnn_primitive; }
+    shared_ptr<primitive> primitive() const { return _mkldnn_primitive.primitive; }
 private:
-    shared_ptr<primitive> _mkldnn_primitive;
+    MKLDNNPrimitive<Dtype> _mkldnn_primitive;
 };
 
 template <typename Dtype>

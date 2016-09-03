@@ -17,7 +17,7 @@ template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
             : ConvolutionLayer<Dtype>(param), MKLDNNLayer<Dtype>()
             , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , convFwd_pd(NULL), convFwd(NULL)
+            , convFwd_pd(NULL)
             , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL), output_memory(NULL)
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
             , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
@@ -153,7 +153,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    convFwd.reset(new convolution(*convFwd_pd
+    convFwd.primitive.reset(new convolution(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(convFwd);
@@ -180,7 +180,7 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
-    this->get_mkldnn_stream()->submit({*convFwd});
+    convFwd.submit();
 }
 
 template <typename Dtype>
