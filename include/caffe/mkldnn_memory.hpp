@@ -59,7 +59,6 @@ public:
 
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
-    void set_stream_finish(bool stream_finish) { _stream_finish = stream_finish; }
 
     std::string name;  // for debugging purposes
 protected:
@@ -106,8 +105,6 @@ protected:
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
-    // TODO: !! does _stream_finish really need??
-    bool _stream_finish;
 };
 
 template <typename Dtype, bool is_diff>

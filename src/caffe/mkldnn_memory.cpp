@@ -11,7 +11,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
                                     ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
-                                    , _mkldnn_layer(NULL), _stream_finish(false)
+                                    , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd);
     set_prv_memory_pd(prv_memory_pd);
@@ -120,7 +120,7 @@ template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
 {
     CHECK(this->mkldnn_layer());
-    if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready() && this->_stream_finish) {
+    if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready()) {
         VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::" << __FUNCTION__ << ": stream.wait() - " << this->name;
         StreamHolder::Instance().current_stream()->wait();
     }
@@ -258,7 +258,6 @@ template <typename Dtype, bool is_diff>
 shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory()
 {
     // TODO: need to iptimize code
-    this->set_stream_finish(true);
     shared_ptr<memory> omem = create_output_memory(this->_blob);
     this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
     return omem;
