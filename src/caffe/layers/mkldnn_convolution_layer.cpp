@@ -65,8 +65,6 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
     BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
     init_properties(bottom, top);
-    if( convFwd_pd == NULL)
-        InitConvolution(bottom, top);
 }
 
 template <typename Dtype>
@@ -173,6 +171,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    if( convFwd_pd == NULL)
+        InitConvolution(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     fwd_weights_data->sync_before_read(true);

@@ -21,6 +21,7 @@ public:
     virtual ~MKLDNNStream() {}
     MKLDNNStream  &submit(std::vector<primitive> primitives) { _stream->submit(primitives); return *this; }
     bool wait(bool block = true) {
+        VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : execute stream (wait) ";
         _ready = false;
         return _stream->wait(block);
     }

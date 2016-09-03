@@ -28,8 +28,6 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
 
-    if( reluFwd_pd == NULL)
-        InitReLU(bottom, top);
 }
 
 
@@ -88,6 +86,8 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    if( reluFwd_pd == NULL)
+        InitReLU(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv

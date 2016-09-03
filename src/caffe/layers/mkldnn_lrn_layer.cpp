@@ -51,8 +51,6 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     default:
         LOG(FATAL) << "Unknown normalization region.";
     }
-    if( lrnFwd_pd == NULL)
-        InitLRN(bottom, top);
 }
 
 template <typename Dtype>
@@ -124,6 +122,8 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    if( lrnFwd_pd == NULL)
+        InitLRN(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv

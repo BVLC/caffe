@@ -116,8 +116,6 @@ void MKLDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     if (top.size() == 1) {
         max_idx_.Reshape(bottom[0]->num(), channels_, height_out_, width_out_);
     }
-    if (NULL == poolingFwd_pd)
-        InitPooling(bottom, top);
 }
 
 template <typename Dtype>
@@ -225,6 +223,8 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                             ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    if (NULL == poolingFwd_pd)
+        InitPooling(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     // update top that head at prv

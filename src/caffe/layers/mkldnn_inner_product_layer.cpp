@@ -49,8 +49,6 @@ void MKLDNNInnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 
     this->w_ = bottom[0]->width();
     this->h_ = bottom[0]->height();
-    if( ipFwd_pd == NULL)
-        InitInnerProduct(bottom, top);
 }
 
 template <typename Dtype>
@@ -146,6 +144,8 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    if( ipFwd_pd == NULL)
+        InitInnerProduct(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     fwd_weights_data->sync_before_read(true);

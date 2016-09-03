@@ -163,7 +163,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
 {
     CHECK(this->mkldnn_layer());
     if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready() && this->_stream_finish) {
-        VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::check_stream: stream.wait() - " << this->name;
+        VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::" << __FUNCTION__ << ": stream.wait() - " << this->name;
         StreamHolder::Instance().current_stream()->wait();
         /*
 //        if(this->_reorder_prv2usr_pd == NULL) {
