@@ -203,8 +203,7 @@ Workaround: We recommend to always use LMDB Data Layer
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
-* We observe convergence problems with some publicly presented hyper parameters (for Googlenet and ResNet50).
-Workaround: For CPU it is recommended to set learning rate in rage of 0.002-0.005
+* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
 
 
 # Recomendations to achieve best performance
