@@ -17,6 +17,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
     set_prv_memory_pd(prv_memory_pd);
     set_mkldnn_layer(mkldnn_layer);
     this->_blob = blob;
+    // !! TODO: check code below (there is error on second and other iterations without it) .
     if (_blob->data()->cpu_ptr())
         _blob->set_prv_data_descriptor(NULL);
 }
