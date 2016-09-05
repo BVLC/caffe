@@ -84,6 +84,10 @@ public:
 
     shared_ptr<MKLDNNStream> get_stream();
     shared_ptr<MKLDNNStream> current_stream() { return _current_stream; }
+    void prepare_mkldnn_stream(shared_ptr<MKLDNNStream> mkldnn_stream) {
+        _current_stream = mkldnn_stream;
+        _current_stream->prepare();
+    }
 protected:
     StreamHolder() : _current_stream(NULL) {}
     ~StreamHolder() {}

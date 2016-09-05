@@ -14,15 +14,12 @@ shared_ptr<MKLDNNStream> StreamHolder::get_stream()
 
 template <typename Dtype>
 shared_ptr<MKLDNNStream>  MKLDNNPrimitive<Dtype>::get_mkldnn_stream() {
-/* TODO: !! must be this code
     if(mkldnn_stream == NULL)
         mkldnn_stream = StreamHolder::Instance().get_stream();
-    else if(!mkldnn_stream->ready())
-        mkldnn_stream->prepare();
-*/
-    if(mkldnn_stream == NULL || !mkldnn_stream->ready())
-        mkldnn_stream = StreamHolder::Instance().get_stream();
+    else
+        StreamHolder::Instance().prepare_mkldnn_stream(mkldnn_stream);
     return mkldnn_stream;
+
 }
 
 template <typename Dtype>
