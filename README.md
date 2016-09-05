@@ -21,7 +21,7 @@ Framework development discussions and thorough bug reports are collected on [Iss
 Happy brewing!
 
 # Intel Caffe
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW+)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
 
 ## Building
 Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
@@ -38,6 +38,9 @@ one through OpenMP environmental variables like OMP_NUM_THREADS or GOMP_CPU_AFFI
 If some system tool like numactl is used to control CPU affinity, by default caffe will prevent
 to use more than one thread per core. When less than required cores are specified, caffe will
 limit execution of OpenMP threads to specified cores only.
+
+## Best performance solution
+Please read [release notes](https://github.com/intel/caffe/blob/master/docs/release_notes.md) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
 ## Multinode Training
 Intel Caffe multinode allows you to execute deep neural network training on multiple machines.

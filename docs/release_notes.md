@@ -23,7 +23,7 @@ title: Release Notes
 
 # Introduction
 
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW+)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (Haswell, Broadwell, Xenon Phi)
 
 # Installation
 
@@ -88,10 +88,12 @@ This Caffe version is seflcontained. This means that newest version of Intel MKL
 * Set `BLAS := mkl` in `Makefile.config`
 * If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
 
-[Intel MKL 2017 Beta Update 1](https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305) introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
+[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
 
 * As default and recommended configuration Caffe is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
 * Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
+
+* `USE_MKLDNN_AS_DEFAULT_ENGINE := 1` in `Makefile.config` is new integration with new MKLDNN engine. This is experimental solution - not recommended for buissnes users.
 
 ## Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
@@ -177,11 +179,20 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
-# Known issues and limitations
-* Intel MKL 2017 Beta Update 1 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
-Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
+# Change log
+1-09-2016
+* added RNN support
+* moved form MKL2017 beta update 1 engine to MKL2017 (providing better performance solution)
+* added official support for ResNet50, GoogleNet v2, VGG-19. (List of currenlty supported topologies: AlexNet, GoogleNet, GoogleNet v2, ResNet50, VGG-19)
+* added official support for multinode on GoogleNet with MKL2017 engine
+* added DataLayer optimizations
+* added support for compressed LMDB
+* initial integration with MKLDNN 
 
-* Itersize parameter value different from 1 in prototxt is not supported in Intel MKL2017 beta update1 and will lead to incorrect results.
+
+# Known issues and limitations
+* Intel MKL 2017 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
+Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
 
 * Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
@@ -189,15 +200,10 @@ Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine
 * Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
 Workaround: We recommend to always use LMDB Data Layer
 
-* Compressed LMDB Data Layer is not supported in Caffe 
-Workaround: Use uncompressed LMDB Data Layer (durring creation of Data Layer do not specify encode type) 
-
-* Tempolary Multi node training is not supported in Intel MKL2017 beta update1 when used with option `USE_MKL2017_AS_DEFAULT_ENGINE := 1`
-Workaround: use GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config` and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
-
-* LeNet and Cifar are not optimized in terms of performance in Intel MKL2017 beta update1
+* LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
+* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
 
 
 # Recomendations to achieve best performance
@@ -209,7 +215,9 @@ Workaround: better performance results might be achieved with GEMM engine: `set 
 
 * It is recommended to use newest XPPSL software for Intel Xeon Phi™ product family: [https://mic-bld.pdx.intel.com/release/external/XPPSL/] (https://mic-bld.pdx.intel.com/release/external/XPPSL/)
 
-* Make sure that your hardware configurations includes fast SSD (M.2) drive
+* Some Linux distributions security settings can affect performance (for example Centos 7.2). If this is your case for best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
+
+* Make sure that your hardware configurations includes fast SSD (M.2) drive. If during trainings you will observe in logs "waiting for data" - you should install better SSD or reduce batchsize.
 
 * Optimize hardware in bios: set CPU max frequency, set 100% fan speed, check cooling system
 
@@ -221,9 +229,12 @@ Workaround: better performance results might be achieved with GEMM engine: `set 
 
 * Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
 
+* Make sure that there are no unnecesary processes during traning and scoring. IntelCaffe is using all available resources and other processes (like monitoring tools, java processes, network trafic etc.) might impact performance.
+
+
 # Instructions:
 
-For instructions and tutorials please visit: [https://github.com/intelcaffe/caffe/wiki](https://github.com/intelcaffe/caffe/wiki)
+For instructions and tutorials please visit: [https://github.com/intel/caffe/wiki](https://github.com/intel/caffe/wiki)
 
 ##	How to measure performance
 1. Make sure that you implemented recommendations to achieve best performance
@@ -254,7 +265,7 @@ or edit commands and provide other optimized topologies.
 
 ##	How to train multinode
 
-Tutorials and training instructions are available at: [https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F](https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F)
+Tutorials and training instructions are available at: [https://github.com/intel/caffe/wiki/Multinode---How-to-...%3F](https://github.com/intel/caffe/wiki/Multinode---How-to-...%3F)
 
 ##	How to contribute 
 
