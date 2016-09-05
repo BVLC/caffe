@@ -64,6 +64,8 @@ DEFINE_string(listen_address, "",
 DEFINE_int32(comm_threads, 1,
     "Optional; multinode mode,"
     " The number of threads used by communication code.");
+DEFINE_bool(forward_only, false,
+    "Optional; Execute only forward pass");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -409,8 +411,10 @@ int time() {
   float initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
+  if (!FLAGS_forward_only){
+    LOG(INFO) << "Performing Backward";
+    caffe_net.Backward();
+  }
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
@@ -438,16 +442,21 @@ int time() {
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
-    backward_timer.Start();
-    for (int i = layers.size() - 1; i >= 0; --i) {
-      timer.Start();
-      layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          bottom_vecs[i]);
-      backward_time_per_layer[i] += timer.MicroSeconds();
+    if (!FLAGS_forward_only) {
+      backward_timer.Start();
+      for (int i = layers.size() - 1; i >= 0; --i) {
+        timer.Start();
+        layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
+                            bottom_vecs[i]);
+        backward_time_per_layer[i] += timer.MicroSeconds();
+      }
+      backward_time += backward_timer.MicroSeconds();
+      LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
+        << iter_timer.MilliSeconds() << " ms.";
+    } else {
+      LOG(INFO) << "Iteration: " << j + 1 << " forward time: "
+        << iter_timer.MilliSeconds() << " ms.";
     }
-    backward_time += backward_timer.MicroSeconds();
-    LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
-      << iter_timer.MilliSeconds() << " ms.";
   }
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
@@ -455,17 +464,21 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
-    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
-      "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+    if (!FLAGS_forward_only) {
+      LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+        "\tbackward: " << backward_time_per_layer[i] / 1000 /
+        FLAGS_iterations << " ms.";
+    }
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
-    FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
-    FLAGS_iterations << " ms.";
+  if (!FLAGS_forward_only) {
+    LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+      FLAGS_iterations << " ms.";
+    LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+      FLAGS_iterations << " ms.";
+  }
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
