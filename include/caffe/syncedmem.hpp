@@ -77,12 +77,12 @@ struct PrvMemDescr {
 class SyncedMemory {
  public:
   SyncedMemory()
-      : prv_descriptor_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL),
+      : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(0), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
-      : prv_descriptor_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL),
+      : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(size), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
