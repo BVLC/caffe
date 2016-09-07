@@ -15,6 +15,11 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 
     Layer<Dtype>::LayerSetUp(bottom, top);
 
+    channels_ = bottom[0]->channels();
+    height_   = bottom[0]->height();
+    width_    = bottom[0]->width();
+    num_      = bottom[0]->num();
+
     eps_ = this->layer_param_.batch_norm_param().eps();
     use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
     bias_term_ = this->layer_param_.batch_norm_param().bias_term();
@@ -33,6 +38,7 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         // Initialize scale and shift
         vector<int> scaleshift_shape(1);
         scaleshift_shape[0] = channels_;
+        VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: channels_  = " << channels_;
 
         this->blobs_[0].reset(new Blob<Dtype>(scaleshift_shape));
         FillerParameter filler_param(this->layer_param_.batch_norm_param().filler());
@@ -41,6 +47,7 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
             filler_param.set_value(1);
         }
         shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
+        VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: scaleshift " << __LINE__ << ":" << this->layer_param_.name();
         filler->Fill(this->blobs_[0].get());
 
         if ( bias_term_ ) {
@@ -51,6 +58,7 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
                 bias_filler_param.set_value(0);
             }
             shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(bias_filler_param));
+            VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: bias " << __LINE__ << ":" << this->layer_param_.name();
             bias_filler->Fill(this->blobs_[1].get());
         }
     }
