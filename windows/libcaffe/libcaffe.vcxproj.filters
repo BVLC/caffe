@@ -336,6 +336,21 @@
     <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp">
       <Filter>src\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\psroi_pooling_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\smooth_l1_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\softmax_loss_ohem_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\box_annotator_ohem_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_ohem_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -638,6 +653,12 @@
     <ClInclude Include="..\..\include\caffe\layers\scale_layer.hpp">
       <Filter>include\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\psroi_pooling_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\smooth_l1_loss_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu">
@@ -810,6 +831,21 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu">
       <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\psroi_pooling_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_l1_loss_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_ohem_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\box_annotator_ohem_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_ohem_layer.cu">
+      <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

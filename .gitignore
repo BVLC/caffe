@@ -70,6 +70,7 @@ models/*
 
 # build, distribute, and bins (+ python proto bindings)
 build
+windows/packages
 .build_debug/*
 .build_release/*
 distribute/*

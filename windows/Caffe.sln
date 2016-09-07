@@ -53,6 +53,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{E2EF
 		scripts\MatlabPreBuild.cmd = scripts\MatlabPreBuild.cmd
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe.managed", "caffe.managed\caffe.managed.vcxproj", "{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_cifar_data", "convert_cifar_data\convert_cifar_data.vcxproj", "{B166B643-C90B-4903-B735-D2D4ED4F2248}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "classification", "classification\classification.vcxproj", "{273E7766-61AA-437C-BCA9-4CA7FE0484D4}"
@@ -105,6 +107,10 @@ Global
 		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Debug|x64.Build.0 = Debug|x64
 		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Release|x64.ActiveCfg = Release|x64
 		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Release|x64.Build.0 = Release|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Debug|x64.ActiveCfg = Debug|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Debug|x64.Build.0 = Debug|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Release|x64.ActiveCfg = Release|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Release|x64.Build.0 = Release|x64
 		{B166B643-C90B-4903-B735-D2D4ED4F2248}.Debug|x64.ActiveCfg = Debug|x64
 		{B166B643-C90B-4903-B735-D2D4ED4F2248}.Debug|x64.Build.0 = Debug|x64
 		{B166B643-C90B-4903-B735-D2D4ED4F2248}.Release|x64.ActiveCfg = Release|x64
