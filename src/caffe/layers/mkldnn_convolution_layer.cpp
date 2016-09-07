@@ -74,21 +74,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
 {
     if (std::is_same<Dtype, double>::value)   NOT_IMPLEMENTED;
 
-    uint32_t g  = std::max(this->group_, 1);
-    uint32_t n  = this->num_;
-    uint32_t iw = this->width_;
-    uint32_t ih = this->height_;
-    uint32_t ic = this->channels_;
+    int32_t g  = std::max(this->group_, 1);
+    int32_t n  = this->num_;
+    int32_t iw = this->width_;
+    int32_t ih = this->height_;
+    int32_t ic = this->channels_;
 
-    uint32_t ow = this->width_out_;
-    uint32_t oh = this->height_out_;
-    uint32_t oc = this->num_output_;
+    int32_t ow = this->width_out_;
+    int32_t oh = this->height_out_;
+    int32_t oc = this->num_output_;
 
-    uint32_t kw = this->kernel_w_;
-    uint32_t kh = this->kernel_h_;
+    int32_t kw = this->kernel_w_;
+    int32_t kh = this->kernel_h_;
 
     tensor::dims convolutionStrides {this->stride_h_, this->stride_w_};
-    tensor::nd_offset padding {this->pad_h_, this->pad_w_};
+    tensor::dims padding {this->pad_h_, this->pad_w_};
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::precision mpcsn = memory::precision::f32;

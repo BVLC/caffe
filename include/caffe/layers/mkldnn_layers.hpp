@@ -43,6 +43,44 @@ private:
     engine _cpu_engine;
 };
 
+// =====  MKLDNNBatchNormLayer =======================================
+template <typename Dtype>
+class MKLDNNBatchNormLayer : public Layer<Dtype> {
+public:
+    explicit MKLDNNBatchNormLayer(const LayerParameter& param)
+            : Layer<Dtype>(param)
+            , fwd_top_data    (NULL)
+            , fwd_bottom_data (NULL)
+            , BatchNormFwd_pd(NULL)
+            , BatchNormFwd(NULL)
+            , input_memory(NULL), output_memory(NULL)
+            , scaleshift_memory(NULL), ws_memory(NULL)
+        {}
+
+    ~MKLDNNBatchNormLayer() {}
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "BatchNorm"; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<batch_normalization::primitive_desc> BatchNormFwd_pd;
+
+    shared_ptr<batch_normalization> BatchNormFwd;
+    shared_ptr<memory> input_memory, output_memory, scaleshift_memory, ws_memory;
+
+    int32_t num_, width_, height_, channels_;
+    Dtype eps_;
+    bool use_weight_bias_, bias_term_;
+};
+
 // =====  MKLDNNConvolutionLayer =======================================
 template <typename Dtype>
 class MKLDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
@@ -70,7 +108,7 @@ private:
     shared_ptr<convolution> convFwd;
     shared_ptr<memory> input_memory, weights_memory, bias_memory, output_memory;
 
-    uint32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
+    int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
 };
 
@@ -99,7 +137,7 @@ private:
     shared_ptr<inner_product> ipFwd;
     shared_ptr<memory> input_memory, weights_memory, bias_memory, output_memory;
 
-    uint32_t w_, h_;
+    int32_t w_, h_;
 };
 
 
@@ -188,12 +226,12 @@ protected:
 private:
     void InitPooling(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
-    uint32_t num_, channels_, width_, height_, width_out_, height_out_;
-    uint32_t kernel_w_, kernel_h_;
-    uint32_t stride_w_, stride_h_;
+    int32_t num_, channels_, width_, height_, width_out_, height_out_;
+    int32_t kernel_w_, kernel_h_;
+    int32_t stride_w_, stride_h_;
     int32_t  pad_w_, pad_h_;
 
-    Blob<uint32_t> max_idx_;
+    Blob<int32_t> max_idx_;
     bool global_pooling_;
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
@@ -243,7 +281,7 @@ private:
     shared_ptr<relu> reluFwd;
     shared_ptr<memory> input_memory, output_memory;
 
-    uint32_t num_, width_, height_, channels_;
+    int32_t num_, width_, height_, channels_;
 };
 
 }  // namespace caffe

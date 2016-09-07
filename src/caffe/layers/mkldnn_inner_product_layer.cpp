@@ -64,11 +64,11 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
 
-    uint32_t n  = this->M_;
-    uint32_t w = this->w_;
-    uint32_t h = this->h_;
-    uint32_t oc = this->N_;
-    uint32_t ic = this->K_/h_/w_;
+    int32_t n  = this->M_;
+    int32_t w = this->w_;
+    int32_t h = this->h_;
+    int32_t oc = this->N_;
+    int32_t ic = this->K_/h_/w_;
     bool has_spatial = h > 1 || w > 1;
 
     // Initialize memory descriptors (fromat = any) to create inner_product descriptor
