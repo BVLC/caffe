@@ -1,7 +1,5 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
-
-#include "caffe/util/im_transforms.hpp"
 #endif  // USE_OPENCV
 
 #include <string>
@@ -9,6 +7,7 @@
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/bbox_util.hpp"
+#include "caffe/util/im_transforms.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
