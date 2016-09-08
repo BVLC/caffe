@@ -180,14 +180,11 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_output_mpd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> prv_input_mpd(NULL);
+    shared_ptr<MemPD> prv_output_mpd(NULL);
     if (bottom_data_is_prv) {
-        shared_ptr<MemPD> prv_input_mpd(new MemPD(*input_md, cpu_engine));
-        shared_ptr<MemPD> prv_output_mpd(new MemPD(*output_md, cpu_engine));
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd));
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd));
-    } else {
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, NULL));
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, NULL));
+        prv_input_mpd.reset(new MemPD(*input_md, cpu_engine));
+        prv_output_mpd.reset(new MemPD(*output_md, cpu_engine));
     }
 
     // ---- Initialize pooling primitive descriptor -------------
@@ -207,14 +204,16 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
-    // ---- Create memory  ---------------------
-    input_memory = fwd_bottom_data->create_input_memory(bottom[0]);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+    // ---  init primitive and prv_memory descriptors ----------------------
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
 
-    // ---- Create pooling  --------------------
-    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_memory, *indices_memory, *output_memory));
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
+
+    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
+    fwd_bottom_data->set_mkldnn_primitive(poolingFwd);
+    fwd_top_data->set_mkldnn_primitive(poolingFwd);
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
@@ -224,15 +223,14 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                             ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    if (NULL == poolingFwd_pd) {
+    if (NULL == poolingFwd_pd)
         InitPooling(bottom, top);
-    } else {
-        fwd_bottom_data->sync_blob_prv_data(bottom[0]);
-        if (fwd_top_data->conversion_needed())
-            top[0]->set_prv_data_descriptor(fwd_top_data);
-    }
+    // making reorders if needed.
+    fwd_bottom_data->sync_before_read(false);
+    // update top that head at prv
+    fwd_top_data->sync_before_write();
 
-    stream().submit({*poolingFwd}).wait();
+    poolingFwd.submit();
 }
 
 template <typename Dtype>

@@ -96,9 +96,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-
     // ---- Initialize LRN primitive descriptor -------------
     lrn::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
                             ,*output_md, alpha_, beta_, size_);
@@ -107,14 +104,16 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     memory::primitive_desc scratch_mpd(memory::desc(lrnFwd_pd->data.scratch_primitive_desc.memory_desc), cpu_engine);
     scratch_.reset(new memory(scratch_mpd));
 
-    // ---- Create memory  ---------------------
-    input_memory = fwd_bottom_data->create_input_memory(bottom[0]);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
+    // ---  init primitive and prv_memory descriptors ----------------------
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
 
-    // ---- Create lrn --------------------
-    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_memory, *scratch_, *output_memory));
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
+
+    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
+    fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }
 
 
@@ -123,15 +122,14 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    if( lrnFwd_pd == NULL) {
+    if( lrnFwd_pd == NULL)
         InitLRN(bottom, top);
-    } else {
-        fwd_bottom_data->sync_blob_prv_data(bottom[0]);
-        if (fwd_top_data->conversion_needed())
-            top[0]->set_prv_data_descriptor(fwd_top_data);
-    }
+    // making reorders if needed.
+    fwd_bottom_data->sync_before_read(false);
+    // update top that head at prv
+    fwd_top_data->sync_before_write();
 
-    stream().submit({*lrnFwd}).wait();
+    lrnFwd.submit();
 }
 
 template <typename Dtype>

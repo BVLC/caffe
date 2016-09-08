@@ -49,10 +49,16 @@ inline void SyncedMemory::to_cpu() {
     }
     CHECK(prv_descriptor_.get());
     prv_descriptor_->convert_from_prv(cpu_ptr_);
+    prv_descriptor_->on_to_cpu();
     head_ = SYNCED_PRV;
     break;
   case SYNCED_PRV:
   case HEAD_AT_CPU:
+    if(prv_descriptor_.get()) {
+        prv_descriptor_->on_to_cpu();
+        head_ = SYNCED;
+    }
+    break;
   case SYNCED:
     break;
   }
@@ -175,10 +181,16 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor,
         bool same_data) {
   // If it wasn't synced before, it won't be now.
-  if ((head_ != HEAD_AT_PRV) && same_data)
-    head_ = SYNCED_PRV;
-  else
-    head_ = HEAD_AT_PRV;
+  if (descriptor == NULL) {
+    if (head_ != UNINITIALIZED)
+      head_ = HEAD_AT_CPU;
+  }
+  else {
+    if ((head_ != HEAD_AT_PRV) && same_data)
+      head_ = SYNCED_PRV;
+    else
+      head_ = HEAD_AT_PRV;
+  }
 
   prv_descriptor_ = descriptor;
 }
