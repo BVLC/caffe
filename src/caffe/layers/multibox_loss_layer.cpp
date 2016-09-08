@@ -193,6 +193,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                         loc_pred_data, loc_gt_data);
     loc_loss_layer_->Reshape(loc_bottom_vec_, loc_top_vec_);
     loc_loss_layer_->Forward(loc_bottom_vec_, loc_top_vec_);
+  } else {
+    loc_loss_.mutable_cpu_data()[0] = 0;
   }
 
   // Form data to pass on to conf_loss_layer_.
@@ -232,6 +234,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                          conf_pred_data, conf_gt_data);
     conf_loss_layer_->Reshape(conf_bottom_vec_, conf_top_vec_);
     conf_loss_layer_->Forward(conf_bottom_vec_, conf_top_vec_);
+  } else {
+    conf_loss_.mutable_cpu_data()[0] = 0;
   }
 
   top[0]->mutable_cpu_data()[0] = 0;
