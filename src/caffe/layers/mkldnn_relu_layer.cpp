@@ -27,6 +27,7 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->height_ = bottom[0]->height();
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
+
 }
 
 
@@ -62,20 +63,21 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd));
 
     // ---- Initialize relu primitive descriptor -------------
     relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
     reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
-    // ---- Create memory  ---------------------
-    input_memory = fwd_bottom_data->create_input_memory(bottom[0]);
-    output_memory = fwd_top_data->create_output_memory(top[0]);
-    if (fwd_top_data->conversion_needed())
-        top[0]->set_prv_data_descriptor(fwd_top_data);
 
-    // ---- Create relu --------------------
-    reluFwd.reset(new relu(*reluFwd_pd, *input_memory, *output_memory));
+    // ---  init primitive and prv_memory descriptors ----------------------
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
+    input_primitive = fwd_bottom_data->create_input(false);
+
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
+    output_memory = fwd_top_data->create_output_memory();
+
+    reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
+    fwd_bottom_data->set_mkldnn_primitive(reluFwd);
+    fwd_top_data->set_mkldnn_primitive(reluFwd);
 }
 
 
@@ -84,16 +86,14 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-
-    if( reluFwd_pd == NULL) {
+    if( reluFwd_pd == NULL)
         InitReLU(bottom, top);
-    } else {
-        fwd_bottom_data->sync_blob_prv_data(bottom[0]);
-        if (fwd_top_data->conversion_needed())
-            top[0]->set_prv_data_descriptor(fwd_top_data);
-    }
+    // making reorders if needed.
+    fwd_bottom_data->sync_before_read(false);
+    // update top that head at prv
+    fwd_top_data->sync_before_write();
 
-    stream().submit({*reluFwd}).wait();
+    reluFwd.submit();
 }
 
 template <typename Dtype>

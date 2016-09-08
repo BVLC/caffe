@@ -54,6 +54,7 @@ struct PrvMemDescr {
   virtual void convert_from_prv(void* cpu_ptr) = 0;
   virtual void convert_to_prv(void* cpu_ptr) = 0;
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other) = 0;
+  virtual void on_to_cpu() {}
   virtual void* prv_ptr() = 0;
   // returns true for matching layouts
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other) = 0;
@@ -93,10 +94,12 @@ class SyncedMemory {
   void* mutable_cpu_data();
   void* mutable_gpu_data();
 
+  const void* cpu_ptr() const { return cpu_ptr_; }
+
+  shared_ptr<PrvMemDescr> prv_descriptor_;
   void set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor, bool same_data);
   const void* prv_data();
   void* mutable_prv_data();
-  shared_ptr<PrvMemDescr> prv_descriptor_;
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED,
                     HEAD_AT_PRV, SYNCED_PRV};
   SyncedHead head() { return head_; }
