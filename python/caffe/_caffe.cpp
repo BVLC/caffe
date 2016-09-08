@@ -51,6 +51,8 @@ const int NPY_DTYPE = NPY_FLOAT32;
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
 
+void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
+
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
 // later if the input files are disturbed before they are actually used, but
@@ -86,19 +88,42 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   }
 }
 
-// Net constructor for passing phase as int
-shared_ptr<Net<Dtype> > Net_Init(
-    string param_file, int phase) {
-  CheckFile(param_file);
+// Net constructor
+shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
+    const int level, const bp::object& stages,
+    const bp::object& weights) {
+  CheckFile(network_file);
 
-  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+  // Convert stages from list to vector
+  vector<string> stages_vector;
+  if (!stages.is_none()) {
+    for (int i = 0; i < len(stages); i++) {
+      stages_vector.push_back(bp::extract<string>(stages[i]));
+    }
+  }
+
+  // Initialize net
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(network_file,
+        static_cast<Phase>(phase), level, &stages_vector));
+
+  // Load weights
+  if (!weights.is_none()) {
+    std::string weights_file_str = bp::extract<std::string>(weights);
+    CheckFile(weights_file_str);
+    net->CopyTrainedLayersFrom(weights_file_str);
+  }
+
   return net;
 }
 
-// Net construct-and-load convenience constructor
+// Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
+  LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
+  LOG(WARNING) << "Use this instead (with the named \"weights\""
+    << " parameter):";
+  LOG(WARNING) << "Net('" << param_file << "', " << phase
+    << ", weights='" << pretrained_param_file << "')";
   CheckFile(param_file);
   CheckFile(pretrained_param_file);
 
@@ -260,17 +285,24 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("set_random_seed", &set_random_seed);
   bp::def("set_device", &Caffe::SetDevice);
 
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
-    .def("__init__", bp::make_constructor(&Net_Init))
+    // Constructor
+    .def("__init__", bp::make_constructor(&Net_Init,
+          bp::default_call_policies(), (bp::arg("network_file"), "phase",
+            bp::arg("level")=0, bp::arg("stages")=bp::object(),
+            bp::arg("weights")=bp::object())))
+    // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
+    .def("clear_param_diffs", &Net<Dtype>::ClearParamDiffs)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
