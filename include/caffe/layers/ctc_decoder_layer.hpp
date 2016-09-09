@@ -1,7 +1,6 @@
 #ifndef CAFFE_CTC_DECODER_LAYER_HPP_
 #define CAFFE_CTC_DECODER_LAYER_HPP_
 
-#include <algorithm>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -24,44 +23,11 @@ class CTCDecoderLayer : public Layer<Dtype> {
   typedef vector<Sequence> Sequences;
 
  public:
-  explicit CTCDecoderLayer(const LayerParameter& param)
-      : Layer<Dtype>(param)
-      , T_(0)
-      , N_(0)
-      , C_(0)
-      , blank_index_(param.ctc_decoder_param().blank_index())
-      , merge_repeated_(param.ctc_decoder_param().ctc_merge_repeated()) {
-    }
-
+  explicit CTCDecoderLayer(const LayerParameter& param);
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-    // required additional output blob for accuracies
-    if (bottom.size() == 3) {CHECK_EQ(top.size(), 2);}
-  }
-
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-    Blob<Dtype>* scores = top[0];
-
-    const Blob<Dtype>* probabilities = bottom[0];
-    T_ = probabilities->shape(0);
-    N_ = probabilities->shape(1);
-    C_ = probabilities->shape(2);
-
-    output_sequences_.clear();
-    output_sequences_.resize(N_);
-
-    scores->Reshape(N_, 1, 1, 1);
-
-    if (blank_index_ < 0) {
-      blank_index_ = C_ - 1;
-    }
-
-    if (top.size() == 2) {
-      // Single accuracy as output
-      top[1]->Reshape(1, 1, 1, 1);
-    }
-  }
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "CTCDecoder"; }
 
@@ -73,88 +39,28 @@ class CTCDecoderLayer : public Layer<Dtype> {
   virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int MaxBottomBlobs() const { return 3; }
 
-  // output scores, accuracy [optional, if target_sequences as bottom blob]
+  // sequences (terminated with negative numbers),
+  // output scores [optional if 2 top blobs and bottom blobs = 2]
+  // accuracy [optional, if target_sequences as bottom blob = 3]
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
   const Sequences& OutputSequences() const {return output_sequences_;}
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-    const Blob<Dtype>* probabilities = bottom[0];
-    const Blob<Dtype>* sequence_indicators = bottom[1];
-    Blob<Dtype>* scores = top[0];
-
-    Decode(probabilities, sequence_indicators, &output_sequences_, scores);
-
-    if (top.size() == 2) {
-      // compute accuracy
-      Dtype &acc = top[1]->mutable_cpu_data()[0];
-      acc = 0;
-
-      CHECK_GE(bottom.size(), 3);  // required target sequences blob
-      const Blob<Dtype>* target_sequences_data = bottom[2];
-      const Dtype* ts_data = target_sequences_data->cpu_data();
-      for (int n = 0; n < N_; ++n) {
-        Sequence target_sequence;
-        for (int t = 0; t < T_; ++t) {
-          const Dtype dtarget = ts_data[target_sequences_data->offset(t, n)];
-          if (dtarget < 0) {
-            // sequence has finished
-            break;
-          }
-          // round to int, just to be sure
-          const int target = static_cast<int>(0.5 + dtarget);
-          target_sequence.push_back(target);
-        }
-
-        const int ed = EditDistance(target_sequence, output_sequences_[n]);
-
-        acc += ed * 1.0 /
-                std::max(target_sequence.size(), output_sequences_[n].size());
-      }
-
-      acc = 1 - acc / N_;
-      CHECK_GE(acc, 0);
-      CHECK_LE(acc, 1);
-    }
-  }
+                           const vector<Blob<Dtype>*>& top);
 
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    for (int i = 0; i < propagate_down.size(); ++i) {
-      if (propagate_down[i]) { NOT_IMPLEMENTED; }
-    }
-  }
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
 
   virtual void Decode(const Blob<Dtype>* probabilities,
                       const Blob<Dtype>* sequence_indicators,
                       Sequences* output_sequences,
                       Blob<Dtype>* scores) const = 0;
 
-  int EditDistance(const Sequence &s1, const Sequence &s2) {
-    const size_t len1 = s1.size();
-    const size_t len2 = s2.size();
-
-    Sequences d(len1 + 1, Sequence(len2 + 1));
-
-    d[0][0] = 0;
-    for (size_t i = 1; i <= len1; ++i) {d[i][0] = i;}
-    for (size_t i = 1; i <= len2; ++i) {d[0][i] = i;}
-
-    for (size_t i = 1; i <= len1; ++i) {
-      for (size_t j = 1; j <= len2; ++j) {
-        d[i][j] = std::min(
-                    std::min(
-                      d[i - 1][j] + 1,
-                      d[i][j - 1] + 1),
-                    d[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 0 : 1));
-      }
-    }
-
-    return d[len1][len2];
-  }
+  int EditDistance(const Sequence &s1, const Sequence &s2);
 
  protected:
   Sequences output_sequences_;
@@ -163,6 +69,10 @@ class CTCDecoderLayer : public Layer<Dtype> {
   int C_;
   int blank_index_;
   bool merge_repeated_;
+
+  int sequence_index_;
+  int score_index_;
+  int accuracy_index_;
 };
 
 template <typename Dtype>
@@ -185,43 +95,7 @@ class CTCGreedyDecoderLayer : public CTCDecoderLayer<Dtype> {
   virtual void Decode(const Blob<Dtype>* probabilities,
                       const Blob<Dtype>* sequence_indicators,
                       Sequences* output_sequences,
-                      Blob<Dtype>* scores) const {
-    CHECK_EQ(CHECK_NOTNULL(scores)->count(), N_);
-    Dtype* score_data = scores->mutable_cpu_data();
-    for (int n = 0; n < N_; ++n) {
-      int prev_class_idx = -1;
-      score_data[n] = 0;
-
-      for (int t = 0; /* check at end */; ++t) {
-        // get maximum probability and its index
-        int max_class_idx = 0;
-        const Dtype* probs = probabilities->cpu_data()
-                + probabilities->offset(t, n);
-        Dtype max_prob = probs[0];
-        ++probs;
-        for (int c = 1; c < C_; ++c, ++probs) {
-            if (*probs > max_prob) {
-                max_class_idx = c;
-                max_prob = *probs;
-            }
-        }
-
-        score_data[n] += -max_prob;
-
-        if (max_class_idx != blank_index_
-                && !(merge_repeated_&& max_class_idx == prev_class_idx)) {
-            output_sequences->at(n).push_back(max_class_idx);
-        }
-
-        prev_class_idx = max_class_idx;
-
-        if (t + 1 == T_ || sequence_indicators->data_at(t + 1, n, 0, 0) == 0) {
-            // End of sequence
-            break;
-        }
-      }
-    }
-  }
+                      Blob<Dtype>* scores) const;
 };
 
 }  // namespace caffe

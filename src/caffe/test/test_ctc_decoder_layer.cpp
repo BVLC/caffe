@@ -26,11 +26,13 @@ class CTCDecoderLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_data_(new Blob<Dtype>(T_, N_, num_labels_, 1)),
         blob_bottom_seq_ind_(new Blob<Dtype>(T_, N_, 1, 1)),
         blob_bottom_target_seq_(new Blob<Dtype>(T_, N_, 1, 1)),
+        blob_top_sequences_(new Blob<Dtype>()),
         blob_top_scores_(new Blob<Dtype>()),
         blob_top_accuracy_(new Blob<Dtype>()) {
     // Add blobs to the correct bottom/top lists
     blob_bottom_vec_.push_back(blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_seq_ind_);
+    blob_top_vec_.push_back(blob_top_sequences_);
     blob_top_vec_.push_back(blob_top_scores_);
   }
 
@@ -202,6 +204,7 @@ class CTCDecoderLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_seq_ind_;
   Blob<Dtype>* const blob_bottom_target_seq_;
+  Blob<Dtype>* const blob_top_sequences_;
   Blob<Dtype>* const blob_top_scores_;
   Blob<Dtype>* const blob_top_accuracy_;
 
