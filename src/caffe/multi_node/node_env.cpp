@@ -5,8 +5,6 @@
 
 namespace caffe {
 
-NodeEnv *NodeEnv::instance_ = NULL;
-boost::once_flag NodeEnv::once_;
 char NodeEnv::id_server_addr_[MAX_STR_LEN];
 char NodeEnv::model_server_addr_[MAX_STR_LEN];
 ModelRequest NodeEnv::model_request_;
@@ -14,9 +12,8 @@ bool NodeEnv::has_model_request_ = false;
 NodeRole NodeEnv::node_role_ = INVALID_ROLE;
 
 NodeEnv* NodeEnv::Instance() {
-  boost::call_once(once_, InitNode);
-
-  return instance_;
+  static NodeEnv node_env;
+  return &node_env;
 }
 
 void NodeEnv::InitNode(void) {
@@ -26,11 +23,9 @@ void NodeEnv::InitNode(void) {
   CHECK(has_model_request_) << "Need to set model request";
   CHECK(node_role_ != INVALID_ROLE) << "Need to set node role";
 
-  instance_ = new NodeEnv();
-
-  instance_->InitIP();
-  instance_->InitNodeID();
-  instance_->InitModel();
+  NodeEnv::Instance()->InitIP();
+  NodeEnv::Instance()->InitNodeID();
+  NodeEnv::Instance()->InitModel();
 }
 
 int NodeEnv::InitNodeID() {

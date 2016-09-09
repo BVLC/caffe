@@ -119,6 +119,9 @@ class WorkerThread : public InternalThread {
     return layer_id_to_params_[layer_id].size() > 0;
   }
 
+  // send exit message to worker threads
+  void SendExit();
+
   const vector<int>& GetLearnableIndices(int layer_id) {
     CHECK_GT(layer_id_to_params_.size(), layer_id);
 

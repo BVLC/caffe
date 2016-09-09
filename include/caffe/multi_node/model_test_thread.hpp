@@ -25,6 +25,8 @@ class TestThread : public WorkerThread<Dtype> {
     snapshot_iter_ = 0;
     param_ = NodeEnv::Instance()->SolverParam();
     solver_ = new SGDSolver<Dtype>(param_);
+    max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
+    need_exit_ = false;
   }
 
   virtual ~TestThread() { delete solver_; }
@@ -45,7 +47,7 @@ class TestThread : public WorkerThread<Dtype> {
 
   void SendParamRquest();
 
-  void UpdateParam(shared_ptr<Msg> m);
+  int UpdateParam(shared_ptr<Msg> m);
 
   virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
                                       const SolverParameter& solver_param) {
@@ -70,6 +72,10 @@ class TestThread : public WorkerThread<Dtype> {
   SolverParameter param_;
 
   SGDSolver<Dtype> *solver_;
+
+  int max_iter_;
+
+  bool need_exit_;
 };
 
 }  // end namespace caffe

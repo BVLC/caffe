@@ -27,12 +27,14 @@ class PSThread : public WorkerThread<Dtype> {
     updated_layers_ = 0;
     staleness_ = NodeEnv::Instance()->get_staleness();
     num_workers_ = NodeEnv::Instance()->num_workers();
+    max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
+    test_node_ = -1;
   }
 
   virtual void Run();
 
  protected:
-  void SendUpdates(int layer_id);
+  int SendUpdates(int layer_id);
 
   int GetBatchSize(shared_ptr<Net<Dtype> > net) {
     const vector<Blob<Dtype>*>& out_blobs = net->output_blobs();
@@ -52,7 +54,7 @@ class PSThread : public WorkerThread<Dtype> {
 
   /// BSP stype
   // return true if we are ready to broadcast the parameter to clients
-  void UpdateParam(shared_ptr<Msg> m);
+  int UpdateParam(shared_ptr<Msg> m);
 
   void SendParam(shared_ptr<Net<Dtype> > net,
                  const vector<string>& layer_names,
@@ -65,6 +67,7 @@ class PSThread : public WorkerThread<Dtype> {
 
     return new SGDSolver<Dtype>(solver_param, ps_root);
   }
+
 
  protected:
   SGDSolver<Dtype> *ps_solver_;
@@ -95,6 +98,12 @@ class PSThread : public WorkerThread<Dtype> {
 
   // the number of conv. workers
   int num_workers_;
+
+  // maximun iterations to be executed
+  int max_iter_;
+
+  // the id of test node
+  int test_node_;
 };
 
 }  // end namespace caffe

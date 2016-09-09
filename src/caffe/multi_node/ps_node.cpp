@@ -48,6 +48,9 @@ int ParamServer<Dtype>::RouteMsg() {
     if (this->poll_items_[i].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = this->sockp_arr_[i]->RecvMsg(true);
 
+      if (m->type() == EXIT_TRAIN) {
+        return -1;
+      }
       ps_router_->SendMsg(m);
     }
   }

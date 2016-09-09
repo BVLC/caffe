@@ -13,6 +13,23 @@ template <typename Dtype>
 boost::atomic_int WorkerThread<Dtype>::new_solver_cnt_(0);
 
 template <typename Dtype>
+void WorkerThread<Dtype>::SendExit() {
+  shared_ptr<Msg> m(new Msg());
+
+  // always use the 0th clock
+  m->set_clock(0);
+  m->set_src(ROOT_THREAD_ID);
+  m->set_dst(WORKER_BCAST);
+  m->set_type(EXIT_TRAIN);
+
+  // For some reason we need a payload in message
+  int pad = 0;
+  m->AppendData(&pad, sizeof(pad));
+
+  this->SendMsg(m); 
+}
+
+template <typename Dtype>
 int WorkerThread<Dtype>::InitParamMap(shared_ptr<Net<Dtype> > net) {
   const vector<Blob<Dtype>*>& learn_params = net->learnable_params();
   unordered_map<void *, int> blob_to_idx;

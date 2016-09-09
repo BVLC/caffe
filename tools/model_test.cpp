@@ -47,6 +47,8 @@ int main(int argc, char** argv) {
   rq.mutable_node_info()->set_node_role(TEST_NODE);
   NodeEnv::set_model_request(rq);
 
+  NodeEnv::InitNode();
+  
   LOG(INFO) << "test node id: " << NodeEnv::Instance()->ID();
 
   shared_ptr<TestClient<float> > client(new TestClient<float>());

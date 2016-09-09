@@ -36,11 +36,11 @@ void fc_server_thread() {
     FLAGS_threads + 1, FLAGS_omp_param_threads));
 
     fclient->Init();
-    fclient->Poll();}
+    fclient->Poll();
+  }
 
-  return;}
-
-
+  return;
+}
 
 int main(int argc, char** argv) {
   google::InstallFailureSignalHandler();
@@ -60,6 +60,8 @@ int main(int argc, char** argv) {
   NodeEnv::set_id_server(id_server_addr);
   NodeEnv::set_request_file(FLAGS_request);
   NodeEnv::set_node_role(FC_NODE);
+
+  NodeEnv::InitNode();
 
   fc_server_thread();
 

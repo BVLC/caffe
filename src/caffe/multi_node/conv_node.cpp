@@ -179,9 +179,13 @@ int ConvClient<Dtype>::RouteMsg() {
     }
   }
 
+  bool need_exit = false;
   // from the parameter client thread to PS server
   if (this->poll_items_[ps_thread_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = this->sockp_arr_[ps_thread_index_]->RecvMsg(true);
+    if (m->type() == EXIT_TRAIN) {
+      need_exit = true;
+    }
     // send backward messages to worker thread
     if (m->type() == BACKWARD) {
       this->Enqueue(m->dst(), m);
@@ -212,6 +216,9 @@ int ConvClient<Dtype>::RouteMsg() {
     }
   }
 
+  if (need_exit) {
+    return -1;
+  }
   return 0;
 }
 

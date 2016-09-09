@@ -28,10 +28,15 @@ class SkSock {
     InitZmq();
     sk_type_ = type;
     sock_ = zmq_socket(zmq_ctx_, type);
+
+    // let zmq wait for 1000 ms for a message
+    int val = 1000;
+    zmq_setsockopt(sock_, ZMQ_LINGER, &val, sizeof(val));
   }
 
   virtual ~SkSock() {
     if (NULL != sock_) {
+      LOG(INFO) << "close sock";
       zmq_close(sock_);
     }
 
@@ -42,6 +47,7 @@ class SkSock {
     if (0 == inited_cnt_) {
       LOG(INFO) << "destroying zmq context";
       zmq_ctx_destroy(zmq_ctx_);
+      LOG(INFO) << "zmq context destroyed";
     }
   }
 

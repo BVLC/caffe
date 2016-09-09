@@ -127,7 +127,8 @@ enum MsgType {
   BACKWARD        = 8;
   TRAIN_ITER      = 9;
   UPDATE_CLOCK    = 10;
-  INVALID_MSG     = 11;
+  EXIT_TRAIN      = 11;
+  INVALID_MSG     = 12;
 }
 
 message BlobInfo {

@@ -16,7 +16,10 @@ void TestThread<Dtype>::Run() {
     if (m->type() == TRAIN_ITER) {
       UpdateTrainIter(m);
     } else if (m->type() == PUT_PARAM) {
-      UpdateParam(m);
+      if (UpdateParam(m) < 0) {
+        this->SendExit();
+        return;
+      }
     } else {
       LOG(WARNING) << "unknown type: " << m->type();
     }
@@ -64,20 +67,20 @@ void TestThread<Dtype>::UpdateTrainIter(shared_ptr<Msg> m) {
 }
 
 template <typename Dtype>
-void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
+int TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   ParamHelper<Dtype>::CopyParamDataFromMsg(solver_->net(), m);
 
   updated_map_[m->src()] = true;
 
   for (int i = 0; i < ps_ids_.size(); i++) {
     if (!updated_map_[ps_ids_[i]]) {
-      return;
+      return 0;
     }
   }
 
   for (int i = 0; i < fc_ids_.size(); i++) {
     if (!updated_map_[fc_ids_[i]]) {
-      return;
+      return 0;
     }
   }
 
@@ -100,10 +103,17 @@ void TestThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   solver_->TestAll(tested_iter_);
 
   if (param_.snapshot() &&
-    train_iter_ - snapshot_iter_ >= param_.snapshot()) {
+    (train_iter_ - snapshot_iter_ >= param_.snapshot()
+      || train_iter_ >= max_iter_)) {
     snapshot_iter_ = train_iter_;
     solver_->Snapshot(snapshot_iter_);
   }
+
+  if (train_iter_ >= max_iter_) {
+    return -1;
+  }
+
+  return 0;
 }
 
 INSTANTIATE_CLASS(TestThread);

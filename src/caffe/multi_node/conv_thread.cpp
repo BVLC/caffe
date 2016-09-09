@@ -59,43 +59,6 @@ void ConvThread<Dtype>::ForwardLayer(shared_ptr<Net<Dtype> > conv_net,
   }
 }
 
-template <typename Dtype>
-void ConvThread<Dtype>::BackwardLayer(shared_ptr<Net<Dtype> > conv_net,
-                                      int layer_id) {
-  shared_ptr<Layer<Dtype> > l = conv_net->layers()[layer_id];
-  const vector<Blob<Dtype>*>& bottom = conv_net->bottom_vecs()[layer_id];
-  const vector<Blob<Dtype>*>& top = conv_net->top_vecs()[layer_id];
-
-  string skip_layer("LRN");
-
-  const vector<bool>& layer_need_bwd = conv_net->layer_need_backward();
-  if (!layer_need_bwd[layer_id]) {
-    return;
-  }
-
-  const vector<vector<bool> >& bottom_need_bwd =
-                                            conv_net->bottom_need_backward();
-
-  if (skip_layer == l->type()) {
-    shared_ptr<Net<Dtype> > full_net = full_solver_->net();
-    const vector<Blob<Dtype>*>& full_bottom =
-                                          full_net->bottom_vecs()[layer_id];
-    const vector<Blob<Dtype>*>& full_top = full_net->top_vecs()[layer_id];
-
-    ParamHelper<Dtype>::CopyBlobDiff(top, full_top, this->GetWorkerId());
-
-    pconv_barrier_->wait();
-    if (this->GetWorkerId() == 0) {
-      shared_ptr<Layer<Dtype> > full_layer = full_net->layers()[layer_id];
-      full_layer->Backward(full_top, bottom_need_bwd[layer_id], full_bottom);
-    }
-
-    pconv_barrier_->wait();
-    ParamHelper<Dtype>::CopyBlobDiff(full_bottom, bottom, this->GetWorkerId());
-  } else {
-    l->Backward(top, bottom_need_bwd[layer_id], bottom);
-  }
-}
 
 template <typename Dtype>
 void ConvThread<Dtype>::ConvForward() {
@@ -161,7 +124,15 @@ void ConvThread<Dtype>::SendLayer(int layer_id) {
 }
 
 template <typename Dtype>
-bool ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver,
+void ConvThread<Dtype>::BackwardLayer(WorkerSolver<Dtype> *psolver,
+                                      int layer_id) {
+  shared_ptr<Net<Dtype> > conv_net = psolver->net();
+  conv_net->BackwardFromTo(layer_id, layer_id);
+  ParamHelper<Dtype>::AddDiffFromNet(param_solver_->net(), conv_net, layer_id);
+}
+
+template <typename Dtype>
+void ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver,
                                        int prev_idx,
                                        shared_ptr<Msg> m) {
   WorkerSolver<Dtype> * pconv = PrepareBwdSolver(m);
@@ -196,34 +167,24 @@ bool ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver,
 
   NodeEnv::Instance()->DeleteSolver(m->conv_id());
   NodeEnv::Instance()->PushFreeSolver(pconv);
-
-  return true;
 }
 
 
 template <typename Dtype>
-bool ConvThread<Dtype>::ConvBackward(WorkerSolver<Dtype> *pconv,
-                                     bool peek_next) {
+void ConvThread<Dtype>::ConvBackward(shared_ptr<Msg> m) {
+  WorkerSolver<Dtype> *pconv = PrepareBwdSolver(m);
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
 
   const vector<shared_ptr<Layer<Dtype> > >& layers = conv_net->layers();
 
   // do backward from layer to layer
-  // and sync with PS when a new backward msg becomes ready
   for (int i = layers.size() - 1; i >= 0; i--) {
     conv_net->BackwardFromTo(i, i);
     ParamHelper<Dtype>::AddDiffFromNet(param_solver_->net(), conv_net, i);
-
-    // check whether we can do full backwards
-    shared_ptr<Msg> r;
-    if (peek_next) {
-      if ((r = this->RecvMsg(false)) != NULL) {
-        return SyncedBackward(pconv, i, r);
-      }
-    }
   }
 
-  return false;
+  NodeEnv::Instance()->DeleteSolver(m->conv_id());
+  NodeEnv::Instance()->PushFreeSolver(pconv);
 }
 
 
@@ -245,36 +206,61 @@ void ConvThread<Dtype>::Run() {
     for (int i = 0; i < num_sub_solvers_; i++) {
       ConvForward();
     }
-    shared_ptr<Msg> r;
 
-    // for (int i = 0; i < num_sub_solvers_; i++) {
-    for (int i = 0; i < num_sub_solvers_ - 2; i++) {
-      if ((r = this->RecvMsg(true)) != NULL) {
-        WorkerSolver<Dtype> *psolver = PrepareBwdSolver(r);
-
-        ConvBackward(psolver, false);
-
-        NodeEnv::Instance()->DeleteSolver(r->conv_id());
-        NodeEnv::Instance()->PushFreeSolver(psolver);
-      }
-    }
-
-    bool is_done = false;
     WorkerSolver<Dtype> *prev_solver = NULL;
     int prev_conv_id = 0;
 
-    if (num_sub_solvers_ >= 2) {
-      if ((r = this->RecvMsg(true)) != NULL) {
-        prev_solver = PrepareBwdSolver(r);
-        prev_conv_id = r->conv_id();
+    int num_layers = root_solver->net()->layers().size();
+    // next layer to be processed for iter num_sub_solvers_ - 1
+    int layer_idx = num_layers - 1;
 
-        is_done = ConvBackward(prev_solver, true);
+    bool blocked_recv = true;
+    int num_bwd = 0;
+    while (num_bwd < num_sub_solvers_) {
+      shared_ptr<Msg> r = this->RecvMsg(blocked_recv);
+
+      // exit training
+      if (r != NULL && r->type() == EXIT_TRAIN) {
+        return;
       }
-    }
 
-    if (!is_done) {
-      shared_ptr<Msg> r = this->RecvMsg(true);
-      SyncedBackward(prev_solver, 0, r);
+      if (num_bwd < num_sub_solvers_ - 2) {
+        ConvBackward(r);
+        blocked_recv = true;
+        num_bwd++;
+      } else if (num_sub_solvers_ >= 2 && num_bwd == num_sub_solvers_ - 2) {
+        if (layer_idx >= num_layers - 1) {
+          // init solver
+          prev_solver = PrepareBwdSolver(r);
+          prev_conv_id = r->conv_id();
+          BackwardLayer(prev_solver, layer_idx);
+
+          // blocked receive to check the opportunity to overlap
+          blocked_recv = false;
+          layer_idx--;
+        } else if (layer_idx < num_layers - 1 && layer_idx >= 0) {
+          if (r != NULL) {
+            BackwardLayer(prev_solver, layer_idx);
+            SyncedBackward(prev_solver, layer_idx, r);
+            break;
+          } else {
+            BackwardLayer(prev_solver, layer_idx);
+            layer_idx--;
+            blocked_recv = false;
+          }
+        } else {
+          num_bwd++;
+
+          // block receive for the last sub-solver
+          blocked_recv = true;
+        }
+      } else if (num_bwd == num_sub_solvers_ - 1) {
+        SyncedBackward(prev_solver, 0, r);
+        num_bwd++;
+      } else {
+        // shouldn't be here...
+        LOG(FATAL) << "Unepxected status";
+      }
     }
 
     if (prev_solver != NULL) {
@@ -290,6 +276,9 @@ void ConvThread<Dtype>::Run() {
     // waiting for parameter update
     shared_ptr<Msg> m = this->RecvMsg(true);
     while (m->type() != PUT_PARAM) {
+      if (m->type() == EXIT_TRAIN) {
+        return;
+      }
       m = this->RecvMsg(true);
     }
   }
@@ -327,7 +316,6 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id) {
   ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, layer_vec, ps_msg);
 
   this->SendMsg(ps_msg);
-
   MLOG(INFO) << "Send Gradients for layer: " << layer_name
              << ", clock: " << ps_msg->clock();
 }
@@ -478,16 +466,31 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
 
   int layer_id = (reinterpret_cast<int *>(m->ZmsgData(0)))[0];
 
-  if (!this->IsLearnable(layer_id)) {
-    return -1;
+
+  if (this->IsLearnable(layer_id)) {
+    ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
   }
 
-  ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
   layer_updates_[layer_id]++;
-
   if (layer_updates_[layer_id] == this->GetWorkerNum()) {
-    SyncLayer(layer_id);
     layer_updates_[layer_id] = 0;
+
+    if (this->IsLearnable(layer_id)) {
+      SyncLayer(layer_id);
+    }
+
+    if (layer_id == 0) {
+      // check whether we need to exit
+      for (int i = 0; i < ps_clocks_.size(); i++) {
+        if (ps_clocks_[i] < max_iter_) {
+          return 0;
+        }
+      }
+
+      // notify the param thread to exit
+      this->SendExit();
+      return -1;
+    }
   }
 
   return 0;
@@ -564,13 +567,19 @@ void ConvParamThread<Dtype>::Run() {
     shared_ptr<Msg> m = this->RecvMsg(true);
 
     if (m->type() == PUT_GRADIENT) {
-      PutGradient(m);
+      if (PutGradient(m) < 0) {
+        return;
+      }
     } else if (m->type() == PUT_PARAM) {
       UpdateParam(m);
     } else if (m->type() == FORWARD) {
       ProcessForward(m);
     } else if (m->type() == BACKWARD) {
       ProcessBackward(m);
+    } else if (m->type() == EXIT_TRAIN) {
+      // exit training
+      this->SendExit();
+      return;
     } else {
       LOG(ERROR) << "PS client: unknown type " << m->type();
     }

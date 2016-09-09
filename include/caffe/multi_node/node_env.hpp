@@ -37,6 +37,7 @@ class NodeEnv {
   //// NOTE: all the public funcations are constants
  public:
   static NodeEnv *Instance();
+  static void InitNode(void);
 
  public:
   const string& IP() { return node_ip_; }
@@ -310,7 +311,6 @@ class NodeEnv {
 
 
  protected:
-  static void InitNode(void);
   int InitNodeID();
   int InitModel();
   int InitIP();
@@ -410,10 +410,6 @@ class NodeEnv {
   int num_sub_solvers_;
 
  private:
-  // For Singleton pattern
-  static NodeEnv *instance_;
-  static boost::once_flag once_;
-
   // get unique integer id from id server
   static char id_server_addr_[MAX_STR_LEN];
 

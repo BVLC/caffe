@@ -304,7 +304,6 @@ void FcThread<Dtype>::Run() {
         if (msg_buf_[i]->clock() <= clock_bound) {
           ProcessMsg(msg_buf_[i]);
         } else {
-          LOG(WARNING) << "Wait for param thread";
           msgs.push_back(msg_buf_[i]);
         }
       }
@@ -313,10 +312,14 @@ void FcThread<Dtype>::Run() {
       for (int i = 0; i < msgs.size(); i++) {
         msg_buf_.push_back(msgs[i]);
       }
+    } else if (m->type() == EXIT_TRAIN) {
+      // exit training
+      return;
     } else {
       if (m->clock() <= clock_bound) {
         ProcessMsg(m);
       } else {
+        LOG(WARNING) << "Wait for param thread";
         msg_buf_.push_back(m);
       }
     }
@@ -417,7 +420,7 @@ void FcParamThread<Dtype>::ClearGroup(int grp_idx) {
 }
 
 template <typename Dtype>
-void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
+int FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   Solver<Dtype> *psolver =
             (Solver<Dtype> *)NodeEnv::Instance()->FindSolver(m->msg_id());
   CHECK(psolver != NULL);
@@ -534,7 +537,7 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   }
 
   if (grad_updates_vec_[group_id] < batch_size) {
-    return;
+    return 0;
   }
 
   // share paramters
@@ -588,12 +591,50 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
 
   UpdateClock();
 
+  if (train_iter_ == max_iter_) {
+    StopModelServer();
+  }
+
   if (test_node_id_ > 0
-     && train_iter_ % TRAIN_NOTIFY_INTERVAL == 0
+     && (train_iter_ % TRAIN_NOTIFY_INTERVAL == 0
+        || train_iter_ > max_iter_)
      &&  bcast_addrs.size() == 0
-      ) {
+     ) {
     this->SendNotify();
   }
+
+  if (test_node_id_ < 0 && train_iter_ > max_iter_) {
+    return -1;
+  }
+
+  return 0;
+}
+
+template <typename Dtype>
+void FcParamThread<Dtype>::StopModelServer() {
+  string ms_addr(NodeEnv::model_server_addr());
+  int node_id = NodeEnv::Instance()->ID();
+
+  shared_ptr<SkSock> dealer(new SkSock(ZMQ_DEALER));
+  dealer->SetId(node_id);
+  dealer->Connect(ms_addr);
+
+  shared_ptr<Msg> m(new Msg());
+  m->set_type(EXIT_TRAIN);
+  m->set_src(node_id);
+  m->set_clock(train_iter_);
+
+  int pad = 0;
+  m->AppendData(&pad, sizeof(pad));
+
+  dealer->SendMsg(m);
+
+  // notify id server
+  shared_ptr<SkSock> req(new SkSock(ZMQ_REQ));
+  string id_addr(NodeEnv::id_server_addr());
+  req->Connect(id_addr);
+
+  req->SendMsg(m);
 }
 
 template <typename Dtype>
@@ -627,7 +668,7 @@ void FcParamThread<Dtype>::SendNotify() {
 
 
 template <typename Dtype>
-void FcParamThread<Dtype>::SendParam(shared_ptr<Msg> m) {
+int FcParamThread<Dtype>::SendParam(shared_ptr<Msg> m) {
   shared_ptr<Msg> r(new Msg());
   r->set_type(PUT_PARAM);
   r->set_dst(m->src());
@@ -642,6 +683,12 @@ void FcParamThread<Dtype>::SendParam(shared_ptr<Msg> m) {
   // LOG(INFO) << "sending param";
 
   this->SendMsg(r);
+
+  if (train_iter_ > max_iter_) {
+    return -1;
+  }
+
+  return 0;
 }
 
 template <typename Dtype>
@@ -668,9 +715,19 @@ void FcParamThread<Dtype>::Run() {
 
     if (m->type() == GET_PARAM) {
       test_node_id_ = m->src();
-      SendParam(m);
+      if (SendParam(m) < 0) {
+        this->SendExit();
+        return;
+      }
+    } else if (m->type() == EXIT_TRAIN) {
+      // exit training
+      this->SendExit();
+      return;
     } else {
-      UpdateParam(m);
+      if (UpdateParam(m) < 0) {
+        this->SendExit();
+        return;
+      }
     }
   }
 }

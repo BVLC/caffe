@@ -217,9 +217,14 @@ int FcNode<Dtype>::RouteMsg() {
     }
   }
 
+  bool need_exit = false;
   // Paramter update thread
   if (this->poll_items_[param_thread_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = this->sockp_arr_[param_thread_index_]->RecvMsg(true);
+
+    if (m->type() == EXIT_TRAIN) {
+      need_exit = true;
+    }
 
     if (m->dst() == WORKER_BCAST) {
       // broadcast the message to all the workers
@@ -255,6 +260,10 @@ int FcNode<Dtype>::RouteMsg() {
       LOG(ERROR) << "unknown message: ";
       m->PrintHeader();
     }
+  }
+
+  if (need_exit) {
+    return -1;
   }
 
   return 0;

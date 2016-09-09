@@ -188,14 +188,15 @@ class FcParamThread : public FcWorker<Dtype> {
     num_sub_solvers_ = NodeEnv::Instance()->num_sub_solvers();
     sub_batches_ = 0;
     sub_loss_ = 0;
+    max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
   }
 
   virtual void Run();
 
  protected:
-  void SendParam(shared_ptr<Msg> m);
+  int SendParam(shared_ptr<Msg> m);
 
-  void UpdateParam(shared_ptr<Msg> m);
+  int UpdateParam(shared_ptr<Msg> m);
 
   virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
                                       const SolverParameter& solver_param) {
@@ -203,6 +204,9 @@ class FcParamThread : public FcWorker<Dtype> {
   }
 
   void SendNotify();
+
+  // Terminate model server, id server and fc node
+  void StopModelServer();
 
   int GetGroupIndex(void *psolver, int64_t msg_id);
 
@@ -251,6 +255,9 @@ class FcParamThread : public FcWorker<Dtype> {
 
   // sum of loss the param thread processed
   Dtype sub_loss_;
+
+  // maximun iterations to be executed
+  int max_iter_;
 
 DISABLE_COPY_AND_ASSIGN(FcParamThread);
 };

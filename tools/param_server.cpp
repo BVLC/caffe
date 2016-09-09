@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
   NodeEnv::set_id_server(id_server_addr);
   NodeEnv::set_request_file(FLAGS_request);
   NodeEnv::set_node_role(PARAM_SERVER);
+  
+  NodeEnv::InitNode();
 
   LOG(INFO) << "node id: " << NodeEnv::Instance()->ID();
   shared_ptr<ParamServer<float> > ps(new ParamServer<float>(FLAGS_ps_threads));

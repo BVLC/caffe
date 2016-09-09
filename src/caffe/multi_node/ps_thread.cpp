@@ -12,12 +12,12 @@
 namespace caffe {
 
 template <typename Dtype>
-void PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
+int PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   map<int, int>::iterator map_iter = client_idx_map_.find(m->src());
 
   if (map_iter == client_idx_map_.end()) {
     LOG(WARNING) << "update from unregistered node id: " << m->src();
-    return;
+    return 0;
   }
 
   CHECK_EQ(m->num_blobs(), 1) << "expect 1 blob";
@@ -37,7 +37,8 @@ void PSThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
 
   // update clock
   msg_clocks_[layer_id][client_idx] = m->clock();
-  SendUpdates(layer_id);
+
+  return SendUpdates(layer_id);
 }
 
 template <typename Dtype>
@@ -77,7 +78,7 @@ void PSThread<Dtype>::BroadcastLayer(int layer_id) {
 }
 
 template <typename Dtype>
-void PSThread<Dtype>::SendUpdates(int layer_id) {
+int PSThread<Dtype>::SendUpdates(int layer_id) {
   CHECK_EQ(staleness_, 0) << "only support sync mode";
 
   const vector<int>& clock_vec = msg_clocks_[layer_id];
@@ -117,6 +118,12 @@ void PSThread<Dtype>::SendUpdates(int layer_id) {
     iter_++;
     ps_solver_->IncreaseIter();
   }
+
+  if (iter_ >= max_iter_ && test_node_ < 0) {
+    return -1;
+  }
+
+  return 0;
 }
 
 template <typename Dtype>
@@ -140,6 +147,7 @@ void PSThread<Dtype>::RegisterNode(shared_ptr<Msg> m) {
     }
   }
 }
+
 
 template <typename Dtype>
 void PSThread<Dtype>::Run() {
@@ -168,11 +176,23 @@ void PSThread<Dtype>::Run() {
     shared_ptr<Msg> m = this->RecvMsg(true);
 
     if (m->type() == PUT_GRADIENT) {
-      UpdateParam(m);
+      if (UpdateParam(m) < 0) {
+        this->SendExit();
+        return;
+      }
     } else if (m->type() == REGISTER_NODE) {
       RegisterNode(m);
     } else if (m->type() == GET_PARAM) {
+      test_node_ = m->src();
       SendParam(ps_net, ps_net->layer_names(), m->src(), iter_);
+      if (iter_ >= max_iter_) {
+        this->SendExit();
+        return;
+      }
+    } else if (m->type() == EXIT_TRAIN) {
+      // exit training
+      this->SendExit();
+      return;
     } else {
       LOG(ERROR) << "Cannot deal with message type: " << m->type()
                  << " from: " << m->src();

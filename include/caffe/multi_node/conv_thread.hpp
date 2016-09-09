@@ -56,20 +56,20 @@ class ConvThread : public WorkerThread<Dtype> {
   WorkerSolver<Dtype> *PrepareBwdSolver(shared_ptr<Msg> m);
 
   // backward and sync, return true if backward is done
-  bool ConvBackward(WorkerSolver<Dtype> *pconv, bool peek_next);
+  void ConvBackward(shared_ptr<Msg> m);
 
-  bool SyncedBackward(WorkerSolver<Dtype> *prev_solver,
+  void SyncedBackward(WorkerSolver<Dtype> *prev_solver,
                       int prev_idx,
                       shared_ptr<Msg> m);
 
   // inform the parameter thread to update layer i
   void SendLayer(int layer_id);
 
-  // do forward to a layer
+  // do forward for a layer
   void ForwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
 
-  // do backward to a layer
-  void BackwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
+  // do backward for a layer
+  void BackwardLayer(WorkerSolver<Dtype> *psolver, int layer_id);
 
  protected:
   typedef unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > >
@@ -124,6 +124,8 @@ class ConvParamThread : public WorkerThread<Dtype> {
     gateway_ids_ = NodeEnv::Instance()->gateway_ids();
     gateway_blobs_ = NodeEnv::Instance()->gateway_blobs();
     num_param_update_ = 0;
+
+    max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
   }
 
   virtual ~ConvParamThread() { }
@@ -198,6 +200,9 @@ class ConvParamThread : public WorkerThread<Dtype> {
 
   // find the array of backward messages with a conv_id
   ConvIdMap bwd_id_to_vec_;
+
+  // maximun iterations to be executed
+  int max_iter_;
 
 DISABLE_COPY_AND_ASSIGN(ConvParamThread);
 };

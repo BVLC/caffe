@@ -52,6 +52,8 @@ void rep_server_thread() {
       LOG(INFO) << "RP server add new sock id: " << id;
 
       id++;
+    } else if (m->type() == caffe::EXIT_TRAIN) {
+      return;
     } else {
       LOG(ERROR) << "unknow message type: " << m->type();
     }
@@ -89,6 +91,8 @@ void model_server_thread() {
         lmap.ClearMsg();
       }
 
+    } else if (m->type() == caffe::EXIT_TRAIN) {
+      return;
     } else {
       LOG(ERROR) << "unknown message type: " << m->type();
     }

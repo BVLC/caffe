@@ -57,15 +57,22 @@ int TestClient<Dtype>::SetUpPoll() {
 
 template <typename Dtype>
 int TestClient<Dtype>::RouteMsg() {
+  bool need_exit = false;
+
   for (int i = 0; i < this->nthreads_; i++) {
     if (this->poll_items_[i].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = this->sockp_arr_[i]->RecvMsg(true);
-      unordered_map<int, shared_ptr<SkSock> >::iterator iter =
+      if (m->type() == EXIT_TRAIN) {
+        need_exit = true;
+      } else {
+        unordered_map<int, shared_ptr<SkSock> >::iterator iter =
                                             node_id_to_sock_.find(m->dst());
 
-      CHECK(iter != node_id_to_sock_.end()) << "Cannot find route to node id: "
-                                            << m->dst();
-      iter->second->SendMsg(m);
+        CHECK(iter != node_id_to_sock_.end())
+                            << "Cannot find route to node id: "
+                            << m->dst();
+        iter->second->SendMsg(m);
+      }
     }
   }
 
@@ -82,6 +89,10 @@ int TestClient<Dtype>::RouteMsg() {
       shared_ptr<Msg> m = fc_socks_[i]->RecvMsg(true);
       this->Enqueue(0, m);
     }
+  }
+
+  if (need_exit) {
+    return -1;
   }
 
   return 0;
