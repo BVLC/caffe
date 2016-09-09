@@ -27,6 +27,12 @@ void hdf5_save_nd_dataset(
 
 int hdf5_load_int(hid_t loc_id, const string& dataset_name);
 void hdf5_save_int(hid_t loc_id, const string& dataset_name, int i);
+
+template <typename Dtype>
+Dtype hdf5_load_float(hid_t loc_id, const string& dataset_name);
+template <typename Dtype>
+void hdf5_save_float(hid_t loc_id, const string& dataset_name, Dtype f);
+
 string hdf5_load_string(hid_t loc_id, const string& dataset_name);
 void hdf5_save_string(hid_t loc_id, const string& dataset_name,
                       const string& s);

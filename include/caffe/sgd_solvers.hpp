@@ -42,6 +42,10 @@ class SGDSolver : public Solver<Dtype> {
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
+  // loss history for 'plateau' LR policy (should be stored in snapshots)
+  Dtype minimum_loss_;
+  int iter_last_event_;
+
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
