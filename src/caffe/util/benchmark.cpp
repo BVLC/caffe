@@ -76,7 +76,6 @@ void Timer::Stop() {
 #ifdef USE_CUDA
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
         CUDA_CHECK(cudaEventRecord(stop_gpu_cuda_, 0));
-        CUDA_CHECK(cudaEventSynchronize(stop_gpu_cuda_));
       }
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
@@ -116,6 +115,7 @@ float Timer::MicroSeconds() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      CUDA_CHECK(cudaEventSynchronize(stop_gpu_cuda_));
       CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
               stop_gpu_cuda_));
       // Cuda only measure milliseconds
@@ -155,6 +155,7 @@ float Timer::MilliSeconds() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      CUDA_CHECK(cudaEventSynchronize(stop_gpu_cuda_));
       CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
               stop_gpu_cuda_));
     }
