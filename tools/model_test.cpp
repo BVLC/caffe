@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
   NodeEnv::set_model_request(rq);
 
   NodeEnv::InitNode();
-  
+
   LOG(INFO) << "test node id: " << NodeEnv::Instance()->ID();
 
   shared_ptr<TestClient<float> > client(new TestClient<float>());

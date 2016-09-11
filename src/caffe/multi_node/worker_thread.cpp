@@ -26,7 +26,7 @@ void WorkerThread<Dtype>::SendExit() {
   int pad = 0;
   m->AppendData(&pad, sizeof(pad));
 
-  this->SendMsg(m); 
+  this->SendMsg(m);
 }
 
 template <typename Dtype>

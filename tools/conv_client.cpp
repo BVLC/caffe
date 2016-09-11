@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   NodeEnv::set_model_request(rq);
 
   NodeEnv::InitNode();
-  
+
   LOG(INFO) << "conv node id: " << NodeEnv::Instance()->ID();
 
   // total threads equals worker thread + 1 parameter thread
