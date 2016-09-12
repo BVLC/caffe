@@ -108,9 +108,9 @@ class PositiveUnitballFiller : public Filler<Dtype> {
     caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
-    int dim = blob->count() / blob->num();
+    int dim = blob->count() / blob->shape(0);
     CHECK(dim);
-    for (int i = 0; i < blob->num(); ++i) {
+    for (int i = 0; i < blob->shape(0); ++i) {
       Dtype sum = 0;
       for (int j = 0; j < dim; ++j) {
         sum += data[i * dim + j];
