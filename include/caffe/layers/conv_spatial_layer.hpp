@@ -146,6 +146,12 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                    int_tp blockWidth,
                                    int_tp blockHeight,
                                    int_tp blockDepth);
+  virtual bool create_gemm_like_conv_kernel(const vector<Blob<Dtype>*>& bottom,
+                                   const vector<Blob<Dtype>*>& top,
+                                   int_tp blockWidth,
+                                   int_tp blockHeight,
+                                   int_tp blockDepth);
+
   virtual cl_int convolve(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top, int_tp index,
                           int_tp numImages,
@@ -162,7 +168,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                const vector<Blob<Dtype>*>& top, kernelConfig*);
   virtual void swizzleWeights(const vector<Blob<Dtype>*>& bottom,
                               const vector<Blob<Dtype>*>& top,
-                              int_tp swizzle_factor);
+                              int_tp swizzle_factor,
+                              bool interleave = false);
   virtual void pad_image(const vector<Blob<Dtype>*>& bottom,
                          const vector<Blob<Dtype>*>& top,
                          int_tp image_offset, kernelConfig* config,
