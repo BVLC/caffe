@@ -572,11 +572,13 @@ message TransformationParameter {
   optional NoiseParameter noise_param = 9;
   // Distortion policy
   optional DistortionParameter distort_param = 13;
+  // Expand policy
+  optional ExpansionParameter expand_param = 14;
   // Constraint for emitting the annotation after transformation.
   optional EmitConstraint emit_constraint = 10;
 }
 
-// Message that stores parameters used by data transformer for transformation policy
+// Message that stores parameters used by data transformer for resize policy
 message ResizeParameter {
   //Probability of using this resize policy
   optional float prob = 1 [default = 1];
@@ -690,6 +692,15 @@ message DistortionParameter {
 
   // The probability of randomly order the image channels.
   optional float random_order_prob = 11 [default = 0.0];
+}
+
+// Message that stores parameters used by data transformer for expansion policy
+message ExpansionParameter {
+  //Probability of using this expansion policy
+  optional float prob = 1 [default = 1];
+
+  // The ratio to expand the image.
+  optional float max_expand_ratio = 2 [default = 1.];
 }
 
 // Message that stores parameters shared by loss layers
