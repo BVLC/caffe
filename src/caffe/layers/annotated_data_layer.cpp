@@ -148,23 +148,29 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // get a anno_datum
     AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
+    AnnotatedDatum distort_datum(anno_datum);
+    this->data_transformer_->DistortImage(anno_datum.datum(),
+                                          distort_datum.mutable_datum());
+    AnnotatedDatum expand_datum;
+    this->data_transformer_->ExpandImage(distort_datum, &expand_datum);
     read_time += timer.MicroSeconds();
     timer.Start();
     AnnotatedDatum sampled_datum;
     if (batch_samplers_.size() > 0) {
-      // Generate sampled bboxes from anno_datum.
+      // Generate sampled bboxes from expand_datum.
       vector<NormalizedBBox> sampled_bboxes;
-      GenerateBatchSamples(anno_datum, batch_samplers_, &sampled_bboxes);
+      GenerateBatchSamples(expand_datum, batch_samplers_, &sampled_bboxes);
       if (sampled_bboxes.size() > 0) {
-        // Randomly pick a sampled bbox and crop the anno_datum.
+        // Randomly pick a sampled bbox and crop the expand_datum.
         int rand_idx = caffe_rng_rand() % sampled_bboxes.size();
-        this->data_transformer_->CropImage(anno_datum, sampled_bboxes[rand_idx],
+        this->data_transformer_->CropImage(expand_datum,
+                                           sampled_bboxes[rand_idx],
                                            &sampled_datum);
       } else {
-        sampled_datum.CopyFrom(anno_datum);
+        sampled_datum.CopyFrom(expand_datum);
       }
     } else {
-      sampled_datum.CopyFrom(anno_datum);
+      sampled_datum.CopyFrom(expand_datum);
     }
     vector<int> shape =
         this->data_transformer_->InferBlobShape(sampled_datum.datum());

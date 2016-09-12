@@ -115,6 +115,23 @@ class DataTransformer {
   void CropImage(const AnnotatedDatum& anno_datum, const NormalizedBBox& bbox,
                  AnnotatedDatum* cropped_anno_datum);
 
+  /**
+   * @brief Expand the datum.
+   */
+  void ExpandImage(const Datum& datum, const float expand_ratio,
+                   NormalizedBBox* expand_bbox, Datum* expanded_datum);
+
+  /**
+   * @brief Expand the datum and adjust AnnotationGroup.
+   */
+  void ExpandImage(const AnnotatedDatum& anno_datum,
+                   AnnotatedDatum* expanded_anno_datum);
+
+  /**
+   * @brief Apply distortion to the datum.
+   */
+  void DistortImage(const Datum& datum, Datum* distort_datum);
+
 #ifdef USE_OPENCV
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -148,6 +165,12 @@ class DataTransformer {
    */
   void CropImage(const cv::Mat& img, const NormalizedBBox& bbox,
                  cv::Mat* crop_img);
+
+  /**
+   * @brief Expand img to include mean value as background.
+   */
+  void ExpandImage(const cv::Mat& img, const float expand_ratio,
+                   NormalizedBBox* expand_bbox, cv::Mat* expand_img);
 
   void TransformInv(const Blob<Dtype>* blob, vector<cv::Mat>* cv_imgs);
   void TransformInv(const Dtype* data, cv::Mat* cv_img, const int height,
