@@ -212,7 +212,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 43 (last added: ap_version)
+// SolverParameter next available ID: 44 (last added: plateau_winsize)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -289,6 +289,8 @@ message SolverParameter {
   //      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
   //    - sigmoid: the effective learning rate follows a sigmod decay
   //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
+  //    - plateau: decreases lr
+  //              if the minimum loss isn't updated for 'plateau_winsize' iters
   //
   // where base_lr, max_iter, gamma, step, stepvalue and power are defined
   // in the solver parameter protocol buffer, and iter is the current iteration.
@@ -304,6 +306,8 @@ message SolverParameter {
   optional int32 stepsize = 13;
   // the stepsize for learning rate policy "multistep"
   repeated int32 stepvalue = 34;
+  // the stepsize for learning rate policy "plateau"
+  repeated int32 plateau_winsize = 43;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -370,6 +374,8 @@ message SolverState {
   optional string learned_net = 2; // The file that stores the learned net.
   repeated BlobProto history = 3; // The history for sgd solvers
   optional int32 current_step = 4 [default = 0]; // The current step for learning rate
+  optional float minimum_loss = 5 [default = 1E38]; // Historical minimum loss
+  optional int32 iter_last_event = 6 [default = 0]; // The iteration when last lr-update or min_loss-update happend
 }
 
 enum Phase {
@@ -566,11 +572,13 @@ message TransformationParameter {
   optional NoiseParameter noise_param = 9;
   // Distortion policy
   optional DistortionParameter distort_param = 13;
+  // Expand policy
+  optional ExpansionParameter expand_param = 14;
   // Constraint for emitting the annotation after transformation.
   optional EmitConstraint emit_constraint = 10;
 }
 
-// Message that stores parameters used by data transformer for transformation policy
+// Message that stores parameters used by data transformer for resize policy
 message ResizeParameter {
   //Probability of using this resize policy
   optional float prob = 1 [default = 1];
@@ -684,6 +692,15 @@ message DistortionParameter {
 
   // The probability of randomly order the image channels.
   optional float random_order_prob = 11 [default = 0.0];
+}
+
+// Message that stores parameters used by data transformer for expansion policy
+message ExpansionParameter {
+  //Probability of using this expansion policy
+  optional float prob = 1 [default = 1];
+
+  // The ratio to expand the image.
+  optional float max_expand_ratio = 2 [default = 1.];
 }
 
 // Message that stores parameters shared by loss layers
