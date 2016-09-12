@@ -597,7 +597,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
         in_offset += (_IW + IWPAD) * TILE_Y_STRIDE;
       });
     in_addr += (_IH + IHPAD) * (_IW + IWPAD);
-    
+
 // PREF could be 4 or 8, could not be other values.
 #define WEIGHT_PREF 8
     union {
@@ -701,4 +701,609 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 #endif // Stride > 2
 #endif
 
+#endif
+
+/*******************************************************************************
+Copyright © 2016, Intel Corporation
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+******************************************************************************/
+#ifdef Conv_Interleaved
+typedef struct float1 { float s0; } float1;
+typedef struct float5 { float s0; float s1; float s2; float s3; float s4; } float5;
+typedef struct float6 { float s0; float s1; float s2; float s3; float s4; float s5; } float6;
+typedef struct float7 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; } float7;
+typedef struct float9 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; float s7; float s8; } float9;
+typedef struct float10 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9;} float10;
+typedef struct float11 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9; float sa;} float11;
+typedef struct float12 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9; float sa; float sb; } float12;
+typedef struct float13 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9; float sa; float sb; float sc;} float13;
+typedef struct float14 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; } float14;
+typedef struct float15 { float s0; float s1; float s2; float s3; float s4; float s5;
+                         float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; float se; } float15;
+typedef struct float0 { float s0; } float0; //never used but makes compiler happy.
+#endif
+
+
+
+#ifdef GEMM_LIKE_CONV_32_1
+//////////////////////////////////////////////////////////////////////////////
+// Conv_Interleaved_32_1
+//
+// Convolution: each workitem computes 1 patch x 32 filters worth of output
+// data.  Kernel's inner loop works on a single tile consisting of one
+// row from each patch and the filter data corresponding to that row.  Filter
+// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked
+// by rows and then by slices.  Relies on sub_group extension for block
+// reads and SIMD broadcast.
+
+#define TILE_M          1
+#define TILE_K          KERNEL_WIDTH
+#define TILE_N          32
+
+__attribute__((intel_reqd_sub_group_size(8)))
+__kernel void Conv_Interleaved(
+    const __global float *src0,
+    const __global float *src1,
+    const __global float *biases,
+    __global float *dst)
+{
+    const int group_x = get_group_id(0);
+    const int group_y = get_group_id(1);
+    const int global_x = get_global_id(0);
+    const int global_y = get_global_id(1);
+    const int global_z = get_global_id(2);
+    int interleaved_y;
+    int kernel_y;
+    int kernel_idx;
+
+    // Result ctile (*dst) is M rows x N columns
+    // LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.
+    float8  blockC00 = 0.f;
+    float8  blockC10 = 0.f;
+    float8  blockC20 = 0.f;
+    float8  blockC30 = 0.f;
+
+    // Src0 (patch input) is directly used as atile.
+    // Each work item points to the start of a different patch.
+    // atile is M rows x K columns.
+    const __global float *src0_read = src0
+     + ALIGNED_INPUT_SIZE * global_z                            // batch offset
+     + ( ( global_y / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )      // y offset
+     + ( ( global_y % OUT_WIDTH ) * STRIDE_X );                 // x offset
+
+    // Src1 (filter) is directly used as btile.
+    // It starts at the top of src1 and walks down.
+    // btile is K rows x N columns.
+    const __global float *src1_read = src1 + ( global_x * TILE_N  * 2);
+
+#define DOT_PRODUCT_8( _result, _rowA, colB )    \
+    {   \
+        _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );  \
+        _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );  \
+        _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );  \
+        _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );  \
+        _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );  \
+        _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );  \
+        _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );  \
+        _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );  \
+    }
+    typedef CAT( float, KERNEL_WIDTH ) float_t;
+
+    // Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.
+    // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch
+    // and KERNEL_WIDTH/2 rows of interleaved filter.
+    int patch_depth = 0;
+    do
+    {
+        int patch_row = 0;
+        do
+        {
+            // Load atile and btile.
+            // Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.
+            // The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non
+            // interleaved row is padded with zero to ensure same size as interleaved rows. This
+            // interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the
+            // kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.
+            // (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..
+            // (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...
+            // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
+            // ...
+            const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
+            float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ]; src0_read += ROW_PITCH;
+            float*  pblockA00 = (float*)(&blockA00);
+
+            float blockB00[KERNEL_WIDTH*4];
+            float8* p8BlockB00 = (float8*)blockB00;
+            float4* p4BlockB00 = (float4*)blockB00;
+            float*  pBlockB00 =  (float* )blockB00;
+
+            interleaved_y = 0;
+            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,
+            {
+                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );
+                src1_read += WIDTH1 * 2;
+            } )
+            if ( kernel_width_is_odd )
+            {
+                p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );
+                src1_read += WIDTH1 * 2;
+            }
+
+            // Perform MADs
+            kernel_idx = 0;
+            interleaved_y = 0;
+            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,
+            {
+                kernel_y = interleaved_y * 2;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+            } )
+            if ( kernel_width_is_odd )
+            {
+                kernel_y = interleaved_y * 2;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+            }
+        }
+
+        //while( ++patch_row < 1 ); //debug
+        while( ++patch_row < KERNEL_HEIGHT );
+
+        src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+    }
+    //while ( ++patch_depth < 1 );  //debug
+    while ( ++patch_depth < INPUT_DEPTH );
+
+    // Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:
+    // (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.
+    __global float *out = dst
+     + global_z * OUT_PITCH_Z                                                   // batch offset
+     + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset
+     + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
+     + ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+    float bias[4];
+    float4 *bias_vec;
+    bias_vec = (float4*)bias;
+    *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
+    if ( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+    {
+        if ( ( OUT_DEPTH % TILE_N ) == 0 )
+        {
+            for ( int i = 0; i < 8; i++ )
+            {
+                out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+            }
+        }
+        else
+        {
+            if ( ( global_x + 1 ) < get_global_size(0) )
+            {
+                for ( int i = 0; i < 8; i++ )
+                {
+                    out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+                }
+            }
+            else
+            {
+                if ( ( OUT_DEPTH % TILE_N ) >= 24 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                        out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                        out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+
+                    // Remaining channels
+                    for (int i = 0; i < OUT_DEPTH % 24; i++)
+                    {
+                        out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                        out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 16; i++)
+                    {
+                        out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+                }
+            }
+
+        }
+    }
+}
+#endif
+
+#ifdef GEMM_LIKE_CONV_32_2
+//////////////////////////////////////////////////////////////////////////////
+// Conv_Interleaved_32_2
+//
+// Convolution: each workitem computes 2 patches x 32 filters worth of output
+// data.  Kernel's inner loop works on a single tile consisting of one
+// row from each patch and the filter data corresponding to that row.  Filter
+// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked
+// by rows and then by slices.  Relies on sub_group extension for block
+// reads and SIMD broadcast.
+#define TILE_M          2
+#define TILE_K          KERNEL_WIDTH
+#define TILE_N          32
+
+__attribute__((intel_reqd_sub_group_size(8)))
+__kernel void Conv_Interleaved(
+    const __global float *src0,
+    const __global float *src1,
+    const __global float *biases,
+    __global float *dst)
+{
+    const int group_x = get_group_id(0);
+    const int group_y = get_group_id(1);
+    const int global_x = get_global_id(0);
+    const int global_y = get_global_id(1);
+    const int global_z = get_global_id(2);
+    int interleaved_y;
+    int kernel_y;
+    int kernel_idx;
+
+    // Result ctile (*dst) is M rows x N columns
+    // LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.
+    float8  blockC00 = 0.f;
+    float8  blockC10 = 0.f;
+    float8  blockC20 = 0.f;
+    float8  blockC30 = 0.f;
+    float8  blockC01 = 0.f;
+    float8  blockC11 = 0.f;
+    float8  blockC21 = 0.f;
+    float8  blockC31 = 0.f;
+
+    // Src0 (patch input) is directly used as atile.
+    // Each work item points to the start of a different patch.
+    // atile is M rows x K columns.
+    const __global float *src0_read0 = src0
+     + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
+     + ( ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )   // y offset
+     + ( ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X );                // x offset
+    const __global float *src0_read1 = src0
+     + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
+     + ( ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )   // y offset
+     + ( ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X );                // x offset
+
+    // Src1 (filter) is directly used as btile.
+    // It starts at the top of src1 and walks down.
+    // btile is K rows x N columns.
+    const __global float *src1_read = src1 + ( global_x * TILE_N * 2);
+
+#define DOT_PRODUCT_8( _result, _rowA, colB )    \
+    {   \
+        _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );  \
+        _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );  \
+        _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );  \
+        _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );  \
+        _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );  \
+        _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );  \
+        _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );  \
+        _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );  \
+    }
+    typedef CAT( float, KERNEL_WIDTH ) float_t;
+
+    // Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.
+    // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch
+    // and KERNEL_WIDTH/2 rows of interleaved filter.
+    int patch_depth = 0;
+    do
+    {
+        int patch_row = 0;
+        do
+        {
+            // Load atile and btile.
+            // Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.
+            // The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non
+            // interleaved row is padded with zero to ensure same size as interleaved rows. This
+            // interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the
+            // kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.
+            // (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..
+            // (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...
+            // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
+            // ...
+            const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
+            float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;
+            float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;
+            float*  pblockA00 = (float*)(&blockA00);
+            float*  pblockA01 = (float*)(&blockA01);
+
+            float blockB00[KERNEL_WIDTH*4];
+            float8* p8BlockB00 = (float8*)blockB00;
+            float4* p4BlockB00 = (float4*)blockB00;
+            float*  pBlockB00 =  (float* )blockB00;
+
+            interleaved_y = 0;
+            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,
+            {
+                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );
+                src1_read += WIDTH1 * 2;
+            } )
+            if ( kernel_width_is_odd )
+            {
+                p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );
+                src1_read += WIDTH1 * 2;
+            }
+
+            // Perform MADs
+            kernel_idx = 0;
+            interleaved_y = 0;
+            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,
+            {
+                kernel_y = interleaved_y * 2;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;
+            } )
+            if ( kernel_width_is_odd )
+            {
+                kernel_y = interleaved_y * 2;
+                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] );
+                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;
+            }
+        }
+
+        //while( ++patch_row < 1 ); //debug
+        while( ++patch_row < KERNEL_HEIGHT );
+
+        src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+        src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+    }
+    //while ( ++patch_depth < 1 );  //debug
+    while ( ++patch_depth < INPUT_DEPTH );
+
+    // Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:
+    // (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.
+    __global float *out0 = dst
+     + global_z * OUT_PITCH_Z                                                       // batch offset
+     + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
+     + ( ( global_y * TILE_M + 0 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+     + ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+    __global float *out1 = dst
+     + global_z * OUT_PITCH_Z                                                       // batch offset
+     + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
+     + ( ( global_y * TILE_M + 1 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+     + ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+    float bias[4];
+    float4 *bias_vec;
+    bias_vec = (float4*)bias;
+    *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
+
+
+    if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+    {
+        if ( ( OUT_DEPTH % TILE_N ) == 0 )
+        {
+            for( int i = 0; i < 8; i++ )
+            {
+                out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+            }
+        }
+        else
+        {
+            if ( ( global_x + 1 ) < get_global_size(0) )
+            {
+                for ( int i = 0; i < 8; i++ )
+                {
+                    out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+                }
+            }
+            else
+            {
+                if ( ( OUT_DEPTH % TILE_N ) >= 24 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                        out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                        out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+
+                    // remaining output channels
+                    for (int i = 0; i < OUT_DEPTH % 24; i++)
+                    {
+                        out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                        out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 16; i++)
+                    {
+                        out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out0[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+                }
+            }
+        }
+    }
+
+    if( global_y * TILE_M + 1 < OUT_WIDTH * OUT_HEIGHT )
+    {
+        if ( ( OUT_DEPTH % TILE_N ) == 0 )
+        {
+            for( int i = 0; i < 8; i++ )
+            {
+                out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);
+                out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);
+                out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);
+            }
+        }
+        else
+        {
+            if ( ( global_x + 1 ) < get_global_size(0) )
+            {
+                for ( int i = 0; i < 8; i++ )
+                {
+                    out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                    out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);
+                    out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);
+                    out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);
+                }
+            }
+            else
+            {
+                if ( ( OUT_DEPTH % TILE_N ) >= 24 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                        out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);
+                        out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+
+                    // Remaining channels
+                    for (int i = 0; i < OUT_DEPTH % 24; i++)
+                    {
+                        out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                        out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 16; i++)
+                    {
+                        out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);
+                    }
+                }
+                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out1[(8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < OUT_DEPTH % 8; i++)
+                    {
+                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);
+                    }
+                }
+            }
+        }
+    }
+}
 #endif

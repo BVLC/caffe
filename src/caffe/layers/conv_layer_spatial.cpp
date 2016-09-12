@@ -94,7 +94,7 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   spatial_col_buffer_.Reshape(this->num_, this->channels_, height_ + 2 * pad_h_,
                       width_ + 2 * pad_w_);
   swizzled_weights_.Reshape(this->num_output_, this->channels_,
-                            kernel_h_ + 2 * pad_h_, kernel_w_ + 2 * pad_w_);
+                            kernel_h_, (kernel_w_ + 1) & ~1);
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (this->bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
@@ -174,7 +174,9 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 // For large enough input size, we do not need to tune kernels for different
 // size. The reason is with large input size, there will be enough work items
 // to feed al the EUs.
-#define ADJUST_INPUT_IMAGE_SIZE(x) ((x) > 16 * 16 ? 256 : (x))
+// FIXME for the gemm like convolution, switch back to eaxct image size.
+
+#define ADJUST_INPUT_IMAGE_SIZE(x) (x) //((x) > 16 * 16 ? 256 : (x))
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -330,33 +332,129 @@ bool ConvolutionLayerSpatial<float>::generate_kernel(
 }
 
 template<typename Dtype>
+void interleaveMatrix( Dtype* mem_dst, const Dtype *mem,
+         int r, int c, int interleavedRows, int nonInterleavedRows, int blockWidth, int rowAlignment )
+{
+    CHECK_EQ( interleavedRows % 2, 0 ) <<
+        "interleaveMatrix only supports even values for interleavedRows.";
+
+    size_t memSize = r * c * sizeof( float );
+    size_t dstSize = memSize *
+              ( interleavedRows + nonInterleavedRows * 2 ) /
+              ( interleavedRows + nonInterleavedRows );
+    memset( mem_dst, 0, dstSize);
+
+    const int xStride = blockWidth;
+    const int yStride = c * 2;
+    const Dtype *pSrc = mem;
+    Dtype* pDst = mem_dst;
+    for( int y = 0; y < r;  )
+    {
+        for( int rows = 0; rows < interleavedRows; rows += 2 )
+        {
+            if( y >= r ) break;
+
+            if( ( c % xStride ) == 0 )
+            {
+                for( int x = 0; x < c / xStride; x++ )
+                {
+                    memcpy( pDst + x * xStride * 2,           pSrc + x * xStride,     xStride * sizeof( Dtype ) );
+                    memcpy( pDst + x * xStride * 2 + xStride, pSrc + x * xStride + c, xStride * sizeof( Dtype ) );
+                }
+            }
+            else
+            {
+                const int count = c / xStride;
+                int x = 0;
+                for( ; x < count - 1; x++ )
+                {
+                    memcpy( pDst + x * xStride * 2, pSrc + x * xStride, xStride * sizeof( Dtype ) );
+                    memcpy( pDst + x * xStride * 2 + xStride, pSrc + x * xStride + c, xStride * sizeof( Dtype ) );
+                }
+
+                memcpy( pDst + x * xStride * 2, pSrc + x * xStride, xStride * sizeof( Dtype ) );
+            }
+            pSrc += yStride;
+            pDst += yStride;
+            y += 2;
+        }
+
+        for( int rows = 0; rows < nonInterleavedRows; rows++ )
+        {
+            if( y >= r ) break;
+
+            const int stride = rowAlignment;
+            int remaining = c;
+            for( int x = 0; x < c; x += stride )
+            {
+                if( remaining >= stride )
+                {
+                    memcpy( pDst + x * 2, pSrc + x, stride * sizeof( Dtype ) );
+                    remaining -=stride;
+                }
+                else
+                {
+                    memcpy( pDst + x * 2, pSrc + x, remaining * sizeof( Dtype ) );
+                }
+            }
+            pSrc += yStride / 2;
+            pDst += yStride;
+            y++;
+        }
+    }
+}
+
+template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top,
-    int_tp swizzled_factor) {
+    int_tp swizzled_factor,
+    bool interleave) {
+  if (!interleave) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::kernel &oclk_copy_weight = program.get_kernel(
+        CL_KERNEL_SELECT("copyWeightsSwizzled"));
+    cl_uint argIdx = 0;
 
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-      this->device_->id());
-  viennacl::ocl::program &program = this->device_->program();
-  viennacl::ocl::kernel &oclk_copy_weight = program.get_kernel(
-      CL_KERNEL_SELECT("copyWeightsSwizzled"));
-  cl_uint argIdx = 0;
+    int_tp channels = this->channels_ / this->group_;
+    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
+    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights, &ctx));
+    oclk_copy_weight.arg(argIdx++, kernel_w_);
+    oclk_copy_weight.arg(argIdx++, kernel_h_);
+    oclk_copy_weight.arg(argIdx++, channels);
+    oclk_copy_weight.arg(argIdx++, this->num_output_);
+    oclk_copy_weight.arg(argIdx++, swizzled_factor);
+    const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_
+        * channels * kernel_w_ * kernel_h_), 1, 1 };
 
-  int_tp channels = this->channels_ / this->group_;
-  oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-  oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights, &ctx));
-  oclk_copy_weight.arg(argIdx++, kernel_w_);
-  oclk_copy_weight.arg(argIdx++, kernel_h_);
-  oclk_copy_weight.arg(argIdx++, channels);
-  oclk_copy_weight.arg(argIdx++, this->num_output_);
-  oclk_copy_weight.arg(argIdx++, swizzled_factor);
-  const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_
-      * channels * kernel_w_ * kernel_h_), 1, 1 };
-
-  OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                       oclk_copy_weight.handle().get(), 3, NULL,
-                                       global_work_size_Copy, NULL, 0, NULL,
-                                       NULL));
+    OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                     oclk_copy_weight.handle().get(), 3, NULL,
+                                     global_work_size_Copy, NULL, 0, NULL,
+                                     NULL));
+  } else {
+    const Dtype *cpu_weight = this->blobs_[0]->cpu_data();
+    Dtype *cpu_swizzled_weight = swizzled_weights_.mutable_cpu_data();
+    int interleavedRows = (kernel_w_ / 2) * 2;
+    int nonInterleavedRows = kernel_w_ % 2;
+    int blockWidth = swizzled_factor; // should equal to simd size.
+    int rowAlignment = 32;
+    size_t interleaved_filter_size = M_ * kernel_w_ * kernel_h_ * this->channels_ * sizeof(Dtype);
+    Dtype * tmpSwizzledWeight = (Dtype*) malloc(interleaved_filter_size);
+    CHECK_EQ(tmpSwizzledWeight != NULL, true)
+      << "Failed to allocate temporary swizzled weight";
+    for( int od = 0; od < M_; od++)
+      for( int id = 0; id < this->channels_; id++)
+        for( int r = 0; r < kernel_h_; r++)
+          for( int c = 0; c < kernel_w_; c++)
+            tmpSwizzledWeight[(( id * kernel_h_ + r )* kernel_w_ + c) * M_ + od]
+              = cpu_weight[((od * this->channels_ + id) * kernel_h_ + r) * kernel_w_ + c ];
+    interleaveMatrix( cpu_swizzled_weight, tmpSwizzledWeight,
+                      kernel_w_ * kernel_h_ * this->channels_, M_,
+                      interleavedRows, nonInterleavedRows, blockWidth, rowAlignment );
+    free(tmpSwizzledWeight);
+  }
 }
 
 template<>
@@ -530,60 +628,8 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
   viennacl::ocl::kernel &kernel = program.get_kernel(config->kernelName);
   cl_int err = 0;
 
-  if (config->kernelType != 2) {
-    for (int_tp n = 0; n < numImages; ++n) {
-      for (int_tp g = 0; g < group_; ++g) {
-        bias_offset_ = M_ * g;
-        int_tp image_offset = n * this->bottom_dim_
-            + width_ * height_ * (channels_ / group_) * g;
-        int_tp output_image_offset = n * this->top_dim_
-            + output_w_ * output_h_ * M_ * g;
-
-        cl_uint argIdx = 0;
-        int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
-            * g;
-
-        // Copy image
-        if (pad_w_ > 0 || pad_h_ > 0) {
-          pad_image(bottom, top, image_offset, config, numImages);
-          image_offset = 0;
-          kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
-        } else {
-          kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-        }
-        kernel.arg(argIdx++, image_offset);
-        kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-        kernel.arg(argIdx++, kernel_offset);
-        kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
-        kernel.arg(argIdx++, bias_offset_);
-        kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-        kernel.arg(argIdx++, output_image_offset);
-        kernel.arg(argIdx++, (uint16_t)padded_width_);
-        kernel.arg(argIdx++, (uint16_t)padded_height_);
-        kernel.arg(argIdx++, (uint16_t)output_w_);
-        kernel.arg(argIdx++, (uint16_t)output_h_);
-        if (config->use_null_local) {
-          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                       kernel.handle().get(), 3,
-                                       NULL,
-                                       config->global_work_size, NULL, 0, NULL,
-                                       NULL);
-        } else {
-          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                       kernel.handle().get(), 3,
-                                       NULL,
-                                       config->global_work_size,
-                                       config->local_work_size, 0, NULL,
-                                       NULL);
-        }
-
-        if (err != CL_SUCCESS)
-          return err;
-        viennacl::backend::finish();
-      }
-    }
-  } else {
-    swizzleWeights(bottom, top, 16);
+  if (config->kernelType == 2) {
+    swizzleWeights(bottom, top, 16, false);
     size_t total_bottom_size = bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
     size_t total_bias_size = M_ * group_;
@@ -640,6 +686,111 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
       cleanTmpSubBuffers(bottom, top);
     }
   }
+  else if (config->kernelType == 5) {
+    swizzleWeights(bottom, top, 8, true);
+    size_t total_bottom_size = bottom_dim_ * numImages;
+    size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
+    size_t total_bias_size = M_ * group_;
+    size_t total_top_size = top_dim_ * numImages;
+    for (int_tp g = 0; g < group_; ++g) {
+      bias_offset_ = M_ * g;
+      int_tp image_offset = width_ * height_ * (channels_ / group_) * g;
+      int_tp output_image_offset = output_w_ * output_h_ * M_ * g;
+
+      cl_uint argIdx = 0;
+      int_tp kernel_offset = kernel_h_ * kernel_w_
+                             * (channels_ / group_) * M_ * g;
+      // Copy image
+      cl_mem input_image;
+      if (pad_w_ > 0 || pad_h_ > 0) {
+        pad_image(bottom, top, image_offset, config, numImages);
+        image_offset = 0;
+        input_image = (cl_mem) col_data;
+      } else {
+        input_image = (cl_mem) bottom_data;
+      }
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, input_image,
+                         image_offset, total_bottom_size - image_offset,
+                         true, false);
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                         (cl_mem) swizzled_weights,
+                         kernel_offset, total_kernel_size - kernel_offset,
+                         true, true);
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
+                         bias_offset_, total_bias_size - bias_offset_,
+                         true, true);
+      setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                         (cl_mem) top_data,
+                         output_image_offset,
+                         total_top_size - output_image_offset,
+                         false, false);
+      err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                   kernel.handle().get(), 3,
+                                   NULL,
+                                   config->global_work_size,
+                                   config->local_work_size, 0, NULL,
+                                   NULL);
+      OCL_CHECK(err);
+      if (err != CL_SUCCESS)
+        return err;
+    }
+
+    if (group_ > 1) {
+      viennacl::backend::finish();
+      cleanTmpSubBuffers(bottom, top);
+    }
+  } else {
+    for (int_tp n = 0; n < numImages; ++n) {
+      for (int_tp g = 0; g < group_; ++g) {
+        bias_offset_ = M_ * g;
+        int_tp image_offset = n * this->bottom_dim_
+            + width_ * height_ * (channels_ / group_) * g;
+        int_tp output_image_offset = n * this->top_dim_
+            + output_w_ * output_h_ * M_ * g;
+
+        cl_uint argIdx = 0;
+        int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
+            * g;
+
+        // Copy image
+        if (pad_w_ > 0 || pad_h_ > 0) {
+          pad_image(bottom, top, image_offset, config, numImages);
+          image_offset = 0;
+          kernel.arg(argIdx++, WrapHandle((cl_mem) col_data, &ctx));
+        } else {
+          kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+        }
+        kernel.arg(argIdx++, image_offset);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
+        kernel.arg(argIdx++, kernel_offset);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
+        kernel.arg(argIdx++, bias_offset_);
+        kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+        kernel.arg(argIdx++, output_image_offset);
+        kernel.arg(argIdx++, (uint16_t)padded_width_);
+        kernel.arg(argIdx++, (uint16_t)padded_height_);
+        kernel.arg(argIdx++, (uint16_t)output_w_);
+        kernel.arg(argIdx++, (uint16_t)output_h_);
+        if (config->use_null_local) {
+          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       kernel.handle().get(), 3,
+                                       NULL,
+                                       config->global_work_size, NULL, 0, NULL,
+                                       NULL);
+        } else {
+          err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       kernel.handle().get(), 3,
+                                       NULL,
+                                       config->global_work_size,
+                                       config->local_work_size, 0, NULL,
+                                       NULL);
+        }
+
+        if (err != CL_SUCCESS)
+          return err;
+      }
+    }
+  }
 
   return err;
 }
@@ -649,6 +800,8 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
+  // warm up.
+  convolve(bottom, top, index, num_, config);
   Timer timer;
   timer.initted();
   timer.Start();
@@ -728,6 +881,115 @@ bool ConvolutionLayerSpatial<float>::verify_result(
   }
   return true;
 }
+
+template<>
+bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+    int_tp blockM,
+    int_tp blockK, int_tp blockN) {
+  std::stringstream multFunctionBuilder;
+  std::string stringBuilder;
+  std::stringstream optionsString;
+  std::string kernelUKey = generate_specific_key(5, blockM, blockK,
+                                                 blockN);
+  int_tp workItemOutput[3] = { blockM, blockK, blockN };
+
+  int_tp output_width = output_w_;
+  int_tp output_height = output_h_;
+  int_tp simd_size = 8;
+  int_tp num_batches = num_;
+  int_tp alignedFilterWidth = ( M_ + blockN - 1 ) & ~( blockN - 1 );
+  int_tp alignedExpandHeight = ( output_width * output_height + blockM - 1 ) & ~( blockM - 1 );
+  int_tp globalWorkSizeDX = blockN;
+  int_tp globalWorkSizeDY = blockM;
+
+  kernel_name_ = "U_GEMM_LIKE_CONV_";
+  kernel_name_ += kernelUKey.c_str();
+  kernel_name_ += "_SIMD8";
+  std::stringstream kernelDef;
+  kernelDef << "GEMM_LIKE_CONV_" << blockN << "_" << blockM;
+
+  // Build list of options and defines
+  optionsString.str("");
+  optionsString << "-cl-fast-relaxed-math " << " -D " << kernelDef.str()
+                << " -D Conv_Interleaved=" << kernel_name_.c_str() ;
+
+  optionsString <<
+        " -cl-mad-enable" <<
+        " -DKERNEL_WIDTH=" << kernel_w_ <<
+        " -DKERNEL_HEIGHT=" << kernel_h_ <<
+        " -DPADDING_LEFT=" << pad_w_ <<
+        " -DPADDING_HEIGHT=" << pad_h_ <<
+        " -DSTRIDE_X=" << stride_w_ <<
+        " -DSTRIDE_Y=" << stride_h_ <<
+        " -DINPUT_WIDTH=" << width_ <<
+        " -DINPUT_HEIGHT=" << height_ <<
+        " -DINPUT_DEPTH=" << channels_ <<
+        " -DWIDTH1=" << alignedFilterWidth <<
+        " -DOUT_PADDING_LEFT=" << 0 <<
+        " -DOUT_PADDING_HEIGHT=" << 0 <<
+        " -DALIGNED_INPUT_SIZE=" << padded_height_ * padded_width_ * channels_ <<
+        " -DOUT_WIDTH=" << output_width <<
+        " -DOUT_HEIGHT=" << output_height <<
+        " -DOUT_DEPTH=" << M_ <<
+        " -DOUT_PITCH_X=" << output_width <<
+        " -DOUT_PITCH_Y=" << output_width * output_height <<
+        " -DOUT_PITCH_Z=" << output_width * output_height * M_ <<
+        " -DROW_PITCH=" <<   padded_width_ <<
+        " -DSLICE_PITCH=" << padded_width_ * padded_height_ <<
+        " -DBATCH_PITCH=" << padded_width_ * padded_height_ * M_ <<
+        " -DNUM_BATCHES=" << num_ <<
+        " -DDY=" << globalWorkSizeDY <<
+        " -DDX=" << globalWorkSizeDX <<
+        " -DKERNEL_WIDTH_DIV2=" << kernel_w_ / 2 <<
+        " -DKERNEL_SLICE_DIV2=" << ( kernel_w_ * kernel_h_) / 2 <<
+        " -DTILE_N_LAST=" << alignedFilterWidth % 32 <<
+        " -DTILE_N_LAST_DIV8=" << ( alignedFilterWidth % 32 ) / 8 <<
+        " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
+
+    // chooses "Oldest First EU scheduling mode" instead of "Round Robin"
+  optionsString <<
+      " -cl-no-subgroup-ifp ";
+
+  size_t sgemm_m = alignedExpandHeight;
+  size_t sgemm_n = alignedFilterWidth;
+  size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );
+  size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );
+  gy = (gy + 7) & ~7;
+  size_t gz = num_batches;
+  size_t global_size[3] = { gx, gy, gz };
+
+  size_t local_size[3] = { 1, static_cast<size_t>(simd_size), 1 };
+  string options = optionsString.str();
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  viennacl::ocl::program & program = submit_conv_spatial_program(&ctx,
+                                                                 kernel_name_,
+                                                                 options);
+  // ClKernel kernel;
+  size_t workgroupSize_used;
+  viennacl::ocl::kernel & kernel = program.get_kernel(kernel_name_);
+  cl_int err = clGetKernelWorkGroupInfo(
+      kernel.handle().get(), viennacl::ocl::current_device().id(),
+      CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
+      sizeof(size_t), &workgroupSize_used,
+      NULL);
+
+  if (workgroupSize_used != simd_size) {
+    ctx.delete_program(kernel_name_);
+    return false;
+  }
+
+  if (err == CL_SUCCESS || err == true) {
+    kernelQueue.push_back(
+        new kernelConfig(kernel_name_, global_size, local_size, workItemOutput,
+                         false, true, false, 5));
+    return true;
+  } else {
+    ctx.delete_program(kernel_name_);
+    return false;
+  }
+}
+
 
 template<>
 bool ConvolutionLayerSpatial<float>::setup_IDLF(
@@ -922,6 +1184,8 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
     setup_IDLF(bottom, top, blockWidth, blockHeight, blockDepth);
   else if (kernelType == 4)
     create_basic_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
+  else if (kernelType == 5)
+    create_gemm_like_conv_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
   else
     assert(0);
 }
@@ -942,6 +1206,10 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
     int kernelCnt = 0;
+    if (this->group_ == 1) {
+      create_convolution_kernel(bottom, top, 5, 1, 8, 32);
+      create_convolution_kernel(bottom, top, 5, 2, 8, 32);
+    }
     for (uint32_t width = 14; width > 0; width--) {
       int candidate = 0;
       if (width > output_w_)
@@ -1264,11 +1532,13 @@ template void ConvolutionLayerSpatial<double>::SetUp(
 template void ConvolutionLayerSpatial<float>::swizzleWeights(
     const vector<Blob<float>*>& bottom,
     const vector<Blob<float>*>& top,
-    int_tp swizzle_factor);
+    int_tp swizzle_factor,
+    bool interleave = false);
 template void ConvolutionLayerSpatial<double>::swizzleWeights(
     const vector<Blob<double>*>& bottom,
     const vector<Blob<double>*>& top,
-    int_tp swizzle_factor);
+    int_tp swizzle_factor,
+    bool interleave = false);
 template void ConvolutionLayerSpatial<float>::pad_image(
     const vector<Blob<float>*>& bottom,
     const vector<Blob<float>*>& top,
@@ -1289,6 +1559,7 @@ void ConvolutionLayerSpatial<double>::create_convolution_kernel(
   NOT_IMPLEMENTED;
   return;
 }
+
 template<>
 bool ConvolutionLayerSpatial<double>::setup_IDLF(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
@@ -1297,6 +1568,16 @@ bool ConvolutionLayerSpatial<double>::setup_IDLF(
   NOT_IMPLEMENTED;
   return false;
 }
+
+template<>
+bool ConvolutionLayerSpatial<double>::create_gemm_like_conv_kernel(
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
+    int_tp blockWidth,
+    int_tp blockHeight, int_tp blockDepth) {
+  NOT_IMPLEMENTED;
+  return false;
+}
+
 
 template<>
 bool ConvolutionLayerSpatial<double>::verify_result(
