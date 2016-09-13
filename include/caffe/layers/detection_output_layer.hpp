@@ -110,6 +110,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   bool visualize_;
   float visualize_threshold_;
   shared_ptr<DataTransformer<Dtype> > data_transformer_;
+  string save_file_;
 };
 
 }  // namespace caffe
