@@ -1,10 +1,10 @@
 #include <boost/bind.hpp>
-#include <boost/condition_variable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <boost/ref.hpp>
 #include <boost/thread.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/unordered_map.hpp>
 #include <algorithm>
 #include <deque>
@@ -56,6 +56,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     struct SendJob : Element {
     };
     BlockingQueue<Element*> jobs_to_run;
+    bool finished;
     boost::condition_variable cv;
     boost::mutex mtx;
     std::vector<Job*> available_jobs;
@@ -411,6 +412,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
   void finish_all_tasks() {
     boost::recursive_mutex::scoped_lock lock(mtx);
+    finished=false;
     while (!finished) {
       cv.wait(lock);
     }
