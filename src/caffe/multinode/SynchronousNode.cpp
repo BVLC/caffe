@@ -221,6 +221,8 @@ class SynchronousSync : public InternalThread
 
   virtual void terminate() {
     boost::mutex::scoped_lock lock(mtx);
+    if (!is_root())
+      comms_up.finish_all_tasks();
     terminated_ = true;
   }
 

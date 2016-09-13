@@ -1,4 +1,5 @@
 #include <boost/bind.hpp>
+#include <boost/condition_variable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
@@ -55,6 +56,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     struct SendJob : Element {
     };
     BlockingQueue<Element*> jobs_to_run;
+    boost::condition_variable cv;
     boost::mutex mtx;
     std::vector<Job*> available_jobs;
     boost::thread thread;
@@ -216,6 +218,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       next = get_next_part_to_send();
       if (!next) {
         DLOG(INFO) << "nothing to send";
+        finished=true;
+        boost::notify_all(cv, lock);
         return;
       }
       during_sending = true;
@@ -405,7 +409,12 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     iter_size_handlers.push_back(handler);
   }
 
-  void finish_all_tasks() {}  // TODO: finish
+  void finish_all_tasks() {
+    boost::recursive_mutex::scoped_lock lock(mtx);
+    while (!finished) {
+      cv.wait(lock);
+    }
+  }
 };
 
 }  // namespace
