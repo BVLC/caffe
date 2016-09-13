@@ -113,6 +113,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         new DataTransformer<Dtype>(this->layer_param_.transform_param(),
                                    this->phase_));
     data_transformer_->InitRand();
+    save_file_ = detection_output_param.save_file();
   }
 }
 
@@ -435,7 +436,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     this->data_transformer_->TransformInv(bottom[3], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_);
+        label_to_display_name_, save_file_);
 #endif  // USE_OPENCV
   }
 }

@@ -475,7 +475,8 @@ vector<cv::Scalar> GetColors(const int n);
 template <typename Dtype>
 void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
-                   const map<int, string>& label_to_display_name);
+                   const map<int, string>& label_to_display_name,
+                   const string& save_file);
 #endif  // USE_OPENCV
 
 }  // namespace caffe
