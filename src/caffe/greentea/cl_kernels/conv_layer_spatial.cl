@@ -8,6 +8,7 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
 
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
+#define LOOP0(VAR, STMT)
 #define LOOP1(VAR, STMT) (STMT); (VAR)++;
 #define LOOP2(VAR, STMT) LOOP1(VAR, STMT); (STMT); (VAR)++;
 #define LOOP3(VAR, STMT) LOOP2(VAR, STMT); (STMT); (VAR)++;
