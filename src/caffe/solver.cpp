@@ -97,6 +97,8 @@ void Solver<Dtype>::InitTrainNet() {
         << "Creating training net from net file: " << param_.net();
     ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
   }
+  if (param_.engine_sequence() != "")
+    net_param.set_engine_sequence(param_.engine_sequence());
   // Set the correct NetState.  We start with the solver defaults (lowest
   // precedence); then, merge in any NetState specified by the net_param itself;
   // finally, merge in any NetState specified by the train_state (highest
@@ -183,6 +185,10 @@ void Solver<Dtype>::InitTestNets() {
       net_state.MergeFrom(param_.test_state(i));
     }
     net_params[i].mutable_state()->CopyFrom(net_state);
+
+    if (param_.engine_sequence() != "")
+      net_params[i].set_engine_sequence(param_.engine_sequence());
+
     LOG(INFO)
         << "Creating test net (#" << i << ") specified by " << sources[i];
     if (Caffe::root_solver()) {

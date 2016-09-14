@@ -31,7 +31,7 @@ Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase,
     const int level, const vector<string>* stages,
-    const Net* root_net)
+    const Net* root_net, std::string engine_sequence)
     : root_net_(root_net) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
@@ -43,6 +43,8 @@ Net<Dtype>::Net(const string& param_file, Phase phase,
     }
   }
   param.mutable_state()->set_level(level);
+  if (engine_sequence != "")
+    param.set_engine_sequence(engine_sequence);
   Init(param);
 }
 
@@ -99,6 +101,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
+    if (param.engine_sequence() != "")
+      param.mutable_layer(layer_id)->set_engine_sequence(param.engine_sequence());
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
           layer_param.bottom_size())

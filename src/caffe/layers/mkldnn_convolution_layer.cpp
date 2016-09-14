@@ -13,6 +13,39 @@
 
 namespace caffe {
 
+// just a PoC - move to some better location to be used by other layers as well
+std::vector<engine> get_engines(std::string engine_sequence) {
+  std::vector<engine> engines;
+  if (engine_sequence == "") {
+    engines.push_back(CpuEngine::Instance().get_engine());
+  } else {
+    // Assuming engines are separated by #
+    vector<string> engine_names;
+    std::string::size_type prev = 0, pos = 0, last = engine_sequence.size()-1;
+
+    int choice_num = 1;
+    while(pos < last) {
+      pos = engine_sequence.find('#', pos);
+      if (pos == std::string::npos)
+        pos = last+1;
+      std::string current_engine(engine_sequence.substr(prev, pos-prev));
+      LOG(INFO) << "Engine choice #" << choice_num++ << ": " << current_engine;
+
+      if (current_engine == "CPU")
+        engines.push_back(CpuEngine::Instance().get_engine());
+      else if (current_engine == "FPGA")
+        engines.push_back(CpuEngine::Instance().get_engine());  // TBD: change
+      else
+        CHECK(0) << "Unknown engine \"" << current_engine
+                 << "\" in engine_sequence string: \""
+                 << engine_sequence <<"\"";
+
+      prev = ++pos;
+    }
+  }
+  return engines;
+}
+
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), ConvolutionLayer<Dtype>(param)
@@ -92,7 +125,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::precision mpcsn = memory::precision::f32;
     memory::format mfmt_any = memory::format::any;
-    engine cpu_engine = CpuEngine::Instance().get_engine();
 
     tensor::dims input_tz = {n, ic, ih, iw};
     tensor::dims bias_tz = {oc};
@@ -111,7 +143,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , init_output_md, convolutionStrides
                                     , padding, padding_kind::zero);
 
-    convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, cpu_engine));
+    LOG(INFO) << "Engine sequence for " << this->layer_param_.name();
+    vector<engine> engines = get_engines(this->layer_param_.engine_sequence());
+    CHECK(engines.size() != 0);
+    engine engine = engines[0];
+    for(int i = 0; i < engines.size(); i++) {
+      engine = engines[i];
+      convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, engine));
+   // if (success) // TBD: how we'll detect that engine has no support
+        break;
+    }
+    CHECK(convFwd_pd != NULL);
 
     // -- Memory descriptors initialization ------------------------------------------
     // ---- Get memory descriptors from convolution primitive descriptor -------------
@@ -123,18 +165,18 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
-    shared_ptr<MemPD> prv_input_primitive_pd(new MemPD(prv_input_md, cpu_engine));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(prv_bias_md, cpu_engine));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(prv_output_md, cpu_engine));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(prv_weights_md, cpu_engine));
+    shared_ptr<MemPD> prv_input_primitive_pd(new MemPD(prv_input_md, engine));
+    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(prv_bias_md, engine));
+    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(prv_output_md, engine));
+    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(prv_weights_md, engine));
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
     memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-    shared_ptr<MemPD> usr_input_primitive_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
-    shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
-    shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+    shared_ptr<MemPD> usr_input_primitive_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, engine));
+    shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, engine));
+    shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, engine));
+    shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_primitive_pd, prv_input_primitive_pd, bottom[0], this));
