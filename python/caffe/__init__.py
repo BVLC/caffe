@@ -1,4 +1,4 @@
-from .pycaffe import SolverParameter, Net, SGDSolver, NesterovSolver, AdaGradSolver, RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
+from .pycaffe import SolverParameter, NetParameter, NetState, Net, SGDSolver, NesterovSolver, AdaGradSolver, RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
 from ._caffe import init_log, log, set_mode_cpu, set_mode_gpu, set_device, Layer, get_solver, get_solver_from_file, layer_type_list, set_random_seed, solver_count, set_solver_count, solver_rank, set_solver_rank, set_multiprocess, has_nccl
 from ._caffe import __version__
 from .proto.caffe_pb2 import TRAIN, TEST

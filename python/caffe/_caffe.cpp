@@ -107,12 +107,12 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
 
 // Net constructor
 shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
-    const int level, const bp::object& stages,
+    int level, const bp::object& stages,
     const bp::object& weights) {
   CheckFile(network_file);
 
   // Convert stages from list to vector
-  vector<string> stages_vector;
+  std::vector<std::string> stages_vector;
   if (!stages.is_none()) {
     for (int i = 0; i < len(stages); i++) {
       stages_vector.push_back(bp::extract<string>(stages[i]));
@@ -135,7 +135,8 @@ shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
 
 // Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
-    string param_file, string pretrained_param_file, int phase) {
+    string param_file, string pretrained_param_file, int phase,
+    int level, const bp::object& stages) {
   LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
   LOG(WARNING) << "Use this instead (with the named \"weights\""
     << " parameter):";
@@ -144,8 +145,16 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
   CheckFile(param_file);
   CheckFile(pretrained_param_file);
 
+  // Convert stages from list to vector
+  std::vector<std::string> stages_vector;
+  if (!stages.is_none()) {
+    for (int i = 0; i < len(stages); i++) {
+      stages_vector.push_back(bp::extract<string>(stages[i]));
+    }
+  }
+
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+      static_cast<Phase>(phase), level, &stages_vector));
   net->CopyTrainedLayersFrom(pretrained_param_file);
   return net;
 }
@@ -203,23 +212,30 @@ void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype>* layer,
   // check that we were passed appropriately-sized contiguous memory
   PyArrayObject* data_arr =
       reinterpret_cast<PyArrayObject*>(data_obj.ptr());
-  PyArrayObject* labels_arr =
-      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
   CheckContiguousArray(data_arr, "data array", md_layer->channels(),
       md_layer->height(), md_layer->width());
-  CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
-  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
-    throw std::runtime_error("data and labels must have the same first"
-        " dimension");
-  }
   if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
     throw std::runtime_error("first dimensions of input arrays must be a"
         " multiple of batch size");
   }
 
-  md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
-      static_cast<Dtype*>(PyArray_DATA(labels_arr)),
-      PyArray_DIMS(data_arr)[0]);
+  PyArrayObject* labels_arr = NULL;
+
+  if (labels_obj.ptr() != bp::object().ptr()) {
+    labels_arr = reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+    CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
+    if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+      throw std::runtime_error("data and labels must have the same first"
+          " dimension");
+    }
+    md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
+        static_cast<Dtype*>(PyArray_DATA(labels_arr)),
+        PyArray_DIMS(data_arr)[0]);
+  } else {
+    md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
+        NULL,
+        PyArray_DIMS(data_arr)[0]);
+  }
 }
 
 
@@ -441,7 +457,10 @@ BOOST_PYTHON_MODULE(_caffe) {
             bp::arg("level")=0, bp::arg("stages")=bp::object(),
             bp::arg("weights")=bp::object())))
     // Legacy constructor
-    .def("__init__", bp::make_constructor(&Net_Init_Load))
+    .def("__init__", bp::make_constructor(&Net_Init_Load,
+         bp::default_call_policies(), (bp::arg("network_file"),
+            bp::arg("pretrained_param_file"), "phase",
+            bp::arg("level")=0, bp::arg("stages")=bp::object())))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
@@ -519,14 +538,31 @@ BOOST_PYTHON_MODULE(_caffe) {
           bp::return_internal_reference<>()))
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
-    .add_property("type", bp::make_function(&Layer<Dtype>::type));
+    .add_property("type", bp::make_function(&Layer<Dtype>::type))
+    .add_property("layer_param", bp::make_function(&Layer<Dtype>::layer_param,
+          bp::return_internal_reference<>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Layer<Dtype>);
 
   bp::class_<SolverParameter>("SolverParameter", bp::no_init)
     .add_property("max_iter", &SolverParameter::max_iter)
     .add_property("display", &SolverParameter::display)
     .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce);
-  bp::class_<LayerParameter>("LayerParameter", bp::no_init);
+
+  bp::class_<LayerParameter>("LayerParameter", bp::no_init)
+    .add_property("name",          bp::make_function(
+                          static_cast<const string& (LayerParameter::*)
+                          (void) const>(&LayerParameter::name),
+                          bp::return_value_policy<bp::return_by_value>()))
+    .add_property("bottom_size",   &LayerParameter::bottom_size)
+    .def("get_bottom",    bp::make_function(
+                          static_cast<const string& (LayerParameter::*)
+                          (int) const>(&LayerParameter::bottom),  // NOLINT
+                          bp::return_value_policy<bp::return_by_value>()))
+    .add_property("top_size",      &LayerParameter::top_size)
+    .def("get_top",       bp::make_function(
+                          static_cast<const string& (LayerParameter::*)
+                          (int) const>(&LayerParameter::top),     // NOLINT
+                          bp::return_value_policy<bp::return_by_value>()));
 
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
@@ -548,6 +584,31 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("param", bp::make_function(&Solver<Dtype>::param,
               bp::return_value_policy<bp::copy_const_reference>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
+
+  bp::class_<NetState>("NetState", bp::init<>())
+    .add_property("phase", &NetState::phase,
+                           &NetState::set_phase)
+    .add_property("level", &NetState::level,
+                           &NetState::set_level)
+    .def("stage_size",     &NetState::stage_size)
+    .def("get_stage",      bp::make_function(
+                           static_cast<const string& (NetState::*)
+                           (int) const>(&NetState::stage),  // NOLINT
+                           bp::return_value_policy<bp::return_by_value>()))
+    .def("add_stage",      static_cast<void (NetState::*)   // NOLINT
+                           (const string&)>(&NetState::add_stage))
+    .def("set_stage",      static_cast<void (NetState::*)   // NOLINT
+                           (int, const string&)>(&NetState::set_stage))
+    .def("clear_stage",    &NetState::clear_stage);
+
+  bp::class_<NetParameter>("NetParameter", bp::init<>())
+    .add_property("force_backward", &NetParameter::force_backward,
+                                    &NetParameter::set_force_backward)
+    .add_property("state",
+                     bp::make_function(&NetParameter::state,
+                     bp::return_value_policy<bp::copy_const_reference>()),
+                     static_cast<void (NetParameter::*)(NetState*)>(
+                             &NetParameter::set_allocated_state));
 
 
   bp::class_<SolverParameter>("SolverParameter", bp::init<>())
@@ -589,25 +650,35 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("snapshot_format", &SolverParameter::snapshot_format,
                                      &SolverParameter::set_snapshot_format)
     .add_property("snapshot_prefix",
-                       bp::make_function(&SolverParameter::snapshot_prefix,
-                       bp::return_value_policy<bp::copy_const_reference>()),
-                       static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_snapshot_prefix))
+                   bp::make_function(&SolverParameter::snapshot_prefix,
+                   bp::return_value_policy<bp::copy_const_reference>()),
+                   static_cast<void (SolverParameter::*)(const string&)>(
+                           &SolverParameter::set_snapshot_prefix))
     .add_property("type",
-                       bp::make_function(&SolverParameter::type,
-                       bp::return_value_policy<bp::copy_const_reference>()),
-                       static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_type))
+                   bp::make_function(&SolverParameter::type,
+                   bp::return_value_policy<bp::copy_const_reference>()),
+                   static_cast<void (SolverParameter::*)(const string&)>(
+                           &SolverParameter::set_type))
     .add_property("net",
-                       bp::make_function(&SolverParameter::net,
-                       bp::return_value_policy<bp::copy_const_reference>()),
-                       static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_net))
+                   bp::make_function(&SolverParameter::net,
+                   bp::return_value_policy<bp::copy_const_reference>()),
+                   static_cast<void (SolverParameter::*)(const string&)>(
+                           &SolverParameter::set_net))
     .add_property("train_net",
-                       bp::make_function(&SolverParameter::train_net,
-                       bp::return_value_policy<bp::copy_const_reference>()),
-                       static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_train_net));
+                   bp::make_function(&SolverParameter::train_net,
+                   bp::return_value_policy<bp::copy_const_reference>()),
+                   static_cast<void (SolverParameter::*)(const string&)>(
+                           &SolverParameter::set_train_net))
+    .add_property("net_param",
+                   bp::make_function(&SolverParameter::mutable_net_param,
+                   bp::return_value_policy<bp::reference_existing_object>()),
+                   static_cast<void (SolverParameter::*)(NetParameter*)>(
+                           &SolverParameter::set_allocated_net_param))
+    .add_property("train_state",
+                   bp::make_function(&SolverParameter::mutable_train_state,
+                   bp::return_value_policy<bp::reference_existing_object>()),
+                   static_cast<void (SolverParameter::*)(NetState*)>(
+                           &SolverParameter::set_allocated_train_state));
 
   bp::enum_< ::caffe::SolverParameter_SnapshotFormat>("snapshot_format")
       .value("HDF5", SolverParameter_SnapshotFormat_HDF5)
