@@ -11,7 +11,7 @@ except:
 import numpy as np
 
 from ._caffe import \
-    SolverParameter, Net, SGDSolver, NesterovSolver, AdaGradSolver, \
+    SolverParameter, NetParameter, NetState, Net, SGDSolver, NesterovSolver, AdaGradSolver, \
     RMSPropSolver, AdaDeltaSolver, AdamSolver
     
 import caffe.io
@@ -262,7 +262,7 @@ def _Net_set_input_arrays(self, index, data, labels):
     Set input arrays of the in-memory MemoryDataLayer.
     (Note: this is only for networks declared with the memory data layer.)
     """
-    if labels.ndim == 1:
+    if (not labels == None) and (labels.ndim == 1):
         labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
                                              np.newaxis])
     return self._set_input_arrays(index, data, labels)
@@ -272,7 +272,7 @@ def _Net_set_layer_input_arrays(self, layer, data, labels):
     Set input arrays of the in-memory MemoryDataLayer.
     (Note: this is only for networks declared with the memory data layer.)
     """
-    if labels.ndim == 1:
+    if (not labels == None) and (labels.ndim == 1):
         labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
                                              np.newaxis])
     return self._set_layer_input_arrays(layer, data, labels)
