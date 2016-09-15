@@ -20,6 +20,9 @@ class LevelDBCursor : public Cursor {
   virtual void Next() { iter_->Next(); }
   virtual string key() { return iter_->key().ToString(); }
   virtual string value() { return iter_->value().ToString(); }
+  virtual std::pair<void*, size_t> getPointerToValue() {
+    CHECK(false)<<"not implemented yet";
+  };
   virtual bool valid() { return iter_->Valid(); }
 
  private:

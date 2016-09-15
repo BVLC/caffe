@@ -18,6 +18,7 @@ class Cursor {
   virtual void Next() = 0;
   virtual string key() = 0;
   virtual string value() = 0;
+  virtual std::pair<void*, size_t> getPointerToValue() = 0;
   virtual bool valid() = 0;
 
   DISABLE_COPY_AND_ASSIGN(Cursor);

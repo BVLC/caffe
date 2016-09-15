@@ -74,6 +74,26 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
+  
+  //need_shuffle_ = param_.image_data_param().shuffle();
+  need_shuffle_ = true;
+  do
+  {
+    img_pointers_.push_back(cursor->getPointerToValue());
+    cursor->Next();
+  } while (cursor->valid());
+  vector<std::pair<void*, int> >::iterator cur_img = img_pointers_.begin();
+  
+  if (need_shuffle_) {
+      // randomly shuffle data
+    LOG(INFO) << "Shuffling data";
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+    ShuffleImages();
+  }
+
+  
+  
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -83,13 +103,13 @@ void DataReader::Body::InternalThreadEntry() {
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cursor.get(), qp.get());
+      read_one(cur_img, qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
       for (int i = 0; i < solver_count; ++i) {
-        read_one(cursor.get(), qps[i].get());
+        read_one(cur_img, qps[i].get());
       }
       // Check no additional readers have been created. This can happen if
       // more than one net is trained at a time per process, whether single
@@ -102,18 +122,26 @@ void DataReader::Body::InternalThreadEntry() {
   }
 }
 
-void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
+void DataReader::Body::read_one(vector<std::pair<void*, int> >::iterator& cur_img, QueuePair* qp) {
   string* data = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
-  *data = cursor->value();
+  //*data = cursor->value();
+  *data = string(static_cast<const char*>(cur_img->first),cur_img->second);
   qp->full_.push(data);
-
-  // go to the next iter
-  cursor->Next();
-  if (!cursor->valid()) {
-    DLOG(INFO) << "Restarting data prefetching from start.";
-    cursor->SeekToFirst();
+   
+  cur_img++;
+  if (cur_img == img_pointers_.end())
+  {
+    if (need_shuffle_) ShuffleImages();
+    cur_img = img_pointers_.begin();
   }
 }
+
+void DataReader::Body::ShuffleImages() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  shuffle(img_pointers_.begin(), img_pointers_.end(), prefetch_rng);
+}
+
 
 }  // namespace caffe

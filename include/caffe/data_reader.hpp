@@ -12,6 +12,7 @@
 
 namespace caffe {
 
+ 
 /**
  * @brief Reads data from a source to queues available to data layers.
  * A single reading thread is created per source, even if multiple solvers
@@ -53,10 +54,14 @@ class DataReader {
 
    protected:
     void InternalThreadEntry();
-    void read_one(db::Cursor* cursor, QueuePair* qp);
+    void read_one(vector<std::pair<void*, int> >::iterator& cur_img, QueuePair* qp);
+    void ShuffleImages();
 
     const LayerParameter param_;
     int read;
+    vector<std::pair<void*, int> > img_pointers_;
+    bool need_shuffle_;
+    shared_ptr<Caffe::RNG> prefetch_rng_;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
 
     friend class DataReader;
@@ -72,7 +77,7 @@ class DataReader {
 
   const shared_ptr<QueuePair> queue_pair_;
   shared_ptr<Body> body_;
-
+  
   static map<const string, boost::weak_ptr<DataReader::Body> > bodies_;
 
 DISABLE_COPY_AND_ASSIGN(DataReader);

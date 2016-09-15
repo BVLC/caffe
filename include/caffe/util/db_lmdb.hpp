@@ -34,6 +34,11 @@ class LMDBCursor : public Cursor {
     return string(static_cast<const char*>(mdb_value_.mv_data),
         mdb_value_.mv_size);
   }
+  virtual std::pair<void*, size_t> getPointerToValue()
+  {
+    return std::make_pair(mdb_value_.mv_data,mdb_value_.mv_size);
+  }
+  
   virtual bool valid() { return valid_; }
 
  private:
