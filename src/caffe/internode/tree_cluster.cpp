@@ -20,6 +20,10 @@
 
 
 const int MSG_TAG = 1972;
+// Message tag to terminate all processes.
+// https://en.wikipedia.org/wiki/Seppuku
+const int exit_command_size = 10;
+const std::vector<char> TAG_SEPPUKU(exit_command_size, 'E');
 
 namespace caffe {
 namespace internode {
@@ -50,7 +54,8 @@ class MpiTreeClient : public TreeWaypoint {
   std::vector<char> buffer;
   mutable boost::recursive_mutex mtx;
   mutable boost::optional<boost::thread::id> main_thread_id;
-
+  mutable bool finished;
+  
   void set_recv() {
     boost::recursive_mutex::scoped_lock lock(mtx);
     MpiRequest req = {
@@ -101,6 +106,11 @@ class MpiTreeClient : public TreeWaypoint {
         }
         request.sender = status.MPI_SOURCE;
         result = MPI_Get_count(&status, MPI_CHAR, &request.size);
+        if(exit_command_size == request.size
+           && std::equal(buffer.begin(), buffer.begin() + request.size, TAG_SEPPUKU.begin())) {
+           finished=true;
+           return false;
+        }
         request.ok = (result == MPI_SUCCESS);
         if (!request.ok) {
           LOG(ERROR) << "ERROR: " << mpi_get_error_string(result);
@@ -109,14 +119,48 @@ class MpiTreeClient : public TreeWaypoint {
       return flag;
   }
 
+  bool is_finished() const {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      return finished;
+  }
+
  public:
   explicit MpiTreeClient(boost::shared_ptr<Daemon> daemon)
-      : daemon(daemon) {
+      : daemon(daemon)
+      , finished(false) {
     post(daemon);
   }
 
   virtual boost::shared_ptr<Daemon> get_daemon() {
     return daemon;
+  }
+
+  virtual void lets_die_together() const {
+    //MPI_Barrier(MPI_COMM_WORLD);
+    if( id() == parent() ){
+//        MPI_Bcast(
+//            const_cast<char*>(&TAG_SEPPUKU.front()) ,
+//            exit_command_size,
+//            MPI_CHAR,
+//            id(),
+//            MPI_COMM_WORLD);
+        for (int i = 0; i < total_nodes(); i++) {
+          if (i != id()) {
+            MPI_Send(
+                    const_cast<char*>(&TAG_SEPPUKU.front()),
+                    exit_command_size,
+                    MPI_CHAR,
+                    i,
+                    MSG_TAG,
+                    MPI_COMM_WORLD);
+          }
+        }
+        finished = true;
+    } else {
+        while(!is_finished()) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        }
+    }
   }
 
   virtual void set_buffer_size(size_t max_packet_size) {

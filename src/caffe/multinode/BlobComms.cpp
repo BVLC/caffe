@@ -4,7 +4,6 @@
 #include <boost/optional.hpp>
 #include <boost/ref.hpp>
 #include <boost/thread.hpp>
-#include <boost/thread/condition_variable.hpp>
 #include <boost/unordered_map.hpp>
 #include <algorithm>
 #include <deque>
@@ -56,8 +55,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     struct SendJob : Element {
     };
     BlockingQueue<Element*> jobs_to_run;
-    bool finished;
-    boost::condition_variable cv;
     boost::mutex mtx;
     std::vector<Job*> available_jobs;
     boost::thread thread;
@@ -219,8 +216,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       next = get_next_part_to_send();
       if (!next) {
         DLOG(INFO) << "nothing to send";
-        finished=true;
-        boost::notify_all(cv, lock);
         return;
       }
       during_sending = true;
@@ -408,14 +403,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   void register_iter_size_handler(IterSizeHandler* handler) {
     boost::recursive_mutex::scoped_lock lock(mtx);
     iter_size_handlers.push_back(handler);
-  }
-
-  void finish_all_tasks() {
-    boost::recursive_mutex::scoped_lock lock(mtx);
-    finished=false;
-    while (!finished) {
-      cv.wait(lock);
-    }
   }
 };
 
