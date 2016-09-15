@@ -19,6 +19,44 @@ using namespace mkldnn;
 
 namespace caffe {
 
+// =====  MKLDNNBatchNormLayer =======================================
+template <typename Dtype>
+class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+public:
+    explicit MKLDNNBatchNormLayer(const LayerParameter& param)
+            : Layer<Dtype>(param)
+            , fwd_top_data    (NULL)
+            , fwd_bottom_data (NULL)
+            , BatchNormFwd_pd(NULL)
+            , output_memory(NULL), scaleshift_memory(NULL), ws_memory(NULL)
+            , input_primitive(NULL)
+        {}
+
+    ~MKLDNNBatchNormLayer() {}
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "BatchNorm"; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<batch_normalization::primitive_desc> BatchNormFwd_pd;
+
+    MKLDNNPrimitive<Dtype> BatchNormFwd;
+    shared_ptr<memory> output_memory, scaleshift_memory, ws_memory;
+    shared_ptr<primitive> input_primitive;
+
+    int32_t num_, width_, height_, channels_;
+    Dtype eps_;
+    bool use_weight_bias_, bias_term_;
+};
+
 // =====  MKLDNNConvolutionLayer =======================================
 template <typename Dtype>
 class MKLDNNConvolutionLayer : public MKLDNNLayer<Dtype> , public ConvolutionLayer<Dtype> {

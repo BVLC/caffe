@@ -247,6 +247,8 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   if (engine == BatchNormParameter_Engine_DEFAULT) {
 #if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = BatchNormParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    engine = BatchNormParameter_Engine_MKLDNN;
 #else
     engine = BatchNormParameter_Engine_CAFFE;
 #endif
@@ -257,6 +259,10 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
 #if defined(MKL2017_SUPPORTED)
   } else if (engine == BatchNormParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLBatchNormLayer<Dtype>(param));
+#endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == BatchNormParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNBatchNormLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
