@@ -52,7 +52,7 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestReshapeZero) {
-  vector<int> shape(2);
+  vector<int_tp> shape(2);
   shape[0] = 0;
   shape[1] = 5;
   this->blob_->Reshape(shape);
