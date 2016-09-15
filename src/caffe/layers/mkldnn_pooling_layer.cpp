@@ -110,7 +110,7 @@ void MKLDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     top[0]->Reshape(bottom[0]->num(), channels_, height_out_, width_out_);
 
     if (top.size() > 1) {
-        (reinterpret_cast<Blob<uint32_t>* > (top[1]) )->Reshape(num_,
+        (reinterpret_cast<Blob<int32_t>* > (top[1]) )->Reshape(num_,
             channels_, height_out_, width_out_);
     }
     if (top.size() == 1) {
@@ -140,18 +140,18 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
         LOG(FATAL) << "Unknown pooling method.";
     }
 
-    uint32_t n = this->num_;
-    uint32_t c = this->channels_;
-    uint32_t ih = this->height_;
-    uint32_t iw = this->width_;
-    uint32_t oh = this->height_out_;
-    uint32_t ow = this->width_out_;
+    int32_t n = this->num_;
+    int32_t c = this->channels_;
+    int32_t ih = this->height_;
+    int32_t iw = this->width_;
+    int32_t oh = this->height_out_;
+    int32_t ow = this->width_out_;
 
-    uint32_t kh = this->kernel_h_;
-    uint32_t kw = this->kernel_w_;
+    int32_t kh = this->kernel_h_;
+    int32_t kw = this->kernel_w_;
 
-    uint32_t sh = this->stride_h_;
-    uint32_t sw = this->stride_w_;
+    int32_t sh = this->stride_h_;
+    int32_t sw = this->stride_w_;
 
     int32_t ph = this->pad_h_;
     int32_t pw = this->pad_w_;
@@ -197,10 +197,10 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     indices_pd.reset(new MemPD(*indices_md, cpu_engine));
 
     // We'll output the mask to top[1] if it's of size >1.
-    uint32_t* mask = NULL;  // suppress warnings about uninitalized variables
+    int32_t* mask = NULL;  // suppress warnings about uninitalized variables
     // We'll output the mask to top[1] if it's of size >1.
     const bool use_top_mask = top.size() > 1;
-    mask = (use_top_mask) ?  reinterpret_cast<uint32_t*>(top[1]->mutable_cpu_data())
+    mask = (use_top_mask) ?  reinterpret_cast<int32_t*>(top[1]->mutable_cpu_data())
             : max_idx_.mutable_cpu_data();
     indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 

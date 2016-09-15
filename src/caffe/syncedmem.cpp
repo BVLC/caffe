@@ -55,9 +55,8 @@ inline void SyncedMemory::to_cpu() {
   case SYNCED_PRV:
   case HEAD_AT_CPU:
     if(prv_descriptor_.get()) {
-        prv_descriptor_->on_to_cpu();
-        //TODO: This was disabled due to MKL2017 being broken (to be explained)
-        //head_ = SYNCED;
+        if ( prv_descriptor_->on_to_cpu())
+            head_ = SYNCED;
     }
     break;
   case SYNCED:

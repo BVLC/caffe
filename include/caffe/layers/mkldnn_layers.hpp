@@ -45,7 +45,7 @@ private:
     MKLDNNPrimitive<Dtype> convFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
-    uint32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
+    int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
 };
 
@@ -73,7 +73,7 @@ private:
     MKLDNNPrimitive<Dtype> ipFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
-    uint32_t w_, h_;
+    int32_t w_, h_;
 };
 
 
@@ -164,10 +164,10 @@ private:
     shared_ptr<memory::primitive_desc> indices_pd;
     shared_ptr<memory> indices_memory, output_memory;
     shared_ptr<primitive> input_primitive;
-    uint32_t num_, channels_, width_, height_, width_out_, height_out_;
-    uint32_t kernel_w_, kernel_h_, stride_w_, stride_h_;
+    int32_t num_, channels_, width_, height_, width_out_, height_out_;
+    int32_t kernel_w_, kernel_h_, stride_w_, stride_h_;
     int32_t  pad_w_, pad_h_;
-    Blob<uint32_t> max_idx_;
+    Blob<int32_t> max_idx_;
     bool global_pooling_;
 };
 
@@ -207,7 +207,7 @@ private:
     MKLDNNPrimitive<Dtype> reluFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive;
-    uint32_t num_, width_, height_, channels_;
+    int32_t num_, width_, height_, channels_;
 };
 
 }  // namespace caffe
