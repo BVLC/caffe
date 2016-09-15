@@ -54,7 +54,7 @@ class MpiTreeClient : public TreeWaypoint {
   mutable boost::recursive_mutex mtx;
   mutable boost::optional<boost::thread::id> main_thread_id;
   mutable bool finished;
-  
+
   void set_recv() {
     boost::recursive_mutex::scoped_lock lock(mtx);
     MpiRequest req = {
