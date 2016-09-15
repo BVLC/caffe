@@ -567,7 +567,7 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
     }
-    //else  boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+
     sync.lets_die_together();
     sync.terminate();
     sync.StopInternalThread();

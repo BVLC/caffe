@@ -22,8 +22,7 @@
 const int MSG_TAG = 1972;
 // Message tag to terminate all processes.
 // https://en.wikipedia.org/wiki/Seppuku
-const int exit_command_size = 10;
-const std::vector<char> TAG_SEPPUKU(exit_command_size, 'E');
+const int SEPPUKU_TAG = 0xDEAD;
 
 namespace caffe {
 namespace internode {
@@ -106,8 +105,7 @@ class MpiTreeClient : public TreeWaypoint {
         }
         request.sender = status.MPI_SOURCE;
         result = MPI_Get_count(&status, MPI_CHAR, &request.size);
-        if(exit_command_size == request.size
-           && std::equal(buffer.begin(), buffer.begin() + request.size, TAG_SEPPUKU.begin())) {
+        if( SEPPUKU_TAG == status.MPI_TAG ) {
            finished=true;
            return false;
         }
@@ -136,27 +134,22 @@ class MpiTreeClient : public TreeWaypoint {
   }
 
   virtual void lets_die_together() const {
-    //MPI_Barrier(MPI_COMM_WORLD);
-    if( id() == parent() ){
-//        MPI_Bcast(
-//            const_cast<char*>(&TAG_SEPPUKU.front()) ,
-//            exit_command_size,
-//            MPI_CHAR,
-//            id(),
-//            MPI_COMM_WORLD);
+    if( id() == parent() ){ // if root has ended, shut down all nodes
         for (int i = 0; i < total_nodes(); i++) {
           if (i != id()) {
             MPI_Send(
-                    const_cast<char*>(&TAG_SEPPUKU.front()),
-                    exit_command_size,
+                    &i, // can be anything, SEPPUKU_TAG shut downs caffe,
+                    1,  // message is irrelevant
                     MPI_CHAR,
                     i,
-                    MSG_TAG,
+                    SEPPUKU_TAG,
                     MPI_COMM_WORLD);
           }
         }
         finished = true;
     } else {
+        // else if internode has ended,
+        // wait for message from toot to do it (some messages may be pending)
         while(!is_finished()) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         }
