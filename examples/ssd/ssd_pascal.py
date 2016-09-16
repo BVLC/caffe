@@ -201,6 +201,10 @@ train_transform_param = {
                 'saturation_upper': 1.5,
                 'random_order_prob': 0.0,
                 },
+        'expand_param': {
+                'prob': 0.5,
+                'max_expand_ratio': 4.0,
+                },
         'emit_constraint': {
             'emit_type': caffe_pb2.EmitConstraint.CENTER,
             }
@@ -364,12 +368,12 @@ solver_param = {
     'base_lr': base_lr,
     'weight_decay': 0.0005,
     'lr_policy': "multistep",
-    'stepvalue': [40000, 50000, 60000],
+    'stepvalue': [80000, 90000, 100000],
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 60000,
-    'snapshot': 40000,
+    'max_iter': 100000,
+    'snapshot': 80000,
     'display': 10,
     'average_loss': 10,
     'type': "SGD",
