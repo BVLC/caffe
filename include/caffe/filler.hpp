@@ -207,58 +207,158 @@ class MSRAFiller : public Filler<Dtype> {
   }
 };
 
-/*!
-@brief Fills a Blob with coefficients for bilinear interpolation.
-
-A common use case is with the DeconvolutionLayer acting as upsampling.
-You can upsample a feature map with shape of (B, C, H, W) by any integer factor
-using the following proto.
-\code
-layer {
-  name: "upsample", type: "Deconvolution"
-  bottom: "{{bottom_name}}" top: "{{top_name}}"
-  convolution_param {
-    kernel_size: {{2 * factor - factor % 2}} stride: {{factor}}
-    num_output: {{C}} group: {{C}}
-    pad: {{ceil((factor - 1) / 2.)}}
-    weight_filler: { type: "bilinear" } bias_term: false
-  }
-  param { lr_mult: 0 decay_mult: 0 }
-}
-\endcode
-Please use this by replacing `{{}}` with your values. By specifying
-`num_output: {{C}} group: {{C}}`, it behaves as
-channel-wise convolution. The filter shape of this deconvolution layer will be
-(C, 1, K, K) where K is `kernel_size`, and this filler will set a (K, K)
-interpolation kernel for every channel of the filter identically. The resulting
-shape of the top feature map will be (B, C, factor * H, factor * W).
-Note that the learning rate and the
-weight decay are set to 0 in order to keep coefficient values of bilinear
-interpolation unchanged during training. If you apply this to an image, this
-operation is equivalent to the following call in Python with Scikit.Image.
-\code{.py}
-out = skimage.transform.rescale(img, factor, mode='constant', cval=0)
-\endcode
+/**
+ * @brief Base class for windowed interpolation fillers.
+ *
+ * A common use case is with the DeconvolutionLayer acting as upsampling. The
+ * derived classes need to implement the interpolation function f() and the size
+ * of the support, i.e. the absolute value, when f reaches 0.
+ * You can upsample a feature map with shape of (B, C, S_n,..., S_1) by any
+ * integer factor using the following proto.
+ * \code
+ * layer {
+ *   name: "upsample", type: "Deconvolution"
+ *   bottom: "{{bottom_name}}" top: "{{top_name}}"
+ *   convolution_param {
+ *     num_output: {{C}} group: {{C}}
+ *     kernel_size: {{2 * support * factor - factor % 2}}
+ *     stride: {{factor}}
+ *     pad: {{((2 * support - 1) * factor - factor % 2) / 2}}
+ *     weight_filler: { type: {{type}} }
+ *     bias_term: false
+ *   }
+ *   param { lr_mult: 0 decay_mult: 0 }
+ * }
+ * \endcode
+ * Please use this by replacing `{{}}` with your values. By specifying
+ * `num_output: {{C}} group: {{C}}`, it behaves as
+ * channel-wise convolution. The filter shape of this deconvolution layer will
+ * be (C, 1, K_n,..., K_1) where K_i is `kernel_size` in dimension i, and this
+ * filler will set a (K_n,..., K_1) interpolation kernel for every channel of
+ * the filter identically. The resulting shape of the top feature map will be
+ * (B, C, factor_n * S_n,..., factor_1 * S_1).
+ * Note that the learning rate and the weight decay are set to 0 in order to
+ * keep coefficient values of interpolation unchanged during training.
  */
 template <typename Dtype>
-class BilinearFiller : public Filler<Dtype> {
+class InterpolationFillerBase : public Filler<Dtype> {
  public:
-  explicit BilinearFiller(const FillerParameter& param)
+  explicit InterpolationFillerBase(const FillerParameter& param)
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
-    CHECK_EQ(blob->num_axes(), 4) << "Blob must be 4 dim.";
-    CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
+    CHECK_GE(blob->num_axes(), 3) << "Blob must have at least 3 dimensions.";
     Dtype* data = blob->mutable_cpu_data();
-    int f = ceil(blob->width() / 2.);
-    float c = (2 * f - 1 - f % 2) / (2. * f);
     for (int i = 0; i < blob->count(); ++i) {
-      float x = i % blob->width();
-      float y = (i / blob->width()) % blob->height();
-      data[i] = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
+      unsigned int stride = 1;
+      Dtype weight = 1;
+      for (int axis = blob->num_axes() - 1; axis >= 2; --axis) {
+        unsigned int shape = blob->shape(axis);
+        unsigned int factor =
+            std::ceil(static_cast<Dtype>(shape) / (2 * support()));
+        Dtype center = (2 * support() * factor - 1 - factor % 2) * 0.5;
+        Dtype coordinate = ((i / stride) % shape);
+        weight *= f((coordinate - center) / factor);
+        stride *= shape;
+      }
+      data[i] = weight;
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
+
+ protected:
+  virtual Dtype f(Dtype x) = 0;
+  virtual int support() = 0;
+};
+
+/**
+ * @brief Fills a Blob with coefficients for multilinear interpolation.
+ *
+ * Set type of weight_filler to 'multilinear'. Support is set to 1. See
+ * InterpolationFillerBase for a detailed explanation of how to set kernel_size,
+ * stride and pad.
+ * If you apply this to an image, this operation is equivalent to the following
+ * call in Python with Scikit.Image.
+ * \code{.py}
+ * out = skimage.transform.rescale(img, (factor_y, factor_x), mode='constant', cval=0)
+ * \endcode
+ */
+template <typename Dtype>
+class MultilinearFiller : public InterpolationFillerBase<Dtype> {
+ public:
+  explicit MultilinearFiller(const FillerParameter& param)
+      : InterpolationFillerBase<Dtype>(param) {}
+ protected:
+  virtual Dtype f(Dtype x) {
+    return std::abs(x) <= 1 ? 1 - std::abs(x) : 0;
+  }
+  virtual int support() { return 1; }
+};
+
+/**
+ * @brief Fills a Blob with coefficients for multicubic interpolation.
+ *
+ * Set type of weight_filler to 'multicubic'. Support is set to 2. See
+ * InterpolationFillerBase for a detailed explanation of how to set kernel_size,
+ * stride and pad.
+ * If you apply this to an image, this operation is equivalent to the following
+ * call in Python with Scikit.Image.
+ * \code{.py}
+ * out = skimage.transform.rescale(img, (factor_y, factor_x), mode='constant', order=3, clip=False, cval=0)
+ * \endcode
+ */
+template <typename Dtype>
+class MulticubicFiller : public InterpolationFillerBase<Dtype> {
+ public:
+  explicit MulticubicFiller(const FillerParameter& param)
+      : InterpolationFillerBase<Dtype>(param) {}
+ protected:
+  virtual Dtype f(Dtype x) {
+    const Dtype A = -0.5;
+    if (std::abs(x) <= 1) {
+      return (A + 2) * std::pow(std::abs(x), 3)
+          - (A + 3) * std::pow(std::abs(x), 2) + 1;
+    }
+    if (std::abs(x) < 2) {
+      return A * std::pow(std::abs(x), 3)
+          - 5 * A * std::pow(std::abs(x), 2)
+          + 8 * A * std::abs(x) - 4 * A;
+    }
+    return 0;
+  }
+  virtual int support() { return 2; }
+};
+
+/**
+ * @brief Fills a Blob with coefficients for Lanczos interpolation.
+ *
+ * Set type of weight_filler to 'lanczos2', 'lanczos3' or 'lanczos4'.
+ * Support is set to 2, 3 or 4, respectively. See InterpolationFillerBase for a
+ * detailed explanation of how to set kernel_size, stride and pad.
+ * If you apply this to an image, this operation is similar to the following
+ * call in Python with opencv (with different border handling and rounding
+ * errors).
+ * \code{.py}
+ * out = cv2.resize(img, (img.shape[1] * factor_x, img.shape[0] * factor_y), interpolation=cv2.INTER_LANCZOS4)
+ * \endcode
+ */
+template <typename Dtype, unsigned A>
+class LanczosFiller : public InterpolationFillerBase<Dtype> {
+ public:
+  explicit LanczosFiller(const FillerParameter& param)
+      : InterpolationFillerBase<Dtype>(param) {}
+ protected:
+  virtual Dtype f(Dtype x) {
+    if (x == 0) {
+      return 1;
+    }
+    if (std::abs(x) < A) {
+      return (A * std::sin(M_PI * x) * std::sin(M_PI * x / A))
+          / (M_PI * M_PI * x * x);
+    }
+    return 0;
+  }
+  virtual int support() { return A; }
 };
 
 /**
@@ -282,8 +382,16 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new XavierFiller<Dtype>(param);
   } else if (type == "msra") {
     return new MSRAFiller<Dtype>(param);
-  } else if (type == "bilinear") {
-    return new BilinearFiller<Dtype>(param);
+  } else if (type == "multilinear") {
+    return new MultilinearFiller<Dtype>(param);
+  } else if (type == "multicubic") {
+    return new MulticubicFiller<Dtype>(param);
+  } else if (type == "lanczos2") {
+    return new LanczosFiller<Dtype, 2>(param);
+  } else if (type == "lanczos3") {
+    return new LanczosFiller<Dtype, 3>(param);
+  } else if (type == "lanczos4") {
+    return new LanczosFiller<Dtype, 4>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
