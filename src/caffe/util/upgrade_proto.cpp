@@ -1023,7 +1023,7 @@ void UpgradeNetInput(NetParameter* net_param) {
 }
 
 bool NetNeedsBatchNormUpgrade(const NetParameter& net_param) {
-  for (int i = 0; i < net_param.layer_size(); ++i) {
+  for (int_tp i = 0; i < net_param.layer_size(); ++i) {
     // Check if BatchNorm layers declare three parameters, as required by
     // the previous BatchNorm layer definition.
     if (net_param.layer(i).type() == "BatchNorm"
