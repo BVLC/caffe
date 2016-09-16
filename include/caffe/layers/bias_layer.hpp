@@ -10,13 +10,13 @@
 namespace caffe {
 
 /**
- * @brief Computes a sum of two input Blobs, with the shape of the
- *        latter Blob "broadcast" to match the shape of the former.
- *        Equivalent to tiling the latter Blob, then computing the elementwise
- *        sum.
+ * @brief Computes a sum of two input Blobs, with the shape of the latter Blob
+ *        "broadcast" to match the shape of the former. Equivalent to tiling
+ *        the latter Blob, then computing the elementwise sum.
  *
  * The second input may be omitted, in which case it's learned as a parameter
- * of the layer.
+ * of the layer. Note: in case bias and scaling are desired, both operations can
+ * be handled by `ScaleLayer` configured with `bias_term: true`.
  */
 template <typename Dtype>
 class BiasLayer : public Layer<Dtype> {
