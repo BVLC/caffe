@@ -117,7 +117,7 @@ public:
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
-    virtual void on_to_cpu();
+    virtual bool on_to_cpu();
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);

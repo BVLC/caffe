@@ -54,7 +54,7 @@ struct PrvMemDescr {
   virtual void convert_from_prv(void* cpu_ptr) = 0;
   virtual void convert_to_prv(void* cpu_ptr) = 0;
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other) = 0;
-  virtual void on_to_cpu() {}
+  virtual bool on_to_cpu() { return false; }
   virtual void* prv_ptr() = 0;
   // returns true for matching layouts
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other) = 0;
