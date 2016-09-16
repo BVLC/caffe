@@ -205,7 +205,7 @@ private:
     int32_t num_, channels_, width_, height_, width_out_, height_out_;
     int32_t kernel_w_, kernel_h_, stride_w_, stride_h_;
     int32_t  pad_w_, pad_h_;
-    Blob<int32_t> max_idx_;
+    Blob<uint32_t> max_idx_;
     bool global_pooling_;
 };
 

@@ -125,6 +125,7 @@ bool MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
         VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::" << __FUNCTION__ << ": stream.wait() - " << this->name;
         StreamHolder::Instance().current_stream()->wait();
     }
+    return true;
 }
 
 template <typename Dtype>
