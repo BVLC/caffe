@@ -95,11 +95,8 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL), scaleshift_mpd(NULL);
     if (bottom_data_is_prv) {
-        CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type()
-                    ,PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNData<Dtype> > mem_descr
-            = boost::static_pointer_cast<MKLDNNData<Dtype> >(bottom[0]->get_prv_data_descriptor());
-        CHECK(mem_descr != NULL);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+            = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         input_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
         usr_mpd = mem_descr->usr_memory_pd();
         prv_mpd = mem_descr->prv_memory_pd();
