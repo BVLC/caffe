@@ -20,6 +20,9 @@
 
 
 const int MSG_TAG = 1972;
+// Message tag to terminate all processes.
+// https://en.wikipedia.org/wiki/Seppuku
+const int SEPPUKU_TAG = 0xDEAD;
 
 namespace caffe {
 namespace internode {
@@ -50,6 +53,7 @@ class MpiTreeClient : public TreeWaypoint {
   std::vector<char> buffer;
   mutable boost::recursive_mutex mtx;
   mutable boost::optional<boost::thread::id> main_thread_id;
+  mutable bool finished;
 
   void set_recv() {
     boost::recursive_mutex::scoped_lock lock(mtx);
@@ -101,6 +105,10 @@ class MpiTreeClient : public TreeWaypoint {
         }
         request.sender = status.MPI_SOURCE;
         result = MPI_Get_count(&status, MPI_CHAR, &request.size);
+        if( SEPPUKU_TAG == status.MPI_TAG ) {
+           finished=true;
+           return false;
+        }
         request.ok = (result == MPI_SUCCESS);
         if (!request.ok) {
           LOG(ERROR) << "ERROR: " << mpi_get_error_string(result);
@@ -109,14 +117,43 @@ class MpiTreeClient : public TreeWaypoint {
       return flag;
   }
 
+  bool is_finished() const {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      return finished;
+  }
+
  public:
   explicit MpiTreeClient(boost::shared_ptr<Daemon> daemon)
-      : daemon(daemon) {
+      : daemon(daemon)
+      , finished(false) {
     post(daemon);
   }
 
   virtual boost::shared_ptr<Daemon> get_daemon() {
     return daemon;
+  }
+
+  virtual void lets_die_together() const {
+    if( id() == parent() ){ // if root has ended, shut down all nodes
+        for (int i = 0; i < total_nodes(); i++) {
+          if (i != id()) {
+            MPI_Send(
+                    &i, // can be anything, SEPPUKU_TAG shut downs caffe,
+                    1,  // message is irrelevant
+                    MPI_CHAR,
+                    i,
+                    SEPPUKU_TAG,
+                    MPI_COMM_WORLD);
+          }
+        }
+        finished = true;
+    } else {
+        // else if internode has ended,
+        // wait for message from toot to do it (some messages may be pending)
+        while(!is_finished()) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        }
+    }
   }
 
   virtual void set_buffer_size(size_t max_packet_size) {

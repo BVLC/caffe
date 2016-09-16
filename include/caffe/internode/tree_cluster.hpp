@@ -38,9 +38,10 @@ class TreeWaypoint {
   virtual std::vector<RemoteId> children() const = 0;
   virtual RemoteId parent() const = 0;
   virtual int total_nodes() const = 0;
+  virtual void lets_die_together() const = 0;
+  virtual bool is_finished() const = 0;
 };
 }  // namespace internode
 }  // namespace caffe
 
 #endif  // CAFFE_INTERNODE_TREE_CLUSTER_HPP_
-

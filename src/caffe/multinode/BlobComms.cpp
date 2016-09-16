@@ -404,8 +404,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     boost::recursive_mutex::scoped_lock lock(mtx);
     iter_size_handlers.push_back(handler);
   }
-
-  void finish_all_tasks() {}  // TODO: finish
 };
 
 }  // namespace
