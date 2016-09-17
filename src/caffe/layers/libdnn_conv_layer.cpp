@@ -57,8 +57,13 @@ void LibDNNConvolutionLayer<Dtype>::Reshape(
     config.weights_backward = this->param_propagate_down_[0];
     config.bias_backward = this->param_propagate_down_[1];
 
-    if (std::is_same<Dtype, float>::value ||
-        this->device_->CheckCapability("cl_khr_int64_base_atomics")) {
+    if ((std::is_same<Dtype, float>::value
+        && (this->device_->CheckCapability("cl_khr_int32_base_atomics") ||
+            this->device_->CheckCapability("cl_khr_global_int32_base_atomics") ||
+            this->device_->CheckCapability("cl_khr_global_int32_extended_atomics"))) ||
+        (std::is_same<Dtype, double>::value
+        && (this->device_->CheckCapability("cl_khr_int64_base_atomics") ||
+            this->device_->CheckCapability("cl_khr_int64_extended_atomics")))) {
       config.wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
       config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
     } else {
@@ -150,4 +155,4 @@ INSTANTIATE_CLASS(LibDNNConvolutionLayer);
 
 
 }   // namespace caffe
-#endif
+#endif  // USE_LIBDNN
