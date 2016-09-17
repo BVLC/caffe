@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['concat_5fbottom_5fvec_5f',['concat_bottom_vec_',['../classcaffe_1_1SPPLayer.html#a2874ca5b0c4d8f7d970c5a30768d2bc0',1,'caffe::SPPLayer']]],
-  ['concat_5flayer_5f',['concat_layer_',['../classcaffe_1_1SPPLayer.html#a02a9d50a48983fa0c6e42cafa85c1eb8',1,'caffe::SPPLayer']]],
-  ['constant_5fcount_5f',['constant_count_',['../classcaffe_1_1ReshapeLayer.html#abbb071bc8398e2b0442302e51c644c28',1,'caffe::ReshapeLayer']]],
-  ['copy_5faxes_5f',['copy_axes_',['../classcaffe_1_1ReshapeLayer.html#ace08e8747c8d4562fbc26ca789681a4a',1,'caffe::ReshapeLayer']]]
+  ['blob_5floss_5fweights_5f',['blob_loss_weights_',['../classcaffe_1_1Net.html#a3eef6ff47640210c6d8d6affb1fd86f8',1,'caffe::Net']]],
+  ['blobs_5f',['blobs_',['../classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321',1,'caffe::Layer::blobs_()'],['../classcaffe_1_1Net.html#ab033c0574fcbf1e67e22b9682677c64d',1,'caffe::Net::blobs_()']]],
+  ['bottom_5fvecs_5f',['bottom_vecs_',['../classcaffe_1_1Net.html#ac5bf2007047f749d9d111b0dfa220afc',1,'caffe::Net']]]
 ];

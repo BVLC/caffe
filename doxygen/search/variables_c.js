@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['threshold_5f',['threshold_',['../classcaffe_1_1DropoutLayer.html#a8e9d88e6128a97101c27ce8a11158ca6',1,'caffe::DropoutLayer']]],
-  ['top_5fvecs_5f',['top_vecs_',['../classcaffe_1_1Net.html#aa834096a02382d9a881bf33694e72564',1,'caffe::Net']]]
+  ['op_5f',['op_',['../classcaffe_1_1ReductionLayer.html#aa65f46eaf24eca2948592bcb9e127346',1,'caffe::ReductionLayer']]],
+  ['output_5fshape_5f',['output_shape_',['../classcaffe_1_1BaseConvolutionLayer.html#af0892b61454ba086c4c74b78d910bf31',1,'caffe::BaseConvolutionLayer']]]
 ];

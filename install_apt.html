@@ -58,29 +58,37 @@
 
 <p><strong>General dependencies</strong></p>
 
-<pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
+sudo apt-get install --no-install-recommends libboost-all-dev
 </code></pre>
+</div>
 
-<p><strong>CUDA</strong>: Install via the NVIDIA package instead of <code>apt-get</code> to be certain of the library and driver versions.
-Install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
+<p><strong>CUDA</strong>: Install by <code class="highlighter-rouge">apt-get</code> or the NVIDIA <code class="highlighter-rouge">.run</code> package.
+The NVIDIA package tends to follow more recent library and driver versions, but the installation is more manual.
+If installing from packages, install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
 This can be skipped for CPU-only installation.</p>
 
-<p><strong>BLAS</strong>: install ATLAS by <code>sudo apt-get install libatlas-base-dev</code> or install OpenBLAS or MKL for better CPU performance.</p>
+<p><strong>BLAS</strong>: install ATLAS by <code class="highlighter-rouge">sudo apt-get install libatlas-base-dev</code> or install OpenBLAS or MKL for better CPU performance.</p>
 
-<p><strong>Python</strong> (optional): if you use the default Python you will need to <code>sudo apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the pycaffe interface.</p>
+<p><strong>Python</strong> (optional): if you use the default Python you will need to <code class="highlighter-rouge">sudo apt-get install</code> the <code class="highlighter-rouge">python-dev</code> package to have the Python headers for building the pycaffe interface.</p>
+
+<p><strong>Compatibility notes, 16.04</strong></p>
+
+<p>CUDA 8 is required on Ubuntu 16.04.</p>
 
 <p><strong>Remaining dependencies, 14.04</strong></p>
 
 <p>Everything is packaged in 14.04.</p>
 
-<pre><code>sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 </code></pre>
+</div>
 
 <p><strong>Remaining dependencies, 12.04</strong></p>
 
 <p>These dependencies need manual installation in 12.04.</p>
 
-<pre><code># glog
+<div class="highlighter-rouge"><pre class="highlight"><code># glog
 wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
 tar zxvf glog-0.3.3.tar.gz
 cd glog-0.3.3
@@ -94,10 +102,11 @@ mkdir build &amp;&amp; cd build
 export CXXFLAGS="-fPIC" &amp;&amp; cmake .. &amp;&amp; make VERBOSE=1
 make &amp;&amp; make install
 # lmdb
-git clone https://gitorious.org/mdb/mdb.git
-cd mdb/libraries/liblmdb
+git clone https://github.com/LMDB/lmdb
+cd lmdb/libraries/liblmdb
 make &amp;&amp; make install
 </code></pre>
+</div>
 
 <p>Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.</p>
 

@@ -132,3 +132,50 @@
 \form#131:$i$
 \form#132:$ \frac{\partial E}{\partial x_i} = \left\{ \begin{array}{lr} a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0 \end{array} \right. $
 \form#133:$ \frac{\partial E}{\partial a_i} = \left\{ \begin{array}{lr} \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ 0 & \mathrm{if} \; x_i > 0 \end{array} \right. $
+\form#134:$ (S \times C \times H \times W) $
+\form#135:$ y = log_{\gamma}(\alpha x + \beta) $
+\form#136:$ (N \times 1 \times K) $
+\form#137:$ (N \times 2 \times K) $
+\form#138:$ (N \times K \times H \times W) $
+\form#139:$ (N \times ...) $
+\form#140:$ (M) $
+\form#141:$ (M \times ...) $
+\form#142:$ y = x_1[x_2] $
+\form#143:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
+\form#144:$ d = \left| \left| a_n - b_n \right| \right|_2 $
+\form#145:$ y = \left\{ \begin{array}{lr} x & \mathrm{if} \; x > 0 \\ \alpha (\exp(x)-1) & \mathrm{if} \; x \le 0 \end{array} \right. $
+\form#146:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 1 & \mathrm{if} \; x > 0 \\ y + \alpha & \mathrm{if} \; x \le 0 \end{array} \right. $
+\form#147:$ (1 \times N \times D) $
+\form#148:$ c_{t-1} $
+\form#149:$ (1 \times N \times 4D) $
+\form#150:$ [i_t', f_t', o_t', g_t'] $
+\form#151:$ (1 \times N) $
+\form#152:$ \delta_t $
+\form#153:$ c_t $
+\form#154:$ h_t $
+\form#155:$ \frac{\partial E}{\partial c_t} $
+\form#156:$ \frac{\partial E}{\partial h_t} $
+\form#157:$ [ \frac{\partial E}{\partial i_t} \frac{\partial E}{\partial f_t} \frac{\partial E}{\partial o_t} \frac{\partial E}{\partial g_t} ] $
+\form#158:$ (1 \times 1 \times N) $
+\form#159:$ (T \times N \times ...) $
+\form#160:$ T $
+\form#161:$ N $
+\form#162:$ (N \times T \times ...) $
+\form#163:$ (T \times N) $
+\form#164:$ \delta $
+\form#165:$ \delta_{t,n} = 0 $
+\form#166:$ h_{t-1} $
+\form#167:$ \delta_t = 0 $
+\form#168:$ \delta_{t,n} = 1 $
+\form#169:$ t-1 $
+\form#170:$ x_{static} $
+\form#171:$ x'_t = [x_t; x_{static}] $
+\form#172:$ (T \times N \times D) $
+\form#173:$ D $
+\form#174:$ x_t $
+\form#175:$ h_t := \tanh[ W_{hh} h_{t_1} + W_{xh} x_t + b_h ] $
+\form#176:$ o_t := \tanh[ W_{ho} h_t + b_o ] $
+\form#177:$ i $
+\form#178:$ (d_0 \times ... \times d_i \times ... \times d_j \times ... \times d_n) $
+\form#179:$ (d_i \times ... \times d_j) $
+\form#180:$ z = x y $

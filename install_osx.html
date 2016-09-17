@@ -57,39 +57,42 @@
       <h1 id="os-x-installation">OS X Installation</h1>
 
 <p>We highly recommend using the <a href="http://brew.sh/">Homebrew</a> package manager.
-Ideally you could start from a clean <code>/usr/local</code> to avoid conflicts.
+Ideally you could start from a clean <code class="highlighter-rouge">/usr/local</code> to avoid conflicts.
 In the following, we assume that you’re using Anaconda Python and Homebrew.</p>
 
-<p><strong>CUDA</strong>: Install via the NVIDIA package that includes both CUDA and the bundled driver. <strong>CUDA 7 is strongly suggested.</strong> Older CUDA require <code>libstdc++</code> while clang++ is the default compiler and <code>libc++</code> the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.</p>
+<p><strong>CUDA</strong>: Install via the NVIDIA package that includes both CUDA and the bundled driver. <strong>CUDA 7 is strongly suggested.</strong> Older CUDA require <code class="highlighter-rouge">libstdc++</code> while clang++ is the default compiler and <code class="highlighter-rouge">libc++</code> the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.</p>
 
-<p><strong>Library Path</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
-In other <code>ENV</code> settings, things may not work as expected.</p>
+<p><strong>Library Path</strong>: We find that everything compiles successfully if <code class="highlighter-rouge">$LD_LIBRARY_PATH</code> is not set at all, and <code class="highlighter-rouge">$DYLD_FALLBACK_LIBRARY_PATH</code> is set to provide CUDA, Python, and other relevant libraries (e.g. <code class="highlighter-rouge">/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
+In other <code class="highlighter-rouge">ENV</code> settings, things may not work as expected.</p>
 
 <p><strong>General dependencies</strong></p>
 
-<pre><code>brew install --fresh -vd snappy leveldb gflags glog szip lmdb
+<div class="highlighter-rouge"><pre class="highlight"><code>brew install -vd snappy leveldb gflags glog szip lmdb
 # need the homebrew science source for OpenCV and hdf5
 brew tap homebrew/science
 brew install hdf5 opencv
 </code></pre>
+</div>
 
 <p>If using Anaconda Python, a modification to the OpenCV formula might be needed
-Do <code>brew edit opencv</code> and change the lines that look like the two lines below to exactly the two lines below.</p>
+Do <code class="highlighter-rouge">brew edit opencv</code> and change the lines that look like the two lines below to exactly the two lines below.</p>
 
-<pre><code>  -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
+<div class="highlighter-rouge"><pre class="highlight"><code>  -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
   -DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7
 </code></pre>
+</div>
 
-<p>If using Anaconda Python, HDF5 is bundled and the <code>hdf5</code> formula can be skipped.</p>
+<p>If using Anaconda Python, HDF5 is bundled and the <code class="highlighter-rouge">hdf5</code> formula can be skipped.</p>
 
 <p><strong>Remaining dependencies, with / without Python</strong></p>
 
-<pre><code># with Python pycaffe needs dependencies built from source
-brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost boost-python
+<div class="highlighter-rouge"><pre class="highlight"><code># with Python pycaffe needs dependencies built from source
+brew install --build-from-source --with-python -vd protobuf
+brew install --build-from-source -vd boost boost-python
 # without Python the usual installation suffices
 brew install protobuf boost
 </code></pre>
+</div>
 
 <p><strong>BLAS</strong>: already installed as the <a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html">Accelerate / vecLib Framework</a>. OpenBLAS and MKL are alternatives for faster CPU computation.</p>
 
@@ -105,21 +108,22 @@ Check that Caffe and dependencies are linking against the same, desired Python.<
 For OS X 10.10 and 10.9 you should install CUDA 7 and follow the instructions above.
 If that is not an option, take a deep breath and carry on.</p>
 
-<p>In OS X 10.9+, clang++ is the default C++ compiler and uses <code>libc++</code> as the standard library.
-However, NVIDIA CUDA (even version 6.0) currently links only with <code>libstdc++</code>.
+<p>In OS X 10.9+, clang++ is the default C++ compiler and uses <code class="highlighter-rouge">libc++</code> as the standard library.
+However, NVIDIA CUDA (even version 6.0) currently links only with <code class="highlighter-rouge">libstdc++</code>.
 This makes it necessary to change the compilation settings for each of the dependencies.</p>
 
 <p>We do this by modifying the Homebrew formulae before installing any packages.
-Make sure that Homebrew doesn’t install any software dependencies in the background; all packages must be linked to <code>libstdc++</code>.</p>
+Make sure that Homebrew doesn’t install any software dependencies in the background; all packages must be linked to <code class="highlighter-rouge">libstdc++</code>.</p>
 
 <p>The prerequisite Homebrew formulae are</p>
 
-<pre><code>boost snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv
+<div class="highlighter-rouge"><pre class="highlight"><code>boost snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv
 </code></pre>
+</div>
 
-<p>For each of these formulas, <code>brew edit FORMULA</code>, and add the ENV definitions as shown:</p>
+<p>For each of these formulas, <code class="highlighter-rouge">brew edit FORMULA</code>, and add the ENV definitions as shown:</p>
 
-<pre><code>  def install
+<div class="highlighter-rouge"><pre class="highlight"><code>  def install
       # ADD THE FOLLOWING:
       ENV.append "CXXFLAGS", "-stdlib=libstdc++"
       ENV.append "CFLAGS", "-stdlib=libstdc++"
@@ -128,34 +132,38 @@ Make sure that Homebrew doesn’t install any software dependencies in the backg
       ENV["CXX"] = "/usr/bin/clang++ -stdlib=libstdc++"
       ...
 </code></pre>
+</div>
 
 <p>To edit the formulae in turn, run</p>
 
-<pre><code>for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
+<div class="highlighter-rouge"><pre class="highlight"><code>for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
 </code></pre>
+</div>
 
 <p>After this, run</p>
 
-<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
-brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost boost-python
+<div class="highlighter-rouge"><pre class="highlight"><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source -vd $x; done
+brew uninstall protobuf; brew install --build-from-source --with-python -vd protobuf
+brew install --build-from-source -vd boost boost-python
 </code></pre>
+</div>
 
 <p>If this is not done exactly right then linking errors will trouble you.</p>
 
-<p><strong>Homebrew versioning</strong> that Homebrew maintains itself as a separate git repository and making the above <code>brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code>brew update</code>, as you will get an error message like the following:</p>
+<p><strong>Homebrew versioning</strong> that Homebrew maintains itself as a separate git repository and making the above <code class="highlighter-rouge">brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code class="highlighter-rouge">brew update</code>, as you will get an error message like the following:</p>
 
-<pre><code>$ brew update
+<div class="highlighter-rouge"><pre class="highlight"><code>$ brew update
 error: Your local changes to the following files would be overwritten by merge:
   Library/Formula/lmdb.rb
 Please, commit your changes or stash them before you can merge.
 Aborting
 Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
 </code></pre>
+</div>
 
-<p>One solution is to commit your changes to a separate Homebrew branch, run <code>brew update</code>, and rebase your changes onto the updated master. You’ll have to do this both for the main Homebrew repository in <code>/usr/local/</code> and the Homebrew science repository that contains OpenCV in  <code>/usr/local/Library/Taps/homebrew/homebrew-science</code>, as follows:</p>
+<p>One solution is to commit your changes to a separate Homebrew branch, run <code class="highlighter-rouge">brew update</code>, and rebase your changes onto the updated master. You’ll have to do this both for the main Homebrew repository in <code class="highlighter-rouge">/usr/local/</code> and the Homebrew science repository that contains OpenCV in  <code class="highlighter-rouge">/usr/local/Library/Taps/homebrew/homebrew-science</code>, as follows:</p>
 
-<pre><code>cd /usr/local
+<div class="highlighter-rouge"><pre class="highlight"><code>cd /usr/local
 git checkout -b caffe
 git add .
 git commit -m "Update Caffe dependencies to use libstdc++"
@@ -164,10 +172,11 @@ git checkout -b caffe
 git add .
 git commit -m "Update Caffe dependencies"
 </code></pre>
+</div>
 
 <p>Then, whenever you want to update homebrew, switch back to the master branches, do the update, rebase the caffe branches onto master and fix any conflicts:</p>
 
-<pre><code># Switch batch to homebrew master branches
+<div class="highlighter-rouge"><pre class="highlight"><code># Switch batch to homebrew master branches
 cd /usr/local
 git checkout master
 cd /usr/local/Library/Taps/homebrew/homebrew-science
@@ -186,6 +195,7 @@ git rebase master caffe
 
 # Done!
 </code></pre>
+</div>
 
 <p>At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.</p>
 

@@ -57,53 +57,71 @@
       <h1 id="installation">Installation</h1>
 
 <p>Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
-The official Makefile and <code>Makefile.config</code> build are complemented by an automatic CMake build from the community.</p>
+We install and run Caffe on Ubuntu 16.04–12.04, OS X 10.11–10.8, and through Docker and AWS.
+The official Makefile and <code class="highlighter-rouge">Makefile.config</code> build are complemented by a <a href="#cmake-build">community CMake build</a>.</p>
+
+<p><strong>Step-by-step Instructions</strong>:</p>
+
+<ul>
+  <li><a href="https://github.com/BVLC/caffe/tree/master/docker">Docker setup</a> <em>out-of-the-box brewing</em></li>
+  <li><a href="install_apt.html">Ubuntu installation</a> <em>the standard platform</em></li>
+  <li><a href="install_osx.html">OS X installation</a></li>
+  <li><a href="install_yum.html">RHEL / CentOS / Fedora installation</a></li>
+  <li><a href="https://github.com/BVLC/caffe/tree/windows">Windows</a> <em>see the Windows branch led by Microsoft</em></li>
+  <li><a href="https://github.com/BVLC/caffe/tree/opencl">OpenCL</a> <em>see the OpenCL branch led by Fabian Tschopp</em></li>
+</ul>
+
+<p><strong>Overview</strong>:</p>
 
 <ul>
   <li><a href="#prerequisites">Prerequisites</a></li>
   <li><a href="#compilation">Compilation</a></li>
   <li><a href="#hardware">Hardware</a></li>
-  <li>Platforms: <a href="install_apt.html">Ubuntu guide</a>, <a href="install_osx.html">OS X guide</a>, and <a href="install_yum.html">RHEL / CentOS / Fedora guide</a></li>
 </ul>
 
-<p>When updating Caffe, it’s best to <code>make clean</code> before re-compiling.</p>
+<p>When updating Caffe, it’s best to <code class="highlighter-rouge">make clean</code> before re-compiling.</p>
 
 <h2 id="prerequisites">Prerequisites</h2>
 
-<p>Caffe has several dependencies.</p>
+<p>Caffe has several dependencies:</p>
 
 <ul>
   <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> is required for GPU mode.
     <ul>
-      <li>library version 7.0 and the latest driver version are recommended, but 6.* is fine too</li>
+      <li>library version 7+ and the latest driver version are recommended, but 6.* is fine too</li>
       <li>5.5, and 5.0 are compatible but considered legacy</li>
     </ul>
   </li>
   <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> via ATLAS, MKL, or OpenBLAS.</li>
   <li><a href="http://www.boost.org/">Boost</a> &gt;= 1.55</li>
+  <li><code class="highlighter-rouge">protobuf</code>, <code class="highlighter-rouge">glog</code>, <code class="highlighter-rouge">gflags</code>, <code class="highlighter-rouge">hdf5</code></li>
+</ul>
+
+<p>Optional dependencies:</p>
+
+<ul>
   <li><a href="http://opencv.org/">OpenCV</a> &gt;= 2.4 including 3.0</li>
-  <li><code>protobuf</code>, <code>glog</code>, <code>gflags</code></li>
-  <li>IO libraries <code>hdf5</code>, <code>leveldb</code>, <code>snappy</code>, <code>lmdb</code></li>
+  <li>IO libraries: <code class="highlighter-rouge">lmdb</code>, <code class="highlighter-rouge">leveldb</code> (note: leveldb requires <code class="highlighter-rouge">snappy</code>)</li>
+  <li>cuDNN for GPU acceleration (v5)</li>
 </ul>
 
 <p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
 
 <ul>
-  <li>For Python Caffe:  <code>Python 2.7</code> or <code>Python 3.3+</code>, <code>numpy (&gt;= 1.7)</code>, boost-provided <code>boost.python</code></li>
-  <li>For MATLAB Caffe: MATLAB with the <code>mex</code> compiler.</li>
+  <li>For Python Caffe:  <code class="highlighter-rouge">Python 2.7</code> or <code class="highlighter-rouge">Python 3.3+</code>, <code class="highlighter-rouge">numpy (&gt;= 1.7)</code>, boost-provided <code class="highlighter-rouge">boost.python</code></li>
+  <li>For MATLAB Caffe: MATLAB with the <code class="highlighter-rouge">mex</code> compiler.</li>
 </ul>
 
-<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see <a href="https://github.com/BVLC/caffe/pull/1731">PR #1731</a> for v2.</p>
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v5; older versions are supported in older Caffe.</p>
 
-<p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code>CPU_ONLY := 1</code> flag in <code>Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
+<p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code class="highlighter-rouge">CPU_ONLY := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 
 <h3 id="cuda-and-blas">CUDA and BLAS</h3>
 
-<p>Caffe requires the CUDA <code>nvcc</code> compiler to compile its GPU code and CUDA driver for GPU operation.
+<p>Caffe requires the CUDA <code class="highlighter-rouge">nvcc</code> compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads">NVIDIA CUDA website</a> and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. <strong>Warning!</strong> The 331.* CUDA driver series has a critical performance issue: do not use it.</p>
 
-<p>For best performance, Caffe can be accelerated by <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the <code>USE_CUDNN := 1</code> flag set in your <code>Makefile.config</code>.</p>
+<p>For best performance, Caffe can be accelerated by <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag set in your <code class="highlighter-rouge">Makefile.config</code>.</p>
 
 <p>Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library. The choice is yours:</p>
@@ -113,13 +131,14 @@ There are several implementations of this library. The choice is yours:</p>
   <li><a href="http://software.intel.com/en-us/intel-mkl">Intel MKL</a>: commercial and optimized for Intel CPUs, with a free trial and <a href="http://software.intel.com/en-us/intel-education-offerings">student</a> licenses.
     <ol>
       <li>Install MKL.</li>
-      <li>Set <code>BLAS := mkl</code> in <code>Makefile.config</code></li>
+      <li>Set up MKL environment (Details: <a href="https://software.intel.com/en-us/node/528499">Linux</a>, <a href="https://software.intel.com/en-us/node/528659">OS X</a>). Example: <em>source /opt/intel/mkl/bin/mklvars.sh intel64</em></li>
+      <li>Set <code class="highlighter-rouge">BLAS := mkl</code> in <code class="highlighter-rouge">Makefile.config</code></li>
     </ol>
   </li>
   <li><a href="http://www.openblas.net/">OpenBLAS</a>: free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     <ol>
       <li>Install OpenBLAS</li>
-      <li>Set <code>BLAS := open</code> in <code>Makefile.config</code></li>
+      <li>Set <code class="highlighter-rouge">BLAS := open</code> in <code class="highlighter-rouge">Makefile.config</code></li>
     </ol>
   </li>
 </ul>
@@ -128,73 +147,78 @@ There are several implementations of this library. The choice is yours:</p>
 
 <h4 id="python">Python</h4>
 
-<p>The main requirements are <code>numpy</code> and <code>boost.python</code> (provided by boost). <code>pandas</code> is useful too and needed for some examples.</p>
+<p>The main requirements are <code class="highlighter-rouge">numpy</code> and <code class="highlighter-rouge">boost.python</code> (provided by boost). <code class="highlighter-rouge">pandas</code> is useful too and needed for some examples.</p>
 
 <p>You can install the dependencies with</p>
 
-<pre><code>for req in $(cat requirements.txt); do pip install $req; done
+<div class="highlighter-rouge"><pre class="highlight"><code>for req in $(cat requirements.txt); do pip install $req; done
 </code></pre>
+</div>
 
-<p>but we suggest first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code>hdf5</code> library dependency.</p>
+<p>but we suggest first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code class="highlighter-rouge">hdf5</code> library dependency.</p>
 
-<p>To import the <code>caffe</code> Python module after completing the installation, add the module directory to your <code>$PYTHONPATH</code> by <code>export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH</code> or the like. You should not import the module in the <code>caffe/python/caffe</code> directory!</p>
+<p>To import the <code class="highlighter-rouge">caffe</code> Python module after completing the installation, add the module directory to your <code class="highlighter-rouge">$PYTHONPATH</code> by <code class="highlighter-rouge">export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH</code> or the like. You should not import the module in the <code class="highlighter-rouge">caffe/python/caffe</code> directory!</p>
 
 <p><em>Caffe’s Python interface works with Python 2.7. Python 3.3+ should work out of the box without protobuf support. For protobuf support please install protobuf 3.0 alpha (https://developers.google.com/protocol-buffers/). Earlier Pythons are your own adventure.</em></p>
 
 <h4 id="matlab">MATLAB</h4>
 
-<p>Install MATLAB, and make sure that its <code>mex</code> is in your <code>$PATH</code>.</p>
+<p>Install MATLAB, and make sure that its <code class="highlighter-rouge">mex</code> is in your <code class="highlighter-rouge">$PATH</code>.</p>
 
-<p><em>Caffe’s MATLAB interface works with versions 2014a/b, 2013a/b, and 2012b.</em></p>
-
-<h4 id="windows">Windows</h4>
-
-<p>There is an unofficial Windows port of Caffe at <a href="https://github.com/niuzhiheng/caffe">niuzhiheng/caffe:windows</a>. Thanks <a href="https://github.com/niuzhiheng">@niuzhiheng</a>!</p>
+<p><em>Caffe’s MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.</em></p>
 
 <h2 id="compilation">Compilation</h2>
 
-<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
+<p>Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.</p>
 
-<pre><code>cp Makefile.config.example Makefile.config
-# Adjust Makefile.config (for example, if using Anaconda Python)
+<h3 id="compilation-with-make">Compilation with Make</h3>
+
+<p>Configure the build by copying and modifying the example <code class="highlighter-rouge">Makefile.config</code> for your setup. The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cp Makefile.config.example Makefile.config
+# Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)
 make all
 make test
 make runtest
 </code></pre>
+</div>
 
 <ul>
-  <li>For cuDNN acceleration, you should uncomment the <code>USE_CUDNN := 1</code> switch in <code>Makefile.config</code>.</li>
-  <li>For CPU-only Caffe, uncomment <code>CPU_ONLY := 1</code> in <code>Makefile.config</code>.</li>
+  <li>For CPU &amp; GPU accelerated Caffe, no changes are needed.</li>
+  <li>For cuDNN acceleration using NVIDIA’s proprietary cuDNN software, uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> switch in <code class="highlighter-rouge">Makefile.config</code>. cuDNN is sometimes but not always faster than Caffe’s GPU acceleration.</li>
+  <li>For CPU-only Caffe, uncomment <code class="highlighter-rouge">CPU_ONLY := 1</code> in <code class="highlighter-rouge">Makefile.config</code>.</li>
 </ul>
 
-<p>To compile the Python and MATLAB wrappers do <code>make pycaffe</code> and <code>make matcaffe</code> respectively.
-Be sure to set your MATLAB and Python paths in <code>Makefile.config</code> first!</p>
+<p>To compile the Python and MATLAB wrappers do <code class="highlighter-rouge">make pycaffe</code> and <code class="highlighter-rouge">make matcaffe</code> respectively.
+Be sure to set your MATLAB and Python paths in <code class="highlighter-rouge">Makefile.config</code> first!</p>
 
-<p><strong>Distribution</strong>: run <code>make distribute</code> to create a <code>distribute</code> directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.</p>
+<p><strong>Distribution</strong>: run <code class="highlighter-rouge">make distribute</code> to create a <code class="highlighter-rouge">distribute</code> directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.</p>
 
-<p><strong>Speed</strong>: for a faster build, compile in parallel by doing <code>make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
+<p><strong>Speed</strong>: for a faster build, compile in parallel by doing <code class="highlighter-rouge">make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
 
 <p>Now that you have installed Caffe, check out the <a href="gathered/examples/mnist.html">MNIST tutorial</a> and the <a href="gathered/examples/imagenet.html">reference ImageNet model tutorial</a>.</p>
 
-<h3 id="cmake-compilation">CMake Compilation</h3>
+<h3 id="cmake-build">CMake Build</h3>
 
-<p>In lieu of manually editing <code>Makefile.config</code> to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version &gt;= 2.8.7.
+<p>In lieu of manually editing <code class="highlighter-rouge">Makefile.config</code> to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version &gt;= 2.8.7.
 The basic steps are as follows:</p>
 
-<pre><code>mkdir build
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir build
 cd build
 cmake ..
 make all
+make install
 make runtest
 </code></pre>
+</div>
 
 <p>See <a href="https://github.com/BVLC/caffe/pull/1667">PR #1667</a> for options and details.</p>
 
 <h2 id="hardware">Hardware</h2>
 
-<p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
+<p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with Titan Xs, K80s, GTX 980s, K40s, K20s, Titans, and GTX 770s including models at ImageNet/ILSVRC scale. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
 
-<p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.</p>
+<p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capability &gt;= 3.0.</p>
 
 <p>Once installed, check your times against our <a href="performance_hardware.html">reference performance numbers</a> to make sure everything is configured properly.</p>
 

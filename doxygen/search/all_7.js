@@ -4,5 +4,6 @@ var searchData=
   ['hdf5datalayer',['HDF5DataLayer',['../classcaffe_1_1HDF5DataLayer.html',1,'caffe']]],
   ['hdf5outputlayer',['HDF5OutputLayer',['../classcaffe_1_1HDF5OutputLayer.html',1,'caffe']]],
   ['height',['height',['../classcaffe_1_1Blob.html#a422a10a605c30ac02a5377e7cf4c8c6c',1,'caffe::Blob']]],
+  ['hidden_5fdim_5f',['hidden_dim_',['../classcaffe_1_1LSTMUnitLayer.html#a7ffcad2a4e6ca83f03cc88dffa32b7ca',1,'caffe::LSTMUnitLayer']]],
   ['hingelosslayer',['HingeLossLayer',['../classcaffe_1_1HingeLossLayer.html',1,'caffe']]]
 ];

@@ -74,21 +74,21 @@ This method is impartial and always up-to-date.</p>
 
 <h3 id="documentation">Documentation</h3>
 
-<p>This website, written with <a href="http://jekyllrb.com/">Jekyll</a>, acts as the official Caffe documentation – simply run <code>scripts/build_docs.sh</code> and view the website at <code>http://0.0.0.0:4000</code>.</p>
+<p>This website, written with <a href="http://jekyllrb.com/">Jekyll</a>, acts as the official Caffe documentation – simply run <code class="highlighter-rouge">scripts/build_docs.sh</code> and view the website at <code class="highlighter-rouge">http://0.0.0.0:4000</code>.</p>
 
-<p>We prefer tutorials and examples to be documented close to where they live, in <code>readme.md</code> files.
-The <code>build_docs.sh</code> script gathers all <code>examples/**/readme.md</code> and <code>examples/*.ipynb</code> files, and makes a table of contents.
-To be included in the docs, the readme files must be annotated with <a href="http://jekyllrb.com/docs/frontmatter/">YAML front-matter</a>, including the flag <code>include_in_docs: true</code>.
-Similarly for IPython notebooks: simply include <code>"include_in_docs": true</code> in the <code>"metadata"</code> JSON field.</p>
+<p>We prefer tutorials and examples to be documented close to where they live, in <code class="highlighter-rouge">readme.md</code> files.
+The <code class="highlighter-rouge">build_docs.sh</code> script gathers all <code class="highlighter-rouge">examples/**/readme.md</code> and <code class="highlighter-rouge">examples/*.ipynb</code> files, and makes a table of contents.
+To be included in the docs, the readme files must be annotated with <a href="http://jekyllrb.com/docs/frontmatter/">YAML front-matter</a>, including the flag <code class="highlighter-rouge">include_in_docs: true</code>.
+Similarly for IPython notebooks: simply include <code class="highlighter-rouge">"include_in_docs": true</code> in the <code class="highlighter-rouge">"metadata"</code> JSON field.</p>
 
-<p>Other docs, such as installation guides, are written in the <code>docs</code> directory and manually linked to from the <code>index.md</code> page.</p>
+<p>Other docs, such as installation guides, are written in the <code class="highlighter-rouge">docs</code> directory and manually linked to from the <code class="highlighter-rouge">index.md</code> page.</p>
 
 <p>We strive to provide lots of usage examples, and to document all code in docstrings.
 We absolutely appreciate any contribution to this effort!</p>
 
 <h3 id="versioning">Versioning</h3>
 
-<p>The <code>master</code> branch receives all new development including community contributions.
+<p>The <code class="highlighter-rouge">master</code> branch receives all new development including community contributions.
 We try to keep it in a reliable state, but it is the bleeding edge, and things do get broken every now and then.
 BVLC maintainers will periodically make releases by marking stable checkpoints as tags and maintenance branches. <a href="https://github.com/BVLC/caffe/releases">Past releases</a> are catalogued online.</p>
 
@@ -103,10 +103,10 @@ We do release things as soon as a reasonable technical report may be written, an
 <p><strong>When you are ready to develop a feature or fixing a bug, follow this protocol</strong>:</p>
 
 <ul>
-  <li>Develop in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names. Branch off of the latest <code>master</code>.</li>
-  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code>master</code> when done.
+  <li>Develop in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names. Branch off of the latest <code class="highlighter-rouge">master</code>.</li>
+  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code class="highlighter-rouge">master</code> when done.
 (Groom your changes by <a href="https://help.github.com/articles/interactive-rebase">interactive rebase</a>, if you’d like.)</li>
-  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code>BVLC/caffe</code>’s <code>master</code> branch for discussion and review.
+  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code class="highlighter-rouge">BVLC/caffe</code>’s <code class="highlighter-rouge">master</code> branch for discussion and review.
     <ul>
       <li>Make PRs <em>as soon as development begins</em>, to let discussion guide development.</li>
       <li>A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested – that means your PR must include tests!</li>
@@ -119,59 +119,64 @@ We do release things as soon as a reasonable technical report may be written, an
 
 <h4 id="shelhamershttpsgithubcomshelhamer-life-of-a-branch-in-four-acts"><a href="https://github.com/shelhamer">Shelhamer’s</a> “life of a branch in four acts”</h4>
 
-<p>Make the <code>feature</code> branch off of the latest <code>bvlc/master</code>
-<code>
-git checkout master
+<p>Make the <code class="highlighter-rouge">feature</code> branch off of the latest <code class="highlighter-rouge">bvlc/master</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git checkout master
 git pull upstream master
 git checkout -b feature
 # do your work, make commits
-</code></p>
+</code></pre>
+</div>
 
-<p>Prepare to merge by rebasing your branch on the latest <code>bvlc/master</code>
-<code>
-# make sure master is fresh
+<p>Prepare to merge by rebasing your branch on the latest <code class="highlighter-rouge">bvlc/master</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># make sure master is fresh
 git checkout master
 git pull upstream master
 # rebase your branch on the tip of master
 git checkout feature
 git rebase master
-</code></p>
+</code></pre>
+</div>
 
-<p>Push your branch to pull request it into <code>BVLC/caffe:master</code>
-<code>
-git push origin feature
+<p>Push your branch to pull request it into <code class="highlighter-rouge">BVLC/caffe:master</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git push origin feature
 # ...make pull request to master...
-</code></p>
+</code></pre>
+</div>
 
-<p>Now make a pull request! You can do this from the command line (<code>git pull-request -b master</code>) if you install <a href="https://github.com/github/hub">hub</a>. Hub has many other magical uses.</p>
+<p>Now make a pull request! You can do this from the command line (<code class="highlighter-rouge">git pull-request -b master</code>) if you install <a href="https://github.com/github/hub">hub</a>. Hub has many other magical uses.</p>
 
-<p>The pull request of <code>feature</code> into <code>master</code> will be a clean merge. Applause.</p>
+<p>The pull request of <code class="highlighter-rouge">feature</code> into <code class="highlighter-rouge">master</code> will be a clean merge. Applause.</p>
 
-<p><strong>Historical note</strong>: Caffe once relied on a two branch <code>master</code> and <code>dev</code> workflow.
-PRs from this time are still open but these will be merged into <code>master</code> or closed.</p>
+<p><strong>Historical note</strong>: Caffe once relied on a two branch <code class="highlighter-rouge">master</code> and <code class="highlighter-rouge">dev</code> workflow.
+PRs from this time are still open but these will be merged into <code class="highlighter-rouge">master</code> or closed.</p>
 
 <h3 id="testing">Testing</h3>
 
-<p>Run <code>make runtest</code> to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.</p>
+<p>Run <code class="highlighter-rouge">make runtest</code> to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.</p>
 
-<p>The <code>gtest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code>--gtest_filter</code>, which allows you to filter tests by name:</p>
+<p>The <code class="highlighter-rouge">gtest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code class="highlighter-rouge">--gtest_filter</code>, which allows you to filter tests by name:</p>
 
-<pre><code># run all tests with CPU in the name
+<div class="highlighter-rouge"><pre class="highlight"><code># run all tests with CPU in the name
 build/test/test_all.testbin --gtest_filter='*CPU*'
 
 # run all tests without GPU in the name (note the leading minus sign)
 build/test/test_all.testbin --gtest_filter=-'*GPU*'
 </code></pre>
+</div>
 
-<p>To get a list of all options <code>googletest</code> provides, simply pass the <code>--help</code> flag:</p>
+<p>To get a list of all options <code class="highlighter-rouge">googletest</code> provides, simply pass the <code class="highlighter-rouge">--help</code> flag:</p>
 
-<pre><code>build/test/test_all.testbin --help
+<div class="highlighter-rouge"><pre class="highlight"><code>build/test/test_all.testbin --help
 </code></pre>
+</div>
 
 <h3 id="style">Style</h3>
 
 <ul>
-  <li><strong>Run <code>make lint</code> to check C++ code.</strong></li>
+  <li><strong>Run <code class="highlighter-rouge">make lint</code> to check C++ code.</strong></li>
   <li>Wrap lines at 80 chars.</li>
   <li>Follow <a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google C++ style</a> and <a href="http://google-styleguide.googlecode.com/svn/trunk/pyguide.html">Google python style</a> + <a href="http://legacy.python.org/dev/peps/pep-0008/">PEP 8</a>.</li>
   <li>Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.</li>

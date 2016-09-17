@@ -2,15 +2,20 @@ var searchData=
 [
   ['caffe',['Caffe',['../classcaffe_1_1Caffe.html',1,'caffe']]],
   ['caffe',['caffe',['../namespacecaffe.html',1,'']]],
+  ['callback',['Callback',['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver']]],
   ['canonicalaxisindex',['CanonicalAxisIndex',['../classcaffe_1_1Blob.html#a6ce87a58a08438c46a4858929a77ee77',1,'caffe::Blob']]],
   ['channels',['channels',['../classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec',1,'caffe::Blob']]],
   ['checkblobcounts',['CheckBlobCounts',['../classcaffe_1_1Layer.html#adaa95e30dff155409a25ffcb5c8c885e',1,'caffe::Layer']]],
+  ['clearparamdiffs',['ClearParamDiffs',['../classcaffe_1_1Net.html#a3d251c397f812a6d8e162db3a82bb198',1,'caffe::Net']]],
+  ['coeff_5f',['coeff_',['../classcaffe_1_1ReductionLayer.html#a7aeb19ec25f01d4df995ba2122fbfeb3',1,'caffe::ReductionLayer']]],
+  ['col_5fbuffer_5fshape_5f',['col_buffer_shape_',['../classcaffe_1_1BaseConvolutionLayer.html#a9dd3f4ea6e17fe155efe537c120a3de4',1,'caffe::BaseConvolutionLayer']]],
   ['concat_5fbottom_5fvec_5f',['concat_bottom_vec_',['../classcaffe_1_1SPPLayer.html#a2874ca5b0c4d8f7d970c5a30768d2bc0',1,'caffe::SPPLayer']]],
   ['concat_5flayer_5f',['concat_layer_',['../classcaffe_1_1SPPLayer.html#a02a9d50a48983fa0c6e42cafa85c1eb8',1,'caffe::SPPLayer']]],
   ['concatlayer',['ConcatLayer',['../classcaffe_1_1ConcatLayer.html',1,'caffe']]],
   ['constant_5fcount_5f',['constant_count_',['../classcaffe_1_1ReshapeLayer.html#abbb071bc8398e2b0442302e51c644c28',1,'caffe::ReshapeLayer']]],
   ['constantfiller',['ConstantFiller',['../classcaffe_1_1ConstantFiller.html',1,'caffe']]],
   ['contrastivelosslayer',['ContrastiveLossLayer',['../classcaffe_1_1ContrastiveLossLayer.html',1,'caffe']]],
+  ['conv_5finput_5fshape_5f',['conv_input_shape_',['../classcaffe_1_1BaseConvolutionLayer.html#a63756d6ef00f6491939e539094c21397',1,'caffe::BaseConvolutionLayer']]],
   ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html#ad27360afd7729001b9e4f1d8c8401866',1,'caffe::ConvolutionLayer']]],
   ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html',1,'caffe']]],
   ['copy_5faxes_5f',['copy_axes_',['../classcaffe_1_1ReshapeLayer.html#ace08e8747c8d4562fbc26ca789681a4a',1,'caffe::ReshapeLayer']]],
@@ -18,5 +23,7 @@ var searchData=
   ['copytrainedlayersfrom',['CopyTrainedLayersFrom',['../classcaffe_1_1Net.html#a4ac2b69748470f54d530bc5dfa05b9c3',1,'caffe::Net']]],
   ['count',['count',['../classcaffe_1_1Blob.html#adcc7936d19ff798cfa8f24901a63d1fa',1,'caffe::Blob::count(int start_axis, int end_axis) const '],['../classcaffe_1_1Blob.html#aca6ae30ecc52bd38699fd82fdbe147f7',1,'caffe::Blob::count(int start_axis) const ']]],
   ['cputimer',['CPUTimer',['../classcaffe_1_1CPUTimer.html',1,'caffe']]],
-  ['cursor',['Cursor',['../classcaffe_1_1db_1_1Cursor.html',1,'caffe::db']]]
+  ['croplayer',['CropLayer',['../classcaffe_1_1CropLayer.html',1,'caffe']]],
+  ['cursor',['Cursor',['../classcaffe_1_1db_1_1Cursor.html',1,'caffe::db']]],
+  ['solveraction',['SolverAction',['../namespacecaffe_1_1SolverAction.html',1,'caffe']]]
 ];

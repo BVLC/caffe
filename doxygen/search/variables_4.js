@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['has_5fignore_5flabel_5f',['has_ignore_label_',['../classcaffe_1_1AccuracyLayer.html#a4acdfaf6db79fbe1983b8439391ad15e',1,'caffe::AccuracyLayer::has_ignore_label_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#ad77bc32fa576ad025102d29acf79aefb',1,'caffe::SoftmaxWithLossLayer::has_ignore_label_()']]]
+  ['expose_5fhidden_5f',['expose_hidden_',['../classcaffe_1_1RecurrentLayer.html#abfafaacb1fece0309e750e0d307fb76e',1,'caffe::RecurrentLayer']]]
 ];

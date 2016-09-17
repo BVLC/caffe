@@ -61,19 +61,19 @@ Let’s fine-tune the BVLC-distributed CaffeNet model on a different dataset, <a
 
 <h2 id="explanation">Explanation</h2>
 
-<p>The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the <code>bvlc_reference_caffenet</code> was trained.
-Since that model works well for object category classification, we’d like to use it architecture for our style classifier.
+<p>The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the <code class="highlighter-rouge">bvlc_reference_caffenet</code> was trained.
+Since that model works well for object category classification, we’d like to use this architecture for our style classifier.
 We also only have 80,000 images to train on, so we’d like to start with the parameters learned on the 1,000,000 ImageNet images, and fine-tune as needed.
-If we give provide the <code>weights</code> argument to the <code>caffe train</code> command, the pretrained weights will be loaded into our model, matching layers by name.</p>
+If we provide the <code class="highlighter-rouge">weights</code> argument to the <code class="highlighter-rouge">caffe train</code> command, the pretrained weights will be loaded into our model, matching layers by name.</p>
 
 <p>Because we are predicting 20 classes instead of a 1,000, we do need to change the last layer in the model.
-Therefore, we change the name of the last layer from <code>fc8</code> to <code>fc8_flickr</code> in our prototxt.
-Since there is no layer named that in the <code>bvlc_reference_caffenet</code>, that layer will begin training with random weights.</p>
+Therefore, we change the name of the last layer from <code class="highlighter-rouge">fc8</code> to <code class="highlighter-rouge">fc8_flickr</code> in our prototxt.
+Since there is no layer named that in the <code class="highlighter-rouge">bvlc_reference_caffenet</code>, that layer will begin training with random weights.</p>
 
-<p>We will also decrease the overall learning rate <code>base_lr</code> in the solver prototxt, but boost the <code>blobs_lr</code> on the newly introduced layer.
+<p>We will also decrease the overall learning rate <code class="highlighter-rouge">base_lr</code> in the solver prototxt, but boost the <code class="highlighter-rouge">lr_mult</code> on the newly introduced layer.
 The idea is to have the rest of the model change very slowly with new data, but let the new layer learn fast.
-Additionally, we set <code>stepsize</code> in the solver to a lower value than if we were training from scratch, since we’re virtually far along in training and therefore want the learning rate to go down faster.
-Note that we could also entirely prevent fine-tuning of all layers other than <code>fc8_flickr</code> by setting their <code>blobs_lr</code> to 0.</p>
+Additionally, we set <code class="highlighter-rouge">stepsize</code> in the solver to a lower value than if we were training from scratch, since we’re virtually far along in training and therefore want the learning rate to go down faster.
+Note that we could also entirely prevent fine-tuning of all layers other than <code class="highlighter-rouge">fc8_flickr</code> by setting their <code class="highlighter-rouge">lr_mult</code> to 0.</p>
 
 <h2 id="procedure">Procedure</h2>
 
@@ -82,7 +82,7 @@ Note that we could also entirely prevent fine-tuning of all layers other than <c
 <p>The dataset is distributed as a list of URLs with corresponding labels.
 Using a script, we will download a small subset of the data and split it into train and val sets.</p>
 
-<pre><code>caffe % ./examples/finetune_flickr_style/assemble_data.py -h
+<div class="highlighter-rouge"><pre class="highlight"><code>caffe % ./examples/finetune_flickr_style/assemble_data.py -h
 usage: assemble_data.py [-h] [-s SEED] [-i IMAGES] [-w WORKERS]
 
 Download a subset of Flickr Style to a directory
@@ -100,15 +100,20 @@ caffe % python examples/finetune_flickr_style/assemble_data.py --workers=-1 --im
 Downloading 2000 images with 7 workers...
 Writing train/val for 1939 successfully downloaded images.
 </code></pre>
+</div>
 
-<p>This script downloads images and writes train/val file lists into <code>data/flickr_style</code>.
-The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run <code>get_ilsvrc_aux.sh</code> from <code>data/ilsvrc12</code> to obtain this if you haven’t yet).</p>
+<p>This script downloads images and writes train/val file lists into <code class="highlighter-rouge">data/flickr_style</code>.
+The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run <code class="highlighter-rouge">get_ilsvrc_aux.sh</code> from <code class="highlighter-rouge">data/ilsvrc12</code> to obtain this if you haven’t yet).</p>
 
-<p>We’ll also need the ImageNet-trained model, which you can obtain by running <code>./scripts/download_model_binary.py models/bvlc_reference_caffenet</code>.</p>
+<p>We’ll also need the ImageNet-trained model, which you can obtain by running <code class="highlighter-rouge">./scripts/download_model_binary.py models/bvlc_reference_caffenet</code>.</p>
 
-<p>Now we can train! (You can fine-tune in CPU mode by leaving out the <code>-gpu</code> flag.)</p>
+<p>Now we can train! The key to fine-tuning is the <code class="highlighter-rouge">-weights</code> argument in the
+command below, which tells Caffe that we want to load weights from a pre-trained
+Caffe model.</p>
 
-<pre><code>caffe % ./build/tools/caffe train -solver models/finetune_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
+<p>(You can fine-tune in CPU mode by leaving out the <code class="highlighter-rouge">-gpu</code> flag.)</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>caffe % ./build/tools/caffe train -solver models/finetune_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
 
 [...]
 
@@ -153,6 +158,7 @@ I0828 22:22:46.376682 11510 solver.cpp:397] Iteration 980, lr = 0.001
 I0828 22:22:51.687258 11510 solver.cpp:251] Iteration 1000, Testing net (#0)
 I0828 22:23:17.438894 11510 solver.cpp:302]     Test net output #0: accuracy = 0.2356
 </code></pre>
+</div>
 
 <p>Note how rapidly the loss went down. Although the 23.5% accuracy is only modest, it was achieved in only 1000, and evidence that the model is starting to learn quickly and well.
 Once the model is fully fine-tuned on the whole training set over 100,000 iterations the final validation accuracy is 39.16%.
@@ -160,7 +166,7 @@ This takes ~7 hours in Caffe on a K40 GPU.</p>
 
 <p>For comparison, here is how the loss goes down when we do not start with a pre-trained model:</p>
 
-<pre><code>I0828 22:24:18.624004 12919 solver.cpp:165] Solving FlickrStyleCaffeNet
+<div class="highlighter-rouge"><pre class="highlight"><code>I0828 22:24:18.624004 12919 solver.cpp:165] Solving FlickrStyleCaffeNet
 I0828 22:24:18.624099 12919 solver.cpp:251] Iteration 0, Testing net (#0)
 I0828 22:24:44.520992 12919 solver.cpp:302]     Test net output #0: accuracy = 0.0366
 I0828 22:24:44.676905 12919 solver.cpp:195] Iteration 0, loss = 3.47942
@@ -195,6 +201,7 @@ I0828 22:29:18.123147 12919 solver.cpp:397] Iteration 980, lr = 0.001
 I0828 22:29:23.432059 12919 solver.cpp:251] Iteration 1000, Testing net (#0)
 I0828 22:29:49.409044 12919 solver.cpp:302]     Test net output #0: accuracy = 0.0572
 </code></pre>
+</div>
 
 <p>This model is only beginning to learn.</p>
 
@@ -207,7 +214,7 @@ Furthermore, note that the model has only trained on &lt; 2,000 instances. Trans
 <h2 id="trained-model">Trained model</h2>
 
 <p>We provide a model trained on all 80K images, with final accuracy of 39%.
-Simply do <code>./scripts/download_model_binary.py models/finetune_flickr_style</code> to obtain it.</p>
+Simply do <code class="highlighter-rouge">./scripts/download_model_binary.py models/finetune_flickr_style</code> to obtain it.</p>
 
 <h2 id="license">License</h2>
 

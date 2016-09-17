@@ -77,13 +77,13 @@ This pass goes from top to bottom.</p>
 
 <p><img src="fig/backward.jpg" alt="Backward pass" width="320" /></p>
 
-<p>The backward pass begins with the loss and computes the gradient with respect to the output <script type="math/tex">\frac{\partial f_W}{\partial h}</script>. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the <code>INNER_PRODUCT</code> layer, compute the gradient with respect to their parameters <script type="math/tex">\frac{\partial f_W}{\partial W_{\text{ip}}}</script> during the backward step.</p>
+<p>The backward pass begins with the loss and computes the gradient with respect to the output <script type="math/tex">\frac{\partial f_W}{\partial h}</script>. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the <code class="highlighter-rouge">INNER_PRODUCT</code> layer, compute the gradient with respect to their parameters <script type="math/tex">\frac{\partial f_W}{\partial W_{\text{ip}}}</script> during the backward step.</p>
 
 <p>These computations follow immediately from defining the model: Caffe plans and carries out the forward and backward passes for you.</p>
 
 <ul>
-  <li>The <code>Net::Forward()</code> and <code>Net::Backward()</code> methods carry out the respective passes while <code>Layer::Forward()</code> and <code>Layer::Backward()</code> compute each step.</li>
-  <li>Every layer type has <code>forward_{cpu,gpu}()</code> and <code>backward_{cpu,gpu}</code> methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.</li>
+  <li>The <code class="highlighter-rouge">Net::Forward()</code> and <code class="highlighter-rouge">Net::Backward()</code> methods carry out the respective passes while <code class="highlighter-rouge">Layer::Forward()</code> and <code class="highlighter-rouge">Layer::Backward()</code> compute each step.</li>
+  <li>Every layer type has <code class="highlighter-rouge">forward_{cpu,gpu}()</code> and <code class="highlighter-rouge">backward_{cpu,gpu}()</code> methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.</li>
 </ul>
 
 <p>The <a href="solver.html">Solver</a> optimizes a model by first calling forward to yield the output and loss, then calling backward to generate the gradient of the model, and then incorporating the gradient into a weight update that attempts to minimize the loss. Division of labor between the Solver, Net, and Layer keep Caffe modular and open to development.</p>

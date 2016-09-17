@@ -73,7 +73,7 @@
 <p>The conventional blob dimensions for batches of image data are number N x channel K x height H x width W. Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically located at index ((n * K + k) * H + h) * W + w.</p>
 
 <ul>
-  <li>Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images B = 256.</li>
+  <li>Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images N = 256.</li>
   <li>Channel / K is the feature dimension e.g. for RGB images K = 3.</li>
 </ul>
 
@@ -89,9 +89,10 @@
 
 <p>Further, as the actual values could be stored either on the CPU and on the GPU, there are two different ways to access them: the const way, which does not change the values, and the mutable way, which changes the values:</p>
 
-<pre><code>const Dtype* cpu_data() const;
+<div class="highlighter-rouge"><pre class="highlight"><code>const Dtype* cpu_data() const;
 Dtype* mutable_cpu_data();
 </code></pre>
+</div>
 
 <p>(similarly for gpu and diff).</p>
 
@@ -101,7 +102,7 @@ Dtype* mutable_cpu_data();
 
 <p>If you want to check out when a Blob will copy data, here is an illustrative example:</p>
 
-<pre><code>// Assuming that data are on the CPU initially, and we have a blob.
+<div class="highlighter-rouge"><pre class="highlight"><code>// Assuming that data are on the CPU initially, and we have a blob.
 const Dtype* foo;
 Dtype* bar;
 foo = blob.gpu_data(); // data copied cpu-&gt;gpu.
@@ -115,6 +116,7 @@ bar = blob.mutable_cpu_data(); // still no data copied.
 bar = blob.mutable_gpu_data(); // data copied cpu-&gt;gpu.
 bar = blob.mutable_cpu_data(); // data copied gpu-&gt;cpu.
 </code></pre>
+</div>
 
 <h2 id="layer-computation-and-connections">Layer computation and connections</h2>
 
@@ -151,7 +153,7 @@ A simple logistic regression classifier</p>
 
 <p>is defined by</p>
 
-<pre><code>name: "LogReg"
+<div class="highlighter-rouge"><pre class="highlight"><code>name: "LogReg"
 layer {
   name: "mnist"
   type: "Data"
@@ -179,10 +181,11 @@ layer {
   top: "loss"
 }
 </code></pre>
+</div>
 
-<p>Model initialization is handled by <code>Net::Init()</code>. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ <code>SetUp()</code> function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:</p>
+<p>Model initialization is handled by <code class="highlighter-rouge">Net::Init()</code>. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers’ <code class="highlighter-rouge">SetUp()</code> function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:</p>
 
-<pre><code>I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
+<div class="highlighter-rouge"><pre class="highlight"><code>I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
 name: "LogReg"
 [...model prototxt printout...]
 # construct the network layer-by-layer
@@ -217,8 +220,9 @@ I0902 22:52:17.941810 2079114000 net.cpp:467] Collecting Learning Rate and Weigh
 I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
 I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
 </code></pre>
+</div>
 
-<p>Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in <code>Caffe::mode()</code> and set by <code>Caffe::set_mode()</code>. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.</p>
+<p>Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in <code class="highlighter-rouge">Caffe::mode()</code> and set by <code class="highlighter-rouge">Caffe::set_mode()</code>. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.</p>
 
 <h3 id="model-format">Model format</h3>
 
