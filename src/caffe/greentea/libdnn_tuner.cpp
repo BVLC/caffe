@@ -418,10 +418,13 @@ template void LibDNNTuner::add_set_param(const char* name,
 template void LibDNNTuner::add_set_param(const char* name,
                             int64_t def_value, std::vector<int64_t> values);
 
-void LibDNNTuner::add_boolean_param(std::string name, bool def_value) {
+void LibDNNTuner::add_boolean_param(std::string name,
+                                    bool def_value, bool inverse) {
   std::vector<bool> set_values;
   set_values.push_back(def_value);
-  set_values.push_back(!def_value);
+  if (inverse) {
+    set_values.push_back(!def_value);
+  }
   std::shared_ptr<LibDNNTunerParam> param(
       new LibDNNTunerParamBool(this, name, set_values, 0));
   params_.push_back(param);
@@ -429,9 +432,10 @@ void LibDNNTuner::add_boolean_param(std::string name, bool def_value) {
                     std::shared_ptr<LibDNNTunerParam>>(name, param));
 }
 
-void LibDNNTuner::add_boolean_param(const char* name, bool def_value) {
+void LibDNNTuner::add_boolean_param(const char* name,
+                                    bool def_value, bool inverse) {
   std::string str(name);
-  add_boolean_param(str, def_value);
+  add_boolean_param(str, def_value, inverse);
 }
 
 

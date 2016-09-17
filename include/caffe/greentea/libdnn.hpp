@@ -120,7 +120,7 @@ class LibDNNConv {
   void SetMemory(Dtype* memory, int_tp count, int_tp offset, Dtype value);
 #ifdef USE_GREENTEA
   viennacl::ocl::program CompileKernelsOpenCL(viennacl::ocl::context *ctx);
-#endif  // USE_GREETEA
+#endif  // USE_GREENTEA
 #ifdef USE_CUDA
   nvrtcProgram CompileKernelsCuda();
 #endif  // USE_CUDA

@@ -223,8 +223,8 @@ class LibDNNTuner {
 
   void set_benchmark_routine(std::function<double()> fun);
 
-  void add_boolean_param(std::string name, bool def_value);
-  void add_boolean_param(const char* name, bool def_value);
+  void add_boolean_param(std::string name, bool def_value, bool inverse);
+  void add_boolean_param(const char* name, bool def_value, bool inverse);
 
   template<class T>
   void add_range_param(std::string name, T def_value, T min, T max, T step);
