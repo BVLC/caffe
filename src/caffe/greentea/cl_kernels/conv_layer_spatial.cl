@@ -763,7 +763,9 @@ typedef struct float0 { float s0; } float0; //never used but makes compiler happ
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
+#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(8)))
+#endif
 __kernel void Conv_Interleaved(
     const __global float *src0,
     const __global float *src1,
@@ -990,7 +992,9 @@ __kernel void Conv_Interleaved(
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
+#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(8)))
+#endif
 __kernel void Conv_Interleaved(
     const __global float *src0,
     const __global float *src1,
