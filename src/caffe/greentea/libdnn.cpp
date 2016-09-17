@@ -44,9 +44,9 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
     im_out_shape_.push_back(config.out_shape[dims - spatial_dims + i]);
   }
 
-  fw_tuner_ = std::shared_ptr < LibDNNTuner > (new LibDNNTuner());
-  bw_tuner_ = std::shared_ptr < LibDNNTuner > (new LibDNNTuner());
-  wg_tuner_ = std::shared_ptr < LibDNNTuner > (new LibDNNTuner());
+  fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  bw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  wg_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
 
   // Setup tuning parameters
 
@@ -65,126 +65,131 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConfig config) {
   }
 
   // TSK
-  fw_tuner_->add_range_param < int_tp > ("TSK", 8, 1, 32, 1);
-  bw_tuner_->add_range_param < int_tp > ("TSK", 8, 1, 32, 1);
-  wg_tuner_->add_range_param < int_tp > ("TSK", 8, 1, 32, 1);
+  fw_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+  bw_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+  wg_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
 
-  fw_tuner_->add_range_param < int_tp > ("TSK_UNROLL", 1, 1, 16, 1);
-  bw_tuner_->add_range_param < int_tp > ("TSK_UNROLL", 1, 1, 16, 1);
-  wg_tuner_->add_range_param < int_tp > ("TSK_UNROLL", 1, 1, 16, 1);
+  fw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
+  bw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
+  wg_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
 
   // WPTM, WPTN
-  fw_tuner_->add_range_param < int_tp > ("WPTM", 4, 4, 16, 4);
-  bw_tuner_->add_range_param < int_tp > ("WPTM", 4, 4, 16, 4);
-  wg_tuner_->add_range_param < int_tp > ("WPTM", 4, 4, 16, 4);
+  fw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
 
-  fw_tuner_->add_set_param < int_tp > ("VWM", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
-  bw_tuner_->add_set_param < int_tp > ("VWM", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
-  wg_tuner_->add_set_param < int_tp > ("VWM", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
+  fw_tuner_->add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  bw_tuner_->add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  wg_tuner_->add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
 
-  fw_tuner_->add_range_param < int_tp > ("WPTN", 4, 4, 16, 4);
-  bw_tuner_->add_range_param < int_tp > ("WPTN", 4, 4, 16, 4);
-  wg_tuner_->add_range_param < int_tp > ("WPTN", 4, 4, 16, 4);
+  fw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
 
-  fw_tuner_->add_set_param < int_tp > ("VWN", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
-  bw_tuner_->add_set_param < int_tp > ("VWN", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
-  wg_tuner_->add_set_param < int_tp > ("VWN", 4, std::vector<int_tp>( { 1, 2, 4,
-      8, 16 }));
+  fw_tuner_->add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  bw_tuner_->add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  wg_tuner_->add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
 
   // Constraint using TSK, TSM, RTSM and RTSN. Adapt TSK if constraint fails.
-  fw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTM", "workgroup_size_1" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-  bw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTM", "workgroup_size_1" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-  wg_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTM", "workgroup_size_1" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-
+  fw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
+    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
+  bw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}), std::vector<
+    std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
+  wg_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}), std::vector<
+    std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
   // Constraint using TSK, TSN, RTSN and RTSM. Adapt TSK if constraint fails.
-  fw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTN", "workgroup_size_0" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-  bw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTN", "workgroup_size_0" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-  wg_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "WPTN", "workgroup_size_0" }), std::vector<
-          std::string>( { "TSK" }), [](std::vector<int64_t> args) -> bool {
-        return (args[0] * args[1]) % (args[2]) == 0;
-      });
-
-  fw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "TSK_UNROLL" }), std::vector<
-          std::string>( { "TSK_UNROLL" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  bw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "TSK_UNROLL" }), std::vector<
-          std::string>( { "TSK_UNROLL" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  wg_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "TSK", "TSK_UNROLL" }), std::vector<
-          std::string>( { "TSK_UNROLL" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-
-  fw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTM", "VWM" }), std::vector<std::string>(
-          { "WPTM" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  bw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTM", "VWM" }), std::vector<std::string>(
-          { "WPTM" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  wg_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTM", "VWM" }), std::vector<std::string>(
-          { "WPTM" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-
-  fw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTN", "VWN" }), std::vector<std::string>(
-          { "WPTN" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  bw_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTN", "VWN" }), std::vector<std::string>(
-          { "WPTN" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
-  wg_tuner_->add_constraint < int64_t
-      > (std::vector<std::string>( { "WPTN", "VWN" }), std::vector<std::string>(
-          { "WPTN" }), [](std::vector<int64_t> args) -> bool {
-        return args[0] % args[1] == 0;
-      });
+  fw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
+  bw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
+  wg_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
+    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+      return (args[0] * args[1]) % (args[2]) == 0;
+    });
+  fw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+    std::vector<std::string>({"TSK_UNROLL"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  bw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+    std::vector<std::string>({"TSK_UNROLL"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  wg_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
+    std::vector<std::string>({"TSK_UNROLL"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  fw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTM", "VWM"}),
+    std::vector<std::string>({"WPTM"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  bw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTM", "VWM"}),
+    std::vector<std::string>({"WPTM"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  wg_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTM", "VWM"}),
+    std::vector<std::string>({"WPTM"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  fw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTN", "VWN"}),
+    std::vector<std::string>({"WPTN"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  bw_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTN", "VWN"}),
+    std::vector<std::string>({"WPTN"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
+  wg_tuner_->add_constraint<int64_t>(
+    std::vector<std::string>({"WPTN", "VWN"}),
+    std::vector<std::string>({"WPTN"}),
+    [](std::vector<int64_t> args) -> bool {
+      return args[0] % args[1] == 0;
+    });
 
   // pad_A, pad_B
-  fw_tuner_->add_range_param < int_tp > ("lmem_pad_A", 0, 0, 8, 1);
-  bw_tuner_->add_range_param < int_tp > ("lmem_pad_A", 0, 0, 8, 1);
-  wg_tuner_->add_range_param < int_tp > ("lmem_pad_A", 0, 0, 8, 1);
-  fw_tuner_->add_range_param < int_tp > ("lmem_pad_B", 0, 0, 8, 1);
-  bw_tuner_->add_range_param < int_tp > ("lmem_pad_B", 0, 0, 8, 1);
-  wg_tuner_->add_range_param < int_tp > ("lmem_pad_B", 0, 0, 8, 1);
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  fw_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
+  bw_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
+  wg_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
 
   if (dev_ptr_->backend() == BACKEND_CUDA) {
     // CUDA needs the vector elements unrolled
@@ -242,7 +247,6 @@ std::string LibDNNConv<Dtype>::generate_header() {
       ss << "#define ATOMICS_64_AVAILABLE" << std::endl;
       ss << "#endif" << std::endl;
     }
-
   }
 
   if (std::is_same<Dtype, double>::value) {
@@ -261,9 +265,11 @@ std::string LibDNNConv<Dtype>::generate_header() {
     }
   }
 
-  std::vector<std::string> elems4( { "x", "y", "z", "w" });
-  std::vector<std::string> elems16( { "s0", "s1", "s2", "s3", "s4", "s5", "s6",
-      "s7", "s8", "s9", "sA", "sB", "sC", "sD", "sE", "sF" });
+  std::vector<std::string> elems4({
+      "x", "y", "z", "w" });
+  std::vector<std::string> elems16({
+      "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+      "s8", "s9", "sA", "sB", "sC", "sD", "sE", "sF" });
 
   for (int_tp i = 1; i <= 16; i *= 2) {
     for (int_tp j = 0; j < i; ++j) {
@@ -333,8 +339,8 @@ std::string LibDNNConv<Dtype>::generate_header() {
     ss << "}" << std::endl;
   }
 
-  std::vector<std::string> atomic_funcs( { "Add", "Sub", "Mul", "Div" });
-  std::vector<std::string> atomic_ops( { "+", "-", "*", "/" });
+  std::vector<std::string> atomic_funcs({ "Add", "Sub", "Mul", "Div" });
+  std::vector<std::string> atomic_ops({ "+", "-", "*", "/" });
 
   // Atomic operations
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
@@ -823,7 +829,8 @@ std::string LibDNNConv<Dtype>::generate_gemm_core(
   ss << "for (int_tp wn=0; wn<WPTN/VWN; ++wn) {" << std::endl;
   ss << "int_tp col = tidn + wn*VWN*RTSN;" << std::endl;
   for (int i = 0; i < vwn; ++i) {
-    ss << "VEC_" << vwn << "_" << i << "(Breg[wn])" << " = Bsub[k][col + " << (i*rtsn)
+    ss << "VEC_" << vwn << "_" << i << "(Breg[wn])"
+       << " = Bsub[k][col + " << (i*rtsn)
        << "];" << std::endl;
   }
   ss << "}" << std::endl;
@@ -858,7 +865,9 @@ std::string LibDNNConv<Dtype>::generate_gemm_core(
     }
   } else {
     for (int m = 0; m < vwm; ++m) {
-      ss << "Creg[wm * VWM + " << m << "][wn]" << " += VEC_"<< vwm << "_" << m << "(Areg)" << " * (Breg[wn]);" << std::endl;
+      ss << "Creg[wm * VWM + " << m << "][wn]"
+         << " += VEC_"<< vwm << "_" << m << "(Areg)" << " * (Breg[wn]);"
+         << std::endl;
     }
   }
   ss << "}" << std::endl;
@@ -1032,11 +1041,12 @@ std::string LibDNNConv<Dtype>::generate_fw_kernels(std::string name) {
     ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
     int rowstep = (rtsn * rtsm) / tsk;
     for (int i = 0; i < lpta; ++i) {
-      ss << "if ((offM + row + " << i*rowstep << ") < M && tiledIndex < K) {" << std::endl;
-      ss << "Asub[row+"<<i*rowstep<<"][col] = Aptr[(offM + row + "
+      ss << "if ((offM + row + " << i * rowstep << ") < M && tiledIndex < K) {"
+         << std::endl;
+      ss << "Asub[row+" << i * rowstep << "][col] = Aptr[(offM + row + "
          << i * rowstep << ") * K + tiledIndex];" << std::endl;
       ss << "} else {" << std::endl;  // M-K-Guard
-      ss << "Asub[row+"<<i*rowstep<<"][col] = 0.0;" << std::endl;
+      ss << "Asub[row+" << i * rowstep << "][col] = 0.0;" << std::endl;
       ss << "}";
     }
   } else {
@@ -1775,9 +1785,11 @@ viennacl::ocl::program LibDNNConv<Dtype>::CompileKernelsOpenCL(
 
 #ifdef LIBDNN_DEBUG
   size_t bin_sz;
-  clGetProgramInfo(ocl_program_.handle().get(), CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
+  clGetProgramInfo(ocl_program_.handle().get(),
+                   CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
   unsigned char *bin = (unsigned char *)malloc(bin_sz);  // NOLINT
-  clGetProgramInfo(ocl_program_.handle().get(), CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
+  clGetProgramInfo(ocl_program_.handle().get(),
+                   CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
   FILE* fp = fopen("libdnn_conv_opencl.ptx", "wb");
   fwrite(bin, sizeof(char), bin_sz, fp);
   fclose(fp);
@@ -1791,7 +1803,6 @@ viennacl::ocl::program LibDNNConv<Dtype>::CompileKernelsOpenCL(
 #ifdef USE_CUDA
 template<typename Dtype>
 nvrtcProgram LibDNNConv<Dtype>::CompileKernelsCuda() {
-
   nvrtcCreateProgram(&cuda_program_, kernel_.c_str(), NULL, 0, NULL, NULL);
 
   std::vector<const char*> build_opts;
@@ -1799,7 +1810,8 @@ nvrtcProgram LibDNNConv<Dtype>::CompileKernelsCuda() {
   cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, dev_ptr_->id());
 
-  std::string arch_opt = "--gpu-architecture=compute_"+std::to_string(prop.major)+std::to_string(prop.minor);
+  std::string arch_opt = "--gpu-architecture=compute_"
+      + std::to_string(prop.major) + std::to_string(prop.minor);
   std::string stdcpp_opt = "--std=c++11";
   std::string fum_opt = "--use_fast_math";
 
@@ -1818,18 +1830,18 @@ nvrtcProgram LibDNNConv<Dtype>::CompileKernelsCuda() {
   cuModuleLoadDataEx(&cuda_module_, ptx, 0, 0, 0);
 
 #ifdef LIBDNN_DEBUG
-   size_t log_size;
-   nvrtcGetProgramLogSize(cuda_program_, &log_size);
-   std::vector<char> log(log_size);
-   nvrtcGetProgramLog(cuda_program_, log.data());
+  size_t log_size;
+  nvrtcGetProgramLogSize(cuda_program_, &log_size);
+  std::vector<char> log(log_size);
+  nvrtcGetProgramLog(cuda_program_, log.data());
 
-   std::cout << "CUDA compile log:" << std::endl;
-   std::cout << log.data() << std::endl;
+  std::cout << "CUDA compile log:" << std::endl;
+  std::cout << log.data() << std::endl;
 
-   FILE* fp = fopen("libdnn_conv_cuda.ptx", "wb");
-   fwrite(ptx, sizeof(char), ptxSize, fp);
-   fclose(fp);
-   free(ptx);
+  FILE* fp = fopen("libdnn_conv_cuda.ptx", "wb");
+  fwrite(ptx, sizeof(char), ptxSize, fp);
+  fclose(fp);
+  free(ptx);
 #endif
 
   return cuda_program_;

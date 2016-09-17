@@ -58,9 +58,12 @@ void LibDNNConvolutionLayer<Dtype>::Reshape(
     config.bias_backward = this->param_propagate_down_[1];
 
     if ((std::is_same<Dtype, float>::value
-        && (this->device_->CheckCapability("cl_khr_int32_base_atomics") ||
-            this->device_->CheckCapability("cl_khr_global_int32_base_atomics") ||
-            this->device_->CheckCapability("cl_khr_global_int32_extended_atomics"))) ||
+        && (this->device_->CheckCapability(
+                "cl_khr_int32_base_atomics") ||
+            this->device_->CheckCapability(
+                "cl_khr_global_int32_base_atomics") ||
+            this->device_->CheckCapability(
+                "cl_khr_global_int32_extended_atomics"))) ||
         (std::is_same<Dtype, double>::value
         && (this->device_->CheckCapability("cl_khr_int64_base_atomics") ||
             this->device_->CheckCapability("cl_khr_int64_extended_atomics")))) {
