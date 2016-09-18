@@ -2,6 +2,7 @@
 #ifndef MULTI_NODE_FC_THREAD_H_
 #define MULTI_NODE_FC_THREAD_H_
 
+#include <algorithm>
 #include <vector>
 
 #include "caffe/multi_node/node_env.hpp"
@@ -105,6 +106,15 @@ class FcWorker : public WorkerThread<Dtype> {
     return pbuf_;
   }
 
+ protected:
+  inline bool IsLossNode() {
+    if (NodeEnv::Instance()->bcast_addrs().size() > 0) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
  private:
   static void CreateParamBuf() {
     pbuf_ = new ParamBuf<Dtype>();
@@ -117,6 +127,61 @@ class FcWorker : public WorkerThread<Dtype> {
 DISABLE_COPY_AND_ASSIGN(FcWorker);
 };
 
+template <typename Dtype>
+class SolverGroup {
+ public:
+  explicit SolverGroup(int64_t c) {
+    total_loss_ = 0;
+    num_sub_batches_ = 0;
+    batch_clock_ = c;
+  }
+
+  virtual ~SolverGroup() { }
+
+  Solver<Dtype> *PopSolver() {
+    if (solver_vec_.size() <= 0) {
+      return NULL;
+    }
+
+    Solver<Dtype> *p = solver_vec_.back();
+    solver_vec_.pop_back();
+
+    return p;
+  }
+
+  // push a used solver in the buffer
+  void PushSolver(Solver<Dtype> *p) {
+    solver_vec_.push_back(p);
+    num_sub_batches_++;
+  }
+
+  void AddLoss(Dtype loss) {
+    total_loss_ += loss;
+  }
+
+  Dtype total_loss() {
+    return total_loss_;
+  }
+
+  int num_sub_batches() {
+    return num_sub_batches_;
+  }
+
+ protected:
+  // sum of loss in a batch
+  Dtype total_loss_;
+
+  // solvers that have been used in a batch
+  vector<Solver<Dtype> *> solver_vec_;
+
+  // number of sub batches processed
+  int num_sub_batches_;
+
+  // the batch clock it is processing
+  int64_t batch_clock_;
+
+DISABLE_COPY_AND_ASSIGN(SolverGroup);
+};
 
 template <typename Dtype>
 class FcThread : public FcWorker<Dtype> {
@@ -125,14 +190,22 @@ class FcThread : public FcWorker<Dtype> {
     clock_ = 0;
     staleness_ = 0;
   }
+
   virtual ~FcThread() { }
 
   virtual void Run();
 
  protected:
-  shared_ptr<Msg> FcForward(shared_ptr<Msg> m);
+  typedef typename unordered_map<int,
+                                 shared_ptr<SolverGroup<Dtype> > >::iterator
+                                                               group_iter_t;
+
+ protected:
+  // copy the activations from message m and do forward
+  void FcForward(shared_ptr<Msg> m);
+
+  //
   void FcBackward(shared_ptr<Msg> m,
-                  vector<shared_ptr<Msg> > *preplies,
                   bool copy_diff);
 
   // copy Input data from Message
@@ -144,6 +217,12 @@ class FcThread : public FcWorker<Dtype> {
 
   virtual void ProcessMsg(shared_ptr<Msg> m);
 
+  // Send the gradients of a clock to param thread
+  void SendGradients(shared_ptr<Msg> m);
+
+  // remove the solvers associated with the clock
+  void RemoveSolvers(int clock);
+
  protected:
   // the clock of the node
   int clock_;
@@ -153,6 +232,10 @@ class FcThread : public FcWorker<Dtype> {
 
   // buffer the messages with larger clock
   vector<shared_ptr<Msg> > msg_buf_;
+
+  // map a clock to a group of solvers
+  unordered_map<int, shared_ptr<SolverGroup<Dtype> > > clock_to_solver_grp_;
+
 
 DISABLE_COPY_AND_ASSIGN(FcThread);
 };
@@ -196,7 +279,7 @@ class FcParamThread : public FcWorker<Dtype> {
  protected:
   int SendParam(shared_ptr<Msg> m);
 
-  int UpdateParam(shared_ptr<Msg> m);
+  int UpdateParam();
 
   virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver,
                                       const SolverParameter& solver_param) {
@@ -214,6 +297,11 @@ class FcParamThread : public FcWorker<Dtype> {
 
   // send clock update to workers
   void UpdateClock();
+
+  void AddGradients(shared_ptr<Msg> m);
+
+  // process gradients in the message
+  int ProcessGradients(shared_ptr<Msg> m);
 
  protected:
   // map a clock to vector index where the solver is stored
@@ -258,6 +346,9 @@ class FcParamThread : public FcWorker<Dtype> {
 
   // maximun iterations to be executed
   int max_iter_;
+
+  // store the messages from clients
+  vector<shared_ptr<Msg> > grad_msgs_;
 
 DISABLE_COPY_AND_ASSIGN(FcParamThread);
 };

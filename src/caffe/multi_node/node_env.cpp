@@ -23,6 +23,7 @@ void NodeEnv::InitNode(void) {
   CHECK(has_model_request_) << "Need to set model request";
   CHECK(node_role_ != INVALID_ROLE) << "Need to set node role";
 
+  NodeEnv::Instance()->ParseCPUInfo();
   NodeEnv::Instance()->InitIP();
   NodeEnv::Instance()->InitNodeID();
   NodeEnv::Instance()->InitModel();
@@ -51,6 +52,28 @@ int NodeEnv::InitNodeID() {
   return id;
 }
 
+void NodeEnv::ParseCPUInfo() {
+  // TODO: fix it using a parser
+  FILE *fpsock = popen(
+      "cat /proc/cpuinfo |grep \"physical id\" |sort -n | uniq | wc -l",
+      "r");
+
+  CHECK(fpsock != NULL) << "fail to get sockets";
+  int r = fscanf(fpsock, "%d", &num_sockets_);
+  CHECK_EQ(r, 1) << "fail to read sockets";
+  pclose(fpsock);
+
+  FILE *fpcores = popen(
+        "cat /proc/cpuinfo |grep \"core id\" |wc -l",
+        "r");
+  CHECK(fpcores != NULL) << "fail to get cores";
+  r = fscanf(fpcores, "%d", &num_online_cores_);
+  CHECK_EQ(r, 1) << "fail to read core numbers";
+
+  LOG(INFO) << "number of sockets: " << num_sockets_
+            << ", number of cores: " << num_online_cores_;
+}
+
 int NodeEnv::InitIP() {
   interface_.clear();
   node_ip_.clear();
@@ -69,7 +92,6 @@ int NodeEnv::InitIP() {
   CHECK(!node_ip_.empty()) << "failed to get IP address";
   return 0;
 }
-
 
 void NodeEnv::InitPSNodes() {
   ps_layers_.resize(rt_info_.ps_nodes_size());

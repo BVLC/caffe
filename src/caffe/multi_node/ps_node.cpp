@@ -30,7 +30,7 @@ int ParamServer<Dtype>::Init() {
   ParamHelper<Dtype>::CopyParamDataFromMsg(root_solver->net(),
                               NodeEnv::Instance()->model_server_msg());
 
-  NodeEnv::Instance()->PushFreeSolver(root_solver);
+  NodeEnv::Instance()->SetRootSolver(root_solver);
 
   return this->StartThreads();
 }

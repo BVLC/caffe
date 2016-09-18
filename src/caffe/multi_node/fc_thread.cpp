@@ -1,4 +1,7 @@
 
+#include <boost/make_shared.hpp>
+
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -153,38 +156,45 @@ void FcThread<Dtype>::CopyInputDataFromMsg(shared_ptr<Net<Dtype> > fc_net,
 
 
 template <typename Dtype>
-shared_ptr<Msg> FcThread<Dtype>::FcForward(shared_ptr<Msg> m) {
-  Solver<Dtype> *pfc = (Solver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
-  Solver<Dtype> *proot = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
-
+void FcThread<Dtype>::FcForward(shared_ptr<Msg> m) {
   MLOG(INFO) << "Begin forward for src: " << m->src()
              << ", ID: " << m->conv_id();
 
-  if (NULL == pfc) {
+  group_iter_t grp_iter = clock_to_solver_grp_.find(m->clock());
+
+  shared_ptr<SolverGroup<Dtype> > pgrp;
+  if (grp_iter == clock_to_solver_grp_.end()) {
+    pgrp = boost::make_shared<SolverGroup<Dtype> >(m->clock());
+    clock_to_solver_grp_[m->clock()] = pgrp;
+  } else {
+    pgrp = grp_iter->second;
+  }
+
+  // Use the solver in group first
+  Solver<Dtype> *pfc = pgrp->PopSolver();
+  if (pfc == NULL) {
+    pfc = this->PopFreeSolver();
+  }
+
+  // allocate a new solver if failed to find a buffered solver
+  if (pfc == NULL) {
+    Solver<Dtype> *proot =
+                  (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
     const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
-
-    pfc = (Solver<Dtype> *)this->NewSolver(proot, solver_param);
+    pfc = this->NewSolver(proot, solver_param);
   }
-
-  // copy param data from root solver
-  const vector<Blob<Dtype>*>& params = pfc->net()->learnable_params();
-  // const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
-
-  const vector<Blob<Dtype>*> *ref_params =
-                              this->GetParamBuf()->RefParam(pfc, m->clock());
-  CHECK_EQ(params.size(), ref_params->size());
-
-  for (int i = 0; i < params.size(); i++) {
-    // CHECK_EQ(params[i]->count(), ref_params->at(i)->count());
-    params[i]->ShareData(*ref_params->at(i));
-  }
-
-  // ParamHelper<Dtype>::PrintParam(pfc->net());
 
   shared_ptr<Net<Dtype> > fc_net = pfc->net();
 
   CopyInputDataFromMsg(fc_net, m);
   fc_net->ForwardPrefilled();
+
+  this->BindSolver(pfc, m->msg_id());
+
+  // don't need send activation if we are a loss node
+  if (this->IsLossNode()) {
+    return;
+  }
 
   shared_ptr<Msg> r(new Msg(m));
   // broadcast the message
@@ -195,9 +205,7 @@ shared_ptr<Msg> FcThread<Dtype>::FcForward(shared_ptr<Msg> m) {
   }
   ParamHelper<Dtype>::CopyOutputDataToMsg(fc_net, r);
 
-  NodeEnv::Instance()->PutSolver(m->msg_id(), pfc);
-
-  return r;
+  this->SendMsg(r);
 }
 
 
@@ -216,15 +224,11 @@ void FcThread<Dtype>::CopyOutputDiffFromMsg(shared_ptr<Net<Dtype> > fc_net,
 
 template <typename Dtype>
 void FcThread<Dtype>::FcBackward(shared_ptr<Msg> m,
-                                 vector<shared_ptr<Msg> > *preplies,
                                  bool copy_diff) {
-  Solver<Dtype> *pfc =
-                (Solver<Dtype> *)NodeEnv::Instance()->FindSolver(m->msg_id());
-  CHECK(pfc != NULL);
-
   MLOG(INFO) << "Begin backward for src: " << m->src()
              << ", ID: " << m->conv_id();
 
+  Solver<Dtype> *pfc = this->FindSolver(m->msg_id());
   shared_ptr<Net<Dtype> > fc_net = pfc->net();
   if (copy_diff) {
     CopyOutputDiffFromMsg(fc_net, m);
@@ -234,51 +238,106 @@ void FcThread<Dtype>::FcBackward(shared_ptr<Msg> m,
 
   const vector<int>& pre_ids = NodeEnv::Instance()->prev_node_ids();
 
+  vector<shared_ptr<Msg> > bwd_msgs;
   if (pre_ids.size() <= 0) {  // we are the gateway node
     shared_ptr<Msg> r(new Msg(m));
     r->set_dst(m->src());
-    preplies->push_back(r);
+    bwd_msgs.push_back(r);
   } else {
     for (int i = 0; i < pre_ids.size(); i++) {
       shared_ptr<Msg> r(new Msg(m));
       r->set_dst(pre_ids[i]);
-      preplies->push_back(r);
+      bwd_msgs.push_back(r);
     }
   }
 
   // copy diff to downstream nodes
-  for (int i = 0; i < preplies->size(); i++) {
-    shared_ptr<Msg> r = preplies->at(i);
+  for (int i = 0; i < bwd_msgs.size(); i++) {
+    shared_ptr<Msg> r = bwd_msgs.at(i);
 
     r->set_type(BACKWARD);
-    ParamHelper<Dtype>::CopyInputDiffToMsg(fc_net, r, i, preplies->size());
+    ParamHelper<Dtype>::CopyInputDiffToMsg(fc_net, r, i, bwd_msgs.size());
+    this->SendMsg(r);
   }
 
-  // pfc->UpdateDiff();
+  group_iter_t grp_iter = clock_to_solver_grp_.find(m->clock());
+  CHECK(grp_iter != clock_to_solver_grp_.end());
+
+  shared_ptr<SolverGroup<Dtype> > pgrp = grp_iter->second;
+
+  if (this->IsLossNode()) {
+    Dtype loss = fc_net->output_blobs()[0]->cpu_data()[0];
+    pgrp->AddLoss(loss);
+  }
+  this->RemoveBind(m->msg_id());
+  pgrp->PushSolver(pfc);
+
+  SendGradients(m);
+}
+
+template <typename Dtype>
+void FcThread<Dtype>::RemoveSolvers(int clock) {
+  group_iter_t grp_iter = clock_to_solver_grp_.find(clock);
+  if (grp_iter == clock_to_solver_grp_.end()) {
+    return;
+  }
+
+  shared_ptr<SolverGroup<Dtype> > pgrp = grp_iter->second;
+
+  Solver<Dtype> *p = NULL;
+  while ((p = pgrp->PopSolver()) != NULL) {
+    this->PushFreeSolver(p);
+  }
+
+  clock_to_solver_grp_.erase(grp_iter);
+}
+
+template <typename Dtype>
+void FcThread<Dtype>::SendGradients(shared_ptr<Msg> m) {
+  group_iter_t grp_iter = clock_to_solver_grp_.find(m->clock());
+  CHECK(grp_iter != clock_to_solver_grp_.end());
+
+  shared_ptr<SolverGroup<Dtype> > pgrp = grp_iter->second;
+
+  int total_sub_batches = NodeEnv::Instance()->num_sub_solvers();
+  if (pgrp->num_sub_batches() < total_sub_batches) {
+    return;
+  }
+
+  Solver<Dtype> *pfc_grad = pgrp->PopSolver();
+  shared_ptr<Net<Dtype> > grad_net = pfc_grad->net();
+
+  Solver<Dtype> *p = NULL;
+  while ((p = pgrp->PopSolver()) != NULL) {
+    ParamHelper<Dtype>::AddDiffFromNet(grad_net, p->net());
+    ParamHelper<Dtype>::ScalDiff(p->net(), (Dtype)0.0);
+    this->PushFreeSolver(p);
+  }
+
+  if (this->IsLossNode()) {
+    Dtype batch_loss = pgrp->total_loss();
+    grad_net->output_blobs()[0]->mutable_cpu_data()[0] = batch_loss;
+  }
+  this->PushFreeSolver(pfc_grad);
 
   // notify the param thread
   shared_ptr<Msg> notify(new Msg(m));
 
+  notify->set_type(PUT_GRADIENT);
   notify->set_dst(ROOT_THREAD_ID);
-  notify->AppendData(&pfc, sizeof(pfc));
-  preplies->push_back(notify);
+  notify->AppendData(&pfc_grad, sizeof(pfc_grad));
+
+  this->SendMsg(notify);
 }
 
 template <typename Dtype>
 void FcThread<Dtype>::ProcessMsg(shared_ptr<Msg> m) {
-  vector<shared_ptr<Msg> > msg_arr;
-
   if (m->type() == FORWARD) {
-    shared_ptr<Msg> f = FcForward(m);
-    msg_arr.push_back(f);
+    FcForward(m);
   } else if (m->type() == BACKWARD) {
-    FcBackward(m, &msg_arr, true);
+    FcBackward(m, true);
   } else {
-    LOG(INFO) << "unkown type: " << m->msg_id();
-  }
-
-  for (int i = 0; i < msg_arr.size(); i++) {
-    this->SendMsg(msg_arr[i]);
+    LOG(INFO) << "unkown type: " << m->type();
   }
 }
 
@@ -287,7 +346,8 @@ void FcThread<Dtype>::Run() {
   #ifdef USE_MKL
   int n = mkl_get_max_threads();
   LOG(INFO) << "max mkl threads: " << n;
-  mkl_set_dynamic(false);
+  this->BindOMPThreads(this->omp_cores_);
+  this->BindCore(this->omp_cores_[0]);
   #endif
 
   while (!this->must_stop()) {
@@ -297,9 +357,12 @@ void FcThread<Dtype>::Run() {
     int clock_bound = clock_ + staleness_;
 
     if (m->type() == UPDATE_CLOCK) {
-      clock_ = m->clock();
-      clock_bound = clock_ + staleness_;
+      // release the solver associated with clock
+      RemoveSolvers(clock_);
 
+      clock_ = m->clock();
+
+      clock_bound = clock_ + staleness_;
       for (int i = 0; i < msg_buf_.size(); i++) {
         if (msg_buf_[i]->clock() <= clock_bound) {
           ProcessMsg(msg_buf_[i]);
@@ -331,16 +394,11 @@ boost::atomic_int FcLossThread<Dtype>::iter_(0);
 
 template <typename Dtype>
 void FcLossThread<Dtype>::ProcessMsg(shared_ptr<Msg> m) {
-  shared_ptr<Msg> f = this->FcForward(m);
+  this->FcForward(m);
 
-  vector<shared_ptr<Msg> > replies;
-  this->FcBackward(f, &replies, false);
+  this->FcBackward(m, false);
 
   iter_++;
-
-  for (int i = 0; i < replies.size(); i++) {
-    this->SendMsg(replies[i]);
-  }
 }
 
 #if 0
@@ -405,9 +463,6 @@ void FcParamThread<Dtype>::ClearGroup(int grp_idx) {
   this->GetParamBuf()->RemoveClock(clock_vec_[grp_idx]);
   this->GetParamBuf()->DeRefParam(pgroup_solver);
 
-  NodeEnv::Instance()->DeleteSolver(msg_id_vec_[grp_idx]);
-  NodeEnv::Instance()->PushFreeSolver(pgroup_solver);
-
   unordered_map<int, int>::iterator iter =
                                 clock_to_group_idx_.find(clock_vec_[grp_idx]);
   clock_to_group_idx_.erase(iter);
@@ -415,179 +470,69 @@ void FcParamThread<Dtype>::ClearGroup(int grp_idx) {
   group_solvers_[grp_idx] = NULL;
   group_loss_vec_[grp_idx] = 0;
   grad_updates_vec_[grp_idx] = 0;
-  msg_id_vec_[grp_idx] = INVALID_ID;
+  msg_id_vec_[grp_idx] = INVALID_NODE_ID;
   clock_vec_[grp_idx] = INVALID_CLOCK;
 }
 
 template <typename Dtype>
-int FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
-  Solver<Dtype> *psolver =
-            (Solver<Dtype> *)NodeEnv::Instance()->FindSolver(m->msg_id());
+void FcParamThread<Dtype>::AddGradients(shared_ptr<Msg> m) {
+  Solver<Dtype> *psolver = ((Solver<Dtype> **)m->ZmsgData(0))[0];
   CHECK(psolver != NULL);
 
   SGDSolver<Dtype> *proot =
                   (SGDSolver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
+  const vector<Blob<Dtype>*>& root_output = proot->net()->output_blobs();
 
-  #if 0
-  map<int, int>::iterator map_iter = client_idx_map_.find(m->src());
-  int client_idx = -1;
-  if (map_iter == client_idx_map_.end()) {
-    // add new client
-    client_idx = AddNewClient(m, psolver);
-  } else {
-    client_idx = map_iter->second;
-    client_clocks_[client_idx] = m->clock();
-    // TODO: allow one client has many solvers
-    CHECK(client_solvers_[client_idx] == NULL);
-    client_solvers_[client_idx] = psolver;
-    msg_ids_[client_idx] = m->msg_id();
-  }
-
-  int clock_bound = MinClock() + staleness_;
-  int num_updates = 0;
-  // update net diff
-  for (int i = 0; i < client_ids_.size(); i++) {
-    if (client_clocks_[i] <= clock_bound && client_solvers_[i] != NULL) {
-      num_updates++;
-      ParamHelper<Dtype>::AddDiffFromNet(proot->net(),
-                                         client_solvers_[i]->net());
-      NodeEnv::Instance()->DeleteSolver(msg_ids_[i]);
-      NodeEnv::Instance()->PushFreeSolver(client_solvers_[i]);
-      client_solvers_[i] = NULL;
-      // LOG(INFO) << "update client: " << client_ids_[i];
-    }
-  }
-
-  if (num_updates > 0) {
-    proot->net()->Update();
-    proot->net()->ClearParamDiffs();
-    train_iter_++;
-  }
-  #endif
-
-
-  #if 0
-  if (sub_batches_ == 0) {
-    ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), psolver->net());
-  } else {
-    ParamHelper<Dtype>::AddDiffFromNet(proot->net(), psolver->net());
-  }
-
-  // doesn't have broadcast nodes means we are loss layer
-  const vector<string>& bcast_addrs = NodeEnv::Instance()->bcast_addrs();
-
-  if (bcast_addrs.size() == 0) {
+  if (this->IsLossNode()) {
     const vector<Blob<Dtype>*>& output = psolver->net()->output_blobs();
     CHECK_EQ(output.size(), 1) << "only deal with output size 1";
     Blob<Dtype>* pblob = output[0];
-    sub_loss_ += pblob->cpu_data()[0];
+    root_output[0]->mutable_cpu_data()[0] += pblob->cpu_data()[0];
   }
 
+  ParamHelper<Dtype>::AddDiffFromNet(proot->net(), psolver->net());
   // clear diff params
   ParamHelper<Dtype>::ScalDiff(psolver->net(), (Dtype)0.0);
+}
 
-  this->GetParamBuf()->DeRefParam(psolver);
 
-  NodeEnv::Instance()->DeleteSolver(m->msg_id());
-  NodeEnv::Instance()->PushFreeSolver(psolver);
+template <typename Dtype>
+int FcParamThread<Dtype>::ProcessGradients(shared_ptr<Msg> m) {
+  grad_msgs_.push_back(m);
 
-  sub_batches_++;
-  if (sub_batches_ < num_conv_workers_ * this->num_sub_solvers_) {
-    return;
-  }
-  #endif
-
-  int group_id = GetGroupIndex(psolver, m->msg_id());
-
-  Solver<Dtype> *pgroup_solver = (Solver<Dtype> *)group_solvers_[group_id];
-  // doesn't have broadcast nodes means we are loss layer
-  const vector<string>& bcast_addrs = NodeEnv::Instance()->bcast_addrs();
-
-  if (bcast_addrs.size() == 0) {
-    const vector<Blob<Dtype>*>& output = psolver->net()->output_blobs();
-    CHECK_EQ(output.size(), 1) << "only deal with output size 1";
-    Blob<Dtype>* pblob = output[0];
-    group_loss_vec_[group_id] += pblob->cpu_data()[0];
-  }
-  grad_updates_vec_[group_id]++;
-
-  // total number of gradients in the system
-  int total_grads = grad_updates_vec_[group_id] + this->QueueSize();
-  int batch_size = num_conv_workers_ * this->num_sub_solvers_;
-  if (total_grads >= batch_size) {
-    #ifdef USE_MKL
-    // use all the availble threads to accerate computing
-    mkl_set_num_threads_local(total_omp_threads_);
-    #endif
-  }
-
-  if (pgroup_solver != psolver) {
-    ParamHelper<Dtype>::AddDiffFromNet(pgroup_solver->net(), psolver->net());
-
-    // clear diff params
-    ParamHelper<Dtype>::ScalDiff(psolver->net(), (Dtype)0.0);
-
-    this->GetParamBuf()->DeRefParam(psolver);
-
-    NodeEnv::Instance()->DeleteSolver(m->msg_id());
-    NodeEnv::Instance()->PushFreeSolver(psolver);
-    // LOG(INFO) << "release solver for group id: " << group_id;
-  } else {
-    // LOG(INFO) << "keep solver for group id: " << group_id;
-  }
-
-  if (grad_updates_vec_[group_id] < batch_size) {
+  int batch_updates = std::min(fc_threads_, num_conv_workers_);
+  if (grad_msgs_.size() < batch_updates) {
     return 0;
   }
 
-  // share paramters
-  const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
-  vector<Blob<Dtype>*> *param = this->GetParamBuf()->FindFreeParam();
-  if (param == NULL) {
-    param = this->GetParamBuf()->CreateParam(root_params);
+  for (int i = 0; i < grad_msgs_.size(); i++) {
+    AddGradients(grad_msgs_[i]);
   }
+  grad_msgs_.clear();
 
-  CHECK_EQ(root_params.size(), param->size());
+  return UpdateParam();
+}
 
-  for (int i = 0; i < root_params.size(); i++) {
-    CHECK_EQ(root_params[i]->count(), param->at(i)->count());
+template <typename Dtype>
+int FcParamThread<Dtype>::UpdateParam() {
+  SGDSolver<Dtype> *proot =
+                  (SGDSolver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
+  const vector<Blob<Dtype>*>& root_output = proot->net()->output_blobs();
 
-    if (root_params[i]->cpu_data() != param->at(i)->cpu_data()) {
-      ParamHelper<Dtype>::BlasCopy(root_params[i]->count(),
-                                   root_params[i]->cpu_data(),
-                                   param->at(i)->mutable_cpu_data());
-      root_params[i]->ShareData(*param->at(i));
-    }
+  Dtype s = (Dtype)(1.0 / (Dtype)(num_conv_workers_ * this->num_sub_solvers_));
+
+  if (this->IsLossNode()) {
+    Dtype loss = root_output[0]->cpu_data()[0] * s;
+    LOG(INFO) << "train iteration: " << train_iter_
+              << " loss: " << loss;
+    root_output[0]->mutable_cpu_data()[0] = 0;
   }
-
-  ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), pgroup_solver->net());
 
   // scaling gradients
-  Dtype s = (Dtype)(1.0 / (Dtype)(num_conv_workers_ * this->num_sub_solvers_));
   ParamHelper<Dtype>::ScalDiff(proot->net(), s);
 
   proot->CommitGradient();
-
-  if (bcast_addrs.size() == 0) {
-    group_loss_vec_[group_id] *= s;
-    LOG(INFO) << "train iteration: " << train_iter_
-              << " loss: " << group_loss_vec_[group_id];
-  }
-
-  ClearGroup(group_id);
-
-  // switch the working param
-  this->GetParamBuf()->ReplaceParam(param);
-
-  #ifdef USE_MKL
-  // reset mkl threads
-  mkl_set_num_threads_local(this->omp_threads_);
-  #endif
-
-  #if 0
-  ParamHelper<Dtype>::PrintParam(proot->net());
-  ParamHelper<Dtype>::PrintDiff(proot->net());
-  #endif
+  ParamHelper<Dtype>::ScalDiff(proot->net(), (Dtype)0.0);
 
   UpdateClock();
 
@@ -598,7 +543,7 @@ int FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   if (test_node_id_ > 0
      && (train_iter_ % TRAIN_NOTIFY_INTERVAL == 0
         || train_iter_ > max_iter_)
-     &&  bcast_addrs.size() == 0
+     && this->IsLossNode()
      ) {
     this->SendNotify();
   }
@@ -695,16 +640,20 @@ template <typename Dtype>
 void FcParamThread<Dtype>::Run() {
   #ifdef USE_MKL
   // get the number of omp threads in each worker
-  int fc_omp_threads = mkl_get_max_threads();
   if (this->omp_threads_ > 0) {
-    mkl_set_num_threads_local(this->omp_threads_);
+    LOG(WARNING) << "Number of OMP threads in param thread is ignored";
   }
+
+  int fc_omp_threads = mkl_get_max_threads();
+  mkl_set_num_threads_local(fc_omp_threads * fc_threads_);
+
   int n = mkl_get_max_threads();
   LOG(INFO) << "max mkl threads in param thread: " << n;
 
-  this->omp_threads_ = n;
-  total_omp_threads_ = fc_omp_threads * fc_threads_ + n;
-  mkl_set_dynamic(false);
+  this->BindOMPThreads(this->omp_cores_);
+
+  int last_core = NodeEnv::Instance()->GetOnlineCores() - 1;
+  this->BindCore(last_core);
   #endif
 
   // use the root solver
@@ -723,16 +672,19 @@ void FcParamThread<Dtype>::Run() {
       // exit training
       this->SendExit();
       return;
-    } else {
-      if (UpdateParam(m) < 0) {
+    } else if (m->type() == PUT_GRADIENT) {
+      if (ProcessGradients(m) < 0) {
         this->SendExit();
         return;
       }
+    } else {
+      LOG(ERROR) << "Unknown type: " << m->type();
     }
   }
 }
 
 INSTANTIATE_CLASS(ParamBuf);
+INSTANTIATE_CLASS(SolverGroup);
 INSTANTIATE_CLASS(FcWorker);
 INSTANTIATE_CLASS(FcThread);
 INSTANTIATE_CLASS(FcLossThread);

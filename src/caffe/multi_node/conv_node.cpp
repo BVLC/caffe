@@ -49,7 +49,9 @@ int ConvClient<Dtype>::Init() {
     LayerParameter *player = pnet_param->mutable_layer(i);
     const string& layer_type = player->type();
 
-    if (layer_type == "Data" || layer_type == "AsyncData") {
+    if (layer_type == "Data"
+        || layer_type == "AsyncData"
+        || layer_type == "ImageData") {
       int batch_size = player->data_param().batch_size();
       CHECK_EQ(batch_size % this->nworkers_, 0)
               << "batch size should be a multiple of threads";
@@ -91,7 +93,7 @@ int ConvClient<Dtype>::Init() {
   LOG(INFO) << "parameters inited";
 
   // push as root solver
-  NodeEnv::Instance()->PushFreeSolver(root_solver);
+  NodeEnv::Instance()->SetRootSolver(root_solver);
 
   #ifdef USE_FULL_SOLVER
   const vector<Blob<Dtype>*>& root_params =

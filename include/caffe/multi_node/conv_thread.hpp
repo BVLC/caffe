@@ -53,12 +53,12 @@ class ConvThread : public WorkerThread<Dtype> {
   }
 
   // get the solver according to message id
-  WorkerSolver<Dtype> *PrepareBwdSolver(shared_ptr<Msg> m);
+  Solver<Dtype> *PrepareBwdSolver(shared_ptr<Msg> m);
 
   // backward and sync, return true if backward is done
   void ConvBackward(shared_ptr<Msg> m);
 
-  void SyncedBackward(WorkerSolver<Dtype> *prev_solver,
+  void SyncedBackward(Solver<Dtype> *prev_solver,
                       int prev_idx,
                       shared_ptr<Msg> m);
 
@@ -69,7 +69,7 @@ class ConvThread : public WorkerThread<Dtype> {
   void ForwardLayer(shared_ptr<Net<Dtype> > conv_net, int layer_id);
 
   // do backward for a layer
-  void BackwardLayer(WorkerSolver<Dtype> *psolver, int layer_id);
+  void BackwardLayer(Solver<Dtype> *psolver, int layer_id);
 
  protected:
   typedef unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > >
@@ -78,7 +78,7 @@ class ConvThread : public WorkerThread<Dtype> {
   MsgMap msg_id_to_buf_;
 
   // the pointer of solver which is used to store gradients
-  WorkerSolver<Dtype> *param_solver_;
+  Solver<Dtype> *param_solver_;
 
  protected:
   int num_sub_solvers_;

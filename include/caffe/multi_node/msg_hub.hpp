@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
+#include "caffe/multi_node/cpu_dispatcher.hpp"
 #include "caffe/multi_node/msg.hpp"
 #include "caffe/multi_node/node_env.hpp"
 #include "caffe/multi_node/sk_server.hpp"
@@ -66,7 +67,14 @@ class MsgHub {
 
  protected:
   virtual int SetUpPoll();
+
+  // start all the work threads
   int StartThreads();
+
+  // statically dispatch CPU cores to work threads
+  void DispatchCPU(vector<vector<int> > *pthread_arr) {
+    dispatcher_.Dispatch(pthread_arr);
+  }
 
   // enqueue a message to a worker thread
   void Enqueue(int thrd_id, shared_ptr<Msg> m) {
@@ -78,6 +86,8 @@ class MsgHub {
     }
     threads_[thrd_id]->Enqueue();
   }
+
+  void BindCore(int core_id);
 
  protected:
   // total number of threads
@@ -99,6 +109,8 @@ class MsgHub {
   int num_poll_items_;
 
   string node_ip_;
+
+  CPUDispatcher dispatcher_;
 
  private:
   MsgHub() {  }

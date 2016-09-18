@@ -2,6 +2,13 @@
 #ifndef MULTI_NODE_WORKER_THREAD_H_
 #define MULTI_NODE_WORKER_THREAD_H_
 
+#ifdef USE_MKL
+#include <mkl.h>
+#endif
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include <boost/atomic.hpp>
 #include <boost/thread.hpp>
@@ -12,7 +19,9 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/multi_node/msg.hpp"
+#include "caffe/multi_node/param_helper.hpp"
 #include "caffe/multi_node/sk_server.hpp"
+#include "caffe/multi_node/solver_pool.hpp"
 #include "caffe/sgd_solvers.hpp"
 
 
@@ -31,6 +40,7 @@ class WorkerThread : public InternalThread {
     queue_size_ = 0;
     num_workers_ = 0;
     omp_threads_ = -1;
+    socket_idx_ = 0;
   }
 
   virtual ~WorkerThread() {
@@ -52,6 +62,10 @@ class WorkerThread : public InternalThread {
 
   void SetOMPThreads(int nthreads) {
     omp_threads_ = nthreads;
+  }
+
+  void SetOMPCores(const vector<int>& omp_cores) {
+    omp_cores_ = omp_cores;
   }
 
   shared_ptr<Msg> RecvMsg(bool blocked) {
@@ -102,7 +116,17 @@ class WorkerThread : public InternalThread {
   virtual void Run() = 0;
 
   inline void Enqueue() { queue_size_++; }
+
   inline int QueueSize() { return queue_size_; }
+
+ public:
+  static void InitParamSolver(Solver<Dtype> *proot, int nsockets) {
+    param_solvers_.resize(nsockets);
+    param_solvers_[0] = proot;
+    for (int i = 1; i < nsockets; i++) {
+      param_solvers_[i] = NULL;
+    }
+  }
 
  protected:
   inline void Dequeue() { queue_size_--; }
@@ -122,6 +146,12 @@ class WorkerThread : public InternalThread {
   // send exit message to worker threads
   void SendExit();
 
+  // Bind main thread a specific CPU core
+  void BindCore(int core_id);
+
+  // Bind OMP threads to a list of cores
+  void BindOMPThreads(const vector<int>& core_list);
+
   const vector<int>& GetLearnableIndices(int layer_id) {
     CHECK_GT(layer_id_to_params_.size(), layer_id);
 
@@ -139,25 +169,36 @@ class WorkerThread : public InternalThread {
 
   Solver<Dtype> *NewSolver(Solver<Dtype> *proot,
                            const SolverParameter& solver_param) {
-    boost::mutex::scoped_lock lock(new_solver_mutex_);
-    const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
-
     Solver<Dtype> *new_solver = CreateSolver(proot, solver_param);
     if (new_solver == NULL) {
       return new_solver;
     }
 
+    boost::mutex::scoped_lock lock(new_solver_mutex_);
     new_solver_cnt_++;
+
+    LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers";
+
+    const vector<Blob<Dtype>*> *proot_params = NULL;
+
+    if (param_solvers_.size() > 0 && param_solvers_[socket_idx_] == NULL) {
+      // use the first solver as param solver of the socket
+      param_solvers_[socket_idx_] = new_solver;
+      return new_solver;
+    } else if (param_solvers_.size() <= 0) {
+      proot_params = &proot->net()->learnable_params();
+    } else {
+      proot_params = &param_solvers_[socket_idx_]->net()->learnable_params();
+    }
 
     const vector<Blob<Dtype>*>& new_params =
                                         new_solver->net()->learnable_params();
     /// share parameters with root solver
     for (int i = 0; i < new_params.size(); i++) {
-      CHECK_EQ(new_params[i]->count(), root_params[i]->count());
-      new_params[i]->ShareData(*root_params[i]);
+      CHECK_EQ(new_params[i]->count(), proot_params->at(i)->count());
+      new_params[i]->ShareData(*(proot_params->at(i)));
     }
 
-    LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers";
     return new_solver;
   }
 
@@ -205,6 +246,43 @@ class WorkerThread : public InternalThread {
     }
   }
 
+  inline void PushFreeSolver(Solver<Dtype> *p) {
+    solver_pool_.PushFreeSolver(p);
+  }
+
+  inline Solver<Dtype> *PopFreeSolver() {
+    return solver_pool_.PopFreeSolver();
+  }
+
+  inline Solver<Dtype> *FindSolver(int64_t msg_id) {
+    return solver_pool_.FindSolver(msg_id);
+  }
+
+  inline void BindSolver(Solver<Dtype> *psolver, int64_t msg_id) {
+    solver_pool_.BindSolver(psolver, msg_id);
+  }
+
+  inline void ReleaseSolver(int64_t msg_id) {
+    solver_pool_.ReleaseSolver(msg_id);
+  }
+
+  inline void RemoveBind(int64_t msg_id) {
+    solver_pool_.RemoveBind(msg_id);
+  }
+
+ protected:
+  static void UpdateSocketParams() {
+    if (param_solvers_.size() <= 0) {
+      return;
+    }
+
+    Solver<Dtype> *proot = param_solvers_[0];
+    for (int i = 1; i < param_solvers_.size(); i++) {
+      ParamHelper<Dtype>::CopyDataFromNet(param_solvers_[i]->net(),
+                                          proot->net());
+    }
+  }
+
  protected:
   // map layer id to its indices in learnable params
   vector<vector<int> > layer_id_to_params_;
@@ -236,11 +314,24 @@ class WorkerThread : public InternalThread {
   // number of OpenMP threads it has
   int omp_threads_;
 
+  // solver pool to store free solvers
+  SolverPool<Dtype> solver_pool_;
+
+  // cores used by openmp threads
+  vector<int> omp_cores_;
+
+  // socket index the omp threads works on
+  int socket_idx_;
+
  protected:
   // serialize creating new solver within a process
   static boost::mutex  new_solver_mutex_;
+
   // number of solvers created
   static boost::atomic_int  new_solver_cnt_;
+
+  // each socket has a different parameter
+  static vector<Solver<Dtype> *> param_solvers_;
 
 DISABLE_COPY_AND_ASSIGN(WorkerThread);
 };

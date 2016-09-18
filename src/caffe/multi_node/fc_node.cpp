@@ -54,6 +54,10 @@ int FcNode<Dtype>::ScheduleMsg(shared_ptr<Msg> m) {
 
 template <typename Dtype>
 int FcNode<Dtype>::Init() {
+#ifdef USE_MKL
+  LOG(INFO) << "max local mkl threads: " << mkl_get_max_threads();
+#endif
+
   const vector<string>& next = NodeEnv::Instance()->bcast_addrs();
 
   for (int i = 0; i < this->nworkers_; i++) {
@@ -65,10 +69,33 @@ int FcNode<Dtype>::Init() {
     }
   }
 
+  vector<vector<int> > omp_cores;
+  omp_cores.resize(this->nworkers_);
+  this->DispatchCPU(&omp_cores);
+
+  for (int i = 0; i < this->nworkers_; i++) {
+    this->threads_[i]->SetOMPCores(omp_cores[i]);
+  }
+
   // the last slot for param thread
   this->threads_[param_thread_index_].reset(
                               new FcParamThread<Dtype>(this->nworkers_));
   this->threads_[param_thread_index_]->SetOMPThreads(omp_param_threads_);
+
+  vector<int> param_cores;
+  for (int i = 0; i < omp_cores.size(); i++) {
+    for (int j = 0; j < omp_cores[i].size(); j++) {
+      LOG(INFO) << "thread: " << i << ", core: " << omp_cores[i][j];
+      param_cores.push_back(omp_cores[i][j]);
+    }
+  }
+
+  // param thread uses all the omp thread to update parameters
+  this->threads_[param_thread_index_]->SetOMPCores(param_cores);
+
+  int core_id = 0;
+  // let FC node run in the first core in the beginning
+  this->BindCore(core_id);
 
   // wait for the downstream nodes to connect
   for (int i = 0; i < next.size(); i++) {
@@ -101,9 +128,14 @@ int FcNode<Dtype>::Init() {
   net->ClearParamDiffs();
   ParamHelper<Dtype>::CopyParamDataFromMsg(net,
                         NodeEnv::Instance()->model_server_msg());
-  NodeEnv::Instance()->PushFreeSolver(pfc0);
+
+  NodeEnv::Instance()->SetRootSolver(pfc0);
+
+  int nsockets = NodeEnv::Instance()->GetSockets();
+  WorkerThread<Dtype>::InitParamSolver(pfc0, nsockets);
 
   // init parameter buffer
+  #if 0
   const vector<Blob<Dtype>*>& root_params = net->learnable_params();
   ParamBuf<Dtype> *pbuf = FcWorker<Dtype>::GetParamBuf();
 
@@ -115,9 +147,16 @@ int FcNode<Dtype>::Init() {
   }
 
   pbuf->ReplaceParam(pparam);
+  #endif
 
-  // init the threads
-  return this->StartThreads();
+  // start worker threads
+  this->StartThreads();
+
+  // bind the route thread to last core
+  core_id = NodeEnv::Instance()->GetOnlineCores() - 1;
+  this->BindCore(core_id);
+
+  return 0;
 }
 
 template <typename Dtype>

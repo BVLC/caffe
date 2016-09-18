@@ -66,6 +66,17 @@ int MsgHub<Dtype>::Poll() {
   return 0;
 }
 
+template <typename Dtype>
+void MsgHub<Dtype>::BindCore(int core_id) {
+  cpu_set_t new_mask;
+  CPU_ZERO(&new_mask);
+  CPU_SET(core_id, &new_mask);
+
+  if (sched_setaffinity(0, sizeof(new_mask), &new_mask) == -1) {
+    LOG(ERROR) << "cannot bind to core: " << core_id;
+  }
+}
+
 
 INSTANTIATE_CLASS(MsgHub);
 

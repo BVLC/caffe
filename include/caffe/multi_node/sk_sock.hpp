@@ -14,7 +14,7 @@ namespace caffe {
 class SkSock {
  public:
   SkSock() {
-    id_ = INVALID_ID;
+    id_ = INVALID_NODE_ID;
   }
 
   SkSock(int type, int id) {

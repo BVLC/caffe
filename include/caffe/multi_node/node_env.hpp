@@ -129,75 +129,21 @@ class NodeEnv {
 
   int num_splits() { return model_request_.num_splits(); }
 
-  void *FindSolver(int64_t msg_id) {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-    unordered_map<int64_t, void *>::iterator iter = id_to_solver_.find(msg_id);
-
-    if (iter == id_to_solver_.end()) {
-      return NULL;
-    } else {
-      return iter->second;
-    }
-  }
-
-  void PutSolver(int64_t msg_id, void *solver) {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-    unordered_map<int64_t, void *>::iterator iter = id_to_solver_.find(msg_id);
-
-    CHECK(iter == id_to_solver_.end());
-    id_to_solver_[msg_id] = solver;
-
-    return;
-  }
-
-
-  void *DeleteSolver(int64_t msg_id) {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-    unordered_map<int64_t, void *>::iterator iter = id_to_solver_.find(msg_id);
-
-    CHECK(iter != id_to_solver_.end());
-
-    void *p = iter->second;
-    id_to_solver_.erase(iter);
-
-    return p;
-  }
-
-
-  void PushFreeSolver(void *solver) {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-    free_solver_.push_back(solver);
-  }
-
-
-  void *PopFreeSolver() {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-
-    // the 0th solver is root solver
-    if (free_solver_.size() <= 1) {
-      return NULL;
-    }
-
-    void *p = free_solver_.back();
-    free_solver_.pop_back();
-
-    return p;
-  }
-
-
-  int NumFreeSolver() {
-    boost::mutex::scoped_lock lock(id_map_mutex_);
-    return free_solver_.size();
-  }
-
   void *GetRootSolver() {
-    if (free_solver_.size() <= 0) {
-      return NULL;
-    } else {
-      return free_solver_[0];
-    }
+    return root_solver_;
   }
 
+  void SetRootSolver(void *proot) {
+    root_solver_ = proot;
+  }
+
+  int GetOnlineCores() {
+    return num_online_cores_;
+  }
+
+  int GetSockets() {
+    return num_sockets_;
+  }
 
  public:
   static inline void set_id_server(const string& addr) {
@@ -314,6 +260,7 @@ class NodeEnv {
   int InitNodeID();
   int InitModel();
   int InitIP();
+  void ParseCPUInfo();
 
  protected:
   void InitPSNodes();
@@ -321,9 +268,12 @@ class NodeEnv {
 
  private:
   NodeEnv() {
-    node_id_ = INVALID_ID;
+    node_id_ = INVALID_NODE_ID;
     num_workers_ = 0;
     num_sub_solvers_ = 0;
+    root_solver_ = NULL;
+    num_sockets_ = 0;
+    num_online_cores_ = 0;
   }
 
 
@@ -395,12 +345,8 @@ class NodeEnv {
   // number of input blobs
   int num_input_blobs_;
 
-  // mapping message id to solver
-  unordered_map<int64_t, void *> id_to_solver_;
-  boost::mutex  id_map_mutex_;
-
-  // available solvers
-  vector<void *> free_solver_;
+  // root solver
+  void *root_solver_;
 
   shared_ptr<SkSock> sk_id_req_;
 
@@ -408,6 +354,12 @@ class NodeEnv {
 
   // number of sub solvers
   int num_sub_solvers_;
+
+  // online cores
+  int num_online_cores_;
+
+  // number of physical sockets
+  int num_sockets_;
 
  private:
   // get unique integer id from id server

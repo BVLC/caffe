@@ -13,6 +13,9 @@ template <typename Dtype>
 boost::atomic_int WorkerThread<Dtype>::new_solver_cnt_(0);
 
 template <typename Dtype>
+vector<Solver<Dtype> *> WorkerThread<Dtype>::param_solvers_;
+
+template <typename Dtype>
 void WorkerThread<Dtype>::SendExit() {
   shared_ptr<Msg> m(new Msg());
 
@@ -27,6 +30,46 @@ void WorkerThread<Dtype>::SendExit() {
   m->AppendData(&pad, sizeof(pad));
 
   this->SendMsg(m);
+}
+
+template <typename Dtype>
+void WorkerThread<Dtype>::BindCore(int core_id) {
+  cpu_set_t new_mask;
+  CPU_ZERO(&new_mask);
+  CPU_SET(core_id, &new_mask);
+
+  if (sched_setaffinity(0, sizeof(new_mask), &new_mask) == -1) {
+    LOG(ERROR) << "cannot bind to core: " << core_id;
+  }
+}
+
+template <typename Dtype>
+void WorkerThread<Dtype>::BindOMPThreads(const vector<int>& core_list) {
+  int omp_threads = mkl_get_max_threads();
+
+  // Determine which socket the omp threads works on
+  int nsockets = NodeEnv::Instance()->GetSockets();
+  int ncores = NodeEnv::Instance()->GetOnlineCores();
+  int cores_per_socket = ncores / nsockets;
+
+  // TODO: enhance it by parsing /cpu/info
+  socket_idx_ = core_list[0] / cores_per_socket;
+
+  CHECK_EQ(omp_threads, core_list.size())
+                << "fail to bind omp threads";
+
+#if (defined USE_MKL) && (defined _OPENMP)
+  #pragma omp parallel num_threads(omp_threads)
+  {
+    int tid = omp_get_thread_num();
+    int core_id = core_list[tid];
+
+    BindCore(core_id);
+    LOG(INFO) << "bind omp thread " << tid << " to core: " << core_id;
+  }
+#else
+  LOG(ERROR) << "OMP threads bind can only work with MKL and OMP enabled";
+#endif
 }
 
 template <typename Dtype>

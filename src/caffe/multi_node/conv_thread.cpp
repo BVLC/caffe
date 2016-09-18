@@ -63,14 +63,13 @@ void ConvThread<Dtype>::ForwardLayer(shared_ptr<Net<Dtype> > conv_net,
 template <typename Dtype>
 void ConvThread<Dtype>::ConvForward() {
   Caffe::set_root_solver(false);
-  WorkerSolver<Dtype> *pconv = NULL;
-  pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
+  Solver<Dtype> *pconv = this->PopFreeSolver();
 
   if (NULL == pconv) {
     Solver<Dtype> *root_solver = NULL;
     root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
     const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
-    pconv = (WorkerSolver<Dtype> *)this->NewSolver(root_solver, solver_param);
+    pconv = this->NewSolver(root_solver, solver_param);
   }
 
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
@@ -89,15 +88,14 @@ void ConvThread<Dtype>::ConvForward() {
   m->AppendData(&pconv, sizeof(pconv));
 
   this->SendMsg(m);
-  NodeEnv::Instance()->PutSolver(conv_id, pconv);
+  this->BindSolver(pconv, conv_id);
 }
 
 
 template <typename Dtype>
-WorkerSolver<Dtype> *ConvThread<Dtype>::PrepareBwdSolver(shared_ptr<Msg> m) {
+Solver<Dtype> *ConvThread<Dtype>::PrepareBwdSolver(shared_ptr<Msg> m) {
   int conv_id = m->conv_id();
-  WorkerSolver<Dtype> *pconv = NULL;
-  pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->FindSolver(conv_id);
+  Solver<Dtype> *pconv = this->FindSolver(conv_id);
   CHECK(pconv != NULL) << "cannot find conv_id: " << conv_id
                        << ", msg type: " << m->type();
 
@@ -124,7 +122,7 @@ void ConvThread<Dtype>::SendLayer(int layer_id) {
 }
 
 template <typename Dtype>
-void ConvThread<Dtype>::BackwardLayer(WorkerSolver<Dtype> *psolver,
+void ConvThread<Dtype>::BackwardLayer(Solver<Dtype> *psolver,
                                       int layer_id) {
   shared_ptr<Net<Dtype> > conv_net = psolver->net();
   conv_net->BackwardFromTo(layer_id, layer_id);
@@ -132,10 +130,10 @@ void ConvThread<Dtype>::BackwardLayer(WorkerSolver<Dtype> *psolver,
 }
 
 template <typename Dtype>
-void ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver,
+void ConvThread<Dtype>::SyncedBackward(Solver<Dtype> *prev_solver,
                                        int prev_idx,
                                        shared_ptr<Msg> m) {
-  WorkerSolver<Dtype> * pconv = PrepareBwdSolver(m);
+  Solver<Dtype> * pconv = PrepareBwdSolver(m);
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
   const vector<shared_ptr<Layer<Dtype> > >& layers = conv_net->layers();
 
@@ -165,14 +163,13 @@ void ConvThread<Dtype>::SyncedBackward(WorkerSolver<Dtype> *prev_solver,
     SendLayer(i);
   }
 
-  NodeEnv::Instance()->DeleteSolver(m->conv_id());
-  NodeEnv::Instance()->PushFreeSolver(pconv);
+  this->ReleaseSolver(m->conv_id());
 }
 
 
 template <typename Dtype>
 void ConvThread<Dtype>::ConvBackward(shared_ptr<Msg> m) {
-  WorkerSolver<Dtype> *pconv = PrepareBwdSolver(m);
+  Solver<Dtype> *pconv = PrepareBwdSolver(m);
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
 
   const vector<shared_ptr<Layer<Dtype> > >& layers = conv_net->layers();
@@ -183,8 +180,7 @@ void ConvThread<Dtype>::ConvBackward(shared_ptr<Msg> m) {
     ParamHelper<Dtype>::AddDiffFromNet(param_solver_->net(), conv_net, i);
   }
 
-  NodeEnv::Instance()->DeleteSolver(m->conv_id());
-  NodeEnv::Instance()->PushFreeSolver(pconv);
+  this->ReleaseSolver(m->conv_id());
 }
 
 
@@ -199,15 +195,14 @@ void ConvThread<Dtype>::Run() {
   Solver<Dtype> *root_solver = NULL;
   root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
   const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
-  param_solver_ = (WorkerSolver<Dtype> *)this->NewSolver(root_solver,
-                                                         solver_param);
+  param_solver_ = this->NewSolver(root_solver, solver_param);
 
   while (!this->must_stop()) {
     for (int i = 0; i < num_sub_solvers_; i++) {
       ConvForward();
     }
 
-    WorkerSolver<Dtype> *prev_solver = NULL;
+    Solver<Dtype> *prev_solver = NULL;
     int prev_conv_id = 0;
 
     int num_layers = root_solver->net()->layers().size();
@@ -264,8 +259,7 @@ void ConvThread<Dtype>::Run() {
     }
 
     if (prev_solver != NULL) {
-      NodeEnv::Instance()->DeleteSolver(prev_conv_id);
-      NodeEnv::Instance()->PushFreeSolver(prev_solver);
+      this->ReleaseSolver(prev_conv_id);
     }
 
     // ParamHelper<Dtype>::ScalDiff(param_solver_->net(), (Dtype)0.25);
@@ -349,8 +343,8 @@ void ConvParamThread<Dtype>::SendActivations() {
 
   // prepare the forward nets from conv_threads
   for (int i = 0; i < fwd_msgs_.size(); i++) {
-    SGDSolver<Dtype> *pconv = NULL;
-    pconv = ((SGDSolver<Dtype> **)fwd_msgs_[i]->ZmsgData(0))[0];
+    Solver<Dtype> *pconv = NULL;
+    pconv = ((Solver<Dtype> **)fwd_msgs_[i]->ZmsgData(0))[0];
     net_vec.push_back(pconv->net());
   }
 
@@ -428,8 +422,8 @@ void ConvParamThread<Dtype>::ProcessBackward(shared_ptr<Msg> m) {
 
   vector<shared_ptr<Net<Dtype> > > net_vec;
   for (int i = 0; i < pfwd_msg->size(); i++) {
-    WorkerSolver<Dtype> *pconv = NULL;
-    pconv = ((WorkerSolver<Dtype> **)pfwd_msg->at(i)->ZmsgData(0))[0];
+    Solver<Dtype> *pconv = NULL;
+    pconv = ((Solver<Dtype> **)pfwd_msg->at(i)->ZmsgData(0))[0];
     net_vec.push_back(pconv->net());
   }
 
@@ -465,7 +459,6 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
 
   int layer_id = (reinterpret_cast<int *>(m->ZmsgData(0)))[0];
-
 
   if (this->IsLearnable(layer_id)) {
     ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
