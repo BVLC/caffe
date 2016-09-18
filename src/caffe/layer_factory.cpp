@@ -33,6 +33,16 @@
 
 namespace caffe {
 
+// Hide the implementation of LayerRegistry::CreatorRegistry singleton
+template <typename Dtype>
+typename LayerRegistry<Dtype>::CreatorRegistry&
+LayerRegistry<Dtype>::Registry() {
+    static CreatorRegistry* g_registry_ = new CreatorRegistry();
+    return *g_registry_;
+}
+
+INSTANTIATE_CLASS(LayerRegistry);
+
 // Get convolution layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
