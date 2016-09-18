@@ -26,6 +26,7 @@ target_link_libraries(caffe ${Caffe_LINKER_LIBS})
 target_include_directories(caffe ${Caffe_INCLUDE_DIRS}
                                  PUBLIC
                                  $<BUILD_INTERFACE:${Caffe_INCLUDE_DIR}>
+                                 $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
                                  $<INSTALL_INTERFACE:include>)
 target_compile_definitions(caffe ${Caffe_DEFINITIONS})
 if(Caffe_COMPILE_OPTIONS)
