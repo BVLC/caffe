@@ -1,3 +1,4 @@
+#ifdef USE_LIBDNN
 #ifndef CAFFE_LIBDNN_CONV_LAYER_HPP_
 #define CAFFE_LIBDNN_CONV_LAYER_HPP_
 
@@ -12,7 +13,6 @@
 #include "caffe/greentea/libdnn.hpp"
 
 namespace caffe {
-#ifdef USE_GREENTEA
 
 template <typename Dtype>
 class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
@@ -39,8 +39,8 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  private:
   shared_ptr<LibDNNConv<Dtype> > libdnn_;
 };
-#endif
 
 }  // namespace caffe
 
 #endif  // CAFFE_LIBDNN_CONV_LAYER_HPP_
+#endif  // USE_LIBDNN

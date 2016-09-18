@@ -176,7 +176,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 // to feed al the EUs.
 // FIXME for the gemm like convolution, switch back to eaxct image size.
 
-#define ADJUST_INPUT_IMAGE_SIZE(x) (x) //((x) > 16 * 16 ? 256 : (x))
+#define ADJUST_INPUT_IMAGE_SIZE(x) (x)  // ((x) > 16 * 16 ? 256 : (x))
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -332,76 +332,67 @@ bool ConvolutionLayerSpatial<float>::generate_kernel(
 }
 
 template<typename Dtype>
-void interleaveMatrix( Dtype* mem_dst, const Dtype *mem,
-         int r, int c, int interleavedRows, int nonInterleavedRows, int blockWidth, int rowAlignment )
-{
-    CHECK_EQ( interleavedRows % 2, 0 ) <<
-        "interleaveMatrix only supports even values for interleavedRows.";
+void interleaveMatrix(
+         Dtype* mem_dst, const Dtype *mem,
+         int r, int c, int interleavedRows, int nonInterleavedRows,
+         int blockWidth, int rowAlignment ) {
+  CHECK_EQ(interleavedRows % 2, 0) <<
+      "interleaveMatrix only supports even values for interleavedRows.";
 
-    size_t memSize = r * c * sizeof( float );
-    size_t dstSize = memSize *
-              ( interleavedRows + nonInterleavedRows * 2 ) /
-              ( interleavedRows + nonInterleavedRows );
-    memset( mem_dst, 0, dstSize);
+  size_t memSize = r * c * sizeof(float);
+  size_t dstSize = memSize *
+            (interleavedRows + nonInterleavedRows * 2) /
+            (interleavedRows + nonInterleavedRows);
+  memset(mem_dst, 0, dstSize);    // NOLINT
 
-    const int xStride = blockWidth;
-    const int yStride = c * 2;
-    const Dtype *pSrc = mem;
-    Dtype* pDst = mem_dst;
-    for( int y = 0; y < r;  )
-    {
-        for( int rows = 0; rows < interleavedRows; rows += 2 )
-        {
-            if( y >= r ) break;
-
-            if( ( c % xStride ) == 0 )
-            {
-                for( int x = 0; x < c / xStride; x++ )
-                {
-                    memcpy( pDst + x * xStride * 2,           pSrc + x * xStride,     xStride * sizeof( Dtype ) );
-                    memcpy( pDst + x * xStride * 2 + xStride, pSrc + x * xStride + c, xStride * sizeof( Dtype ) );
-                }
-            }
-            else
-            {
-                const int count = c / xStride;
-                int x = 0;
-                for( ; x < count - 1; x++ )
-                {
-                    memcpy( pDst + x * xStride * 2, pSrc + x * xStride, xStride * sizeof( Dtype ) );
-                    memcpy( pDst + x * xStride * 2 + xStride, pSrc + x * xStride + c, xStride * sizeof( Dtype ) );
-                }
-
-                memcpy( pDst + x * xStride * 2, pSrc + x * xStride, xStride * sizeof( Dtype ) );
-            }
-            pSrc += yStride;
-            pDst += yStride;
-            y += 2;
+  const int xStride = blockWidth;
+  const int yStride = c * 2;
+  const Dtype *pSrc = mem;
+  Dtype* pDst = mem_dst;
+  for (int y = 0; y < r;) {
+    for (int rows = 0; rows < interleavedRows; rows += 2) {
+      if ( y >= r ) break;
+      if ((c % xStride) == 0) {
+        for (int x = 0; x < c / xStride; x++) {
+          memcpy( pDst + x * xStride * 2,                         // NOLINT
+                  pSrc + x * xStride,     xStride * sizeof(Dtype));
+          memcpy( pDst + x * xStride * 2 + xStride,               // NOLINT
+                  pSrc + x * xStride + c, xStride * sizeof(Dtype));
         }
-
-        for( int rows = 0; rows < nonInterleavedRows; rows++ )
-        {
-            if( y >= r ) break;
-
-            const int stride = rowAlignment;
-            int remaining = c;
-            for( int x = 0; x < c; x += stride )
-            {
-                if( remaining >= stride )
-                {
-                    memcpy( pDst + x * 2, pSrc + x, stride * sizeof( Dtype ) );
-                    remaining -=stride;
-                }
-                else
-                {
-                    memcpy( pDst + x * 2, pSrc + x, remaining * sizeof( Dtype ) );
-                }
-            }
-            pSrc += yStride / 2;
-            pDst += yStride;
-            y++;
+      } else {
+        const int count = c / xStride;
+        int x = 0;
+        for (; x < count - 1; x++) {
+          memcpy(pDst + x * xStride * 2,                          // NOLINT
+                 pSrc + x * xStride, xStride * sizeof(Dtype));
+          memcpy(pDst + x * xStride * 2 + xStride,                // NOLINT
+                 pSrc + x * xStride + c, xStride * sizeof(Dtype));
         }
+        memcpy(pDst + x * xStride * 2,                            // NOLINT
+               pSrc + x * xStride, xStride * sizeof(Dtype));
+      }
+      pSrc += yStride;
+      pDst += yStride;
+      y += 2;
     }
+
+    for (int rows = 0; rows < nonInterleavedRows; rows++) {
+      if (y >= r) break;
+      const int stride = rowAlignment;
+      int remaining = c;
+      for (int x = 0; x < c; x += stride) {
+        if (remaining >= stride) {
+          memcpy( pDst + x * 2, pSrc + x, stride * sizeof(Dtype));    // NOLINT
+          remaining -=stride;
+        } else {
+          memcpy(pDst + x * 2, pSrc + x, remaining * sizeof(Dtype));  // NOLINT
+        }
+      }
+      pSrc += yStride / 2;
+      pDst += yStride;
+      y++;
+    }
+  }
 }
 
 template<typename Dtype>
@@ -438,21 +429,25 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     Dtype *cpu_swizzled_weight = swizzled_weights_.mutable_cpu_data();
     int interleavedRows = (kernel_w_ / 2) * 2;
     int nonInterleavedRows = kernel_w_ % 2;
-    int blockWidth = swizzled_factor; // should equal to simd size.
+    int blockWidth = swizzled_factor;  // should equal to SIMD size.
     int rowAlignment = 32;
-    size_t interleaved_filter_size = M_ * kernel_w_ * kernel_h_ * this->channels_ * sizeof(Dtype);
-    Dtype * tmpSwizzledWeight = (Dtype*) malloc(interleaved_filter_size);
+    size_t interleaved_filter_size = M_ * kernel_w_ * kernel_h_ *
+                                     this->channels_ * sizeof(Dtype);
+    Dtype * tmpSwizzledWeight = static_cast<Dtype*>(
+                                  malloc(interleaved_filter_size));
     CHECK_EQ(tmpSwizzledWeight != NULL, true)
       << "Failed to allocate temporary swizzled weight";
-    for( int od = 0; od < M_; od++)
-      for( int id = 0; id < this->channels_; id++)
-        for( int r = 0; r < kernel_h_; r++)
-          for( int c = 0; c < kernel_w_; c++)
-            tmpSwizzledWeight[(( id * kernel_h_ + r )* kernel_w_ + c) * M_ + od]
-              = cpu_weight[((od * this->channels_ + id) * kernel_h_ + r) * kernel_w_ + c ];
-    interleaveMatrix( cpu_swizzled_weight, tmpSwizzledWeight,
-                      kernel_w_ * kernel_h_ * this->channels_, M_,
-                      interleavedRows, nonInterleavedRows, blockWidth, rowAlignment );
+    for (int od = 0; od < M_; od++)
+      for (int id = 0; id < this->channels_; id++)
+        for (int r = 0; r < kernel_h_; r++)
+          for (int c = 0; c < kernel_w_; c++)
+            tmpSwizzledWeight[((id * kernel_h_ + r)
+                * kernel_w_ + c) * M_ + od]
+                = cpu_weight[((od * this->channels_ + id)
+                * kernel_h_ + r) * kernel_w_ + c ];
+    interleaveMatrix(cpu_swizzled_weight, tmpSwizzledWeight,
+              kernel_w_ * kernel_h_ * this->channels_, M_,
+              interleavedRows, nonInterleavedRows, blockWidth, rowAlignment);
     free(tmpSwizzledWeight);
   }
 }
@@ -685,8 +680,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
       viennacl::backend::finish();
       cleanTmpSubBuffers(bottom, top);
     }
-  }
-  else if (config->kernelType == 5) {
+  } else if (config->kernelType == 5) {
     swizzleWeights(bottom, top, 8, true);
     size_t total_bottom_size = bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
@@ -898,8 +892,9 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   int_tp output_height = output_h_;
   int_tp simd_size = 8;
   int_tp num_batches = num_;
-  int_tp alignedFilterWidth = ( M_ + blockN - 1 ) & ~( blockN - 1 );
-  int_tp alignedExpandHeight = ( output_width * output_height + blockM - 1 ) & ~( blockM - 1 );
+  int_tp alignedFilterWidth = (M_ + blockN - 1) & ~(blockN - 1);
+  int_tp alignedExpandHeight = (output_width * output_height + blockM - 1)
+                               & ~(blockM - 1);
   int_tp globalWorkSizeDX = blockN;
   int_tp globalWorkSizeDY = blockM;
 
@@ -912,7 +907,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math " << " -D " << kernelDef.str()
-                << " -D Conv_Interleaved=" << kernel_name_.c_str() ;
+                << " -D Conv_Interleaved=" << kernel_name_.c_str();
 
   optionsString <<
         " -cl-mad-enable" <<
@@ -928,7 +923,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DWIDTH1=" << alignedFilterWidth <<
         " -DOUT_PADDING_LEFT=" << 0 <<
         " -DOUT_PADDING_HEIGHT=" << 0 <<
-        " -DALIGNED_INPUT_SIZE=" << padded_height_ * padded_width_ * channels_ <<
+        " -DALIGNED_INPUT_SIZE=" <<
+              padded_height_ * padded_width_ * channels_ <<
         " -DOUT_WIDTH=" << output_width <<
         " -DOUT_HEIGHT=" << output_height <<
         " -DOUT_DEPTH=" << M_ <<
@@ -942,16 +938,16 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DDY=" << globalWorkSizeDY <<
         " -DDX=" << globalWorkSizeDX <<
         " -DKERNEL_WIDTH_DIV2=" << kernel_w_ / 2 <<
-        " -DKERNEL_SLICE_DIV2=" << ( kernel_w_ * kernel_h_) / 2 <<
+        " -DKERNEL_SLICE_DIV2=" << (kernel_w_ * kernel_h_) / 2 <<
         " -DTILE_N_LAST=" << alignedFilterWidth % 32 <<
-        " -DTILE_N_LAST_DIV8=" << ( alignedFilterWidth % 32 ) / 8 <<
+        " -DTILE_N_LAST_DIV8=" << (alignedFilterWidth % 32) / 8 <<
         " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
 
 
   size_t sgemm_m = alignedExpandHeight;
   size_t sgemm_n = alignedFilterWidth;
-  size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );
-  size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );
+  size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );  // NOLINT
+  size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );  // NOLINT
   gy = (gy + 7) & ~7;
   size_t gz = num_batches;
   size_t global_size[3] = { gx, gy, gz };
@@ -1190,7 +1186,8 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
   else if (kernelType == 4)
     create_basic_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
   else if (kernelType == 5)
-    create_gemm_like_conv_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
+    create_gemm_like_conv_kernel(
+        bottom, top, blockWidth, blockHeight, blockDepth);
   else
     assert(0);
 }

@@ -70,7 +70,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 
 #ifdef USE_CUDNN
     if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CUDA) {
-      engine = ConvolutionParameter_Engine_CUDNN;
+      // engine = ConvolutionParameter_Engine_CUDNN;
     }
 #endif
 
