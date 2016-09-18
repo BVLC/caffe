@@ -947,9 +947,6 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DTILE_N_LAST_DIV8=" << ( alignedFilterWidth % 32 ) / 8 <<
         " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
 
-    // chooses "Oldest First EU scheduling mode" instead of "Round Robin"
-  optionsString <<
-      " -cl-no-subgroup-ifp ";
 
   size_t sgemm_m = alignedExpandHeight;
   size_t sgemm_n = alignedFilterWidth;
@@ -965,7 +962,15 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   viennacl::ocl::program & program = submit_conv_spatial_program(&ctx,
                                                                  kernel_name_,
                                                                  options);
-  // ClKernel kernel;
+  bool is_beignet = ctx.devices()[0].opencl_c_version().find("beignet")
+                    != std::string::npos;
+  if (!is_beignet)
+  // chooses "Oldest First EU scheduling mode" instead of "Round Robin"
+    optionsString <<
+        " -cl-no-subgroup-ifp ";
+  else
+    optionsString <<
+        " -D__BEIGNET__";
   size_t workgroupSize_used;
   viennacl::ocl::kernel & kernel = program.get_kernel(kernel_name_);
   cl_int err = clGetKernelWorkGroupInfo(
