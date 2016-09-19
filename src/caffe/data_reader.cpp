@@ -75,8 +75,7 @@ void DataReader::Body::InternalThreadEntry() {
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   
-  //need_shuffle_ = param_.image_data_param().shuffle();
-  need_shuffle_ = true;
+  need_shuffle_ = param_.data_param().shuffle();
   do
   {
     img_pointers_.push_back(cursor->getPointerToValue());
