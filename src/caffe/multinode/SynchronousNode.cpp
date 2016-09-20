@@ -214,6 +214,10 @@ class SynchronousSync : public InternalThread
     }
   } children_sync;
 
+  void lets_die_together() {
+      waypoint->lets_die_together();
+  }
+
   virtual bool terminated() {
     boost::mutex::scoped_lock lock(mtx);
     return terminated_;
@@ -563,6 +567,8 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
     }
+
+    sync.lets_die_together();
     sync.terminate();
     sync.StopInternalThread();
   }

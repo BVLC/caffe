@@ -307,7 +307,6 @@ TYPED_TEST(BlobCommsTest, SendIterSize) {
     this->SendIterSize(this->waypoint_mock, 0);
     this->SendIterSize(this->waypoint_mock, 101);
     this->SendIterSize(this->waypoint_mock, 1);
-    this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushOneWithCancelledVersion) {
@@ -319,7 +318,6 @@ TYPED_TEST(BlobCommsTest, pushOneWithCancelledVersion) {
                  version, NULL, times);
   this->comms->cancel(layer_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushOne) {
@@ -330,7 +328,6 @@ TYPED_TEST(BlobCommsTest, pushOne) {
                              version, &this->callback, times);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushAnotherTwoDuringSending) {
@@ -342,7 +339,6 @@ TYPED_TEST(BlobCommsTest, pushAnotherTwoDuringSending) {
   this->comms->push(layer_id, blob_id, part_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, push3OneByOne) {
@@ -360,7 +356,6 @@ TYPED_TEST(BlobCommsTest, push3OneByOne) {
   this->callback(true);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
@@ -379,7 +374,6 @@ TYPED_TEST(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
   this->comms->cancel(layer_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelLayer1WhenInQueue) {
@@ -408,7 +402,6 @@ TYPED_TEST(BlobCommsTest, cancelLayer1WhenInQueue) {
   this->callback(true);
   this->callback(true);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushParamsOutOfRange) {
@@ -484,7 +477,6 @@ TYPED_TEST(BlobCommsTest, checkPriorityQueue) {
   this->callback(true);   // sent 2v3 as 2v5 => [2:[2]]
   this->callback(true);   // sent 2v2 as 2v5 => []
   this->callback(true);   // nothing to send
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelDuringReceivingPartsPushedLayer) {
@@ -567,7 +559,6 @@ TYPED_TEST(BlobCommsTest, pushLayers) {
   this->callback(true);       // 2b4 sent
   this->callback(true);       // 2b5 sent
   this->callback(true);       // nothing to send
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveProperBlobUpdate) {
@@ -611,7 +602,6 @@ TYPED_TEST(BlobCommsTest, receiveProperBlobUpdate) {
       received(waypoint_id, layer_id, blob_id, part_id, version));
   }
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveWrongBlobUpdate) {
@@ -632,7 +622,6 @@ TYPED_TEST(BlobCommsTest, receiveWrongBlobUpdate) {
   this->comms->received(&vector<char>(boost::assign::list_of(1).operator
       vector<char>
       ())[0], 3, this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
@@ -661,7 +650,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
   Blob<float > blob(v);
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithIters) {
@@ -696,7 +684,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithIters) {
   EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithNoIters) {
   this->buildOne();
@@ -724,7 +711,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 }  // namespace
 }  // namespace caffe
