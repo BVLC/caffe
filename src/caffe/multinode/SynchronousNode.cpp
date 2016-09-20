@@ -294,7 +294,7 @@ class SynchronousSync : public InternalThread
     , children_sync(this) {
     waypoint->set_buffer_size(codec->packet_size());
     if (!is_root()) solver->param().clear_snapshot();
-    if (!is_root()) solver->param().clear_snapshot_after_train();
+    if (!is_root()) solver->param().set_snapshot_after_train(false);
     if (!is_root()) solver->param().clear_test_interval();
     CVLOG(1) << "initialized sync node with parent: " << waypoint->parent()
       << ", and num of children " << waypoint->children().size();
@@ -616,7 +616,7 @@ SynchronousNode<Dtype>::SynchronousNode(shared_ptr<Solver<Dtype> > solver, int)
   : impl(boost::make_shared<Impl>(solver)) {
   solver->param().set_disabled_update(true);
   solver->param().clear_snapshot();
-  solver->param().clear_snapshot_after_train();
+  solver->param().set_snapshot_after_train(false);
 }
 
 template<typename Dtype>

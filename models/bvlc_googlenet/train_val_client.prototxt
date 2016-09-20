@@ -16,7 +16,7 @@ layer {
   }
   image_data_param {
     source: "data/ilsvrc12/train.txt"
-    batch_size: 512
+    batch_size: 256
     shuffle: true
   }
 }
