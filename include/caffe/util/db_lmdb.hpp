@@ -3,6 +3,7 @@
 #define CAFFE_UTIL_DB_LMDB_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lmdb.h"
@@ -34,11 +35,10 @@ class LMDBCursor : public Cursor {
     return string(static_cast<const char*>(mdb_value_.mv_data),
         mdb_value_.mv_size);
   }
-  virtual std::pair<void*, size_t> getPointerToValue()
-  {
-    return std::make_pair(mdb_value_.mv_data,mdb_value_.mv_size);
+  virtual std::pair<void*, size_t> valuePointer() {
+    return std::make_pair(mdb_value_.mv_data, mdb_value_.mv_size);
   }
-  
+
   virtual bool valid() { return valid_; }
 
  private:

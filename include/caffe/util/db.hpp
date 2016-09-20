@@ -2,6 +2,7 @@
 #define CAFFE_UTIL_DB_HPP
 
 #include <string>
+#include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -18,7 +19,7 @@ class Cursor {
   virtual void Next() = 0;
   virtual string key() = 0;
   virtual string value() = 0;
-  virtual std::pair<void*, size_t> getPointerToValue() = 0;
+  virtual std::pair<void*, size_t> valuePointer() = 0;
   virtual bool valid() = 0;
 
   DISABLE_COPY_AND_ASSIGN(Cursor);

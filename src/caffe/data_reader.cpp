@@ -62,7 +62,8 @@ DataReader::QueuePair::~QueuePair() {
 
 DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
-      new_queue_pairs_() {
+      new_queue_pairs_(),
+      need_shuffle_ (false){
   StartInternalThread();
 }
 
@@ -74,25 +75,23 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
-  
   need_shuffle_ = param_.data_param().shuffle();
-  do
-  {
-    img_pointers_.push_back(cursor->getPointerToValue());
+  while (cursor->valid()) {
+    image_pointers_.push_back(cursor->valuePointer());
     cursor->Next();
-  } while (cursor->valid());
-  vector<std::pair<void*, int> >::iterator cur_img = img_pointers_.begin();
-  
+  } 
+  CHECK(!image_pointers_.empty());
+  vector<std::pair<void*, int> >::iterator 
+                                      current_image = image_pointers_.begin();
+ 
   if (need_shuffle_) {
-      // randomly shuffle data
+    // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
   }
-
-  
-  
+ 
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -102,13 +101,13 @@ void DataReader::Body::InternalThreadEntry() {
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cur_img, qp.get());
+      read_one(current_image, qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
       for (int i = 0; i < solver_count; ++i) {
-        read_one(cur_img, qps[i].get());
+        read_one(current_image, qps[i].get());
       }
       // Check no additional readers have been created. This can happen if
       // more than one net is trained at a time per process, whether single
@@ -121,25 +120,24 @@ void DataReader::Body::InternalThreadEntry() {
   }
 }
 
-void DataReader::Body::read_one(vector<std::pair<void*, int> >::iterator& cur_img, QueuePair* qp) {
+void DataReader::Body::read_one(vector<std::pair<void*, int> >::iterator& img, 
+                                                                QueuePair* qp) {
   string* data = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
-  //*data = cursor->value();
-  *data = string(static_cast<const char*>(cur_img->first),cur_img->second);
+  data->assign(static_cast<const char*>(img->first), img->second);
   qp->full_.push(data);
    
-  cur_img++;
-  if (cur_img == img_pointers_.end())
-  {
+  img++;
+  if (img == image_pointers_.end()) {
     if (need_shuffle_) ShuffleImages();
-    cur_img = img_pointers_.begin();
+    img = image_pointers_.begin();
   }
 }
 
 void DataReader::Body::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
-  shuffle(img_pointers_.begin(), img_pointers_.end(), prefetch_rng);
+  shuffle(image_pointers_.begin(), image_pointers_.end(), prefetch_rng);
 }
 
 
