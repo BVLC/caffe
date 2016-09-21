@@ -443,9 +443,17 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 }
 
 template <typename Dtype>
+void Solver<Dtype>::set_filename(const string& filename){
+	my_filename = filename;
+}
+
+template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
-  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
-    + extension;
+  if(my_filename.empty())
+    return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+      + extension;
+  else
+    return my_filename + extension + ".data";
 }
 
 template <typename Dtype>

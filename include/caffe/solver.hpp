@@ -65,6 +65,7 @@ class Solver {
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
+  void set_filename(const string& filename);
   void Snapshot();
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
@@ -118,6 +119,7 @@ class Solver {
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
+  string my_filename;
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
