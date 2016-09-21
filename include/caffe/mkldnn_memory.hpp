@@ -163,5 +163,8 @@ public:
         : MKLDNNMemoryDescriptor<Dtype, true>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer ) {}
 };
 
+template <typename Dtype, bool is_diff>
+shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > get_mkldnn_prv_descriptor(Blob<Dtype>* blob);
+
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_MEMORY_HPP_

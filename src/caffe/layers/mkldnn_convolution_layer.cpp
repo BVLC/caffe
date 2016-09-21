@@ -113,36 +113,28 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
 
     convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, cpu_engine));
 
-    // -- Memory descriptors initialization ------------------------------------------
-    // ---- Get memory descriptors from convolution primitive descriptor -------------
-    memory::desc prv_input_md(convFwd_pd->data.src_primitive_desc.memory_desc);
-    memory::desc prv_weights_md(convFwd_pd->data.weights_primitive_desc.memory_desc);
-    memory::desc prv_bias_md(convFwd_pd->data.bias_primitive_desc.memory_desc);
-    memory::desc prv_output_md(convFwd_pd->data.dst_primitive_desc.memory_desc);
-
+    // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
-    // ---- Create priv memory primitive descriptors stored as class members -------------
-    shared_ptr<MemPD> prv_input_primitive_pd(new MemPD(prv_input_md, cpu_engine));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(prv_bias_md, cpu_engine));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(prv_output_md, cpu_engine));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(prv_weights_md, cpu_engine));
+    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->data.src_primitive_desc));
+    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->data.bias_primitive_desc));
+    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->data.dst_primitive_desc));
+    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->data.weights_primitive_desc));
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
     memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-    shared_ptr<MemPD> usr_input_primitive_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
     shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_primitive_pd, prv_input_primitive_pd, bottom[0], this));
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_memory_pd, prv_input_memory_pd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_memory_pd, prv_output_memory_pd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
-//    top[0]->set_prv_data_descriptor(fwd_top_data, fwd_top_data->conversion_needed() ? false : true);
 
     fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_memory_pd, prv_weights_memory_pd, this->blobs_[0].get(), this));
     weights_primitive = fwd_weights_data->create_input(false);
