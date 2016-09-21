@@ -13,7 +13,6 @@
 
 namespace caffe {
 
-
 /**
  * @brief Reads data from a source to queues available to data layers.
  * A single reading thread is created per source, even if multiple solvers
@@ -47,6 +46,39 @@ class DataReader {
   DISABLE_COPY_AND_ASSIGN(QueuePair);
   };
 
+  class DBWrapper  {
+   public:
+    explicit DBWrapper(const LayerParameter& param);
+    virtual string value() = 0;
+    virtual void Next() = 0;
+   protected:
+    shared_ptr<db::DB> db;
+    shared_ptr<db::Cursor> cursor;
+  };
+
+  class DBShuffle: public DBWrapper {
+   public:
+    explicit DBShuffle(const LayerParameter& param);
+    virtual string value() {
+      return string(static_cast<const char*>(current_image_->first),
+                                                      current_image_->second);
+    }
+    virtual void Next();
+   protected:
+    vector<std::pair<void*, int> > image_pointers_;
+    vector<std::pair<void*, int> >::iterator current_image_;
+    shared_ptr<Caffe::RNG> prefetch_rng_;
+
+    void ShuffleImages();
+  };
+
+  class DBSequential: public DBWrapper {
+   public:
+    explicit DBSequential(const LayerParameter& param): DBWrapper(param)  {}
+    virtual string value()  { return cursor->value(); }
+    virtual void Next();
+  };
+
   // A single body is created per source
   class Body : public InternalThread {
    public:
@@ -55,15 +87,11 @@ class DataReader {
 
    protected:
     void InternalThreadEntry();
-    void read_one(vector<std::pair<void*, int> >::iterator& img, QueuePair* qp);
+    void read_one(DBWrapper* img, QueuePair* qp);
     void ShuffleImages();
 
     const LayerParameter param_;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
-
-    vector<std::pair<void*, int> > image_pointers_;
-    bool need_shuffle_;
-    shared_ptr<Caffe::RNG> prefetch_rng_;
 
     friend class DataReader;
 
