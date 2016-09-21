@@ -133,6 +133,11 @@ void CTCDecoderLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         target_sequence.push_back(target);
       }
 
+      if (std::max(target_sequence.size(), output_sequences_[n].size()) == 0) {
+        // 0 length
+        continue;
+      }
+
       const int ed = EditDistance(target_sequence, output_sequences_[n]);
 
       acc += ed * 1.0 /

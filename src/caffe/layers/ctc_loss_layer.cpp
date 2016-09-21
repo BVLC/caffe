@@ -17,6 +17,10 @@ namespace caffe {
 std::string imploded(const std::vector<int> &in,
                      const std::string &delim = " ") {
   std::stringstream out;
+  if (in.size() == 0) {
+    return "";
+  }
+
   out << in[0];
   for (int i = 1; i < in.size(); ++i) {
     out << delim << in[i];
@@ -207,6 +211,13 @@ void CTCLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       label += target_seq_blob->channels();
     }
 
+    // if the label length is 0, the seq_len is 1 (0 following 0)
+    // set seq_len to 0 in this case aswell, to skip this example
+    if (label_len[n] == 0) {
+        CHECK_LE(seq_len[n], 1);
+        seq_len[n] = 0;
+    }
+
     CHECK_LE(label_len[n], seq_len[n])
          << "The label length must be smaller or equals the sequence length!";
   }
@@ -286,6 +297,7 @@ void CTCLossLayer<Dtype>::CalculateLoss(
   CHECK(loss);
 
   const int *seq_len = seq_len_blob->cpu_data();
+  const int *label_len = target_seq_len_blob->cpu_data();
 
   const int num_time_steps = T_;
   const int batch_size = N_;
@@ -326,6 +338,10 @@ void CTCLossLayer<Dtype>::CalculateLoss(
   // TODO: this can be parallelized
   for (int b = 0; b < batch_size; ++b) {
     const int seq_len_b = seq_len[b];
+    const int label_len_b = label_len[b];
+    if (label_len_b == 0) {
+      CHECK_EQ(seq_len_b, 0);
+    }
     if (seq_len_b == 0) {
       continue;  // zero length, no gradients or loss to be computed
     }
@@ -419,6 +435,9 @@ void CTCLossLayer<Dtype>::PopulateLPrimes(bool preprocess_collapse_repeated,
     const Dtype* label = labels.cpu_data() + n;
     // increment for getting label at next t
     const int label_incr = labels.channels();
+
+    // continue or exception... not sure what to prefer
+    if (label_size == 0) {continue;}
     CHECK_GT(label_size, 0)
             << "Labels length is zero in sequence number " << n;
 
@@ -435,7 +454,10 @@ void CTCLossLayer<Dtype>::PopulateLPrimes(bool preprocess_collapse_repeated,
     for (int i = 0; i < label_size; ++i) {
       if (i == 0 || !preprocess_collapse_repeated || *label != *prev_label) {
         int i_label = static_cast<int>(*label + 0.5);  // integer label (round)
-        if (i_label >= num_classes - 1) {
+        if (i_label >= num_classes || i_label == blank_index_) {
+          LOG(WARNING) << "To end a seuqence you should pass a negative "
+                       << "number instead of " << i_label << ". Maybe your "
+                       << "probability channel shape is too small?";
           finished_sequence = true;
         } else {
           if (finished_sequence) {
@@ -662,7 +684,9 @@ void CTCLossLayer<Dtype>::CalculateGradient(
   // It is possible that no valid path is found if the activations for the
   // targets are zero.
   if (log_p_z_x == kLogZero) {
-    LOG(WARNING) << "No valid path found.";
+    LOG(WARNING) << "No valid path found for "
+                 << imploded(extract_label_sequence(l_prime->cpu_data(),
+                                                    l_prime->count(), 1));
     // dy is then y
     for (int t = 0; t < T - output_delay_; ++t) {
       for (int l = 0; l < L; ++l) {
