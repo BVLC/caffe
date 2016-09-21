@@ -214,6 +214,10 @@ class SynchronousSync : public InternalThread
     }
   } children_sync;
 
+  void lets_die_together() {
+      waypoint->lets_die_together();
+  }
+
   virtual bool terminated() {
     boost::mutex::scoped_lock lock(mtx);
     return terminated_;
@@ -291,6 +295,7 @@ class SynchronousSync : public InternalThread
     waypoint->set_buffer_size(codec->packet_size());
     if (!is_root()) solver->param().clear_snapshot();
     if (!is_root()) solver->param().clear_snapshot_after_train();
+    if (!is_root()) solver->param().clear_test_interval();
     CVLOG(1) << "initialized sync node with parent: " << waypoint->parent()
       << ", and num of children " << waypoint->children().size();
 
@@ -563,6 +568,8 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
     }
+
+    sync.lets_die_together();
     sync.terminate();
     sync.StopInternalThread();
   }
@@ -608,7 +615,6 @@ template<typename Dtype>
 SynchronousNode<Dtype>::SynchronousNode(shared_ptr<Solver<Dtype> > solver, int)
   : impl(boost::make_shared<Impl>(solver)) {
   solver->param().set_disabled_update(true);
-  solver->param().clear_test_interval();
   solver->param().clear_snapshot();
   solver->param().clear_snapshot_after_train();
 }

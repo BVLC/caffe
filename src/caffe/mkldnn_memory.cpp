@@ -26,9 +26,9 @@ template <typename Dtype>
 size_t MKLDNNMemoryDescriptorBase<Dtype>::prv_count()
 {
     mkldnn::c_api::mkldnn_dims_t* pdims = &(_usr_memory_pd->data.memory_desc.tensor_desc.dims);
-    uint32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
-    uint32_t count = 1;
-    for (uint32_t i = 0; i < ndims; ++i) count *= (*pdims)[i];
+    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
+    int32_t count = 1;
+    for (int32_t i = 0; i < ndims; ++i) count *= (*pdims)[i];
     return count;
 }
 
@@ -37,10 +37,10 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
-    uint32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
+    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
     CHECK_EQ(ndims, _prv_memory_pd->data.memory_desc.tensor_desc.ndims)
             << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions number";
-    for (uint32_t dim = 0; dim < ndims; ++dim) {
+    for (int32_t dim = 0; dim < ndims; ++dim) {
         CHECK_EQ(_usr_memory_pd->data.memory_desc.tensor_desc.dims[dim]
                 , _prv_memory_pd->data.memory_desc.tensor_desc.dims[dim])
                 << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions";
@@ -118,13 +118,14 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 }
 
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
+bool MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
 {
     CHECK(this->mkldnn_layer());
     if (StreamHolder::Instance().current_stream() != NULL && StreamHolder::Instance().current_stream()->ready()) {
         VLOG(1) << "- MKLDNNMemoryDescriptorBase<Dtype>::" << __FUNCTION__ << ": stream.wait() - " << this->name;
         StreamHolder::Instance().current_stream()->wait();
     }
+    return true;
 }
 
 template <typename Dtype>

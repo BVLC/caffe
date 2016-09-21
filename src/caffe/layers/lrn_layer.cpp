@@ -126,36 +126,21 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
   Dtype alpha_over_size = alpha_ / size_;
-  int limit = pre_pad_ < (channels_-1) ? pre_pad_ : (channels_-1);
 
   caffe_sqr(num_ * channels_ * height_ * width_, bottom_data, top_data);
+  caffe_set(num_ * channels_ * height_ * width_, Dtype(k_), scale_data);
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
 #endif
-  for (int n = 0; n < num_; ++n) {
-    caffe_set(limit * height_ * width_, Dtype(k_),
-      scale_data + scale_.offset(n, 0));
-    for (int c = 0; c <= limit; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-        top_data + scale_.offset(n, c),
-        scale_data + scale_.offset(n, 0));
-    }
-    for (int c = 1; c < channels_; ++c) {
-      caffe_cpu_copy<Dtype>(height_ * width_,
-        scale_data + scale_.offset(n, c - 1),
-        scale_data + scale_.offset(n, c));
-      // copy previous scale
-      if (c < (channels_ - pre_pad_)) {
-        caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-          top_data + scale_.offset(n, c + pre_pad_),
-          scale_data + scale_.offset(n, c));
-      }
-      // subtract tail
-      if (c > pre_pad_) {
-        caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
-          top_data + scale_.offset(n, c - pre_pad_ - 1),
-          scale_data + scale_.offset(n, c));
+  for (int n = 0; n < num_; n++) {
+    for (int c = 0; c < channels_; c++) {
+      for (int i = c - pre_pad_; i <= c + pre_pad_; i++) {
+        if ((i >= 0) && (i < channels_)) {
+          caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+            top_data + scale_.offset(n, i),
+            scale_data + scale_.offset(n, c));
+        }
       }
     }
   }

@@ -36,10 +36,10 @@ template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
-    uint32_t n  = this->num_;
-    uint32_t iw = this->width_;
-    uint32_t ih = this->height_;
-    uint32_t ic = this->channels_;
+    int32_t n  = this->num_;
+    int32_t iw = this->width_;
+    int32_t ih = this->height_;
+    int32_t ic = this->channels_;
 
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
