@@ -8,7 +8,6 @@
 #include "caffe/internode/communication.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/internode/mpi_configuration.hpp"
-#include "caffe/internode/tcp_configuration.hpp"
 
 namespace caffe {
 namespace internode {
@@ -138,9 +137,6 @@ boost::shared_ptr<MultiWaypoint> configure_server(
 
   AddressInfo info = extract(address);
   switch (info.protocol) {
-    case Protocol::TCP:
-      return configure_tcp_server(
-        communication_daemon, info.port, max_buffer_size);
     case Protocol::MPI:
       return configure_mpi_server(
         communication_daemon, info.ip, max_buffer_size);
@@ -159,9 +155,6 @@ boost::shared_ptr<Waypoint> configure_client(
 
   AddressInfo info = extract(address);
   switch (info.protocol) {
-    case Protocol::TCP:
-      return configure_tcp_client(
-        communication_daemon, info.ip, info.port, max_buffer_size);
     case Protocol::MPI:
       return configure_mpi_client(
               communication_daemon, info.ip, max_buffer_size);
