@@ -576,6 +576,7 @@ message BatchNormParameter {
     DEFAULT = 0;
     CAFFE = 1;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 4 [default = DEFAULT];
   optional bool use_weight_bias = 5 [default = true];
