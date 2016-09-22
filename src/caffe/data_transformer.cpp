@@ -52,8 +52,10 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
-  const int mask_size = param_.mask_size(); //default declared as 0 in caffe/proto/caffe.proto
-  const int mask_freq = param_.mask_freq(); //default of 1 in 3
+  // mask_size is defaulted to 0 in caffe/proto/caffe.proto
+  const int mask_size = param_.mask_size(); 
+  // mask_freq is defaulted to 1 in 3 in caffe/proto/caffe.proto
+  const int mask_freq = param_.mask_freq(); 
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -95,18 +97,19 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
   }
 
-  //initialize masking offsets to be same as cropping offsets so that there is no conflict
+  // initialize masking offsets to be same as cropping offsets 
+  // so that there is no conflict
   bool masking = (phase_ == TRAIN) && (mask_size > 0) && (Rand(mask_freq) == 0);
   int h_mask_start = h_off;
   int w_mask_start = w_off;
   if (masking) {
-	int h_effective = datum_height;
-	int w_effective = datum_width;
-	if (crop_size) { h_effective = w_effective = crop_size; }
-	CHECK_GE(h_effective, mask_size);
-	CHECK_GE(w_effective, mask_size);
-	h_mask_start += Rand(h_effective-mask_size+1);
-	w_mask_start += Rand(w_effective-mask_size+1);
+    int h_effective = datum_height;
+    int w_effective = datum_width;
+    if (crop_size) { h_effective = w_effective = crop_size; }
+    CHECK_GE(h_effective, mask_size);
+    CHECK_GE(w_effective, mask_size);
+    h_mask_start += Rand(h_effective-mask_size+1);
+    w_mask_start += Rand(w_effective-mask_size+1);
   }
   int h_mask_end = h_mask_start + mask_size;
   int w_mask_end = w_mask_start + mask_size;
@@ -140,9 +143,10 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           }
         }
         if (masking) {
-        	if ( (h > h_mask_start) && (w > w_mask_start) && (h < h_mask_end) && (w < w_mask_end)) {
-        		transformed_data[top_index] = 0;
-        	}
+          if ((h > h_mask_start) && (w > w_mask_start) && 
+              (h < h_mask_end) && (w < w_mask_end)) {
+            transformed_data[top_index] = 0;
+          }
         }
       }
     }
@@ -270,8 +274,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
-  const int mask_size = param_.mask_size(); //default declared as 0 in caffe/proto/caffe.proto
-  const int mask_freq = param_.mask_freq(); //default of 1 in 3
+  // mask_size is defaulted to 0 in caffe/proto/caffe.proto
+  const int mask_size = param_.mask_size();
+  // mask_freq is defaulted to 1 in 3 in caffe/proto/caffe.proto
+  const int mask_freq = param_.mask_freq();
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
@@ -318,18 +324,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_cropped_img.data);
 
-  //initialize masking offsets to be same as cropping offsets so that there is no conflict
+  // initialize masking offsets to be same as cropping offsets 
+  // so that there is no conflict
   bool masking = (phase_ == TRAIN) && (mask_size > 0) && (Rand(mask_freq) == 0);
   int h_mask_start = h_off;
   int w_mask_start = w_off;
   if (masking) {
-	int h_effective = img_height;
-	int w_effective = img_width;
-	if (crop_size) { h_effective = w_effective = crop_size; }
-	CHECK_GE(h_effective, mask_size);
-	CHECK_GE(w_effective, mask_size);
-	h_mask_start += Rand(h_effective-mask_size+1);
-	w_mask_start += Rand(w_effective-mask_size+1);
+    int h_effective = img_height;
+    int w_effective = img_width;
+    if (crop_size) { h_effective = w_effective = crop_size; }
+    CHECK_GE(h_effective, mask_size);
+    CHECK_GE(w_effective, mask_size);
+    h_mask_start += Rand(h_effective-mask_size+1);
+    w_mask_start += Rand(w_effective-mask_size+1);
   }
   int h_mask_end = h_mask_start + mask_size;
   int w_mask_end = w_mask_start + mask_size;
@@ -361,9 +368,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           }
         }
         if (masking) {
-        	if ( (h > h_mask_start) && (w > w_mask_start) && (h < h_mask_end) && (w < w_mask_end)) {
-        		transformed_data[top_index] = 0;
-        	}
+          if ((h > h_mask_start) && (w > w_mask_start) && 
+              (h < h_mask_end) && (w < w_mask_end)) {
+            transformed_data[top_index] = 0;
+          }
         }
       }
     }
@@ -407,8 +415,10 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
-  const int mask_size = param_.mask_size(); //default declared as 0 in caffe/proto/caffe.proto
-  const int mask_freq = param_.mask_freq(); //default of 1 in 3
+  // mask_size is defaulted to 0 in caffe/proto/caffe.proto
+  const int mask_size = param_.mask_size(); 
+  // mask_freq is defaulted to 1 in 3 in caffe/proto/caffe.proto
+  const int mask_freq = param_.mask_freq();
 
   int h_off = 0;
   int w_off = 0;
@@ -428,18 +438,19 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(input_width, width);
   }
 
-  //initialize masking offsets to be same as cropping offsets so that there is no conflict
+  // initialize masking offsets to be same as cropping offsets 
+  // so that there is no conflict
   bool masking = (phase_ == TRAIN) && (mask_size > 0) && (Rand(mask_freq) == 0);
   int h_mask_start = h_off;
   int w_mask_start = w_off;
   if (masking) {
-	int h_effective = input_height;
-	int w_effective = input_width;
-	if (crop_size) { h_effective = w_effective = crop_size; }
-	CHECK_GE(h_effective, mask_size);
-	CHECK_GE(w_effective, mask_size);
-	h_mask_start += Rand(h_effective-mask_size+1);
-	w_mask_start += Rand(w_effective-mask_size+1);
+    int h_effective = input_height;
+    int w_effective = input_width;
+    if (crop_size) { h_effective = w_effective = crop_size; }
+    CHECK_GE(h_effective, mask_size);
+    CHECK_GE(w_effective, mask_size);
+    h_mask_start += Rand(h_effective-mask_size+1);
+    w_mask_start += Rand(w_effective-mask_size+1);
   }
   int h_mask_end = h_mask_start + mask_size;
   int w_mask_end = w_mask_start + mask_size;
@@ -486,19 +497,21 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
         if (do_mirror) {
           int top_index_w = top_index_h + width - 1;
           for (int w = 0; w < width; ++w) {
-        	if (masking && (h > h_mask_start) && (w > w_mask_start) && (h < h_mask_end) && (w < w_mask_end)) {
+            if (masking && (h > h_mask_start) && (w > w_mask_start) && 
+                (h < h_mask_end) && (w < w_mask_end)) {
               transformed_data[top_index_w-w] = 0;
-        	} else {
-        	  transformed_data[top_index_w-w] = input_data[data_index_h + w];
-        	}
+            } else {
+              transformed_data[top_index_w-w] = input_data[data_index_h + w];
+            }
           }
         } else {
           for (int w = 0; w < width; ++w) {
-        	if (masking && (h > h_mask_start) && (w > w_mask_start) && (h < h_mask_end) && (w < w_mask_end)) {
-        	  transformed_data[top_index_h + w] = 0;
-        	} else {
+            if (masking && (h > h_mask_start) && (w > w_mask_start) && 
+                (h < h_mask_end) && (w < w_mask_end)) {
+              transformed_data[top_index_h + w] = 0;
+            } else {
               transformed_data[top_index_h + w] = input_data[data_index_h + w];
-        	}
+            }
           }
         }
       }
