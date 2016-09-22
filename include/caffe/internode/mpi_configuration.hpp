@@ -9,12 +9,12 @@
 namespace caffe {
 namespace internode {
 
-boost::shared_ptr<Waypoint> configure_mpi_client(
+boost::shared_ptr<Waypoint> configure_client(
         boost::shared_ptr<Daemon> communication_daemon,
         std::string server_name,
         size_t max_buffer_size);
 
-boost::shared_ptr<MultiWaypoint> configure_mpi_server(
+boost::shared_ptr<MultiWaypoint> configure_server(
         boost::shared_ptr<Daemon> communication_daemon,
         std::string server_name,
         size_t max_buffer_size);

@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "caffe/internode/configuration.hpp"
+#include "caffe/internode/mpi_configuration.hpp"
 #include "caffe/solver.hpp"
 
 namespace caffe {

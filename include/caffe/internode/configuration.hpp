@@ -81,17 +81,6 @@ create_communication_daemon() {
   return boost::make_shared<Daemon>();
 }
 
-boost::shared_ptr<Waypoint> configure_client(
-    boost::shared_ptr<Daemon> communication_daemon,
-    std::string address,
-    size_t max_buffer_size);
-boost::shared_ptr<MultiWaypoint> configure_server(
-    boost::shared_ptr<Daemon> communication_daemon,
-    std::string address,
-    size_t max_buffer_size);
-
-bool is_remote_address(std::string str);
-
 }  // namespace internode
 }  // namespace caffe
 

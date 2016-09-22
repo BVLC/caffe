@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include "caffe/internode/configuration.hpp"
+#include "caffe/internode/mpi_configuration.hpp"
 #include "caffe/layers/remote_data_layer.hpp"
 #include "caffe/multinode/SendCallback.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -273,9 +273,7 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
 
   RemoteDataReader(string name, string address, shared_ptr<Queue> queue)
     : daemon(internode::create_communication_daemon())
-    , waypoint(internode::is_remote_address(address) ?
-        internode::configure_client(daemon, address, UINT_MAX) :
-        boost::shared_ptr<Waypoint>())
+    , waypoint(internode::configure_client(daemon, address, UINT_MAX))
     , queue(queue)
     , name(name)
     , finished(false) {
