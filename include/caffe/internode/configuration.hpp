@@ -16,6 +16,7 @@ typedef boost::function<void()> TimerCallback;
 class Daemon {
   typedef boost::asio::deadline_timer Timer;
   typedef boost::posix_time::microseconds Microseconds;
+  boost::asio::io_service io_service;
 
   void expired(const boost::system::error_code& error,
                TimerCallback callback,
@@ -31,30 +32,40 @@ class Daemon {
     }
   }
 
- public:
-  boost::asio::io_service io_service;
-
+public:
   void create_timer(uint64_t duration, TimerCallback callback, bool repeat) {
     shared_ptr<Timer> timer(new Timer(io_service, Microseconds(duration)));
     timer->async_wait(
       boost::bind(&Daemon::expired, this, _1, callback, timer, repeat,
         Microseconds(duration)));
   }
+
+  boost::asio::io_service& get_io_service() {
+    return io_service;
+  }
+
+  void run_one() {
+    io_service.run_one();
+  }
+
+  void poll_one() {
+    io_service.poll_one();
+  }
 };
 
 inline void
 run_one(shared_ptr<Daemon> daemon) {
-  daemon->io_service.run_one();
+  daemon->run_one();
 }
 
 inline void
 poll_one(shared_ptr<Daemon> daemon) {
-  daemon->io_service.poll_one();
+  daemon->poll_one();
 }
 
 inline boost::asio::io_service&
 get_io_service(boost::shared_ptr<Daemon> daemon) {
-  return daemon->io_service;
+  return daemon->get_io_service();
 }
 
 inline void
