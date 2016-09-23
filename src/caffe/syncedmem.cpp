@@ -54,7 +54,7 @@ inline void SyncedMemory::to_cpu() {
     break;
   case SYNCED_PRV:
   case HEAD_AT_CPU:
-    if(prv_descriptor_.get()) {
+    if (prv_descriptor_.get()) {
         if ( prv_descriptor_->on_to_cpu())
             head_ = SYNCED;
     }
@@ -184,8 +184,7 @@ void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor,
   if (descriptor == NULL) {
     if (head_ != UNINITIALIZED)
       head_ = HEAD_AT_CPU;
-  }
-  else {
+  } else {
     if ((head_ != HEAD_AT_PRV) && same_data)
       head_ = SYNCED_PRV;
     else

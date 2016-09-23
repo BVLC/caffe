@@ -71,12 +71,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
+  // Create a copy of filtered_param with splits added where necessary.
+  NetParameter param_with_splits;
+  InsertSplits(filtered_param, &param_with_splits);
+
+  // Transform Net (merge layers etc.) improve computational performance
+  NetParameter param;
+  CompileNet(param_with_splits, &param);
+
+  // Printing processed model
   LOG_IF(INFO, Caffe::root_solver())
       << "Initializing net from parameters: " << std::endl
-      << filtered_param.DebugString();
-  // Create a copy of filtered_param with splits added where necessary.
-  NetParameter param;
-  InsertSplits(filtered_param, &param);
+      << param.DebugString();
+
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -329,6 +336,106 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
       param_filtered->add_layer()->CopyFrom(layer_param);
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompileNet(const NetParameter& param,
+    NetParameter* param_compiled) {
+  param_compiled->CopyFrom(param);
+  param_compiled->clear_layer();    // Remove layers
+
+  CompilationRuleOne(param, param_compiled);
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
+                                    NetParameter* param_compiled) {
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
+    const string& layer_name = layer_param->name();
+    bool layer_included = true;
+
+    // Optimization rule 1:
+    // - If we are having engine MKL2017 and Scale layer within a model
+    // and input bottom comes from  BatchNorm of engine MKL2017
+    // then we can remove Scale layer
+    // and rename BatchNorm top blob after deleted Scale's top
+
+    // If current layer is BatchNorm of MKL2017 engine..
+    if ((layer_param->type().compare("BatchNorm") == 0) &&
+       ((layer_param->batch_norm_param().engine() ==
+         BatchNormParameter_Engine_MKL2017)
+#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
+       || (layer_param->batch_norm_param().engine() ==
+           BatchNormParameter_Engine_DEFAULT)
+#endif
+       )) {
+      const LayerParameter& consumer_layer_param =
+            GetBlobConsumer(layer_param->top(0), param, i+1);
+
+      // Consumer lauyer of blob produced by BN
+      // has to be Scale layer with one Input Blob
+      if ((consumer_layer_param.type().compare("Scale") == 0) &&
+           (consumer_layer_param.bottom_size() == 1)) {
+        string& batchnorm_top_blob_name =
+            const_cast<string&>(layer_param->top(0));
+        const string& scale_top_blob_name = consumer_layer_param.top(0);
+        // Mark Consumer layer (its name) as the one marked for dropping
+        layers_to_drop.insert(consumer_layer_param.name());
+
+        // Replace BatchNorm top name with Scale top name
+        batchnorm_top_blob_name.resize(scale_top_blob_name.size());
+        batchnorm_top_blob_name.replace(0,
+                                        scale_top_blob_name.size(),
+                                        scale_top_blob_name);
+        // Read the batch_term param of Scale Layer and set batch_term param
+        // of MKLBatchNorm accordingly
+        bool scale_bias_term = consumer_layer_param.
+                               scale_param().bias_term();
+        layer_param->mutable_batch_norm_param()->
+        set_bias_term(scale_bias_term);
+      }
+    }
+
+    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+      LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+             << layer_param->name() << std::endl;
+      layer_included = false;
+      // Remove dropped layer from the list of layers to be dropped
+      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+    }
+
+    if (layer_included) {
+      param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
+}
+
+template <typename Dtype>
+const LayerParameter& Net<Dtype>::GetBlobConsumer(
+    const string& blob_name_to_find,
+    const NetParameter& param,
+    int layer_id_to_start_traversing_from) {
+  // Valida values of ids of layers are <1..num_layers-1>
+  CHECK_GE(layer_id_to_start_traversing_from, 1);
+
+  if (layer_id_to_start_traversing_from >= param.layer_size()) {
+    return param.layer(layer_id_to_start_traversing_from - 1);
+  }
+  // Traverse through layers to search the layer that consumes blob_name_to_find
+  for (int i = layer_id_to_start_traversing_from; i < param.layer_size(); ++i) {
+    // check bottom blobs if any of them is consuming given blob
+    for (int j = 0; j < param.layer(i).bottom_size(); ++j) {
+      if (param.layer(i).bottom(j).compare(blob_name_to_find) == 0) {
+        return param.layer(i);
+      }
+    }
+  }
+  // If no appropriate layer was found then return the one that should be layer
+  // producing blob we are searching consumer for
+  return param.layer(layer_id_to_start_traversing_from-1);
 }
 
 template <typename Dtype>

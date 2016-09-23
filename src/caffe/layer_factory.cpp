@@ -143,9 +143,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
 #elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
-    PoolingParameter_PoolMethod method = param.pooling_param().pool();
-    if (method == PoolingParameter_PoolMethod_MAX)
-      engine = PoolingParameter_Engine_MKL2017;
+    engine = PoolingParameter_Engine_MKL2017;
 #elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
     PoolingParameter_PoolMethod method = param.pooling_param().pool();
     if (method == PoolingParameter_PoolMethod_MAX)
