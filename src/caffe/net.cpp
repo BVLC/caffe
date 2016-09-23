@@ -393,7 +393,7 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
         // Read the batch_term param of Scale Layer and set batch_term param
         // of MKLBatchNorm accordingly
         bool scale_bias_term = consumer_layer_param.
-                               batch_norm_param().bias_term();
+                               scale_param().bias_term();
         layer_param->mutable_batch_norm_param()->
         set_bias_term(scale_bias_term);
       }
