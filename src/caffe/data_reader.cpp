@@ -71,9 +71,10 @@ DataReader::Body::~Body() {
 }
 
 void DataReader::Body::InternalThreadEntry() {
-  shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
-  db->Open(param_.data_param().source(), db::READ);
-  shared_ptr<db::Cursor> cursor(db->NewCursor());
+  shared_ptr<DBWrapper> dbw(param_.data_param().shuffle() ?
+                        static_cast<DBWrapper*>(new DBShuffle(param_)):
+                        static_cast<DBWrapper*>(new DBSequential(param_)));
+
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -83,13 +84,13 @@ void DataReader::Body::InternalThreadEntry() {
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cursor.get(), qp.get());
+      read_one(dbw.get(), qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
       for (int i = 0; i < solver_count; ++i) {
-        read_one(cursor.get(), qps[i].get());
+        read_one(dbw.get(), qps[i].get());
       }
       // Check no additional readers have been created. This can happen if
       // more than one net is trained at a time per process, whether single
@@ -102,18 +103,62 @@ void DataReader::Body::InternalThreadEntry() {
   }
 }
 
-void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
+void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
   string* data = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
-  *data = cursor->value();
+  *data = dbw->value();
   qp->full_.push(data);
 
-  // go to the next iter
+  dbw->Next();
+}
+
+
+
+DataReader::DBWrapper::DBWrapper(const LayerParameter& param) {
+  db.reset(db::GetDB(param.data_param().backend()));
+  db->Open(param.data_param().source(), db::READ);
+  cursor.reset(db->NewCursor());
+}
+
+DataReader::DBShuffle::DBShuffle(const LayerParameter& param):DBWrapper(param) {
+  CHECK(param.data_param().backend() != DataParameter_DB_LEVELDB)
+                                      << "LevelDB doesn't support shuffle";
+  while (cursor->valid()) {
+    image_pointers_.push_back(cursor->valuePointer());
+    cursor->Next();
+  }
+  CHECK(!image_pointers_.empty());
+  current_image_ = image_pointers_.begin();
+
+  // randomly shuffle data
+  LOG(INFO) << "Shuffling data";
+  const unsigned int prefetch_rng_seed = caffe_rng_rand();
+  prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+  ShuffleImages();
+}
+
+void DataReader::DBShuffle::Next() {
+  current_image_++;
+  if (current_image_ == image_pointers_.end()) {
+    ShuffleImages();
+    current_image_ = image_pointers_.begin();
+  }
+}
+
+void DataReader::DBShuffle::ShuffleImages() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  shuffle(image_pointers_.begin(), image_pointers_.end(), prefetch_rng);
+}
+
+void DataReader::DBSequential::Next() {
   cursor->Next();
   if (!cursor->valid()) {
     DLOG(INFO) << "Restarting data prefetching from start.";
     cursor->SeekToFirst();
   }
 }
+
+
 
 }  // namespace caffe

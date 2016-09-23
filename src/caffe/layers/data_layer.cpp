@@ -2,7 +2,7 @@
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
 #include <stdint.h>
-
+#include <string>
 #include <vector>
 
 #include "caffe/data_transformer.hpp"
@@ -111,7 +111,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     {
       Datum datum;
       datum.ParseFromString(*data);
-      (reader_.free()).push(data);    
+      (reader_.free()).push(data);  
       // Copy label. We need to copy it before we release datum
       if (this->output_labels_) {
         top_label[item_id] = datum.label();
