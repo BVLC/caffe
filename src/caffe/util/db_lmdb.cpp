@@ -20,8 +20,8 @@ void LMDB::Open(const string& source, Mode mode) {
 #ifndef ALLOW_LMDB_NOLOCK
   MDB_CHECK(rc);
 #else
-  if (rc == EACCES) {
-    LOG(WARNING) << "Permission denied. Trying with MDB_NOLOCK ...";
+  if (rc == EACCES || rc == ENOLCK) {
+    LOG(WARNING) << "Permission denied or no locks. Trying with MDB_NOLOCK ...";
     // Close and re-open environment handle
     mdb_env_close(mdb_env_);
     MDB_CHECK(mdb_env_create(&mdb_env_));
