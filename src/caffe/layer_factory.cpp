@@ -143,9 +143,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
 #elif defined(USE_MKL2017_AS_DEFAULT_ENGINE)
-    PoolingParameter_PoolMethod method = param.pooling_param().pool();
-    if (method == PoolingParameter_PoolMethod_MAX)
-      engine = PoolingParameter_Engine_MKL2017;
+    engine = PoolingParameter_Engine_MKL2017;
 #elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
     PoolingParameter_PoolMethod method = param.pooling_param().pool();
     if (method == PoolingParameter_PoolMethod_MAX)
@@ -247,6 +245,8 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   if (engine == BatchNormParameter_Engine_DEFAULT) {
 #if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     engine = BatchNormParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    engine = BatchNormParameter_Engine_MKLDNN;
 #else
     engine = BatchNormParameter_Engine_CAFFE;
 #endif
@@ -257,6 +257,10 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
 #if defined(MKL2017_SUPPORTED)
   } else if (engine == BatchNormParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLBatchNormLayer<Dtype>(param));
+#endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == BatchNormParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNBatchNormLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";

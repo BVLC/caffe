@@ -228,6 +228,24 @@ class Net {
    */
   static void FilterNet(const NetParameter& param,
       NetParameter* param_filtered);
+
+  /**
+   * @brief Remove or Replace layers that the user specified should be excluded to increase
+   *        computational performance.
+   */
+  static void CompileNet(const NetParameter& param,
+    NetParameter* param_compiled); 
+
+  /**
+  * @brief This is rule that analyze layer if it is of type Scale and if that is the case
+  *        and previous layer which serves as inoput layer to Scale Layer is MKLBatchNorm
+  *        then scale layer can be dropped
+  */
+  // TODO: Make it decent C++ anonymous function etc.
+  static void CompilationRuleOne(const NetParameter& param, NetParameter* param_compiled);
+
+  static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find, const NetParameter& param, int layer_id);
+
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);

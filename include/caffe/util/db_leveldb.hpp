@@ -3,6 +3,7 @@
 #define CAFFE_UTIL_DB_LEVELDB_HPP
 
 #include <string>
+#include <utility>
 
 #include "leveldb/db.h"
 #include "leveldb/write_batch.h"
@@ -20,6 +21,9 @@ class LevelDBCursor : public Cursor {
   virtual void Next() { iter_->Next(); }
   virtual string key() { return iter_->key().ToString(); }
   virtual string value() { return iter_->value().ToString(); }
+  virtual std::pair<void*, size_t> valuePointer() {
+    CHECK(false) << "Function valuePointer not implemented in LevelDBCursor";
+  }
   virtual bool valid() { return iter_->Valid(); }
 
  private:

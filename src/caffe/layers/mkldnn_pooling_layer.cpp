@@ -169,10 +169,8 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     memory::format cmfmt = mfmt_nchw;
     if (bottom_data_is_prv) {
-        CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNData<Dtype> > mem_descr
-            = boost::static_pointer_cast<MKLDNNData<Dtype> >(bottom[0]->get_prv_data_descriptor());
-        CHECK(mem_descr != NULL);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+            = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
     }
     shared_ptr<memory::desc> input_md(new memory::desc({input_tz}, mpcsn, cmfmt));

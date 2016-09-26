@@ -3,6 +3,7 @@
 
 namespace caffe {
 
+
 template <typename Dtype>
 MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
                                                             , shared_ptr<memory::primitive_desc> prv_memory_pd
@@ -174,13 +175,7 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         }
         return this->reorder_usr2prv();
     } else {
-        shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
-                (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
-
-        CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-
-        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr =
-                boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(blob_prv_mem_descriptor);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
 
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
             // TODO: prv in blob and in this descrptor may have different layouts
@@ -233,11 +228,8 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
     shared_ptr<memory> omem;
     if (this->conversion_needed()) {
         if(blob->get_prv_data_descriptor() != NULL) {
-            shared_ptr<PrvMemDescr> prv_mem_descriptor = is_diff ?
-                (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
-            CHECK_EQ(prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-            shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr =
-                boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(prv_mem_descriptor);
+            shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
+
             omem = current_descr->get_prv_memory();
             this->set_prv_memory(omem);
         } else {
@@ -263,6 +255,20 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
     shared_ptr<memory> omem = create_output_memory(this->_blob);
     this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
     return omem;
+}
+
+template <typename Dtype, bool is_diff>
+shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > get_mkldnn_prv_descriptor(Blob<Dtype>* blob)
+{
+    shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
+            (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
+
+    CHECK_EQ(blob_prv_mem_descriptor->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
+
+    shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr =
+            boost::static_pointer_cast<MKLDNNMemoryDescriptor<Dtype, is_diff> >(blob_prv_mem_descriptor);
+    CHECK(blob_prv_mkldnn_mem_descr != NULL);
+    return blob_prv_mkldnn_mem_descr;
 }
 
 template class MKLDNNMemoryDescriptor<double, true>;

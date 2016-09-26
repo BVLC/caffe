@@ -2374,6 +2374,8 @@ TEST_F(FilterNetTest, TestFilterInOutByExcludeMultiRule) {
   this->RunFilterNetTest(input_proto_test, output_proto_test);
 }
 
+
+
 TYPED_TEST(NetTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
@@ -2599,6 +2601,132 @@ TYPED_TEST(NetTest, TestAllInOneNetDeploy) {
     }
   }
   ASSERT_TRUE(found_data);
+}
+
+class CompileNetTest : public ::testing::Test {
+ protected:
+  void RunCompilerNetTest(
+      const string& input_param_string, const string& compiled_param_string) {
+    NetParameter input_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        input_param_string, &input_param));
+    NetParameter expected_compiled_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        compiled_param_string, &expected_compiled_param));
+    NetParameter actual_compiled_param;
+    Net<float>::CompileNet(input_param, &actual_compiled_param);
+    EXPECT_EQ(expected_compiled_param.DebugString(),
+        actual_compiled_param.DebugString());
+    // Also test idempotence.
+    NetParameter double_compiled_param;
+    Net<float>::CompileNet(actual_compiled_param, &double_compiled_param);
+    EXPECT_EQ(actual_compiled_param.DebugString(),
+       double_compiled_param.DebugString());
+  }
+};
+
+#ifdef MKL2017_SUPPORTED
+// If BatchNorm of engine MKL2017
+// produce blob consumed by
+// Scale Layer then Scale Layer can be dropped
+TEST_F(CompileNetTest, TestCompileNet) {
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'sc' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'sc' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "   bias_term: true "
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+#endif
+
+// If There is BatchNorm followed by Scale layer, but BatchNorm
+// is of engine Caffe then no reduction takes place
+TEST_F(CompileNetTest, TestNoCompileNet) {
+  const string& input_proto=
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: CAFFE "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'sc' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, input_proto);
 }
 
 }  // namespace caffe
