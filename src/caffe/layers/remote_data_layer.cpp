@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include "caffe/internode/configuration.hpp"
+#include "caffe/internode/mpi_configuration.hpp"
 #include "caffe/layers/remote_data_layer.hpp"
 #include "caffe/multinode/SendCallback.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -273,9 +273,7 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
 
   RemoteDataReader(string name, string address, shared_ptr<Queue> queue)
     : daemon(internode::create_communication_daemon())
-    , waypoint(internode::is_remote_address(address) ?
-        internode::configure_client(daemon, address, UINT_MAX) :
-        boost::shared_ptr<Waypoint>())
+    , waypoint(internode::configure_client(daemon, address, UINT_MAX))
     , queue(queue)
     , name(name)
     , finished(false) {
@@ -380,8 +378,7 @@ class ReaderKeeper {
 template <typename Dtype>
 RemoteDataLayer<Dtype>::RemoteDataLayer(const LayerParameter& param)
   : BaseDataLayer<Dtype>(param)
-  , queue(ReaderKeeper<Dtype>::instance()
-      .get_queue(param))
+  , queue(ReaderKeeper<Dtype>::instance().get_queue(param))
   , transform_blob(new Blob<Dtype>())
   , label_blob(new Blob<Dtype>()) {
   aux_blobs.push_back(transform_blob.get());
@@ -409,8 +406,11 @@ void RemoteDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Forward_cpu(bottom, top);
 }
 
+#if 0 /* Temporarly removed from list of available layers.
+         To be fixed by separate series of patches */
 INSTANTIATE_CLASS(RemoteDataLayer);
 REGISTER_LAYER_CLASS(RemoteData);
+#endif
 
 }  // namespace caffe
 

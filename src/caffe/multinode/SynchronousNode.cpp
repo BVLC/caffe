@@ -15,7 +15,6 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/internode/configuration.hpp"
-#include "caffe/internode/guaranteed_comm.hpp"
 #include "caffe/internode/tree_cluster.hpp"
 #include "caffe/multinode/BlobComms.hpp"
 #include "caffe/multinode/BlobInfo.hpp"
