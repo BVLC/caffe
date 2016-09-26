@@ -20,7 +20,7 @@
          Setting proper architecture is important to mimize your run and compile time. -->
         <CudaArchitecture>compute_35,sm_35;compute_52,sm_52</CudaArchitecture>
 
-        <!-- CuDNN 3 and 4 are supported -->
+        <!-- CuDNN 4 and 5 are supported -->
         <CuDnnPath></CuDnnPath>
         <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
     </PropertyGroup>

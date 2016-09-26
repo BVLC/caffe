@@ -1,6 +1,6 @@
 This branch of Caffe extends [BVLC-led Caffe](https://github.com/BVLC/caffe) by adding Windows support and other functionalities commonly used by Microsoft's researchers, such as managed-code wrapper, [Faster-RCNN](https://papers.nips.cc/paper/5638-faster-r-cnn-towards-real-time-object-detection-with-region-proposal-networks.pdf), [R-FCN](https://arxiv.org/pdf/1605.06409v2.pdf), etc.
 
-**Contact**: Kenneth Tran (ktran@microsoft.com)
+**Contact**: caffe@microsoft.com
 
 ---
 
@@ -8,7 +8,7 @@ This branch of Caffe extends [BVLC-led Caffe](https://github.com/BVLC/caffe) by 
 
 |  **`Linux (CPU)`**   |  **`Windows (CPU)`** |
 |-------------------|----------------------|
-| [![Travis Build Status](https://api.travis-ci.org/Microsoft/caffe.svg?branch=master)](https://travis-ci.org/Microsoft/caffe) | [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/58wvckt0rcqtwnr5/branch/master?svg=true)](https://ci.appveyor.com/project/pavlejosipovic/caffe-3a30a) |              
+| [![Travis Build Status](https://api.travis-ci.org/Microsoft/caffe.svg?branch=master)](https://travis-ci.org/Microsoft/caffe) | [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/6x4l911frv07lj1w/branch/master?svg=true)](https://ci.appveyor.com/project/zer0n/caffe) |              
 
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
