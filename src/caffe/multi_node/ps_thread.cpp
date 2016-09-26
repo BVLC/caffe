@@ -72,8 +72,14 @@ void PSThread<Dtype>::BroadcastLayer(int layer_id) {
   vector<string> layer_names;
   layer_names.push_back(ps_solver_->net()->layer_names()[layer_id]);
 
-  for (int i = 0; i < client_ids_.size(); i++) {
-    SendParam(ps_solver_->net(), layer_names, client_ids_[i], iter_ + 1);
+  const vector<string>& next_addrs = NodeEnv::Instance()->bcast_addrs();
+
+  if (next_addrs.size() <= 0) {
+    for (int i = 0; i < client_ids_.size(); i++) {
+      SendParam(ps_solver_->net(), layer_names, client_ids_[i], iter_ + 1);
+    }
+  } else {
+    SendParam(ps_solver_->net(), layer_names, -1, iter_ + 1);
   }
 }
 
@@ -98,7 +104,7 @@ int PSThread<Dtype>::SendUpdates(int layer_id) {
 
   if (num_updates > 0) {
     ParamHelper<Dtype>::ScalDiff(ps_solver_->net(),
-                                 (Dtype)(1.0 / (Dtype)num_updates),
+                                 (Dtype)(1.0 / (Dtype)num_workers_),
                                  layer_id);
     UpdateLayer(layer_id);
     BroadcastLayer(layer_id);
@@ -129,23 +135,25 @@ int PSThread<Dtype>::SendUpdates(int layer_id) {
 template <typename Dtype>
 void PSThread<Dtype>::RegisterNode(shared_ptr<Msg> m) {
   LOG(INFO) << "registering node: " << m->src();
+  const vector<int>& child_ids = NodeEnv::Instance()->bcast_ids();
 
-  int client_idx = client_ids_.size();
+  if (child_ids.size() <= 0) {
+    int client_idx = client_ids_.size();
 
-  int node_id = m->src();
-  client_ids_.push_back(node_id);
-  client_idx_map_[node_id] = client_idx;
+    int node_id = m->src();
+    client_ids_.push_back(node_id);
+    client_idx_map_[node_id] = client_idx;
+  }
+
+  registered_workers_++;
 
   // wait for all the conv. clients
   LOG(INFO) << "total workers: " << num_workers_
-            << ", current workers: " << client_ids_.size();
-  if (client_ids_.size() >= num_workers_) {
-    shared_ptr<Net<Dtype> > ps_net = ps_solver_->net();
-    for (int i = 0; i < client_ids_.size(); i++) {
-      // send the expected clock to clients
-      SendParam(ps_net, ps_net->layer_names(), client_ids_[i], iter_);
-    }
-  }
+            << ", current workers: " << registered_workers_;
+
+  shared_ptr<Net<Dtype> > ps_net = ps_solver_->net();
+  // send the expected clock to clients
+  SendParam(ps_net, ps_net->layer_names(), m->src(), iter_);
 }
 
 
@@ -161,13 +169,27 @@ void PSThread<Dtype>::Run() {
   client_msgs_.resize(layer_vec.size());
   msg_clocks_.resize(layer_vec.size());
 
+  const vector<int>& child_ids = NodeEnv::Instance()->bcast_ids();
+
   for (int i = 0; i < layer_vec.size(); i++) {
-    client_msgs_[i].resize(num_workers_);
-    msg_clocks_[i].resize(num_workers_);
+    if (child_ids.size() <= 0) {
+      client_msgs_[i].resize(num_workers_);
+      msg_clocks_[i].resize(num_workers_);
+    } else {
+      client_msgs_[i].resize(child_ids.size());
+      msg_clocks_[i].resize(child_ids.size());
+    }
 
     for (int j = 0; j < msg_clocks_[i].size(); j++) {
       msg_clocks_[i][j] = iter_;
     }
+  }
+
+  for (int i = 0; i < child_ids.size(); i++) {
+    int child = child_ids[i];
+    int offset = client_ids_.size();
+    client_ids_.push_back(child);
+    client_idx_map_[child] = offset;
   }
 
   num_learnable_layers_ = this->InitParamMap(ps_net);

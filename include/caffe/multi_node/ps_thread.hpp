@@ -29,6 +29,7 @@ class PSThread : public WorkerThread<Dtype> {
     num_workers_ = NodeEnv::Instance()->num_workers();
     max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
     test_node_ = -1;
+    registered_workers_ = 0;
   }
 
   virtual void Run();
@@ -68,7 +69,6 @@ class PSThread : public WorkerThread<Dtype> {
     return new SGDSolver<Dtype>(solver_param, ps_root);
   }
 
-
  protected:
   SGDSolver<Dtype> *ps_solver_;
 
@@ -104,6 +104,8 @@ class PSThread : public WorkerThread<Dtype> {
 
   // the id of test node
   int test_node_;
+
+  int registered_workers_;
 };
 
 }  // end namespace caffe

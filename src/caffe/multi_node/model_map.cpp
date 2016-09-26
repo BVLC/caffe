@@ -187,11 +187,12 @@ void ModelMap<Dtype>::AddRoutes(RouteInfo *proute, int node_idx) {
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareFCMsg() {
+int ModelMap<Dtype>::PrepareFCMsg() {
   if (status_ != INITED) {
-    return;
+    return 0;
   }
 
+  int fc_msg = 0;
   for (int i = 0; i < fc_nodes_.size(); i++) {
     int node_idx = fc_nodes_[i];
     for (int j = 0; j < requests_[node_idx].size(); j++) {
@@ -230,46 +231,52 @@ void ModelMap<Dtype>::PrepareFCMsg() {
       ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(),
                                              sub_solver_layer_names_[node_idx],
                                               m, j, num_splits);
+      fc_msg++;
       replies_.push_back(m);
     }
   }
+
+  return fc_msg;
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PreparePSMsg() {
-  if (status_ != INITED) {
-    return;
+int ModelMap<Dtype>::PreparePSMsg() {
+  // wait for the request from all the conv nodes
+  if (status_ != COMPLETED) {
+    return 0;
   }
-  for (int i = 0; i < ps_nodes_.size(); i++) {
+
+  int ps_msg = 0;
+  for (int i = 0; i < ps_routes_.size(); i++) {
+    shared_ptr<Msg> m(new Msg);
+    m->set_type(GET_TRAIN_MODEL);
+    m->set_dst(ps_routes_[i].node_info().node_id());
+
+    string rt_str;
+    ps_routes_[i].SerializeToString(&rt_str);
+    m->AppendData(rt_str.data(), rt_str.length());
+
     int node_idx = ps_nodes_[i];
-    for (int j = 0; j < requests_[node_idx].size(); j++) {
-      shared_ptr<Msg> m(new Msg);
-      m->set_type(GET_TRAIN_MODEL);
-      m->set_dst(requests_[node_idx][j]->node_info().node_id());
-
-      RouteInfo rt;
-      AddSolver(&rt, node_idx);
-
-      string rt_str;
-      rt.SerializeToString(&rt_str);
-      m->AppendData(rt_str.data(), rt_str.length());
-
-      // Copy parameters
-      ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(),
+    // Copy parameters
+    ParamHelper<Dtype>::CopyParamDataToMsg(psolver_->net(),
                                              sub_solver_layer_names_[node_idx],
                                              m);
 
-      replies_.push_back(m);
-    }
+    replies_.push_back(m);
+    ps_msg++;
   }
+
+  return ps_msg;
 }
 
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareTestMsg() {
-  if (status_ != INITED) {
-    return;
+int ModelMap<Dtype>::PrepareTestMsg() {
+  if (status_ != COMPLETED) {
+    return 0;
   }
+
+  int test_msg = 0;
   for (int i = 0; i < test_requests_.size(); i++) {
     shared_ptr<Msg> m(new Msg);
     m->set_type(GET_TRAIN_MODEL);
@@ -299,59 +306,33 @@ void ModelMap<Dtype>::PrepareTestMsg() {
     m->AppendData(rt_str.data(), rt_str.length());
 
     replies_.push_back(m);
+    test_msg++;
   }
+
+  return test_msg;
 }
 
 template <typename Dtype>
-void ModelMap<Dtype>::PrepareConvMsg() {
-  if (status_ != INITED) {
-    return;
+int ModelMap<Dtype>::PrepareConvMsg() {
+  if (status_ != COMPLETED) {
+    return 0;
   }
 
-  for (int i = 0; i < conv_requests_.size(); i++) {
+  int conv_msg = 0;
+  for (int i = 0; i < conv_routes_.size(); i++) {
     shared_ptr<Msg> m(new Msg);
     m->set_type(GET_TRAIN_MODEL);
-    m->set_dst(conv_requests_[i]->node_info().node_id());
-
-    // add solver for conv nodes
-    RouteInfo rt;
-
-    rt.set_num_sub_solvers(num_sub_solvers_);
-    // add ps nodes
-    for (int j = 0; j < ps_nodes_.size(); j++) {
-      int ps_idx = ps_nodes_[j];
-      for (int k = 0; k < route_nodes_[ps_idx].size(); k++) {
-        rt.add_ps_nodes()->CopyFrom(route_nodes_[ps_idx][k]);
-      }
-    }
-
-    // add gateway nodes
-    for (int j = 0; j < fc_gateways_.size(); j++) {
-      int gw_id = fc_gateways_[j];
-      for (int k = 0; k < route_nodes_[gw_id].size(); k++) {
-        rt.add_gateway_nodes()->CopyFrom(route_nodes_[gw_id][k]);
-      }
-    }
-
-    // add fwd blobs and nodes
-    for (int j = 0; j < conv_fwd_nodes_.size(); j++) {
-      int fwd_id = conv_fwd_nodes_[j];
-      for (int k = 0; k < route_nodes_[fwd_id].size(); k++) {
-        rt.add_fwrd_nodes()->CopyFrom(route_nodes_[fwd_id][k]);
-      }
-    }
-
-    // add conv solver
-    rt.mutable_solver_param()->CopyFrom(conv_solver_);
+    m->set_dst(conv_routes_[i].node_info().node_id());
 
     string rt_str;
-    rt.SerializeToString(&rt_str);
+    conv_routes_[i].SerializeToString(&rt_str);
     m->AppendData(rt_str.data(), rt_str.length());
 
     replies_.push_back(m);
+    conv_msg++;
   }
 
-  conv_requests_.clear();
+  return conv_msg;
 }
 
 template <typename Dtype>
@@ -387,7 +368,7 @@ void ModelMap<Dtype>::PrintRouteInfo() {
 
 template <typename Dtype>
 void ModelMap<Dtype>::PrepareConvSolver() {
-  if (!(status_ == WAIT_FC_GATEWAY || status_ == INITED)) {
+  if (status_ != COMPLETED) {
     return;
   }
 
@@ -514,8 +495,6 @@ int ModelMap<Dtype>::PrepareRoutes() {
         << ", node id: " << requests_[gw_id][j]->node_info().node_id();
     }
   }
-
-  status_ = INITED;
 
   PrintRouteInfo();
 
@@ -691,6 +670,142 @@ bool ModelMap<Dtype>::CheckIntegrity() {
   return true;
 }
 
+template <typename Dtype>
+void ModelMap<Dtype>::SetUpConvRoutes() {
+  if (status_ != COMPLETED) {
+    return;
+  }
+
+  conv_routes_.clear();
+  conv_routes_.resize(num_workers_);
+
+  CHECK_GE(conv_requests_.size(), conv_routes_.size());
+
+  PrepareConvSolver();
+
+  RouteInfo rt;
+  rt.set_num_sub_solvers(num_sub_solvers_);
+  // add ps nodes
+  for (int j = 0; j < ps_nodes_.size(); j++) {
+    int ps_idx = ps_nodes_[j];
+    for (int k = 0; k < route_nodes_[ps_idx].size(); k++) {
+      rt.add_ps_nodes()->CopyFrom(route_nodes_[ps_idx][k]);
+    }
+  }
+
+  // add gateway nodes
+  for (int j = 0; j < fc_gateways_.size(); j++) {
+    int gw_id = fc_gateways_[j];
+    for (int k = 0; k < route_nodes_[gw_id].size(); k++) {
+      rt.add_gateway_nodes()->CopyFrom(route_nodes_[gw_id][k]);
+    }
+  }
+
+  // add fwd blobs and nodes
+  for (int j = 0; j < conv_fwd_nodes_.size(); j++) {
+    int fwd_id = conv_fwd_nodes_[j];
+    for (int k = 0; k < route_nodes_[fwd_id].size(); k++) {
+      rt.add_fwrd_nodes()->CopyFrom(route_nodes_[fwd_id][k]);
+    }
+  }
+
+  // add conv solver
+  rt.mutable_solver_param()->CopyFrom(conv_solver_);
+
+  for (int i = 0; i < conv_routes_.size(); i++) {
+    conv_routes_[i].CopyFrom(rt);
+    NodeInfo *pnode = conv_routes_[i].mutable_node_info();
+    pnode->CopyFrom(conv_requests_[i]->node_info());
+  }
+}
+
+template <typename Dtype>
+void ModelMap<Dtype>::SetUpPSRoutes() {
+  if (status_ != COMPLETED) {
+    return;
+  }
+  ps_routes_.resize(ps_nodes_.size());
+
+  int k = 0;
+  for (int i = 0; i < ps_nodes_.size(); i++) {
+    int node_idx = ps_nodes_[i];
+    for (int j = 0; j < requests_[node_idx].size(); j++) {
+      AddSolver(&ps_routes_[k], node_idx);
+      NodeInfo *pnode = ps_routes_[k].mutable_node_info();
+      pnode->CopyFrom(requests_[node_idx][j]->node_info());
+
+      k++;
+    }
+  }
+}
+
+template <typename Dtype>
+int ModelMap<Dtype>::BuildReduceTree() {
+  if (status_ != COMPLETED) {
+    return 0;
+  }
+
+  SetUpPSRoutes();
+  SetUpConvRoutes();
+
+  // don't build reduce tree with multiple parameter servers
+  if (ps_routes_.size() > 1) {
+    return 0;
+  }
+
+  vector<RouteInfo *> rt_tree;
+
+  rt_tree.push_back(&ps_routes_[0]);
+
+  for (int i = 0; i < conv_routes_.size(); i++) {
+    rt_tree.push_back(&conv_routes_[i]);
+  }
+
+  for (int i = 0; i < rt_tree.size() / 2; i++) {
+    int lchild = 2 * i + 1;
+    int rchild = 2 * i + 2;
+
+    RouteNode parent_node;
+    parent_node.mutable_node_info()->CopyFrom(rt_tree[i]->node_info());
+    // set up binary tree
+    if (lchild < rt_tree.size()) {
+      RouteNode lnode;
+      lnode.mutable_node_info()->CopyFrom(rt_tree[lchild]->node_info());
+      rt_tree[i]->add_bcast_nodes()->CopyFrom(lnode);
+      rt_tree[lchild]->add_prev_nodes()->CopyFrom(parent_node);
+    }
+
+    if (rchild < rt_tree.size()) {
+      RouteNode rnode;
+      rnode.mutable_node_info()->CopyFrom(rt_tree[rchild]->node_info());
+      rt_tree[i]->add_bcast_nodes()->CopyFrom(rnode);
+      rt_tree[rchild]->add_prev_nodes()->CopyFrom(parent_node);
+    }
+  }
+
+  return 1;
+}
+
+template <typename Dtype>
+int ModelMap<Dtype>::UpdateWorkers() {
+  if (status_ != INITED) {
+    return 0;
+  }
+
+  if (conv_requests_.size() < num_workers_) {
+    return 0;
+  }
+
+  status_ = COMPLETED;
+  BuildReduceTree();
+
+  int r = 0;
+  r += PreparePSMsg();
+  r += PrepareConvMsg();
+  r += PrepareTestMsg();
+
+  return r;
+}
 
 template <typename Dtype>
 int ModelMap<Dtype>::ProcessTests(shared_ptr<Msg> m) {
@@ -700,9 +815,8 @@ int ModelMap<Dtype>::ProcessTests(shared_ptr<Msg> m) {
 
   test_requests_.push_back(rq);
 
-  if (status_ == INITED) {
-    PrepareTestMsg();
-    return 1;
+  if (status_ == COMPLETED) {
+    return PrepareTestMsg();
   } else {
     LOG(INFO) << "waiting for mode map to be inited";
     return 0;
@@ -715,11 +829,18 @@ int ModelMap<Dtype>::ProcessConv(shared_ptr<Msg> m) {
   rq->ParseFromString(string(reinterpret_cast<char *>(m->ZmsgData(0)),
                              m->ZmsgSize(0)));
 
+  if (conv_requests_.size() >= num_workers_) {
+    LOG(WARNING) << "too many clients";
+    return 0;
+  }
   conv_requests_.push_back(rq);
 
   if (status_ == INITED) {
-    PrepareConvMsg();
-    return 1;
+    if (conv_requests_.size() < num_workers_) {
+      return 0;
+    } else {
+      return UpdateWorkers();
+    }
   } else {
     LOG(INFO) << "model map hasn't been inited yet";
     return 0;
@@ -743,19 +864,14 @@ int ModelMap<Dtype>::ProcessModels(shared_ptr<Msg> m) {
     return -1;
   }
 
-  // we have all the fc nodes and ps nodes
-  PrepareFCMsg();
-  PreparePSMsg();
+  status_ = INITED;
 
-  // send messages to conv nodes and test nodes
-  if (status_ == INITED) {
-    PrepareConvSolver();
-    PrepareConvMsg();
-    PrepareTestMsg();
-    return 1;
-  } else {
-    return 0;
-  }
+  // we have all the fc nodes and ps nodes
+  int r = 0;
+  r += PrepareFCMsg();
+
+  r += UpdateWorkers();
+  return r;
 }
 
 template <typename Dtype>

@@ -25,38 +25,23 @@ class ConvClient : public MsgHub<Dtype> {
     fc_gateway_ids_ = NodeEnv::Instance()->gateway_ids();
 
     fc_clients_.resize(fc_gateway_addrs_.size());
-    int client_id = NodeEnv::Instance()->ID();
 
-    for (int i = 0; i < fc_clients_.size(); i++) {
-      fc_clients_[i].reset(new SkSock(ZMQ_DEALER));
-      fc_clients_[i]->SetId(client_id);
-    }
     gateway_num_ = fc_clients_.size();
 
     fc_fwd_addrs_ = NodeEnv::Instance()->forward_addrs();
     fc_fwd_ids_ = NodeEnv::Instance()->forward_ids();
 
     fwd_socks_.resize(fc_fwd_ids_.size());
-    for (int i = 0; i < fwd_socks_.size(); i++) {
-      fwd_socks_[i].reset(new SkSock(ZMQ_DEALER));
-      fwd_socks_[i]->SetId(client_id);
-    }
 
     // init parameter server addresses
     ps_addrs_ = NodeEnv::Instance()->ps_addrs();
     ps_ids_ = NodeEnv::Instance()->ps_ids();
     ps_num_ = ps_addrs_.size();
 
-    // Connect to parameter server
-    for (int i = 0; i < ps_num_; i++) {
-      shared_ptr<SkSock> ps_sock(new SkSock(ZMQ_DEALER));
-      ps_sock->SetId(client_id);
-      ps_clients_.push_back(ps_sock);
-    }
+    ps_clients_.resize(ps_num_);
 
-    fc_sock_index_ = nthreads;
-    ps_sock_index_ = nthreads + gateway_num_;
-    ps_thread_index_ = nthreads - 1;
+    fc_sock_index_ = this->poll_offset_;
+    ps_sock_index_ = fc_sock_index_ + gateway_num_;
   }
 
   virtual ~ConvClient() { }
@@ -71,6 +56,9 @@ class ConvClient : public MsgHub<Dtype> {
 
   // send out the message to FC layer gateways
   void SendOutMsg(shared_ptr<Msg> m);
+
+  // connect the topologies in reduce tree
+  void SetUpReduceTree();
 
  protected:
   /// socket used to communicate Fully Connected layers
@@ -102,17 +90,14 @@ class ConvClient : public MsgHub<Dtype> {
   /// socket used to communicate parameter server
   vector<shared_ptr<SkSock> > ps_clients_;
 
-  // map node id to sock
-  unordered_map<int, shared_ptr<SkSock> > node_to_sock_;
-
   /// the location of fc socket in zmq polling table
   int fc_sock_index_;
+
   /// the location of parameter server socket in zmq polling table
   int ps_sock_index_;
 
-  /// A thread is dedicated to communicate parameter server
-  /// this index stores its location in the polling table
-  int ps_thread_index_;
+  // the route socket to receive packets
+  shared_ptr<SkSock> back_sock_;
 
 DISABLE_COPY_AND_ASSIGN(ConvClient);
 };

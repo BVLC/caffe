@@ -86,13 +86,13 @@ message RouteInfo {
 
   // list of all the FC nodes
   repeated RouteNode fc_nodes = 6;
-  
+
   // sub solver that a node needs to run
   required SolverParameter solver_param = 7;
-  
+
   // Node info of dest node
   optional NodeInfo node_info = 8;
-  
+
   // number of conv. workers in the cluster
   optional int32 num_workers = 9 [default = 0];
 

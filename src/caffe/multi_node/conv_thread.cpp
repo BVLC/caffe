@@ -109,6 +109,7 @@ void ConvThread<Dtype>::SendLayer(int layer_id) {
   m->set_dst(ROOT_THREAD_ID);
   m->set_type(PUT_GRADIENT);
 
+  // To avoid empty message
   m->AppendData(&layer_id, sizeof(layer_id));
 
   const string& layer_name = param_solver_->net()->layer_names()[layer_id];
@@ -279,11 +280,11 @@ void ConvThread<Dtype>::Run() {
 }
 
 template <typename Dtype>
-void ConvParamThread<Dtype>::SyncLayer(int layer_id) {
-  SGDSolver<Dtype> *root_solver = NULL;
-  root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
-  shared_ptr<Net<Dtype> > root_net = root_solver->net();
-  const string& layer_name = root_net->layer_names()[layer_id];
+void ConvParamThread<Dtype>::SendGradient(const string& layer_name, int dst) {
+  shared_ptr<Msg> m(new Msg());
+  m->set_type(PUT_GRADIENT);
+  m->set_dst(dst);
+  m->set_src(NodeEnv::Instance()->ID());
 
   // check whether the PS can be updated
   map<string, int>::iterator iter = layer_to_ps_id_.find(layer_name);
@@ -295,23 +296,62 @@ void ConvParamThread<Dtype>::SyncLayer(int layer_id) {
 
   int ps_id = iter->second;
 
-  // Put gradient to PS
-  shared_ptr<Msg> ps_msg(new Msg());
-  ps_msg->set_type(PUT_GRADIENT);
-  ps_msg->set_dst(ps_id);
-  ps_msg->set_src(NodeEnv::Instance()->ID());
-
   int ps_local_index = ps_id_map_[ps_id];
   int next_clock = ps_clocks_[ps_local_index] + 1;
-  ps_msg->set_clock(next_clock);
+
+  m->set_clock(next_clock);
+
+  SGDSolver<Dtype> *root_solver = NULL;
+  root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
+  shared_ptr<Net<Dtype> > root_net = root_solver->net();
 
   vector<string> layer_vec;
   layer_vec.push_back(layer_name);
-  ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, layer_vec, ps_msg);
+  ParamHelper<Dtype>::CopyParamDiffToMsg(root_net, layer_vec, m);
 
-  this->SendMsg(ps_msg);
+  this->SendMsg(m);
+
   MLOG(INFO) << "Send Gradients for layer: " << layer_name
-             << ", clock: " << ps_msg->clock();
+             << ", clock: " << m->clock();
+}
+
+template <typename Dtype>
+void ConvParamThread<Dtype>::SyncLayerWithPS(const string& layer_name) {
+  // check whether the PS can be updated
+  map<string, int>::iterator iter = layer_to_ps_id_.find(layer_name);
+
+  // there are split layers in caffe which are not in the layer database
+  if (iter == layer_to_ps_id_.end()) {
+    return;
+  }
+
+  int ps_id = iter->second;
+
+  SendGradient(layer_name, ps_id);
+}
+
+template <typename Dtype>
+void ConvParamThread<Dtype>::ReduceLayer(const string& layer_name) {
+  const vector<int>& parent_nodes = NodeEnv::Instance()->prev_node_ids();
+  CHECK_EQ(parent_nodes.size(), 1);
+
+  SendGradient(layer_name, parent_nodes[0]);
+}
+
+template <typename Dtype>
+void ConvParamThread<Dtype>::SyncLayer(int layer_id) {
+  SGDSolver<Dtype> *root_solver = NULL;
+  root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
+  shared_ptr<Net<Dtype> > root_net = root_solver->net();
+  const string& layer_name = root_net->layer_names()[layer_id];
+
+  const vector<int>& parent_nodes = NodeEnv::Instance()->prev_node_ids();
+
+  if (parent_nodes.size() <= 0) {
+    SyncLayerWithPS(layer_name);
+  } else {
+    ReduceLayer(layer_name);
+  }
 }
 
 template <typename Dtype>
@@ -360,7 +400,7 @@ void ConvParamThread<Dtype>::SendActivations() {
 
   // always use the 0th clock
   m->set_clock(ps_clocks_[0]);
-  m->set_dst(-1);
+  m->set_dst(FC_BCAST);
 
   for (int i = 0; i < gateway_ids_.size(); i++) {
     shared_ptr<Msg> f(new Msg(m));
@@ -458,14 +498,25 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
   root_solver = (SGDSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   shared_ptr<Net<Dtype> > root_net = root_solver->net();
 
-  int layer_id = (reinterpret_cast<int *>(m->ZmsgData(0)))[0];
+  CHECK_LE(m->num_blobs(), 1) << "expect 1 layer to reduce";
+
+  int layer_id = -1;
+  if (m->num_blobs() == 1) {
+    const string& layer_name = m->blob_info(0).blob_name();
+    layer_id = this->GetLayerId(layer_name);
+  } else if (m->num_blobs() == 0) {
+    layer_id = (reinterpret_cast<int *>(m->ZmsgData(0)))[0];
+  } else {
+    LOG(WARNING) << "Too many blobs";
+    return 0;
+  }
 
   if (this->IsLearnable(layer_id)) {
     ParamHelper<Dtype>::AddDiffFromMsg(root_net, m);
   }
 
   layer_updates_[layer_id]++;
-  if (layer_updates_[layer_id] == this->GetWorkerNum()) {
+  if (layer_updates_[layer_id] >= max_gradients_) {
     layer_updates_[layer_id] = 0;
 
     if (this->IsLearnable(layer_id)) {
@@ -490,6 +541,19 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
 }
 
 template <typename Dtype>
+void ConvParamThread<Dtype>::BroadcastParam(shared_ptr<Msg> m) {
+  const vector<string>& next_hops = NodeEnv::Instance()->bcast_addrs();
+
+  if (next_hops.size() <= 0) {
+    return;
+  }
+
+  // broadcast to downstream nodes
+  m->set_dst(-1);
+  this->SendMsg(m);
+}
+
+template <typename Dtype>
 int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
   map<int, int>::iterator map_iter = ps_id_map_.find(m->src());
   CHECK(map_iter != ps_id_map_.end());
@@ -503,6 +567,9 @@ int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m) {
 
   ParamHelper<Dtype>::CopyParamDataFromMsg(root_net, m);
   ps_updates_[ps_idx]++;
+
+  // broadcast the pramater to downstream nodes
+  BroadcastParam(m);
 
   if (ps_updates_[ps_idx] >= num_learnable_layers_) {
     ps_clocks_[ps_idx]++;
@@ -555,6 +622,9 @@ void ConvParamThread<Dtype>::Run() {
   for (int i = 0; i < layer_updates_.size(); i++) {
     layer_updates_[i] = 0;
   }
+
+  int n_downstream = NodeEnv::Instance()->bcast_addrs().size();
+  max_gradients_ = this->GetWorkerNum() + n_downstream;
 
   while (!this->must_stop()) {
     shared_ptr<Msg> m = this->RecvMsg(true);

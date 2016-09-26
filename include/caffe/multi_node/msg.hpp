@@ -22,9 +22,11 @@ using std::vector;
 
 using boost::shared_ptr;
 
-const int     REQ_SERVER_ID   = 3;
-const int     ROOT_THREAD_ID  = 2;
+const int     REQ_SERVER_ID   = 4;
+const int     ROOT_THREAD_ID  = 3;
+const int     FC_BCAST        = 2;
 const int     WORKER_BCAST    = 1;
+
 const int     INVALID_NODE_ID = -1;
 const int64_t INVALID_MSG_ID  = -1;
 const int     INVALID_CLOCK   = -1;

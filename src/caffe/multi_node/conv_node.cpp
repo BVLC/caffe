@@ -14,23 +14,22 @@ int ConvClient<Dtype>::Init() {
 
   LOG(INFO) << "Initing conv client";
 
+  this->InitRoute();
+
   // connect client socks
   for (int i = 0; i < gateway_num_; i++) {
-    fc_clients_[i]->Connect(fc_gateway_addrs_[i]);
     int gt_id = fc_gateway_ids_[i];
-    node_to_sock_[gt_id] = fc_clients_[i];
+    fc_clients_[i] = this->ConnectNode(fc_gateway_addrs_[i], gt_id);
   }
 
   for (int i = 0; i < ps_num_; i++) {
-    ps_clients_[i]->Connect(ps_addrs_[i]);
     int ps_id = ps_ids_[i];
-    node_to_sock_[ps_id] = ps_clients_[i];
+    ps_clients_[i] = this->ConnectNode(ps_addrs_[i], ps_id);
   }
 
   for (int i = 0; i < fwd_socks_.size(); i++) {
-    fwd_socks_[i]->Connect(fc_fwd_addrs_[i]);
-    int fwd_id = fc_fwd_ids_[i];
-    node_to_sock_[fwd_id] = fwd_socks_[i];
+    int fw_id = fc_fwd_ids_[i];
+    fwd_socks_[i] = this->ConnectNode(fc_fwd_addrs_[i], fw_id);
   }
 
   // create solver
@@ -115,7 +114,7 @@ int ConvClient<Dtype>::Init() {
     this->threads_[i].reset(new ConvThread<Dtype>());
   }
 
-  this->threads_[ps_thread_index_].reset(
+  this->threads_[this->param_thread_index_].reset(
                                    new ConvParamThread<Dtype>(ps_clocks));
 
   return this->StartThreads();
@@ -123,8 +122,9 @@ int ConvClient<Dtype>::Init() {
 
 template <typename Dtype>
 int ConvClient<Dtype>::SetUpPoll() {
-  this->num_poll_items_ = this->nthreads_ + gateway_num_ + ps_num_;
+  this->num_poll_items_ = this->poll_offset_ + 1 + gateway_num_ + ps_num_;
   this->poll_items_ = new zmq_pollitem_t[this->num_poll_items_];
+  memset(this->poll_items_, 0, sizeof(zmq_pollitem_t) * this->num_poll_items_);   // NOLINT
 
   // 1 socket to communicate fc_gateway
   for (int i = 0; i < gateway_num_; i++) {
@@ -147,25 +147,27 @@ int ConvClient<Dtype>::SetUpPoll() {
 
 template <typename Dtype>
 void ConvClient<Dtype>::SendOutMsg(shared_ptr<Msg> m) {
-  // broadcast the message to gateways
+  // broadcast the message to downstream nodes
   if (m->dst() < 0) {
+    this->sock_pub_->SendMsg(m);
+  } else if (m->dst() == FC_BCAST) {
     for (int i = 0; i < fc_clients_.size(); i++) {
       fc_clients_[i]->SendMsg(m);
     }
   } else if (m->dst() == ROOT_THREAD_ID) {
-    this->Enqueue(ps_thread_index_, m);
+    this->Enqueue(this->param_thread_index_, m);
   } else if (m->dst() == WORKER_BCAST) {
     // broadcast the message to all the workers
     for (int i = 0; i < this->nthreads_; i++) {
-      if (i != ps_thread_index_) {
+      if (i != this->param_thread_index_) {
         this->Enqueue(i, m);
       }
     }
   } else {
     // look up the routing table
     unordered_map<int, shared_ptr<SkSock> >::iterator iter =
-                                             node_to_sock_.find(m->dst());
-    CHECK(iter != node_to_sock_.end())
+                                        this->node_to_sock_.find(m->dst());
+    CHECK(iter != this->node_to_sock_.end())
           << "cannot find socket for id: " << m->dst();
     iter->second->SendMsg(m);
   }
@@ -183,8 +185,9 @@ int ConvClient<Dtype>::RouteMsg() {
 
   bool need_exit = false;
   // from the parameter client thread to PS server
-  if (this->poll_items_[ps_thread_index_].revents & ZMQ_POLLIN) {
-    shared_ptr<Msg> m = this->sockp_arr_[ps_thread_index_]->RecvMsg(true);
+  if (this->poll_items_[this->param_thread_index_].revents & ZMQ_POLLIN) {
+    int ps_thrd = this->param_thread_index_;
+    shared_ptr<Msg> m = this->sockp_arr_[ps_thrd]->RecvMsg(true);
     if (m->type() == EXIT_TRAIN) {
       need_exit = true;
     }
@@ -202,7 +205,7 @@ int ConvClient<Dtype>::RouteMsg() {
     if (this->poll_items_[fc_poll_idx].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = fc_clients_[i]->RecvMsg(true);
 
-      this->Enqueue(ps_thread_index_, m);
+      this->Enqueue(this->param_thread_index_, m);
     }
   }
 
@@ -214,7 +217,24 @@ int ConvClient<Dtype>::RouteMsg() {
       shared_ptr<Msg> m = ps_clients_[i]->RecvMsg(true);
 
       // forwarding the message to Param thread
-      this->sockp_arr_[ps_thread_index_]->SendMsg(m);
+      this->Enqueue(this->param_thread_index_, m);
+    }
+  }
+
+  if (this->poll_items_[this->back_sock_index_].revents & ZMQ_POLLIN) {
+    shared_ptr<Msg> m = this->sock_back_->RecvMsg(true);
+
+    // pass this message to praram thread
+    this->Enqueue(this->param_thread_index_, m);
+  }
+
+  int poll_index = this->sub_sock_index_;
+  for (int i = 0; i < this->vec_sub_sock_.size(); i++, poll_index++) {
+    if (this->poll_items_[poll_index].revents & ZMQ_POLLIN) {
+      shared_ptr<Msg> m = this->vec_sub_sock_[i]->RecvMsg(true);
+
+      // pass this message to param thread
+      this->Enqueue(this->param_thread_index_, m);
     }
   }
 

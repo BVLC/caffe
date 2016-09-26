@@ -19,25 +19,6 @@ class FcNode : public MsgHub<Dtype> {
   FcNode(int nthreads, int nworkers, int omp_param_threads = 0)
       : MsgHub<Dtype>(nthreads, nworkers),
       work_loads_(nworkers, 0) {
-    node_id_ = NodeEnv::Instance()->ID();
-
-    string pub_addr = NodeEnv::Instance()->pub_addr();
-    string back_addr = NodeEnv::Instance()->router_addr();
-
-    sock_pub_.reset(new SkSock(ZMQ_PUB));
-    sock_pub_->Bind(pub_addr);
-
-    LOG(INFO) << "Bind PUB to: " << pub_addr;
-
-    sock_back_.reset(new SkServer());
-    sock_back_->Bind(back_addr);
-
-    LOG(INFO) << "Bind Router to " << back_addr;
-
-    num_next_hops_ = 0;
-    param_thread_index_ = nthreads - 1;
-    back_sock_index_ = nthreads;
-
     omp_param_threads_ = omp_param_threads;
   }
 
@@ -53,9 +34,6 @@ class FcNode : public MsgHub<Dtype> {
   virtual int SendOutMsg(shared_ptr<Msg> m);
 
   virtual void ProcessFwdMsg(shared_ptr<Msg> m);
-
-  /// Set up the connections and init the routing table
-  int InitRoute();
 
   inline int num_inputs() { return input_blob_name_map_.size(); }
 
@@ -75,34 +53,16 @@ class FcNode : public MsgHub<Dtype> {
   int ScheduleMsg(shared_ptr<Msg> m);
 
  protected:
-  // broadcast blobs to downstream nodes
-  shared_ptr<SkSock> sock_pub_;
-
-  /// a ROUTER socket to received the packets from downstream nodes
-  shared_ptr<SkSock> sock_back_;
-
-  /// back sock index in the poll table
-  int back_sock_index_;
   int num_next_hops_;
 
   vector<int> prev_ids_;
   int num_prev_hops_;
-
-  /// use hash map as a routing table
-  /// map from node id to the sock index
-  unordered_map<int, shared_ptr<SkSock> > node_to_sock_;
 
   /// a thread handles a client
   unordered_map<int, int> src_to_thread_;
 
   /// number of conv. clients a thread handles
   vector<int> work_loads_;
-
-  /// the dealer socks used to connect upstream nodes
-  vector<shared_ptr<SkSock> > vec_dealer_;
-
-  /// NodeID, fetched from ID server
-  int node_id_;
 
   typedef unordered_map<int64_t, shared_ptr<vector<shared_ptr<Msg> > > >
                                                                   MsgMap;
@@ -114,9 +74,6 @@ class FcNode : public MsgHub<Dtype> {
   unordered_map<int64_t, shared_ptr<Msg> > id_to_msg_;
 
   unordered_map<string, bool> input_blob_name_map_;
-
-  //
-  int param_thread_index_;
 
   // number of omp threads for param thread
   int omp_param_threads_;
@@ -146,7 +103,6 @@ class FcClient : public FcNode<Dtype> {
  public:
   FcClient(int nthreads, int omp_param_threads = 0)
       : FcNode<Dtype>(nthreads, nthreads - 1, omp_param_threads) {
-    sub_sock_index_ = nthreads + 1;
   }
 
  public:
@@ -157,11 +113,6 @@ class FcClient : public FcNode<Dtype> {
   virtual int SetUpPoll();
 
  protected:
-  // receive broadcast message from upstream nodes
-  vector<shared_ptr<SkSock> > vec_sub_sock_;
-
-  //
-  int sub_sock_index_;
 };
 
 }  // end namespace caffe

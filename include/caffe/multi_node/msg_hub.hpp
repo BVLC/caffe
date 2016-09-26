@@ -46,6 +46,30 @@ class MsgHub {
 
     // get ip address from machine (use the first interface by default)
     node_ip_ = NodeEnv::Instance()->IP();
+    node_id_ = NodeEnv::Instance()->ID();
+
+    string pub_addr = NodeEnv::Instance()->pub_addr();
+    string back_addr = NodeEnv::Instance()->router_addr();
+
+    if (!back_addr.empty()) {
+      sock_back_.reset(new SkServer());
+      sock_back_->Bind(back_addr);
+
+      LOG(INFO) << "Bind Router to " << back_addr;
+    }
+
+    if (!pub_addr.empty()) {
+      sock_pub_.reset(new SkSock(ZMQ_PUB));
+      sock_pub_->Bind(pub_addr);
+      LOG(INFO) << "Bind PUB to: " << pub_addr;
+    }
+
+    param_thread_index_ = nthreads - 1;
+    back_sock_index_ = nthreads;
+    sub_sock_index_ = back_sock_index_ + 1;
+
+    int sub_addr_size = NodeEnv::Instance()->sub_addrs().size();
+    poll_offset_ = sub_sock_index_ + sub_addr_size;
   }
 
   virtual ~MsgHub() {
@@ -89,6 +113,14 @@ class MsgHub {
 
   void BindCore(int core_id);
 
+  void InitRoute();
+
+  inline shared_ptr<SkSock> param_sock() {
+    return sockp_arr_[param_thread_index_];
+  }
+
+  shared_ptr<SkSock> ConnectNode(const string& addr, int dst_id);
+
  protected:
   // total number of threads
   int nthreads_;
@@ -106,11 +138,41 @@ class MsgHub {
 
   // for message polling
   zmq_pollitem_t *poll_items_;
+
+  // number of poll items
   int num_poll_items_;
 
   string node_ip_;
 
   CPUDispatcher dispatcher_;
+
+  // broadcast blobs to downstream nodes
+  shared_ptr<SkSock> sock_pub_;
+
+  /// a ROUTER socket to received the packets from downstream nodes
+  shared_ptr<SkSock> sock_back_;
+
+  /// back sock index in the poll table
+  int back_sock_index_;
+
+  /// use hash map as a routing table
+  /// map from node id to the sock index
+  unordered_map<int, shared_ptr<SkSock> > node_to_sock_;
+
+  /// NodeID, fetched from ID server
+  int node_id_;
+
+  //
+  int param_thread_index_;
+
+  // receive broadcast message from upstream nodes
+  vector<shared_ptr<SkSock> > vec_sub_sock_;
+
+  //
+  int sub_sock_index_;
+
+  // the poll offset used by MsgHub
+  int poll_offset_;
 
  private:
   MsgHub() {  }

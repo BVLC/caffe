@@ -163,13 +163,13 @@ class ModelMap {
   int ProcessTests(shared_ptr<Msg> m);
 
   // generate message for fc nodes
-  void PrepareFCMsg();
+  int PrepareFCMsg();
 
-  void PreparePSMsg();
+  int PreparePSMsg();
 
-  void PrepareConvMsg();
+  int PrepareConvMsg();
 
-  void PrepareTestMsg();
+  int PrepareTestMsg();
 
   void PrepareConvSolver();
 
@@ -186,11 +186,25 @@ class ModelMap {
   // parse a request with start layer start_idx
   void ParseRequest(int start_idx);
 
+  // build a tree to reduce gradients in conv nodes
+  int BuildReduceTree();
+
+  // set up routing info for conv. nodes
+  void SetUpConvRoutes();
+
+  // set up routing info for parameter servers
+  void SetUpPSRoutes();
+
+  // Build reduce tree to workers and send updates
+  int UpdateWorkers();
+
  protected:
   enum Status {
     WAIT_REQUESTS = 0,
     WAIT_FC_GATEWAY,
-    INITED
+    // wait for conv nodes to complete
+    INITED,
+    COMPLETED
   };
 
   Status status_;
@@ -289,6 +303,12 @@ class ModelMap {
 
   // number of overlapping sub solvers
   int num_sub_solvers_;
+
+  // routing info for parameter servers
+  vector<RouteInfo> ps_routes_;
+
+  // routing info for conv nodes
+  vector<RouteInfo> conv_routes_;
 
 DISABLE_COPY_AND_ASSIGN(ModelMap);
 };

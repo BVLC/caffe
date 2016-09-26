@@ -74,6 +74,8 @@ class NodeEnv {
   /// We broadcast blobs to downstream nodes
   const vector<string>& bcast_addrs() { return bcast_addrs_; }
 
+  const vector<int>& bcast_ids() { return bcast_ids_; }
+
   /// for forwarding some blobs
   const vector<string>& forward_addrs() { return fwrd_addrs_; }
   const vector<int>& forward_ids() { return fwrd_ids_; }
@@ -106,15 +108,22 @@ class NodeEnv {
   shared_ptr<Msg> model_server_msg() { return model_server_msg_; }
 
   string pub_addr() {
-    string addr = "tcp://*:";
-    addr += boost::lexical_cast<string>(pub_port_);
+    string addr;
+    if (pub_port_ > 0) {
+      addr = "tcp://*:";
+      addr += boost::lexical_cast<string>(pub_port_);
+    }
 
     return addr;
   }
 
   string router_addr() {
-    string addr = "tcp://*:";
-    addr += boost::lexical_cast<string>(router_port_);
+    string addr;
+
+    if (router_port_ > 0) {
+      addr = "tcp://*:";
+      addr += boost::lexical_cast<string>(router_port_);
+    }
 
     return addr;
   }
@@ -305,8 +314,10 @@ class NodeEnv {
   // ID of the prev nodes, we use dealers to connect upstream nodes
   vector<int> prev_node_ids_;
 
-  // In FC nodes, we broadcast the blobs to downstream nodes
+  // the addresses of downstream nodes
   vector<string> bcast_addrs_;
+
+  vector<int> bcast_ids_;
 
   // the name of blobs that need to be forwarded
   vector<vector<string> > fwrd_blobs_;

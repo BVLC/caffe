@@ -175,6 +175,7 @@ int NodeEnv::InitModel() {
   for (int i = 0; i < rt_info_.bcast_nodes_size(); i++) {
     const NodeInfo& bcast_node = rt_info_.bcast_nodes(i).node_info();
     bcast_addrs_.push_back(bcast_node.ip());
+    bcast_ids_.push_back(bcast_node.node_id());
   }
 
   // add forward node and blobs

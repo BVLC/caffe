@@ -21,15 +21,6 @@ class ParamServer : public MsgHub<Dtype> {
 
   virtual int RouteMsg();
 
- public:
-  virtual int SetUpPoll();
-
- protected:
-  shared_ptr<SkSock> ps_router_;
-
-  string ps_bind_addr_;
-  int ps_sock_index_;
-
 DISABLE_COPY_AND_ASSIGN(ParamServer);
 };
 

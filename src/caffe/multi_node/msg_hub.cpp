@@ -1,5 +1,6 @@
 
 #include <string>
+#include <vector>
 
 #include "caffe/multi_node/msg_hub.hpp"
 
@@ -29,16 +30,75 @@ int MsgHub<Dtype>::StartThreads() {
 }
 
 template <typename Dtype>
-int MsgHub<Dtype>::SetUpPoll() {
-  CHECK_GT(num_poll_items_, nthreads_);
-  CHECK(poll_items_ != NULL);
+void MsgHub<Dtype>::InitRoute() {
+  // Connect Upstream PUB sockets
+  const vector<string>& sub_addrs = NodeEnv::Instance()->sub_addrs();
 
+  for (int i = 0; i < sub_addrs.size(); i++) {
+    // connect PUB node
+    shared_ptr<SkSock> sub(new SkSock(ZMQ_SUB));
+    sub->Connect(sub_addrs[i]);
+    zmq_setsockopt(sub->GetSock(), ZMQ_SUBSCRIBE, "", 0);
+
+    vec_sub_sock_.push_back(sub);
+  }
+
+  const vector<string>& prev_addrs = NodeEnv::Instance()->prev_router_addrs();
+  const vector<int>& prev_ids = NodeEnv::Instance()->prev_node_ids();
+
+  for (int i = 0; i < prev_addrs.size(); i++) {
+    ConnectNode(prev_addrs[i], prev_ids[i]);
+  }
+
+  return;
+}
+
+template <typename Dtype>
+shared_ptr<SkSock> MsgHub<Dtype>::ConnectNode(const string& addr,
+                                              int dst_id) {
+  unordered_map<int, shared_ptr<SkSock> >::iterator iter =
+                                                node_to_sock_.find(dst_id);
+  if (iter != node_to_sock_.end()) {
+    return iter->second;
+  }
+
+  shared_ptr<SkSock> dealer(new SkSock(ZMQ_DEALER));
+  dealer->SetId(node_id_);
+  dealer->Connect(addr);
+  node_to_sock_[dst_id] = dealer;
+
+  return dealer;
+}
+
+template <typename Dtype>
+int MsgHub<Dtype>::SetUpPoll() {
+  if (poll_items_ == NULL) {
+    num_poll_items_ = poll_offset_ + 1;
+    poll_items_ = new zmq_pollitem_t[this->num_poll_items_];
+    memset(poll_items_, 0, sizeof(zmq_pollitem_t) * this->num_poll_items_); // NOLINT
+  }
   // initialize polling items for the work threads
   for (int i = 0; i < nthreads_; i++) {
     poll_items_[i].socket = sockp_arr_[i]->GetSock();
     poll_items_[i].events = ZMQ_POLLIN;
     poll_items_[i].fd = 0;
     poll_items_[i].revents = 0;
+  }
+
+  if (sock_back_ != NULL) {
+    poll_items_[back_sock_index_].socket = sock_back_->GetSock();
+    poll_items_[back_sock_index_].events = ZMQ_POLLIN;
+    poll_items_[back_sock_index_].fd = 0;
+    poll_items_[back_sock_index_].revents = 0;
+  }
+
+  // adding the subscribers to the polling items
+  int poll_index = sub_sock_index_;
+  for (int i = 0; i < vec_sub_sock_.size(); i++, poll_index++) {
+    this->poll_items_[poll_index].socket = vec_sub_sock_[i]->GetSock();
+    this->poll_items_[poll_index].events = ZMQ_POLLIN;
+    this->poll_items_[poll_index].fd = 0;
+    this->poll_items_[poll_index].revents = 0;
   }
 
   return 0;

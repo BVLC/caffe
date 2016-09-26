@@ -36,16 +36,15 @@ class SkSock {
 
   virtual ~SkSock() {
     if (NULL != sock_) {
-      LOG(INFO) << "close sock";
       zmq_close(sock_);
     }
 
     boost::mutex::scoped_lock lock(zmq_init_mutex_);
-    LOG(INFO) << "deinitialize zmq ctx cnt: " << inited_cnt_;
+    MLOG(INFO) << "deinitialize zmq ctx cnt: " << inited_cnt_;
 
     inited_cnt_--;
     if (0 == inited_cnt_) {
-      LOG(INFO) << "destroying zmq context";
+      MLOG(INFO) << "destroying zmq context";
       zmq_ctx_destroy(zmq_ctx_);
       LOG(INFO) << "zmq context destroyed";
     }

@@ -26,6 +26,9 @@ DEFINE_string(net_if, "", "the network interface to be used");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
 DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
+DEFINE_int32(pub_port, 3001, "the tcp port to do broadcast");
+DEFINE_int32(route_port, 3002, "the tcp port to listen");
+
 int main(int argc, char** argv) {
   google::InstallFailureSignalHandler();
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -46,6 +49,8 @@ int main(int argc, char** argv) {
 
   ModelRequest rq;
   rq.mutable_node_info()->set_node_role(CONV_CLIENT);
+  rq.mutable_node_info()->set_router_port(FLAGS_route_port);
+  rq.mutable_node_info()->set_pub_port(FLAGS_pub_port);
   if (!FLAGS_net_if.empty()) {
     rq.mutable_node_info()->set_net_if(FLAGS_net_if);
   }
