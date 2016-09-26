@@ -10,9 +10,9 @@ build_script:
 
     set PATH=%PATH:nuget=hello%
 
-    msbuild Caffe.sln /m /v:m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Debug;CpuOnlyBuild=true;UseCuDNN=false
+    msbuild Caffe.sln /v:m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Debug;CpuOnlyBuild=true;UseCuDNN=false
 
-    msbuild Caffe.sln /m /v:m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release;CpuOnlyBuild=true;UseCuDNN=false;WholeProgramOptimization=false
+    msbuild Caffe.sln /v:m /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" /p:Configuration=Release;CpuOnlyBuild=true;UseCuDNN=false;WholeProgramOptimization=false
 
     cd ..
 
