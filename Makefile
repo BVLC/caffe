@@ -408,7 +408,7 @@ endif
 MKLDNN_LDFLAGS=
 MKLDNN_INCLUDE ?= $(MKLDNNROOT)/include
 ifneq ("$(wildcard $(MKLDNN_INCLUDE)/mkldnn.hpp)","")
-	CXXFLAGS += -DMKLDNN_SUPPORTED -std=c++11
+	CXXFLAGS += -DMKLDNN_SUPPORTED
 	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
 	CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
 	endif
@@ -483,7 +483,7 @@ CXXFLAGS += -MMD -MP
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
+CXXFLAGS += -std=c++11 -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
