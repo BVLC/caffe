@@ -94,6 +94,7 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
   virtual void ApplyUpdate() = 0;
+  virtual void UpdateClearDiff(){};
 
  protected:
   // Make and apply the update value for the current iteration.

@@ -254,7 +254,7 @@ static void solver_update(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('solver_update', hSolver, iters)");
   Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
-  solver->ApplyUpdate();
+  solver->UpdateClearDiff();
 }
 
 // Usage: caffe_('get_net', model_file, phase_name)
