@@ -30,8 +30,11 @@ public:
     virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
     virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
     virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;}
-    virtual size_t prv_count();
-    virtual size_t prv_size() { return prv_size() * sizeof(Dtype); }
+
+    // TODO: assuming size/sizeof = count may be not correct
+    virtual size_t prv_count() { return prv_size()/sizeof(Dtype); }
+
+    virtual size_t prv_size() { return _prv_memory_pd->get_size(); }
     // ---------------------------------------
     shared_ptr<MKLDNNMemoryDescriptorBase<Dtype> > get_shared_ptr() {
         return this->shared_from_this();

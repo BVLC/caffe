@@ -24,26 +24,16 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
 }
 
 template <typename Dtype>
-size_t MKLDNNMemoryDescriptorBase<Dtype>::prv_count()
-{
-    mkldnn::c_api::mkldnn_dims_t* pdims = &(_usr_memory_pd->data.memory_desc.tensor_desc.dims);
-    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
-    int32_t count = 1;
-    for (int32_t i = 0; i < ndims; ++i) count *= (*pdims)[i];
-    return count;
-}
-
-template <typename Dtype>
 void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
-    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
-    CHECK_EQ(ndims, _prv_memory_pd->data.memory_desc.tensor_desc.ndims)
+    int32_t ndims = _usr_memory_pd->desc().data.ndims;
+    CHECK_EQ(ndims, _prv_memory_pd->desc().data.ndims)
             << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions number";
     for (int32_t dim = 0; dim < ndims; ++dim) {
-        CHECK_EQ(_usr_memory_pd->data.memory_desc.tensor_desc.dims[dim]
-                , _prv_memory_pd->data.memory_desc.tensor_desc.dims[dim])
+        CHECK_EQ(_usr_memory_pd->desc().data.dims[dim]
+                , _prv_memory_pd->desc().data.dims[dim])
                 << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions";
     }
 }
@@ -103,6 +93,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_p
     if(this->_reorder_prv2usr.aprimitive == NULL) {
         CHECK(this->aprimitive());
         this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->_reorder_prv2usr_pd, *this->aprimitive(), *this->_usr_memory));
+//        this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->aprimitive(), *this->_usr_memory));
     }
 }
 

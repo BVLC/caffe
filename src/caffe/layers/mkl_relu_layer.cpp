@@ -96,8 +96,8 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   relu_res[dnnResourceSrc] = bottom_data;
 
   if (fwd_top_data_->conversion_needed()) {
-    if (NULL != bottom[0]->get_prv_data_descriptor()) {
-      top[0]->set_prv_data_descriptor(fwd_bottom_data_);
+    if (bottom[0] == top[0]) {
+//      top[0]->set_prv_data_descriptor(fwd_bottom_data_);
       DLOG(INFO) << "Using bottom as top (in-place) in mklReLU.";
     } else {
       top[0]->set_prv_data_descriptor(fwd_top_data_);

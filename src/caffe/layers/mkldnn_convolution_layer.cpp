@@ -86,18 +86,18 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
 
-    tensor::dims convolutionStrides {this->stride_h_, this->stride_w_};
-    tensor::dims padding {this->pad_h_, this->pad_w_};
+    memory::dims convolutionStrides {this->stride_h_, this->stride_w_};
+    memory::dims padding {this->pad_h_, this->pad_w_};
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
-    tensor::dims input_tz = {n, ic, ih, iw};
-    tensor::dims bias_tz = {oc};
-    tensor::dims output_tz = {n, oc, oh, ow};
-    tensor::dims weights_tz = ( g!= 1) ? tensor::dims{g, oc/g, ic/g, kh, kw} : tensor::dims{oc, ic, kh, kw};
+    memory::dims input_tz = {n, ic, ih, iw};
+    memory::dims bias_tz = {oc};
+    memory::dims output_tz = {n, oc, oh, ow};
+    memory::dims weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_input_md({input_tz}, mpcsn, mfmt_any);
@@ -106,20 +106,26 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt_any);
 
     // ---- Initialize convolution primitive descriptor -------------
-    convolution::desc convFwd_desc(prop_kind::forward, convolution::direct, init_input_md
-                                    , init_weights_md, init_bias_md
-                                    , init_output_md, convolutionStrides
-                                    , padding, padding_kind::zero);
+    shared_ptr<convolution_forward::desc> convFwd_desc;
+    if (this->bias_term_) {
+        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, convolution_forward::direct
+                                    , init_input_md, init_weights_md, init_bias_md, init_output_md
+                                    , convolutionStrides, padding, padding, padding_kind::zero));
+    } else {
+        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, convolution_forward::direct
+                                    , init_input_md, init_weights_md, init_output_md
+                                    , convolutionStrides, padding, padding, padding_kind::zero));
+    }
 
-    convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, cpu_engine));
+    convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc, cpu_engine));
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->data.src_primitive_desc));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->data.bias_primitive_desc));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->data.dst_primitive_desc));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->data.weights_primitive_desc));
+    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->src_primitive_desc()));
+    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
+    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->dst_primitive_desc()));
+    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->weights_primitive_desc()));
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
@@ -143,7 +149,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    convFwd.reset(new convolution(*convFwd_pd
+    convFwd.reset(new convolution_forward(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(convFwd);

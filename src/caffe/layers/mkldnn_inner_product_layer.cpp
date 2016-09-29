@@ -65,13 +65,13 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     bool has_spatial = h > 1 || w > 1;
 
     // Initialize memory descriptors (fromat = any) to create inner_product descriptor
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt = memory::format::any;
 
-    tensor::dims input_tz = (has_spatial) ? tensor::dims{n, ic, h, w} : tensor::dims{n, ic};
-    tensor::dims output_tz = {n, oc};
-    tensor::dims weights_tz = (has_spatial) ? tensor::dims {oc, ic, h, w} : tensor::dims{oc, ic};
-    tensor::dims bias_tz = {oc};
+    memory::dims input_tz = (has_spatial) ? memory::dims{n, ic, h, w} : memory::dims{n, ic};
+    memory::dims output_tz = {n, oc};
+    memory::dims weights_tz = (has_spatial) ? memory::dims {oc, ic, h, w} : memory::dims{oc, ic};
+    memory::dims bias_tz = {oc};
 
     memory::desc init_input_md({input_tz}, mpcsn, mfmt);
     memory::desc init_output_md({ output_tz}, mpcsn, mfmt);
@@ -79,20 +79,20 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     memory::desc init_bias_md({bias_tz}, mpcsn, mfmt);
 
     // Initialize inner_product primitive descriptor
-    inner_product::desc ipFwd_desc(prop_kind::forward, init_input_md, init_weights_md
+    inner_product_forward::desc ipFwd_desc(prop_kind::forward, init_input_md, init_weights_md
                                                 ,init_bias_md, init_output_md);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
-    ipFwd_pd.reset(new inner_product::primitive_desc(ipFwd_desc, cpu_engine));
+    ipFwd_pd.reset(new inner_product_forward::primitive_desc(ipFwd_desc, cpu_engine));
 
     // Create priv memory primitive descriptors stored as class members
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(ipFwd_pd->data.src_primitive_desc));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(ipFwd_pd->data.bias_primitive_desc));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(ipFwd_pd->data.dst_primitive_desc));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(ipFwd_pd->data.weights_primitive_desc));
+    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(ipFwd_pd->src_primitive_desc()));
+    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
+    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(ipFwd_pd->dst_primitive_desc()));
+    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(ipFwd_pd->weights_primitive_desc()));
 
     // Create usr memory primitive descriptors stored as class members
     memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
@@ -116,7 +116,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
     }
-    ipFwd.reset(new inner_product(prop_kind::forward
+    ipFwd.reset(new inner_product_forward(*ipFwd_pd
                             , *input_primitive, *weights_primitive
                             , *bias_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);

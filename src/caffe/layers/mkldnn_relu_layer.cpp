@@ -45,7 +45,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL);
@@ -62,8 +62,8 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     output_md = input_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    relu::desc reluFwd_desc(prop_kind::forward, negative_slope, *input_md, *output_md);
-    reluFwd_pd.reset(new relu::primitive_desc(reluFwd_desc, cpu_engine));
+    relu_forward::desc reluFwd_desc(prop_kind::forward, *input_md, negative_slope);
+    reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
@@ -72,7 +72,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    reluFwd.reset(new relu(*reluFwd_pd, *input_primitive, *output_memory));
+    reluFwd.reset(new relu_forward(*reluFwd_pd, *input_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(reluFwd);
     fwd_top_data->set_mkldnn_primitive(reluFwd);
 }

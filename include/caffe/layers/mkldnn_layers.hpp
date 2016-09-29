@@ -46,7 +46,7 @@ protected:
 private:
     void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
-    shared_ptr<batch_normalization::primitive_desc> BatchNormFwd_pd;
+    shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
 
     MKLDNNPrimitive<Dtype> BatchNormFwd;
     shared_ptr<memory> output_memory, scaleshift_memory, ws_memory;
@@ -79,7 +79,7 @@ private:
     void InitConvolution(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
-    shared_ptr<convolution::primitive_desc> convFwd_pd;
+    shared_ptr<convolution_forward::primitive_desc> convFwd_pd;
     MKLDNNPrimitive<Dtype> convFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
@@ -107,7 +107,7 @@ private:
     void InitInnerProduct(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
-    shared_ptr<inner_product::primitive_desc> ipFwd_pd;
+    shared_ptr<inner_product_forward::primitive_desc> ipFwd_pd;
     MKLDNNPrimitive<Dtype> ipFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
@@ -149,7 +149,7 @@ private:
     void InitLRN(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
-    shared_ptr<lrn::primitive_desc> lrnFwd_pd;
+    shared_ptr<lrn_forward::primitive_desc> lrnFwd_pd;
     MKLDNNPrimitive<Dtype> lrnFwd;
     shared_ptr<memory> output_memory, scratch_;
     shared_ptr<primitive> input_primitive;
@@ -197,7 +197,7 @@ private:
     void InitPooling(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data;
-    shared_ptr<pooling::primitive_desc> poolingFwd_pd;
+    shared_ptr<pooling_forward::primitive_desc> poolingFwd_pd;
     MKLDNNPrimitive<Dtype> poolingFwd;
     shared_ptr<memory::primitive_desc> indices_pd;
     shared_ptr<memory> indices_memory, output_memory;
@@ -241,7 +241,7 @@ private:
     void InitReLU(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
-    shared_ptr<relu::primitive_desc> reluFwd_pd;
+    shared_ptr<relu_forward::primitive_desc> reluFwd_pd;
     MKLDNNPrimitive<Dtype> reluFwd;
     shared_ptr<memory> output_memory;
     shared_ptr<primitive> input_primitive;
