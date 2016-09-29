@@ -177,6 +177,13 @@ class Layer {
       const vector<Blob<Dtype>*>& bottom);
 
   /**
+   * @brief Set phase: TRAIN or TEST
+   */
+  inline void SetPhase(Phase p) {
+    phase_ = p;
+  }
+
+  /**
    * @brief Returns the vector of learnable parameter blobs.
    */
   vector<shared_ptr<Blob<Dtype> > >& blobs() {
