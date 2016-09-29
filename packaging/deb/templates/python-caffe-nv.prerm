@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+
+# Cleanup compiled files
+pyclean /usr/lib/python2.7/dist-packages/caffe
+
+#DEBHELPER#

@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+
+ifeq ($(CUDA_VERSION),7.5)
+	CUDA_ARCH_BIN := 30 35 50 52
+	CUDA_ARCH_PTX := 52
+else ifeq ($(CUDA_VERSION),8.0)
+	CUDA_ARCH_BIN := 30 35 50 52 60
+	CUDA_ARCH_PTX := 60
+else ifeq ($(CUDA_VERSION),)
+$(error "CUDA_VERSION is not set")
+else
+$(error "CUDA_VERSION $(CUDA_VERSION) is not recognized")
+endif
+
+%:
+	dh $@ --buildsystem=cmake --parallel
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DALLOW_LMDB_NOLOCK=ON \
+		-DBLAS=Open \
+		-DCMAKE_BUILD_TYPE="Release" \
+		-DCMAKE_SKIP_RPATH=TRUE \
+		-DCPU_ONLY=OFF \
+		-DCUDA_ARCH_NAME=Manual \
+		-DCUDA_ARCH_BIN="$(CUDA_ARCH_BIN)" \
+		-DCUDA_ARCH_PTX="$(CUDA_ARCH_PTX)"
+
+BIN_BUILD_DIR := debian/tmp/usr/bin
+TOOLS_INSTALL_DIR := debian/caffe-nv-tools/usr/bin
+LIB_BUILD_DIR := debian/tmp/usr/lib
+LIB_INSTALL_DIR := debian/libcaffe-nv0/usr/lib/x86_64-linux-gnu
+
+override_dh_auto_install:
+	dh_auto_install
+	# Copy the tools manually rather than with a ".install" file because
+	#   we want to add the "caffe_" prefix.
+	mkdir -p $(TOOLS_INSTALL_DIR)
+	for orig_name in `ls $(BIN_BUILD_DIR) -I caffe`; do \
+		dest_name=caffe_$$orig_name; \
+		cp -v $(BIN_BUILD_DIR)/$$orig_name $(TOOLS_INSTALL_DIR)/$$dest_name; \
+	done
+	# Copy the versioned DSOs manually since the version number changes
+	mkdir -p $(LIB_INSTALL_DIR)
+	for filename in `ls $(LIB_BUILD_DIR)/*.so.*`; do \
+		cp -av $$filename $(LIB_INSTALL_DIR)/; \
+	done
