@@ -11,7 +11,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , MKLDNNLayer<Dtype>* mkldnn_layer)
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL), _reorder_extprv2prv_pd(NULL)
-                                    ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL), _extprv_ptr(NULL)
+                                    ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd);
@@ -35,13 +35,6 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
         CHECK_EQ(_usr_memory_pd->desc().data.dims[dim]
                 , _prv_memory_pd->desc().data.dims[dim])
                 << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions";
-    }
-    if(this->_extprv_memory_pd != NULL) {
-        for (int32_t dim = 0; dim < ndims; ++dim) {
-            CHECK_EQ(_usr_memory_pd->desc().data.dims[dim]
-                    , _extprv_memory_pd->desc().data.dims[dim])
-                    << "MKLDNNMemoryDescriptorBase: Usr and External Prv memory must have same dimensions";
-        }
     }
 }
 
@@ -138,29 +131,29 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 }
 
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_extprv(void* extprv_ptr)
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_extprv(shared_ptr<primitive> aprimitive)
 {
-    CHECK(extprv_ptr);
+    CHECK(aprimitive);
     CHECK(this->_extprv_memory_pd);
     CHECK(this->_prv_memory_pd);
     CHECK(this->_reorder_extprv2prv_pd);
-    if (this->_extprv_ptr == NULL)
-        this->_extprv_ptr = extprv_ptr;
+    if (this->_extprv_primitive == NULL)
+        this->_extprv_primitive = aprimitive;
     else
-        CHECK_EQ(this->_extprv_ptr, extprv_ptr);
-    if(this->_extprv_memory == NULL)
-        this->_extprv_memory.reset(new memory(*this->_extprv_memory_pd, extprv_ptr));
+        CHECK_EQ(this->_extprv_primitive, aprimitive);
+//    if(this->_extprv_memory == NULL)
+//        this->_extprv_memory.reset(new memory(*this->_extprv_memory_pd, extprv_ptr));
     if(this->_reorder_extprv2prv.aprimitive == NULL)
-        this->_reorder_extprv2prv.reset(new reorder(*this->_reorder_extprv2prv_pd, *this->_extprv_memory, *this->get_prv_memory()));
+        this->_reorder_extprv2prv.reset(new reorder(*this->_reorder_extprv2prv_pd, *this->_extprv_primitive, *this->get_prv_memory()));
 }
 
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(void* extprv_ptr)
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<primitive> aprimitive)
 {
-    CHECK(extprv_ptr);
+    CHECK(aprimitive);
     if(this->_reorder_extprv2prv_pd == NULL)
         return;
-    create_reorder_from_extprv(extprv_ptr);
+    create_reorder_from_extprv(aprimitive);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
     this->_reorder_extprv2prv.submit();;
 }
@@ -228,9 +221,9 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
             // prv in blob and in this descrptor may have different layouts
             if(convert)
-                this->convert_from_extprv(const_cast<Dtype*>(is_diff ? blob->prv_diff() : blob->prv_data()));
+                this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
             else
-                this->create_reorder_from_extprv(const_cast<Dtype*>(is_diff ? blob->prv_diff() : blob->prv_data()));
+                this->create_reorder_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
             return this->reorder_extprv2prv();
         } else if (blob_prv_mkldnn_mem_descr.get() != this) {
             VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;

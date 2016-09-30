@@ -46,9 +46,11 @@ public:
     virtual ~MKLDNNStream() {}
     MKLDNNStream  &submit(std::vector<primitive> primitives) { _stream->submit(primitives); return *this; }
     bool wait(bool block = true) {
-        VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : execute stream (wait) ";
+        VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : wait stream ";
         _ready = false;
-        return _stream->wait(block);
+        bool res = _stream->wait(block);
+        VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : end of stream waiting ";
+        return res;
     }
     bool ready() { return _ready; }
     void prepare() {
@@ -57,8 +59,8 @@ public:
             // !! TODO: change below if stream will have method to reset its state
             VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : create new stream";
 //            _stream.reset(new stream(stream::kind::any));
-            _stream.reset(new stream(stream::kind::eager));
-//            _stream.reset(new stream(stream::kind::lazy));
+//            _stream.reset(new stream(stream::kind::eager));
+            _stream.reset(new stream(stream::kind::lazy));
         }
         _ready = true;
     }

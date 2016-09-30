@@ -115,9 +115,9 @@ protected:
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
-    shared_ptr<memory> _extprv_memory;
+    shared_ptr<primitive> _extprv_primitive;
     void* _cpu_ptr; // TODO: ?? 
-    void* _extprv_ptr;
+//    void* _extprv_ptr;
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
@@ -132,12 +132,12 @@ public:
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
-    virtual void convert_from_extprv(void* cpu_ptr);
+    virtual void convert_from_extprv(shared_ptr<primitive> aprimitive);
     virtual bool on_to_cpu();
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);
-    virtual void create_reorder_from_extprv(void* cpu_ptr);
+    virtual void create_reorder_from_extprv(shared_ptr<primitive> aprimitive);
 
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.
