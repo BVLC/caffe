@@ -137,14 +137,8 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_extprv(shared_p
     CHECK(this->_extprv_memory_pd);
     CHECK(this->_prv_memory_pd);
     CHECK(this->_reorder_extprv2prv_pd);
-    if (this->_extprv_primitive == NULL)
-        this->_extprv_primitive = aprimitive;
-    else
-        CHECK_EQ(this->_extprv_primitive, aprimitive);
-//    if(this->_extprv_memory == NULL)
-//        this->_extprv_memory.reset(new memory(*this->_extprv_memory_pd, extprv_ptr));
     if(this->_reorder_extprv2prv.aprimitive == NULL)
-        this->_reorder_extprv2prv.reset(new reorder(*this->_reorder_extprv2prv_pd, *this->_extprv_primitive, *this->get_prv_memory()));
+        this->_reorder_extprv2prv.reset(new reorder(*this->_reorder_extprv2prv_pd, *aprimitive, *this->get_prv_memory()));
 }
 
 template <typename Dtype, bool is_diff>

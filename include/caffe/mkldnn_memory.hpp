@@ -115,9 +115,7 @@ protected:
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
-    shared_ptr<primitive> _extprv_primitive;
-    void* _cpu_ptr; // TODO: ?? 
-//    void* _extprv_ptr;
+    void* _cpu_ptr;
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
