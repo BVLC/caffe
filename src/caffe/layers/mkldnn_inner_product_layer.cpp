@@ -79,12 +79,18 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     memory::desc init_bias_md({bias_tz}, mpcsn, mfmt);
 
     // Initialize inner_product primitive descriptor
-    inner_product_forward::desc ipFwd_desc(prop_kind::forward, init_input_md, init_weights_md
-                                                ,init_bias_md, init_output_md);
+    shared_ptr<inner_product_forward::desc> ipFwd_desc;
+    if (this->bias_term_) {
+        ipFwd_desc.reset(new inner_product_forward::desc(prop_kind::forward, init_input_md, init_weights_md
+                                                ,init_bias_md, init_output_md));
+    } else {
+        ipFwd_desc.reset(new inner_product_forward::desc(prop_kind::forward, init_input_md, init_weights_md
+                                                , init_output_md));
+    }
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
-    ipFwd_pd.reset(new inner_product_forward::primitive_desc(ipFwd_desc, cpu_engine));
+    ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc, cpu_engine));
 
     // Create priv memory primitive descriptors stored as class members
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
@@ -115,10 +121,14 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     if (this->bias_term_) {
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
-    }
-    ipFwd.reset(new inner_product_forward(*ipFwd_pd
+        ipFwd.reset(new inner_product_forward(*ipFwd_pd
                             , *input_primitive, *weights_primitive
                             , *bias_primitive, *output_memory));
+    } else {
+        ipFwd.reset(new inner_product_forward(*ipFwd_pd
+                            , *input_primitive, *weights_primitive
+                            , *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);
     fwd_top_data->set_mkldnn_primitive(ipFwd);
     fwd_weights_data->set_mkldnn_primitive(ipFwd);

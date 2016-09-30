@@ -148,10 +148,14 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     if (this->bias_term_) {
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
-    }
-    convFwd.reset(new convolution_forward(*convFwd_pd
+        convFwd.reset(new convolution_forward(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
+    } else {
+        convFwd.reset(new convolution_forward(*convFwd_pd
+                        , *input_primitive, *weights_primitive
+                        , *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(convFwd);
     fwd_top_data->set_mkldnn_primitive(convFwd);
     fwd_weights_data->set_mkldnn_primitive(convFwd);
