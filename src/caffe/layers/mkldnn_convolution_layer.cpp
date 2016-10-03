@@ -123,7 +123,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
     shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->src_primitive_desc()));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
     shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->dst_primitive_desc()));
     shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->weights_primitive_desc()));
 
@@ -146,11 +145,14 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     weights_primitive = fwd_weights_data->create_input(false);
 
     if (this->bias_term_) {
+        shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
         convFwd.reset(new convolution_forward(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
+        fwd_bias_data->set_mkldnn_primitive(convFwd);
+        fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
     } else {
         convFwd.reset(new convolution_forward(*convFwd_pd
                         , *input_primitive, *weights_primitive
@@ -159,13 +161,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     fwd_bottom_data->set_mkldnn_primitive(convFwd);
     fwd_top_data->set_mkldnn_primitive(convFwd);
     fwd_weights_data->set_mkldnn_primitive(convFwd);
-    fwd_bias_data->set_mkldnn_primitive(convFwd);
 
     // Names are for debugging purposes only.
     fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
-    fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 }
 
 template <typename Dtype>
@@ -178,7 +178,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     fwd_weights_data->sync_before_read(true);
-    fwd_bias_data->sync_before_read(true);
+    if (this->bias_term_)
+        fwd_bias_data->sync_before_read(true);
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
