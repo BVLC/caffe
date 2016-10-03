@@ -145,6 +145,7 @@ struct GPUMemory {
   struct Manager {
     Manager();
     ~Manager();
+    void lazy_init(int device);
     void GetInfo(size_t* free_mem, size_t* used_mem);
     void deallocate(void* ptr, int device, cudaStream_t stream);
     bool try_allocate(void** ptr, size_t size, int device, cudaStream_t);
