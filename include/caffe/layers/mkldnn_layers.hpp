@@ -255,7 +255,7 @@ public:
     explicit MKLDNNConcatLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
             concatFwd_pd(NULL), output_memory(NULL),
-            fwd_top_data(NULL), fwd_bottom_data(NULL) {
+            fwd_top_data(NULL), fwd_bottom_data(NULL), split_channels(NULL) {
     }
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -270,13 +270,14 @@ protected:
 private:
     void InitConcat(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
-    vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
-    shared_ptr<memory> output_memory;
-    vector<primitive::at> input_primitive;
     shared_ptr<concat::primitive_desc> concatFwd_pd;
+    shared_ptr<memory> output_memory;
+    vector<shared_ptr<primitive>> input_primitives_;
+    vector<primitive::at> input_primitives_at_;
     MKLDNNPrimitive<Dtype> concatFwd;
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data;
-    int *split_channels;
+    vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
+    vector<int> split_channels;
 
     int32_t num_, width_, height_, channels_, num_concats_;
 };
