@@ -69,9 +69,25 @@ GPUMemory::Manager::~Manager() {
   }
 }
 
+void GPUMemory::Manager::lazy_init(int device) {
+  if (initialized_) {
+    return;
+  }
+  if (device < 0) {
+    CUDA_CHECK(cudaGetDevice(&device));
+  }
+  LOG(WARNING) << "Lazily initializing GPU Memory Manager Scope on device "
+      << device << ". Note: it's recommended to do this explicitly in your "
+          "main() function.";
+  vector<int> gpus(1, device);
+  static Scope gpu_memory_scope(gpus);
+}
+
 bool GPUMemory::Manager::try_allocate(void** ptr, size_t size, int device,
     cudaStream_t stream) {
-  CHECK(initialized_) << "Create GPUMemory::Scope to initialize Memory Manager";
+  if (!initialized_) {
+    lazy_init(device);
+  }
   CHECK_NOTNULL(ptr);
   cudaError_t status = cudaSuccess, last_err = cudaSuccess;
   switch (mode_) {
