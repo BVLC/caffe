@@ -22,13 +22,13 @@ namespace caffe {
 device::device()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0), list_id_(0),
       backend_(Backend::BACKEND_CPU), memory_usage_(0), peak_memory_usage_(0),
-      host_unified_(false) {
+      host_unified_(false), name_("") {
 }
 
 device::device(int id, int list_id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id), list_id_(list_id),
       backend_(backend), memory_usage_(0), peak_memory_usage_(0),
-      host_unified_(false) {
+      host_unified_(false), name_("") {
 }
 
 void device::Init() {
@@ -156,6 +156,40 @@ uint_tp device::peak_memory_usage() {
   return peak_memory_usage_;
 }
 
+std::string device::name() {
+  if (name_ == "") {
+    if (backend_ == BACKEND_OpenCL) {
+#ifdef USE_GREENTEA
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+
+      size_t size;
+      size_t max_size = 1024 * 1024;
+      clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
+                      0, NULL, &size);
+
+      // Cap at 1 MB to capture faulty OpenCL implementations (nVidia)
+      std::vector<char> exts(std::min(size, max_size));
+
+      clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
+                      std::min(size, max_size), &(exts[0]), NULL);
+
+      std::string extsstr(&(exts[0]));
+      std::replace(extsstr.begin(), extsstr.end(), ' ', '_');
+      name_ = extsstr;
+#endif  // USE_GREENTEA
+    } else {
+#ifdef USE_CUDA
+      cudaDeviceProp prop;
+      cudaGetDeviceProperties(&prop, id_);
+      std::string extsstr(&prop.name[0]);
+      std::replace(extsstr.begin(), extsstr.end(), ' ', '_');
+      name_ = extsstr;
+#endif  // USE_CUDA
+    }
+  }
+  return name_;
+}
+
 void device::IncreaseMemoryUsage(uint_tp bytes) {
   memory_usage_ += bytes;
   if (memory_usage_ > peak_memory_usage_) {
@@ -185,7 +219,7 @@ bool device::CheckCapability(std::string cap) {
     std::vector<char> exts(std::min(size, max_size));
 
     clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_EXTENSIONS,
-                    size, &(exts[0]), NULL);
+                    std::min(size, max_size), &(exts[0]), NULL);
 
     std::string extsstr(&(exts[0]));
     return extsstr.find(cap) != std::string::npos;
@@ -214,7 +248,25 @@ bool device::CheckVendor(std::string vendor) {
       return true;
   }
 #endif
+  return false;
+}
 
+bool device::CheckType(std::string type) {
+  if (backend_ == BACKEND_CUDA) {
+    if (type.compare("GPU") == 0)
+      return true;
+  }
+#ifdef USE_GREENTEA
+  else if (backend_ == BACKEND_OpenCL) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+    const viennacl::ocl::device &device = ctx.current_device();
+
+    if (type.compare("GPU") == 0 && device.type() == CL_DEVICE_TYPE_GPU)
+      return true;
+    if (type.compare("CPU") == 0 && device.type() == CL_DEVICE_TYPE_CPU)
+      return true;
+  }
+#endif
   return false;
 }
 

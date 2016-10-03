@@ -49,11 +49,13 @@ class device {
 
   uint_tp memory_usage();
   uint_tp peak_memory_usage();
+  std::string name();
   void IncreaseMemoryUsage(uint_tp bytes);
   void DecreaseMemoryUsage(uint_tp bytes);
   void ResetPeakMemoryUsage();
   bool CheckCapability(std::string cap);
   bool CheckVendor(std::string vendor);
+  bool CheckType(std::string type);
 
  private:
   int current_queue_id_;
@@ -66,6 +68,7 @@ class device {
   std::vector<shared_ptr<Blob<float> > > buff_f_;
   std::vector<shared_ptr<Blob<double> > > buff_d_;
   bool host_unified_;
+  std::string name_;
 #ifdef USE_GREENTEA
   viennacl::ocl::program ocl_program_;
 #endif  // USE_GREENTEA

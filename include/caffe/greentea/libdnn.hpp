@@ -53,14 +53,25 @@ typedef enum {
   LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC = 1
 } libdnnConvolutionBackwardAlgo_t;
 
-struct LibDNNConfig {
-  LibDNNConfig() :
+typedef enum {
+  LIBDNN_POOLING_METHOD_MAX                 = 0,
+  LIBDNN_POOLING_METHOD_AVE                 = 1,
+  LIBDNN_POOLING_METHOD_STO                 = 2
+} libdnnPoolingMethod_t;
+
+typedef enum {
+  LIBDNN_POOLING_BW_ALGO_DIRECT             = 0,
+  LIBDNN_POOLING_BW_ALGO_ATOMIC             = 1
+} libdnnPoolingBackwardAlgo_t;
+
+struct LibDNNConvConfig {
+  LibDNNConvConfig() :
     in_shape(3, 1),
     out_shape(3, 1),
     kernel(1, 1),
-    pad(1, 0),
+    pad(0, 0),
     stride(1, 1),
-    dilation(1, 0)
+    dilation(1, 1)
   {}
   device* dev_ptr = nullptr;
   std::vector<int_tp> in_shape;
@@ -78,13 +89,71 @@ struct LibDNNConfig {
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
       LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
+  std::function<void*(void**, const uint_tp, const int_tp)>
+      memory_allocator = nullptr;
 };
 
+template<typename Dtype>
+class LibDNN {
+ protected:
+  explicit LibDNN();
+  virtual void GenerateKernels() = 0;
+  virtual std::string string_identifier() = 0;
+  std::string generate_header();
+  std::string generate_common_defs();
+  bool CompileKernels();
+  void AllocateMemory(void** ptr, uint_tp size, int_tp flags);
+  void SetMemory(Dtype* memory, int_tp count, int_tp offset, Dtype value);
+#ifdef USE_GREENTEA
+  viennacl::ocl::program CompileKernelsOpenCL(viennacl::ocl::context *ctx);
+#endif  // USE_GREENTEA
+#ifdef USE_CUDA
+  nvrtcProgram CompileKernelsCuda();
+#endif  // USE_CUDA
+
+  template<class T>
+  inline void add_def(std::stringstream& ss,  // NOLINT
+      const char* name, T value) {
+    ss << "#ifdef " << name << std::endl;
+    ss << "#undef " << name << std::endl;
+    ss << "#endif" << std::endl;
+    if (std::is_same<T, float>::value) {
+      ss << "#define " << name << " (float) " << std::setprecision(32) << value
+          << std::endl;
+    } else if (std::is_same<T, double>::value) {
+      ss << "#define " << name << " (double) " << std::setprecision(32) << value
+          << std::endl;
+    } else {
+      ss << "#define " << name << " " << value << std::endl;
+    }
+  }
+
+  template<class T>
+  inline void add_def(std::stringstream& ss,  // NOLINT
+      const std::string name, T value) {
+    add_def(ss, name.c_str(), value);
+  }
+
+  device* dev_ptr_;
+
+#ifdef USE_GREENTEA
+  viennacl::ocl::program ocl_program_;
+#endif  // USE_GREENTEA
+
+#ifdef USE_CUDA
+  nvrtcProgram cuda_program_;
+  CUmodule cuda_module_;
+#endif  // USE_CUDA
+
+  std::string kernel_;
+
+  bool fast_unsafe_math_;
+};
 
 template<typename Dtype>
-class LibDNNConv {
+class LibDNNConv : public LibDNN<Dtype> {
  public:
-  explicit LibDNNConv(LibDNNConfig config);
+  explicit LibDNNConv(LibDNNConvConfig config);
   void Forward(const Dtype* bottom_data, const Dtype* weight,
                const Dtype* bias,
                Dtype* top_data, int_tp batch_size);
@@ -103,9 +172,7 @@ class LibDNNConv {
 
  protected:
   void GenerateKernels();
-  void compile_kernel();
-  std::string generate_header();
-  std::string generate_common_defs();
+  std::string string_identifier();
   std::string generate_fw_defs();
   std::string generate_bw_defs();
   std::string generate_wg_defs();
@@ -116,33 +183,8 @@ class LibDNNConv {
   std::string generate_fw_kernels(std::string name);
   std::string generate_bw_kernels(std::string name);
   std::string generate_wg_kernels(std::string name);
-  bool CompileKernels();
-  void SetMemory(Dtype* memory, int_tp count, int_tp offset, Dtype value);
-#ifdef USE_GREENTEA
-  viennacl::ocl::program CompileKernelsOpenCL(viennacl::ocl::context *ctx);
-#endif  // USE_GREENTEA
-#ifdef USE_CUDA
-  nvrtcProgram CompileKernelsCuda();
-#endif  // USE_CUDA
-  template<class T>
-  void add_def(std::stringstream& ss, const char* name, T value);  // NOLINT
-  template<class T>
-  void add_def(std::stringstream& ss, const std::string name, T value);  // NOLINT
 
  private:
-  device* dev_ptr_;
-
-#ifdef USE_GREENTEA
-  viennacl::ocl::program ocl_program_;
-#endif  // USE_GREENTEA
-
-#ifdef USE_CUDA
-  nvrtcProgram cuda_program_;
-  CUmodule cuda_module_;
-#endif  // USE_CUDA
-
-  std::string kernel_;
-
   // Autotuners
   std::shared_ptr<LibDNNTuner> fw_tuner_;
   std::shared_ptr<LibDNNTuner> bw_tuner_;
@@ -185,13 +227,91 @@ class LibDNNConv {
   // Compile and method flags
   bool weights_backward_;
   bool bias_backward_;
-  bool fast_unsafe_math_;
   bool bias_term_;
   bool skip_range_check_;
   Dtype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
 };
+
+struct LibDNNPoolConfig {
+  LibDNNPoolConfig() :
+    in_shape(3, 1),
+    out_shape(3, 1),
+    kernel(1, 1),
+    pad(0, 0),
+    stride(1, 1),
+    dilation(1, 1)
+  {}
+  device* dev_ptr = nullptr;
+  std::vector<int_tp> in_shape;
+  std::vector<int_tp> out_shape;
+  std::vector<int_tp> kernel;
+  std::vector<int_tp> pad;
+  std::vector<int_tp> stride;
+  std::vector<int_tp> dilation;
+  bool use_top_mask = false;
+  bool fast_unsafe_math = false;
+  libdnnPoolingMethod_t pool_method = LIBDNN_POOLING_METHOD_MAX;
+  libdnnPoolingBackwardAlgo_t pool_bw_algo = LIBDNN_POOLING_BW_ALGO_ATOMIC;
+  bool global_pooling = false;
+  std::function<void*(void**, const uint_tp, const int_tp)>
+      memory_allocator = nullptr;
+};
+
+template<typename Dtype>
+class LibDNNPool : public LibDNN<Dtype> {
+ public:
+  explicit LibDNNPool(LibDNNPoolConfig config);
+  void Forward(const Dtype* bottom_data, Dtype* top_data,
+               int_tp channels, int_tp batch_size,
+               bool test_mode, int_tp* mask,
+               Dtype* top_mask, Dtype* rand_idx);
+  void Backward(const Dtype* top_diff, Dtype* bottom_diff,
+                int_tp channels, int_tp batch_size,
+                const int_tp* mask, const Dtype* top_mask,
+                const Dtype* rand_idx);
+
+ protected:
+  void Forward(const Dtype* bottom_data, Dtype* top_data,
+               int_tp channels, int_tp batch_size,
+               bool test_mode);
+
+  void GenerateKernels();
+  std::string string_identifier();
+  std::string generate_fw_defs();
+  std::string generate_bw_defs();
+  std::string generate_fw_kernels(std::string name, bool test_mode);
+  std::string generate_fwtr_kernels(std::string name);
+  std::string generate_fwte_kernels(std::string name);
+  std::string generate_bw_kernels(std::string name);
+
+ private:
+  // Autotuners
+  std::shared_ptr<LibDNNTuner> fw_tuner_;
+  std::shared_ptr<LibDNNTuner> bw_tuner_;
+
+  // Pooling parameters
+  int_tp num_axes_;
+
+  std::vector<int_tp> pad_;
+  std::vector<int_tp> stride_;
+  std::vector<int_tp> dilation_;
+  std::vector<int_tp> kernel_shape_;
+  std::vector<int_tp> im_in_shape_;
+  std::vector<int_tp> im_out_shape_;
+
+  // Working memory for stochastic and max pooling
+  int_tp* mask_ = nullptr;
+  Dtype* rand_idx_ = nullptr;
+
+  // Compile and method flags
+  bool skip_range_check_;
+  libdnnPoolingMethod_t pool_method_;
+  libdnnPoolingBackwardAlgo_t pool_bw_algo_;
+  bool use_top_mask_;
+};
+
 
 }  // namespace caffe
 

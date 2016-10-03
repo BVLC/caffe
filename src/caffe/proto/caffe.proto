@@ -914,6 +914,7 @@ message PoolingParameter {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
+    LIBDNN = 3;
   }
   optional Engine engine = 11 [default = DEFAULT];
   // If global_pooling then it will pool over the size of the bottom by doing
