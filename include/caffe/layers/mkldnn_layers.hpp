@@ -248,5 +248,37 @@ private:
     int32_t num_, width_, height_, channels_;
 };
 
+// ===== MKLDNNConcatLayer ======================================
+template <typename Dtype>
+class MKLDNNConcatLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+public:
+    explicit MKLDNNConcatLayer(const LayerParameter& param)
+            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
+            concatFwd_pd(NULL), output_memory(NULL),
+            fwd_top_data(NULL), fwd_bottom_data(NULL) {
+    }
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "Concat"; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitConcat(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+
+    vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
+    shared_ptr<memory> output_memory;
+    vector<primitive::at> input_primitive;
+    shared_ptr<concat::primitive_desc> concatFwd_pd;
+    MKLDNNPrimitive<Dtype> concatFwd;
+    shared_ptr<MKLDNNData<Dtype> > fwd_top_data;
+    int *split_channels;
+
+    int32_t num_, width_, height_, channels_, num_concats_;
+};
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
