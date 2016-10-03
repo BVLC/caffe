@@ -131,7 +131,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
         pooling_algorithm = pooling_forward::algorithm::max;
         break;
     case PoolingParameter_PoolMethod_AVE:
-        NOT_IMPLEMENTED;
+        pooling_algorithm = pooling_forward::algorithm::avg;
         break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
         NOT_IMPLEMENTED;
@@ -206,7 +206,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    if ( propagation == prop_kind::forward_training ) {
+    if ( propagation == prop_kind::forward_training && pooling_algorithm != pooling_forward::algorithm::avg) {
         indices_pd.reset(new MemPD(poolingFwd_pd->workspace_primitive_desc()));
         indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
         poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory, *indices_memory));
