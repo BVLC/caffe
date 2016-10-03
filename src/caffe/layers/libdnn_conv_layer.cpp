@@ -43,7 +43,7 @@ void LibDNNConvolutionLayer<Dtype>::Reshape(
         dilation_vec.push_back(dilation_data[i]);
     }
 
-    LibDNNConfig config;
+    LibDNNConvConfig config;
     config.dev_ptr = this->device_;
     config.in_shape = bottom[0]->shape();
     config.out_shape = top[0]->shape();

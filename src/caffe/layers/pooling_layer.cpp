@@ -238,7 +238,6 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int_tp pooled_height_ = pooled_size_.cpu_data()[0];
   int_tp pooled_width_ = pooled_size_.cpu_data()[1];
 
-
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp top_count = top[0]->count();

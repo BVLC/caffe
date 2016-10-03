@@ -31,6 +31,7 @@
 
 #ifdef USE_LIBDNN
 #include "caffe/layers/libdnn_conv_layer.hpp"
+#include "caffe/layers/libdnn_pool_layer.hpp"
 #endif  // USE_LIBDNN
 
 #ifdef WITH_PYTHON_LAYER
@@ -70,13 +71,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 
 #ifdef USE_CUDNN
     if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CUDA) {
-      // engine = ConvolutionParameter_Engine_CUDNN;
+      engine = ConvolutionParameter_Engine_CUDNN;
     }
 #endif
 
 #ifdef USE_INTEL_SPATIAL
     if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
-      if (Caffe::GetDevice(param.device(), true)->CheckVendor("Intel")) {
+      if (Caffe::GetDevice(param.device(), true)->CheckVendor("Intel")
+          && Caffe::GetDevice(param.device(), true)->CheckType("GPU")) {
         engine = ConvolutionParameter_Engine_INTEL_SPATIAL;
       }
     }
@@ -133,11 +135,13 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
-#ifdef USE_CUDNN
-    engine = PoolingParameter_Engine_CUDNN;
+#ifdef USE_LIBDNN
+    engine = PoolingParameter_Engine_LIBDNN;
 #endif
   }
-  if (engine == PoolingParameter_Engine_CAFFE
+  if (engine == PoolingParameter_Engine_LIBDNN) {
+    return shared_ptr<Layer<Dtype> >(new LibDNNPoolingLayer<Dtype>(param));
+  } else if (engine == PoolingParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
       || checkPoolingDilated(param.pooling_param())) {
     return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
@@ -151,6 +155,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     if (checkPoolingDilated(param.pooling_param())) {
       LOG(FATAL) << "CuDNN doesn't support the dilated pooling at Layer "
                  << param.name();
+      return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
     // CuDNN assumes layers are not being modified in place, thus
     // breaking our index tracking for updates in some cases in Caffe.
