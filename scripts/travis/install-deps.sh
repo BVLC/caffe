@@ -84,7 +84,7 @@ if $WITH_CUDA ; then
   rm $CUDA_REPO_PKG
 
   if $WITH_CUDNN ; then
-    ML_REPO_PKG=nvidia-machine-learning-repo_4.0-2_amd64.deb
+    ML_REPO_PKG=nvidia-machine-learning-repo-ubuntu1404_4.0-2_amd64.deb
     wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1404/x86_64/$ML_REPO_PKG
     dpkg -i $ML_REPO_PKG
   fi
