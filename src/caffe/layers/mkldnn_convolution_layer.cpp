@@ -108,11 +108,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Initialize convolution primitive descriptor -------------
     shared_ptr<convolution_forward::desc> convFwd_desc;
     if (this->bias_term_) {
-        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, convolution_forward::direct
+        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, algorithm::convolution_direct
                                     , init_input_md, init_weights_md, init_bias_md, init_output_md
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     } else {
-        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, convolution_forward::direct
+        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, algorithm::convolution_direct
                                     , init_input_md, init_weights_md, init_output_md
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }

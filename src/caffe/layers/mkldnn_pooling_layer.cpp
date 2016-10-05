@@ -125,13 +125,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    pooling_forward::algorithm pooling_algorithm;
+    algorithm pooling_algorithm;
     switch (this->layer_param_.pooling_param().pool()) {
     case PoolingParameter_PoolMethod_MAX:
-        pooling_algorithm = pooling_forward::algorithm::max;
+        pooling_algorithm = algorithm::pooling_max;
         break;
     case PoolingParameter_PoolMethod_AVE:
-        pooling_algorithm = pooling_forward::algorithm::avg;
+        pooling_algorithm = algorithm::pooling_avg;
         break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
         NOT_IMPLEMENTED;
@@ -206,7 +206,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    if ( propagation == prop_kind::forward_training && pooling_algorithm != pooling_forward::algorithm::avg) {
+    if ( propagation == prop_kind::forward_training && pooling_algorithm != algorithm::pooling_avg) {
         indices_pd.reset(new MemPD(poolingFwd_pd->workspace_primitive_desc()));
         indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
         poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory, *indices_memory));

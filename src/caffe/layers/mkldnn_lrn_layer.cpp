@@ -46,7 +46,7 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
         top[0]->Reshape(num_, channels_, height_, width_);
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        NOT_IMPLEMENTED;
+        top[0]->Reshape(num_, channels_, height_, width_);
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
@@ -59,13 +59,13 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    lrn_forward::algorithm  lrn_algorithm;
+    algorithm  lrn_algorithm;
     switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
-        lrn_algorithm = lrn_forward::algorithm::across_channels;
+        lrn_algorithm = algorithm::lrn_across_channels;
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        lrn_algorithm = lrn_forward::algorithm::within_channel;
+        lrn_algorithm = algorithm::lrn_within_channel;
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
