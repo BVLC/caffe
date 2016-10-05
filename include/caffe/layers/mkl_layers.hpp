@@ -36,6 +36,9 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
   // Customized methods
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
+
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void compute_output_shape();

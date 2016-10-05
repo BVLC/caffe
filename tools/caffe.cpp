@@ -411,7 +411,7 @@ int time() {
   float initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
-  if (!FLAGS_forward_only){
+  if (!FLAGS_forward_only) {
     LOG(INFO) << "Performing Backward";
     caffe_net.Backward();
   }

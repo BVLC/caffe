@@ -84,6 +84,15 @@ template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_layouts(
     const dnnPrimitive_t primitive, dnnResourceType_t type,
     size_t dimension, const size_t size[], const size_t strides[]) {
+  // To avoid creating conversion among potentialiy diffrent 
+  // (in terms of size) layouts we need to destroy existing layouts here
+
+  if (this->layout_usr) {
+    DLOG(INFO) << "User layout already created, recreating for"
+               << this->name;
+    int status = dnnLayoutDelete<Dtype>(this->layout_usr);
+    CHECK_EQ(status, E_SUCCESS);
+  }
   this->create_internal_layout(primitive, type);
   this->create_user_layout(dimension, size, strides);
 }
