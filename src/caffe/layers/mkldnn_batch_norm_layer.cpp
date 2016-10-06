@@ -109,7 +109,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     output_md = input_md;
 
     // ---- Initialize BatchNorm primitive descriptor -------------
-    batch_normalization_forward::desc BatchNormFwd_desc(prop_kind::forward, *input_md, eps_);
+    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_);
     BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, cpu_engine));
     // ---- Create memory  ---------------------
     scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
