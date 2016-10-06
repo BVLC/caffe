@@ -56,6 +56,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
                                                     , const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
     int32_t n  = this->M_;
     int32_t w = this->w_;
@@ -81,10 +82,10 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     // Initialize inner_product primitive descriptor
     shared_ptr<inner_product_forward::desc> ipFwd_desc;
     if (this->bias_term_) {
-        ipFwd_desc.reset(new inner_product_forward::desc(prop_kind::forward, init_input_md, init_weights_md
+        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_input_md, init_weights_md
                                                 ,init_bias_md, init_output_md));
     } else {
-        ipFwd_desc.reset(new inner_product_forward::desc(prop_kind::forward, init_input_md, init_weights_md
+        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_input_md, init_weights_md
                                                 , init_output_md));
     }
 

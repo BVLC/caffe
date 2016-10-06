@@ -72,6 +72,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                                 , const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value)   NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
     int32_t g  = std::max(this->group_, 1);
     int32_t n  = this->num_;
@@ -108,11 +109,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Initialize convolution primitive descriptor -------------
     shared_ptr<convolution_forward::desc> convFwd_desc;
     if (this->bias_term_) {
-        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, algorithm::convolution_direct
+        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
                                     , init_input_md, init_weights_md, init_bias_md, init_output_md
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     } else {
-        convFwd_desc.reset(new convolution_forward::desc(prop_kind::forward, algorithm::convolution_direct
+        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
                                     , init_input_md, init_weights_md, init_output_md
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }

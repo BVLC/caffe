@@ -36,6 +36,7 @@ template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
     int32_t n  = this->num_;
     int32_t iw = this->width_;
     int32_t ih = this->height_;
@@ -62,7 +63,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     output_md = input_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    relu_forward::desc reluFwd_desc(prop_kind::forward, *input_md, negative_slope);
+    relu_forward::desc reluFwd_desc(propagation, *input_md, negative_slope);
     reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
