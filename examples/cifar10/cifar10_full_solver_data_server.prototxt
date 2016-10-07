@@ -1,1 +1,0 @@
-train_net: "examples/cifar10/cifar10_full_train_test_data_server.prototxt"
