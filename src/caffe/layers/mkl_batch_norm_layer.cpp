@@ -128,15 +128,6 @@ void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  if (bottom[0] == top[0]) {
-    // In-place computation; need to store bottom data before overwriting it.
-    // Note that this is only necessary for Backward; we could skip this if not
-    // doing Backward, but Caffe currently provides no way of knowing whether
-    // we'll need to do Backward at the time of the Forward call.
-    caffe_copy(bottom[0]->count(), bottom[0]->prv_data(),
-                                                      temp_.mutable_cpu_data());
-  }
-
   void* bottom_data =
     reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
   int is_first_pass = 0;
@@ -240,6 +231,16 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       }
     }
   }
+
+  if (bottom[0] == top[0]) {
+    // In-place computation; need to store bottom data before overwriting it.
+    // Note that this is only necessary for Backward; we could skip this if not
+    // doing Backward, but Caffe currently provides no way of knowing whether
+    // we'll need to do Backward at the time of the Forward call.
+    caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
+                                                      temp_.mutable_cpu_data());
+  }
+
   dnnError_t e;
   void* BatchNorm_res[dnnResourceNumber];
   BatchNorm_res[dnnResourceSrc] = bottom_data;
@@ -265,7 +266,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& bottom) {
   void *bottom_data = NULL;
   if (bottom[0] == top[0]) {
-   bottom_data = reinterpret_cast<void *>(const_cast<Dtype*>(temp_.cpu_data()));
+    bottom_data = reinterpret_cast<void *>(const_cast<Dtype*>(temp_.cpu_data()));
   } else {
     bottom_data =
             reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
