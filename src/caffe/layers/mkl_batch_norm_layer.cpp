@@ -232,11 +232,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     }
   }
 
-  if (bottom[0] == top[0]) {
+  if (bottom[0] == top[0] && this->phase_ == TRAIN) {
     // In-place computation; need to store bottom data before overwriting it.
-    // Note that this is only necessary for Backward; we could skip this if not
-    // doing Backward, but Caffe currently provides no way of knowing whether
-    // we'll need to do Backward at the time of the Forward call.
+    // Note that this is only necessary for Backward; we skip this if not
+    // doing Backward
     caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
                                                       temp_.mutable_cpu_data());
   }
