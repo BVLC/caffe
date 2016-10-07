@@ -16,7 +16,7 @@ weight_decay: 0.004
 # The learning rate policy
 lr_policy: "fixed"
 # Display every 200 iterations
-display: 200
+display: 10
 # The maximum number of iterations
 max_iter: 60000
 # snapshot intermediate results
@@ -24,4 +24,4 @@ snapshot: 10000
 snapshot_format: HDF5
 snapshot_prefix: "examples/cifar10/cifar10_full"
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU
