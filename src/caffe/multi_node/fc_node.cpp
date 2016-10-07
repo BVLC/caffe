@@ -38,6 +38,7 @@ int FcNode<Dtype>::ScheduleMsg(shared_ptr<Msg> m) {
     }
     src_to_thread_[src] = qidx;
     work_loads_[qidx]++;
+    this->threads_[qidx]->AddClient();
   } else {
     qidx = iter->second;
   }
@@ -78,7 +79,6 @@ int FcNode<Dtype>::Init() {
   // the last slot for param thread
   this->threads_[param_thread_idx].reset(
                               new FcParamThread<Dtype>(this->nworkers_));
-  this->threads_[param_thread_idx]->SetOMPThreads(omp_param_threads_);
 
   vector<int> param_cores;
   for (int i = 0; i < omp_cores.size(); i++) {

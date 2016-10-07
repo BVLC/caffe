@@ -39,8 +39,8 @@ class WorkerThread : public InternalThread {
     worker_id_ = -1;
     queue_size_ = 0;
     num_workers_ = 0;
-    omp_threads_ = -1;
-    socket_idx_ = 0;
+    cpu_socket_idx_ = 0;
+    num_clients_ = 0;
   }
 
   virtual ~WorkerThread() {
@@ -56,16 +56,20 @@ class WorkerThread : public InternalThread {
   void SetClientAddr(const string& addr) { client_addr_ = addr; }
   void SetPriorAddr(const string& addr) { prior_addr_ = addr; }
 
+  void SetOMPCores(const vector<int> omp_cores) {
+    omp_cores_ = omp_cores;
+
+    if (omp_cores_.size() > 0) {
+      cpu_socket_idx_ = NodeEnv::Instance()->GetSocketIndex(omp_cores_[0]);
+    }
+  }
+
+  inline int GetClients() { return num_clients_; }
+
+  inline void AddClient() { num_clients_++; }
+
   int SendMsg(shared_ptr<Msg> msg) {
     return sk_client_->SendMsg(msg);
-  }
-
-  void SetOMPThreads(int nthreads) {
-    omp_threads_ = nthreads;
-  }
-
-  void SetOMPCores(const vector<int>& omp_cores) {
-    omp_cores_ = omp_cores;
   }
 
   shared_ptr<Msg> RecvMsg(bool blocked) {
@@ -177,18 +181,19 @@ class WorkerThread : public InternalThread {
     boost::mutex::scoped_lock lock(new_solver_mutex_);
     new_solver_cnt_++;
 
-    LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers";
+    LOG(INFO) << "created " << this->new_solver_cnt_ << " solvers"
+              << ", at socket: " << cpu_socket_idx_;
 
     const vector<Blob<Dtype>*> *proot_params = NULL;
 
-    if (param_solvers_.size() > 0 && param_solvers_[socket_idx_] == NULL) {
+    if (param_solvers_.size() > 0 && param_solvers_[cpu_socket_idx_] == NULL) {
       // use the first solver as param solver of the socket
-      param_solvers_[socket_idx_] = new_solver;
+      param_solvers_[cpu_socket_idx_] = new_solver;
       return new_solver;
     } else if (param_solvers_.size() <= 0) {
       proot_params = &proot->net()->learnable_params();
     } else {
-      proot_params = &param_solvers_[socket_idx_]->net()->learnable_params();
+      proot_params = &param_solvers_[cpu_socket_idx_]->net()->learnable_params();
     }
 
     const vector<Blob<Dtype>*>& new_params =
@@ -278,8 +283,10 @@ class WorkerThread : public InternalThread {
 
     Solver<Dtype> *proot = param_solvers_[0];
     for (int i = 1; i < param_solvers_.size(); i++) {
-      ParamHelper<Dtype>::CopyDataFromNet(param_solvers_[i]->net(),
-                                          proot->net());
+      if (param_solvers_[i] != NULL) {
+        ParamHelper<Dtype>::CopyDataFromNet(param_solvers_[i]->net(),
+                                            proot->net());
+      }
     }
   }
 
@@ -292,10 +299,13 @@ class WorkerThread : public InternalThread {
 
  protected:
   int worker_id_;
+
+  // total number of worker threads the node started
   int num_workers_;
 
   /// in-process communication addr with routing thread
   string client_addr_;
+
   shared_ptr<SkSock> sk_client_;
 
   // for priority queue
@@ -311,9 +321,6 @@ class WorkerThread : public InternalThread {
   // rough count of the queue's length
   boost::atomic_int queue_size_;
 
-  // number of OpenMP threads it has
-  int omp_threads_;
-
   // solver pool to store free solvers
   SolverPool<Dtype> solver_pool_;
 
@@ -321,7 +328,10 @@ class WorkerThread : public InternalThread {
   vector<int> omp_cores_;
 
   // socket index the omp threads works on
-  int socket_idx_;
+  int cpu_socket_idx_;
+
+  // number of clients it serves
+  boost::atomic_int num_clients_;
 
  protected:
   // serialize creating new solver within a process

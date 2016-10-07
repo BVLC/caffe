@@ -299,7 +299,8 @@ void FcThread<Dtype>::SendGradients(shared_ptr<Msg> m) {
 
   shared_ptr<SolverGroup<Dtype> > pgrp = grp_iter->second;
 
-  int total_sub_batches = NodeEnv::Instance()->num_sub_solvers();
+  int total_sub_batches = NodeEnv::Instance()->num_sub_solvers()
+                                            * this->GetClients();
   if (pgrp->num_sub_batches() < total_sub_batches) {
     return;
   }
@@ -532,6 +533,8 @@ int FcParamThread<Dtype>::UpdateParam() {
   ParamHelper<Dtype>::ScalDiff(proot->net(), s);
 
   proot->CommitGradient();
+  this->UpdateSocketParams();
+
   ParamHelper<Dtype>::ScalDiff(proot->net(), (Dtype)0.0);
 
   UpdateClock();
@@ -639,11 +642,6 @@ int FcParamThread<Dtype>::SendParam(shared_ptr<Msg> m) {
 template <typename Dtype>
 void FcParamThread<Dtype>::Run() {
   #ifdef USE_MKL
-  // get the number of omp threads in each worker
-  if (this->omp_threads_ > 0) {
-    LOG(WARNING) << "Number of OMP threads in param thread is ignored";
-  }
-
   int fc_omp_threads = mkl_get_max_threads();
   mkl_set_num_threads_local(fc_omp_threads * fc_threads_);
 

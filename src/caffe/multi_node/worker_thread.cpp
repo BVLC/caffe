@@ -47,14 +47,6 @@ template <typename Dtype>
 void WorkerThread<Dtype>::BindOMPThreads(const vector<int>& core_list) {
   int omp_threads = mkl_get_max_threads();
 
-  // Determine which socket the omp threads works on
-  int nsockets = NodeEnv::Instance()->GetSockets();
-  int ncores = NodeEnv::Instance()->GetOnlineCores();
-  int cores_per_socket = ncores / nsockets;
-
-  // TODO: enhance it by parsing /cpu/info
-  socket_idx_ = core_list[0] / cores_per_socket;
-
   CHECK_EQ(omp_threads, core_list.size())
                 << "fail to bind omp threads";
 

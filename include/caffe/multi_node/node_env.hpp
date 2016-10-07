@@ -154,6 +154,14 @@ class NodeEnv {
     return num_sockets_;
   }
 
+  // TODO: Fix me
+  // return the socket index for a core
+  int GetSocketIndex(int core_id) {
+    int cores_per_socket = num_online_cores_ / num_sockets_;
+
+    return core_id / cores_per_socket;
+  }
+
  public:
   static inline void set_id_server(const string& addr) {
     CHECK_LT(addr.size(), MAX_STR_LEN);
