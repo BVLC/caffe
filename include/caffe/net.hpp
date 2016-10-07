@@ -242,9 +242,11 @@ class Net {
   *        then scale layer can be dropped
   */
   // TODO: Make it decent C++ anonymous function etc.
-  static void CompilationRuleOne(const NetParameter& param, NetParameter* param_compiled);
+  static void CompilationRuleOne(const NetParameter& param,
+                                 NetParameter* param_compiled);
 
-  static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find, const NetParameter& param, int layer_id);
+  static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find,
+                                               const NetParameter& param, int layer_id);
 
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
