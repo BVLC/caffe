@@ -114,11 +114,15 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
-  num_ = bottom[0]->num();
-  top[0]->Reshape(num_, channels_, height_, width_);
+  if (bottom[0] == top[0]) {  // in-place computation
+    temp_.ReshapeLike(*bottom[0]);
+  } else {
+    channels_ = bottom[0]->channels();
+    height_ = bottom[0]->height();
+    width_ = bottom[0]->width();
+    num_ = bottom[0]->num();
+    top[0]->Reshape(num_, channels_, height_, width_);
+  }
 }
 
 template <typename Dtype>
@@ -227,6 +231,15 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       }
     }
   }
+
+  if (bottom[0] == top[0] && this->phase_ == TRAIN) {
+    // In-place computation; need to store bottom data before overwriting it.
+    // Note that this is only necessary for Backward; we skip this if not
+    // doing Backward
+    caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
+                                                      temp_.mutable_cpu_data());
+  }
+
   dnnError_t e;
   void* BatchNorm_res[dnnResourceNumber];
   BatchNorm_res[dnnResourceSrc] = bottom_data;
@@ -250,11 +263,15 @@ template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  void* bottom_data =
-    reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
-  if (NULL == bottom_data) {
+  void *bottom_data = NULL;
+  if (bottom[0] == top[0]) {
+    bottom_data = reinterpret_cast<void *>(const_cast<Dtype*>(temp_.cpu_data()));
+  } else {
     bottom_data =
-      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
+            reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
+    if (NULL == bottom_data)
+      bottom_data =
+            reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
   }
 
   dnnError_t e;

@@ -352,6 +352,7 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   shared_ptr<MKLData<Dtype> > fwd_bottom_data;
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
+  Blob<Dtype> temp_;
   dnnPrimitive_t batchNormFwd, batchNormBwdData, batchNormBwdScaleShift;
   Dtype *workspace_buffer_;
   Dtype *scaleShift_buffer_;
