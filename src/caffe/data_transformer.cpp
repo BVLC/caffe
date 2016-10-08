@@ -750,7 +750,7 @@ void DataTransformer<Dtype>::TransformInv(const Dtype* data, cv::Mat* cv_img,
   for (int h = 0; h < height; ++h) {
     uchar* ptr = orig_img.ptr<uchar>(h);
     int img_idx = 0;
-    for (int w = 0; w < height; ++w) {
+    for (int w = 0; w < width; ++w) {
       for (int c = 0; c < channels; ++c) {
         int idx = (c * height + h) * width + w;
         if (has_mean_file) {
