@@ -41,30 +41,30 @@ This branch is developed for deep face recognition, the related paper is as foll
 - Creat list for training set and validation set. Place them in face_example/data/
 - Specify your data source for train & val
 
-    layer {
-      name: "data"
-      type: "ImageData"
-      top: "data"
-      top: "label"
-      image_data_param {
-        source: "face_example/data/###your_list###"
-      }
-    }
+        layer {
+          name: "data"
+          type: "ImageData"
+          top: "data"
+          top: "label"
+          image_data_param {
+            source: "face_example/data/###your_list###"
+          }
+        }
 - Specify the number of subject corresponding to your training set
 
-    layer {
-      name: "fc6"
-      type: "InnerProduct"
-      bottom: "fc5"
-      top: "fc6"
-      inner_product_param {
-        num_output: ##number##
-      }
-    }
+        layer {
+          name: "fc6"
+          type: "InnerProduct"
+          bottom: "fc5"
+          top: "fc6"
+          inner_product_param {
+            num_output: ##number##
+          }
+        }
 - Run the model
 
-    cd $CAFFE-FACE_ROOT
-    ./build/tools/caffe train -solver face_example/face_solver.prototxt -gpu X,Y
+        cd $CAFFE-FACE_ROOT
+        ./build/tools/caffe train -solver face_example/face_solver.prototxt -gpu X,Y
 
 - Please refer to our ECCV paper and code for more details.
 
