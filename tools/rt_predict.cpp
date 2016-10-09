@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <fstream>
 //#include <future>
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
@@ -39,12 +40,16 @@ DEFINE_int32(classnum, -1,
     "The class of label");
 DEFINE_string(image, "",
     "test image path");
+DEFINE_string(imagedir, "",
+    "test images path filename");
 DEFINE_int32(height,64,
     "crop image height");
 DEFINE_int32(width,64,
     "crop image width");
 DEFINE_int32(batchsize,1,
     "batch size in test phase");
+DEFINE_string(outputfile,"",
+    "output result file name.");
 
 // Parse GPU ids or use all available devices
 void get_gpus(vector<int>* gpus) {
@@ -162,7 +167,7 @@ std::vector<float> crop_image_predict_prob(Net<float>& caffe_test_net,
         return predictResult;
 }
 
-void image_tsigma_distribution(const vector<float>& y)
+void image_tsigma_distribution(const vector<float>& y,string& image)
 {
     size_t y_len = y.size();
     float mu = std::accumulate(y.begin(),y.end(),0.0)/y_len;
@@ -197,15 +202,41 @@ void image_tsigma_distribution(const vector<float>& y)
         }
     }
     LOG(INFO)<<"mu = "<<mu<<", sigma = "<<sigma;
+    bool writable = false;
+
+    fstream output;
+    if(FLAGS_outputfile.size()) {
+        output.open(FLAGS_outputfile.c_str(),std::ofstream::out | std::ofstream::app);
+        writable = true;
+        output<<image;
+    }
     for (size_t i = 0; i<FLAGS_classnum; ++i) {
         LOG(INFO)<<"JND="<<i<<",predicted value : "<<jnd_predict[i];
+        if(writable) {
+            output<<" "<<jnd_predict[i];
+            if(i== FLAGS_classnum -1) {
+                output<<endl;
+            }
+        }
     }
 
 //    return tsigma;
 
 }
                                 
-
+vector<string> get_imagelist() {
+    vector<string> imagelist;
+    if(FLAGS_imagedir.size()) {
+        fstream imagein(FLAGS_imagedir.c_str(),std::fstream::in);
+        string image_path;
+        while(imagein>>image_path) {
+            imagelist.push_back(image_path);
+        }
+    } else {
+        imagelist.push_back(FLAGS_image);
+    }
+    return imagelist;
+}
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
@@ -216,8 +247,9 @@ int main(int argc, char** argv) {
       "usage: rt_predict <command> <args>\n\n"
       "commands:\n"
       "  model           model path\n"
-      "  weight          trained weights\n"
-      "  device_query    show GPU diagnostic information\n"
+      "  weights          trained weights\n"
+      "  gpu    set gpu device\n"
+      "  imagedir    set test images list file\n"
       "  image           test image\n");
   // Run tool or show usage.
  
@@ -238,48 +270,58 @@ int main(int argc, char** argv) {
 
     Net<float> caffe_test_net(FLAGS_model,caffe::TEST);
     caffe_test_net.CopyTrainedLayersFrom(FLAGS_weights);
-
-    vector<vector<Mat> > crop_set; 
-    crop_image_memory(crop_set,FLAGS_image);
     const float labelOrder[] = {0,1,2,3,4,5,6,7};
-    int bsize = FLAGS_batchsize;
-    vector<float> jnd_jpeg(100);
 
-    //#pragma omp parallel for
-    for(size_t factor = 0 ; factor < crop_set.size(); factor++ ) {
-        if(!(factor%10)) {
-            LOG(INFO)<<"Now "<<factor<<"/100";
-        }
-        vector<Mat> dv = crop_set[factor];
-        float* predictResult = new float[FLAGS_classnum];
-        std::fill_n(predictResult,FLAGS_classnum,0.0);
-        size_t roiSize = dv.size();
-        int opMax = roiSize/bsize;
-        
-        for (size_t i = 0 ; i<opMax; i++ ) {
-            //LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
-            vector<Mat> tmpSlice(dv.begin()+(i)*bsize,dv.begin()+(i+1)*bsize);
-            vector<float> tmpProb = 
-                crop_image_predict_prob(
-                        caffe_test_net,
-                        tmpSlice,
-                        bsize);
-            for(size_t p = 0; p< FLAGS_classnum ; ++p) {
-                predictResult[p]+=tmpProb[p];
+    vector<string> image_list = get_imagelist();
+    
+    size_t image_list_index = 0;
+    size_t image_list_size = image_list.size();
+
+    while(image_list_index < image_list_size) {
+
+        vector<vector<Mat> > crop_set; 
+        crop_image_memory(crop_set,image_list[image_list_index]);
+        int bsize = FLAGS_batchsize;
+        vector<float> jnd_jpeg(100);
+
+        //#pragma omp parallel for
+        for(size_t factor = 0 ; factor < crop_set.size(); factor++ ) {
+            if(!(factor%10)) {
+                LOG(INFO)<<"Now "<<factor<<"/100";
             }
+            vector<Mat> dv = crop_set[factor];
+            float* predictResult = new float[FLAGS_classnum];
+            std::fill_n(predictResult,FLAGS_classnum,0.0);
+            size_t roiSize = dv.size();
+            int opMax = roiSize/bsize;
+            
+            for (size_t i = 0 ; i<opMax; i++ ) {
+                //LOG(INFO)<<" bsize : "<<i<<"/"<<opMax;
+                vector<Mat> tmpSlice(dv.begin()+(i)*bsize,dv.begin()+(i+1)*bsize);
+                vector<float> tmpProb = 
+                    crop_image_predict_prob(
+                            caffe_test_net,
+                            tmpSlice,
+                            bsize);
+                for(size_t p = 0; p< FLAGS_classnum ; ++p) {
+                    predictResult[p]+=tmpProb[p];
+                }
+            }
+            for(size_t i=0; i<FLAGS_classnum ; ++i) {
+                predictResult[i]/=roiSize;
+                //LOG(INFO)<<"i="<<i<<" prob="<<predictResult[i];
+            }
+            jnd_jpeg[factor] = caffe::caffe_cpu_dot(FLAGS_classnum,labelOrder,predictResult);
+            //LOG(INFO)<<"factor "<<factor<<",predict : "<< jnd_jpeg[factor];
+            delete[] predictResult;
         }
-        for(size_t i=0; i<FLAGS_classnum ; ++i) {
-            predictResult[i]/=roiSize;
-            //LOG(INFO)<<"i="<<i<<" prob="<<predictResult[i];
+
+        for(size_t i = 0; i<crop_set.size() ;++i) {
+            LOG(INFO)<<"JPEG QoF="<<i+1<<",predict="<<jnd_jpeg[i];
         }
-        jnd_jpeg[factor] = caffe::caffe_cpu_dot(FLAGS_classnum,labelOrder,predictResult);
-        //LOG(INFO)<<"factor "<<factor<<",predict : "<< jnd_jpeg[factor];
-        delete[] predictResult;
+        image_tsigma_distribution(jnd_jpeg,image_list[image_list_index]);
+        image_list_index++;
     }
-    for(size_t i = 0; i<crop_set.size() ;++i) {
-        LOG(INFO)<<"JPEG QoF="<<i+1<<",predict="<<jnd_jpeg[i];
-    }
-    image_tsigma_distribution(jnd_jpeg);
 
     return 0;
 }
