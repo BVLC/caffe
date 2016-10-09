@@ -50,7 +50,7 @@ This branch is developed for deep face recognition, the related paper is as foll
             source: "face_example/data/###your_list###"
           }
         }
-- Specify the number of subject corresponding to your training set
+- Specify the number of subject in FC6 layer
 
         layer {
           name: "fc6"
@@ -61,6 +61,20 @@ This branch is developed for deep face recognition, the related paper is as foll
             num_output: ##number##
           }
         }
+- Specify the loss weight and the number of subject in center loss layer
+
+        layer {
+          name: "center_loss"
+          type: "CenterLoss"
+          bottom: "fc5"
+          bottom: "label"
+          top: "center_loss"
+          loss_weight: ##weight##
+          center_loss_param {
+            num_output: ##number##
+          }
+        }
+
 - Run the model
 
         cd $CAFFE-FACE_ROOT
