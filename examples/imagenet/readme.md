@@ -10,7 +10,7 @@ Brewing ImageNet
 ================
 
 This guide is meant to get you ready to train your own model on your own data.
-If you just want an ImageNet-trained network, then note that since training takes a lot of energy and we hate global warming, we provide the CaffeNet model trained as described below in the [model zoo](/model_zoo.html).
+If you just want an ImageNet-trained network, then note that since training takes a lot of energy and we hate global warming, we provide the CaffeNet model trained as described below in the [model zoo](http://caffe.berkeleyvision.org/model_zoo.html).
 
 Data Preparation
 ----------------
