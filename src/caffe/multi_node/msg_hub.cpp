@@ -127,13 +127,15 @@ int MsgHub<Dtype>::Poll() {
 }
 
 template <typename Dtype>
-void MsgHub<Dtype>::BindCore(int core_id) {
+void MsgHub<Dtype>::BindCores(const vector<int>& core_list) {
   cpu_set_t new_mask;
   CPU_ZERO(&new_mask);
-  CPU_SET(core_id, &new_mask);
+  for (int i = 0; i < core_list.size(); i++) {
+    CPU_SET(core_list[i], &new_mask);
+  }
 
   if (sched_setaffinity(0, sizeof(new_mask), &new_mask) == -1) {
-    LOG(ERROR) << "cannot bind to core: " << core_id;
+    LOG(ERROR) << "cannot bind to cores";
   }
 }
 

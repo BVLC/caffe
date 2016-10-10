@@ -128,6 +128,8 @@ class ConvParamThread : public WorkerThread<Dtype> {
     max_iter_ = NodeEnv::Instance()->SolverParam().max_iter();
 
     max_gradients_ = 0;
+
+    num_sync_layers_ = 0;
   }
 
   virtual ~ConvParamThread() { }
@@ -221,6 +223,9 @@ class ConvParamThread : public WorkerThread<Dtype> {
 
   // number of gradients it need to receive before sync with PS
   int max_gradients_;
+
+  // number of layers synced with parameter server
+  int num_sync_layers_;
 
 DISABLE_COPY_AND_ASSIGN(ConvParamThread);
 };

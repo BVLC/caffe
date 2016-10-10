@@ -52,10 +52,6 @@ int FcNode<Dtype>::ScheduleMsg(shared_ptr<Msg> m) {
 
 template <typename Dtype>
 int FcNode<Dtype>::Init() {
-#ifdef USE_MKL
-  LOG(INFO) << "max local mkl threads: " << mkl_get_max_threads();
-#endif
-
   const vector<string>& next = NodeEnv::Instance()->bcast_addrs();
 
   for (int i = 0; i < this->nworkers_; i++) {
@@ -91,9 +87,8 @@ int FcNode<Dtype>::Init() {
   // param thread uses all the omp thread to update parameters
   this->threads_[param_thread_idx]->SetOMPCores(param_cores);
 
-  int core_id = 0;
-  // let FC node run in the first core in the beginning
-  this->BindCore(core_id);
+  // let FC node run in the cores of the first thread in the beginning
+  this->BindCores(omp_cores[0]);
 
   num_next_hops_ = next.size();
 
@@ -141,8 +136,9 @@ int FcNode<Dtype>::Init() {
   this->StartThreads();
 
   // bind the route thread to last core
-  core_id = NodeEnv::Instance()->GetOnlineCores() - 1;
-  this->BindCore(core_id);
+  vector<int> core_list;
+  core_list.push_back(NodeEnv::Instance()->GetOnlineCores() - 1);
+  this->BindCores(core_list);
 
   return 0;
 }

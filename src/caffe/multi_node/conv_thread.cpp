@@ -516,25 +516,31 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m) {
   }
 
   layer_updates_[layer_id]++;
-  if (layer_updates_[layer_id] >= max_gradients_) {
-    layer_updates_[layer_id] = 0;
-
-    if (this->IsLearnable(layer_id)) {
+  if (this->IsLearnable(layer_id)) {
+    if (layer_updates_[layer_id] >= max_gradients_) {
+      layer_updates_[layer_id] = 0;
       SyncLayer(layer_id);
+      num_sync_layers_++;
     }
+  } else {
+    if (layer_updates_[layer_id] >= this->GetWorkerNum()) {
+      layer_updates_[layer_id] = 0;
+    }
+  }
 
-    if (layer_id == 0) {
-      // check whether we need to exit
-      for (int i = 0; i < ps_clocks_.size(); i++) {
-        if (ps_clocks_[i] < max_iter_) {
-          return 0;
-        }
+  if (num_sync_layers_ >= num_learnable_layers_) {
+    // reset synced layers
+    num_sync_layers_ = 0;
+    // check whether we need to exit
+    for (int i = 0; i < ps_clocks_.size(); i++) {
+      if ((ps_clocks_[i] + 1) < max_iter_) {
+        return 0;
       }
-
-      // notify the param thread to exit
-      this->SendExit();
-      return -1;
     }
+
+    // notify the param thread to exit
+    this->SendExit();
+    return -1;
   }
 
   return 0;

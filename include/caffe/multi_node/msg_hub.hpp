@@ -111,7 +111,7 @@ class MsgHub {
     threads_[thrd_id]->Enqueue();
   }
 
-  void BindCore(int core_id);
+  void BindCores(const vector<int>& core_list);
 
   void InitRoute();
 

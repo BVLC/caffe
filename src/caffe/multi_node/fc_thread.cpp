@@ -545,13 +545,13 @@ int FcParamThread<Dtype>::UpdateParam() {
 
   if (test_node_id_ > 0
      && (train_iter_ % TRAIN_NOTIFY_INTERVAL == 0
-        || train_iter_ > max_iter_)
+        || train_iter_ >= max_iter_)
      && this->IsLossNode()
      ) {
     this->SendNotify();
   }
 
-  if (test_node_id_ < 0 && train_iter_ > max_iter_) {
+  if (test_node_id_ < 0 && train_iter_ >= max_iter_) {
     return -1;
   }
 
