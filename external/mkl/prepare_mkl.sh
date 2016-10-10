@@ -1,3 +1,5 @@
+#!/bin/sh
+# set -ex
 # 
 # All modification made by Intel Corporation: © 2016 Intel Corporation
 # 
@@ -34,8 +36,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#!/bin/sh
-# set -ex
 FindLibrary() 
 {
   case "$1" in
