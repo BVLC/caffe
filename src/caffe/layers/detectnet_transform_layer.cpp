@@ -27,16 +27,6 @@ using boost::array;
 namespace caffe {
 
 
-struct AugmentSelection {
-    bool flip;
-    float degree;
-    Point crop;
-    float scale;
-    float hue_rotation;
-    float saturation;
-};
-
-
 template<typename Dtype>
 DetectNetTransformationLayer<Dtype>::DetectNetTransformationLayer(
     const LayerParameter& param) :
@@ -83,6 +73,15 @@ void DetectNetTransformationLayer<Dtype>::retrieveMeanImage(Size dimensions) {
   if (dimensions.area() > 0) {
     cv::resize(data_mean_, data_mean_, dimensions, 0, 0, cv::INTER_CUBIC);
   }
+
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    mean_blob_.Reshape(1, data_mean_.channels(),
+        data_mean_.size().height, data_mean_.size().width);
+    matToBlob(data_mean_, mean_blob_.mutable_cpu_data());
+  }
+#endif
+
   // scale from 0..255 to 0..1:
   data_mean_ /= Dtype(UINT8_MAX);
 }
@@ -135,6 +134,15 @@ void DetectNetTransformationLayer<Dtype>::Reshape(
       tensorDimensions(0),
       tensorDimensions(1),
       tensorDimensions(2));
+
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    const size_t aug_data_sz = sizeof(AugmentSelection) * bottom[0]->num();
+    gpu_workspace_augmentations_.reserve(aug_data_sz);
+    const size_t tmp_data_sz = sizeof(Dtype) * bottom[0]->count();
+    gpu_workspace_tmpdata_.reserve(tmp_data_sz);
+  }
+#endif
 }
 
 
@@ -324,266 +332,286 @@ void DetectNetTransformationLayer<Dtype>::Forward_cpu(
         outputLabels.offset(iImage, 0, 0, 0)
     ];
 
-    transform(inputImage, inputLabel, &outputImage, outputLabel);
+    AugmentSelection as = get_augmentations(inputImage.size());
+
+    outputImage = transform_image_cpu(inputImage, as);
+    transform_label_cpu(inputLabel, outputLabel, as, inputImage.size());
   }
   // emplace images in output image blob:
   matsToBlob(outputImages, top[0]);
 }
 
 template<typename Dtype>
-void DetectNetTransformationLayer<Dtype>::transform(
-    const Mat3v& img,
-    const vector<BboxLabel >& bboxlist,
-    Mat3v* img_aug,
-    Dtype* transformed_label
-) {
-  uint32_t image_x = g_param_.image_size_x();
-  uint32_t image_y = g_param_.image_size_y();
-
-  // Perform mean subtraction on un-augmented image:
-  Mat3v img_temp = img.clone();  // size determined by scale
-  // incoming float images have values from 0..255, but OpenCV expects these
-  //  values to be from 0..1:
-  img_temp /= Dtype(UINT8_MAX);
-  *img_aug = Mat::zeros(image_y, image_x, img.type());
-  vector<BboxLabel > bboxlist_aug;
+AugmentSelection DetectNetTransformationLayer<Dtype>::get_augmentations(
+    cv::Size original_size) {
+  const int image_size_x = g_param_.image_size_x();
+  const int image_size_y = g_param_.image_size_y();
   AugmentSelection as;
-  // We only do random transform as augmentation when training.
-  if (this->phase_ == TRAIN) {
-    // TODO: combine hueRotation and desaturation if performance is a concern,
-    //  as we must redundantly convert to and from HSV colorspace for each
-    //  operation
-    as.hue_rotation = augmentation_hueRotation(img_temp, &img_temp);
-    as.saturation = augmentation_desaturation(img_temp, &img_temp);
-    // mean subtraction must occur after color augmentations as colorshift
-    //  outside of 0..1 invalidates scale
-    meanSubtract(&img_temp);
-    // images now bounded from [-1,1] (range is dependent on mean subtraction)
-    as.scale = augmentation_scale(img_temp, img_aug, bboxlist, &bboxlist_aug);
-    as.degree =
-        augmentation_rotate(*img_aug, &img_temp, bboxlist_aug, &bboxlist_aug);
-    as.flip = augmentation_flip(img_temp, img_aug, bboxlist_aug, &bboxlist_aug);
-    as.crop = augmentation_crop(
-        *img_aug,
-        &img_temp,
-        bboxlist_aug,
-        &bboxlist_aug);
-    *img_aug = img_temp;
-  } else {
-    // perform mean subtraction:
-    meanSubtract(&img_temp);
+  // Turn off all augmentations
+  as.hue_rotation = 0;
+  as.saturation = 1;
+  as.flip = false;
+  as.scale = original_size;
+  as.rotation = 0;
+  as.crop_offset = cv::Point(0, 0);
 
-    // deterministically scale the image and ground-truth, if requested:
-    transform_scale(
-        img_temp,
-        img_aug,
-        bboxlist,
-        &bboxlist_aug,
-        Size(image_x, image_y));
-  }
-
-  CHECK_EQ(img_aug->cols, image_x);
-  CHECK_EQ(img_aug->rows, image_y);
-
-  // generate transformed_label based on bboxlist_aug
-  coverage_->generate(transformed_label, bboxlist_aug);
-
-  // networks expect floats bounded from -255..255, so rescale to this range:
-  *img_aug *= Dtype(UINT8_MAX);
-}
-
-
-template<typename Dtype>
-float DetectNetTransformationLayer<Dtype>::augmentation_scale(
-    const Mat3v& img_src,
-    Mat3v* img_dst,
-    const vector<BboxLabel >& bboxList,
-    vector<BboxLabel >* bboxList_aug
-) {
-  bool doScale = randDouble() <= a_param_.scale_prob();
-  // linear shear into [scale_min, scale_max]
-  float scale =
-      a_param_.scale_min() +
-      (a_param_.scale_max() - a_param_.scale_min()) *
-      randDouble();
-
-  if (doScale) {
-    // scale uniformly across both axes by some random value:
-    Size scaleSize(round(img_src.cols * scale), round(img_src.rows * scale));
-    transform_scale(
-        img_src,
-        img_dst,
-        bboxList,
-        bboxList_aug,
-        scaleSize);
-  } else {
-    *img_dst = img_src.clone();
-    *bboxList_aug = bboxList;
-    scale = 1;
-  }
-
-  return scale;
-}
-
-
-template<typename Dtype>
-void DetectNetTransformationLayer<Dtype>::transform_scale(
-    const Mat3v& img,
-    Mat3v* img_temp,
-    const vector<BboxLabel >& bboxList,
-    vector<BboxLabel >* _bboxList_aug,
-    const Size& size
-) {
-  // perform scaling if desired size and image size are non-equal:
-  if (size.height != img.rows || size.width != img.cols) {
-    Dtype scale_x = (Dtype)size.width / img.cols;
-    Dtype scale_y = (Dtype)size.height / img.rows;
-    cv::resize(img, *img_temp, size, 0, 0, cv::INTER_CUBIC);
-    vector<BboxLabel > bboxList_aug;
-    foreach_(BboxLabel label, bboxList) {  // for every bbox:
-      // resize by scale
-      label.bbox = Rectv(
-          label.bbox.x * scale_x,
-          label.bbox.y * scale_y,
-          label.bbox.width * scale_x,
-          label.bbox.height * scale_y);
-      bboxList_aug.push_back(label);
+  if (this->phase_ == TRAIN) {  // Randomly enable some augmentations
+    if (randDouble() <= a_param_.hue_rotation_prob()) {
+      // [-hue_rotation, hue_rotation]
+      as.hue_rotation = (randDouble() - 0.5) * 2 * a_param_.hue_rotation();
+      // clamp to -180d..180d
+      as.hue_rotation = std::max(std::min(as.hue_rotation, 180.0f), -180.0f);
+    }
+    if (randDouble() <= a_param_.desaturation_prob()) {
+      // [1-desaturation_max, 1]
+      as.saturation = 1.0 - randDouble() * a_param_.desaturation_max();
+    }
+    as.flip = randDouble() <= a_param_.flip_prob();
+    if (randDouble() <= a_param_.scale_prob()) {
+      // [scale_min, scale_max]
+      float scale = a_param_.scale_min() +
+        (a_param_.scale_max() - a_param_.scale_min()) * randDouble();
+      as.scale = cv::Size(round(original_size.width * scale),
+          round(original_size.height * scale));
+    }
+    if (randDouble() <= a_param_.rotation_prob()) {
+      // [-max_rotate_degree, max_rotate_degree]
+      as.rotation = (randDouble() - 0.5) * 2 * a_param_.max_rotate_degree();
     }
 
-    _bboxList_aug->swap(bboxList_aug);
-
-  } else {
-    *img_temp = img.clone();
-    *_bboxList_aug = bboxList;
+    // crop calculations
+    cv::Size before_crop = as.scale;
+    if (as.doRotation()) {
+      before_crop = getRotatedSize(as.scale, as.rotation);
+    }
+    int shift_x, shift_y;
+    double pct_x, pct_y;
+    if (randDouble() <= a_param_.crop_prob()) {
+      // Random crop
+      pct_x = randDouble();
+      pct_y = randDouble();
+      shift_x = a_param_.shift_x();
+      shift_y = a_param_.shift_y();
+    } else {
+      // Deterministic crop
+      pct_x = 0.5;
+      pct_y = 0.5;
+      shift_x = 0;
+      shift_y = 0;
+    }
+    as.crop_offset = cv::Point(
+        round(pct_x * (before_crop.width - image_size_x + shift_x) -
+          shift_x/2),
+        round(pct_y * (before_crop.height - image_size_y + shift_y) -
+          shift_y/2));
+  } else {  // phase == TEST
+    as.scale = cv::Size(image_size_x, image_size_y);
   }
+  return as;
 }
 
 
 template<typename Dtype>
-Point DetectNetTransformationLayer<Dtype>::augmentation_crop(
-    const Mat3v& img_src,
-    Mat3v* img_dst,
-    const vector<BboxLabel >& bboxList,
-    vector<BboxLabel >* bboxList_aug
+typename DetectNetTransformationLayer<Dtype>::Mat3v
+DetectNetTransformationLayer<Dtype>::transform_image_cpu(
+    const Mat3v& src_img, const AugmentSelection& as
 ) {
-  bool doCrop = randDouble() <= a_param_.crop_prob();
-  Size2i crop(g_param_.image_size_x(), g_param_.image_size_y());
-  Size2i shift(a_param_.shift_x(), a_param_.shift_y());
-  Size2i imgSize(img_src.cols, img_src.rows);
-  Point2i offset, inner, outer;
-  if (doCrop) {
-    // perform a random crop, bounded by the difference between the network's
-    //  input and the size of the incoming image. Add a user-defined shift to
-    //  the max range of the crop offset.
-    offset = Point2i(
-        round(randDouble() * (imgSize.width  - crop.width  + shift.width)),
-        round(randDouble() * (imgSize.height - crop.height + shift.height)));
-    offset -= Point2i(shift.width / 2, shift.height / 2);
-  } else {
-    // perform a deterministic crop, placing the image in the middle of the
-    //  network's input region:
-    offset = Point2i(
-        (imgSize.width  - crop.width) / 2,
-        (imgSize.height - crop.height) / 2);
-  }
-  inner = Point2i(std::max(0,  1 * offset.x), std::max(0,  1 * offset.y));
-  outer = Point2i(std::max(0, -1 * offset.x), std::max(0, -1 * offset.y));
+  // Scale from [0,255] to [0,1] for HSV augmentations
+  Mat3v img = src_img.clone() / UINT8_MAX;
 
-  // crop / grow to size:
-  transform_crop(
-      img_src,
-      img_dst,
-      bboxList,
-      bboxList_aug,
-      Rect(inner, crop),
-      crop,
-      outer);
-  return offset;
+  // Do HSV transformations before mean subtraction while image still in [0,1]
+  if (as.doHueRotation() || as.doDesaturation()) {
+    img = transform_hsv_cpu(img, as);
+  }
+
+  meanSubtract(&img);
+  if (as.flip) {
+    cv::flip(img, img, 1);
+  }
+  if (as.doScale(img.size())) {
+    cv::resize(img, img, as.scale, 0, 0, cv::INTER_CUBIC);
+  }
+  if (as.doRotation()) {
+    img = rotate_image_cpu(img, as.rotation);
+  }
+  img = crop_image_cpu(img,
+      cv::Size(
+        g_param_.image_size_x(),
+        g_param_.image_size_y()),
+      as.crop_offset);
+
+  // Scale from [-1,1] into [-255,255]
+  img *= Dtype(UINT8_MAX);
+  return img;
 }
 
 
 template<typename Dtype>
-void DetectNetTransformationLayer<Dtype>::transform_crop(
-    const Mat3v& img_src,
-    Mat3v* img_dst,
-    const vector<BboxLabel>& bboxlist,
-    vector<BboxLabel>* _bboxlist_aug,
-    Rect inner,
-    Size2i dst_size,
-    Point2i outer
-) const {
-  // ensure src_rect fits within img_src:
-  Rect src_rect = inner & Rect(Point(0, 0), Size2i(img_src.cols, img_src.rows));
-  // dst_rect has a size the same as src_rect:
-  Rect dst_rect(outer, src_rect.size());
-  // ensure dst_rect fits within img_dst:
-  dst_rect &= Rect(Point(0, 0), dst_size);
-  // assert src_rect and dst_rect have the same size:
-  src_rect = Rect(src_rect.tl(), dst_rect.size());
-  // Fail with an Opencv exception if any of these are negative
-
-  // no operation is needed in the case of zero transformations:
-  if (src_rect == dst_rect
-    && src_rect.tl() == Point2i(0, 0)
-    && src_rect.size() == dst_size
-    && dst_size == Size2i(img_src.cols, img_src.rows)) {
-    // no crop is needed:
-    *img_dst = img_src.clone();
-    *_bboxlist_aug = bboxlist;
-  } else {
-    // construct a destination matrix:
-    *img_dst = Mat3v(dst_size);
-    // and fill with black:
-    img_dst->setTo(Scalar(0, 0, 0));
-
-    // define destinationROI inside of destination mat:
-    Mat3v destinationROI = (*img_dst)(dst_rect);
-    // sourceROI inside of source mat:
-    Mat3v sourceROI = img_src(src_rect);
-    // copy sourceROI into destinationROI:
-    sourceROI.copyTo(destinationROI);
-
-    // translate all bounding boxes by the new offset, -inner + outer:
-    Point2v bboxOffset = dst_rect.tl() - src_rect.tl();
-    vector<BboxLabel> bboxlist_aug;
-    foreach_(const BboxLabel& label, bboxlist) {  // for every bbox
-      BboxLabel cropped = label;
-      // shift topLeft by offset
-      cropped.bbox += bboxOffset;
-
-      // Add to list of bboxes.
-      bboxlist_aug.push_back(cropped);
-    }
-    _bboxlist_aug->swap(bboxlist_aug);
+void DetectNetTransformationLayer<Dtype>::transform_label_cpu(
+    vector<BboxLabel> bboxes, Dtype* transformed_label,
+    const AugmentSelection& as, const cv::Size& orig_size
+) {
+  if (as.flip) {
+    bboxes = flip_label_cpu(bboxes, orig_size);
   }
+  if (as.doScale(orig_size)) {
+    bboxes = scale_label_cpu(bboxes, orig_size, as.scale);
+  }
+  if (as.doRotation()) {
+    bboxes = rotate_label_cpu(bboxes, as.scale, as.rotation);
+  }
+  bboxes = crop_label_cpu(bboxes, as.crop_offset);
+
+  coverage_->generate(transformed_label, bboxes);
 }
 
 
 template<typename Dtype>
-bool DetectNetTransformationLayer<Dtype>::augmentation_flip(
-    const Mat3v& img_src,
-    Mat3v* img_aug,
-    const vector<BboxLabel >& bboxlist,
-    vector<BboxLabel >* _bboxlist_aug) {
-  bool doflip = randDouble() <= a_param_.flip_prob();
-  if (doflip) {
-    flip(img_src, *img_aug, 1);
-    float w = img_src.cols;
-
-    vector <BboxLabel > bboxlist_aug;
-    foreach_(BboxLabel label, bboxlist) {  // for every bbox
-      // flip X across the width of the image:
-      label.bbox.x = w - label.bbox.x - 1.0f - label.bbox.width;
-      // Y, width, height stay the same
-
-      bboxlist_aug.push_back(label);
-    }
-    _bboxlist_aug->swap(bboxlist_aug);
-  } else {
-    *img_aug = img_src.clone();
-    *_bboxlist_aug = bboxlist;
+typename DetectNetTransformationLayer<Dtype>::Mat3v
+DetectNetTransformationLayer<Dtype>::transform_hsv_cpu(
+    const Mat3v& orig, const AugmentSelection& as) {
+  // Use CV_32F since cvtColor doesn't support CV_64F
+  cv::Mat_<cv::Vec<float, 3> > result = orig;
+  cvtColor(result, result, COLOR_BGR2HSV);
+  vector<Mat1v> channels(3);
+  cv::split(result, channels);
+  // Perform transformations
+  if (as.doHueRotation()) {
+    channels[0] += as.hue_rotation;
   }
-  return doflip;
+  if (as.doDesaturation()) {
+    channels[1] *= as.saturation;
+  }
+  cv::merge(channels, result);
+  // Convert back to BGR
+  cvtColor(result, result, COLOR_HSV2BGR);
+  return result;
+}
+
+
+template<typename Dtype>
+vector<typename DetectNetTransformationLayer<Dtype>::BboxLabel>
+DetectNetTransformationLayer<Dtype>::flip_label_cpu(
+    const vector<BboxLabel>& orig, const cv::Size& size) {
+  vector<BboxLabel> result;
+  foreach_(BboxLabel label, orig) {
+    // flip X across the width of the image:
+    label.bbox.x = size.width - label.bbox.x - label.bbox.width - 1;
+    result.push_back(label);
+  }
+  return result;
+}
+
+
+template<typename Dtype>
+vector<typename DetectNetTransformationLayer<Dtype>::BboxLabel>
+DetectNetTransformationLayer<Dtype>::scale_label_cpu(
+    const vector<BboxLabel>& orig,
+    const cv::Size& old_size, const cv::Size& new_size) {
+  vector<BboxLabel> result;
+  Dtype scale_x = (Dtype)new_size.width / old_size.width;
+  Dtype scale_y = (Dtype)new_size.height / old_size.height;
+  foreach_(BboxLabel label, orig) {
+    // resize by scale
+    label.bbox = Rectv(
+        label.bbox.x * scale_x,
+        label.bbox.y * scale_y,
+        label.bbox.width * scale_x,
+        label.bbox.height * scale_y);
+    result.push_back(label);
+  }
+  return result;
+}
+
+
+template<typename Dtype>
+typename DetectNetTransformationLayer<Dtype>::Mat3v
+DetectNetTransformationLayer<Dtype>::rotate_image_cpu(
+    const Mat3v& orig, const float rotation) {
+  // Calculate new size
+  Rect roi(0, 0, orig.cols, orig.rows);
+  Size2i boundingSize = getRotatedSize(roi.size(), rotation);
+  Mat3v result(boundingSize, Dtype(0));
+  // Rotate image
+  Mat1v transformationMatrix = getTransformationMatrix(roi, rotation);
+  cv::warpAffine(orig, result, transformationMatrix, boundingSize,
+      INTER_LINEAR, BORDER_TRANSPARENT);
+  return result;
+}
+
+
+template<typename Dtype>
+vector<typename DetectNetTransformationLayer<Dtype>::BboxLabel>
+DetectNetTransformationLayer<Dtype>::rotate_label_cpu(
+    const vector<BboxLabel>& orig, const cv::Size& orig_size,
+    const float rotation) {
+  // Get transformation matrix
+  Rect roi(0, 0, orig_size.width, orig_size.height);
+  Mat1v transformationMatrix = getTransformationMatrix(roi, rotation);
+  // Rotate labels
+  vector<BboxLabel> result;
+  foreach_(BboxLabel label, orig) {
+    Mat1v center(3, 1);
+    // center of bbox as midpoint between topLeft and bottomRight:
+    Point2v center_point = (label.bbox.tl() + label.bbox.br()) * 0.5;
+    center.template at<Dtype>(0, 0) = center_point.x;
+    center.template at<Dtype>(1, 0) = center_point.y;
+    center.template at<Dtype>(2, 0) = 1.0;
+
+    // rotate around the origin:
+    Mat1v new_center(3, 1);
+    new_center = transformationMatrix * center;
+
+    // rotated bbox with topleft as midpoint - size/2 and prior size
+    Point2v new_center_point(
+        new_center.template at<Dtype>(0, 0),
+        new_center.template at<Dtype>(1, 0));
+    Rectv rotated(
+        new_center_point - (label.bbox.br() - center_point),
+        label.bbox.size());
+    label.bbox = rotated;
+
+    // Add to list of bboxes. Note that it's possible for the bounding box
+    // to be out of the display area at this point
+    result.push_back(label);
+  }
+  return result;
+}
+
+template<typename Dtype>
+typename DetectNetTransformationLayer<Dtype>::Mat3v
+DetectNetTransformationLayer<Dtype>::crop_image_cpu(
+    const Mat3v& orig, const cv::Size& new_size, const cv::Point& crop_offset
+) {
+  Mat3v result(new_size, Dtype(0));
+
+  // Create rects for ROIs
+  cv::Rect src_rect = cv::Rect(crop_offset, new_size) &
+    cv::Rect(cv::Point(0, 0), orig.size());
+  cv::Rect dst_rect = cv::Rect(-crop_offset, orig.size()) &
+    cv::Rect(cv::Point(0, 0), new_size);
+  CHECK_EQ(src_rect.size(), dst_rect.size());
+
+  // Copy
+  Mat3v sourceROI = orig(src_rect);
+  Mat3v destinationROI = result(dst_rect);
+  sourceROI.copyTo(destinationROI);
+
+  return result;
+}
+
+template<typename Dtype>
+vector<typename DetectNetTransformationLayer<Dtype>::BboxLabel>
+DetectNetTransformationLayer<Dtype>::crop_label_cpu(
+    const vector<BboxLabel>& orig, const cv::Point& crop_offset
+) {
+  vector<BboxLabel> result;
+  Point2v offset = crop_offset;  // convert to Dtype
+  foreach_(BboxLabel label, orig) {
+    label.bbox -= offset;
+    result.push_back(label);
+  }
+  return result;
 }
 
 
@@ -620,177 +648,16 @@ DetectNetTransformationLayer<Dtype>::getTransformationMatrix(
 
 
 template<typename Dtype>
-Rect DetectNetTransformationLayer<Dtype>::getBoundingRect(
-    Rect region,
-    Dtype rotation
-) const {
-  Size2v size(region.width, region.height);
-  Point2v center = size * (Dtype)0.5;
-
-  return RotatedRect(center, size, rotation).boundingRect();
+cv::Size DetectNetTransformationLayer<Dtype>::getRotatedSize(
+    cv::Size size, float rotation) const {
+  cv::Point center(0.5 * size.width, 0.5 * size.height);
+  return cv::RotatedRect(center, size, rotation).boundingRect().size();
 }
 
 
-template<typename Dtype>
-float DetectNetTransformationLayer<Dtype>::augmentation_rotate(
-    const Mat3v& img_src,
-    Mat3v* img_aug,
-    const vector<BboxLabel >& bboxList,
-    vector<BboxLabel >* _bboxlist_aug) {
-  bool doRotate = randDouble() <= a_param_.rotation_prob();
-  float degree = (randDouble() - 0.5) * 2 * a_param_.max_rotate_degree();
-
-  if (doRotate && std::abs(degree) > FLT_EPSILON) {
-    Rect roi(0, 0, img_src.cols, img_src.rows);
-    // determine new bounding rect:
-    Size2i boundingSize = getBoundingRect(roi, degree).size();
-    // determine rotation matrix:
-    Mat1v transformationMatrix = getTransformationMatrix(roi, degree);
-
-    // construct a destination matrix large enough to contain the rotated image:
-    *img_aug = Mat3v(boundingSize);
-    // and fill with black:
-    img_aug->setTo(Scalar(0, 0, 0));
-    // warp old image into new buffer, maintaining the background:
-    warpAffine(
-        img_src,
-        *img_aug,
-        transformationMatrix,
-        boundingSize,
-        INTER_LINEAR,
-        BORDER_TRANSPARENT);
-
-    vector<BboxLabel > bboxlist_aug;
-    foreach_(BboxLabel label, bboxList) {  // for each bbox:
-      Mat1v center(3, 1);
-      // center of bbox as midpoint between topLeft and bottomRight:
-      Point2v center_point = (label.bbox.tl() + label.bbox.br()) * 0.5;
-      center.template at<Dtype>(0, 0) = center_point.x;
-      center.template at<Dtype>(1, 0) = center_point.y;
-      center.template at<Dtype>(2, 0) = 1.0;
-
-      // rotate around the origin:
-      Mat1v new_center(3, 1);
-      new_center = transformationMatrix * center;
-
-      // rotated bbox with topleft as midpoint - size/2 and prior size
-      Point2v new_center_point(
-          new_center.template at<Dtype>(0, 0),
-          new_center.template at<Dtype>(1, 0));
-      Rectv rotated(
-          new_center_point - (label.bbox.br() - center_point),
-          label.bbox.size());
-      label.bbox = rotated;
-
-      // Add to list of bboxes. Note that it's possible for the bounding box
-      // to be out of the display area at this point
-      bboxlist_aug.push_back(label);
-    }
-    _bboxlist_aug->swap(bboxlist_aug);
-  } else {
-    *img_aug = img_src.clone();
-    *_bboxlist_aug = bboxList;
-    degree = 0.0f;
-  }
-
-  return degree;
-}
-
-
-template<typename Dtype>
-float DetectNetTransformationLayer<Dtype>::augmentation_hueRotation(
-    const Mat3v& img,
-    Mat3v* result) {
-  bool doHueRotate = randDouble() <= a_param_.hue_rotation_prob();
-  // rotate hue by this amount in degrees
-  float rotation =
-      (randDouble()                       // range: 0..1
-      * (2.0 * a_param_.hue_rotation()))  // range: 0..2*rot
-      - a_param_.hue_rotation();          // range: -rot..rot
-  // clamp to -180d..180d
-  rotation = std::max(std::min(rotation, 180.0f), -180.0f);
-
-  // if we're actually rotating:
-  if (doHueRotate && std::abs(rotation) > FLT_EPSILON) {
-    // convert to HSV colorspace
-    cvtColor(img, *result, COLOR_BGR2HSV);
-
-    // retrieve the hue channel:
-    static const array<int, 2> from_mix = {{0, 0}};
-    Mat1v hueChannel(result->rows, result->cols);
-    mixChannels(
-        result, 1,
-        &hueChannel, 1,
-        from_mix.data(), from_mix.size()/2);
-
-    // shift the hue's value by some amount:
-    hueChannel += rotation;
-
-    // place hue-rotated channel back in result matrix:
-    // NOLINT_NEXT_LINE(whitespace/comma)
-    static const array<int, 6> to_mix = {{3,0, 1,1, 2,2}};
-    const array<Mat, 2> to_channels = {{*result, hueChannel}};
-    mixChannels(
-        to_channels.data(), 2,
-        result, 1,
-        to_mix.data(), to_mix.size()/2);
-
-    // back to BGR colorspace
-    cvtColor(*result, *result, COLOR_HSV2BGR);
-  } else {
-    *result = img;
-    rotation = 0.0f;
-  }
-
-  return rotation;
-}
-
-
-template<typename Dtype>
-float DetectNetTransformationLayer<Dtype>::augmentation_desaturation(
-    const Mat3v& img,
-    Mat3v* result) {
-  bool doDesaturate = randDouble() <= a_param_.desaturation_prob();
-  // scale saturation by this amount:
-  float saturation =
-      1.0                           // inverse
-    - randDouble()                  // range: 0..1
-    * a_param_.desaturation_max();  // range: 0..max
-
-  // if our random value is large enough to produce noticeable desaturation:
-  if (doDesaturate && (saturation < 1.0 - 1.0/UINT8_MAX)) {
-    // convert to HSV colorspace
-    cvtColor(img, *result, COLOR_BGR2HSV);
-
-    // retrieve the saturation channel:
-    static const array<int, 2> from_mix = {{1, 0}};
-    Mat1v saturationChannel(result->rows, result->cols);
-    mixChannels(
-        result, 1,
-        &saturationChannel, 1,
-        from_mix.data(), from_mix.size()/2);
-    // de-saturate the channel by an amount:
-    saturationChannel *= saturation;
-
-    // place de-saturated channel back in result matrix:
-    // NOLINT_NEXT_LINE(whitespace/comma)
-    static const array<int, 6> to_mix = {{0,0, 3,1, 2,2}};
-    const array<Mat, 2> to_channels = {{*result, saturationChannel}};
-    mixChannels(
-        to_channels.data(), 2,
-        result, 1,
-        to_mix.data(), to_mix.size()/2);
-
-    // convert back to BGR colorspace:
-    cvtColor(*result, *result, COLOR_HSV2BGR);
-  } else {
-    *result = img;
-    saturation = 1.0;
-  }
-
-  return saturation;
-}
-
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(DetectNetTransformationLayer, Forward);
+#endif
 
 INSTANTIATE_CLASS(DetectNetTransformationLayer);
 REGISTER_LAYER_CLASS(DetectNetTransformation);
