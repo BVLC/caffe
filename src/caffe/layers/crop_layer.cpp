@@ -69,44 +69,42 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+template <bool is_forward>
 void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top,
              const vector<int>& offsets,
-             vector<int> indices,
-             int cur_dim,
              const Dtype* src_data,
-             Dtype* dest_data,
-             bool is_forward) {
-  if (cur_dim + 1 < top[0]->num_axes()) {
-    // We are not yet at the final dimension, call copy recursively
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
-      indices[cur_dim] = i;
-      crop_copy(bottom, top, offsets, indices, cur_dim+1,
-                src_data, dest_data, is_forward);
+             Dtype* dest_data) {
+  int last_dim = top[0]->num_axes() - 1;
+  int copy_count = top[0]->count() / top[0]->shape(last_dim);
+
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
+  for (int i = 0; i < copy_count; ++i) {
+    // prepare index vector reduced(red) and with offsets(off)
+    std::vector<int> ind_red(last_dim, 0);
+    std::vector<int> ind_off(last_dim+1, 0);
+    int cur_iteration = i;
+    for (int j = last_dim - 1; j >=0; --j) {
+      int index = cur_iteration % top[0]->shape(j);
+      cur_iteration /= top[0]->shape(j);
+      ind_red[j] = index;
+      ind_off[j] = index + offsets[j];
     }
-  } else {
-    // We are at the last dimensions, which is stored continously in memory
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
-      // prepare index vector reduced(red) and with offsets(off)
-      std::vector<int> ind_red(cur_dim, 0);
-      std::vector<int> ind_off(cur_dim+1, 0);
-      for (int j = 0; j < cur_dim; ++j) {
-          ind_red[j] = indices[j];
-          ind_off[j] = indices[j] + offsets[j];
-      }
-      ind_off[cur_dim] = offsets[cur_dim];
-      // do the copy
-      if (is_forward) {
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + bottom[0]->offset(ind_off),
-            dest_data + top[0]->offset(ind_red));
-      } else {
-        // in the backwards pass the src_data is top_diff
-        // and the dest_data is bottom_diff
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + top[0]->offset(ind_red),
-            dest_data + bottom[0]->offset(ind_off));
-      }
+    ind_off[last_dim] = offsets[last_dim];
+    // Last dimensions stored continously in memory
+    // do the copy
+    if (is_forward) {
+      caffe_copy(top[0]->shape(last_dim),
+          src_data + bottom[0]->offset(ind_off),
+          dest_data + top[0]->offset(ind_red));
+    } else {
+      // in the backwards pass the src_data is top_diff
+      // and the dest_data is bottom_diff
+      caffe_copy(top[0]->shape(last_dim),
+          src_data + top[0]->offset(ind_red),
+          dest_data + bottom[0]->offset(ind_off));
     }
   }
 }
@@ -114,10 +112,9 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CropLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  std::vector<int> indices(top[0]->num_axes(), 0);
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  crop_copy(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
+  crop_copy<true>(bottom, top, offsets, bottom_data, top_data);
 }
 
 template <typename Dtype>
@@ -128,8 +125,7 @@ void CropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   if (propagate_down[0]) {
     caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
-    std::vector<int> indices(top[0]->num_axes(), 0);
-    crop_copy(bottom, top, offsets, indices, 0, top_diff, bottom_diff, false);
+    crop_copy<false>(bottom, top, offsets, top_diff, bottom_diff);
   }
 }
 

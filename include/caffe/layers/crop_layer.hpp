@@ -44,17 +44,14 @@ class CropLayer : public Layer<Dtype> {
   vector<int> offsets;
 
  private:
-  // Recursive copy function.
+  template<bool is_forward>
   void crop_copy(const vector<Blob<Dtype>*>& bottom,
                const vector<Blob<Dtype>*>& top,
                const vector<int>& offsets,
-               vector<int> indices,
-               int cur_dim,
                const Dtype* src_data,
-               Dtype* dest_data,
-               bool is_forward);
+               Dtype* dest_data);
 
-  // Recursive copy function: this is similar to crop_copy() but loops over all
+  // Copy function: this is similar to crop_copy() but loops over all
   // but the last two dimensions to allow for ND cropping while still relying on
   // a CUDA kernel for the innermost two dimensions for performance reasons.  An
   // alterantive implementation could rely on the kernel more by passing
