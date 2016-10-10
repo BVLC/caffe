@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+# Compile python code
+python -m compileall -q /usr/lib/python2.7/dist-packages/caffe
+
+#DEBHELPER#
+

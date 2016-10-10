@@ -1,0 +1,90 @@
+Source: caffe-nv
+Section: universe/misc
+Maintainer: #USERNAME# <#EMAIL#>
+Homepage: http://caffe.berkeleyvision.org/
+Vcs-Browser: https://github.com/NVIDIA/caffe
+Priority: optional
+# Assumes that you have installed CUDA, cuDNN and NCCL
+Build-Depends: debhelper (>= 9),
+ cmake,
+ libboost-filesystem-dev,
+ libboost-python-dev,
+ libboost-system-dev,
+ libboost-thread-dev,
+ libgflags-dev,
+ libgoogle-glog-dev,
+ libhdf5-dev,
+ liblapack-dev,
+ libleveldb-dev,
+ liblmdb-dev,
+ libopenblas-dev,
+ libopencv-dev (>= 2.4),
+ libprotobuf-dev,
+ libsnappy-dev,
+ protobuf-compiler,
+ python-all-dev,
+ python-numpy
+Standards-Version: #POLICY#
+
+Package: caffe-nv
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}, libcaffe-nv0 (= ${binary:Version})
+Recommends: caffe-nv-tools
+Conflicts: caffe
+Description: Fast open framework for Deep Learning
+ This package provides the caffe binary.
+ .
+ This is NVIDIA's fork of the Caffe project from BVLC.
+ .
+ Caffe is a deep learning framework made with expression, speed,
+ and modularity in mind. It is developed by the Berkeley Vision
+ and Learning Center (BVLC) and community contributors.
+
+Package: libcaffe-nv0
+Architecture: amd64
+Section: universe/libs
+Depends: ${misc:Depends}, ${shlibs:Depends}, liblapack3
+Description: Fast open framework for Deep Learning (Libs)
+ This package provides the caffe shared libraries.
+ .
+ This is NVIDIA's fork of the Caffe project from BVLC.
+ .
+ Caffe is a deep learning framework made with expression, speed,
+ and modularity in mind. It is developed by the Berkeley Vision
+ and Learning Center (BVLC) and community contributors.
+
+Package: python-caffe-nv
+Architecture: amd64
+Section: universe/python
+Depends: ${misc:Depends}, ${shlibs:Depends}, libcaffe-nv0 (= ${binary:Version}),
+    cython,
+    python,
+    python-numpy,
+    python-opencv,
+    python-pil,
+    python-protobuf,
+    python-scipy,
+    python-skimage
+Conflicts: python-caffe
+Description: Fast open framework for Deep Learning (Python)
+ This package provides the caffe python bindings.
+ .
+ This is NVIDIA's fork of the Caffe project from BVLC.
+ .
+ Caffe is a deep learning framework made with expression, speed,
+ and modularity in mind. It is developed by the Berkeley Vision
+ and Learning Center (BVLC) and community contributors.
+
+Package: caffe-nv-tools
+Architecture: amd64
+Section: universe/utils
+Depends: ${misc:Depends}, ${shlibs:Depends}, libcaffe-nv0 (= ${binary:Version})
+Conflicts: caffe-tools
+Description: Fast open framework for Deep Learning (Tools)
+ This package provides the caffe supplementary tools.
+ .
+ This is NVIDIA's fork of the Caffe project from BVLC.
+ .
+ Caffe is a deep learning framework made with expression, speed,
+ and modularity in mind. It is developed by the Berkeley Vision
+ and Learning Center (BVLC) and community contributors.

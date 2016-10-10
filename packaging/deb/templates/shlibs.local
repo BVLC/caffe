@@ -1,0 +1,8 @@
+libcublas 7.5 cuda-cublas-7-5
+libcudart 7.5 cuda-cudart-7-5
+libcurand 7.5 cuda-curand-7-5
+libcublas 8.0 cuda-cublas-8-0
+libcudart 8.0 cuda-cudart-8-0
+libcurand 8.0 cuda-curand-8-0
+libcudnn 4 libcudnn4
+libcudnn 5 libcudnn5
