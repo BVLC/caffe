@@ -107,12 +107,12 @@ void MKLConvolutionLayer<Dtype>::Init(
   this->num_ = bottom[0]->num();
 
   // TODO: clean up this
-  kernel_w_ = this->kernel_shape_.cpu_data()[0];
-  kernel_h_ = this->kernel_shape_.cpu_data()[1];
-  stride_w_ = this->stride_.cpu_data()[0];
-  stride_h_ = this->stride_.cpu_data()[1];
-  pad_w_ = this->pad_.cpu_data()[0];
-  pad_h_ = this->pad_.cpu_data()[1];
+  kernel_w_ = this->kernel_shape_.cpu_data()[1];
+  kernel_h_ = this->kernel_shape_.cpu_data()[0];
+  stride_w_ = this->stride_.cpu_data()[1];
+  stride_h_ = this->stride_.cpu_data()[0];
+  pad_w_ = this->pad_.cpu_data()[1];
+  pad_h_ = this->pad_.cpu_data()[0];
 
   this->bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
