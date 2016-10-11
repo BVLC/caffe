@@ -50,8 +50,8 @@ For quick start read [Multinode quickstart guide](https://github.com/intelcaffe/
 
 Please see also prepared examples for cifar10 and Googlenet.
 
-For cifar10 example look at `examples/cifar10/train_full_multinode_mpi.sh` file. The script will run 4 processes on localhost. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
-It uses the MPI setup with an implicit parameter server (*all-reduce* approach). Each process will calculate it's own gradients, and propagate it up through the binary tree structure to the root, which will apply the weight updates and propagate them down the tree.
+For cifar10 example look at `examples/cifar10/train_full_multinode_mpi.sh` file. The script runs 4 processes on localhost. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
+It uses the MPI setup with an implicit parameter server (*all-reduce* approach). Each process is calculating its own gradients and sending them up through the binary tree structure. The intermediate nodes accumulate the received gradients with their own. The root node applies the weight updates and propagates them down the tree.
 
 A copy of the data has to be accessible from all of the nodes. Datasets can be either distributed to each node or on a parallel file system. The snapshots are saved only by the root process. The same applies to the test phase - it is carried out by the root process.
 
