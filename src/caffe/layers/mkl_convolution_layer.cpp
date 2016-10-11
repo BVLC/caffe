@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKL2017_SUPPORTED
 #include <algorithm>
 #include <cstdlib>
@@ -62,11 +99,9 @@ MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::LayerSetUp(
+void MKLConvolutionLayer<Dtype>::Init(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
-
   this->width_ = bottom[0]->width();
   this->height_ = bottom[0]->height();
   this->num_ = bottom[0]->num();
@@ -141,6 +176,8 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
   bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 
+  // Free MKL primitives
+  dnnDelete<Dtype>(convolutionFwd);
   if (this->bias_term_) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
@@ -183,10 +220,10 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
   if (this->bias_term_)
     fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
                                   bias_sizes, bias_strides);
-
 /*
  * Backward by data layer setup
  */
+  dnnDelete<Dtype>(convolutionBwdData);
   status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
     &convolutionBwdData,
     NULL,
@@ -213,6 +250,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 /*
  * Backward by filter layer setup
  */
+  dnnDelete<Dtype>(convolutionBwdFilter);
   status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
     &convolutionBwdFilter,
     NULL,
@@ -258,6 +296,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
  * Backward by bias layer setup
  */
   if (this->bias_term_) {
+    dnnDelete<Dtype>(convolutionBwdBias);
     status = dnnGroupsConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
       NULL,
@@ -277,6 +316,17 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
     bwdb_bias_diff_iter->create_layouts(convolutionBwdBias, dnnResourceDiffBias,
                                         1, bias_sizes, bias_strides);
   }
+
+}
+
+
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::LayerSetUp(
+      const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+
+  Init(bottom,top);
 }
 
 template <typename Dtype>
@@ -290,95 +340,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       this->num_ == bottom[0]->num())
     return;
 
-  // Free MKL primitives
-  dnnDelete<Dtype>(convolutionFwd);
-  dnnDelete<Dtype>(convolutionBwdData);
-
-  // Reinit layer params
-  this->width_ = bottom[0]->width();
-  this->height_ = bottom[0]->height();
-  this->num_ = bottom[0]->num();
-
-  this->bottom_shape_ = &bottom[0]->shape();
-  compute_output_shape();
-  int status;
-  size_t n, g;
-  size_t ic, oc, kw, kh;
-  size_t dimension = 4;
-
-  g  = this->group_;
-  n  = this->num_;
-  ic = this->channels_;
-  kw = this->kernel_w_;
-  kh = this->kernel_h_;
-
-  oc = this->num_output_;
-
-  size_t bdata_sizes[4] = {this->width_, this->height_, ic, n};
-
-  /* starting with MKL 2017 Gold in case of groups filter layout
-   * becomes 5D, i.e. groups become a separate dimension */
-  size_t g_mkl2017 = g;
-  size_t f_dimension = dimension + (g != 1);
-  if (getMKLBuildDate() < 20160701) {
-      g_mkl2017 = 1;
-      f_dimension = dimension;
-  }
-
-  size_t fdata_sizes[5] = {kw, kh, ic/g, oc/g_mkl2017, g_mkl2017};
-
-  size_t tdata_sizes[4] = {this->width_out_, this->height_out_, oc, n};
-
-  size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
-  int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
-
-  // Recreate MKL primitives
-  if (this->bias_term_) {
-    status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
-      &convolutionFwd,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  } else {
-    status = dnnGroupsConvolutionCreateForward<Dtype>(
-      &convolutionFwd,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  }
-  CHECK_EQ(status, 0)
-          << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
-          << status << "\n";
-
-  status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
-    &convolutionBwdData,
-    NULL,
-    dnnAlgorithmConvolutionDirect,
-    g,
-    dimension,
-    bdata_sizes,
-    tdata_sizes,
-    fdata_sizes,
-    convolutionStrides,
-    inputOffset,
-    dnnBorderZeros);
-  CHECK_EQ(status, 0)
-          << "Failed dnnConvolutionCreateBackwardData with status "
-          << status << "\n";
+  Init(bottom,top);
 }
 
 template <typename Dtype>

@@ -1,85 +1,128 @@
-#ifndef _MKL_DNN_CPPWRAPPER_H
-#define _MKL_DNN_CPPWRAPPER_H
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
 
-#include <stdarg.h>
-#include <stddef.h>
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
 
-#include "mkl_dnn_types.h"
-#include "mkl_dnn.h"
-#include "mkl_version.h"
-
-#define TEMPLATE_PREFIX template <typename Dtype> inline
-#define SPEC_PREFIX template <> inline
-
-#if (__INTEL_MKL__ < 2017) || (__INTEL_MKL_BUILD_DATE <= 20160311)
-#error: To use the new MKL DNN API, you must install Intel(R) MKL 2017 Beta Update 1 or higher.
-#endif
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
 
 
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-TEMPLATE_PREFIX dnnError_t dnnLayoutCreate(
-        dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[]);
-SPEC_PREFIX dnnError_t dnnLayoutCreate<float>(
-        dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
-        {return dnnLayoutCreate_F32(pLayout, dimension, size, strides);}
-SPEC_PREFIX dnnError_t dnnLayoutCreate<double>(
-        dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
-        {return dnnLayoutCreate_F64(pLayout, dimension, size, strides);}
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
 
-TEMPLATE_PREFIX dnnError_t dnnLayoutCreateFromPrimitive(
-        dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type);
-SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<float>(
-        dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
-        {return dnnLayoutCreateFromPrimitive_F32(pLayout, primitive, type);}
-SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<double>(
-        dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
-        {return dnnLayoutCreateFromPrimitive_F64(pLayout, primitive, type);}
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
-TEMPLATE_PREFIX size_t dnnLayoutGetMemorySize(
-        const dnnLayout_t layout);
-SPEC_PREFIX size_t dnnLayoutGetMemorySize<float>(
-        const dnnLayout_t layout)
-        {return dnnLayoutGetMemorySize_F32(layout);}
-SPEC_PREFIX size_t dnnLayoutGetMemorySize<double>(
-        const dnnLayout_t layout)
-        {return dnnLayoutGetMemorySize_F64(layout);}
+  #ifndef _MKL_DNN_CPPWRAPPER_H
+  #define _MKL_DNN_CPPWRAPPER_H
 
-TEMPLATE_PREFIX int dnnLayoutCompare(
-        const dnnLayout_t l1, const dnnLayout_t l2);
-SPEC_PREFIX int dnnLayoutCompare<float>(
-        const dnnLayout_t l1, const dnnLayout_t l2)
-        {return dnnLayoutCompare_F32(l1, l2);}
-SPEC_PREFIX int dnnLayoutCompare<double>(
-        const dnnLayout_t l1, const dnnLayout_t l2)
-        {return dnnLayoutCompare_F64(l1, l2);}
+  #include <stdarg.h>
+  #include <stddef.h>
+
+  #include "mkl_dnn_types.h"
+  #include "mkl_dnn.h"
+  #include "mkl_version.h"
+
+  #define TEMPLATE_PREFIX template <typename Dtype> inline
+  #define SPEC_PREFIX template <> inline
+
+  #if (__INTEL_MKL__ < 2017) || (__INTEL_MKL_BUILD_DATE <= 20160311)
+  #error: To use the new MKL DNN API, you must install Intel(R) MKL 2017 Beta Update 1 or higher.
+  #endif
 
 
-TEMPLATE_PREFIX dnnError_t dnnAllocateBuffer(
-        void **pPtr, dnnLayout_t layout);
-SPEC_PREFIX dnnError_t dnnAllocateBuffer<float>(
-        void **pPtr, dnnLayout_t layout)
-    {return dnnAllocateBuffer_F32(pPtr, layout);}
-SPEC_PREFIX dnnError_t dnnAllocateBuffer<double>(
-        void **pPtr, dnnLayout_t layout)
-    {return dnnAllocateBuffer_F64(pPtr, layout);}
 
-TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer(
-        void *ptr);
-SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
-        void *ptr)
-    {return dnnReleaseBuffer_F32(ptr);}
-SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
-        void *ptr)
-    {return dnnReleaseBuffer_F64(ptr);}
+  TEMPLATE_PREFIX dnnError_t dnnLayoutCreate(
+          dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[]);
+  SPEC_PREFIX dnnError_t dnnLayoutCreate<float>(
+          dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
+          {return dnnLayoutCreate_F32(pLayout, dimension, size, strides);}
+  SPEC_PREFIX dnnError_t dnnLayoutCreate<double>(
+          dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
+          {return dnnLayoutCreate_F64(pLayout, dimension, size, strides);}
 
-TEMPLATE_PREFIX dnnError_t dnnLayoutDelete(
-        dnnLayout_t layout);
-SPEC_PREFIX dnnError_t dnnLayoutDelete<float>(
-        dnnLayout_t layout)
-    {return dnnLayoutDelete_F32(layout);}
-SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
-        dnnLayout_t layout)
-    {return dnnLayoutDelete_F64(layout);}
+  TEMPLATE_PREFIX dnnError_t dnnLayoutCreateFromPrimitive(
+          dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type);
+  SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<float>(
+          dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
+          {return dnnLayoutCreateFromPrimitive_F32(pLayout, primitive, type);}
+  SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<double>(
+          dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
+          {return dnnLayoutCreateFromPrimitive_F64(pLayout, primitive, type);}
+
+  TEMPLATE_PREFIX size_t dnnLayoutGetMemorySize(
+          const dnnLayout_t layout);
+  SPEC_PREFIX size_t dnnLayoutGetMemorySize<float>(
+          const dnnLayout_t layout)
+          {return dnnLayoutGetMemorySize_F32(layout);}
+  SPEC_PREFIX size_t dnnLayoutGetMemorySize<double>(
+          const dnnLayout_t layout)
+          {return dnnLayoutGetMemorySize_F64(layout);}
+
+  TEMPLATE_PREFIX int dnnLayoutCompare(
+          const dnnLayout_t l1, const dnnLayout_t l2);
+  SPEC_PREFIX int dnnLayoutCompare<float>(
+          const dnnLayout_t l1, const dnnLayout_t l2)
+          {return dnnLayoutCompare_F32(l1, l2);}
+  SPEC_PREFIX int dnnLayoutCompare<double>(
+          const dnnLayout_t l1, const dnnLayout_t l2)
+          {return dnnLayoutCompare_F64(l1, l2);}
+
+
+  TEMPLATE_PREFIX dnnError_t dnnAllocateBuffer(
+          void **pPtr, dnnLayout_t layout);
+  SPEC_PREFIX dnnError_t dnnAllocateBuffer<float>(
+          void **pPtr, dnnLayout_t layout)
+      {return dnnAllocateBuffer_F32(pPtr, layout);}
+  SPEC_PREFIX dnnError_t dnnAllocateBuffer<double>(
+          void **pPtr, dnnLayout_t layout)
+      {return dnnAllocateBuffer_F64(pPtr, layout);}
+
+  TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer(
+          void *ptr);
+  SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
+          void *ptr)
+      {return dnnReleaseBuffer_F32(ptr);}
+  SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
+          void *ptr)
+      {return dnnReleaseBuffer_F64(ptr);}
+
+  TEMPLATE_PREFIX dnnError_t dnnLayoutDelete(
+          dnnLayout_t& layout);
+  SPEC_PREFIX dnnError_t dnnLayoutDelete<float>(
+          dnnLayout_t& layout) {
+    dnnError_t status = dnnLayoutDelete_F32(layout);
+    layout = NULL;
+    return status;
+  }
+  SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
+          dnnLayout_t& layout) {
+    dnnError_t status = dnnLayoutDelete_F64(layout);
+    layout = NULL;
+    return status;
+}
 
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesCreate(
         dnnPrimitiveAttributes_t *attributes);
@@ -140,14 +183,19 @@ SPEC_PREFIX dnnError_t dnnWaitFor<double>(
         {return dnnWaitFor_F64(primitive);}
 
 TEMPLATE_PREFIX dnnError_t dnnDelete(
-        dnnPrimitive_t primitive);
+        dnnPrimitive_t& primitive);
 SPEC_PREFIX dnnError_t dnnDelete<float>(
-        dnnPrimitive_t primitive)
-        {return dnnDelete_F32(primitive);}
+        dnnPrimitive_t& primitive) {
+  dnnError_t status = dnnDelete_F32(primitive); 
+  primitive = NULL;
+  return status;
+}
 SPEC_PREFIX dnnError_t dnnDelete<double>(
-        dnnPrimitive_t primitive)
-        {return dnnDelete_F64(primitive);}
-
+        dnnPrimitive_t& primitive) {
+  dnnError_t status = dnnDelete_F64(primitive); 
+  primitive = NULL;
+  return status;
+}
 
 TEMPLATE_PREFIX dnnError_t dnnConversionCreate(
         dnnPrimitive_t* pConversion, const dnnLayout_t from, const dnnLayout_t to);
