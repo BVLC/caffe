@@ -1,4 +1,3 @@
-function net = get_net(varargin)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function net = get_net(varargin)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function net = get_net(varargin)
 % net = get_net(model_file, phase_name) or
 % net = get_net(model_file, weights_file, phase_name)
 %   Construct a net from model_file, and load weights from weights_file

@@ -1,4 +1,3 @@
-classdef Layer < handle
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ classdef Layer < handle
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+classdef Layer < handle
   % Wrapper class of caffe::Layer in matlab
   
   properties (Access = private)

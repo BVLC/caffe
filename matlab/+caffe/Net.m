@@ -1,4 +1,3 @@
-classdef Net < handle
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ classdef Net < handle
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+classdef Net < handle
   % Wrapper class of caffe::Net in matlab
   
   properties (Access = private)

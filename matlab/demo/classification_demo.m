@@ -1,4 +1,3 @@
-function [scores, maxlabel] = classification_demo(im, use_gpu)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function [scores, maxlabel] = classification_demo(im, use_gpu)
 % [scores, maxlabel] = classification_demo(im, use_gpu)
 %
 % Image classification demo using BVLC CaffeNet.

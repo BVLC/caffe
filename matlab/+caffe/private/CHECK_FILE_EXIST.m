@@ -1,4 +1,3 @@
-function CHECK_FILE_EXIST(filename)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function CHECK_FILE_EXIST(filename)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function CHECK_FILE_EXIST(filename)
 
 if exist(filename, 'file') == 0
   error('%s does not exist', filename);

@@ -1,4 +1,3 @@
-function set_device(device_id)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function set_device(device_id)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function set_device(device_id)
 % set_device(device_id)
 %   set Caffe's GPU device ID
 

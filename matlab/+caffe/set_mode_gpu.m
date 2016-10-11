@@ -1,4 +1,3 @@
-function set_mode_gpu()
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function set_mode_gpu()
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function set_mode_gpu()
 % set_mode_gpu()
 %   set Caffe to GPU mode
 

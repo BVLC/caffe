@@ -1,4 +1,3 @@
-function valid = is_valid_handle(hObj)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function valid = is_valid_handle(hObj)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function valid = is_valid_handle(hObj)
 % valid = is_valid_handle(hObj) or is_valid_handle('get_new_init_key')
 %   Check if a handle is valid (has the right data type and init_key matches)
 %   Use is_valid_handle('get_new_init_key') to get new init_key from C++;
