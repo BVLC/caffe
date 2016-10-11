@@ -1,4 +1,3 @@
-function results = run_tests()
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function results = run_tests()
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function results = run_tests()
 % results = run_tests()
 %   run all tests in this caffe matlab wrapper package
 

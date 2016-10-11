@@ -1,4 +1,3 @@
-function solver = get_solver(solver_file)
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ function solver = get_solver(solver_file)
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+function solver = get_solver(solver_file)
 % solver = get_solver(solver_file)
 %   Construct a Solver object from solver_file
 

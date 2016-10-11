@@ -1,4 +1,3 @@
-classdef Blob < handle
 % 
 % All modification made by Intel Corporation: © 2016 Intel Corporation
 % 
@@ -35,6 +34,7 @@ classdef Blob < handle
 % OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
+classdef Blob < handle
   % Wrapper class of caffe::Blob in matlab
   
   properties (Access = private)
