@@ -50,10 +50,10 @@ For quick start read [Multinode quickstart guide](https://github.com/intelcaffe/
 
 Please see also prepared examples for cifar10 and Googlenet.
 
-For cifar10 example look at `examples/cifar10/train_full_multinode.sh` file. The script will run data server, synchronous parameter server and 4 clients. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
-It use the MPI setup with explicit all reduce. This will run 5 processes on hosts set with host, and each process will calculate it's own gradients, and propagate it up with a tree structure to the root, which will apply them and propagate parameters down also in a tree structure.
+For cifar10 example look at `examples/cifar10/train_full_multinode_mpi.sh` file. The script runs 4 processes on localhost. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
+It uses the MPI setup with an implicit parameter server (*all-reduce* approach). Each process is calculating its own gradients and sending them up through the binary tree structure. The intermediate nodes accumulate the received gradients with their own. The root node applies the weight updates and propagates them down the tree.
 
-Data server is for convenience. By the default you could use data shard prepared on each node separetely, either by shuffling the data uniquely or by creating a subset of your training data. The remote data layer can be used to get data from data server. It can also be used to cache data from the server in order to reduce the network traffic. Use only TCP protocol with data server. In the case of choosing caching policy USE_CACHE_WHEN_FULL, it will first download cache_size batches and then will randomized the cached data for actual training.
+A copy of the data has to be accessible from all of the nodes. Datasets can be either distributed to each node or on a parallel file system. The snapshots are saved only by the root process. The same applies to the test phase - it is carried out by the root process.
 
 For Googlenet example look at `models/bvlc_googlenet/solver_client.prototxt`. The solver tries to offset the bigger batch size with bigger learning rate. According to paper:
 
