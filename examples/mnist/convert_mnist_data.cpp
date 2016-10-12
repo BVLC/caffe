@@ -107,8 +107,10 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   image_file.read(reinterpret_cast<char*>(&cols), 4);
   cols = swap_endian(cols);
 
+  db::DB *database_instance = db::GetDB(db_backend);
+  CHECK(database_instance) << "Failed to obtain database instance";
 
-  scoped_ptr<db::DB> db(db::GetDB(db_backend));
+  scoped_ptr<db::DB> db(database_instance);
   db->Open(db_path, db::NEW);
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 
