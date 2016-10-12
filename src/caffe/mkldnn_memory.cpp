@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKLDNN_SUPPORTED
 #include "caffe/mkldnn_memory.hpp"
 
@@ -10,7 +47,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , Blob<Dtype>* blob
                                                             , MKLDNNLayer<Dtype>* mkldnn_layer)
                                     : name("MKLDNNMemoryDescriptorBase")
-                                    , _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL)
+                                    , _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL), _reorder_extprv2prv_pd(NULL)
                                     ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL)
 {
@@ -24,26 +61,16 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
 }
 
 template <typename Dtype>
-size_t MKLDNNMemoryDescriptorBase<Dtype>::prv_count()
-{
-    mkldnn::c_api::mkldnn_dims_t* pdims = &(_usr_memory_pd->data.memory_desc.tensor_desc.dims);
-    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
-    int32_t count = 1;
-    for (int32_t i = 0; i < ndims; ++i) count *= (*pdims)[i];
-    return count;
-}
-
-template <typename Dtype>
 void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
-    int32_t ndims = _usr_memory_pd->data.memory_desc.tensor_desc.ndims;
-    CHECK_EQ(ndims, _prv_memory_pd->data.memory_desc.tensor_desc.ndims)
+    int32_t ndims = _usr_memory_pd->desc().data.ndims;
+    CHECK_EQ(ndims, _prv_memory_pd->desc().data.ndims)
             << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions number";
     for (int32_t dim = 0; dim < ndims; ++dim) {
-        CHECK_EQ(_usr_memory_pd->data.memory_desc.tensor_desc.dims[dim]
-                , _prv_memory_pd->data.memory_desc.tensor_desc.dims[dim])
+        CHECK_EQ(_usr_memory_pd->desc().data.dims[dim]
+                , _prv_memory_pd->desc().data.dims[dim])
                 << "MKLDNNMemoryDescriptorBase: Usr and Prv memory must have same dimensions";
     }
 }
@@ -58,6 +85,26 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors()
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd));
         _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd));
+    }
+    if ( _extprv_memory_pd && *_prv_memory_pd != *_extprv_memory_pd) {
+        _reorder_extprv2prv_pd = shared_ptr<reorder::primitive_desc>(
+                new reorder::primitive_desc(*_extprv_memory_pd, *_prv_memory_pd));
+    }
+}
+
+
+template <typename Dtype, bool is_diff>
+ MKLDNNMemoryDescriptor<Dtype, is_diff>::MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
+                        , shared_ptr<memory::primitive_desc> prv_memory_pd
+                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer)
+{
+    const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
+    if (prv_ptr != NULL) {
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
+        if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
+            set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd());
+        }
     }
 }
 
@@ -82,6 +129,7 @@ template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
+    CHECK_EQ(this->_cpu_ptr, cpu_ptr);
     create_reorder_to_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
     this->_reorder_usr2prv.submit();;
@@ -103,6 +151,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_p
     if(this->_reorder_prv2usr.aprimitive == NULL) {
         CHECK(this->aprimitive());
         this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->_reorder_prv2usr_pd, *this->aprimitive(), *this->_usr_memory));
+//        this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->aprimitive(), *this->_usr_memory));
     }
 }
 
@@ -117,6 +166,29 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
     this->_reorder_prv2usr.submit();
 }
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_extprv(shared_ptr<primitive> aprimitive)
+{
+    CHECK(aprimitive);
+    CHECK(this->_extprv_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_extprv2prv_pd);
+    if(this->_reorder_extprv2prv.aprimitive == NULL)
+        this->_reorder_extprv2prv.reset(new reorder(*this->_reorder_extprv2prv_pd, *aprimitive, *this->get_prv_memory()));
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<primitive> aprimitive)
+{
+    CHECK(aprimitive);
+    if(this->_reorder_extprv2prv_pd == NULL)
+        return;
+    create_reorder_from_extprv(aprimitive);
+    VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
+    this->_reorder_extprv2prv.submit();;
+}
+
 
 template <typename Dtype, bool is_diff>
 bool MKLDNNMemoryDescriptor<Dtype, is_diff>::on_to_cpu()
@@ -178,8 +250,12 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
 
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
-            // TODO: prv in blob and in this descrptor may have different layouts
-            NOT_IMPLEMENTED;
+            // prv in blob and in this descrptor may have different layouts
+            if(convert)
+                this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
+            else
+                this->create_reorder_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
+            return this->reorder_extprv2prv();
         } else if (blob_prv_mkldnn_mem_descr.get() != this) {
             VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;
         }

@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <vector>
@@ -82,6 +119,8 @@ template <typename Dtype>
 void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
+
     int32_t n  = this->num_;
     int32_t iw = this->width_;
     int32_t ih = this->height_;
@@ -90,7 +129,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL), scaleshift_mpd(NULL);
@@ -105,17 +144,12 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    scaleshift_md.reset(new memory::desc({{2, ic}}, mpcsn, memory::format::nc));
-    scaleshift_mpd.reset(new memory::primitive_desc(*scaleshift_md, cpu_engine));
 
     // ---- Initialize BatchNorm primitive descriptor -------------
-    batch_normalization::desc BatchNormFwd_desc(prop_kind::forward, *input_md, *output_md, *scaleshift_md, eps_);
-    BatchNormFwd_pd.reset(new batch_normalization::primitive_desc(BatchNormFwd_desc, cpu_engine));
+    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_);
+    BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, cpu_engine));
     // ---- Create memory  ---------------------
-    shared_ptr<memory::primitive_desc> ws_memory_pd(new memory::primitive_desc(BatchNormFwd_pd->data.workspace_primitive_desc));
-
-    scaleshift_memory.reset(new memory(*scaleshift_mpd));
-    ws_memory.reset(new memory(*ws_memory_pd));
+    scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
 
     if (!use_weight_bias_) {
         Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
@@ -133,7 +167,12 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     output_memory = fwd_top_data->create_output_memory();
 
     // ---- Create BatchNorm --------------------
-    BatchNormFwd.reset(new batch_normalization(*BatchNormFwd_pd, *input_primitive, *output_memory, *scaleshift_memory, *ws_memory));
+    if ( propagation == prop_kind::forward_training ) {
+        ws_memory.reset(new memory(BatchNormFwd_pd->workspace_primitive_desc()));
+        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *ws_memory, *output_memory));
+    } else {
+        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);
     fwd_top_data->set_mkldnn_primitive(BatchNormFwd);
 }

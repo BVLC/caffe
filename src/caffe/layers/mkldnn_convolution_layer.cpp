@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <cstdlib>
@@ -72,6 +109,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                                 , const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value)   NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
     int32_t g  = std::max(this->group_, 1);
     int32_t n  = this->num_;
@@ -86,18 +124,18 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
 
-    tensor::dims convolutionStrides {this->stride_h_, this->stride_w_};
-    tensor::dims padding {this->pad_h_, this->pad_w_};
+    memory::dims convolutionStrides {this->stride_h_, this->stride_w_};
+    memory::dims padding {this->pad_h_, this->pad_w_};
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
-    tensor::dims input_tz = {n, ic, ih, iw};
-    tensor::dims bias_tz = {oc};
-    tensor::dims output_tz = {n, oc, oh, ow};
-    tensor::dims weights_tz = ( g!= 1) ? tensor::dims{g, oc/g, ic/g, kh, kw} : tensor::dims{oc, ic, kh, kw};
+    memory::dims input_tz = {n, ic, ih, iw};
+    memory::dims bias_tz = {oc};
+    memory::dims output_tz = {n, oc, oh, ow};
+    memory::dims weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_input_md({input_tz}, mpcsn, mfmt_any);
@@ -106,20 +144,25 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt_any);
 
     // ---- Initialize convolution primitive descriptor -------------
-    convolution::desc convFwd_desc(prop_kind::forward, convolution::direct, init_input_md
-                                    , init_weights_md, init_bias_md
-                                    , init_output_md, convolutionStrides
-                                    , padding, padding_kind::zero);
+    shared_ptr<convolution_forward::desc> convFwd_desc;
+    if (this->bias_term_) {
+        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
+                                    , init_input_md, init_weights_md, init_bias_md, init_output_md
+                                    , convolutionStrides, padding, padding, padding_kind::zero));
+    } else {
+        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
+                                    , init_input_md, init_weights_md, init_output_md
+                                    , convolutionStrides, padding, padding, padding_kind::zero));
+    }
 
-    convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, cpu_engine));
+    convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc, cpu_engine));
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->data.src_primitive_desc));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->data.bias_primitive_desc));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->data.dst_primitive_desc));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->data.weights_primitive_desc));
+    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(convFwd_pd->src_primitive_desc()));
+    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(convFwd_pd->dst_primitive_desc()));
+    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(convFwd_pd->weights_primitive_desc()));
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
@@ -140,22 +183,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     weights_primitive = fwd_weights_data->create_input(false);
 
     if (this->bias_term_) {
+        shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
-    }
-    convFwd.reset(new convolution(*convFwd_pd
+        convFwd.reset(new convolution_forward(*convFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
+        fwd_bias_data->set_mkldnn_primitive(convFwd);
+        fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+    } else {
+        convFwd.reset(new convolution_forward(*convFwd_pd
+                        , *input_primitive, *weights_primitive
+                        , *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(convFwd);
     fwd_top_data->set_mkldnn_primitive(convFwd);
     fwd_weights_data->set_mkldnn_primitive(convFwd);
-    fwd_bias_data->set_mkldnn_primitive(convFwd);
 
     // Names are for debugging purposes only.
     fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
-    fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 }
 
 template <typename Dtype>
@@ -168,7 +216,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     // making reorders if needed.
     fwd_bottom_data->sync_before_read(false);
     fwd_weights_data->sync_before_read(true);
-    fwd_bias_data->sync_before_read(true);
+    if (this->bias_term_)
+        fwd_bias_data->sync_before_read(true);
     // update top that head at prv
     fwd_top_data->sync_before_write();
 

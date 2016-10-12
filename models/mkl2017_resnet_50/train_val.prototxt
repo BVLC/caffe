@@ -388,7 +388,7 @@ layer {
 }
 
 layer {
-        bottom: "res2a"
+        bottom: "res2a_z"
         bottom: "res2b_branch2c_y"
         top: "res2b"
         name: "res2b"
@@ -528,7 +528,7 @@ layer {
 }
 
 layer {
-        bottom: "res2b"
+        bottom: "res2b_z"
         bottom: "res2c_branch2c_y"
         top: "res2c"
         name: "res2c"
@@ -841,7 +841,7 @@ layer {
 }
 
 layer {
-        bottom: "res3a"
+        bottom: "res3a_z"
         bottom: "res3b_branch2c_y"
         top: "res3b"
         name: "res3b"
@@ -981,7 +981,7 @@ layer {
 }
 
 layer {
-        bottom: "res3b"
+        bottom: "res3b_z"
         bottom: "res3c_branch2c_y"
         top: "res3c"
         name: "res3c"
@@ -1121,7 +1121,7 @@ layer {
 }
 
 layer {
-        bottom: "res3c"
+        bottom: "res3c_z"
         bottom: "res3d_branch2c_y"
         top: "res3d"
         name: "res3d"
@@ -1434,7 +1434,7 @@ layer {
 }
 
 layer {
-        bottom: "res4a"
+        bottom: "res4a_z"
         bottom: "res4b_branch2c_y"
         top: "res4b"
         name: "res4b"
@@ -1574,7 +1574,7 @@ layer {
 }
 
 layer {
-        bottom: "res4b"
+        bottom: "res4b_z"
         bottom: "res4c_branch2c_y"
         top: "res4c"
         name: "res4c"
@@ -1714,7 +1714,7 @@ layer {
 }
 
 layer {
-        bottom: "res4c"
+        bottom: "res4c_z"
         bottom: "res4d_branch2c_y"
         top: "res4d"
         name: "res4d"
@@ -1854,7 +1854,7 @@ layer {
 }
 
 layer {
-        bottom: "res4d"
+        bottom: "res4d_z"
         bottom: "res4e_branch2c_y"
         top: "res4e"
         name: "res4e"
@@ -1994,7 +1994,7 @@ layer {
 }
 
 layer {
-        bottom: "res4e"
+        bottom: "res4e_z"
         bottom: "res4f_branch2c_y"
         top: "res4f"
         name: "res4f"
@@ -2307,7 +2307,7 @@ layer {
 }
 
 layer {
-        bottom: "res5a"
+        bottom: "res5a_b"
         bottom: "res5b_branch2c_y"
         top: "res5b"
         name: "res5b"
@@ -2447,7 +2447,7 @@ layer {
 }
 
 layer {
-        bottom: "res5b"
+        bottom: "res5b_z"
         bottom: "res5c_branch2c_y"
         top: "res5c"
         name: "res5c"

@@ -1,3 +1,39 @@
+# 
+# All modification made by Intel Corporation: © 2016 Intel Corporation
+# 
+# All contributions by the University of California:
+# Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+# All rights reserved.
+# 
+# All other contributions:
+# Copyright (c) 2014, 2015, the respective contributors
+# All rights reserved.
+# For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+# 
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Intel Corporation nor the names of its contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
 ---
 title: Release Notes
@@ -206,31 +242,10 @@ Workaround: better performance results might be achieved with GEMM engine: `set 
 * We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
 
 
-# Recomendations to achieve best performance
-* Disable Hyper-threading (HT) on your platform.
+# Recommendations to achieve best performance
 
-* With Intel Xeon Phi™ product family - set BIOS MCDRAM mode as `cache`
-
-* With Intel Xeon Phi™ product family - it is recommended to use Centos 7.2 or newer
-
-* It is recommended to use newest XPPSL software for Intel Xeon Phi™ product family: [https://mic-bld.pdx.intel.com/release/external/XPPSL/] (https://mic-bld.pdx.intel.com/release/external/XPPSL/)
-
-* Some Linux distributions security settings can affect performance (for example Centos 7.2). If this is your case for best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
-
-* Make sure that your hardware configurations includes fast SSD (M.2) drive. If during trainings you will observe in logs "waiting for data" - you should install better SSD or reduce batchsize.
-
-* Optimize hardware in bios: set CPU max frequency, set 100% fan speed, check cooling system
-
-* Change prototxt file with network topology to Intel MKL's optimized versions. Caffe includes optimized (for Intel MKL2017) versions of popular prototxt files. Those files have specific engines set for each layer. There is no change in topology itself.  
-
-* Use LMDB data layer (Using ‘Images’ layer as data source will result in suboptimal performance). Or to achieve maximum theoretical performance - don't use any data layer. 
-
-* Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results.
-
-* Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
-
-* Make sure that there are no unnecesary processes during traning and scoring. IntelCaffe is using all available resources and other processes (like monitoring tools, java processes, network trafic etc.) might impact performance.
-
+At our wiki page we present out recommendations and tuning guide to achieve best performance. 
+[https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 
 # Instructions:
 
