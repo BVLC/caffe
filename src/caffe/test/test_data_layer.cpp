@@ -67,7 +67,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     db->Close();
   }
 
-  void TestRead() {
+  void TestRead(bool use_gpu_transform = false) {
     const Dtype scale = 3;
     LayerParameter param;
     param.set_phase(TRAIN);
@@ -79,6 +79,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     TransformationParameter* transform_param =
         param.mutable_transform_param();
     transform_param->set_scale(scale);
+    transform_param->set_use_gpu_transform(use_gpu_transform);
 
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
@@ -170,7 +171,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestReadCrop(Phase phase) {
+  void TestReadCrop(Phase phase, bool use_gpu_transform = false) {
     const Dtype scale = 3;
     LayerParameter param;
     param.set_phase(phase);
@@ -185,6 +186,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         param.mutable_transform_param();
     transform_param->set_scale(scale);
     transform_param->set_crop_size(1);
+    transform_param->set_use_gpu_transform(use_gpu_transform);
 
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
@@ -224,7 +226,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestReadCropTrainSequenceSeeded() {
+  void TestReadCropTrainSequenceSeeded(bool use_gpu_transform = false) {
     LayerParameter param;
     param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
@@ -236,6 +238,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
+    transform_param->set_use_gpu_transform(use_gpu_transform);
 
     // Get crop sequence with Caffe seed 1701.
     Caffe::set_random_seed(seed_);
@@ -279,7 +282,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestReadCropTrainSequenceUnseeded() {
+  void TestReadCropTrainSequenceUnseeded(bool use_gpu_transform = false) {
     LayerParameter param;
     param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
@@ -291,6 +294,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
+    transform_param->set_use_gpu_transform(use_gpu_transform);
 
     // Get crop sequence with Caffe seed 1701, srand seed 1701.
     Caffe::set_random_seed(seed_);
@@ -387,6 +391,41 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
   this->TestReadCrop(TEST);
 }
+
+TYPED_TEST(DataLayerTest, TestReadLevelDBGPUTransform) {
+  const bool unique_pixels = false;  // all pixels the same; images different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestRead(true);
+}
+
+TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestReadCrop(TRAIN, true);
+}
+
+// Test that the sequence of random crops is consistent when using
+// Caffe::set_random_seed.
+TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLevelDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestReadCropTrainSequenceSeeded(true);
+}
+
+// Test that the sequence of random crops differs across iterations when
+// Caffe::set_random_seed isn't called (and seeds from srand are ignored).
+TYPED_TEST(DataLayerTest,
+      TestReadCropTrainSequenceUnseededLevelDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestReadCropTrainSequenceUnseeded(true);
+}
+
+TYPED_TEST(DataLayerTest, TestReadCropTestLevelDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestReadCrop(TEST, true);
+}
 #endif  // USE_LEVELDB
 
 #ifdef USE_LMDB
@@ -428,6 +467,39 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   this->TestReadCrop(TEST);
 }
 
+TYPED_TEST(DataLayerTest, TestReadLMDBGPUTransform) {
+  const bool unique_pixels = false;  // all pixels the same; images different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestRead(true);
+}
+
+TYPED_TEST(DataLayerTest, TestReadCropTrainLMDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestReadCrop(TRAIN, true);
+}
+
+// Test that the sequence of random crops is consistent when using
+// Caffe::set_random_seed.
+TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLMDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestReadCropTrainSequenceSeeded(true);
+}
+
+// Test that the sequence of random crops differs across iterations when
+// Caffe::set_random_seed isn't called (and seeds from srand are ignored).
+TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLMDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestReadCropTrainSequenceUnseeded(true);
+}
+
+TYPED_TEST(DataLayerTest, TestReadCropTestLMDBGPUTransform) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestReadCrop(TEST, true);
+}
 #endif  // USE_LMDB
 }  // namespace caffe
 #endif  // USE_OPENCV

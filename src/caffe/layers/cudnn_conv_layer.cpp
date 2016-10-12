@@ -32,9 +32,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   // Do not rely on initialized algorithms (Reshape will set algorithms
   // with correct values in the first iteration).
   for (size_t i = 0; i < bottom.size(); ++i) {
-    fwd_algo_[i] = (cudnnConvolutionFwdAlgo_t)0;
-    bwd_filter_algo_[i] = (cudnnConvolutionBwdFilterAlgo_t)0;
-    bwd_data_algo_[i] = (cudnnConvolutionBwdDataAlgo_t)0;
+    fwd_algo_[i] = (cudnnConvolutionFwdAlgo_t)1;
+    bwd_filter_algo_[i] = (cudnnConvolutionBwdFilterAlgo_t)1;
+    bwd_data_algo_[i] = (cudnnConvolutionBwdDataAlgo_t)1;
     workspace_fwd_sizes_[i] = 0;
     workspace_bwd_data_sizes_[i] = 0;
     workspace_bwd_filter_sizes_[i] = 0;
@@ -83,7 +83,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 
   handles_setup_ = true;
   // When true, Reshape asks cuDNN (either Get ot FindEx) for the best algorithm
-  use_algo_seeker_ = true;
+  use_algo_seeker_ = false;
   // When true, a small amount of workspace is allowed for algorithms
   use_modest_workspace_ = true;
   // When true, Reshape sets descriptors, algorithms, workspaces.
