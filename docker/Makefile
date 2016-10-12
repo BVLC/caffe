@@ -30,7 +30,7 @@ intel_standalone: standalone/intel/Dockerfile
 
 docker_files: standalone_files
 
-standalone_files: standalone/cpu/Dockerfile standalone/gpu/Dockerfile standalone/gpu/Dockerfile
+standalone_files: standalone/cpu/Dockerfile standalone/gpu/Dockerfile standalone/intel/Dockerfile
 
 FROM_GPU = "nvidia/cuda:7.5-cudnn5-devel-ubuntu14.04"
 FROM_CPU = "ubuntu:14.04"
