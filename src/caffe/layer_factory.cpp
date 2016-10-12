@@ -376,6 +376,8 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
 #if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
     if (param.concat_param().axis() == 1)
       engine = ConcatParameter_Engine_MKL2017;
+#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+    engine = ConcatParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == ConcatParameter_Engine_CAFFE) {
@@ -383,6 +385,10 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
 #if defined(MKL2017_SUPPORTED)
   } else if (engine == ConcatParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLConcatLayer<Dtype>(param));
+#endif
+#ifdef MKLDNN_SUPPORTED
+  } else if (engine == ConcatParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNConcatLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknow engine.";
