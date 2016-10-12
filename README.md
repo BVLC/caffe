@@ -15,10 +15,14 @@ This branch is developed for deep face recognition, the related paper is as foll
 * [LICENSE](#license)
 * [README_Caffe](#readme_caffe)
 
-
 ### Updates
+- Oct 12, 2016
+  * The links of face model and features on LFW are available.   
+  **model:** [google drive](https://drive.google.com/open?id=0B_geeR2lTMegUzlSdG5wZ1V5WU0) [baidu skydrive](http://pan.baidu.com/s/1skFoqrr)  
+  **feature:** [google drive](https://drive.google.com/open?id=0B_geeR2lTMegLWRuWnZoMVJPZ3c) [baidu skyDrive](http://pan.baidu.com/s/1boLM1bh)
+  * The training prototxt of toy example on MNIST are released.
 - Otc 9, 2016
-  * The code and training prototxt for our [ECCV16](http://link.springer.com/chapter/10.1007/978-3-319-46478-7_31) paper are released.
+  * The code and training prototxt for our [ECCV16](http://link.springer.com/chapter/10.1007/978-3-319-46478-7_31) paper are released. If you train our Network on **CAISA-WebFace**, the expected verification performance of **SINGLE MODEL** on **[LFW](http://vis-www.cs.umass.edu/lfw/)** should be **~99%**.
 
 ### Files
 - Original Caffe library
@@ -33,7 +37,12 @@ This branch is developed for deep face recognition, the related paper is as foll
   * face_example/face_train_test.prototxt
   * face_example/face_solver.prototxt
   * face_example/face_deploy.prototxt
-
+- mnist_example
+  * mnist_example/data/
+  * mnist_example/face_snapshot/
+  * mnist_example/mnist_train_test.prototxt
+  * mnist_example/mnist_solver.prototxt
+  * mnist_example/mnist_deploy.prototxt
 ### Usage
 - Make sure you have correctly installed [Caffe](http://caffe.berkeleyvision.org/) before using our code. Please follow the [installation instructions](http://caffe.berkeleyvision.org/installation.html).
 - Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
@@ -87,7 +96,7 @@ This branch is developed for deep face recognition, the related paper is as foll
 - [Kaipeng Zhang](http://kpzhang93.github.io/)
 
 ### Citation
-You are encouraged to cite the following paper if it helps your research.
+You are encouraged to cite the following paper if it helps your research. 
 
     @inproceedings{wen2016discriminative,
       title={A Discriminative Feature Learning Approach for Deep Face Recognition},

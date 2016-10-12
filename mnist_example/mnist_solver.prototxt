@@ -1,0 +1,25 @@
+net: "mnist_example/mnist_train_test.prototxt"
+
+test_iter: 100
+test_interval: 1000
+
+base_lr: 0.01
+momentum: 0.9
+weight_decay: 0.0005
+
+lr_policy: "multistep"
+gamma: 0.8
+stepvalue: 5000
+stepvalue: 8000
+stepvalue: 10000
+
+display: 100
+
+# The maximum number of iterations
+max_iter: 10000
+# snapshot intermediate results
+snapshot: 1000
+snapshot_prefix: "mnist_example/mnist_snapshot/mnist_train"
+
+# solver mode: CPU or GPU
+solver_mode: GPU
