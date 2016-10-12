@@ -265,6 +265,9 @@ class SynchronousSync : public InternalThread
   }
 
   virtual void InternalThreadEntry() {
+    if(is_root()) {
+      solver->CheckSnapshotWritePermissions();
+    }
     CLOG(INFO) << "Comm thread started " << is_leaf() << " " << is_root();
     create_timer(
       waypoint->get_daemon(),
