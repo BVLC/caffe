@@ -5,18 +5,35 @@
 
 DOCKER ?= docker
 
+ifneq ($(http_proxy),)
+DOCKER_BUILD_ARG += --build-arg http_proxy=$(http_proxy)
+endif
+ifneq ($(https_proxy),)
+DOCKER_BUILD_ARG += --build-arg https_proxy=$(https_proxy)
+endif
+
+
 all: docker_files standalone
 
-.PHONY: standalone devel
+.PHONY: standalone devel intel
 
 standalone: cpu_standalone gpu_standalone
-
+intel: intel-ubuntu intel-centos intel-fedora
 
 cpu_standalone: standalone/cpu/Dockerfile
-	$(DOCKER) build -t caffe:cpu standalone/cpu
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:cpu standalone/cpu
 
 gpu_standalone: standalone/gpu/Dockerfile
-	$(DOCKER) build -t caffe:gpu standalone/gpu
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:gpu standalone/gpu
+
+intel-ubuntu: standalone/intel/ubuntu/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-ubuntu standalone/intel/ubuntu
+
+intel-centos: standalone/intel/centos/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-centos standalone/intel/centos
+
+intel-fedora: standalone/intel/fedora/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-fedora standalone/intel/fedora
 
 docker_files: standalone_files
 
