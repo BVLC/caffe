@@ -162,13 +162,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    pooling::algorithm pooling_algorithm;
+    algorithm pooling_algorithm;
     switch (this->layer_param_.pooling_param().pool()) {
     case PoolingParameter_PoolMethod_MAX:
-        pooling_algorithm = pooling::algorithm::max;
+        pooling_algorithm = algorithm::pooling_max;
         break;
     case PoolingParameter_PoolMethod_AVE:
-        NOT_IMPLEMENTED;
+        pooling_algorithm = algorithm::pooling_avg;
         break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
         NOT_IMPLEMENTED;
@@ -196,9 +196,9 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
-    tensor::dims input_tz = {n, c, ih, iw};
-    tensor::dims output_tz = {n, c, oh, ow};
+    memory::data_type mpcsn = memory::data_type::f32;
+    memory::dims input_tz = {n, c, ih, iw};
+    memory::dims output_tz = {n, c, oh, ow};
     memory::format mfmt_nchw = memory::format::nchw;
 
     // ---- Initialize memory descriptors -------------
@@ -223,13 +223,11 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     }
 
     // ---- Initialize pooling primitive descriptor -------------
-    pooling::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md
-                                    ,*output_md, {sh, sw}, {kh, kw}, {ph, pw}, padding_kind::zero);
-    poolingFwd_pd.reset(new pooling::primitive_desc(poolingFwd_desc, cpu_engine));
+    pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md,*output_md
+                                        , {sh, sw}, {kh, kw}, {ph, pw}, {ph, pw}, padding_kind::zero);
+    poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc, cpu_engine));
 
     // ---- Create priv memory  ---------------------
-    shared_ptr<memory::desc> indices_md(new memory::desc(poolingFwd_pd->data.indices_primitive_desc.memory_desc));
-    indices_pd.reset(new MemPD(*indices_md, cpu_engine));
 
     // We'll output the mask to top[1] if it's of size >1.
     uint32_t* mask = NULL;  // suppress warnings about uninitalized variables
@@ -237,7 +235,6 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     const bool use_top_mask = top.size() > 1;
     mask = (use_top_mask) ?  reinterpret_cast<uint32_t*>(top[1]->mutable_cpu_data())
             : max_idx_.mutable_cpu_data();
-    indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd, bottom[0], this));
@@ -246,7 +243,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
+    if ( propagation == prop_kind::forward_training && pooling_algorithm != algorithm::pooling_avg) {
+        indices_pd.reset(new MemPD(poolingFwd_pd->workspace_primitive_desc()));
+        indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
+        poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory, *indices_memory));
+    } else {
+        poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(poolingFwd);
     fwd_top_data->set_mkldnn_primitive(poolingFwd);
 }

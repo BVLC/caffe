@@ -67,8 +67,11 @@ public:
     virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
     virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
     virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;}
-    virtual size_t prv_count();
-    virtual size_t prv_size() { return prv_size() * sizeof(Dtype); }
+
+    // TODO: assuming size/sizeof = count may be not correct
+    virtual size_t prv_count() { return prv_size()/sizeof(Dtype); }
+
+    virtual size_t prv_size() { return _prv_memory_pd->get_size(); }
     // ---------------------------------------
     shared_ptr<MKLDNNMemoryDescriptorBase<Dtype> > get_shared_ptr() {
         return this->shared_from_this();
@@ -79,7 +82,7 @@ public:
     shared_ptr<memory::primitive_desc>  usr_memory_pd() const {
         return _usr_memory_pd;
     }
-    inline bool conversion_needed() const { return (_reorder_usr2prv_pd != NULL); }
+    inline bool conversion_needed() const { return (_reorder_usr2prv_pd != NULL || _reorder_extprv2prv_pd != NULL); }
     virtual void* prv_ptr() { return _internal_ptr;  }
 
     shared_ptr<memory>  get_prv_memory()
@@ -93,6 +96,7 @@ public:
     }
     shared_ptr<primitive>  reorder_usr2prv() { return _reorder_usr2prv.aprimitive; }
     shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.aprimitive; }
+    shared_ptr<primitive>  reorder_extprv2prv() { return _reorder_extprv2prv.aprimitive; }
 
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
@@ -120,6 +124,13 @@ protected:
             this->create_reorder_descriptors();
         }
     }
+    void set_extprv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd)  {
+        _extprv_memory_pd = memory_pd;
+        if (_prv_memory_pd && _usr_memory_pd) {
+            check_usr_with_prv_descriptors();
+            this->create_reorder_descriptors();
+        }
+    }
     void set_usr_memory_pd(shared_ptr<memory::primitive_desc> memory_pd) {
         _usr_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
@@ -131,14 +142,17 @@ protected:
 
     shared_ptr<memory::primitive_desc> _usr_memory_pd;
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
+    shared_ptr<memory::primitive_desc> _extprv_memory_pd;
     shared_ptr<reorder::primitive_desc> _reorder_usr2prv_pd;
     shared_ptr<reorder::primitive_desc> _reorder_prv2usr_pd;
+    shared_ptr<reorder::primitive_desc> _reorder_extprv2prv_pd;
     MKLDNNPrimitive<Dtype> _reorder_usr2prv;
     MKLDNNPrimitive<Dtype> _reorder_prv2usr;
+    MKLDNNPrimitive<Dtype> _reorder_extprv2prv;
     shared_ptr<memory> _prv_memory;
     Dtype* _internal_ptr;
     shared_ptr<memory> _usr_memory;
-    void* _cpu_ptr; // TODO: ?? 
+    void* _cpu_ptr;
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
@@ -149,15 +163,16 @@ class MKLDNNMemoryDescriptor : public MKLDNNMemoryDescriptorBase<Dtype> {
 public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd
-                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
+                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer);
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
+    virtual void convert_from_extprv(shared_ptr<primitive> aprimitive);
     virtual bool on_to_cpu();
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);
+    virtual void create_reorder_from_extprv(shared_ptr<primitive> aprimitive);
 
     // The last get_blob_data_ptr() argument is a hack for reusing
     // in backward a conversion done already in the forward direction.

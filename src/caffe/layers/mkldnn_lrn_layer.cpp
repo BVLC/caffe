@@ -83,7 +83,7 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
         top[0]->Reshape(num_, channels_, height_, width_);
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        NOT_IMPLEMENTED;
+        top[0]->Reshape(num_, channels_, height_, width_);
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
@@ -96,13 +96,13 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    lrn::algorithm  lrn_algorithm;
+    algorithm  lrn_algorithm;
     switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
-        lrn_algorithm = lrn::algorithm::across_channels;
+        lrn_algorithm = algorithm::lrn_across_channels;
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        lrn_algorithm = lrn::algorithm::within_channel;
+        lrn_algorithm = algorithm::lrn_within_channel;
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
@@ -116,7 +116,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL);
@@ -132,12 +132,9 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     }
     output_md = input_md;
     // ---- Initialize LRN primitive descriptor -------------
-    lrn::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
-                            ,*output_md, alpha_, beta_, size_);
-    lrnFwd_pd.reset(new lrn::primitive_desc(lrnFwd_desc, cpu_engine));
-
-    memory::primitive_desc scratch_mpd(memory::desc(lrnFwd_pd->data.scratch_primitive_desc.memory_desc), cpu_engine);
-    scratch_.reset(new memory(scratch_mpd));
+    lrn_forward::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
+                            , size_, alpha_, beta_);
+    lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
@@ -146,7 +143,13 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    if ( propagation == prop_kind::forward_training ) {
+        memory::primitive_desc scratch_mpd(lrnFwd_pd->workspace_primitive_desc());
+        scratch_.reset(new memory(scratch_mpd));
+        lrnFwd.reset(new lrn_forward(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    } else {
+        lrnFwd.reset(new lrn_forward(*lrnFwd_pd, *input_primitive, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }

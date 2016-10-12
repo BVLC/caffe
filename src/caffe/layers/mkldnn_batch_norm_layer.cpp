@@ -119,6 +119,8 @@ template <typename Dtype>
 void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
+    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
+
     int32_t n  = this->num_;
     int32_t iw = this->width_;
     int32_t ih = this->height_;
@@ -127,7 +129,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL), scaleshift_mpd(NULL);
@@ -142,17 +144,12 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
-    scaleshift_md.reset(new memory::desc({{2, ic}}, mpcsn, memory::format::nc));
-    scaleshift_mpd.reset(new memory::primitive_desc(*scaleshift_md, cpu_engine));
 
     // ---- Initialize BatchNorm primitive descriptor -------------
-    batch_normalization::desc BatchNormFwd_desc(prop_kind::forward, *input_md, *output_md, *scaleshift_md, eps_);
-    BatchNormFwd_pd.reset(new batch_normalization::primitive_desc(BatchNormFwd_desc, cpu_engine));
+    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_);
+    BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, cpu_engine));
     // ---- Create memory  ---------------------
-    shared_ptr<memory::primitive_desc> ws_memory_pd(new memory::primitive_desc(BatchNormFwd_pd->data.workspace_primitive_desc));
-
-    scaleshift_memory.reset(new memory(*scaleshift_mpd));
-    ws_memory.reset(new memory(*ws_memory_pd));
+    scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
 
     if (!use_weight_bias_) {
         Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
@@ -170,7 +167,12 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     output_memory = fwd_top_data->create_output_memory();
 
     // ---- Create BatchNorm --------------------
-    BatchNormFwd.reset(new batch_normalization(*BatchNormFwd_pd, *input_primitive, *output_memory, *scaleshift_memory, *ws_memory));
+    if ( propagation == prop_kind::forward_training ) {
+        ws_memory.reset(new memory(BatchNormFwd_pd->workspace_primitive_desc()));
+        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *ws_memory, *output_memory));
+    } else {
+        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);
     fwd_top_data->set_mkldnn_primitive(BatchNormFwd);
 }
