@@ -15,10 +15,9 @@ endif
 
 all: docker_files standalone
 
-.PHONY: standalone devel intel
+.PHONY: standalone devel
 
-standalone: cpu_standalone gpu_standalone
-intel: intel-ubuntu intel-centos intel-fedora
+standalone: cpu_standalone gpu_standalone intel_standalone
 
 cpu_standalone: standalone/cpu/Dockerfile
 	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:cpu standalone/cpu
@@ -26,18 +25,12 @@ cpu_standalone: standalone/cpu/Dockerfile
 gpu_standalone: standalone/gpu/Dockerfile
 	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:gpu standalone/gpu
 
-intel-ubuntu: standalone/intel/ubuntu/Dockerfile
-	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-ubuntu standalone/intel/ubuntu
-
-intel-centos: standalone/intel/centos/Dockerfile
-	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-centos standalone/intel/centos
-
-intel-fedora: standalone/intel/fedora/Dockerfile
-	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel-fedora standalone/intel/fedora
+intel_standalone: standalone/intel/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:intel standalone/intel
 
 docker_files: standalone_files
 
-standalone_files: standalone/cpu/Dockerfile standalone/gpu/Dockerfile
+standalone_files: standalone/cpu/Dockerfile standalone/gpu/Dockerfile standalone/gpu/Dockerfile
 
 FROM_GPU = "nvidia/cuda:7.5-cudnn5-devel-ubuntu14.04"
 FROM_CPU = "ubuntu:14.04"
