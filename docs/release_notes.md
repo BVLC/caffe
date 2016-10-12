@@ -242,31 +242,10 @@ Workaround: better performance results might be achieved with GEMM engine: `set 
 * We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
 
 
-# Recomendations to achieve best performance
-* Disable Hyper-threading (HT) on your platform.
+# Recommendations to achieve best performance
 
-* With Intel Xeon Phi™ product family - set BIOS MCDRAM mode as `cache`
-
-* With Intel Xeon Phi™ product family - it is recommended to use Centos 7.2 or newer
-
-* It is recommended to use newest XPPSL software for Intel Xeon Phi™ product family: [https://mic-bld.pdx.intel.com/release/external/XPPSL/] (https://mic-bld.pdx.intel.com/release/external/XPPSL/)
-
-* Some Linux distributions security settings can affect performance (for example Centos 7.2). If this is your case for best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
-
-* Make sure that your hardware configurations includes fast SSD (M.2) drive. If during trainings you will observe in logs "waiting for data" - you should install better SSD or reduce batchsize.
-
-* Optimize hardware in bios: set CPU max frequency, set 100% fan speed, check cooling system
-
-* Change prototxt file with network topology to Intel MKL's optimized versions. Caffe includes optimized (for Intel MKL2017) versions of popular prototxt files. Those files have specific engines set for each layer. There is no change in topology itself.  
-
-* Use LMDB data layer (Using ‘Images’ layer as data source will result in suboptimal performance). Or to achieve maximum theoretical performance - don't use any data layer. 
-
-* Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results.
-
-* Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
-
-* Make sure that there are no unnecesary processes during traning and scoring. IntelCaffe is using all available resources and other processes (like monitoring tools, java processes, network trafic etc.) might impact performance.
-
+At our wiki page we present out recommendations and tuning guide to achieve best performance. 
+[https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 
 # Instructions:
 
