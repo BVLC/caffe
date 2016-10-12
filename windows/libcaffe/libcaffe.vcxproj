@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\src\caffe\solvers\nesterov_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\rmsprop_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\sgd_solver.cpp" />
+    <ClCompile Include="..\..\src\caffe\solver_factory.cpp" />
     <ClCompile Include="..\..\src\caffe\syncedmem.cpp" />
     <ClCompile Include="..\..\src\caffe\util\benchmark.cpp" />
     <ClCompile Include="..\..\src\caffe\util\blocking_queue.cpp" />

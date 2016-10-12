@@ -9,7 +9,12 @@
 
 namespace caffe {
 
+#ifdef _MSC_VER
+// Timer tests have issues on appveyor
+const float kMillisecondsThreshold = 50;
+#else
 const float kMillisecondsThreshold = 30;
+#endif
 
 template <typename TypeParam>
 class BenchmarkTest : public MultiDeviceTest<TypeParam> {};
