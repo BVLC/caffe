@@ -1473,6 +1473,9 @@ message PriorBoxParameter {
   // Either step or step_h/step_w should be specified; not both.
   optional float step_h = 11;
   optional float step_w = 12;
+
+  // Offset to the top left corner of each cell.
+  optional float offset = 13 [default = 0.5];
 }
 
 message PythonParameter {

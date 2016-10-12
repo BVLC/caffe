@@ -95,6 +95,8 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     step_h_ = 0;
     step_w_ = 0;
   }
+
+  offset_ = prior_box_param.offset();
 }
 
 template <typename Dtype>
@@ -140,8 +142,8 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int idx = 0;
   for (int h = 0; h < layer_height; ++h) {
     for (int w = 0; w < layer_width; ++w) {
-      float center_x = (w + 0.5) * step_w;
-      float center_y = (h + 0.5) * step_h;
+      float center_x = (w + offset_) * step_w;
+      float center_y = (h + offset_) * step_h;
       float box_width, box_height;
       for (int s = 0; s < min_sizes_.size(); ++s) {
         int min_size_ = min_sizes_[s];
