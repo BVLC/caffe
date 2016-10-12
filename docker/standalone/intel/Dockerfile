@@ -12,6 +12,7 @@ RUN yum install -y \
         cmake \
         git \
         wget \
+        atlas-devel \
         boost-devel \
         gflags-devel \
         glog-devel \
@@ -22,11 +23,16 @@ RUN yum install -y \
         protobuf-devel \
         snappy-devel \
         protobuf-compiler \
+        freetype-devel \
+        libpng-devel \
         python-devel \
         python-numpy \
         python-pip \
-        python-scipy
+        python-scipy \
+        gcc-gfortran \
+        libjpeg-turbo-devel
 
+RUN yum clean all 
 ENV CAFFE_ROOT=/opt/caffe
 WORKDIR $CAFFE_ROOT
 
@@ -34,11 +40,10 @@ WORKDIR $CAFFE_ROOT
 ENV CLONE_TAG=master
 
 RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/intel/caffe.git . && \
-    for req in $(cat python/requirements.txt) pydot; do pip install $req; done && \
+    for req in $(cat python/requirements.txt) pydot; do pip --no-cache-dir install $req; done && \
     mkdir build && cd build && \
-    cmake -DCPU_ONLY=1  -DUSE_MKL2017_AS_DEFAULT_ENGINE=1 .. && \
+    cmake -DCPU_ONLY=1  -DUSE_MKL2017_AS_DEFAULT_ENGINE=1 -DCMAKE_BUILD_TYPE=Release .. && \
     make all -j"$(nproc)"
-
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
 ENV PYTHONPATH $PYCAFFE_ROOT:$PYTHONPATH
