@@ -108,7 +108,10 @@ DataReader::Body::~Body() {
 }
 
 void DataReader::Body::InternalThreadEntry() {
-  shared_ptr<DBWrapper> dbw(param_.data_param().shuffle() ?
+  const caffe::DataParameter *data_param = &param_.data_param();
+  CHECK(data_param) << "Failed to obtain data_param";
+
+  shared_ptr<DBWrapper> dbw(data_param->shuffle() ?
                         static_cast<DBWrapper*>(new DBShuffle(param_)):
                         static_cast<DBWrapper*>(new DBSequential(param_)));
 
@@ -141,6 +144,9 @@ void DataReader::Body::InternalThreadEntry() {
 }
 
 void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
+  CHECK(dbw);
+  CHECK(qp);
+
   string* data = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
   *data = dbw->value();

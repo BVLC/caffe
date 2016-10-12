@@ -167,6 +167,8 @@ shared_ptr<Layer<Dtype> > GetInnerProductLayer(
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+
+  return shared_ptr<Layer<Dtype> >(new InnerProductLayer<Dtype>(param));
 }
 
 REGISTER_LAYER_CREATOR(InnerProduct, GetInnerProductLayer);
