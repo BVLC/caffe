@@ -100,6 +100,7 @@ This branch is developed for deep face recognition, the related paper is as foll
 ### Extract_DeepFeature
 1. Compile matcaffe by make matcaffe
 2. Specify the correspinding paths in face_example/extractDeepFeature.m
+
         addpath('path_to_matCaffe/matlab');
         model = 'path_to_deploy/face_deploy.prototxt';
         weights = 'path_to_model/face_model.caffemodel';
