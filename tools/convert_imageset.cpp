@@ -28,6 +28,8 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using boost::scoped_ptr;
 
+#define USE_FLOAT_LABELS
+
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
@@ -68,17 +70,28 @@ int main(int argc, char** argv) {
 
   const bool is_color = !FLAGS_gray;
   const bool check_size = FLAGS_check_size;
-  const bool encoded = FLAGS_encoded;
+  const bool encoded = FLAGS_encoded;  
   const string encode_type = FLAGS_encode_type;
 
   std::ifstream infile(argv[2]);
-  std::vector<std::pair<std::string, int> > lines;
+  #ifdef USE_FLOAT_LABELS
+    std::vector<std::pair<std::string, float> > lines;
+    float label;
+    LOG(INFO) << "Using float labels";
+  #else
+    std::vector<std::pair<std::string, int> > lines;
+    int label;
+  #endif
   std::string line;
-  size_t pos;
-  int label;
+  size_t pos;  
+  
   while (std::getline(infile, line)) {
     pos = line.find_last_of(' ');
-    label = atoi(line.substr(pos + 1).c_str());
+    #ifdef USE_FLOAT_LABELS
+      label = (float)atof(line.substr(pos + 1).c_str());
+    #else      
+      label = atoi(line.substr(pos + 1).c_str());
+    #endif
     lines.push_back(std::make_pair(line.substr(0, pos), label));
   }
   if (FLAGS_shuffle) {
