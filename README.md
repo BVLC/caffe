@@ -43,6 +43,7 @@ This branch is developed for deep face recognition, the related paper is as foll
   * mnist_example/mnist_train_test.prototxt
   * mnist_example/mnist_solver.prototxt
   * mnist_example/mnist_deploy.prototxt
+
 ### Usage
 - Make sure you have correctly installed [Caffe](http://caffe.berkeleyvision.org/) before using our code. Please follow the [installation instructions](http://caffe.berkeleyvision.org/installation.html).
 - Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
