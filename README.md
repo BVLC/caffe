@@ -9,20 +9,24 @@ This branch is developed for deep face recognition, the related paper is as foll
 
 * [Updates](#updates)
 * [Files](#files)
-* [Usage](#usage)
+* [Train_Model](#train_model)
+* [Extract_DeepFeature](#extract_deepfeature)
 * [Contact](#contact)
 * [Citation](#citation)
 * [LICENSE](#license)
 * [README_Caffe](#readme_caffe)
 
 ### Updates
+- Oct 13, 2016
+  * A demo for extracting deep feature by the given model is provided.
 - Oct 12, 2016
   * The links of face model and features on LFW are available.   
   **model:** [google drive](https://drive.google.com/open?id=0B_geeR2lTMegUzlSdG5wZ1V5WU0) [baidu skydrive](http://pan.baidu.com/s/1skFoqrr)  
-  **feature:** [google drive](https://drive.google.com/open?id=0B_geeR2lTMegLWRuWnZoMVJPZ3c) [baidu skyDrive](http://pan.baidu.com/s/1boLM1bh)
+  **feature:** [google drive](https://drive.google.com/open?id=0B_geeR2lTMegLWRuWnZoMVJPZ3c) [baidu skydrive](http://pan.baidu.com/s/1boLM1bh)
   * The training prototxt of toy example on MNIST are released.
 - Otc 9, 2016
-  * The code and training prototxt for our [ECCV16](http://link.springer.com/chapter/10.1007/978-3-319-46478-7_31) paper are released. If you train our Network on **CAISA-WebFace**, the expected verification performance of **SINGLE MODEL** on **[LFW](http://vis-www.cs.umass.edu/lfw/)** should be **~99%**.
+  * The code and training prototxt for our [ECCV16](http://link.springer.com/chapter/10.1007/978-3-319-46478-7_31) paper are released. 
+  * If you train our Network on **CAISA-WebFace**, the expected verification performance of **SINGLE MODEL** on **[LFW](http://vis-www.cs.umass.edu/lfw/)** should be **~99%**.
 
 ### Files
 - Original Caffe library
@@ -37,6 +41,7 @@ This branch is developed for deep face recognition, the related paper is as foll
   * face_example/face_train_test.prototxt
   * face_example/face_solver.prototxt
   * face_example/face_deploy.prototxt
+  * face_example/extractDeepFeature.m
 - mnist_example
   * mnist_example/data/
   * mnist_example/face_snapshot/
@@ -44,12 +49,12 @@ This branch is developed for deep face recognition, the related paper is as foll
   * mnist_example/mnist_solver.prototxt
   * mnist_example/mnist_deploy.prototxt
 
-### Usage
-- Make sure you have correctly installed [Caffe](http://caffe.berkeleyvision.org/) before using our code. Please follow the [installation instructions](http://caffe.berkeleyvision.org/installation.html).
-- Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
-- Preprocess the training face images, including detection, alignment, etc. Here we strongly recommend [MTCNN](https://github.com/kpzhang93/MTCNN_face_detection_alignment), which is an effective and efficient open-source tool for face detection and alignment.
-- Creat list for training set and validation set. Place them in face_example/data/
-- Specify your data source for train & val
+### Train_Model
+1. The Installation completely the same as [Caffe](http://caffe.berkeleyvision.org/). Please follow the [installation instructions](http://caffe.berkeleyvision.org/installation.html). Make sure you have correctly installed before using our code. 
+2. Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
+3. Preprocess the training face images, including detection, alignment, etc. Here we strongly recommend [MTCNN](https://github.com/kpzhang93/MTCNN_face_detection_alignment), which is an effective and efficient open-source tool for face detection and alignment.
+4. Creat list for training set and validation set. Place them in face_example/data/
+5. Specify your data source for train & val
 
         layer {
           name: "data"
@@ -60,7 +65,8 @@ This branch is developed for deep face recognition, the related paper is as foll
             source: "face_example/data/###your_list###"
           }
         }
-- Specify the number of subject in FC6 layer
+
+6. Specify the number of subject in FC6 layer
 
         layer {
           name: "fc6"
@@ -71,7 +77,8 @@ This branch is developed for deep face recognition, the related paper is as foll
             num_output: ##number##
           }
         }
-- Specify the loss weight and the number of subject in center loss layer
+
+7. Specify the loss weight and the number of subject in center loss layer
 
         layer {
           name: "center_loss"
@@ -85,12 +92,18 @@ This branch is developed for deep face recognition, the related paper is as foll
           }
         }
 
-- Run the model
+8. Train model
 
         cd $CAFFE-FACE_ROOT
         ./build/tools/caffe train -solver face_example/face_solver.prototxt -gpu X,Y
 
-- Please refer to our ECCV paper and code for more details.
+### Extract_DeepFeature
+1. Compile matcaffe by make matcaffe
+2. Specify the correspinding paths in face_example/extractDeepFeature.m
+        addpath('path_to_matCaffe/matlab');
+        model = 'path_to_deploy/face_deploy.prototxt';
+        weights = 'path_to_model/face_model.caffemodel';
+        image = imread('path_to_image/Jennifer_Aniston_0016.jpg');
 
 ### Contact 
 - [Yandong Wen](http://ydwen.github.io/)
