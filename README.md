@@ -51,7 +51,7 @@ This branch is developed for deep face recognition, the related paper is as foll
 
 ### Train_Model
 1. The Installation completely the same as [Caffe](http://caffe.berkeleyvision.org/). Please follow the [installation instructions](http://caffe.berkeleyvision.org/installation.html). Make sure you have correctly installed before using our code. 
-2. Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
+2. Download the face dataset for training, e.g. [CAISA-WebFace](http://www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html), [VGG-Face](http://www.robots.ox.ac.uk/~vgg/data/vgg_face/), [MS-Celeb-1M](https://www.microsoft.com/en-us/research/project/ms-celeb-1m-challenge-recognizing-one-million-celebrities-real-world/), [MegaFace](http://megaface.cs.washington.edu/).
 3. Preprocess the training face images, including detection, alignment, etc. Here we strongly recommend [MTCNN](https://github.com/kpzhang93/MTCNN_face_detection_alignment), which is an effective and efficient open-source tool for face detection and alignment.
 4. Creat list for training set and validation set. Place them in face_example/data/
 5. Specify your data source for train & val
@@ -105,6 +105,8 @@ This branch is developed for deep face recognition, the related paper is as foll
         model = 'path_to_deploy/face_deploy.prototxt';
         weights = 'path_to_model/face_model.caffemodel';
         image = imread('path_to_image/Jennifer_Aniston_0016.jpg');
+
+3. Run extractDeepFeature.m in Matlab
 
 ### Contact 
 - [Yandong Wen](http://ydwen.github.io/)

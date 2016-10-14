@@ -1,0 +1,1 @@
+# Ignore everything in this directory
