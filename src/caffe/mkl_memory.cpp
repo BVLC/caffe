@@ -130,7 +130,7 @@ void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
 
   // If conversion creation is to happen
   // then if only we have internal layout already in place
-  // we can proceed with conversion creation. 
+  // we can proceed with conversion creation.
   // Otherwise we make sure that existing conversions are deleted
   // as with new layout creation they are being instantly invalidated
   if (create_conversion_if_possible) {
@@ -146,7 +146,7 @@ template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_layouts(
     const dnnPrimitive_t primitive, dnnResourceType_t type,
     size_t dimension, const size_t size[], const size_t strides[]) {
-  // To avoid creating conversion among potentialiy diffrent 
+  // To avoid creating conversion among potentialiy diffrent
   // (in terms of size) layouts we need to destroy existing layouts here
 
   if (this->layout_usr) {
@@ -162,10 +162,10 @@ void MKLMemoryDescriptorBase<Dtype>::create_layouts(
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr) {
   CHECK(cpu_ptr);
-  // When no conversion is available then 
+  // When no conversion is available then
   // recreate them if layouts are available
   if (this-> convert_from_int == NULL) {
-    this->create_conversions();    
+    this->create_conversions();
   }
   CHECK(this->convert_from_int);
   int status;

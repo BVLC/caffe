@@ -52,7 +52,6 @@ template <typename Dtype>
 void MKLReLULayer<Dtype>::Init(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
   size_t dim = bottom[0]->shape().size();
   this->sizes_.resize(dim);
   this->strides_.resize(dim);
@@ -67,10 +66,10 @@ void MKLReLULayer<Dtype>::Init(
   this->bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   this->bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
-  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
-  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
-  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
-  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]),false);
+  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
+  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
+  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
+  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
