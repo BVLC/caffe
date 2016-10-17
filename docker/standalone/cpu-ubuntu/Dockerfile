@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         git \
         wget \
-        libatlas-base-dev \
         libboost-all-dev \
         libgflags-dev \
         libgoogle-glog-dev \
@@ -29,11 +28,11 @@ WORKDIR $CAFFE_ROOT
 # FIXME: clone a specific git tag and use ARG instead of ENV once DockerHub supports this.
 ENV CLONE_TAG=master
 
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
+RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/intel/caffe.git . && \
     for req in $(cat python/requirements.txt) pydot; do pip install $req; done && \
     mkdir build && cd build && \
-    cmake -DCPU_ONLY=1 .. && \
-    make -j"$(nproc)"
+    cmake -DCPU_ONLY=1 -DUSE_MKL2017_AS_DEFAULT_ENGINE=1 .. && \
+    make all -j"$(nproc)"
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
 ENV PYTHONPATH $PYCAFFE_ROOT:$PYTHONPATH
