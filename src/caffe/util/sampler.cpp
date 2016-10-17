@@ -76,6 +76,9 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       }
       found = true;
     }
+    if (found) {
+      return true;
+    }
   }
   return found;
 }
