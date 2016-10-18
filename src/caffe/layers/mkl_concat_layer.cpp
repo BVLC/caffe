@@ -49,8 +49,9 @@ template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
 }
 
 template <typename Dtype>
-void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+
   size_t dim_src = bottom[0]->shape().size();
   size_t dim_dst = dim_src;
 
@@ -81,8 +82,8 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     split_channels_[i] = bottom[i]->channels();
     channels_ += split_channels_[i];
-    fwd_bottom_data_[i]->create_user_layout(dim_src, sizes_src, strides_src);
-    bwd_bottom_diff_[i]->create_user_layout(dim_src, sizes_src, strides_src);
+    fwd_bottom_data_[i]->create_user_layout(dim_src, sizes_src, strides_src, false);
+    bwd_bottom_diff_[i]->create_user_layout(dim_src, sizes_src, strides_src, false);
   }
 
   // XXX: almost the same computations as above for src
@@ -94,21 +95,35 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       sizes_dst[d] = bottom[0]->shape()[dim_dst - 1 - d];
     strides_dst[d] = (d == 0) ? 1 : strides_dst[d - 1] * sizes_dst[d - 1];
   }
-  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst);
-  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst);
+  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
+  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
 
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
 }
 
 template <typename Dtype>
+void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  const vector<Blob<Dtype>*>& top) {
+  Init(bottom,top);
+}
+
+template <typename Dtype>
 void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+
+  if((num_ == bottom[0]->num()) &&
+      height_ == bottom[0]->height() &&
+      width_ == bottom[0]->width()) {
+      top[0]->Reshape(num_, channels_, height_, width_);
+    return;
+  }
+
   num_ = bottom[0]->num();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-
   top[0]->Reshape(num_, channels_, height_, width_);
+  Init(bottom,top);
 }
 
 template <typename Dtype>

@@ -169,6 +169,9 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
+
   int size_;
   int pre_pad_;
   Dtype alpha_;
@@ -334,6 +337,8 @@ class MKLConcatLayer : public Layer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
 
+  void Init( const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top);
  private:
   dnnPrimitive_t concatFwd_;
   dnnPrimitive_t concatBwd_;
