@@ -6,7 +6,7 @@ This branch of Caffe ports the framework to Windows.
 
 [![Travis Build Status](https://api.travis-ci.org/BVLC/caffe.svg?branch=windows)](https://travis-ci.org/BVLC/caffe) Travis (Linux build)
 
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/lc0pdvlv89a9i9ae?svg=true)](https://ci.appveyor.com/project/willyd/caffe) AppVeyor (Windows build)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/6xpwyq0y9ffdj9pb/branch/windows?svg=true)](https://ci.appveyor.com/project/willyd/caffe-4pvka/branch/windows) AppVeyor (Windows build)
 
 ## Windows Setup
 **Requirements**:
