@@ -136,11 +136,9 @@ void MKLMemoryDescriptorBase<Dtype>::remove_internal_layout() {
 
     // with layout invalidated we should also remove Allocation
     // as next layout may declare diffrent sizes of allocation
-    if(this->internal_ptr) {
-      status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
-      this->internal_ptr = NULL;
-      CHECK_EQ(status, E_SUCCESS);
-    }
+    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+    this->internal_ptr = NULL;
+    CHECK_EQ(status, E_SUCCESS);
   }
 }
 
@@ -155,11 +153,9 @@ void MKLMemoryDescriptorBase<Dtype>::remove_user_layout() {
 
     // with layout invalidated we should also remove Allocation
     // as next layout may declare diffrent sizes of allocation
-    if(this->internal_ptr) {
-      status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
-      this->internal_ptr = NULL;
-      CHECK_EQ(status, E_SUCCESS);
-    }
+    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+    this->internal_ptr = NULL;
+    CHECK_EQ(status, E_SUCCESS);
   }
 }
 

@@ -104,12 +104,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           void* ptr);
   SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
           void* ptr) {
-    dnnError_t status = dnnReleaseBuffer_F32(ptr);
+    dnnError_t status = E_SUCCESS;
+    if( ptr != NULL) {
+      status = dnnReleaseBuffer_F32(ptr);
+    }
     return status; 
   }
   SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
           void* ptr) {
-    dnnError_t status = dnnReleaseBuffer_F64(ptr);
+    dnnError_t status = E_SUCCESS;
+    if( ptr != NULL) {
+      status = dnnReleaseBuffer_F64(ptr);
+    }
     return status; 
   }
 
@@ -117,16 +123,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           dnnLayout_t& layout);
   SPEC_PREFIX dnnError_t dnnLayoutDelete<float>(
           dnnLayout_t& layout) {
-    dnnError_t status = dnnLayoutDelete_F32(layout);
-    layout = NULL;
+    dnnError_t status = E_SUCCESS;
+    if( layout != NULL) {
+      status = dnnLayoutDelete_F32(layout);
+      layout = NULL;
+    }
     return status;
   }
   SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
           dnnLayout_t& layout) {
-    dnnError_t status = dnnLayoutDelete_F64(layout);
-    layout = NULL;
+    dnnError_t status = E_SUCCESS;
+    if( layout != NULL) {
+      status = dnnLayoutDelete_F64(layout);
+      layout = NULL;
+    }
     return status;
-}
+  }
 
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesCreate(
         dnnPrimitiveAttributes_t *attributes);
@@ -190,14 +202,20 @@ TEMPLATE_PREFIX dnnError_t dnnDelete(
         dnnPrimitive_t& primitive);
 SPEC_PREFIX dnnError_t dnnDelete<float>(
         dnnPrimitive_t& primitive) {
-  dnnError_t status = dnnDelete_F32(primitive); 
-  primitive = NULL;
+  dnnError_t status = E_SUCCESS;
+  if (primitive != NULL) {
+    status = dnnDelete_F32(primitive); 
+    primitive = NULL;
+  }
   return status;
 }
 SPEC_PREFIX dnnError_t dnnDelete<double>(
         dnnPrimitive_t& primitive) {
-  dnnError_t status = dnnDelete_F64(primitive); 
-  primitive = NULL;
+  dnnError_t status = E_SUCCESS;
+  if (primitive != NULL) {
+    status = dnnDelete_F64(primitive); 
+    primitive = NULL;
+  }
   return status;
 }
 

@@ -61,15 +61,23 @@ void MKLReLULayer<Dtype>::Init(
   }
 
   // Names are for debugging only
-  this->fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  this->fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
-  this->bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
-  this->bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+  this->fwd_bottom_data_->name = "fwd_bottom_data   @ " +
+                                 this->layer_param_.name();
+  this->fwd_top_data_->name =    "fwd_top_data      @ " +
+                                 this->layer_param_.name();
+  this->bwd_bottom_diff_->name = "bwd_bottom_diff   @ " +
+                                 this->layer_param_.name();
+  this->bwd_top_diff_->name =    "bwd_top_diff      @ " +
+                                 this->layer_param_.name();
 
-  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
-  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
-  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
-  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]), &(this->strides_[0]), false);
+  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
@@ -81,13 +89,13 @@ template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 //  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
-    Init(bottom,top); 
+    Init(bottom, top); 
 }
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  NeuronLayer<Dtype>::Reshape(bottom,top);
+  NeuronLayer<Dtype>::Reshape(bottom, top);
 
   // Here I check for sizes whther to destroy primitives
   size_t dim = bottom[0]->shape().size();

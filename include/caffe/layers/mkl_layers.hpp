@@ -73,8 +73,8 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
   // Customized methods
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
@@ -169,8 +169,8 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   int size_;
   int pre_pad_;
@@ -208,8 +208,8 @@ class MKLPoolingLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Pooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -279,8 +279,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "ReLU"; }
 
@@ -337,8 +337,9 @@ class MKLConcatLayer : public Layer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
  private:
   dnnPrimitive_t concatFwd_;
   dnnPrimitive_t concatBwd_;
@@ -391,6 +392,9 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
 //  Dtype moving_average_fraction_;
   Dtype eps_;
   bool use_weight_bias_;
@@ -426,8 +430,8 @@ class MKLSplitLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -467,8 +471,8 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  void Init( const vector<Blob<Dtype>*>& bottom,
-             const vector<Blob<Dtype>*>& top);
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Eltwise"; }
   virtual inline int MinBottomBlobs() const { return 2; }

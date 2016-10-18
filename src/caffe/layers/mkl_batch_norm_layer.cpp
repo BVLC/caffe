@@ -47,9 +47,9 @@ namespace caffe {
 
 template <typename Dtype>
 MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
-  if (batchNormFwd != NULL) dnnDelete<Dtype>(batchNormFwd);
-  if (batchNormBwdData != NULL) dnnDelete<Dtype>(batchNormBwdData);
-  if (batchNormBwdScaleShift != NULL) dnnDelete<Dtype>(batchNormBwdScaleShift);
+  dnnDelete<Dtype>(batchNormFwd);
+  dnnDelete<Dtype>(batchNormBwdData);
+  dnnDelete<Dtype>(batchNormBwdScaleShift);
 
   dnnLayoutDelete<Dtype>(layout_usr_);
   dnnReleaseBuffer<Dtype>(workspace_buffer_);
@@ -57,7 +57,7 @@ MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
 }
 
 template <typename Dtype>
-void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   eps_ = this->layer_param_.batch_norm_param().eps();
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
@@ -93,24 +93,27 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
+  // TODO: Make a cleanup routine to avoid copy of following code in the Destructor
+
   dnnError_t e;
+  dnnLayoutDelete<Dtype>(layout_usr_);
   e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
-  fwd_bottom_data->create_user_layout(dim, sizes, strides);
-  fwd_top_data   ->create_user_layout(dim, sizes, strides);
-  bwd_bottom_diff->create_user_layout(dim, sizes, strides);
-  bwd_top_diff   ->create_user_layout(dim, sizes, strides);
+  fwd_bottom_data->create_user_layout(dim, sizes, strides, false);
+  fwd_top_data   ->create_user_layout(dim, sizes, strides, false);
+  bwd_bottom_diff->create_user_layout(dim, sizes, strides, false);
+  bwd_top_diff   ->create_user_layout(dim, sizes, strides, false);
 
-  workspace_buffer_ = NULL;
-  scaleShift_buffer_ = NULL;
+  dnnReleaseBuffer<Dtype>(workspace_buffer_);
+  dnnReleaseBuffer<Dtype>(scaleShift_buffer_);
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
 
   // Primitives will be allocated during the first fwd pass
-  batchNormFwd = NULL;
-  batchNormBwdData = NULL;
-  batchNormBwdScaleShift = NULL;
+  dnnDelete<Dtype>(batchNormFwd);
+  dnnDelete<Dtype>(batchNormBwdData);
+  dnnDelete<Dtype>(batchNormBwdScaleShift);
 
   if (use_weight_bias_) {
     if ( bias_term_ ) {
@@ -147,10 +150,24 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+template <typename Dtype>
+void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Init(bottom,top);
+}
 
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+  bool reshaping = true;
+  if((num_ == bottom[0]->num()) &&
+      channels_ == bottom[0]->channels() &&
+      height_ == bottom[0]->height() &&
+      width_ == bottom[0]->width()) {
+    reshaping = false;
+  }
+
   if (bottom[0] == top[0]) {  // in-place computation
     temp_.ReshapeLike(*bottom[0]);
   } else {
@@ -159,6 +176,10 @@ void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     width_ = bottom[0]->width();
     num_ = bottom[0]->num();
     top[0]->Reshape(num_, channels_, height_, width_);
+  }
+
+  if (reshaping == true) {
+    Init(bottom,top);
   }
 }
 

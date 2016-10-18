@@ -93,10 +93,8 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   // what layout is used by neighbours.
   dnnDelete<Dtype>(lrnFwd);
   dnnDelete<Dtype>(lrnBwd);
-  if(lrn_buffer_) {
-    dnnReleaseBuffer<Dtype>(lrn_buffer_);
-    lrn_buffer_ = NULL;
-  }
+  dnnReleaseBuffer<Dtype>(lrn_buffer_);
+  lrn_buffer_ = NULL;
 }
 
 template <typename Dtype>
