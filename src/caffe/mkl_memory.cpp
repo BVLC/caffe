@@ -87,18 +87,7 @@ template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
     const dnnPrimitive_t primitive, dnnResourceType_t type) {
   int status;
-  if (this->layout_int) {
-    DLOG(INFO) << "Internal layout already created, recreating for"
-           << this->name;
-    status = dnnLayoutDelete<Dtype>(this->layout_int);
-    CHECK_EQ(status, E_SUCCESS);
-
-    // with layout invalidated we should also remove Allocation
-    // as next layout may declare diffrent sizes of allocation
-    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
-    this->internal_ptr = NULL;
-    CHECK_EQ(status, E_SUCCESS);
-  }
+  this->remove_internal_layout();
   status = dnnLayoutCreateFromPrimitive<Dtype>(
       &this->layout_int, primitive, type);
   CHECK_EQ(status, E_SUCCESS)
@@ -116,13 +105,7 @@ void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
     const size_t strides[],
     bool create_conversion_if_possible) {
   int status;
-  if (this->layout_usr) {
-    DLOG(INFO) << "User layout already created, recreating for"
-               << this->name;
-    status = dnnLayoutDelete<Dtype>(this->layout_usr);
-    CHECK_EQ(status, E_SUCCESS);
-  }
-
+  this->remove_user_layout();
   status = dnnLayoutCreate<Dtype>(
       &this->layout_usr, dimension, size, strides);
   CHECK_EQ(status, E_SUCCESS) << "Failed dnnLayoutCreate with status "
@@ -139,6 +122,44 @@ void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
     }
   } else {
     this->remove_conversions();
+  }
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_internal_layout() {
+  int status;
+  if (this->layout_int) {
+    DLOG(INFO) << "Internal layout already created, recreating for"
+           << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_int);
+    CHECK_EQ(status, E_SUCCESS);
+
+    // with layout invalidated we should also remove Allocation
+    // as next layout may declare diffrent sizes of allocation
+    if(this->internal_ptr) {
+      status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+      this->internal_ptr = NULL;
+      CHECK_EQ(status, E_SUCCESS);
+    }
+  }
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_user_layout() {
+  int status;
+  if (this->layout_usr) {
+    DLOG(INFO) << "Internal layout already created, recreating for"
+           << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_usr);
+    CHECK_EQ(status, E_SUCCESS);
+
+    // with layout invalidated we should also remove Allocation
+    // as next layout may declare diffrent sizes of allocation
+    if(this->internal_ptr) {
+      status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+      this->internal_ptr = NULL;
+      CHECK_EQ(status, E_SUCCESS);
+    }
   }
 }
 

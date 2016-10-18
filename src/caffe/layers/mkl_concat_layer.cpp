@@ -97,8 +97,8 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst);
   fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst);
 
-  concatFwd_ = NULL;
-  concatBwd_ = NULL;
+  dnnDelete<Dtype>(concatFwd_);
+  dnnDelete<Dtype>(concatBwd_);
 }
 
 template <typename Dtype>

@@ -102,6 +102,9 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
     const dnnPrimitive_t primitive, dnnResourceType_t type,
     size_t dimension, const size_t size[], const size_t strides[]);
 
+  void remove_internal_layout();
+  void remove_user_layout();
+
   virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKL2017;}
   virtual size_t prv_size() {
       return dnnLayoutGetMemorySize<Dtype>(layout_int);

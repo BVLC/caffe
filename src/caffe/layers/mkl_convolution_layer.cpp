@@ -284,6 +284,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     // layout_usr = internal layout of weight data on forward convolution
     bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
         dnnResourceDiffFilter);
+    bwdf2fwd_filter_diff->remove_user_layout();
     status = dnnLayoutCreateFromPrimitive<Dtype>(
         &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
     CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
