@@ -116,8 +116,5 @@ DISTRIBUTE_DIR := distribute
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
 
-# link in some Halide code
-EXTRA_OBJS := $(wildcard halide/*.o)
-
 # enable pretty build (comment to see full commands)
 Q ?= @

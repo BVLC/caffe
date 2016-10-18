@@ -97,7 +97,3 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
-
-# halide
-halide/make_layers
-halide/*.h

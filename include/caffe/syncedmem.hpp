@@ -9,18 +9,7 @@
 
 #include "caffe/common.hpp"
 
-
-
-struct buffer_t;
-
-
 namespace caffe {
-
-// forward declare Blob
-template <typename Dtype> class Blob;
-
-template <typename Dtype>
-void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob, bool data = true);
 
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
@@ -58,6 +47,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #endif
 }
 
+
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
  *        and device (GPU).
@@ -83,6 +73,12 @@ class SyncedMemory {
   void async_gpu_push(const cudaStream_t& stream);
 #endif
 
+  // Included for syncing memory of dynamically loaded layers.
+  // Warning: only use this is you know what you are doing.
+  void set_head(SyncedHead new_head) {
+    head_ = new_head;
+  }
+
  private:
   void check_device();
 
@@ -97,9 +93,6 @@ class SyncedMemory {
   bool own_gpu_data_;
   int device_;
 
-  template <typename Dtype>
-  friend void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob,
-      bool data);
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
 

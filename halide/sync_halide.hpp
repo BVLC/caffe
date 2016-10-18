@@ -74,11 +74,11 @@ void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob,
     mem = blob->diff();
   }
   if (buf.host_dirty) {
-    mem->head_ = SyncedMemory::HEAD_AT_CPU;
+    mem->set_head(SyncedMemory::HEAD_AT_CPU);
   } else if (buf.dev_dirty) {
-    mem->head_ = SyncedMemory::HEAD_AT_GPU;
+    mem->set_head(SyncedMemory::HEAD_AT_GPU);
   } else {
-    mem->head_ = SyncedMemory::SYNCED;
+    mem->set_head(SyncedMemory::SYNCED);
   }
 }
 

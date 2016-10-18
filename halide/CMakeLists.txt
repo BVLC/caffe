@@ -3,7 +3,7 @@
 
 if(BUILD_halide)
 
-    add_subdirectory(test)
+    #add_subdirectory(test)
 
     #Target name modification
     #The general cmake script takes its target names from files. This variable

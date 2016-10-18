@@ -1,16 +1,23 @@
 #include <string>
 #include <vector>
 
+#include "../sync_halide.hpp"
+
 #include "caffe/caffe.hpp"
-#include "caffe/layers/halide_layer.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 using namespace std;
 using namespace caffe;
 
 
 template< typename Dtype >
-class PlipWrapper : public DLLInterface<Dtype> {
+class DevFuncWrapper : public Layer<Dtype> {
 public:
+  explicit DevFuncWrapper(const LayerParameter& param)
+      : Layer<Dtype>(param),
+        param_(param.python_param()){}
+
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -36,6 +43,8 @@ public:
   }
 
 private:
+  PythonParameter param_;
+
   std::vector< std::string > bottom_blob_names;
   std::vector< std::string > top_blob_names;
 
@@ -47,6 +56,5 @@ private:
 
 };
 
-// template class specializations
-template class PlipWrapper<float>;
-template class PlipWrapper<double>;
+template class DevFuncWrapper<float>;
+template class DevFuncWrapper<double>;

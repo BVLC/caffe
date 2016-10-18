@@ -87,6 +87,9 @@ message NetParameter {
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
 
+  // External layers that are loaded as dynamically liked libraries
+  repeated string external_layers = 9;
+
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
@@ -308,7 +311,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 148 (last added: halide_param)
+// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -376,7 +379,6 @@ message LayerParameter {
   optional EmbedParameter embed_param = 137;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
-  optional HalideParameter halide_param = 147;
   optional HDF5DataParameter hdf5_data_param = 112;
   optional HDF5OutputParameter hdf5_output_param = 113;
   optional HingeLossParameter hinge_loss_param = 114;
@@ -743,18 +745,6 @@ message FlattenParameter {
   // axis).
   optional int32 end_axis = 2 [default = -1];
 }
-
-// Message that stores parameters used by HalideLayer
-message HalideParameter {
-  // files will be read in the following order
-  optional string library = 1;
-
-  // This value is set to the attribute `param_str` of the `HalideLayer` instace
-  // in C++ before calling the `setup()` method. This is a string. You may parse
-  // this string in `setup` method and use it in `forward` and `backward`.
-  optional string param_str = 4 [default = ''];
-}
-
 
 // Message that stores parameters used by HDF5DataLayer
 message HDF5DataParameter {

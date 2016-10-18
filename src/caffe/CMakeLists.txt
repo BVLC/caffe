@@ -23,7 +23,9 @@ endif()
 add_library(caffe ${srcs})
 target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
 
-SET_PROPERTY(TARGET caffe APPEND PROPERTY LINK_FLAGS "${PROJECT_BINARY_DIR}/halide/plip.o")
+# this is needed for halide_cuda_wrap_device_ptr
+set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS "${PROJECT_BINARY_DIR}/halide/testfunc.o")
+target_compile_definitions(caffe PRIVATE USE_HALIDE=${BUILD_haide})
 
 caffe_default_properties(caffe)
 target_link_libraries(caffe ${Caffe_LINKER_LIBS})

@@ -3,9 +3,9 @@
 ## Why use Halide?
 
 [Halide](http://halide-lang.org/) is described as a language for image
-processing and computational photography. It works by de-coupleing the
+processing and computational photography. It works by de-coupling the
 definition of the algorithm from the definition from scheduling of the
-computation. This conceptual sparation allows for concise definition of the
+computation. This conceptual separation allows for concise definition of the
 algorithm and the ability to easily define different schedules, for different
 architectures for example.
 
@@ -19,7 +19,7 @@ of a number of different architectures such as: x86/SSE, CUDA, OpenCL etc.
 ## How is Halide called?
 
 Calling halide from caffe requires running the Halide compiler, this makes
-the build process a bit more complicated. The next section descibes the
+the build process a bit more complicated. The next section describes the
 steps the build system needs to perform in order to produce a halide layer.
 
 To explain what is happening I will first define a few terms. The *halide
@@ -59,12 +59,12 @@ To tell the build system to generate a particular object create an empty
 file that is named `<registered name>.gen`
 
 ```
-touch ./generator/plip.gen
+touch ./generator/testfunc.gen
 ```
 
 The build system will generate all of these objects.
 
-The next step is to combine halide obejcts into a wrapper. These are located in
+The next step is to combine halide objects into a wrapper. These are located in
 the ./wrappers folder. The build system is configured to turn each .cpp file in
 this folder into a wrapper shared library. Each of these libraries are linked
 with all halide objects generated previously.
@@ -76,7 +76,7 @@ the usable halide library file:
 cd ../build
 cmake .. -DBUILD_halide=ON
 make install
-file ./install/lib/halide/libplip_wrapper.so
+file ./install/lib/halide/libtestfunc_wrapper.so
 ```
 
 As a final step we can test if this objects works, just set your install dir.
@@ -90,7 +90,7 @@ from caffe import layers as L
 INSTALL_DIR = XXX
 
 def create_neural_net(batch_size=1):
-    library = INSTALL_DIR + "/lib/halide/libplip_wrapper.so"
+    library = INSTALL_DIR + "/lib/halide/libtestfunc_wrapper.so"
     netspec = caffe.NetSpec()
     netspec.data = L.DummyData(shape=[dict(dim=[batch_size, 1, 3, 5])], ntop=1)
     netspec.halide = L.Halide(netspec.data, halide_param=dict(library=library))
@@ -109,6 +109,18 @@ if __name__=='__main__':
 
 
 ```
+
+## How do I compile a module by hand?
+In bash run the following:
+
+```
+HALIDE_DIR=../../halide
+CAFFE_DIR=../build/install
+NAME=testfunc
+g++ ./wrappers/testfunc_wrapper.cpp ../build/halide/testfunc.o -I../build/halide/ -shared -g -std=c++11 -fPIC -fno-rtti -I${HALIDE_DIR}/include -I${CAFFE_DIR}/include -I/opt/cuda/include -L ${HALIDE_DIR}/bin -lHalide -L${CAFFE_DIR}/lib  -lpthread -ldl  -lpthread -lz -lglog -lgflags -lboost_system-mt -lcaffe -o testfunc_wrapper.so
+
+```
+
 
 ## How do I change halide targets?
 Look at the CMakeList.txt file and change target=cuda to something different.
