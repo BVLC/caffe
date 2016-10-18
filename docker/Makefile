@@ -5,22 +5,33 @@
 
 DOCKER ?= docker
 
+ifneq ($(http_proxy),)
+DOCKER_BUILD_ARG += --build-arg http_proxy=$(http_proxy)
+endif
+ifneq ($(https_proxy),)
+DOCKER_BUILD_ARG += --build-arg https_proxy=$(https_proxy)
+endif
+
+
 all: docker_files standalone
 
 .PHONY: standalone devel
 
-standalone: cpu_standalone gpu_standalone
+standalone: cpu-centos cpu-ubuntu gpu_standalone
 
+cpu-centos: standalone/cpu-centos/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:cpu-centos standalone/cpu-centos
 
-cpu_standalone: standalone/cpu/Dockerfile
-	$(DOCKER) build -t caffe:cpu standalone/cpu
+cpu-ubuntu: standalone/cpu-ubuntu/Dockerfile
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:cpu-ubuntu standalone/cpu-ubuntu
 
 gpu_standalone: standalone/gpu/Dockerfile
-	$(DOCKER) build -t caffe:gpu standalone/gpu
+	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:gpu standalone/gpu
+
 
 docker_files: standalone_files
 
-standalone_files: standalone/cpu/Dockerfile standalone/gpu/Dockerfile
+standalone_files: standalone/cpu-centos/Dockerfile standalone/cpu-ubuntu/Dockerfile standalone/gpu/Dockerfile 
 
 FROM_GPU = "nvidia/cuda:7.5-cudnn5-devel-ubuntu14.04"
 FROM_CPU = "ubuntu:14.04"

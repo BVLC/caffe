@@ -44,6 +44,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace caffe {
 
 // Make sure each thread can have different values.
@@ -163,10 +167,17 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
+#ifdef _OPENMP
+  if (0 == omp_get_thread_num()) { 
+#endif
   if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
+#ifdef _OPENMP
+  }
+#endif
+
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
