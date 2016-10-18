@@ -142,9 +142,7 @@ shared_ptr<Layer<Dtype> > GetInnerProductLayer(
   InnerProductParameter_Engine engine = ip_param.engine();
   if (engine == InnerProductParameter_Engine_DEFAULT) {
     engine = InnerProductParameter_Engine_CAFFE;
-#ifdef USE_CUDNN
-    engine = InnerProductParameter_Engine_CUDNN;
-#elif defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
+#if defined(USE_MKLDNN_AS_DEFAULT_ENGINE)
     if (!ip_param.transpose()) {
       engine = InnerProductParameter_Engine_MKLDNN;
     }
@@ -152,10 +150,6 @@ shared_ptr<Layer<Dtype> > GetInnerProductLayer(
   }
   if (engine == InnerProductParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new InnerProductLayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == InnerProductParameter_Engine_CUDNN) {
-    return shared_ptr<Layer<Dtype> >(new CuDNNInnerProductLayer<Dtype>(param));
-#endif
 #ifdef MKLDNN_SUPPORTED
   } else if (engine == InnerProductParameter_Engine_MKLDNN) {
     if (ip_param.transpose()) {
