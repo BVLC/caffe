@@ -606,6 +606,8 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
     if (sync.is_root()) {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
+      if (solver->root_solver()->param().test_interval() && solver->root_solver()->iter() % solver->root_solver()->param().test_interval() == 0)
+        solver->root_solver()->TestAll();
     }
 
     sync.lets_die_together();
