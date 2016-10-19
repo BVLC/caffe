@@ -4,11 +4,11 @@
 
 import os
 import sys
-import urllib
 import hashlib
 import argparse
 import tarfile
 
+from six.moves import urllib
 from download_model_binary import reporthook
 
 WIN_DEPENDENCIES_URLS = dict(
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     dep_filename = os.path.split(url)[1]
     # Download binaries
     print("Downloading dependencies. Please wait...")
-    urllib.urlretrieve(url, dep_filename, reporthook)
+    urllib.request.urlretrieve(url, dep_filename, reporthook)
     if not model_checks_out(dep_filename, sha1):
         print('ERROR: dependencies did not download correctly! Run this again.')
         sys.exit(1)
