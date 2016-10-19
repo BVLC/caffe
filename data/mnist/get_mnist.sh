@@ -2,7 +2,7 @@
 # This scripts downloads the mnist data and unzips it.
 
 DIR="$( cd "$(dirname "$0")" ; pwd -P )"
-cd $DIR
+cd "$DIR"
 
 echo "Downloading..."
 

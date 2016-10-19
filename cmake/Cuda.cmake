@@ -186,11 +186,20 @@ function(detect_cuDNN)
     set(_path_suffixes PATH_SUFFIXES lib/Win32)    
   endif()
 
+  # dynamic libs have different suffix in mac and linux
+  if(APPLE)
+    set(CUDNN_LIB_NAME "libcudnn.dylib")
+  elseif(MSVC)
+    set(CUDNN_LIB_NAME "cudnn")
+  else()
+    set(CUDNN_LIB_NAME "libcudnn.so")
+  endif()
+
   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
-  find_library(CUDNN_LIBRARY NAMES cudnn #libcudnn.so # libcudnn_static.a
-                             PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist}
-                             ${_path_suffixes}
-                             DOC "Path to cuDNN library.")
+  find_library(CUDNN_LIBRARY NAMES ${CUDNN_LIB_NAME}
+   PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
+   ${_path_suffixes}
+   DOC "Path to cuDNN library.")
   
   if(CUDNN_INCLUDE AND CUDNN_LIBRARY)
     set(HAVE_CUDNN  TRUE PARENT_SCOPE)

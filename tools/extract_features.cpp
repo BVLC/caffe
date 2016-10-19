@@ -130,7 +130,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     txns.push_back(txn);
   }
 
-  LOG(ERROR)<< "Extacting Features";
+  LOG(ERROR)<< "Extracting Features";
 
   Datum datum;
   std::vector<int> image_indices(num_features, 0);
