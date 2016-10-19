@@ -3,21 +3,48 @@ clone_folder: c:\projects\caffe
 environment:
   matrix:
     - WITH_CMAKE: 1
+      MSVC_VERSION: 14
       CMAKE_GENERATOR: Ninja
       CMAKE_CONFIG: Release
       CMAKE_BUILD_SHARED_LIBS: OFF
 
     - WITH_CMAKE: 1
+      MSVC_VERSION: 14
       CMAKE_GENERATOR: Ninja
       CMAKE_CONFIG: Debug
       CMAKE_BUILD_SHARED_LIBS: OFF
 
     - WITH_CMAKE: 1
+      MSVC_VERSION: 14
+      CMAKE_GENERATOR: Visual Studio 14 2015 Win64
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: OFF
+
+    - WITH_CMAKE: 1
+      MSVC_VERSION: 14
+      CMAKE_GENERATOR: Visual Studio 14 2015 Win64
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: OFF
+    - WITH_CMAKE: 1
+      MSVC_VERSION: 12
+      CMAKE_GENERATOR: Ninja
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: OFF
+
+    - WITH_CMAKE: 1
+      MSVC_VERSION: 12
+      CMAKE_GENERATOR: Ninja
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: OFF
+
+    - WITH_CMAKE: 1
+      MSVC_VERSION: 12
       CMAKE_GENERATOR: Visual Studio 12 2013 Win64
       CMAKE_CONFIG: Release
       CMAKE_BUILD_SHARED_LIBS: OFF
 
     - WITH_CMAKE: 1
+      MSVC_VERSION: 12
       CMAKE_GENERATOR: Visual Studio 12 2013 Win64
       CMAKE_CONFIG: Debug
       CMAKE_BUILD_SHARED_LIBS: OFF
