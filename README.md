@@ -45,26 +45,7 @@ Please read [release notes](https://github.com/intel/caffe/blob/master/docs/rele
 ## Multinode Training
 Intel Caffe multinode allows you to execute deep neural network training on multiple machines.
 
-You should read our Wiki to understand how it works.
-For quick start read [Multinode quickstart guide](https://github.com/intelcaffe/caffe/wiki/Multinode-quickstart-guide), next [Multinode How to ...?](https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F)
-
-Please see also prepared examples for cifar10 and Googlenet.
-
-For cifar10 example look at `examples/cifar10/train_full_multinode_mpi.sh` file. The script runs 4 processes on localhost. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
-It uses the MPI setup with an implicit parameter server (*all-reduce* approach). Each process is calculating its own gradients and sending them up through the binary tree structure. The intermediate nodes accumulate the received gradients with their own. The root node applies the weight updates and propagates them down the tree.
-
-A copy of the data has to be accessible from all of the nodes. Datasets can be either distributed to each node or on a parallel file system. The snapshots are saved only by the root process. The same applies to the test phase - it is carried out by the root process.
-
-For Googlenet example look at `models/bvlc_googlenet/solver_client.prototxt`. The solver tries to offset the bigger batch size with bigger learning rate. According to paper:
-
-    @article{
-      Author = {Forrest N. Iandola, Khalid Ashraf, Matthew W. Moskewicz, Kurt Keutzer},
-      Journal = {arXiv preprint arXiv:1511.00175},
-      Title = {FireCaffe: near-linear acceleration of deep neural network training on compute clusters},
-      Year = {2016}
-    }
-
-this should use 72 epochs to train Googlenet.
+To understand how it works and read some tutorials, go to our Wiki. Start from https://github.com/intelcaffe/caffe/wiki/Multinode-guide.
 
 ## License and Citation
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
