@@ -166,11 +166,13 @@ template <typename Dtype>
 void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X == Y) return;
 
-  #ifdef _OPENMP
-  int nthr = omp_get_max_threads();
-  int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
+#ifdef _OPENMP
+  static const int threshold = omp_get_max_threads() *
+                          caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
+#ifdef USE_MPI
     (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
+#endif
     (N >= threshold) &&
     (omp_in_parallel() == 0) &&
     (Caffe::mode() != Caffe::GPU);
@@ -185,7 +187,7 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
 
     return;
   }
-  #endif
+#endif
 
   memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
 }
@@ -199,23 +201,22 @@ template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
-    // If there are more than one openmp thread (we are in active region)
-    // then checking Caffe::mode can create additional GPU Context
-    //
+#ifndef CPU_ONLY
     if (
 #ifdef _OPENMP
+         // If there are more than one openmp thread (we are in active region)
+         // then checking Caffe::mode can create additional GPU Context
         (omp_in_parallel() == 0) &&
 #endif
         (Caffe::mode() == Caffe::GPU)) {
-#ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
-#else
-      NO_GPU;
-#endif
     } else {
+#endif
       caffe_cpu_copy<Dtype>(N, X, Y);
+#ifndef CPU_ONLY
     }
+#endif
   }
 }
 
