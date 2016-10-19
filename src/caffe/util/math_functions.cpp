@@ -172,10 +172,15 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   const bool run_parallel =
 #ifdef USE_MPI
     (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
-#endif
     (N >= threshold) &&
     (omp_in_parallel() == 0) &&
     (Caffe::mode() != Caffe::GPU);
+#else
+    (N >= threshold) &&
+    (omp_in_parallel() == 0) &&
+    (Caffe::mode() != Caffe::GPU) &&
+    (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id()));
+#endif
 
   if (run_parallel) {
     const int block_mem_size = 256*1024;
