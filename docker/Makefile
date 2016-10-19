@@ -1,6 +1,7 @@
 # A makefile to build the docker images for caffe.
-# Two caffe images will be built:
-#   caffe:cpu --> A CPU-only build of caffe.
+# Three caffe images can be built:
+#   caffe:cpu-centos --> A CPU-only build of caffe in CentOS-based image.
+#   caffe:cpu-ubuntu --> A CPU-only build of caffe in Ubuntu-based image.
 #   caffe:gpu --> A GPU-enabled build using the latest CUDA and CUDNN versions.
 
 DOCKER ?= docker
@@ -17,7 +18,8 @@ all: docker_files standalone
 
 .PHONY: standalone devel
 
-standalone: cpu-centos cpu-ubuntu gpu_standalone
+cpu_standalone: cpu-centos cpu-ubuntu
+standalone: cpu_standalone gpu_standalone
 
 cpu-centos: standalone/cpu-centos/Dockerfile
 	$(DOCKER) build $(DOCKER_BUILD_ARG) -t caffe:cpu-centos standalone/cpu-centos
