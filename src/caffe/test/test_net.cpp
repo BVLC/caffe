@@ -9,6 +9,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/net.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -27,6 +28,17 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     NetParameter param;
     CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
     net_.reset(new Net<Dtype>(param));
+  }
+
+  virtual void InitNetFromProtoFileWithState(const string& proto,
+      Phase phase = caffe::TRAIN, const int level = 0,
+      const vector<string>* stages = NULL) {
+    NetParameter param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
+    string param_file;
+    MakeTempFilename(&param_file);
+    WriteProtoToTextFile(param, param_file);
+    net_.reset(new Net<Dtype>(param_file, phase, level, stages));
   }
 
   virtual void CopyNetBlobs(const bool copy_diff,
@@ -769,6 +781,62 @@ class NetTest : public MultiDeviceTest<TypeParam> {
       "  type: 'SigmoidCrossEntropyLoss' "
       "} ";
     InitNetFromProtoString(proto);
+  }
+
+  virtual void InitAllInOneNet(Phase phase = caffe::TRAIN,
+      const int level = 0, const vector<string>* stages = NULL) {
+    string proto =
+      "name: 'All-in-one Network'"
+      "layer { "
+      "  name: 'train-data' "
+      "  type: 'DummyData' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "  dummy_data_param { "
+      "    shape { dim: 1 dim: 10 } "
+      "    shape { dim: 1 dim: 1 } "
+      "  } "
+      "  include { phase: TRAIN stage: 'train' } "
+      "} "
+      "layer { "
+      "  name: 'val-data' "
+      "  type: 'DummyData' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "  dummy_data_param { "
+      "    shape { dim: 1 dim: 10 } "
+      "    shape { dim: 1 dim: 1 } "
+      "  } "
+      "  include { phase: TEST stage: 'val' } "
+      "} "
+      "layer { "
+      "  name: 'deploy-data' "
+      "  type: 'Input' "
+      "  top: 'data' "
+      "  input_param { "
+      "    shape { dim: 1 dim: 10 } "
+      "  } "
+      "  include { phase: TEST stage: 'deploy' } "
+      "} "
+      "layer { "
+      "  name: 'ip' "
+      "  type: 'InnerProduct' "
+      "  bottom: 'data' "
+      "  top: 'ip' "
+      "  inner_product_param { "
+      "    num_output: 2 "
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'ip' "
+      "  bottom: 'label' "
+      "  top: 'loss' "
+      "  include { phase: TRAIN stage: 'train' } "
+      "  include { phase: TEST stage: 'val' } "
+      "} ";
+    InitNetFromProtoFileWithState(proto, phase, level, stages);
   }
 
   int seed_;
@@ -2471,6 +2539,66 @@ TYPED_TEST(NetTest, TestForcePropagateDown) {
       LOG(FATAL) << "Unknown layer: " << layer_name;
     }
   }
+}
+
+TYPED_TEST(NetTest, TestAllInOneNetTrain) {
+  vector<string> stages;
+  stages.push_back("train");
+  this->InitAllInOneNet(caffe::TRAIN, 0, &stages);
+  bool found_data = false;
+  bool found_loss = false;
+  for (int i = 0; i < this->net_->layers().size(); ++i) {
+    const string& layer_name = this->net_->layer_names()[i];
+    if (layer_name == "train-data") {
+      found_data = true;
+    } else if (layer_name == "loss") {
+      found_loss = true;
+    } else {
+      ASSERT_NE(layer_name, "val-data");
+      ASSERT_NE(layer_name, "deploy-data");
+    }
+  }
+  ASSERT_TRUE(found_data);
+  ASSERT_TRUE(found_loss);
+}
+
+TYPED_TEST(NetTest, TestAllInOneNetVal) {
+  vector<string> stages;
+  stages.push_back("val");
+  this->InitAllInOneNet(caffe::TEST, 0, &stages);
+  bool found_data = false;
+  bool found_loss = false;
+  for (int i = 0; i < this->net_->layers().size(); ++i) {
+    const string& layer_name = this->net_->layer_names()[i];
+    if (layer_name == "val-data") {
+      found_data = true;
+    } else if (layer_name == "loss") {
+      found_loss = true;
+    } else {
+      ASSERT_NE(layer_name, "train-data");
+      ASSERT_NE(layer_name, "deploy-data");
+    }
+  }
+  ASSERT_TRUE(found_data);
+  ASSERT_TRUE(found_loss);
+}
+
+TYPED_TEST(NetTest, TestAllInOneNetDeploy) {
+  vector<string> stages;
+  stages.push_back("deploy");
+  this->InitAllInOneNet(caffe::TEST, 0, &stages);
+  bool found_data = false;
+  for (int i = 0; i < this->net_->layers().size(); ++i) {
+    const string& layer_name = this->net_->layer_names()[i];
+    if (layer_name == "deploy-data") {
+      found_data = true;
+    } else {
+      ASSERT_NE(layer_name, "train-data");
+      ASSERT_NE(layer_name, "val-data");
+      ASSERT_NE(layer_name, "loss");
+    }
+  }
+  ASSERT_TRUE(found_data);
 }
 
 }  // namespace caffe

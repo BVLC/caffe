@@ -37,11 +37,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string filename;
+  string line;
+  size_t pos;
   int label;
-  while (infile >> filename >> label) {
-    lines_.push_back(std::make_pair(filename, label));
+  while (std::getline(infile, line)) {
+    pos = line.find_last_of(' ');
+    label = atoi(line.substr(pos + 1).c_str());
+    lines_.push_back(std::make_pair(line.substr(0, pos), label));
   }
+
+  CHECK(!lines_.empty()) << "File is empty";
 
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
