@@ -10,18 +10,22 @@ conda config --add channels willyd
 :: Update conda
 conda update conda -y
 :: Create an environment
+:: Todo create protobuf package for vc14
 conda install --yes cmake ninja numpy scipy protobuf==3.1.0.vc12 six scikit-image
 
 :: Create build directory and configure cmake
 mkdir build
 pushd build
-:: Download dependencies from VS 2013 x64
-python ..\scripts\download_prebuilt_dependencies.py --msvc_version v120
+:: Download dependencies from VS x64
+python ..\scripts\download_prebuilt_dependencies.py --msvc_version v%MSVC_VERSION%0
 :: Add the dependencies to the PATH
 :: Prepending is crucial since the hdf5 dll may conflict with python's
 call %cd%\libraries\prependpath.bat
-:: Setup the environement for VS 2013 x64
-call "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat" amd64
+:: Setup the environement for VS x64
+@setlocal EnableDelayedExpansion
+set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\vcvarsall.bat
+@endlocal & set batch_file=%batch_file%
+call "%batch_file%" amd64
 :: Configure using cmake and using the caffe-builder dependencies
 cmake -G"%CMAKE_GENERATOR%" ^
       -DBLAS=Open ^
