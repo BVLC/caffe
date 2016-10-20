@@ -100,7 +100,7 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -110,7 +110,7 @@ void MKLLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       << "corresponding to (num, channels, height, width)";
 
   bool reshaping = true;
-  if((num_ == bottom[0]->num()) &&
+  if ((num_ == bottom[0]->num()) &&
       channels_ == bottom[0]->channels() &&
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width()) {
@@ -133,7 +133,7 @@ void MKLLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 
   if (reshaping == true) {
-    Init(bottom,top);
+    Init(bottom, top);
   }
 }
 

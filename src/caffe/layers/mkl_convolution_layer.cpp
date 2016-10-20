@@ -317,9 +317,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     bwdb_bias_diff_iter->create_layouts(convolutionBwdBias, dnnResourceDiffBias,
                                         1, bias_sizes, bias_strides);
   }
-
 }
-
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::LayerSetUp(
@@ -327,7 +325,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -341,7 +339,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       this->num_ == bottom[0]->num())
     return;
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>

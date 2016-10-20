@@ -81,15 +81,15 @@ void MKLReLULayer<Dtype>::Init(
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
-  dnnDelete<Dtype>(reluFwd_); // Will be allocated in a "lazy" way in first forward pass
-  dnnDelete<Dtype>(reluBwd_); // Will be allocated in a "lazy" way in first backward pass
+  dnnDelete<Dtype>(reluFwd_);
+  dnnDelete<Dtype>(reluBwd_);
 }
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 //  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
-    Init(bottom, top); 
+    Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -103,23 +103,26 @@ void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // If dimensions of blobs are the same as they were then
   // do not really destroy primitives
   if (dim == this->sizes_.size()) {
-    //.. check for strides and size dims if they corresspond each other
+    // .. check for strides and size dims if they corresspond each other
 
     // TODO: speedup comparison?
     bool is_match = true;
     for (size_t d = 0; d < dim; ++d) {
-        is_match = is_match && (this->sizes_[d] == bottom[0]->shape()[dim - 1 - d]);
-        is_match = is_match && (this->strides_[d] == ((d == 0) ? 1 : this->strides_[d-1]*this->sizes_[d-1]));
+        is_match = is_match && (this->sizes_[d] ==
+                                bottom[0]->shape()[dim - 1 - d]);
+        is_match = is_match && (this->strides_[d] == ((d == 0) ? 1 :
+                                this->strides_[d-1]*this->sizes_[d-1]));
     }
 
     // If no new modification was done to layout sizes,
-    // strides realtivly to previous iteration then no primitives recreation is needed
+    // strides realtivly to previous iteration then
+    // no primitives recreation is needed
     if (is_match) {
       return;
     }
   }
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 

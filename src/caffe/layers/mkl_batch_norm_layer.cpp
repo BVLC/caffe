@@ -93,7 +93,8 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
-  // TODO: Make a cleanup routine to avoid copy of following code in the Destructor
+  // TODO: Make a cleanup routine to avoid
+  // copy of following code in the Destructor
 
   dnnError_t e;
   dnnLayoutDelete<Dtype>(layout_usr_);
@@ -153,15 +154,14 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
   bool reshaping = true;
-  if((num_ == bottom[0]->num()) &&
+  if ((num_ == bottom[0]->num()) &&
       channels_ == bottom[0]->channels() &&
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width()) {
@@ -179,7 +179,7 @@ void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 
   if (reshaping == true) {
-    Init(bottom,top);
+    Init(bottom, top);
   }
 }
 
@@ -323,13 +323,16 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& bottom) {
   void *bottom_data = NULL;
   if (bottom[0] == top[0]) {
-    bottom_data = reinterpret_cast<void *>(const_cast<Dtype*>(temp_.cpu_data()));
+    bottom_data = reinterpret_cast<void *>(
+                        const_cast<Dtype*>(temp_.cpu_data()));
   } else {
     bottom_data =
-            reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
+            reinterpret_cast<void *>(
+                        const_cast<Dtype*>(bottom[0]->prv_data()));
     if (NULL == bottom_data)
       bottom_data =
-            reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
+            reinterpret_cast<void *>(
+                        const_cast<Dtype*>(bottom[0]->cpu_data()));
   }
 
   dnnError_t e;

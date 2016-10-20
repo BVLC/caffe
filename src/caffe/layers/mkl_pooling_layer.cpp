@@ -57,8 +57,7 @@ MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Init(
       const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) 
-{
+      const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
 
   channels_ = bottom[0]->channels();
@@ -200,10 +199,10 @@ void MKLPoolingLayer<Dtype>::Init(
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
 
-  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides,false);
-  fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides,false);
-  bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides,false);
-  bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides,false);
+  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides, false);
+  fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides, false);
+  bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides, false);
+  bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides, false);
   // Primitives will be allocated during the first fwd pass
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
@@ -211,9 +210,8 @@ void MKLPoolingLayer<Dtype>::Init(
 
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) 
-{
-  Init(bottom,top);
+      const vector<Blob<Dtype>*>& top) {
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -229,8 +227,7 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     return;
   }
 
-  Init(bottom,top);
-
+  Init(bottom, top);
 }
 
 template <typename Dtype>
