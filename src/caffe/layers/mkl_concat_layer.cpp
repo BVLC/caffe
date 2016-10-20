@@ -105,6 +105,9 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+  num_ = 0;
+  height_ = 0;
+  width_ = 0;
   Init(bottom,top);
 }
 
@@ -133,10 +136,8 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
   vector<void*> bottom_data;
   bool isFirstPass = (concatFwd_ == NULL);
   dnnLayout_t *layouts = NULL;
-  bool *isBottomDataFilled = NULL;
   if (isFirstPass) {
       layouts = new dnnLayout_t[num_concats_];
-      isBottomDataFilled = new bool[num_concats_]();
   }
 
   for (size_t n = 0; n < num_concats_; n++) {
@@ -148,7 +149,6 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
         reinterpret_cast<void *>(const_cast<Dtype*>(bottom[n]->cpu_data()));
       if (isFirstPass) {
         layouts[n] = fwd_bottom_data_[n]->layout_usr;
-        isBottomDataFilled[n] = true;
       }
     } else if (isFirstPass) {
       CHECK((bottom[n]->get_prv_data_descriptor())->get_descr_type() ==
@@ -175,17 +175,12 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
     CHECK_EQ(e, E_SUCCESS);
 
     for (size_t n = 0; n < num_concats_; ++n) {
-      if (isBottomDataFilled[n]) continue;
-
-      fwd_bottom_data_[n]->create_internal_layout(concatFwd_,
-          (dnnResourceType_t)(dnnResourceMultipleSrc + n));
       bwd_bottom_diff_[n]->create_internal_layout(concatBwd_,
           (dnnResourceType_t)(dnnResourceMultipleDst + n));
     }
   }
 
   delete[] layouts;
-  delete[] isBottomDataFilled;
 
   void *concat_res[dnnResourceNumber];
   for (int n = 0; n < num_concats_; ++n) {
