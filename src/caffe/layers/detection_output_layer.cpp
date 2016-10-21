@@ -253,15 +253,22 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
+  Dtype* top_data;
   if (num_kept == 0) {
     LOG(INFO) << "Couldn't find any detections";
-    top_shape[2] = 1;
+    top_shape[2] = num;
     top[0]->Reshape(top_shape);
-    caffe_set<Dtype>(top[0]->count(), -1, top[0]->mutable_cpu_data());
-    return;
+    top_data = top[0]->mutable_cpu_data();
+    caffe_set<Dtype>(top[0]->count(), -1, top_data);
+    // Generate fake results per image.
+    for (int i = 0; i < num; ++i) {
+      top_data[0] = i;
+      top_data += 7;
+    }
+  } else {
+    top[0]->Reshape(top_shape);
+    top_data = top[0]->mutable_cpu_data();
   }
-  top[0]->Reshape(top_shape);
-  Dtype* top_data = top[0]->mutable_cpu_data();
 
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
