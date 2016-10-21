@@ -5,6 +5,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/mkldnn_engines.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
 #include "mkl_service.h"
 
@@ -12,39 +13,6 @@
 // TODO: Exception handling - mkl-dnn produces exceptions on errors
 
 namespace caffe {
-
-// just a PoC - move to some better location to be used by other layers as well
-std::vector<engine> get_engines(std::string engine_sequence) {
-  std::vector<engine> engines;
-  if (engine_sequence == "") {
-    engines.push_back(CpuEngine::Instance().get_engine());
-  } else {
-    // Assuming engines are separated by #
-    vector<string> engine_names;
-    std::string::size_type prev = 0, pos = 0, last = engine_sequence.size()-1;
-
-    int choice_num = 1;
-    while(pos < last) {
-      pos = engine_sequence.find('#', pos);
-      if (pos == std::string::npos)
-        pos = last+1;
-      std::string current_engine(engine_sequence.substr(prev, pos-prev));
-      LOG(INFO) << "Engine choice #" << choice_num++ << ": " << current_engine;
-
-      if (current_engine == "CPU")
-        engines.push_back(CpuEngine::Instance().get_engine());
-      else if (current_engine == "FPGA")
-        engines.push_back(CpuEngine::Instance().get_engine());  // TBD: change
-      else
-        CHECK(0) << "Unknown engine \"" << current_engine
-                 << "\" in engine_sequence string: \""
-                 << engine_sequence <<"\"";
-
-      prev = ++pos;
-    }
-  }
-  return engines;
-}
 
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
@@ -143,17 +111,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , init_output_md, convolutionStrides
                                     , padding, padding_kind::zero);
 
-    LOG(INFO) << "Engine sequence for " << this->layer_param_.name();
-    vector<engine> engines = get_engines(this->layer_param_.engine_sequence());
-    CHECK(engines.size() != 0);
-    engine engine = engines[0];
-    for(int i = 0; i < engines.size(); i++) {
-      engine = engines[i];
-      convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, engine));
-   // if (success) // TBD: how we'll detect that engine has no support
-        break;
+    EngineSequenceParser esp;
+    esp.parse(this->layer_param_.engine_sequence());
+
+    unsigned numberOfEngines = esp.getNumberOfEngines();
+    for(unsigned engineIndex = 0; engineIndex < numberOfEngines; engineIndex++) {
+
+      try {
+        convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, esp.getEngine(i)));
+      }
+      catch(...) {
+        continue;
+      }
+
+      break;
     }
-    CHECK(convFwd_pd != NULL);
+
+    CHECK(convFwd_pd);
 
     // -- Memory descriptors initialization ------------------------------------------
     // ---- Get memory descriptors from convolution primitive descriptor -------------
