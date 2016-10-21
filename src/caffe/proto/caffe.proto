@@ -811,6 +811,8 @@ message ImageDataParameter {
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
+  // axis of prob.
+  optional int32 axis = 2 [default = 1];
 }
 
 message InnerProductParameter {
