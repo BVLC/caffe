@@ -38,8 +38,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const SaveOutputParameter& save_output_param =
       detection_output_param.save_output_param();
   output_directory_ = save_output_param.output_directory();
-  if (!output_directory_.empty() &&
-      !boost::filesystem::is_directory(output_directory_)) {
+  if (!output_directory_.empty()) {
+    if (boost::filesystem::is_directory(output_directory_)) {
+      boost::filesystem::remove_all(output_directory_);
+    }
     if (!boost::filesystem::create_directories(output_directory_)) {
         LOG(FATAL) << "Failed to create directory: " << output_directory_;
     }
@@ -112,6 +114,11 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     data_transformer_->InitRand();
     save_file_ = detection_output_param.save_file();
   }
+  bbox_preds_.ReshapeLike(*(bottom[0]));
+  if (!share_location_) {
+    bbox_permute_.ReshapeLike(*(bottom[0]));
+  }
+  conf_permute_.ReshapeLike(*(bottom[1]));
 }
 
 template <typename Dtype>
@@ -138,6 +145,18 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
+  if (bbox_preds_.num() != bottom[0]->num() ||
+      bbox_preds_.count(1) != bottom[0]->count(1)) {
+    bbox_preds_.ReshapeLike(*(bottom[0]));
+  }
+  if (!share_location_ && (bbox_permute_.num() != bottom[0]->num() ||
+      bbox_permute_.count(1) != bottom[0]->count(1))) {
+    bbox_permute_.ReshapeLike(*(bottom[0]));
+  }
+  if (conf_permute_.num() != bottom[1]->num() ||
+      conf_permute_.count(1) != bottom[1]->count(1)) {
+    conf_permute_.ReshapeLike(*(bottom[1]));
+  }
   num_priors_ = bottom[2]->height() / 4;
   CHECK_EQ(num_priors_ * num_loc_classes_ * 4, bottom[0]->channels())
       << "Number of priors must match number of location predictions.";

@@ -571,6 +571,16 @@ void GetTopKScoreIndex(const vector<float>& scores, const int top_k,
 void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec);
 
+// Get max scores with corresponding indices.
+//    scores: an array of scores.
+//    num: number of total scores in the array.
+//    threshold: only consider scores higher than the threshold.
+//    top_k: if -1, keep all; otherwise, keep at most top_k.
+//    score_index_vec: store the sorted (score, index) pair.
+template <typename Dtype>
+void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
+      const int top_k, vector<pair<Dtype, int> >* score_index_vec);
+
 // Do non maximum suppression given bboxes and scores.
 //    bboxes: a set of bounding boxes.
 //    scores: a set of corresponding confidences.
@@ -602,6 +612,22 @@ void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices);
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const vector<float>& scores, const float score_threshold,
       const float nms_threshold, const int top_k, vector<int>* indices);
+
+// Do non maximum suppression based on raw bboxes and scores data.
+// Inspired by Piotr Dollar's NMS implementation in EdgeBox.
+// https://goo.gl/jV3JYS
+//    bboxes: an array of bounding boxes.
+//    scores: an array of corresponding confidences.
+//    num: number of total boxes/confidences in the array.
+//    score_threshold: a threshold used to filter detection results.
+//    nms_threshold: a threshold used in non maximum suppression.
+//    eta: adaptation rate for nms threshold (see Piotr's paper).
+//    top_k: if not -1, keep at most top_k picked indices.
+//    indices: the kept indices of bboxes after nms.
+template <typename Dtype>
+void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+      const float eta, const int top_k, vector<int>* indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
