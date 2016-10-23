@@ -176,7 +176,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
           << "Cannot find label: " << label << " in the label map.";
         CHECK_LT(name_count_, names_.size());
       }
-      const Dtype* cur_conf_data = conf_cpu_data + conf_idx + label * num_priors_;
+      const Dtype* cur_conf_data =
+        conf_cpu_data + conf_idx + label * num_priors_;
       const Dtype* cur_bbox_data = bbox_cpu_data + bbox_idx;
       if (!share_location_) {
         cur_bbox_data += label * num_priors_ * 4;
