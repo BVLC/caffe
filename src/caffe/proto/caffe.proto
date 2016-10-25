@@ -33,7 +33,7 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5;
+  optional float label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
@@ -98,7 +98,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 41 (last added: type)
+// SolverParameter next available ID: 44 (last added: terminal_epoch_number)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -173,6 +173,13 @@ message SolverParameter {
   optional float gamma = 9; // The parameter to compute the learning rate.
   optional float power = 10; // The parameter to compute the learning rate.
   optional float momentum = 11; // The momentum value.
+  // Starting momentum value when using varying momentum policy
+  optional float momentum_start = 41; 
+  // Ending momentum value when using varying momentum policy
+  optional float momentum_end = 42;
+  // Epoch number after which momentum stays constant when using varying 
+  // momentum policy
+  optional int32 terminal_epoch_number = 43;
   optional float weight_decay = 12; // The weight decay.
   // regularization types supported: L1 and L2
   // controlled by weight_decay
@@ -660,6 +667,8 @@ message DataParameter {
 
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+  // If set to true scaling will happen during testing instead of training
+  optional bool scale_test = 2 [default = false];
 }
 
 // DummyDataLayer fills any number of arbitrarily shaped blobs with random

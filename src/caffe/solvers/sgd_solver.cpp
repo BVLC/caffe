@@ -62,6 +62,29 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   return rate;
 }
 
+// Computes current value of momentum when using varying momentum policy
+// Returns the fixed momentum value when not using varying momentum policy
+template<typename Dtype>
+Dtype SGDSolver<Dtype>::ComputeCurrentMomentum() {
+  Dtype current_momentum = this->param_.momentum();
+  if(varying_momentum_) {   
+    Dtype momentum_start = this->param_.momentum_start();
+    Dtype momentum_end = this->param_.momentum_end();
+    int terminal_epoch_number = this->param_.terminal_epoch_number();
+    int current_epoch_number = this->iter_ / this->param_.stepsize();
+    if(current_epoch_number < terminal_epoch_number)
+    {
+      Dtype epoch_fraction = Dtype(current_epoch_number) / Dtype(terminal_epoch_number);
+      current_momentum = (epoch_fraction * momentum_end) +
+                         ((1 - epoch_fraction) * momentum_start);                         
+    }
+    else {
+      current_momentum = momentum_end;
+    }
+  }
+  return current_momentum;
+}
+
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
   // Initialize the history
@@ -74,6 +97,16 @@ void SGDSolver<Dtype>::PreSolve() {
     history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
     temp_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+  }
+  // Check whether varying momemtum has to be used
+  if(this->param_.has_momentum_start() && this->param_.has_momentum_end()
+     && this->param_.has_terminal_epoch_number()) {
+    LOG(INFO) << "Using varying momentum";
+    varying_momentum_ = true;
+  }
+  else {
+    LOG(INFO) << "Using fixed momentum";
+    varying_momentum_ = false;
   }
 }
 
@@ -101,9 +134,10 @@ void SGDSolver<Dtype>::ClipGradients() {
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   CHECK(Caffe::root_solver());
-  Dtype rate = GetLearningRate();
+  Dtype rate = GetLearningRate();  
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate
+    << ", momentum = " << ComputeCurrentMomentum();
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->learnable_params().size();
@@ -206,21 +240,28 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 #ifndef CPU_ONLY
 template <typename Dtype>
 void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
-    Dtype local_rate);
+    Dtype local_rate, bool varying_momentum);
 #endif
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
-  Dtype momentum = this->param_.momentum();
+  Dtype momentum = ComputeCurrentMomentum();  
   Dtype local_rate = rate * net_params_lr[param_id];
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+    if(varying_momentum_) {
+      caffe_cpu_axpby(net_params[param_id]->count(), (Dtype(1.) - momentum) * local_rate,
+              net_params[param_id]->cpu_diff(), Dtype(-1.0) * momentum,
+              history_[param_id]->mutable_cpu_data());
+    }
+    else {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
               net_params[param_id]->cpu_diff(), momentum,
               history_[param_id]->mutable_cpu_data());
+    }
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
@@ -231,7 +272,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     sgd_update_gpu(net_params[param_id]->count(),
         net_params[param_id]->mutable_gpu_diff(),
         history_[param_id]->mutable_gpu_data(),
-        momentum, local_rate);
+        momentum, local_rate, varying_momentum_);
 #else
     NO_GPU;
 #endif
