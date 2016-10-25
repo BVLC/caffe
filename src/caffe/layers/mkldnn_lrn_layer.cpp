@@ -45,8 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 
 template <typename Dtype>
-void MKLDNNLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
-                                        ,const vector<Blob<Dtype>*>& top)
+void MKLDNNLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                                       const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::LayerSetUp: " << this->layer_param_.name();
 

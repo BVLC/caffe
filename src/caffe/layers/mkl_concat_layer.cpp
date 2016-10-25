@@ -81,8 +81,14 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 
     split_channels_[i] = bottom[i]->channels();
     channels_ += split_channels_[i];
-    fwd_bottom_data_[i]->create_user_layout(dim_src, sizes_src, strides_src, false);
-    bwd_bottom_diff_[i]->create_user_layout(dim_src, sizes_src, strides_src, false);
+    fwd_bottom_data_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
+    bwd_bottom_diff_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
   }
 
   // XXX: almost the same computations as above for src
@@ -113,11 +119,10 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
-
-  if((num_ == bottom[0]->num()) &&
-      height_ == bottom[0]->height() &&
-      width_ == bottom[0]->width()) {
-      top[0]->Reshape(num_, channels_, height_, width_);
+  if ((num_ == bottom[0]->num()) &&
+       height_ == bottom[0]->height() &&
+       width_ == bottom[0]->width()) {
+       top[0]->Reshape(num_, channels_, height_, width_);
     return;
   }
 
@@ -125,7 +130,7 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
   top[0]->Reshape(num_, channels_, height_, width_);
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>

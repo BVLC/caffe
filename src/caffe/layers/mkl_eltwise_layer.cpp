@@ -50,9 +50,8 @@ MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
 }
 
 template <typename Dtype>
-void MKLEltwiseLayer<Dtype>::Init( const vector<Blob<Dtype>*>& bottom,
+void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top) {
-  
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -82,8 +81,14 @@ void MKLEltwiseLayer<Dtype>::Init( const vector<Blob<Dtype>*>& bottom,
       bwd_bottom_diff.push_back(
         shared_ptr<MKLDiff<Dtype> >(new MKLDiff<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      fwd_bottom_data[i]->create_user_layout(dim_src, sizes_src, strides_src,false);
-      bwd_bottom_diff[i]->create_user_layout(dim_src, sizes_src, strides_src,false);
+      fwd_bottom_data[i]->create_user_layout(dim_src,
+                                             sizes_src,
+                                             strides_src,
+                                             false);
+      bwd_bottom_diff[i]->create_user_layout(dim_src,
+                                             sizes_src,
+                                             strides_src,
+                                             false);
   }
 
   fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src,false);
