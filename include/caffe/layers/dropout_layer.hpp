@@ -73,6 +73,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   /// the scale for undropped inputs at train time @f$ 1 / (1 - p) @f$
   Dtype scale_;
   unsigned int uint_thres_;
+  /// specifies whether scaling has to be done during testing or training phase
+  bool scale_test_;
 };
 
 }  // namespace caffe
