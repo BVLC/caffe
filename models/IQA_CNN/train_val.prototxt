@@ -9,7 +9,7 @@ layer {
   }  
   data_param {
     source: "examples/IQA_dataset/live_fastfading_train_lmdb"
-    batch_size: 50
+    batch_size: 64
     backend: LMDB
   }
 }
@@ -80,8 +80,8 @@ layer {
 layer {
   name: "pooled_output"
   type: "Concat"
-  bottom: "pool_min"
-  bottom: "pool_max"  
+  bottom: "pool_max"
+  bottom: "pool_min"  
   top: "pooled_output"
 }
 layer {
@@ -119,6 +119,16 @@ layer {
   }
 }
 layer {
+  name: "drop"
+  type: "Dropout"
+  bottom: "fc1"
+  top: "fc1"
+  dropout_param {
+    dropout_ratio: 0.5
+    scale_test: true
+  }
+}
+layer {
   name: "fc2"
   type: "InnerProduct"
   bottom: "fc1"
@@ -152,20 +162,11 @@ layer {
     negative_slope: 0
   }
 }
-#layer {
-#  name: "drop"
-#  type: "Dropout"
-#  bottom: "fc2"
-#  top: "fc2"
-#  dropout_param {
-#    dropout_ratio: 0.5
-#  }
-#}
 layer {
   name: "loss"
   type: "SVRLoss"
   bottom: "fc2"
   bottom: "scores"
   top: "loss"
-  loss_weight: 0.005
+  loss_weight: 1
 }
