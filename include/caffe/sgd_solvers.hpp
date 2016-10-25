@@ -26,6 +26,9 @@ class SGDSolver : public Solver<Dtype> {
  protected:
   void PreSolve();
   Dtype GetLearningRate();
+  // Computes current value of momentum when using varying momentum policy
+  // Returns the fixed momentum value when not using varying momentum policy
+  Dtype ComputeCurrentMomentum();
   virtual void ApplyUpdate();
   virtual void Normalize(int param_id);
   virtual void Regularize(int param_id);
@@ -35,13 +38,15 @@ class SGDSolver : public Solver<Dtype> {
   virtual void SnapshotSolverStateToBinaryProto(const string& model_filename);
   virtual void SnapshotSolverStateToHDF5(const string& model_filename);
   virtual void RestoreSolverStateFromHDF5(const string& state_file);
-  virtual void RestoreSolverStateFromBinaryProto(const string& state_file);
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file);  
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
-
+  // flag to identify whether to use varying or fixed momentum
+  // default: fixed momentum
+  bool varying_momentum_;
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
