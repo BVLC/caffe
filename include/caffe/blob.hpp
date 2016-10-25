@@ -229,6 +229,9 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
+  
+  void dump(const char *name);
+  void dumpDiff(const char *name);
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;

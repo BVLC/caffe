@@ -6,6 +6,8 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+using namespace std;
+
 namespace caffe {
 
 template <typename Dtype>
@@ -72,6 +74,36 @@ Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
   : capacity_(0) {
   Reshape(shape);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::dump(const char *name)
+{  
+  int i;
+  ofstream outFile;
+  const Dtype *data = cpu_data();
+  
+  outFile.open(name);
+  for(i = 0; i < count_; i++)
+  {
+    outFile << data[i] << endl;
+  }
+  outFile.close();
+}
+
+template<typename Dtype>
+void Blob<Dtype>::dumpDiff(const char *name)
+{  
+  int i;
+  ofstream outFile;
+  const Dtype *diff = cpu_diff();
+  
+  outFile.open(name);
+  for(i = 0; i < count_; i++)
+  {
+    outFile << diff[i] << endl;
+  }
+  outFile.close();
 }
 
 template <typename Dtype>
