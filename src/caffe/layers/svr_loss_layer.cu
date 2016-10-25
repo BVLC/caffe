@@ -9,18 +9,23 @@ using namespace std;
 ofstream outFile;
 ofstream scoreFile;
 
+#define VALIDATE_
+
 namespace caffe {
 
 template <typename Dtype>
 void SVRLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  #ifdef VALIDATE_
   static int i = 0;  
   
   if(i == 0)
   {
     outFile.open("output_.txt");
     scoreFile.open("scores_.txt");
+    i++;
   }
+  #endif
   int count = bottom[0]->count();
   // Compute (f(x_n;w) - y_n)
   caffe_gpu_sub(
@@ -34,19 +39,13 @@ void SVRLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_asum(count, diff_.gpu_data(), &loss);
   // Scale by (1 / batch_size) i.e. (1 / N)
   loss = loss / bottom[0]->num();
-  top[0]->mutable_cpu_data()[0] = loss;
-  LOG(INFO) << "Output = " << bottom[0]->cpu_data()[0];
-  LOG(INFO) << "True Score = " << bottom[1]->cpu_data()[0];
+  top[0]->mutable_cpu_data()[0] = loss;  
+  #ifdef VALIDATE_
   outFile << bottom[0]->cpu_data()[0] << endl;
   scoreFile << bottom[1]->cpu_data()[0] << endl;
   bottom[0]->gpu_data();
-  bottom[1]->gpu_data();
-  if(i == 12261)
-  {
-    outFile.close();
-    scoreFile.close();
-  }
-  i++;
+  bottom[1]->gpu_data(); 
+  #endif
 }
 
 template <typename Dtype>
@@ -61,7 +60,9 @@ void SVRLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Compute gradient 
     // Remember that gradient of |x| is |x| / x
     caffe_gpu_sign(count, diff_.gpu_data(), bottom_diff);
-    // Scale gradients by loss weight which is mostly (1 / batch size)    
+    // Scale gradients by a reasonable scaling factor (loss_weight in this case) 
+    // so that the gradient propagation does not cause large swings 
+    // (unstable behavior) during training     
     caffe_gpu_scal(count, loss_weight, bottom_diff);
   }
 }
