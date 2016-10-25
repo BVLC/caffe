@@ -2307,7 +2307,7 @@ layer {
 }
 
 layer {
-        bottom: "res5a_b"
+        bottom: "res5a_z"
         bottom: "res5b_branch2c_y"
         top: "res5b"
         name: "res5b"
