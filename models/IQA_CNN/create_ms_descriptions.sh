@@ -5,12 +5,16 @@
 N_ITERS=$1
 DISTORTION_TYPE=$2
 MODEL_DIR=models/IQA_CNN/$DISTORTION_TYPE
+if [ ! -d $MODEL_DIR ]; then
+  mkdir $MODEL_DIR
+fi
 for i in $(seq 1 1 $N_ITERS)
 do
-#  mkdir $MODEL_DIR/$i
-  sed '1s/.*/net: "modelsIQA_CNN${i}train_val.prototxt"/' models/IQA_CNN/solver.prototxt > $MODEL_DIR/$i/solver.prototxt
-#  sed '1s/.*/net: "models/IQA_CNN/$DISTORTION_TYPE/$i/train_val.prototxt"/' models/IQA_CNN/solver.prototxt > $MODEL_DIR/$i/solver.prototxt
-#  sed -i '15s/.*/snapshot_prefix: "models/IQA_CNN/$DISTORTION_TYPE/$i/IQA_CNN_train"/' $MODEL_DIR/$i/solver.prototxt
-#  sed '11s/.*/    source: "examples/IQA_dataset/$DISTORTION_TYPE/live_$DISTORTION_TYPE_train_$i_lmdb"/' models/IQA_CNN/train_val.prototxt > $MODEL_DIR/$i/train_val.prototxt
-#  sed -i '25s/.*/    source: "examples/IQA_dataset/$DISTORTION_TYPE/live_$DISTORTION_TYPE_val_$i_lmdb"/' $MODEL_DIR/$i/train_val.prototxt
+  if [ ! -d $MODEL_DIR/$i ]; then
+    mkdir $MODEL_DIR/$i
+  fi
+  sed "1s/.*/net: \"models\/IQA_CNN\/$DISTORTION_TYPE\/$i\/train_val.prototxt\"/" models/IQA_CNN/solver.prototxt > $MODEL_DIR/$i/solver.prototxt
+  sed -i "15s/.*/snapshot_prefix: \"models\/IQA_CNN\/$DISTORTION_TYPE\/$i\/IQA_CNN_train\"/" $MODEL_DIR/$i/solver.prototxt
+  sed "11s/.*/    source: \"examples\/IQA_dataset\/$DISTORTION_TYPE\/live_${DISTORTION_TYPE}_train_${i}_lmdb\"/" models/IQA_CNN/train_val.prototxt > $MODEL_DIR/$i/train_val.prototxt
+  sed -i "25s/.*/    source: \"examples\/IQA_dataset\/$DISTORTION_TYPE\/live_${DISTORTION_TYPE}_val_${i}_lmdb\"/" $MODEL_DIR/$i/train_val.prototxt
 done

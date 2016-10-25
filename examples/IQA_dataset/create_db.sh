@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 # Create the IQA dataset lmdb inputs
 # N.B. set the path to the IQA dataset train + val data dirs
+# First input argument is the number of database being generated
+# Second input argument is the distortion type
 set -e
 
-EXAMPLE=examples/IQA_dataset
-DISTORTION_TYPE=fastfading
+DISTORTION_TYPE=$2
+EXAMPLE=examples/IQA_dataset/$DISTORTION_TYPE
 DATASET=live
 DATA=data/$DATASET/$DISTORTION_TYPE
 TOOLS=build/tools
@@ -44,7 +46,7 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
     $TRAIN_DATA_ROOT \
-    $DATA/scores_train_$1.txt \
+    $DATA/mappings/scores_train_$1.txt \
     $EXAMPLE/${DATASET}_${DISTORTION_TYPE}_train_$1_lmdb
 
 echo "Creating val lmdb..."
@@ -54,7 +56,7 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
     $VAL_DATA_ROOT \
-    $DATA/scores_val_$1.txt \
+    $DATA/mappings/scores_val_$1.txt \
     $EXAMPLE/${DATASET}_${DISTORTION_TYPE}_val_$1_lmdb
 
 echo "Done."
