@@ -315,8 +315,8 @@ class MKLConcatLayer : public Layer<Dtype> {
         concatFwd_(static_cast<dnnPrimitive_t>(NULL)),
         concatBwd_(static_cast<dnnPrimitive_t>(NULL)),
         fwd_top_data_    (new MKLData<Dtype>()),
-        bwd_top_diff_    (new MKLDiff<Dtype>()) {
-      }
+        bwd_top_diff_    (new MKLDiff<Dtype>()),
+        split_channels_  (NULL) { }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,

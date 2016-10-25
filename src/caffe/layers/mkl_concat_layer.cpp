@@ -46,6 +46,7 @@ namespace caffe {
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
+  delete[] split_channels_;
 }
 
 template <typename Dtype>
@@ -63,6 +64,8 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(bottom[0]->width(), bottom[i]->width());
   }
 
+
+  delete[] split_channels_;
   split_channels_ = new size_t[num_concats_];
   for (size_t i = 0; i < num_concats_; ++i) {
     CHECK_EQ(dim_src, bottom[i]->shape().size());
