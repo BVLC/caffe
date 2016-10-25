@@ -43,6 +43,15 @@ if DEFINED APPVEYOR (
       exit /b 1
     )
 
+    :: Install cuda and disable tests if needed
+    if %WITH_CUDA% == 1 (
+        call %~dp0\appveyor\appveyor_install_cuda.cmd
+        set CPU_ONLY=0
+        set RUN_TESTS=0
+    ) else (
+        set CPU_ONLY=1
+    )
+
     :: Disable the tests in debug config
     if "%CMAKE_CONFIG%" == "Debug" (
         echo Disabling tests on appveyor with config == %CMAKE_CONFIG%
