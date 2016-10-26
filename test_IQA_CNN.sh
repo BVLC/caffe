@@ -1,14 +1,15 @@
 #!/bin/bash
-# Test/Validate the trained IQA CNN networks
-# First argument is the number of networks to test/validate
-# Second argument is the distortion type
+# Test/Validate the trained IQA CNN networks 
+# First argument and Second arguments provide the range of the networks to test/validate
+# Third argument is the distortion type
 OUTDIR=outputs
-NITERS=$1
-DISTORTION_TYPE=$2
+ITER_START=$1
+ITER_END=$2
+DISTORTION_TYPE=$3
 if [ ! -d $OUTDIR ]; then
   mkdir $OUTDIR
 fi
-for i in $(seq 1 1 $NITERS)
+for i in $(seq $ITER_START 1 $ITER_END)
 do
    rm output_.txt
    rm scores_.txt
@@ -16,4 +17,5 @@ do
    cp output_.txt $OUTDIR/output_$i.txt
    cp scores_.txt $OUTDIR/scores_$i.txt
 done
-   
+chown -R msl:msl $OUTDIR
+ 

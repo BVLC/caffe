@@ -6,7 +6,7 @@ clc;
 clear;
 
 % number of trained CNN's being tested
-nNets = 10;
+nNets = 100;
 
 % Create an output file
 out = fopen('outputs/out.txt', 'wt');
