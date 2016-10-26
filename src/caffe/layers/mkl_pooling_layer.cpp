@@ -135,11 +135,11 @@ void MKLPoolingLayer<Dtype>::Init(
     if ((pooled_height_ - 1) * stride_h_ >= bottom[0]->height() + pad_h_) {
       --pooled_height_;
     }
-    if ((pooled_width_ - 1) * stride_w_ >= bottom[0]->height() + pad_w_) {
+    if ((pooled_width_ - 1) * stride_w_ >= bottom[0]->width() + pad_w_) {
       --pooled_width_;
     }
     CHECK_LT((pooled_height_ - 1) * stride_h_, bottom[0]->height() + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->height() + pad_w_);
+    CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->width() + pad_w_);
   }
 
   top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
