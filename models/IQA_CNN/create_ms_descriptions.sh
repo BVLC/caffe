@@ -13,7 +13,7 @@ do
   if [ ! -d $MODEL_DIR/$i ]; then
     mkdir $MODEL_DIR/$i
   fi
-  sed "1s/.*/net: \"models\/IQA_CNN\/$DISTORTION_TYPE\/$i\/train_val.prototxt\"/" models/IQA_CNN/solver.prototxt > $MODEL_DIR/$i/solver.prototxt
+  sed "1s/.*/net: \"models\/IQA_CNN\/$DISTORTION_TYPE\/$i\/train_val.prototxt\"/" models/IQA_CNN/solver_$DISTORTION_TYPE.prototxt > $MODEL_DIR/$i/solver.prototxt
   sed -i "15s/.*/snapshot_prefix: \"models\/IQA_CNN\/$DISTORTION_TYPE\/$i\/IQA_CNN_train\"/" $MODEL_DIR/$i/solver.prototxt
   sed "11s/.*/    source: \"examples\/IQA_dataset\/$DISTORTION_TYPE\/live_${DISTORTION_TYPE}_train_${i}_lmdb\"/" models/IQA_CNN/train_val.prototxt > $MODEL_DIR/$i/train_val.prototxt
   sed -i "25s/.*/    source: \"examples\/IQA_dataset\/$DISTORTION_TYPE\/live_${DISTORTION_TYPE}_val_${i}_lmdb\"/" $MODEL_DIR/$i/train_val.prototxt
