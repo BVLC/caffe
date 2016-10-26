@@ -458,11 +458,7 @@ MKL_EXTERNAL := 0
 BLAS ?= mkl
 ifeq ($(BLAS), mkl)
 	# MKL
-	ICC_ON=0
-	ifneq (,$(findstring icpc,$(CXX)))
-		ICC_ON=1
-	endif
-	RETURN_STRING=$(shell ./external/mkl/prepare_mkl.sh $(ICC_ON))
+	RETURN_STRING=$(shell ./external/mkl/prepare_mkl.sh)
 	MKLROOT=$(firstword $(RETURN_STRING))
 	MKL_LDFLAGS=-l$(word 2, $(RETURN_STRING))
 	MKL_EXTERNAL=$(lastword $(RETURN_STRING))
