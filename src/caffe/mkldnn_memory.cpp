@@ -103,7 +103,7 @@ template <typename Dtype, bool is_diff>
     if (prv_ptr != NULL) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
-            set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd());
+            this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd());
         }
     }
 }
