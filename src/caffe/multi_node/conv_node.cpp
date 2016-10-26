@@ -57,6 +57,12 @@ int ConvClient<Dtype>::Init() {
 
       player->mutable_data_param()->set_batch_size(
                                     batch_size / this->nworkers_);
+    } else if (layer_type == "ImageData") {
+      int batch_size = player->image_data_param().batch_size();
+      CHECK_EQ(batch_size % this->nworkers_, 0)
+              << "batch size should be a multiple of threads";
+      player->mutable_image_data_param()->set_batch_size(
+                                    batch_size / this->nworkers_);
     }
   }
 
