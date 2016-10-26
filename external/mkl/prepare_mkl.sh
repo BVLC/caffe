@@ -38,15 +38,7 @@
 #
 FindLibrary() 
 {
-  case "$1" in
-    intel|1)
-      LOCALMKL=`find $2 -name libmklml_intel.so`   # name of MKL SDL lib
-      ;;
-    *)
-      LOCALMKL=`find $2 -name libmklml_gnu.so`   # name of MKL SDL lib
-      ;;
-  esac
-
+LOCALMKL=`find $1 -name libmklml_intel.so`   # name of MKL lib
 }
 
 GetVersionName()
@@ -81,7 +73,7 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
       wget --no-check-certificate -P $DST $MKLURL -O $DST/$ARCHIVE_BASENAME
       tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
     fi
-  FindLibrary $1 $DST
+  FindLibrary $DST
   MKLROOT=$PWD/`echo $LOCALMKL | sed -e 's/lib.*$//'`
 fi
 # Check what MKL lib we have in MKLROOT
@@ -90,7 +82,7 @@ if [ -z `find $MKLROOT -name libmkl_rt.so -print -quit` ]; then
 
   if [ -z $LOCALMKL ] ; then
 # LOCALMKL is not set, when MKLROOT was set manually and it points to MKLML in correct version
-    FindLibrary $1 $MKLROOT
+    FindLibrary $MKLROOT
   fi
     
   LIBRARIES=`basename $LOCALMKL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`

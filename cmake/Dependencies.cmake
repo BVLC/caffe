@@ -129,12 +129,8 @@ if(NOT APPLE)
     list(APPEND Caffe_LINKER_LIBS ${OpenBLAS_LIB})
   elseif(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
 	#--find mkl in external/mkl
-	set(ICC_ON "0")
 	set(script_cmd "./external/mkl/prepare_mkl.sh" )
-	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-	  set(ICC_ON "1")
-	endif()
-	execute_process(COMMAND ${script_cmd} ${ICC_ON}
+	execute_process(COMMAND ${script_cmd}
 	  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	  RESULT_VARIABLE script_result
 	  OUTPUT_VARIABLE RETURN_STRING)
