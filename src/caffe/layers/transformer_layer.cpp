@@ -1,5 +1,6 @@
 #include <vector>
-
+#include <boost/math/special_functions/sin_pi.hpp>
+#include <boost/math/special_functions/cos_pi.hpp>
 #include "caffe/layers/transformer_layer.hpp"
 
 namespace caffe {
@@ -7,23 +8,31 @@ namespace caffe {
 template <typename Dtype>
 void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
-  std::vector<float> a;
-  for (int i = 0; i < 19*19; ++i){
-    cur_a = 10;
-    a.push_back(cur_a);
-  }
-
-  const Dtype* weight = this->blobs_[0]->cpu_data();
+  TransformerParameter trans_param = this->layer_param_.transformer_param();
+  float rotate_angle = transformer_param.rotate_angle()/180;
+  float cos_v = cos_pi(rotate_angle);
+  float sin_v = sin_pi(rotate_angle);
+  int x, y, new_x, new_y, new_n;
   for (int i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* top_data = top[i]->mutable_cpu_data();
-    for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-          top_data + n * this->top_dim_);
-      if (this->bias_term_) {
-        const Dtype* bias = this->blobs_[1]->cpu_data();
-        this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
+    for (int n = 0; n < bottom[0]->num(); ++n) {
+      for (int c = 0; c < channels_; ++c) {
+        channels_ = bottom[0]->channels();
+        height_ = bottom[0]->height();
+        width_ = bottom[0]->width();
+        int xcenter = (width_-1)/2;
+        int ycenter = (height_-1)/2;
+        const Dtype* bottom_data = bottom[i]->cpu_data();
+        Dtype* top_data = top[i]->mutable_cpu_data();
+        for (int y = 0; y < height_; ++y) {
+          for (int x = 0; x < width_; ++x) {
+            new_x = (int) (x-xcenter)*cos_v-(y-ycenter)*sin_v+xcenter;
+            new_y = (int) (x-xcenter)*sin_v-(y-ycenter)*cos_v+ycenter;
+            new_n = new_y*width_+new_x;
+            top_data[new_n] = bottom_data[n];
+          }
+        }
+        bottom_data += bottom[0]->offset(0, 1);
+        top_data += top[0]->offset(0, 1);
       }
     }
   }
@@ -32,31 +41,31 @@ void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void TransformerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* weight = this->blobs_[0]->cpu_data();
-  Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+  TransformerParameter trans_param = this->layer_param_.transformer_param();
+  float rotate_angle = transformer_param.rotate_angle()/180;
+  float cos_v = cos_pi(-rotate_angle);
+  float sin_v = sin_pi(-rotate_angle);
+  int x, y, new_x, new_y, new_n;
   for (int i = 0; i < top.size(); ++i) {
-    const Dtype* top_diff = top[i]->cpu_diff();
-    const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
-    // Bias gradient, if necessary.
-    if (this->bias_term_ && this->param_propagate_down_[1]) {
-      Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
-      for (int n = 0; n < this->num_; ++n) {
-        this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
-      }
-    }
-    if (this->param_propagate_down_[0] || propagate_down[i]) {
-      for (int n = 0; n < this->num_; ++n) {
-        // gradient w.r.t. weight. Note that we will accumulate diffs.
-        if (this->param_propagate_down_[0]) {
-          this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
-              top_diff + n * this->top_dim_, weight_diff);
+    for (int n = 0; n < bottom[0]->num(); ++n) {
+      for (int c = 0; c < channels_; ++c) {
+        channels_ = top[0]->channels();
+        height_ = top[0]->height();
+        width_ = top[0]->width();
+        int xcenter = (width_-1)/2;
+        int ycenter = (height_-1)/2;
+        const Dtype* top_data = top[i]->cpu_diff();
+        Dtype* bottom_data = bottom[i]->mutable_cpu_diff();
+        for (int y = 0; y < height_; ++y) {
+          for (int x = 0; x < width_; ++x) {
+            new_x = (int) (x-xcenter)*cos_v-(y-ycenter)*sin_v+xcenter;
+            new_y = (int) (x-xcenter)*sin_v-(y-ycenter)*cos_v+ycenter;
+            new_n = new_y*width+new_x;
+            bottom_data[new_n] = top_data[n];
+          }
         }
-        // gradient w.r.t. bottom data, if necessary.
-        if (propagate_down[i]) {
-          this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
-              bottom_diff + n * this->bottom_dim_);
-        }
+        bottom_data += bottom[0]->offset(0, 1);
+        top_data += top[0]->offset(0, 1);
       }
     }
   }

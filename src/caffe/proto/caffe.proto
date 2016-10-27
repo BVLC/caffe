@@ -403,13 +403,13 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
-  optional TranformerParameter transformer_param = 150;
+  optional TransformerParameter transformer_param = 150;
 }
 
 
 // Message that stores parameters used to apply transformation
 // to the feature maps
-message TranformerParameter {
+message TransformerParameter {
   optional uint32 rotate_angle = 1 [default = 0];
   optional bool visualize = 2 [default = false];
 }
