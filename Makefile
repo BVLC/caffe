@@ -282,7 +282,7 @@ endif
 # Current Xcode does not officially support openmp
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	ifneq ($(USE_CUDA), 1)
+	ifeq ($(USE_CUDA), 1)
 		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release [0-9.]*' | tr -d '[a-z ]')
 		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
