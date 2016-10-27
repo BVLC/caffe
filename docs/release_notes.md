@@ -64,10 +64,10 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We build and test Caffe on CentOS (7.0, 7.1, 7.2). 
+We build and test Intel® Distribution of Caffe* on CentOS (7.0, 7.1, 7.2). 
 The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
 
-When updating Caffe, it's best to `make clean` before re-compiling.
+When updating Intel® Distribution of Caffe*, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
@@ -118,15 +118,15 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 ##Building for Intel® Architecture
 
-This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Caffe with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
-This Caffe version is seflcontained. This means that newest version of Intel MKL will be downloaded and installed during compilation of IntelCaffe.
+This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Intel® Distribution of Caffe* with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
+This Caffe version is seflcontained. This means that newest version of Intel MKL will be downloaded and installed during compilation of Intel® Distribution of Caffe*.
 
 * Set `BLAS := mkl` in `Makefile.config`
-* If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
+* If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Intel® Distribution of Caffe* without CUDA.
 
-[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
+[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Intel® Distribution of Caffe* can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
 
-* As default and recommended configuration Caffe is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
+* As default and recommended configuration Intel® Distribution of Caffe* is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
 * Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
 
 * `USE_MKLDNN_AS_DEFAULT_ENGINE := 1` in `Makefile.config` is new integration with new MKLDNN engine. This is experimental solution - not recommended for buissnes users.
@@ -295,3 +295,5 @@ In folder `/examples/imagenet/` we provide scripts and instructions `readme.md` 
 
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE). The BVLC reference models are released for unrestricted use.
 
+***
+ *Other names and brands may be claimed as the property of others

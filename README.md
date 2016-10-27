@@ -20,7 +20,7 @@ Framework development discussions and thorough bug reports are collected on [Iss
 
 Happy brewing!
 
-# Intel Caffe
+# Intel® Distribution of Caffe*
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
 
 ## Building
@@ -43,7 +43,7 @@ limit execution of OpenMP threads to specified cores only.
 Please read [release notes](https://github.com/intel/caffe/blob/master/docs/release_notes.md) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
 ## Multinode Training
-Intel Caffe multinode allows you to execute deep neural network training on multiple machines.
+Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
 
 To understand how it works and read some tutorials, go to our Wiki. Start from https://github.com/intelcaffe/caffe/wiki/Multinode-guide.
 
@@ -59,3 +59,6 @@ Please cite Caffe in your publications if it helps your research:
       Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
       Year = {2014}
     }
+
+***
+ *Other names and brands may be claimed as the property of others
