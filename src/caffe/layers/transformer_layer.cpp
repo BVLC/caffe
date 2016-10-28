@@ -11,7 +11,7 @@ template <typename Dtype>
 void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   TransformerParameter trans_param = this->layer_param_.transformer_param();
-  float rotate_angle = transformer_param.rotate_angle()/180;
+  float rotate_angle = trans_param.rotate_angle()/180;
   float cos_v = boost::math::cos_pi<int>(rotate_angle);
   float sin_v = boost::math::sin_pi<int>(rotate_angle);
   int new_x, new_y, new_n;
@@ -42,7 +42,7 @@ template <typename Dtype>
 void TransformerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   TransformerParameter trans_param = this->layer_param_.transformer_param();
-  float rotate_angle = transformer_param.rotate_angle()/180;
+  float rotate_angle = trans_param.rotate_angle()/180;
   float cos_v = boost::math::cos_pi<int>(-rotate_angle);
   float sin_v = boost::math::sin_pi<int>(-rotate_angle);
   int new_x, new_y, new_n;
