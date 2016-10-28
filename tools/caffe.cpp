@@ -160,6 +160,15 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
   }
 }
 
+// Load the weights from the specified caffemodel(s) into a test net.
+void CopyTestLayers(Net<float>* test_net, const std::string& model_list) {
+  std::vector<std::string> model_names;
+  boost::split(model_names, model_list, boost::is_any_of(",") );
+  for (int i = 0; i < model_names.size(); ++i) {
+    test_net->CopyTrainedLayersFrom(model_names[i]);
+  }
+}
+
 // Translate the signal effect the user specified on the command-line to the
 // corresponding enumeration.
 caffe::SolverAction::Enum GetRequestedAction(
@@ -281,7 +290,7 @@ int test() {
   }
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages);
-  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  CopyTestLayers(&caffe_net, FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   vector<int> test_score_output_id;
