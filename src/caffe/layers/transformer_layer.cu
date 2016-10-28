@@ -15,9 +15,9 @@ void TransformerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   float sin_v = boost::math::sin_pi<int>(rotate_angle);
   int x, y, new_x, new_y, new_n;
   for (int i = 0; i < bottom.size(); ++i) {
-    channels_ = bottom[i]->channels();
-    height_ = bottom[i]->height();
-    width_ = bottom[i]->width();
+    int channels_ = bottom[i]->channels();
+    int height_ = bottom[i]->height();
+    int width_ = bottom[i]->width();
     for (int c = 0; c < channels_; ++c) {
       int xcenter = (width_-1)/2;
       int ycenter = (height_-1)/2;
@@ -47,9 +47,9 @@ void TransformerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int x, y, new_x, new_y, new_n;
   for (int i = 0; i < top.size(); ++i) {
     for (int c = 0; c < channels_; ++c) {
-      channels_ = top[0]->channels();
-      height_ = top[0]->height();
-      width_ = top[0]->width();
+      int channels_ = top[0]->channels();
+      int height_ = top[0]->height();
+      int width_ = top[0]->width();
       int xcenter = (width_-1)/2;
       int ycenter = (height_-1)/2;
       const Dtype* top_data = top[i]->gpu_diff();

@@ -16,9 +16,9 @@ void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   float sin_v = boost::math::sin_pi<int>(rotate_angle);
   int new_x, new_y, new_n;
   for (int i = 0; i < bottom.size(); ++i) {
-    channels_ = bottom[i]->channels();
-    height_ = bottom[i]->height();
-    width_ = bottom[i]->width();
+    int channels_ = bottom[i]->channels();
+    int height_ = bottom[i]->height();
+    int width_ = bottom[i]->width();
     for (int c = 0; c < channels_; ++c) {
       int xcenter = (width_-1)/2;
       int ycenter = (height_-1)/2;
@@ -47,9 +47,9 @@ void TransformerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   float sin_v = boost::math::sin_pi<int>(-rotate_angle);
   int new_x, new_y, new_n;
   for (int i = 0; i < top.size(); ++i) {
-    channels_ = top[i]->channels();
-    height_ = top[i]->height();
-    width_ = top[i]->width();
+    int channels_ = top[i]->channels();
+    int height_ = top[i]->height();
+    int width_ = top[i]->width();
     for (int c = 0; c < channels_; ++c) {
       int xcenter = (width_-1)/2;
       int ycenter = (height_-1)/2;
