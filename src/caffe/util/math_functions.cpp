@@ -115,16 +115,35 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
-void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
-                            const float beta, float* Y) {
-  cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+void caffe_cpu_strided_axpby<float>(const int N,
+    const float alpha, const float* X, const int incx,
+    const float beta, float* Y, const int incy) {
+  cblas_saxpby(N, alpha, X, incx, beta, Y, incy);
 }
 
 template <>
-void caffe_cpu_axpby<double>(const int N, const double alpha, const double* X,
-                             const double beta, double* Y) {
+void caffe_cpu_strided_axpby<double>(const int N,
+    const double alpha, const double* X, const int incx,
+    const double beta, double* Y, const int incy) {
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
+
+template <typename Dtype>
+void caffe_cpu_axpby(const int N,
+                     const Dtype alpha, const Dtype* X,
+                     const Dtype beta, Dtype* Y) {
+    caffe_cpu_strided_axpby(N, alpha, X, Dtype(1), beta, Y, Dtype(1));
+}
+
+template
+void caffe_cpu_axpby<float>(const int N,
+                            const float alpha, const float* X,
+                            const float beta, float* Y);
+
+template
+void caffe_cpu_axpby<double>(const int N,
+                             const double alpha, const double* X,
+                             const double beta, double* Y);
 
 template <>
 void caffe_add<float>(const int n, const float* a, const float* b,
@@ -371,5 +390,28 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
 }
+
+template <>
+float caffe_cpu_strided_nrm2<float>(const int n, const float* x,
+                                    const int inc) {
+  return cblas_snrm2(n, x, inc);
+}
+
+template <>
+double caffe_cpu_strided_nrm2<double>(const int n, const double* x,
+                                      const int inc) {
+  return cblas_dnrm2(n, x, inc);
+}
+
+template <typename Dtype>
+Dtype caffe_cpu_nrm2(const int n, const Dtype* x) {
+    return caffe_cpu_strided_nrm2(n, x, 1);
+}
+
+template
+float caffe_cpu_nrm2<float>(const int n, const float* x);
+
+template
+double caffe_cpu_nrm2<double>(const int n, const double* x);
 
 }  // namespace caffe
