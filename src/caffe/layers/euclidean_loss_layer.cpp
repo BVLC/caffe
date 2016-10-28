@@ -5,6 +5,15 @@
 
 namespace caffe {
 
+
+template <typename Dtype>
+void EuclideanLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  bool has_loss_param = this->layer_param_.has_loss_param();
+  CHECK(!has_loss_param) << "Euclidian Layer does not implement"
+                         << "loss parameters";
+}
+
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
