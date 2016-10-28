@@ -17,11 +17,11 @@ class TransformerLayer : public Layer<Dtype> {
  public:
   explicit TransformerLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  //virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  //    const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "Transformer"; }
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  //virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+  //    const vector<Blob<Dtype>*>& top);
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
