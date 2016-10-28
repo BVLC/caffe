@@ -5,6 +5,12 @@
 
 namespace caffe {
 
+template <typename Dtype>
+void TransformerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Layer<Dtype>::LayerSetUp(bottom, top);
+}
+
 
 template <typename Dtype>
 void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -74,5 +80,4 @@ STUB_GPU(TransformerLayer);
 
 INSTANTIATE_CLASS(TransformerLayer);
 REGISTER_LAYER_CLASS(Transformer);
-
 }  // namespace caffe
