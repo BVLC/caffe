@@ -59,7 +59,7 @@ void TransformerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         for (int x = 0; x < width_; ++x) {
           new_x = (int) (x-xcenter)*cos_v-(y-ycenter)*sin_v+xcenter;
           new_y = (int) (x-xcenter)*sin_v-(y-ycenter)*cos_v+ycenter;
-          new_n = new_y*width+new_x;
+          new_n = new_y*width_+new_x;
           bottom_data[new_n] = top_data[y*width_+x];
         }
       }
