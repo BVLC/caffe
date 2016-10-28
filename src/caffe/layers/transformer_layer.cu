@@ -11,8 +11,8 @@ void TransformerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   TransformerParameter trans_param = this->layer_param_.transformer_param();
   float rotate_angle = transformer_param.rotate_angle()/180;
-  float cos_v = cos_pi(rotate_angle);
-  float sin_v = sin_pi(rotate_angle);
+  float cos_v = boost::math::cos_pi<int>(rotate_angle);
+  float sin_v = boost::math::sin_pi<int>(rotate_angle);
   int x, y, new_x, new_y, new_n;
   for (int i = 0; i < bottom.size(); ++i) {
     for (int n = 0; n < bottom[0]->num(); ++n) {
@@ -44,8 +44,8 @@ void TransformerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   TransformerParameter trans_param = this->layer_param_.transformer_param();
   float rotate_angle = transformer_param.rotate_angle()/180;
-  float cos_v = cos_pi(-rotate_angle);
-  float sin_v = sin_pi(-rotate_angle);
+  float cos_v = boost::math::cos_pi<int>(-rotate_angle);
+  float sin_v = boost::math::sin_pi<int>(-rotate_angle);
   int x, y, new_x, new_y, new_n;
   for (int i = 0; i < top.size(); ++i) {
     for (int n = 0; n < bottom[0]->num(); ++n) {
