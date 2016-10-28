@@ -72,6 +72,7 @@ void TransformerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(TransformerLayer);
 #endif
 
-INSTANTIATE_CLASS(Transformer);
+INSTANTIATE_CLASS(TransformerLayer);
+REGISTER_LAYER_CLASS(Transformer);
 
 }  // namespace caffe

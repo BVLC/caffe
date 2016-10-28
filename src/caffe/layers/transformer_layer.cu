@@ -68,6 +68,6 @@ void TransformerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(Transformer);
+INSTANTIATE_LAYER_GPU_FUNCS(TransformerLayer);
 
 }  // namespace caffe
