@@ -136,11 +136,13 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_LIBDNN
-    engine = PoolingParameter_Engine_LIBDNN;
+    // engine = PoolingParameter_Engine_LIBDNN;
 #endif
   }
   if (engine == PoolingParameter_Engine_LIBDNN) {
+#ifdef USE_LIBDNN
     return shared_ptr<Layer<Dtype> >(new LibDNNPoolingLayer<Dtype>(param));
+#endif  // USE_LIBDNN
   } else if (engine == PoolingParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
       || checkPoolingDilated(param.pooling_param())) {
