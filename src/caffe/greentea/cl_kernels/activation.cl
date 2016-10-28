@@ -106,3 +106,13 @@ __kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp 
     }
   }
 }
+
+__kernel void TEMPLATE(sigmoid_cross_entropy_loss_forward,Dtype)(const int_tp nthreads,
+                                        __global const Dtype* input_data,
+                                        __global const Dtype* target,
+                                        __global Dtype* loss) {
+  for (int_tp i = get_global_id(0); i < nthreads; i += get_global_size(0)) {
+    loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0)) -
+        log(1.0 + exp(input_data[i] - 2.0 * input_data[i] * (input_data[i] >= 0.0)));
+  }
+}
