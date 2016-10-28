@@ -11,6 +11,9 @@ void TransformerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   Layer<Dtype>::LayerSetUp(bottom, top);
 }
 
+template <typename Dtype>
+void TransformerLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
 
 template <typename Dtype>
 void TransformerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

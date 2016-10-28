@@ -7,6 +7,16 @@
 namespace caffe {
 
 template <typename Dtype>
+void TransformerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Layer<Dtype>::LayerSetUp(bottom, top);
+}
+
+template <typename Dtype>
+void TransformerLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+template <typename Dtype>
 void TransformerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   TransformerParameter trans_param = this->layer_param_.transformer_param();
