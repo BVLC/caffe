@@ -1,4 +1,5 @@
 #include <vector>
+
 #include <boost/math/special_functions/sin_pi.hpp>
 #include <boost/math/special_functions/cos_pi.hpp>
 #include "caffe/layers/transformer_layer.hpp"
