@@ -136,7 +136,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_LIBDNN
-    // engine = PoolingParameter_Engine_LIBDNN;
+    engine = PoolingParameter_Engine_LIBDNN;
 #endif
   }
   if (engine == PoolingParameter_Engine_LIBDNN) {
