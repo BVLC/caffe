@@ -284,6 +284,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     // layout_usr = internal layout of weight data on forward convolution
     bwdf2fwd_filter_diff->create_internal_layout(convolutionBwdFilter,
         dnnResourceDiffFilter);
+    bwdf2fwd_filter_diff->remove_user_layout();
     status = dnnLayoutCreateFromPrimitive<Dtype>(
         &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
     CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
@@ -316,9 +317,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     bwdb_bias_diff_iter->create_layouts(convolutionBwdBias, dnnResourceDiffBias,
                                         1, bias_sizes, bias_strides);
   }
-
 }
-
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::LayerSetUp(
@@ -326,7 +325,7 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -340,7 +339,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       this->num_ == bottom[0]->num())
     return;
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>

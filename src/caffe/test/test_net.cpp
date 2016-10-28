@@ -2411,8 +2411,6 @@ TEST_F(FilterNetTest, TestFilterInOutByExcludeMultiRule) {
   this->RunFilterNetTest(input_proto_test, output_proto_test);
 }
 
-
-
 TYPED_TEST(NetTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
@@ -2484,6 +2482,132 @@ TYPED_TEST(NetTest, TestReshape) {
   }
   EXPECT_FALSE(same_spatial_shape);
 }
+
+// TODO: this test should work for Caffe Engine as well
+// but there were problems visible on Intel OpenMP
+// that need to be investigated
+#ifdef MKL2017_SUPPORTED
+// This test is just checking if this
+// configuration does not explode
+TYPED_TEST(NetTest, TestForwardReshapeForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  const string& proto =
+      "name: 'TestNetwork' "
+      " layer {"
+      "   top: 'data'"
+      "   top: 'label'"
+      "   name: 'data'"
+      "   type: 'DummyData'"
+      "   dummy_data_param {"
+      "     shape: { dim: 32 dim: 3 dim: 227 dim: 227 }"
+      "     data_filler {"
+      "       type: 'constant'"
+      "       value: 0.01"
+      "     }"
+      "   }"
+      "   transform_param {"
+      "     mirror: true"
+      "     crop_size: 224"
+      "     mean_value: 104"
+      "     mean_value: 117"
+      "     mean_value: 123"
+      "   }"
+      " }"
+      " layer {"
+      "  bottom: 'data'"
+      "   top: 'conv'"
+      "   name: 'conv1'"
+      "   type: 'Convolution'"
+      "   param {"
+      "     lr_mult: 1"
+      "     decay_mult: 1"
+      "   }"
+      "   convolution_param {"
+      "     "
+      "     num_output: 64"
+      "     engine: MKL2017 "
+      "     pad: 3"
+      "     kernel_size: 7"
+      "     stride: 2"
+      "     weight_filler {"
+      "       type: 'xavier'"
+      "     }"
+      "     bias_term: false"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu1'"
+      "   name: 'relu1'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu2'"
+      "   name: 'relu2'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'relu1'"
+      "   bottom: 'relu2'"
+      "   top: 'concat'"
+      "   name: 'concat'"
+      "   type: 'Concat'"
+      "   concat_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " } "
+      " layer {"
+      "   bottom: 'concat'"
+      "   top: 'lrn'"
+      "   name: 'LRN'"
+      "   type: 'LRN'"
+      "   lrn_param {"
+      "     engine: MKL2017 "
+      "     local_size: 5"
+      "     alpha: 0.0001"
+      "     beta: 0.75"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'lrn'"
+      "   top: 'pooling'"
+      "   name: 'Pooling'"
+      "   type: 'Pooling'"
+      "   pooling_param {"
+      "     engine: MKL2017 "
+      "     kernel_size: 5"
+      "     stride: 2"
+      "     pool: MAX"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'pooling'"
+      "   top: 'bn'"
+      "   name: 'BatchNorm'"
+      "   type: 'BatchNorm'"
+      "   batch_norm_param {"
+      "     engine: MKL2017 "
+      "   }"
+      " }";
+    this->InitNetFromProtoString(proto);
+    this->net_->Forward();
+    shared_ptr<Blob<Dtype> > input_blob = this->net_->blob_by_name("data");
+    input_blob->Reshape(1, 3, 1280, 720);
+    this->net_->Forward();
+}
+#endif
+
+
 
 TYPED_TEST(NetTest, TestSkipPropagateDown) {
   // check bottom_need_backward if propagate_down is true

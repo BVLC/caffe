@@ -46,10 +46,11 @@ namespace caffe {
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
+  delete[] split_channels_;
 }
 
 template <typename Dtype>
-void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
   size_t dim_src = bottom[0]->shape().size();
   size_t dim_dst = dim_src;
@@ -63,6 +64,8 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(bottom[0]->width(), bottom[i]->width());
   }
 
+
+  delete[] split_channels_;
   split_channels_ = new size_t[num_concats_];
   for (size_t i = 0; i < num_concats_; ++i) {
     CHECK_EQ(dim_src, bottom[i]->shape().size());
@@ -81,8 +84,14 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     split_channels_[i] = bottom[i]->channels();
     channels_ += split_channels_[i];
-    fwd_bottom_data_[i]->create_user_layout(dim_src, sizes_src, strides_src);
-    bwd_bottom_diff_[i]->create_user_layout(dim_src, sizes_src, strides_src);
+    fwd_bottom_data_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
+    bwd_bottom_diff_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
   }
 
   // XXX: almost the same computations as above for src
@@ -94,21 +103,37 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       sizes_dst[d] = bottom[0]->shape()[dim_dst - 1 - d];
     strides_dst[d] = (d == 0) ? 1 : strides_dst[d - 1] * sizes_dst[d - 1];
   }
-  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst);
-  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst);
+  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
+  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
 
-  concatFwd_ = NULL;
-  concatBwd_ = NULL;
+  dnnDelete<Dtype>(concatFwd_);
+  dnnDelete<Dtype>(concatBwd_);
+}
+
+template <typename Dtype>
+void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  const vector<Blob<Dtype>*>& top) {
+  num_ = 0;
+  height_ = 0;
+  width_ = 0;
+  Init(bottom,top);
 }
 
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+  if ((num_ == bottom[0]->num()) &&
+       height_ == bottom[0]->height() &&
+       width_ == bottom[0]->width()) {
+       top[0]->Reshape(num_, channels_, height_, width_);
+    return;
+  }
+
   num_ = bottom[0]->num();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-
   top[0]->Reshape(num_, channels_, height_, width_);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -118,10 +143,8 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
   vector<void*> bottom_data;
   bool isFirstPass = (concatFwd_ == NULL);
   dnnLayout_t *layouts = NULL;
-  bool *isBottomDataFilled = NULL;
   if (isFirstPass) {
       layouts = new dnnLayout_t[num_concats_];
-      isBottomDataFilled = new bool[num_concats_]();
   }
 
   for (size_t n = 0; n < num_concats_; n++) {
@@ -133,7 +156,6 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
         reinterpret_cast<void *>(const_cast<Dtype*>(bottom[n]->cpu_data()));
       if (isFirstPass) {
         layouts[n] = fwd_bottom_data_[n]->layout_usr;
-        isBottomDataFilled[n] = true;
       }
     } else if (isFirstPass) {
       CHECK((bottom[n]->get_prv_data_descriptor())->get_descr_type() ==
@@ -160,17 +182,12 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
     CHECK_EQ(e, E_SUCCESS);
 
     for (size_t n = 0; n < num_concats_; ++n) {
-      if (isBottomDataFilled[n]) continue;
-
-      fwd_bottom_data_[n]->create_internal_layout(concatFwd_,
-          (dnnResourceType_t)(dnnResourceMultipleSrc + n));
       bwd_bottom_diff_[n]->create_internal_layout(concatBwd_,
           (dnnResourceType_t)(dnnResourceMultipleDst + n));
     }
   }
 
   delete[] layouts;
-  delete[] isBottomDataFilled;
 
   void *concat_res[dnnResourceNumber];
   for (int n = 0; n < num_concats_; ++n) {
