@@ -85,15 +85,15 @@ If Python is installed the default is to build the python interface and python l
 
 ### Using the MATLAB interface
 
-TODO
+Follow the above procedure and use `-DBUILD_matlab=ON`. Then, you need to add the path to the generated `.mexw64` file to your `PATH` and the folder caffe/matlab to your Matlab search PATH to use matcaffe.
 
 ### Building a shared library
 
 CMake can be used to build a shared library instead of the default static library. To do so follow the above procedure and use `-DBUILD_SHARED_LIBS=ON`. Please note however, that some tests (more specifically the solver related tests) will fail since both the test exectuable and caffe library do not share static objects contained in the protobuf library.
 
-### Running the tests or the caffe exectuable
+### Running the tests or the caffe executable
 
-To run the tests or any caffe exectuable you will have to update your `PATH` to include the directories where the depedencies dlls are located:
+To run the tests or any caffe executable you will have to update your `PATH` to include the directories where the depedencies dlls are located:
 ```
 :: Prepend to avoid conflicts with other libraries with same name
 > set PATH=%CAFFE_DEPENDENCIES%\bin;%CAFFE_DEPENDENCIES%\lib;%CAFFE_DEPENDENCIES%\x64\vc12\bin;%PATH%
