@@ -100,7 +100,7 @@ If Python is installed the default is to build the python interface and python l
 
 ### Using the MATLAB interface
 
-TODO
+Follow the above procedure and use `-DBUILD_matlab=ON`. Then, you need to add the path to the generated `.mexw64` file to your `PATH` and the folder caffe/matlab to your Matlab search PATH to use matcaffe.
 
 
 ### Using the Ninja generator
