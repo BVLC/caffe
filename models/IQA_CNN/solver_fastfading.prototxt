@@ -11,6 +11,6 @@ momentum_start: 0.9
 momentum_end: 0.5
 terminal_epoch_number: 10
 weight_decay: 0.0005
-snapshot: 10000
+snapshot: 5000000
 snapshot_prefix: "models/IQA_CNN/IQA_CNN_train"
 solver_mode: GPU
