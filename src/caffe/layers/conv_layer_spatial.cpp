@@ -913,12 +913,12 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -cl-mad-enable" <<
         " -DKERNEL_WIDTH=" << kernel_w_ <<
         " -DKERNEL_HEIGHT=" << kernel_h_ <<
-        " -DPADDING_LEFT=" << pad_w_ <<
-        " -DPADDING_HEIGHT=" << pad_h_ <<
+        " -D_IWPAD=" << 0 << //pad_w_ <<
+        " -D_IHPAD=" << 0 << //pad_h_ <<
         " -DSTRIDE_X=" << stride_w_ <<
         " -DSTRIDE_Y=" << stride_h_ <<
-        " -DINPUT_WIDTH=" << width_ <<
-        " -DINPUT_HEIGHT=" << height_ <<
+        " -D_IW=" << width_ <<
+        " -D_IH=" << height_ <<
         " -DINPUT_DEPTH=" << channels_ <<
         " -DWIDTH1=" << alignedFilterWidth <<
         " -DOUT_PADDING_LEFT=" << 0 <<
@@ -1048,6 +1048,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -D INPUT_DEPTH=" << channels_ / group_
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << num_output_
+                << " -D_IWPAD=" << 0 //pad_w_
+                << " -D_IHPAD=" << 0 //pad_h_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
                 << " -DINPUT_START_Z=" << 0
                 << " -DFILTER_WIDTH=" << kernel_w_

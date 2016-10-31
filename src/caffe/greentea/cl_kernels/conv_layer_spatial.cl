@@ -311,13 +311,6 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 
 #define activation_function(x) (x)
 
-#if 0
-#define _IW INPUT_WIDTH
-#define _IH INPUT_HEIGHT
-#define _OW OUTPUT_WIDTH
-#define _OH OUTPUT_HEIGHT
-#endif
-
 #define _ID INPUT_DEPTH
 #define _OD NUM_FILTERS
 
@@ -328,14 +321,6 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 #define KERNEL FILTER_WIDTH
 // convolution stride, same for x and y
 #define K_STRIDE STRIDEX
-
-#ifndef IWPAD
-#define IWPAD 0
-#endif
-
-#ifndef IHPAD
-#define IHPAD 0
-#endif
 
 #define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
 
@@ -397,15 +382,25 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 
   uint_tp num_in_batch = fm / _OD;
 
-  uint_tp input_batch_offset = num_in_batch * (_IH + IHPAD) * (_IW + IWPAD) * TOTAL_INPUT_DEPTH_SIZE;
+  uint_tp input_batch_offset = num_in_batch * _IH * _IW * TOTAL_INPUT_DEPTH_SIZE;
   for(int_tp kd = 0; kd < _ID; kd++)
   {
-    in_addr = input_batch_offset + (kd + INPUT_START_Z) * (_IH + IHPAD) * (_IW + IWPAD) + (or*K_STRIDE + INPUT_START_Y) * (_IW + IWPAD) + (oc*K_STRIDE + INPUT_START_X) + lid;
+    int curr_y = or * K_STRIDE + INPUT_START_Y;
+    int curr_x = oc*K_STRIDE + INPUT_START_X + lid;
+    in_addr = input_batch_offset + (kd + INPUT_START_Z) * _IH * _IW + (curr_y - _IHPAD) * _IW + curr_x - _IWPAD;
 
     // read 11x16 input block into registers.
     for(uint_tp reg = 0; reg < IN_BUFFER_SIZE; reg++) {
+#if _IWPAD != 0 || _IHPAD != 0
+      if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && (curr_x >= _IWPAD && curr_x < _IW + _IWPAD))
+        in[reg] = inputs[in_addr];    // read 16 elements
+      else
+        in[reg] = 0;
+      ++curr_y;
+#else
       in[reg] = inputs[in_addr];    // read 16 elements
-      in_addr += (_IW + IWPAD);// move to next row down
+#endif
+      in_addr += _IW;// move to next row down
     }
 
 // PREF could be 4 or 8, could not be other values.
@@ -461,15 +456,10 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 
   }
 
-#ifdef IMAGE_AS_OUTPUT
-  // TODO: no ULT for that one yet!
-  uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD)) * (_OW + OWPAD) * (_OH + OHPAD);// out_addr indexes into start of 16 feature maps.
-#else
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * (_OW + OWPAD) * (_OH + OHPAD);
-#endif
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * _OW * _OH;
 
-  out_addr += or * (_OW + OWPAD) + oc;  // offset for the 4x3 block that this workitem is working on;
+  out_addr += or * _OW + oc;  // offset for the 4x3 block that this workitem is working on;
 
   // we need this address calculation for biases because we support views and batching
   float bias = biases[(fm) % _OD ];
@@ -481,11 +471,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
         // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-#ifdef IMAGE_AS_OUTPUT
-        write_imagef(outputs,(int2)(out_addr + r * (_OW + OWPAD) + c,num_in_batch),activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]));
-#else
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-#endif
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
 #ifndef WRITE_PADDED_VALUES
@@ -493,11 +479,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-#ifdef IMAGE_AS_OUTPUT
-        write_imagef(outputs,(int2)(out_addr + r * (_OW + OWPAD) + c,num_in_batch),activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]));
-#else
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-#endif
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -505,11 +487,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-#ifdef IMAGE_AS_OUTPUT
-        write_imagef(outputs,(int2)(out_addr + r * (_OW + OWPAD) + c,num_in_batch),activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]));
-#else
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-#endif
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -517,11 +495,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-#ifdef IMAGE_AS_OUTPUT
-        write_imagef(outputs,(int2)(c,r*(_OW + OWPAD)),activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]));
-#else
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-#endif
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -568,11 +542,18 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 
   uint_tp num_in_batch = ( fm ) / _OD;
 
-  uint_tp input_batch_offset = num_in_batch * (_IH + IHPAD) * (_IW + IWPAD) * TOTAL_INPUT_DEPTH_SIZE;
+  uint_tp input_batch_offset = num_in_batch * _IH * _IW * TOTAL_INPUT_DEPTH_SIZE;
 
-  in_addr = input_batch_offset + INPUT_START_Z * (_IH + IHPAD) * (_IW + IWPAD) + (or*STRIDEY + INPUT_START_Y) * (_IW + IWPAD) + (oc*STRIDEX + INPUT_START_X)
-            + ( lid / ( TILE_X / 4 ) ) * (_IW + IWPAD) * STRIDEY             // y tile offset
-            + ( lid % ( TILE_X / 4 ) ) * 4 * STRIDEX;                        // x tile offset
+  int curr_y = ( lid / ( TILE_X / 4 ) ) * STRIDEY;
+  int curr_x = ( lid % ( TILE_X / 4 ) ) * 4 * STRIDEX;
+#if _IWPAD != 0 || _IHPAD != 0
+  int saved_y = curr_y;
+#endif
+  in_addr = input_batch_offset + INPUT_START_Z * _IH * _IW
+            + (or*STRIDEY + INPUT_START_Y) * _IW
+            + (oc*STRIDEX + INPUT_START_X)
+            +  (curr_y - _IHPAD) * _IW             // y tile offset
+            +   curr_x - _IWPAD;                        // x tile offset
 
   for(int_tp kd = 0; kd < _ID; kd++)
   {
@@ -594,10 +575,34 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     #error too large invec_num.
 #endif
       {
+#if _IWPAD != 0 || _IHPAD != 0
+        if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x + 3 >= _IWPAD && curr_x < _IW + _IWPAD) {
+          in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
+          if (curr_x + 2 >= _IWPAD)
+            in_buf.in_vec[reg].s2 = 0;
+          if (curr_x + 1 >= _IWPAD)
+            in_buf.in_vec[reg].s1 = 0;
+          if (curr_x >= _IWPAD)
+            in_buf.in_vec[reg].s0 = 0;
+          if (curr_x + 1 < _IW + _IWPAD)
+            in_buf.in_vec[reg].s1 = 0;
+          if (curr_x + 2 < _IW + _IWPAD)
+            in_buf.in_vec[reg].s2 = 0;
+          if (curr_x + 3 < _IW + _IWPAD);
+            in_buf.in_vec[reg].s3 = 0;
+        } else {
+          in_buf.in_vec[reg] = 0;
+        }
+        curr_y += TILE_Y_STRIDE;
+#else
         in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
-        in_offset += (_IW + IWPAD) * TILE_Y_STRIDE;
+#endif
+        in_offset += _IW * TILE_Y_STRIDE;
       });
-    in_addr += (_IH + IHPAD) * (_IW + IWPAD);
+    in_addr += _IH * _IW;
+#if _IWPAD != 0 || _IHPAD != 0
+    curr_y = saved_y;
+#endif
 
 // PREF could be 4 or 8, could not be other values.
 #define WEIGHT_PREF 8
@@ -655,9 +660,9 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   }
 
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * (_OW + OWPAD) * (_OH + OHPAD);
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * _OW * _OH;
 
-  out_addr += or * (_OW + OWPAD) + oc;  // offset for the 4x3 block that this workitem is working on;
+  out_addr += or * _OW + oc;  // offset for the 4x3 block that this workitem is working on;
 
   // we need this address calculation for biases because we support views and batching
   float bias = biases[(fm) % _OD ];
@@ -669,7 +674,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
         // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
 #ifndef WRITE_PADDED_VALUES
@@ -677,7 +682,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -685,7 +690,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -693,7 +698,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * (_OW + OWPAD) + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -791,10 +796,17 @@ __kernel void Conv_Interleaved(
     // Src0 (patch input) is directly used as atile.
     // Each work item points to the start of a different patch.
     // atile is M rows x K columns.
+
+    int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;
+    int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;
+#if _IHPAD != 0 || _IWPAD != 0
+    int saved_y = curr_y;
+#endif
     const __global float *src0_read = src0
      + ALIGNED_INPUT_SIZE * global_z                            // batch offset
-     + ( ( global_y / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )      // y offset
-     + ( ( global_y % OUT_WIDTH ) * STRIDE_X );                 // x offset
+     + (curr_y - _IHPAD) * ROW_PITCH      // y offset
+     + (curr_x - _IWPAD);                 // x offset
+
 
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
@@ -821,6 +833,9 @@ __kernel void Conv_Interleaved(
     do
     {
         int patch_row = 0;
+#if _IHPAD != 0 || _IWPAD != 0
+        curr_y = saved_y;
+#endif
         do
         {
             // Load atile and btile.
@@ -834,8 +849,23 @@ __kernel void Conv_Interleaved(
             // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
             // ...
             const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-            float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ]; src0_read += ROW_PITCH;
+#if _IWPAD == 0 && _IHPAD == 0
+            float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];
             float*  pblockA00 = (float*)(&blockA00);
+#else
+            float_t blockA00;
+            float*  pblockA00 = (float*)(&blockA00);
+            int pos;
+            LOOP(KERNEL_WIDTH, pos,
+            {
+              if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x >= _IWPAD && curr_x < _IW + _IWPAD)
+                pblockA00[pos] = src0_read[pos];
+              else
+                pblockA00[pos] = 0;
+            })
+            curr_y++;
+#endif
+            src0_read += ROW_PITCH;
 
             float blockB00[KERNEL_WIDTH*4];
             float8* p8BlockB00 = (float8*)blockB00;
@@ -1024,14 +1054,22 @@ __kernel void Conv_Interleaved(
     // Src0 (patch input) is directly used as atile.
     // Each work item points to the start of a different patch.
     // atile is M rows x K columns.
+    int curr_x0 = ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X;
+    int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;
+    int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;
+    int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;
+#if _IHPAD != 0 || _IWPAD != 0
+    int saved_y0 = curr_y0;
+    int saved_y1 = curr_y1;
+#endif
     const __global float *src0_read0 = src0
      + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
-     + ( ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )   // y offset
-     + ( ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X );                // x offset
+     + (curr_y0 - _IHPAD) * ROW_PITCH   // y offset
+     + curr_x0 - _IWPAD;                // x offset
     const __global float *src0_read1 = src0
      + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
-     + ( ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * ROW_PITCH * STRIDE_Y )   // y offset
-     + ( ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X );                // x offset
+     + (curr_y1 - _IHPAD) * ROW_PITCH   // y offset
+     + curr_x1 - _IWPAD;                // x offset
 
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
@@ -1071,11 +1109,33 @@ __kernel void Conv_Interleaved(
             // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
             // ...
             const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
+#if _IHPAD == 0 && _IWPAD == 0
             float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;
             float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;
             float*  pblockA00 = (float*)(&blockA00);
             float*  pblockA01 = (float*)(&blockA01);
-
+#else
+            float_t blockA00;
+            float*  pblockA00 = (float*)(&blockA00);
+            int pos;
+            LOOP(KERNEL_WIDTH, pos,
+            {
+              if (curr_y0 >= _IHPAD && curr_y0 < _IH + _IHPAD && curr_x0 >= _IWPAD && curr_x0 < _IW + _IWPAD)
+                pblockA00[pos] = src0_read0[pos];
+              else
+                pblockA00[pos] = 0;
+            })
+            curr_y0++;
+            float*  pblockA01 = (float*)(&blockA01);
+            LOOP(KERNEL_WIDTH, pos,
+            {
+              if (curr_y1 >= _IHPAD && curr_y1 < _IH + _IHPAD && curr_x1 >= _IWPAD && curr_x1 < _IW + _IWPAD)
+                pblockA01[pos] = src0_read1[pos];
+              else
+                pblockA01[pos] = 0;
+            })
+            curr_y1++;
+#endif
             float blockB00[KERNEL_WIDTH*4];
             float8* p8BlockB00 = (float8*)blockB00;
             float4* p4BlockB00 = (float4*)blockB00;
@@ -1132,7 +1192,10 @@ __kernel void Conv_Interleaved(
 
         //while( ++patch_row < 1 ); //debug
         while( ++patch_row < KERNEL_HEIGHT );
-
+#if _IWPAD != 0 || _IHPAD != 0
+        curr_y0 = saved_y0;
+        curr_y1 = saved_y1;
+#endif
         src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
         src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
     }
