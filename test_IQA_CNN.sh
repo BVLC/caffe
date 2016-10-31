@@ -18,4 +18,3 @@ do
    cp scores_.txt $OUTDIR/scores_$i.txt
 done
 chmod -R a+rw $OUTDIR
- 
