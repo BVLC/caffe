@@ -13,9 +13,9 @@ for i in $(seq $ITER_START 1 $ITER_END)
 do
    rm output_.txt
    rm scores_.txt
-   ./build/tools/caffe test --weights=models/IQA_CNN/$DISTORTION_TYPE/$i/IQA_CNN_train_iter_33333.caffemodel --model=models/IQA_CNN/$DISTORTION_TYPE/$i/train_val.prototxt --iterations=12000 --gpu=all
+   ./build/tools/caffe test --weights=models/IQA_CNN/$DISTORTION_TYPE/$i/IQA_CNN.caffemodel --model=models/IQA_CNN/$DISTORTION_TYPE/$i/train_val.prototxt --iterations=12000 --gpu=all
    cp output_.txt $OUTDIR/output_$i.txt
    cp scores_.txt $OUTDIR/scores_$i.txt
 done
-chown -R msl:msl $OUTDIR
+chmod -R a+rw $OUTDIR
  
