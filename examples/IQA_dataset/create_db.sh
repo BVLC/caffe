@@ -54,7 +54,6 @@ echo "Creating val lmdb..."
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
-    --shuffle \
     $VAL_DATA_ROOT \
     $DATA/mappings/scores_val_$1.txt \
     $EXAMPLE/${DATASET}_${DISTORTION_TYPE}_val_$1_lmdb
