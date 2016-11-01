@@ -404,13 +404,20 @@ message LayerParameter {
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
   optional TransformerParameter transformer_param = 150;
+  optional TransformerConvParameter trans_conv_param = 151;
+}
+
+
+message TransformerParameter {
+  optional uint32 rotate_angle = 1 [default = 0];
+  optional bool visualize = 2 [default = false];
 }
 
 
 // Message that stores parameters used to apply transformation
 // to the feature maps
 message TransformerParameter {
-  optional uint32 rotate_angle = 1 [default = 0];
+  optional uint32 action = 1 [default = 0];//0 for rotations, 1 for flip
   optional bool visualize = 2 [default = false];
 }
 
