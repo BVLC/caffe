@@ -318,10 +318,6 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 #define NUM_INPUT INPUT_DEPTH
 #define NUM_OUTPUT NUM_FILTERS
 
-#define KERNEL FILTER_WIDTH
-// convolution stride, same for x and y
-#define K_STRIDE STRIDEX
-
 #define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
 
 #ifndef MASTER_OUT_BLOCK_WIDTH
@@ -339,173 +335,13 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 // NOTE: this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
 #ifdef SIMD16
 
+#define TILE_X ((((OUT_BLOCK_WIDTH - 1) * STRIDEX + KERNEL_WIDTH) + 3) & ~3)
+#define TILE_Y ((OUT_BLOCK_HEIGHT - 1) * STRIDEY + KERNEL_HEIGHT)
 
-#define TILE_X ((OUT_BLOCK_WIDTH - 1) * STRIDEX + KERNEL)
-#define TILE_Y ((OUT_BLOCK_HEIGHT - 1) * STRIDEY + KERNEL)
-
-#if (TILE_X % 4) != 0
-__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
-kernel void
-convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
-    __global float* inputs_base,
-    filter_qualifier float* weights_base,
-    __global float* biases_base,
-    __global float* outputs_base,
-    const ushort _IW,
-    const ushort _IH,
-    const ushort _OW,
-    const ushort _OH)
-{
-  __global float* outputs = outputs_base;
-  __global float* inputs = inputs_base;
-  filter_qualifier float* weights = weights_base;
-  __global float* biases = biases_base;
-
-  uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
-  uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
-  uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
-  uint_tp fmg = get_group_id(2);
-  uint_tp lid = get_local_id(2);
-
-  float in[IN_BUFFER_SIZE];// load 11x16 block of input data, really only need 11x15 for 4x6 outputs, but keep it simple.
-  //float out[24]; // 4x6 block of outputs that is SIMD_SIZE deep (along the Feature Map dimension).
-  float out[OUT_BLOCK_SIZE];
-
-  uint_tp in_addr;
-
-  // find weights adress of given neuron (lid is index)
-  uint_tp weight_addr = (fmg % (_OD/SIMD_SIZE)) * INPUT_DEPTH * KERNEL * KERNEL * SIMD_SIZE + lid;
-
-  for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {
-    out[i]=0.0f;
-  }
-
-  uint_tp num_in_batch = fm / _OD;
-
-  uint_tp input_batch_offset = num_in_batch * _IH * _IW * TOTAL_INPUT_DEPTH_SIZE;
-  for(int_tp kd = 0; kd < _ID; kd++)
-  {
-    int curr_y = or * K_STRIDE + INPUT_START_Y;
-    int curr_x = oc*K_STRIDE + INPUT_START_X + lid;
-    in_addr = input_batch_offset + (kd + INPUT_START_Z) * _IH * _IW + (curr_y - _IHPAD) * _IW + curr_x - _IWPAD;
-
-    // read 11x16 input block into registers.
-    for(uint_tp reg = 0; reg < IN_BUFFER_SIZE; reg++) {
-#if _IWPAD != 0 || _IHPAD != 0
-      if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && (curr_x >= _IWPAD && curr_x < _IW + _IWPAD))
-        in[reg] = inputs[in_addr];    // read 16 elements
-      else
-        in[reg] = 0;
-      ++curr_y;
-#else
-      in[reg] = inputs[in_addr];    // read 16 elements
-#endif
-      in_addr += _IW;// move to next row down
-    }
-
-// PREF could be 4 or 8, could not be other values.
-#define WEIGHT_PREF 8
-    union {
-      float w[WEIGHT_PREF];
-      uint8 ui8;
-    } weight_buf;
-    int_tp w_idx=0;
-
-    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
-    uint_tp orig_weight_addr = weight_addr;
-    weight_addr += SIMD_SIZE * WEIGHT_PREF;
-
-    int_tp kr = 0;  // kr = Kernel Row
-    LOOP(KERNEL, kr,// LOOP is a macro that unrolls the loop.
-        {
-          int_tp kc = 0;  // kc = Kernel Column
-          LOOP(KERNEL, kc,
-              {
-                for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
-                  for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
-                    float input = intel_sub_group_shuffle( in[br * K_STRIDE + kr], bc * K_STRIDE + kc);
-                    out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
-                  }
-                }
-                // We assume KERNEL_W is equal to KERNEL_H here.
-                if ((w_idx + 1) % WEIGHT_PREF == 0
-                    #if KERNEL*KERNEL % 8 != 0
-                    && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
-                    #endif
-                    ) {
-                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
-                  weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
-                }
-              #if KERNEL*KERNEL % 8 == 0
-                // need to do nothing
-              #else
-                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
-                #if KERNEL*KERNEL % 8 == 1
-                  weight_buf.w[0] = weights[weight_addr];
-                #elif KERNEL*KERNEL % 4 == 0
-                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
-                #else
-                // should never be here if kernel_w equal to kernel_h. just in case.
-                #error unsupported kernel size.
-                #endif
-              #endif
-                ++w_idx;
-              });
-        });
-    weight_addr = orig_weight_addr + KERNEL * KERNEL * SIMD_SIZE;
-
-  }
-
-  // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * _OW * _OH;
-
-  out_addr += or * _OW + oc;  // offset for the 4x3 block that this workitem is working on;
-
-  // we need this address calculation for biases because we support views and batching
-  float bias = biases[(fm) % _OD ];
-#ifndef WRITE_PADDED_VALUES
-  if(get_global_id(0) != (get_global_size(0)-1) &&
-      get_global_id(1) != (get_global_size(1)-1) )
-  {
-#endif
-    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-#ifndef WRITE_PADDED_VALUES
-  } else if ( get_global_id(1) != (get_global_size(1)-1) )
-  {
-    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-  else if ( get_global_id(0) != (get_global_size(0)-1) )
-  {
-    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-  else
-  {
-    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-#endif //#ifndef WRITE_PADDED_VALUES
-}
-#endif
-
-#if TILE_X % 4 == 0
 #define TILE_Y_STRIDE (64 / TILE_X)
 #define INVEC_NUM ((TILE_Y + TILE_Y_STRIDE - 1) / TILE_Y_STRIDE)
+
+#define ALIGNED_OD ((_OD + 15) & ~15)
 __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
@@ -531,37 +367,35 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 
   float out[OUT_BLOCK_SIZE];
 
-  uint_tp in_addr;
+  int_tp in_addr;
 
   // find weights adress of given neuron (lid is index)
-  uint_tp weight_addr = (fmg % (_OD/SIMD_SIZE)) * INPUT_DEPTH * KERNEL * KERNEL * SIMD_SIZE + lid;
+  uint_tp weight_addr = (fmg % (ALIGNED_OD/SIMD_SIZE)) * INPUT_DEPTH * KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE + lid;
 
   for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {
     out[i]=0.0f;
   }
 
-  uint_tp num_in_batch = ( fm ) / _OD;
+  uint_tp num_in_batch = ( fm ) / ALIGNED_OD;
 
   uint_tp input_batch_offset = num_in_batch * _IH * _IW * TOTAL_INPUT_DEPTH_SIZE;
 
-  int curr_y = ( lid / ( TILE_X / 4 ) ) * STRIDEY;
-  int curr_x = ( lid % ( TILE_X / 4 ) ) * 4 * STRIDEX;
+  int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );
+  int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;
 #if _IWPAD != 0 || _IHPAD != 0
   int saved_y = curr_y;
 #endif
   in_addr = input_batch_offset + INPUT_START_Z * _IH * _IW
-            + (or*STRIDEY + INPUT_START_Y) * _IW
-            + (oc*STRIDEX + INPUT_START_X)
             +  (curr_y - _IHPAD) * _IW             // y tile offset
             +   curr_x - _IWPAD;                        // x tile offset
+  union {
+    float4 in_vec[INVEC_NUM];
+    float in_array[INVEC_NUM * 4];
+  } in_buf;
 
   for(int_tp kd = 0; kd < _ID; kd++)
   {
-    union {
-      float4 in_vec[INVEC_NUM];
-      float in_array[INVEC_NUM * 4];
-    } in_buf;
-    uint_tp in_offset = in_addr;
+    int_tp in_offset = in_addr;
     int_tp reg = 0;
 #if INVEC_NUM == 1
     LOOP(1, reg,
@@ -577,19 +411,26 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
       {
 #if _IWPAD != 0 || _IHPAD != 0
         if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x + 3 >= _IWPAD && curr_x < _IW + _IWPAD) {
-          in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
-          if (curr_x + 2 >= _IWPAD)
-            in_buf.in_vec[reg].s2 = 0;
-          if (curr_x + 1 >= _IWPAD)
-            in_buf.in_vec[reg].s1 = 0;
-          if (curr_x >= _IWPAD)
+          if (curr_x < _IWPAD) {
             in_buf.in_vec[reg].s0 = 0;
-          if (curr_x + 1 < _IW + _IWPAD)
-            in_buf.in_vec[reg].s1 = 0;
-          if (curr_x + 2 < _IW + _IWPAD)
-            in_buf.in_vec[reg].s2 = 0;
-          if (curr_x + 3 < _IW + _IWPAD);
-            in_buf.in_vec[reg].s3 = 0;
+            if (curr_x + 1 >= _IWPAD)
+              in_buf.in_vec[reg].s1 = *(inputs + in_offset + 1);
+            else
+              in_buf.in_vec[reg].s1 = 0;
+            if (curr_x + 2 >= _IWPAD)
+              in_buf.in_vec[reg].s2 = *(inputs + in_offset + 2);
+            else
+              in_buf.in_vec[reg].s2 = 0;
+            in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);
+          } else {
+            in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
+            if (curr_x + 1 >= _IW + _IWPAD)
+              in_buf.in_vec[reg].s1 = 0;
+            if (curr_x + 2 >= _IW + _IWPAD)
+              in_buf.in_vec[reg].s2 = 0;
+            if (curr_x + 3 >= _IW + _IWPAD)
+              in_buf.in_vec[reg].s3 = 0;
+          }
         } else {
           in_buf.in_vec[reg] = 0;
         }
@@ -619,51 +460,58 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 #define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))
 
     int_tp kr = 0;  // kr = Kernel Row
-    LOOP(KERNEL, kr,// LOOP is a macro that unrolls the loop.
+    LOOP(KERNEL_HEIGHT, kr,// LOOP is a macro that unrolls the loop.
         {
           int_tp kc = 0;  // kc = Kernel Column
-          LOOP(KERNEL, kc,
+          LOOP(KERNEL_WIDTH, kc,
               {
                 for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
                   for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
-                    float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);//intel_sub_group_shuffle( in[br * K_STRIDE + kr], bc * K_STRIDE + kc);
+                    float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);
+                    //if (fm == 0 && oc == 0 && br == 1 && bc == 1 && num_in_batch == 0)
+                    //  printf("TILE_X %d TILE_Y_STRIDE %d out %d %d ch %d fm %d input %d %d %f %f :", TILE_X, TILE_Y_STRIDE, br, bc, kd, fm, br * STRIDEY + kr, bc * STRIDEX + kc, input, weight_buf.w[w_idx % WEIGHT_PREF]);
                     out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
                   }
                 }
                 // We assume KERNEL_W is equal to KERNEL_H here.
                 if ((w_idx + 1) % WEIGHT_PREF == 0
-                #if KERNEL*KERNEL % 8 != 0
-                && ((w_idx + 1) <= (KERNEL * KERNEL - WEIGHT_PREF))
+                #if KERNEL_WIDTH * KERNEL_HEIGHT % 8 != 0
+                && ((w_idx + 1) <= (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF))
                 #endif
                     ) {
                   weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                   weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.
                 }
-              #if KERNEL*KERNEL % 8 == 0
+              #if KERNEL_WIDTH*KERNEL_HEIGHT % 8 == 0
                 // need to do nothing
               #else
-                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL * KERNEL - WEIGHT_PREF)))
-                #if KERNEL*KERNEL % 8 == 1
+                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF)))
+                #if KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 1
                   weight_buf.w[0] = weights[weight_addr];
-                #elif KERNEL*KERNEL % 4 == 0
+                #elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 2
+                  weight_buf.ui8.s01 = intel_sub_group_block_read2((__global uint *)&weights[weight_addr]);
+                #elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 <= 4
                   weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);
                 #else
-                // should never be here if kernel_w equal to kernel_h. just in case.
-                #error unsupported kernel size.
+                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                 #endif
               #endif
                 ++w_idx;
               });
         });
-    weight_addr = orig_weight_addr + KERNEL * KERNEL * SIMD_SIZE;
+    weight_addr = orig_weight_addr + KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE;
 
+  }
+  if (ALIGNED_OD != _OD && fm > 0xfffffffeul) {
+    printf("%f", BLOCK_IN(fm % 16));
   }
 
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % _OD) ) * _OW * _OH;
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_OD) ) * _OW * _OH;
 
   out_addr += or * _OW + oc;  // offset for the 4x3 block that this workitem is working on;
 
+  if (ALIGNED_OD == _OD || (fm % ALIGNED_OD) < _OD) {
   // we need this address calculation for biases because we support views and batching
   float bias = biases[(fm) % _OD ];
 #ifndef WRITE_PADDED_VALUES
@@ -703,10 +551,9 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     }
   }
 #endif //#ifndef WRITE_PADDED_VALUES
+  }
 }
 #endif // Stride > 2
-#endif
-
 #endif
 
 /*******************************************************************************
@@ -855,10 +702,10 @@ __kernel void Conv_Interleaved(
 #else
             float_t blockA00;
             float*  pblockA00 = (float*)(&blockA00);
-            int pos;
+            int pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x >= _IWPAD && curr_x < _IW + _IWPAD)
+              if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x + pos >= _IWPAD && curr_x + pos < _IW + _IWPAD)
                 pblockA00[pos] = src0_read[pos];
               else
                 pblockA00[pos] = 0;
@@ -1117,24 +964,28 @@ __kernel void Conv_Interleaved(
 #else
             float_t blockA00;
             float*  pblockA00 = (float*)(&blockA00);
-            int pos;
+            int pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y0 >= _IHPAD && curr_y0 < _IH + _IHPAD && curr_x0 >= _IWPAD && curr_x0 < _IW + _IWPAD)
+              if (curr_y0 >= _IHPAD && curr_y0 < _IH + _IHPAD && curr_x0 + pos >= _IWPAD && curr_x0 + pos< _IW + _IWPAD)
                 pblockA00[pos] = src0_read0[pos];
               else
                 pblockA00[pos] = 0;
             })
             curr_y0++;
+            float_t blockA01;
             float*  pblockA01 = (float*)(&blockA01);
+            pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y1 >= _IHPAD && curr_y1 < _IH + _IHPAD && curr_x1 >= _IWPAD && curr_x1 < _IW + _IWPAD)
+              if (curr_y1 >= _IHPAD && curr_y1 < _IH + _IHPAD && curr_x1 + pos >= _IWPAD && curr_x1 + pos < _IW + _IWPAD)
                 pblockA01[pos] = src0_read1[pos];
               else
                 pblockA01[pos] = 0;
             })
             curr_y1++;
+            src0_read0 += ROW_PITCH;
+            src0_read1 += ROW_PITCH;
 #endif
             float blockB00[KERNEL_WIDTH*4];
             float8* p8BlockB00 = (float8*)blockB00;
