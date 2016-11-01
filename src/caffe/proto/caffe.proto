@@ -408,7 +408,7 @@ message LayerParameter {
 }
 
 
-message TransformerParameter {
+message TransformerConvParameter {
   optional uint32 rotate_angle = 1 [default = 0];
   optional bool visualize = 2 [default = false];
 }
