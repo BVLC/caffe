@@ -93,7 +93,7 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage.
   spatial_col_buffer_.Reshape(this->num_, this->channels_, height_ + 2 * pad_h_,
                       width_ + 2 * pad_w_);
-  swizzled_weights_.Reshape(this->num_output_, this->channels_,
+  swizzled_weights_.Reshape((this->num_output_ + 15) & ~15, this->channels_,
                             kernel_h_, (kernel_w_ + 1) & ~1);
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (this->bias_term_) {
@@ -179,17 +179,28 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 #define ADJUST_INPUT_IMAGE_SIZE(x) (x)  // ((x) > 16 * 16 ? 256 : (x))
 
 template<>
-void ConvolutionLayerSpatial<float>::generate_key() {
+void ConvolutionLayerSpatial<float>::generate_key(bool need_padding) {
   std::stringstream keyBuilder;
   int adjusted_width;
   int adjusted_height;
+  if (need_padding) {
+    adjusted_width = ADJUST_INPUT_IMAGE_SIZE(padded_width_);
+    adjusted_height = ADJUST_INPUT_IMAGE_SIZE(padded_height_);
+  } else {
+    adjusted_width = width_;
+    adjusted_height = height_;
+  }
+
   adjusted_width = ADJUST_INPUT_IMAGE_SIZE(padded_width_);
   adjusted_height = ADJUST_INPUT_IMAGE_SIZE(padded_height_);
   keyBuilder << kernel_w_ << "_" << kernel_h_ << "_" << channels_ << "_"
              << group_ << "_" << stride_h_ << "_" << stride_w_ << "_"
              << bias_term_ << "_" << adjusted_width << "_" << adjusted_height
              << "_" << num_ << "_" << group_ << "_" << M_;
+  if (!need_padding)
+    keyBuilder << "_" << pad_w_ << "_" << pad_h_;
   key_ = keyBuilder.str();
+  need_padding_ = need_padding;
 }
 
 template<>
@@ -215,6 +226,7 @@ bool ConvolutionLayerSpatial<float>::generate_kernel(
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   // Standard spatial setup is done here
+  generate_key();
   std::string kernelDef = "MULTI";
   std::string stringBuilder;
   std::stringstream optionsString;
@@ -230,6 +242,7 @@ bool ConvolutionLayerSpatial<float>::generate_kernel(
   workItemOutput[1] = yDim;
   workItemOutput[2] = zDim;
 
+  CHECK_EQ(need_padding_, true) << "Simple kernel doesn't support no padding.";
   std::string multiplication_func = "floatDotV4(V1,V2)=(V1.s0123*V2.s0123)";
 
   if (kernel_w_ <= 11) {
@@ -417,7 +430,7 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     oclk_copy_weight.arg(argIdx++, channels);
     oclk_copy_weight.arg(argIdx++, this->num_output_);
     oclk_copy_weight.arg(argIdx++, swizzled_factor);
-    const size_t global_work_size_Copy[3] = { (size_t) (this->num_output_
+    const size_t global_work_size_Copy[3] = { (size_t) (((this->num_output_ + 15) & ~15)
         * channels * kernel_w_ * kernel_h_), 1, 1 };
 
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
@@ -513,6 +526,7 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
   // Standard spatial setup is done here
+  generate_key();
   std::stringstream keyBuilder;
   std::stringstream multFunctionBuilder;
   std::string stringBuilder;
@@ -520,7 +534,7 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
   std::string kernelDef = "MULTI";
   std::string kernelUKey = generate_specific_key(1, blockWidth, blockHeight,
                                                  blockDepth);
-
+  CHECK_EQ(need_padding_, true) << "Basic kernel doesn't support no padding.";
   int_tp workItemOutput[3];
   workItemOutput[0] = 1;
   workItemOutput[1] = 1;
@@ -639,7 +653,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                              * (channels_ / group_) * M_ * g;
       // Copy image
       cl_mem input_image;
-      if (pad_w_ > 0 || pad_h_ > 0) {
+      if ((pad_w_ > 0 || pad_h_ > 0) && need_padding_) {
         pad_image(bottom, top, image_offset, config, numImages);
         image_offset = 0;
         input_image = (cl_mem) col_data;
@@ -661,8 +675,13 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                          output_image_offset,
                          total_top_size - output_image_offset,
                          false, false);
-      kernel.arg(argIdx++, (uint16_t)padded_width_);
-      kernel.arg(argIdx++, (uint16_t)padded_height_);
+      if (need_padding_) {
+        kernel.arg(argIdx++, (uint16_t)padded_width_);
+        kernel.arg(argIdx++, (uint16_t)padded_height_);
+      } else {
+        kernel.arg(argIdx++, (uint16_t)width_);
+        kernel.arg(argIdx++, (uint16_t)height_);
+      }
       kernel.arg(argIdx++, (uint16_t)output_w_);
       kernel.arg(argIdx++, (uint16_t)output_h_);
       err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
@@ -696,7 +715,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                              * (channels_ / group_) * M_ * g;
       // Copy image
       cl_mem input_image;
-      if (pad_w_ > 0 || pad_h_ > 0) {
+      if ((pad_w_ > 0 || pad_h_ > 0) && need_padding_) {
         pad_image(bottom, top, image_offset, config, numImages);
         image_offset = 0;
         input_image = (cl_mem) col_data;
@@ -913,8 +932,6 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -cl-mad-enable" <<
         " -DKERNEL_WIDTH=" << kernel_w_ <<
         " -DKERNEL_HEIGHT=" << kernel_h_ <<
-        " -D_IWPAD=" << 0 << //pad_w_ <<
-        " -D_IHPAD=" << 0 << //pad_h_ <<
         " -DSTRIDE_X=" << stride_w_ <<
         " -DSTRIDE_Y=" << stride_h_ <<
         " -D_IW=" << width_ <<
@@ -923,17 +940,12 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DWIDTH1=" << alignedFilterWidth <<
         " -DOUT_PADDING_LEFT=" << 0 <<
         " -DOUT_PADDING_HEIGHT=" << 0 <<
-        " -DALIGNED_INPUT_SIZE=" <<
-              padded_height_ * padded_width_ * channels_ <<
         " -DOUT_WIDTH=" << output_width <<
         " -DOUT_HEIGHT=" << output_height <<
         " -DOUT_DEPTH=" << M_ <<
         " -DOUT_PITCH_X=" << output_width <<
         " -DOUT_PITCH_Y=" << output_width * output_height <<
         " -DOUT_PITCH_Z=" << output_width * output_height * M_ <<
-        " -DROW_PITCH=" <<   padded_width_ <<
-        " -DSLICE_PITCH=" << padded_width_ * padded_height_ <<
-        " -DBATCH_PITCH=" << padded_width_ * padded_height_ * M_ <<
         " -DNUM_BATCHES=" << num_ <<
         " -DDY=" << globalWorkSizeDY <<
         " -DDX=" << globalWorkSizeDX <<
@@ -943,6 +955,18 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DTILE_N_LAST_DIV8=" << (alignedFilterWidth % 32) / 8 <<
         " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
 
+  if (need_padding_)
+    optionsString << " -D_IWPAD=" << 0 << " -D_IHPAD=" << 0
+                  << " -DALIGNED_INPUT_SIZE=" << padded_height_ * padded_width_ * channels_
+                  << " -DROW_PITCH=" <<   padded_width_
+                  << " -DSLICE_PITCH=" << padded_width_ * padded_height_
+                  << " -DBATCH_PITCH=" << padded_width_ * padded_height_ * M_;
+  else
+    optionsString << " -D_IWPAD=" << pad_w_ << " -D_IHPAD=" << pad_h_
+                  << " -DALIGNED_INPUT_SIZE=" << height_ * width_ * channels_
+                  << " -DROW_PITCH=" <<   width_
+                  << " -DSLICE_PITCH=" << width_ * height_
+                  << " -DBATCH_PITCH=" << width_ * height_ * M_;
 
   size_t sgemm_m = alignedExpandHeight;
   size_t sgemm_n = alignedFilterWidth;
@@ -1024,8 +1048,6 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << kernelDef.c_str() << " -D convolve_simd16=U"
                 << kernelUKey.c_str() << "_SIMD16";
 
-  const int_tp in_buffer_size = (output_block_height - 1) * stride_h_
-                                 + kernel_h_;
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
           output_block_width : output_width % output_block_width;
@@ -1035,28 +1057,31 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
 
   size_t global_size[3] = { (size_t) (output_width + output_block_width - 1)
       / output_block_width, (size_t) (output_height + output_block_height - 1)
-      / output_block_height, (size_t) num_batches * num_output_maps };
+      / output_block_height, (size_t) num_batches * ((num_output_maps + 15) & ~15) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
 
   optionsString << " -D SIMD_SIZE=" << simd_size
                 << " -D filter_qualifier=__global" << " -D OUT_BLOCK_WIDTH="
                 << output_block_width << " -D OUT_BLOCK_HEIGHT="
-                << output_block_height << " -D IN_BUFFER_SIZE="
-                << in_buffer_size << " -D LAST_BLOCK_WIDTH=" << last_block_width
+                << output_block_height
+                << " -D LAST_BLOCK_WIDTH=" << last_block_width
                 << " -D LAST_BLOCK_HEIGHT=" << last_block_height
                 << " -D INPUT_DEPTH=" << channels_ / group_
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << num_output_
-                << " -D_IWPAD=" << 0 //pad_w_
-                << " -D_IHPAD=" << 0 //pad_h_
                 << " -DINPUT_START_X=" << 0 << " -DINPUT_START_Y=" << 0
                 << " -DINPUT_START_Z=" << 0
-                << " -DFILTER_WIDTH=" << kernel_w_
-                << " -DFILTER_HEIGHT=" << kernel_h_
+                << " -DKERNEL_WIDTH=" << kernel_w_
+                << " -DKERNEL_HEIGHT=" << kernel_h_
                 << " -DNUM_FILTERS=" << M_ << " -DSTRIDEX=" << stride_w_
                 << " -DSTRIDEY=" << stride_h_ << " -DOWPAD=" << 0 << " -DOHPAD="
                 << 0 << " -DOUT_BUFF_OFFSET=" << 0;
+
+  if (need_padding_)
+    optionsString << " -D_IWPAD=" << 0 << " -D_IHPAD=" << 0;
+  else
+    optionsString << " -D_IWPAD=" << pad_w_ << " -D_IHPAD=" << pad_h_;
 
   string options = optionsString.str();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
@@ -1198,56 +1223,60 @@ template<>
 void ConvolutionLayerSpatial<float>::setup_convolution(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     const Blob<float> &verify_blob) {
-  // Generates static key_
-  generate_key();
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   const viennacl::ocl::device &device = ctx.current_device();
-  if (device.vendor().find("Intel") != std::string::npos &&
-    M_ % 16 == 0) {
+  if (device.vendor().find("Intel") != std::string::npos) {
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
+    // Generates static key_
+    generate_key(false);
     int kernelCnt = 0;
-    if (this->group_ == 1) {
+    if (this->group_ == 1 && M_ % 32 == 0) {
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
     }
-    for (uint32_t width = 14; width > 0; width--) {
-      int candidate = 0;
-      if (width > output_w_)
-        continue;
-      for (uint32_t height = 14; height > 0; height--) {
-        if (height * width > 32 || height > output_h_)
+    if (this->group_ == 1 || M_ % 16 == 0) {
+      for (uint32_t width = 14; width > 0; width--) {
+        int candidate = 0;
+        if (width > output_w_)
           continue;
-        int tile_x = kernel_w_ + (width - 1) * stride_w_;
-        int tile_y = kernel_h_ + (height - 1) * stride_h_;
-        int tile_y_stride = 64 / tile_x;
+        for (uint32_t height = 14; height > 0; height--) {
+          if (width * height > 32 || height > output_h_)
+            continue;
+          int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
+          int tile_y = kernel_h_ + (height - 1) * stride_h_;
+          int tile_y_stride = 64 / tile_x;
 
-        if (tile_x % 4 != 0 && tile_x <= 16) {
-          create_convolution_kernel(bottom, top, 2, width, height, 1);
-          candidate++;
-        } else if ((tile_x % 4 == 0) &&
-                 ((tile_y + tile_y_stride - 1) / tile_y_stride < 4)) {
-          create_convolution_kernel(bottom, top, 2, width, height, 1);
-          candidate++;
+          if ((tile_y + tile_y_stride - 1) / tile_y_stride < 4) {
+            create_convolution_kernel(bottom, top, 2, width, height, 1);
+            candidate++;
+          }
+          if (candidate >= 4 && height == 2)
+            break;
         }
-        if (candidate >= 4 && height == 2)
+        kernelCnt += candidate;
+        if (kernelCnt >= 12 && width == 2)
           break;
       }
-      kernelCnt += candidate;
-      if (kernelCnt >= 12 && width == 2)
-        break;
     }
-  } else {
+  }
+#if 0
+  if (device.vendor().find("Intel") == std::string::npos ||
+      M_ % 16 != 0)
+  {
+    // Generates static key_
+    generate_key();
     for (int_tp y = 1; y < 4; y += 1)
-      for (int_tp z = 1; z < 16 && z < M_; z += 1) {
+      for (int_tp z = 1; z < 16 && z <= M_; z += 1) {
         if (4 * y * z > 32) continue;
         create_convolution_kernel(bottom, top, 1, 4, y, z);
       }
   }
-  for (int_tp x = 0; x < kernelQueue.size(); x++)
+#endif
+  for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (tune_local_size(bottom, top, kernelQueue[x])) {
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
                                                      num_, kernelQueue[x]);
@@ -1256,7 +1285,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       kernelQueue[x]->verified = false;
       kernelQueue[x]->tested = true;
     }
-
+  }
   int_tp failures = 0;
   bool verification = false;
   if (kernelQueue.size()) {
@@ -1447,8 +1476,11 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // Generates static key_
   std::string previous_key = key_;
-  generate_key();
+  generate_key(false);
   if (tuned_) {
+    if (key_.compare(previous_key) == 0)
+      return;
+    generate_key();
     if (key_.compare(previous_key) == 0)
       return;
     tuned_ = false;
@@ -1461,8 +1493,14 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   kernel_uid_ = 0;
 
   string outputFile;
+  generate_key(false);
   outputFile = CACHE_DIRECTORY + key_;
   std::ifstream cachedKernel(outputFile.c_str());
+  if (!cachedKernel) {
+    generate_key(true);
+    outputFile = CACHE_DIRECTORY + key_;
+    cachedKernel.open(outputFile.c_str(), std::ios_base::in);
+  }
 
   if (cachedKernel) {
     int_tp x, y, z, type;
@@ -1643,7 +1681,7 @@ void ConvolutionLayerSpatial<double>::calculate_global_size(
 }
 
 template<>
-void ConvolutionLayerSpatial<double>::generate_key() {
+void ConvolutionLayerSpatial<double>::generate_key(bool need_padding) {
   NOT_IMPLEMENTED;
 }
 template<>
