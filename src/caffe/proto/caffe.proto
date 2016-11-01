@@ -408,7 +408,7 @@ message LayerParameter {
 }
 
 
-message TransformerConvParameter {
+message TransformerParameter{
   optional uint32 rotate_angle = 1 [default = 0];
   optional bool visualize = 2 [default = false];
 }
@@ -416,7 +416,7 @@ message TransformerConvParameter {
 
 // Message that stores parameters used to apply transformation
 // to the feature maps
-message TransformerParameter {
+message TransformerConvParameter{
   optional uint32 action = 1 [default = 0];//0 for rotations, 1 for flip
   optional bool visualize = 2 [default = false];
 }
