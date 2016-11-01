@@ -51,18 +51,24 @@ end
 [max_sCorr, max_sCorrNetId] = max(sCorrs);
 avg_pCorr = mean(pCorrs);
 avg_sCorr = mean(sCorrs);
+med_pCorr = median(pCorrs);
+med_sCorr = median(sCorrs);
 
 fprintf(out, 'Network with highest LCC is No. %d, corr value = %f\n', max_pCorrNetId, max_pCorr);
 fprintf(out, 'Network with highest SROCC is No. %d, corr value = %f\n', max_sCorrNetId, max_sCorr);
-fprintf(out, 'Average LCC for all networks = %f\n', avg_pCorr);
-fprintf(out, 'Average SROCC for all networks = %f\n', avg_sCorr);
+fprintf(out, 'Mean LCC for all networks = %f\n', avg_pCorr);
+fprintf(out, 'Mean SROCC for all networks = %f\n', avg_sCorr);
+fprintf(out, 'Median LCC for all networks = %f\n', med_pCorr);
+fprintf(out, 'Median SROCC for all networks = %f\n', med_sCorr);
 
 fclose(out);
 
 disp(['Network with highest LCC is No. ' num2str(max_pCorrNetId) ', corr value = ' num2str(max_pCorr)]);
 disp(['Network with highest SROCC is No. ' num2str(max_sCorrNetId) ', corr value = ' num2str(max_sCorr)]);
-disp(['Average LCC for all networks = ' num2str(avg_pCorr)]);
-disp(['Average SROCC for all networks = ' num2str(avg_sCorr)]);
+disp(['Mean LCC for all networks = ' num2str(avg_pCorr)]);
+disp(['Mean SROCC for all networks = ' num2str(avg_sCorr)]);
+disp(['Median LCC for all networks = ' num2str(med_pCorr)]);
+disp(['Median SROCC for all networks = ' num2str(med_sCorr)]);
 
 end
 
