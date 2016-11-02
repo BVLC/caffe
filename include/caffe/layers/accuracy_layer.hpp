@@ -39,7 +39,7 @@ class AccuracyLayer : public Layer<Dtype> {
   // If there are two top blobs, then the second blob will contain
   // accuracies per class.
   virtual inline int_tp MinTopBlobs() const { return 1; }
-  virtual inline int_tp MaxTopBlos() const { return 2; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   /**
