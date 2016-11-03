@@ -1,39 +1,37 @@
-# 
-# All modification made by Intel Corporation: © 2016 Intel Corporation
-# 
-# All contributions by the University of California:
-# Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
-# All rights reserved.
-# 
-# All other contributions:
-# Copyright (c) 2014, 2015, the respective contributors
-# All rights reserved.
-# For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
-# 
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 
-#     * Redistributions of source code must retain the above copyright notice,
-#       this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of Intel Corporation nor the names of its contributors
-#       may be used to endorse or promote products derived from this software
-#       without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+ All modification made by Intel Corporation: © 2016 Intel Corporation
+ 
+ All contributions by the University of California:
+ Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+ All rights reserved.
+ 
+ All other contributions:
+ Copyright (c) 2014, 2015, the respective contributors
+ All rights reserved.
+ For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ 
+     * Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+     * Neither the name of Intel Corporation nor the names of its contributors
+       may be used to endorse or promote products derived from this software
+       without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---
 
 ---
 title: Release Notes
@@ -216,9 +214,14 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Change log
+03-11-2016
+* integration with MKL2017 update1 (providing better performance solution)
+* minor changes to provide optimal performance on default prototxt files describing topologies (for AlexNet, GoogleNet v2).
+* fixed Dockerfiles - for Ubuntu and Centos.
+
 1-09-2016
 * added RNN support
-* moved form MKL2017 beta update 1 engine to MKL2017 (providing better performance solution)
+* moved form MKL2017 beta update 1 engine to MKL2017 
 * added official support for ResNet50, GoogleNet v2, VGG-19. (List of currenlty supported topologies: AlexNet, GoogleNet, GoogleNet v2, ResNet50, VGG-19)
 * added official support for multinode on GoogleNet with MKL2017 engine
 * added DataLayer optimizations
@@ -234,12 +237,15 @@ Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEF
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
 
 * Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
-Workaround: We recommend to always use LMDB Data Layer
+Workaround: We recommend to always use compressed LMDB Data Layer
 
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
-* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
+* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet, ResNet50, VGG-19. For CPU tuning of hyper parameters might be needed.
+
+* MKL2017 doesn't allow access to mean & variance statistics in batch normalization layer which prohibits their accumulation (in global-stats mode). This is affecting batch 1 scoring accuracy with topologies using batch normalization layer (resnet50, googlenet v2).
+Workaround: use batch 32 or higher for accuracy measurements. 
 
 
 # Recommendations to achieve best performance
