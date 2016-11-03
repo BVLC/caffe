@@ -40,7 +40,7 @@ to use more than one thread per core. When less than required cores are specifie
 limit execution of OpenMP threads to specified cores only.
 
 ## Best performance solution
-Please read [release notes](https://github.com/intel/caffe/blob/master/docs/release_notes.md) for our recommendations and configuration to achieve best performance on Intel CPUs. 
+Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
 ## Multinode Training
 Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.

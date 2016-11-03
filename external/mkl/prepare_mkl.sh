@@ -56,10 +56,10 @@ echo $VERSION_LINE  # Return Version Line
 # MKL
 DST=`dirname $0`
 OMP=0 
-VERSION_MATCH=20160706
-ARCHIVE_BASENAME=mklml_lnx_2017.0.0.20160801.tgz
+VERSION_MATCH=20160906
+ARCHIVE_BASENAME=mklml_lnx_2017.0.1.20161005.tgz
 MKL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
-GITHUB_RELEASE_TAG=self_containted_MKLGOLD
+GITHUB_RELEASE_TAG=self_containted_MKLGOLD_u1
 MKLURL="https://github.com/intel/caffe/releases/download/$GITHUB_RELEASE_TAG/$ARCHIVE_BASENAME"
 # there are diffrent MKL lib to be used for GCC and for ICC
 reg='^[0-9]+$'
