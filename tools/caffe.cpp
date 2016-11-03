@@ -103,8 +103,8 @@ DEFINE_int32(comm_threads, 1,
     " The number of threads used by communication code.");
 DEFINE_bool(forward_only, false,
     "Optional; Execute only forward pass");
-DEFINE_string(engine_sequence, "",
-    "Optional; Engine sequence");
+DEFINE_string(engine, "",
+    "Optional; Engine sequence in format: engine:subengine_1,subengine_2,...");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -239,8 +239,8 @@ int train() {
   caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   // Override engine_sequence if provided in cmd line
-  if (FLAGS_engine_sequence != "")
-    solver_param.set_engine_sequence(FLAGS_engine_sequence);
+  if (FLAGS_engine != "")
+    solver_param.set_engine_sequence(FLAGS_engine);
 
   solver_param.mutable_train_state()->set_level(FLAGS_level);
   for (int i = 0; i < stages.size(); i++) {
@@ -377,7 +377,7 @@ int test() {
   }
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages, NULL,
-                       FLAGS_engine_sequence);
+                       FLAGS_engine);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
@@ -446,7 +446,7 @@ int time() {
   }
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, phase, FLAGS_level, &stages, NULL,
-                       FLAGS_engine_sequence);
+                       FLAGS_engine);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.

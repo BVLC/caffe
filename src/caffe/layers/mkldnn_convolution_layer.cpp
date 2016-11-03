@@ -155,13 +155,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }
 
-    EngineParser esp(this->layer_param_.engine_sequence());
-    unsigned numberOfSubEngines = esp.getNumberOfSubEngines();
+    EngineParser ep(this->layer_param_.engine_sequence());
+    unsigned numberOfSubEngines = ep.getNumberOfSubEngines();
     unsigned subEngineIndex = 0;
     for(subEngineIndex; subEngineIndex < numberOfSubEngines; subEngineIndex++) {
       try {
         convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
-                esp.getSubEngine(subEngineIndex)));
+                ep.getSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -171,7 +171,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     }
 
     CHECK(convFwd_pd);
-    engine engine = esp.getSubEngine(subEngineIndex);
+    engine engine = ep.getSubEngine(subEngineIndex);
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 

@@ -1,6 +1,7 @@
 #ifndef CAFFE_MKLDNN_ENGINES_HPP_
 #define CAFFE_MKLDNN_ENGINES_HPP_
 
+#include <glog/logging.h>
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -12,24 +13,27 @@
 
 class EngineParser
 {
-    public:
-        EngineParser(const std::string subEngineString) {
-            parse(subEngineString.c_str());
-        }
-        const char *getEngineName() const
-        {
-            return engineName.c_str();
-        }
-        
-        const bool isEngine(const char* name) const
-        {
-            return (engineName == name);
-        }
-
-        unsigned getNumberOfSubEngines() const
-        {
-            return subEngines.size();
-        }
+ public:
+   EngineParser(const std::string subEngineString) {
+     parse(subEngineString.c_str());
+       
+     // Check for wrong engine name
+     validateEngine();
+   }
+   const char *getEngineName() const
+   {
+     return engineName.c_str();
+   }
+   
+   const bool isEngine(const char* name) const
+   {
+       return (engineName == name);
+   }
+   
+   unsigned getNumberOfSubEngines() const
+   {
+       return subEngines.size();
+   }
 
 #ifdef MKLDNN_SUPPORTED
         engine &getSubEngine(unsigned engineIndex) const
@@ -50,8 +54,10 @@ class EngineParser
     private:
 
         std::string engineName;
+        std::vector<std::string> supportedEngines =
+            {"CAFFE","CUDNN","MKL2017","MKLDNN"};
         std::vector<std::string> subEngines;
-
+        
         bool parse(const char *subEngineString)
         {
             // Initialize containers
@@ -76,7 +82,7 @@ class EngineParser
 
             // Otherwise colon must be specified and engine identifier cannot be empty string
             if(!engineName.length() ||  (*subEngineString != ':'))
-                return false;
+                LOG(FATAL) << "Wrong engine specification";
 
             // Process sub engines
             subEngineString++;
@@ -101,7 +107,28 @@ class EngineParser
                 std::string subEngineName;
                 subEngineName.assign(beginOfIdentifier, subEngineString - beginOfIdentifier);
                 subEngines.push_back(subEngineName);
-            }
+            }            
+        }
+        
+        void validateEngine() {
+            if(subEngines.size() > 0 && engineName != "MKLDNN")
+              LOG(FATAL) << "Engine " << engineName << " does not support subengines";
+#ifndef USE_CUDNN
+            if (engineName == "CUDNN")
+                LOG(FATAL) << "Support for CUDNN is not enabled";
+#endif
+#ifndef MKL2017_SUPPORTED
+            if (engineName == "MKL2017")
+                LOG(FATAL) << "Support for MKL2017 is not enabled";
+#endif
+#ifndef MKLDNN_SUPPORTED
+            if (engineName == "MKLDNN")
+                LOG(FATAL) << "Support for MKLDNN is not enabled";
+#endif
+            for (unsigned i = 0; i < supportedEngines.size(); i++ )
+                if (supportedEngines[i] == engineName)
+                    return;
+            LOG(FATAL) << "Unknown engine: " << engineName;
         }
 
         const char *parseWhitespaces(const char *subEngineString) const
