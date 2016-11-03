@@ -6,11 +6,51 @@
 #include <string>
 #include <vector>
 
+#ifdef MKLDNN_SUPPORTED
 #include "caffe/layers/mkldnn_layers.hpp"
+#endif
 
 class EngineParser
 {
     public:
+        EngineParser(const std::string subEngineString) {
+            parse(subEngineString.c_str());
+        }
+        const char *getEngineName() const
+        {
+            return engineName.c_str();
+        }
+        
+        const bool isEngine(const char* name) const
+        {
+            return (engineName == name);
+        }
+
+        unsigned getNumberOfSubEngines() const
+        {
+            return subEngines.size();
+        }
+
+#ifdef MKLDNN_SUPPORTED
+        engine &getSubEngine(unsigned engineIndex) const
+        {
+            const char *engineName = subEngines[engineIndex].c_str();
+
+            if(!stricmp(engineName, "CPU"))
+                return &CpuEngine::Instance().get_engine();
+
+            if(!stricmp(engineName, "FPGA"))
+                return &CpuEngine::Instance().get_engine(); // TODO: change
+
+            LOG(FATAL) << "EngineParser: Unknown subengine";
+        }
+#endif
+
+
+    private:
+
+        std::string engineName;
+        std::vector<std::string> subEngines;
 
         bool parse(const char *subEngineString)
         {
@@ -63,36 +103,6 @@ class EngineParser
                 subEngines.push_back(subEngineName);
             }
         }
-
-        const char *getEngineName() const
-        {
-            return engineName.c_str();
-        }
-
-        unsigned getNumberOfSubEngines() const
-        {
-            return subEngines.size();
-        }
-
-        engine &getSubEngine(unsigned engineIndex) const
-        {
-            const char *engineName = subEngines[engineIndex].c_str();
-
-            if(!stricmp(engineName, "CPU"))
-                return &CpuEngine::Instance().get_engine();
-
-            if(!stricmp(engineName, "FPGA"))
-                return &CpuEngine::Instance().get_engine();
-
-            // ERROR
-            // ...
-        }
-
-
-    private:
-
-        std::string engineName;
-        std::vector<std::string> subEngines;
 
         const char *parseWhitespaces(const char *subEngineString) const
         {

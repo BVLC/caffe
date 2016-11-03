@@ -3,9 +3,9 @@
 #include <cstdlib>
 #include <vector>
 
+#include "caffe/engine_parser.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/mkldnn_engines.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
 #include "mkl_service.h"
 
@@ -111,14 +111,14 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , init_output_md, convolutionStrides
                                     , padding, padding_kind::zero);
 
-    EngineSequenceParser esp;
-    esp.parse(this->layer_param_.engine_sequence());
+    EngineParser esp(this->layer_param_.engine_sequence());
 
-    unsigned numberOfEngines = esp.getNumberOfEngines();
-    for(unsigned engineIndex = 0; engineIndex < numberOfEngines; engineIndex++) {
-
+    unsigned numberOfSubEngines = esp.getNumberOfSubEngines();
+    for(unsigned subEngineIndex = 0; subEngineIndex < numberOfSubEngines; 
+        subEngineIndex++) {
       try {
-        convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc, esp.getEngine(i)));
+        convFwd_pd.reset(new convolution::primitive_desc(convFwd_desc,
+                esp.getSubEngine(i)));
       }
       catch(...) {
         continue;
