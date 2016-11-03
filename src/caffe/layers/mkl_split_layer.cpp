@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #if defined(MKL2017_SUPPORTED)
 #include <vector>
 
@@ -12,26 +49,43 @@ MKLSplitLayer<Dtype>::~MKLSplitLayer() {
 }
 
 template <typename Dtype>
-void MKLSplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLSplitLayer<Dtype>::Init(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   num_tops = top.size();
   size_t dim_src = bottom[0]->shape().size();
-
-  size_t sizes_src[dim_src], strides_src[dim_src];
+  this->sizes_src_.resize(dim_src);
+  this->strides_src_.resize(dim_src);
   for (size_t d = 0; d < dim_src; ++d) {
-    sizes_src[d] = bottom[0]->shape()[dim_src - d - 1];
-    strides_src[d] = (d == 0) ? 1 : strides_src[d-1]*sizes_src[d-1];
+    this->sizes_src_[d] = bottom[0]->shape()[dim_src - d - 1];
+    this->strides_src_[d] = (d == 0) ?
+                1 : this->strides_src_[d-1]*this->sizes_src_[d-1];
   }
 
   for (size_t i = 0; i < num_tops; ++i) {
     bwd_top_diff.push_back(shared_ptr<MKLDiff<Dtype> >(new MKLDiff<Dtype>));
-    bwd_top_diff[i]->create_user_layout(dim_src, sizes_src, strides_src);
+    bwd_top_diff[i]->create_user_layout(dim_src,
+                                        &(this->sizes_src_[0]),
+                                        &(this->strides_src_[0]),
+                                        false);
   }
 
   // Blob-wise coefficients for the elementwise operation.
   coeffs_ = vector<Dtype>(top.size(), 1);
 
-  bwd_bottom_diff->create_user_layout(dim_src, sizes_src, strides_src);
+  bwd_bottom_diff->create_user_layout(dim_src,
+                                      &(this->sizes_src_[0]),
+                                      &(this->strides_src_[0]),
+                                      false);
+
+  // Primitive will be created at first time it is to be used
+  dnnDelete<Dtype>(sumPrimitive);
+}
+
+template <typename Dtype>
+void MKLSplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -49,6 +103,34 @@ void MKLSplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[i]->ReshapeLike(*bottom[0]);
     CHECK_EQ(count_, top[i]->count());
   }
+
+  // Here we check
+  // Here I check for sizes whther to destroy primitives
+  size_t dim_src = bottom[0]->shape().size();
+
+  // If dimensions of blobs are the same as they were then
+  // do not really destroy primitives
+  if (dim_src == this->sizes_src_.size()) {
+    // .. check for strides and size dims if they corresspond each other
+
+    // TODO: speedup comparison?
+    bool is_match = true;
+    for (size_t d = 0; d < dim_src; ++d) {
+        is_match = is_match && (this->sizes_src_[d] ==
+                                bottom[0]->shape()[dim_src - 1 - d]);
+        is_match = is_match && (this->strides_src_[d] == ((d == 0) ? 1 :
+                                this->strides_src_[d-1]*this->sizes_src_[d-1]));
+    }
+
+    // If no new modification was done to layout sizes,
+    // strides realtivly to previous iteration then
+    // no primitives recreation is needed
+    if (is_match) {
+      return;
+    }
+  }
+
+  Init(bottom, top);
 }
 
 template <typename Dtype>

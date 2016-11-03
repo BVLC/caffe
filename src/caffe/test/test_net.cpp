@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -2446,6 +2483,132 @@ TYPED_TEST(NetTest, TestReshape) {
   EXPECT_FALSE(same_spatial_shape);
 }
 
+// TODO: this test should work for Caffe Engine as well
+// but there were problems visible on Intel OpenMP
+// that need to be investigated
+#ifdef MKL2017_SUPPORTED
+// This test is just checking if this
+// configuration does not explode
+TYPED_TEST(NetTest, TestForwardReshapeForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  const string& proto =
+      "name: 'TestNetwork' "
+      " layer {"
+      "   top: 'data'"
+      "   top: 'label'"
+      "   name: 'data'"
+      "   type: 'DummyData'"
+      "   dummy_data_param {"
+      "     shape: { dim: 32 dim: 3 dim: 227 dim: 227 }"
+      "     data_filler {"
+      "       type: 'constant'"
+      "       value: 0.01"
+      "     }"
+      "   }"
+      "   transform_param {"
+      "     mirror: true"
+      "     crop_size: 224"
+      "     mean_value: 104"
+      "     mean_value: 117"
+      "     mean_value: 123"
+      "   }"
+      " }"
+      " layer {"
+      "  bottom: 'data'"
+      "   top: 'conv'"
+      "   name: 'conv1'"
+      "   type: 'Convolution'"
+      "   param {"
+      "     lr_mult: 1"
+      "     decay_mult: 1"
+      "   }"
+      "   convolution_param {"
+      "     "
+      "     num_output: 64"
+      "     engine: MKL2017 "
+      "     pad: 3"
+      "     kernel_size: 7"
+      "     stride: 2"
+      "     weight_filler {"
+      "       type: 'xavier'"
+      "     }"
+      "     bias_term: false"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu1'"
+      "   name: 'relu1'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu2'"
+      "   name: 'relu2'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'relu1'"
+      "   bottom: 'relu2'"
+      "   top: 'concat'"
+      "   name: 'concat'"
+      "   type: 'Concat'"
+      "   concat_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " } "
+      " layer {"
+      "   bottom: 'concat'"
+      "   top: 'lrn'"
+      "   name: 'LRN'"
+      "   type: 'LRN'"
+      "   lrn_param {"
+      "     engine: MKL2017 "
+      "     local_size: 5"
+      "     alpha: 0.0001"
+      "     beta: 0.75"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'lrn'"
+      "   top: 'pooling'"
+      "   name: 'Pooling'"
+      "   type: 'Pooling'"
+      "   pooling_param {"
+      "     engine: MKL2017 "
+      "     kernel_size: 5"
+      "     stride: 2"
+      "     pool: MAX"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'pooling'"
+      "   top: 'bn'"
+      "   name: 'BatchNorm'"
+      "   type: 'BatchNorm'"
+      "   batch_norm_param {"
+      "     engine: MKL2017 "
+      "   }"
+      " }";
+    this->InitNetFromProtoString(proto);
+    this->net_->Forward();
+    shared_ptr<Blob<Dtype> > input_blob = this->net_->blob_by_name("data");
+    input_blob->Reshape(1, 3, 1280, 720);
+    this->net_->Forward();
+}
+#endif
+
+
+
 TYPED_TEST(NetTest, TestSkipPropagateDown) {
   // check bottom_need_backward if propagate_down is true
   this->InitSkipPropNet(false);
@@ -2599,6 +2762,132 @@ TYPED_TEST(NetTest, TestAllInOneNetDeploy) {
     }
   }
   ASSERT_TRUE(found_data);
+}
+
+class CompileNetTest : public ::testing::Test {
+ protected:
+  void RunCompilerNetTest(
+      const string& input_param_string, const string& compiled_param_string) {
+    NetParameter input_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        input_param_string, &input_param));
+    NetParameter expected_compiled_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        compiled_param_string, &expected_compiled_param));
+    NetParameter actual_compiled_param;
+    Net<float>::CompileNet(input_param, &actual_compiled_param);
+    EXPECT_EQ(expected_compiled_param.DebugString(),
+        actual_compiled_param.DebugString());
+    // Also test idempotence.
+    NetParameter double_compiled_param;
+    Net<float>::CompileNet(actual_compiled_param, &double_compiled_param);
+    EXPECT_EQ(actual_compiled_param.DebugString(),
+       double_compiled_param.DebugString());
+  }
+};
+
+#ifdef MKL2017_SUPPORTED
+// If BatchNorm of engine MKL2017
+// produce blob consumed by
+// Scale Layer then Scale Layer can be dropped
+TEST_F(CompileNetTest, TestCompileNet) {
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'sc' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'sc' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "   bias_term: true "
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+#endif
+
+// If There is BatchNorm followed by Scale layer, but BatchNorm
+// is of engine Caffe then no reduction takes place
+TEST_F(CompileNetTest, TestNoCompileNet) {
+  const string& input_proto=
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: CAFFE "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'sc' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, input_proto);
 }
 
 }  // namespace caffe

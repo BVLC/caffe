@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef USE_MPI
 #include <mpi.h>
 #include "caffe/internode/mpiutil.hpp"
@@ -20,6 +57,9 @@
 
 
 const int MSG_TAG = 1972;
+// Message tag to terminate all processes.
+// https://en.wikipedia.org/wiki/Seppuku
+const int SEPPUKU_TAG = 0xDEAD;
 
 namespace caffe {
 namespace internode {
@@ -50,6 +90,7 @@ class MpiTreeClient : public TreeWaypoint {
   std::vector<char> buffer;
   mutable boost::recursive_mutex mtx;
   mutable boost::optional<boost::thread::id> main_thread_id;
+  mutable bool finished;
 
   void set_recv() {
     boost::recursive_mutex::scoped_lock lock(mtx);
@@ -101,6 +142,10 @@ class MpiTreeClient : public TreeWaypoint {
         }
         request.sender = status.MPI_SOURCE;
         result = MPI_Get_count(&status, MPI_CHAR, &request.size);
+        if( SEPPUKU_TAG == status.MPI_TAG ) {
+           finished=true;
+           return false;
+        }
         request.ok = (result == MPI_SUCCESS);
         if (!request.ok) {
           LOG(ERROR) << "ERROR: " << mpi_get_error_string(result);
@@ -109,14 +154,43 @@ class MpiTreeClient : public TreeWaypoint {
       return flag;
   }
 
+  bool is_finished() const {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      return finished;
+  }
+
  public:
   explicit MpiTreeClient(boost::shared_ptr<Daemon> daemon)
-      : daemon(daemon) {
+      : daemon(daemon)
+      , finished(false) {
     post(daemon);
   }
 
   virtual boost::shared_ptr<Daemon> get_daemon() {
     return daemon;
+  }
+
+  virtual void lets_die_together() const {
+    if( id() == parent() ){ // if root has ended, shut down all nodes
+        for (int i = 0; i < total_nodes(); i++) {
+          if (i != id()) {
+            MPI_Send(
+                    &i, // can be anything, SEPPUKU_TAG shut downs caffe,
+                    1,  // message is irrelevant
+                    MPI_CHAR,
+                    i,
+                    SEPPUKU_TAG,
+                    MPI_COMM_WORLD);
+          }
+        }
+        finished = true;
+    } else {
+        // else if internode has ended,
+        // wait for message from toot to do it (some messages may be pending)
+        while(!is_finished()) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        }
+    }
   }
 
   virtual void set_buffer_size(size_t max_packet_size) {

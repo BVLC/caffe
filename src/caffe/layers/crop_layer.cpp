@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <algorithm>
 #include <functional>
 #include <map>
@@ -69,44 +106,42 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+template <bool is_forward>
 void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top,
              const vector<int>& offsets,
-             vector<int> indices,
-             int cur_dim,
              const Dtype* src_data,
-             Dtype* dest_data,
-             bool is_forward) {
-  if (cur_dim + 1 < top[0]->num_axes()) {
-    // We are not yet at the final dimension, call copy recursively
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
-      indices[cur_dim] = i;
-      crop_copy(bottom, top, offsets, indices, cur_dim+1,
-                src_data, dest_data, is_forward);
+             Dtype* dest_data) {
+  int last_dim = top[0]->num_axes() - 1;
+  int copy_count = top[0]->count() / top[0]->shape(last_dim);
+
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
+  for (int i = 0; i < copy_count; ++i) {
+    // prepare index vector reduced(red) and with offsets(off)
+    std::vector<int> ind_red(last_dim, 0);
+    std::vector<int> ind_off(last_dim+1, 0);
+    int cur_iteration = i;
+    for (int j = last_dim - 1; j >=0; --j) {
+      int index = cur_iteration % top[0]->shape(j);
+      cur_iteration /= top[0]->shape(j);
+      ind_red[j] = index;
+      ind_off[j] = index + offsets[j];
     }
-  } else {
-    // We are at the last dimensions, which is stored continously in memory
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
-      // prepare index vector reduced(red) and with offsets(off)
-      std::vector<int> ind_red(cur_dim, 0);
-      std::vector<int> ind_off(cur_dim+1, 0);
-      for (int j = 0; j < cur_dim; ++j) {
-          ind_red[j] = indices[j];
-          ind_off[j] = indices[j] + offsets[j];
-      }
-      ind_off[cur_dim] = offsets[cur_dim];
-      // do the copy
-      if (is_forward) {
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + bottom[0]->offset(ind_off),
-            dest_data + top[0]->offset(ind_red));
-      } else {
-        // in the backwards pass the src_data is top_diff
-        // and the dest_data is bottom_diff
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + top[0]->offset(ind_red),
-            dest_data + bottom[0]->offset(ind_off));
-      }
+    ind_off[last_dim] = offsets[last_dim];
+    // Last dimensions stored continously in memory
+    // do the copy
+    if (is_forward) {
+      caffe_copy(top[0]->shape(last_dim),
+          src_data + bottom[0]->offset(ind_off),
+          dest_data + top[0]->offset(ind_red));
+    } else {
+      // in the backwards pass the src_data is top_diff
+      // and the dest_data is bottom_diff
+      caffe_copy(top[0]->shape(last_dim),
+          src_data + top[0]->offset(ind_red),
+          dest_data + bottom[0]->offset(ind_off));
     }
   }
 }
@@ -114,10 +149,9 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CropLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  std::vector<int> indices(top[0]->num_axes(), 0);
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  crop_copy(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
+  crop_copy<true>(bottom, top, offsets, bottom_data, top_data);
 }
 
 template <typename Dtype>
@@ -128,8 +162,7 @@ void CropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   if (propagate_down[0]) {
     caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
-    std::vector<int> indices(top[0]->num_axes(), 0);
-    crop_copy(bottom, top, offsets, indices, 0, top_diff, bottom_diff, false);
+    crop_copy<false>(bottom, top, offsets, top_diff, bottom_diff);
   }
 }
 

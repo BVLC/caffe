@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #if defined(MKL2017_SUPPORTED)
 #include <cfloat>
 #include <vector>
@@ -13,19 +50,12 @@ MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
 }
 
 template <typename Dtype>
-void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  CHECK(this->layer_param().eltwise_param().coeff_size() == 0
-      || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
-      "MKLEltwise Layer takes one coefficient per bottom blob.";
-  CHECK(!(this->layer_param().eltwise_param().operation()
-      == EltwiseParameter_EltwiseOp_PROD
-      && this->layer_param().eltwise_param().coeff_size())) <<
-      "MKLEltwise layer only takes coefficients for summation.";
-
-  CHECK(this->layer_param().eltwise_param().operation() ==
-    EltwiseParameter_EltwiseOp_SUM)
-      << "MKLEltwise Layer only process summation.";
+void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
+             const vector<Blob<Dtype>*>& top) {
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  num_ = bottom[0]->num();
 
   op_ = this->layer_param_.eltwise_param().operation();
   // Blob-wise coefficients for the elementwise operation.
@@ -51,16 +81,44 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bwd_bottom_diff.push_back(
         shared_ptr<MKLDiff<Dtype> >(new MKLDiff<Dtype>));
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      fwd_bottom_data[i]->create_user_layout(dim_src, sizes_src, strides_src);
-      bwd_bottom_diff[i]->create_user_layout(dim_src, sizes_src, strides_src);
+      fwd_bottom_data[i]->create_user_layout(dim_src,
+                                             sizes_src,
+                                             strides_src,
+                                             false);
+      bwd_bottom_diff[i]->create_user_layout(dim_src,
+                                             sizes_src,
+                                             strides_src,
+                                             false);
   }
 
-  fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src);
+  fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src,false);
+
+  dnnDelete<Dtype>(sumPrimitive);
+}
+
+
+template <typename Dtype>
+void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  CHECK(this->layer_param().eltwise_param().coeff_size() == 0
+      || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
+      "MKLEltwise Layer takes one coefficient per bottom blob.";
+  CHECK(!(this->layer_param().eltwise_param().operation()
+      == EltwiseParameter_EltwiseOp_PROD
+      && this->layer_param().eltwise_param().coeff_size())) <<
+      "MKLEltwise layer only takes coefficients for summation.";
+
+  CHECK(this->layer_param().eltwise_param().operation() ==
+    EltwiseParameter_EltwiseOp_SUM)
+      << "MKLEltwise Layer only process summation.";
+
+  Init(bottom,top);
 }
 
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
   for (int i = 1; i < bottom.size(); ++i) {
     CHECK(bottom[i]->shape() == bottom[0]->shape());
   }
@@ -70,6 +128,16 @@ void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
     max_idx_.Reshape(bottom[0]->shape());
   }
+
+  if (channels_ == bottom[0]->channels() &&
+      height_ == bottom[0]->height() &&
+      width_ == bottom[0]->width() &&
+      num_ == bottom[0]->num() &&
+      num_bottoms == bottom.size()) {
+    return;
+  }
+
+  Init(bottom,top);
 }
 
 template <typename Dtype>

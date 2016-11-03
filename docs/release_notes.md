@@ -1,3 +1,37 @@
+ All modification made by Intel Corporation: © 2016 Intel Corporation
+ 
+ All contributions by the University of California:
+ Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+ All rights reserved.
+ 
+ All other contributions:
+ Copyright (c) 2014, 2015, the respective contributors
+ All rights reserved.
+ For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ 
+     * Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+     * Neither the name of Intel Corporation nor the names of its contributors
+       may be used to endorse or promote products derived from this software
+       without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---
 
 ---
 title: Release Notes
@@ -28,10 +62,10 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We build and test Caffe on CentOS (7.0, 7.1, 7.2). 
+We build and test Intel® Distribution of Caffe* on CentOS (7.0, 7.1, 7.2). 
 The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
 
-When updating Caffe, it's best to `make clean` before re-compiling.
+When updating Intel® Distribution of Caffe*, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
@@ -82,15 +116,15 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 ##Building for Intel® Architecture
 
-This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Caffe with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
-This Caffe version is seflcontained. This means that newest version of Intel MKL will be downloaded and installed during compilation of IntelCaffe.
+This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Intel® Distribution of Caffe* with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
+This Caffe version is seflcontained. This means that newest version of Intel MKL will be downloaded and installed during compilation of Intel® Distribution of Caffe*.
 
 * Set `BLAS := mkl` in `Makefile.config`
-* If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA.
+* If you don't need GPU optimizations `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Intel® Distribution of Caffe* without CUDA.
 
-[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Caffe can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
+[Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Intel® Distribution of Caffe* can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
 
-* As default and recommended configuration Caffe is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
+* As default and recommended configuration Intel® Distribution of Caffe* is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
 * Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
 
 * `USE_MKLDNN_AS_DEFAULT_ENGINE := 1` in `Makefile.config` is new integration with new MKLDNN engine. This is experimental solution - not recommended for buissnes users.
@@ -180,9 +214,14 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Change log
+03-11-2016
+* integration with MKL2017 update1 (providing better performance solution)
+* minor changes to provide optimal performance on default prototxt files describing topologies (for AlexNet, GoogleNet v2).
+* fixed Dockerfiles - for Ubuntu and Centos.
+
 1-09-2016
 * added RNN support
-* moved form MKL2017 beta update 1 engine to MKL2017 (providing better performance solution)
+* moved form MKL2017 beta update 1 engine to MKL2017 
 * added official support for ResNet50, GoogleNet v2, VGG-19. (List of currenlty supported topologies: AlexNet, GoogleNet, GoogleNet v2, ResNet50, VGG-19)
 * added official support for multinode on GoogleNet with MKL2017 engine
 * added DataLayer optimizations
@@ -198,39 +237,21 @@ Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEF
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
 
 * Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
-Workaround: We recommend to always use LMDB Data Layer
+Workaround: We recommend to always use compressed LMDB Data Layer
 
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
-* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet and ResNet50. For CPU tuning of hyper parameters might be needed. 
+* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet, ResNet50, VGG-19. For CPU tuning of hyper parameters might be needed.
+
+* MKL2017 doesn't allow access to mean & variance statistics in batch normalization layer which prohibits their accumulation (in global-stats mode). This is affecting batch 1 scoring accuracy with topologies using batch normalization layer (resnet50, googlenet v2).
+Workaround: use batch 32 or higher for accuracy measurements. 
 
 
-# Recomendations to achieve best performance
-* Disable Hyper-threading (HT) on your platform.
+# Recommendations to achieve best performance
 
-* With Intel Xeon Phi™ product family - set BIOS MCDRAM mode as `cache`
-
-* With Intel Xeon Phi™ product family - it is recommended to use Centos 7.2 or newer
-
-* It is recommended to use newest XPPSL software for Intel Xeon Phi™ product family: [https://mic-bld.pdx.intel.com/release/external/XPPSL/] (https://mic-bld.pdx.intel.com/release/external/XPPSL/)
-
-* Some Linux distributions security settings can affect performance (for example Centos 7.2). If this is your case for best performance solution it is recommended to edit /etc/selinux/config file and set selinux to permissive
-
-* Make sure that your hardware configurations includes fast SSD (M.2) drive. If during trainings you will observe in logs "waiting for data" - you should install better SSD or reduce batchsize.
-
-* Optimize hardware in bios: set CPU max frequency, set 100% fan speed, check cooling system
-
-* Change prototxt file with network topology to Intel MKL's optimized versions. Caffe includes optimized (for Intel MKL2017) versions of popular prototxt files. Those files have specific engines set for each layer. There is no change in topology itself.  
-
-* Use LMDB data layer (Using ‘Images’ layer as data source will result in suboptimal performance). Or to achieve maximum theoretical performance - don't use any data layer. 
-
-* Change batchsize in prototxt files. On some configurations higher batchsize will leads to better results.
-
-* Current implementation uses OpenMP threads. By default the number of OpenMP threads is set to the number of CPU cores. Each one thread is bound to a single core to achieve best performance results. It is however possible to use own configuration by providing right one through OpenMP environmental variables like KMP_AFFINITY, OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
-
-* Make sure that there are no unnecesary processes during traning and scoring. IntelCaffe is using all available resources and other processes (like monitoring tools, java processes, network trafic etc.) might impact performance.
-
+At our wiki page we present out recommendations and tuning guide to achieve best performance. 
+[https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 
 # Instructions:
 
@@ -280,3 +301,5 @@ In folder `/examples/imagenet/` we provide scripts and instructions `readme.md` 
 
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE). The BVLC reference models are released for unrestricted use.
 
+***
+ *Other names and brands may be claimed as the property of others

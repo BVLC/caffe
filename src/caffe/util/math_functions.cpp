@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #if USE_MKL
 #include <mkl_vml_functions.h>
 #include <mkl_vsl.h>
@@ -129,14 +166,21 @@ template <typename Dtype>
 void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X == Y) return;
 
-  #ifdef _OPENMP
-  int nthr = omp_get_max_threads();
-  int threshold = nthr * caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
+#ifdef _OPENMP
+  static const int threshold = omp_get_max_threads() *
+                          caffe::cpu::OpenMpManager::getProcessorSpeedMHz() / 3;
   const bool run_parallel =
+#ifdef USE_MPI
     (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id())) &&
     (N >= threshold) &&
     (omp_in_parallel() == 0) &&
     (Caffe::mode() != Caffe::GPU);
+#else
+    (N >= threshold) &&
+    (omp_in_parallel() == 0) &&
+    (Caffe::mode() != Caffe::GPU) &&
+    (caffe::cpu::OpenMpManager::isMajorThread(boost::this_thread::get_id()));
+#endif
 
   if (run_parallel) {
     const int block_mem_size = 256*1024;
@@ -148,7 +192,7 @@ void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
 
     return;
   }
-  #endif
+#endif
 
   memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
 }
@@ -162,23 +206,22 @@ template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
-    // If there are more than one openmp thread (we are in active region)
-    // then checking Caffe::mode can create additional GPU Context
-    //
+#ifndef CPU_ONLY
     if (
 #ifdef _OPENMP
+         // If there are more than one openmp thread (we are in active region)
+         // then checking Caffe::mode can create additional GPU Context
         (omp_in_parallel() == 0) &&
 #endif
         (Caffe::mode() == Caffe::GPU)) {
-#ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
-#else
-      NO_GPU;
-#endif
     } else {
+#endif
       caffe_cpu_copy<Dtype>(N, X, Y);
+#ifndef CPU_ONLY
     }
+#endif
   }
 }
 

@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKLDNN_SUPPORTED
 #include <vector>
 
@@ -8,8 +45,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void MKLDNNLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
-                                        ,const vector<Blob<Dtype>*>& top)
+void MKLDNNLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                                       const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::LayerSetUp: " << this->layer_param_.name();
 
@@ -46,7 +83,7 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
         top[0]->Reshape(num_, channels_, height_, width_);
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        NOT_IMPLEMENTED;
+        top[0]->Reshape(num_, channels_, height_, width_);
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
@@ -59,35 +96,33 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    lrn::algorithm  lrn_algorithm;
+    algorithm  lrn_algorithm;
     switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
-        lrn_algorithm = lrn::algorithm::across_channels;
+        lrn_algorithm = algorithm::lrn_across_channels;
         break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
-        lrn_algorithm = lrn::algorithm::within_channel;
+        lrn_algorithm = algorithm::lrn_within_channel;
         break;
     default:
         LOG(FATAL) << "Unknown normalization region.";
     }
 
-    uint32_t n  = this->num_;
-    uint32_t iw = this->width_;
-    uint32_t ih = this->height_;
-    uint32_t ic = this->channels_;
+    int32_t n  = this->num_;
+    int32_t iw = this->width_;
+    int32_t ih = this->height_;
+    int32_t ic = this->channels_;
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
+    memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
     shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL);
     if (bottom_data_is_prv) {
-        CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNData<Dtype> > mem_descr
-                = boost::static_pointer_cast<MKLDNNData<Dtype> >(bottom[0]->get_prv_data_descriptor());
-        CHECK(mem_descr != NULL);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+            = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         input_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
         usr_mpd = mem_descr->usr_memory_pd();
         prv_mpd = mem_descr->prv_memory_pd();
@@ -97,12 +132,9 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     }
     output_md = input_md;
     // ---- Initialize LRN primitive descriptor -------------
-    lrn::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
-                            ,*output_md, alpha_, beta_, size_);
-    lrnFwd_pd.reset(new lrn::primitive_desc(lrnFwd_desc, cpu_engine));
-
-    memory::primitive_desc scratch_mpd(memory::desc(lrnFwd_pd->data.scratch_primitive_desc.memory_desc), cpu_engine);
-    scratch_.reset(new memory(scratch_mpd));
+    lrn_forward::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
+                            , size_, alpha_, beta_);
+    lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
@@ -111,7 +143,13 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    lrnFwd.reset(new lrn(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    if ( propagation == prop_kind::forward_training ) {
+        memory::primitive_desc scratch_mpd(lrnFwd_pd->workspace_primitive_desc());
+        scratch_.reset(new memory(scratch_mpd));
+        lrnFwd.reset(new lrn_forward(*lrnFwd_pd, *input_primitive, *scratch_, *output_memory));
+    } else {
+        lrnFwd.reset(new lrn_forward(*lrnFwd_pd, *input_primitive, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(lrnFwd);
     fwd_top_data->set_mkldnn_primitive(lrnFwd);
 }

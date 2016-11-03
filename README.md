@@ -20,7 +20,7 @@ Framework development discussions and thorough bug reports are collected on [Iss
 
 Happy brewing!
 
-# Intel Caffe
+# Intel® Distribution of Caffe*
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
 
 ## Building
@@ -40,31 +40,12 @@ to use more than one thread per core. When less than required cores are specifie
 limit execution of OpenMP threads to specified cores only.
 
 ## Best performance solution
-Please read [release notes](https://github.com/intel/caffe/blob/master/docs/release_notes.md) for our recommendations and configuration to achieve best performance on Intel CPUs. 
+Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
 ## Multinode Training
-Intel Caffe multinode allows you to execute deep neural network training on multiple machines.
+Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
 
-You should read our Wiki to understand how it works.
-For quick start read [Multinode quickstart guide](https://github.com/intelcaffe/caffe/wiki/Multinode-quickstart-guide), next [Multinode How to ...?](https://github.com/intelcaffe/caffe/wiki/Multinode---How-to-...%3F)
-
-Please see also prepared examples for cifar10 and Googlenet.
-
-For cifar10 example look at `examples/cifar10/train_full_multinode.sh` file. The script will run data server, synchronous parameter server and 4 clients. Prepared proto solvers should result in exactly the same behavior as single node full cifar training.
-It use the MPI setup with explicit all reduce. This will run 5 processes on hosts set with host, and each process will calculate it's own gradients, and propagate it up with a tree structure to the root, which will apply them and propagate parameters down also in a tree structure.
-
-Data server is for convenience. By the default you could use data shard prepared on each node separetely, either by shuffling the data uniquely or by creating a subset of your training data. The remote data layer can be used to get data from data server. It can also be used to cache data from the server in order to reduce the network traffic. Use only TCP protocol with data server. In the case of choosing caching policy USE_CACHE_WHEN_FULL, it will first download cache_size batches and then will randomized the cached data for actual training.
-
-For Googlenet example look at `models/bvlc_googlenet/solver_client.prototxt`. The solver tries to offset the bigger batch size with bigger learning rate. According to paper:
-
-    @article{
-      Author = {Forrest N. Iandola, Khalid Ashraf, Matthew W. Moskewicz, Kurt Keutzer},
-      Journal = {arXiv preprint arXiv:1511.00175},
-      Title = {FireCaffe: near-linear acceleration of deep neural network training on compute clusters},
-      Year = {2016}
-    }
-
-this should use 72 epochs to train Googlenet.
+To understand how it works and read some tutorials, go to our Wiki. Start from https://github.com/intelcaffe/caffe/wiki/Multinode-guide.
 
 ## License and Citation
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
@@ -78,3 +59,6 @@ Please cite Caffe in your publications if it helps your research:
       Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
       Year = {2014}
     }
+
+***
+ *Other names and brands may be claimed as the property of others

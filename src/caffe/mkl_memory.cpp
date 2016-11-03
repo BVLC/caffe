@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKL2017_SUPPORTED
 #include "caffe/mkl_memory.hpp"
 
@@ -12,18 +49,7 @@ namespace caffe {
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
   int status;
-  if (this->convert_from_int) {
-    DLOG(INFO) << "convert_from_int layout already created, recreating for"
-           << this->name;
-    status = dnnDelete<Dtype>(this->convert_from_int);
-    CHECK_EQ(status, E_SUCCESS);
-  }
-  if (this->convert_to_int) {
-    DLOG(INFO) << "convert_to_int layout already created, recreating for"
-           << this->name;
-    status = dnnDelete<Dtype>(this->convert_to_int);
-    CHECK_EQ(status, E_SUCCESS);
-  }
+  this->remove_conversions();
   if (layout_int
       && !dnnLayoutCompare<Dtype>(layout_usr, layout_int)) {
     CHECK(layout_usr);
@@ -41,15 +67,27 @@ void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
 }
 
 template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_conversions() {
+  int status;
+  if (this->convert_from_int) {
+    DLOG(INFO) << "convert_from_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_from_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+  if (this->convert_to_int) {
+    DLOG(INFO) << "convert_to_int layout already created, recreating for"
+           << this->name;
+    status = dnnDelete<Dtype>(this->convert_to_int);
+    CHECK_EQ(status, E_SUCCESS);
+  }
+}
+
+template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
     const dnnPrimitive_t primitive, dnnResourceType_t type) {
   int status;
-  if (this->layout_int) {
-    DLOG(INFO) << "Internal layout already created, recreating for"
-           << this->name;
-    status = dnnLayoutDelete<Dtype>(this->layout_int);
-    CHECK_EQ(status, E_SUCCESS);
-  }
+  this->remove_internal_layout();
   status = dnnLayoutCreateFromPrimitive<Dtype>(
       &this->layout_int, primitive, type);
   CHECK_EQ(status, E_SUCCESS)
@@ -62,28 +100,78 @@ void MKLMemoryDescriptorBase<Dtype>::create_internal_layout(
 
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_user_layout(
-    size_t dimension, const size_t size[], const size_t strides[]) {
+    size_t dimension,
+    const size_t size[],
+    const size_t strides[],
+    bool create_conversion_if_possible) {
   int status;
-  if (this->layout_usr) {
-    DLOG(INFO) << "User layout already created, recreating for"
-               << this->name;
-    status = dnnLayoutDelete<Dtype>(this->layout_usr);
-    CHECK_EQ(status, E_SUCCESS);
-  }
-
+  this->remove_user_layout();
   status = dnnLayoutCreate<Dtype>(
       &this->layout_usr, dimension, size, strides);
   CHECK_EQ(status, E_SUCCESS) << "Failed dnnLayoutCreate with status "
       << status << " for buffer: " << this->name << "\n";
 
-  if (this->layout_int)
-    this->create_conversions();
+  // If conversion creation is to happen
+  // then if only we have internal layout already in place
+  // we can proceed with conversion creation.
+  // Otherwise we make sure that existing conversions are deleted
+  // as with new layout creation they are being instantly invalidated
+  if (create_conversion_if_possible) {
+    if (this->layout_int) {
+      this->create_conversions();
+    }
+  } else {
+    this->remove_conversions();
+  }
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_internal_layout() {
+  int status;
+  if (this->layout_int) {
+    DLOG(INFO) << "Internal layout already created, recreating for"
+           << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_int);
+    CHECK_EQ(status, E_SUCCESS);
+
+    // with layout invalidated we should also remove Allocation
+    // as next layout may declare diffrent sizes of allocation
+    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+    this->internal_ptr = NULL;
+    CHECK_EQ(status, E_SUCCESS);
+  }
+}
+
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::remove_user_layout() {
+  int status;
+  if (this->layout_usr) {
+    DLOG(INFO) << "Internal layout already created, recreating for"
+           << this->name;
+    status = dnnLayoutDelete<Dtype>(this->layout_usr);
+    CHECK_EQ(status, E_SUCCESS);
+
+    // with layout invalidated we should also remove Allocation
+    // as next layout may declare diffrent sizes of allocation
+    status = dnnReleaseBuffer<Dtype>(this->internal_ptr);
+    this->internal_ptr = NULL;
+    CHECK_EQ(status, E_SUCCESS);
+  }
 }
 
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::create_layouts(
     const dnnPrimitive_t primitive, dnnResourceType_t type,
     size_t dimension, const size_t size[], const size_t strides[]) {
+  // To avoid creating conversion among potentialiy diffrent
+  // (in terms of size) layouts we need to destroy existing layouts here
+
+  if (this->layout_usr) {
+    DLOG(INFO) << "User layout already created, recreating for"
+               << this->name;
+    int status = dnnLayoutDelete<Dtype>(this->layout_usr);
+    CHECK_EQ(status, E_SUCCESS);
+  }
   this->create_internal_layout(primitive, type);
   this->create_user_layout(dimension, size, strides);
 }
@@ -91,6 +179,11 @@ void MKLMemoryDescriptorBase<Dtype>::create_layouts(
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr) {
   CHECK(cpu_ptr);
+  // When no conversion is available then
+  // recreate them if layouts are available
+  if (this-> convert_from_int == NULL) {
+    this->create_conversions();
+  }
   CHECK(this->convert_from_int);
   int status;
   void *convert_resources[dnnResourceNumber];

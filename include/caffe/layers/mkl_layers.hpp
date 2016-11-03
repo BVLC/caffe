@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef CAFFE_MKL2017_LAYERS_HPP_
 #define CAFFE_MKL2017_LAYERS_HPP_
 
@@ -36,6 +73,9 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
   // Customized methods
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void compute_output_shape();
@@ -129,6 +169,9 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
   int size_;
   int pre_pad_;
   Dtype alpha_;
@@ -164,6 +207,9 @@ class MKLPoolingLayer : public Layer<Dtype> {
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
+
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Pooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -230,6 +276,12 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
 
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "ReLU"; }
 
  protected:
@@ -251,6 +303,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff_;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
+  vector<size_t> sizes_;
+  vector<size_t> strides_;
 };
 
 template <typename Dtype>
@@ -261,8 +315,8 @@ class MKLConcatLayer : public Layer<Dtype> {
         concatFwd_(static_cast<dnnPrimitive_t>(NULL)),
         concatBwd_(static_cast<dnnPrimitive_t>(NULL)),
         fwd_top_data_    (new MKLData<Dtype>()),
-        bwd_top_diff_    (new MKLDiff<Dtype>()) {
-      }
+        bwd_top_diff_    (new MKLDiff<Dtype>()),
+        split_channels_  (NULL) { }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -282,6 +336,9 @@ class MKLConcatLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
+
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
  private:
   dnnPrimitive_t concatFwd_;
@@ -335,6 +392,9 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
 //  Dtype moving_average_fraction_;
   Dtype eps_;
   bool use_weight_bias_;
@@ -349,6 +409,7 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   shared_ptr<MKLData<Dtype> > fwd_bottom_data;
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff;
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
+  Blob<Dtype> temp_;
   dnnPrimitive_t batchNormFwd, batchNormBwdData, batchNormBwdScaleShift;
   Dtype *workspace_buffer_;
   Dtype *scaleShift_buffer_;
@@ -369,6 +430,9 @@ class MKLSplitLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
@@ -388,6 +452,8 @@ class MKLSplitLayer : public Layer<Dtype> {
   vector<shared_ptr<MKLDiff<Dtype> > > bwd_top_diff;
   vector<Dtype> coeffs_;
   size_t num_tops;
+  vector<size_t> sizes_src_;
+  vector<size_t> strides_src_;
   dnnPrimitive_t sumPrimitive;
 };
 
@@ -404,6 +470,9 @@ class MKLEltwiseLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Eltwise"; }
   virtual inline int MinBottomBlobs() const { return 2; }
@@ -431,6 +500,8 @@ class MKLEltwiseLayer : public Layer<Dtype> {
   vector<Dtype> coeffs_;
   Blob<int> max_idx_;
   size_t num_bottoms;
+  int channels_, num_;
+  int height_, width_;
 
   bool stable_prod_grad_;
 };

@@ -1,7 +1,7 @@
 name: "GoogleNet"
 layer {
   name: "data"
-  type: "ImageData"
+  type: "Data"
   top: "data"
   top: "label"
   include {
@@ -14,15 +14,16 @@ layer {
     mean_value: 117
     mean_value: 123
   }
-  image_data_param {
-    source: "data/ilsvrc12/train.txt"
+  data_param {
+    source: "examples/imagenet/ilsvrc12_train_lmdb"
     batch_size: 32
     shuffle: true
+    backend: LMDB
   }
 }
 layer {
   name: "data"
-  type: "ImageData"
+  type: "Data"
   top: "data"
   top: "label"
   include {
@@ -33,11 +34,10 @@ layer {
     mean_value: 117
     mean_value: 123
   }
-  image_data_param {
-    source: "data/ilsvrc12/val.txt"
+  data_param {
+    source: "examples/imagenet/ilsvrc12_val_lmdb"
     batch_size: 50
-    new_width: 224
-    new_height: 224
+    backend: LMDB
   }
 }
 

@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <boost/make_shared.hpp>
 #include <boost/thread.hpp>
 #include <boost/unordered_map.hpp>
@@ -15,7 +52,6 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/internode/configuration.hpp"
-#include "caffe/internode/guaranteed_comm.hpp"
 #include "caffe/internode/tree_cluster.hpp"
 #include "caffe/multinode/BlobComms.hpp"
 #include "caffe/multinode/BlobInfo.hpp"
@@ -214,6 +250,10 @@ class SynchronousSync : public InternalThread
     }
   } children_sync;
 
+  void lets_die_together() {
+      waypoint->lets_die_together();
+  }
+
   virtual bool terminated() {
     boost::mutex::scoped_lock lock(mtx);
     return terminated_;
@@ -225,6 +265,9 @@ class SynchronousSync : public InternalThread
   }
 
   virtual void InternalThreadEntry() {
+    if(is_root()) {
+      solver->CheckSnapshotWritePermissions();
+    }
     CLOG(INFO) << "Comm thread started " << is_leaf() << " " << is_root();
     create_timer(
       waypoint->get_daemon(),
@@ -290,7 +333,8 @@ class SynchronousSync : public InternalThread
     , children_sync(this) {
     waypoint->set_buffer_size(codec->packet_size());
     if (!is_root()) solver->param().clear_snapshot();
-    if (!is_root()) solver->param().clear_snapshot_after_train();
+    if (!is_root()) solver->param().set_snapshot_after_train(false);
+    if (!is_root()) solver->param().clear_test_interval();
     CVLOG(1) << "initialized sync node with parent: " << waypoint->parent()
       << ", and num of children " << waypoint->children().size();
 
@@ -562,7 +606,11 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
     if (sync.is_root()) {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
+      if (solver->root_solver()->param().test_interval() && solver->root_solver()->iter() % solver->root_solver()->param().test_interval() == 0)
+        solver->root_solver()->TestAll();
     }
+
+    sync.lets_die_together();
     sync.terminate();
     sync.StopInternalThread();
   }
@@ -608,9 +656,8 @@ template<typename Dtype>
 SynchronousNode<Dtype>::SynchronousNode(shared_ptr<Solver<Dtype> > solver, int)
   : impl(boost::make_shared<Impl>(solver)) {
   solver->param().set_disabled_update(true);
-  solver->param().clear_test_interval();
   solver->param().clear_snapshot();
-  solver->param().clear_snapshot_after_train();
+  solver->param().set_snapshot_after_train(false);
 }
 
 template<typename Dtype>

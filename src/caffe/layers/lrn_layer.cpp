@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <vector>
 
 #include "caffe/layers/lrn_layer.hpp"
@@ -126,36 +163,21 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
   Dtype alpha_over_size = alpha_ / size_;
-  int limit = pre_pad_ < (channels_-1) ? pre_pad_ : (channels_-1);
 
   caffe_sqr(num_ * channels_ * height_ * width_, bottom_data, top_data);
+  caffe_set(num_ * channels_ * height_ * width_, Dtype(k_), scale_data);
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
 #endif
-  for (int n = 0; n < num_; ++n) {
-    caffe_set(limit * height_ * width_, Dtype(k_),
-      scale_data + scale_.offset(n, 0));
-    for (int c = 0; c <= limit; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-        top_data + scale_.offset(n, c),
-        scale_data + scale_.offset(n, 0));
-    }
-    for (int c = 1; c < channels_; ++c) {
-      caffe_cpu_copy<Dtype>(height_ * width_,
-        scale_data + scale_.offset(n, c - 1),
-        scale_data + scale_.offset(n, c));
-      // copy previous scale
-      if (c < (channels_ - pre_pad_)) {
-        caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-          top_data + scale_.offset(n, c + pre_pad_),
-          scale_data + scale_.offset(n, c));
-      }
-      // subtract tail
-      if (c > pre_pad_) {
-        caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
-          top_data + scale_.offset(n, c - pre_pad_ - 1),
-          scale_data + scale_.offset(n, c));
+  for (int n = 0; n < num_; n++) {
+    for (int c = 0; c < channels_; c++) {
+      for (int i = c - pre_pad_; i <= c + pre_pad_; i++) {
+        if ((i >= 0) && (i < channels_)) {
+          caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+            top_data + scale_.offset(n, i),
+            scale_data + scale_.offset(n, c));
+        }
       }
     }
   }

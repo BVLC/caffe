@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <boost/assign.hpp>
 #include <boost/make_shared.hpp>
 #include <caffe/test/test_caffe_main.hpp>
@@ -307,7 +344,6 @@ TYPED_TEST(BlobCommsTest, SendIterSize) {
     this->SendIterSize(this->waypoint_mock, 0);
     this->SendIterSize(this->waypoint_mock, 101);
     this->SendIterSize(this->waypoint_mock, 1);
-    this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushOneWithCancelledVersion) {
@@ -319,7 +355,6 @@ TYPED_TEST(BlobCommsTest, pushOneWithCancelledVersion) {
                  version, NULL, times);
   this->comms->cancel(layer_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushOne) {
@@ -330,7 +365,6 @@ TYPED_TEST(BlobCommsTest, pushOne) {
                              version, &this->callback, times);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushAnotherTwoDuringSending) {
@@ -342,7 +376,6 @@ TYPED_TEST(BlobCommsTest, pushAnotherTwoDuringSending) {
   this->comms->push(layer_id, blob_id, part_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, push3OneByOne) {
@@ -360,7 +393,6 @@ TYPED_TEST(BlobCommsTest, push3OneByOne) {
   this->callback(true);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
@@ -379,7 +411,6 @@ TYPED_TEST(BlobCommsTest, cancelOneWhenInQueueDuringSending3Queue) {
   this->comms->cancel(layer_id, version);
   this->comms->push(layer_id, blob_id, part_id, version);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelLayer1WhenInQueue) {
@@ -408,7 +439,6 @@ TYPED_TEST(BlobCommsTest, cancelLayer1WhenInQueue) {
   this->callback(true);
   this->callback(true);
   this->callback(true);
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, pushParamsOutOfRange) {
@@ -484,7 +514,6 @@ TYPED_TEST(BlobCommsTest, checkPriorityQueue) {
   this->callback(true);   // sent 2v3 as 2v5 => [2:[2]]
   this->callback(true);   // sent 2v2 as 2v5 => []
   this->callback(true);   // nothing to send
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, cancelDuringReceivingPartsPushedLayer) {
@@ -567,7 +596,6 @@ TYPED_TEST(BlobCommsTest, pushLayers) {
   this->callback(true);       // 2b4 sent
   this->callback(true);       // 2b5 sent
   this->callback(true);       // nothing to send
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveProperBlobUpdate) {
@@ -611,7 +639,6 @@ TYPED_TEST(BlobCommsTest, receiveProperBlobUpdate) {
       received(waypoint_id, layer_id, blob_id, part_id, version));
   }
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveWrongBlobUpdate) {
@@ -632,7 +659,6 @@ TYPED_TEST(BlobCommsTest, receiveWrongBlobUpdate) {
   this->comms->received(&vector<char>(boost::assign::list_of(1).operator
       vector<char>
       ())[0], 3, this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
@@ -661,7 +687,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithoutInfo) {
   Blob<float > blob(v);
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithIters) {
@@ -696,7 +721,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithIters) {
   EXPECT_CALL(*this->keychain_mock, unlock(_)).Times(0);
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithNoIters) {
   this->buildOne();
@@ -724,7 +748,6 @@ TYPED_TEST(BlobCommsTest, receiveBlobUpdateWithNoIters) {
 
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
   this->comms->received(&dane[0], str.size(), this->waypoint_mock.get());
-  this->comms->finish_all_tasks();
 }
 }  // namespace
 }  // namespace caffe

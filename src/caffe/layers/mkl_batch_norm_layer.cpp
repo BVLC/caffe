@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #if defined(MKL2017_SUPPORTED)
 #include <vector>
 
@@ -10,9 +47,9 @@ namespace caffe {
 
 template <typename Dtype>
 MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
-  if (batchNormFwd != NULL) dnnDelete<Dtype>(batchNormFwd);
-  if (batchNormBwdData != NULL) dnnDelete<Dtype>(batchNormBwdData);
-  if (batchNormBwdScaleShift != NULL) dnnDelete<Dtype>(batchNormBwdScaleShift);
+  dnnDelete<Dtype>(batchNormFwd);
+  dnnDelete<Dtype>(batchNormBwdData);
+  dnnDelete<Dtype>(batchNormBwdScaleShift);
 
   dnnLayoutDelete<Dtype>(layout_usr_);
   dnnReleaseBuffer<Dtype>(workspace_buffer_);
@@ -20,7 +57,7 @@ MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
 }
 
 template <typename Dtype>
-void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   eps_ = this->layer_param_.batch_norm_param().eps();
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
@@ -56,24 +93,28 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
 
+  // TODO: Make a cleanup routine to avoid
+  // copy of following code in the Destructor
+
   dnnError_t e;
+  dnnLayoutDelete<Dtype>(layout_usr_);
   e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
-  fwd_bottom_data->create_user_layout(dim, sizes, strides);
-  fwd_top_data   ->create_user_layout(dim, sizes, strides);
-  bwd_bottom_diff->create_user_layout(dim, sizes, strides);
-  bwd_top_diff   ->create_user_layout(dim, sizes, strides);
+  fwd_bottom_data->create_user_layout(dim, sizes, strides, false);
+  fwd_top_data   ->create_user_layout(dim, sizes, strides, false);
+  bwd_bottom_diff->create_user_layout(dim, sizes, strides, false);
+  bwd_top_diff   ->create_user_layout(dim, sizes, strides, false);
 
-  workspace_buffer_ = NULL;
-  scaleShift_buffer_ = NULL;
+  dnnReleaseBuffer<Dtype>(workspace_buffer_);
+  dnnReleaseBuffer<Dtype>(scaleShift_buffer_);
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
 
   // Primitives will be allocated during the first fwd pass
-  batchNormFwd = NULL;
-  batchNormBwdData = NULL;
-  batchNormBwdScaleShift = NULL;
+  dnnDelete<Dtype>(batchNormFwd);
+  dnnDelete<Dtype>(batchNormBwdData);
+  dnnDelete<Dtype>(batchNormBwdScaleShift);
 
   if (use_weight_bias_) {
     if ( bias_term_ ) {
@@ -110,15 +151,36 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+template <typename Dtype>
+void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Init(bottom, top);
+}
 
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
-  num_ = bottom[0]->num();
-  top[0]->Reshape(num_, channels_, height_, width_);
+  bool reshaping = true;
+  if ((num_ == bottom[0]->num()) &&
+      channels_ == bottom[0]->channels() &&
+      height_ == bottom[0]->height() &&
+      width_ == bottom[0]->width()) {
+    reshaping = false;
+  }
+
+  if (bottom[0] == top[0]) {  // in-place computation
+    temp_.ReshapeLike(*bottom[0]);
+  } else {
+    channels_ = bottom[0]->channels();
+    height_ = bottom[0]->height();
+    width_ = bottom[0]->width();
+    num_ = bottom[0]->num();
+    top[0]->Reshape(num_, channels_, height_, width_);
+  }
+
+  if (reshaping == true) {
+    Init(bottom, top);
+  }
 }
 
 template <typename Dtype>
@@ -227,6 +289,15 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       }
     }
   }
+
+  if (bottom[0] == top[0] && this->phase_ == TRAIN) {
+    // In-place computation; need to store bottom data before overwriting it.
+    // Note that this is only necessary for Backward; we skip this if not
+    // doing Backward
+    caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
+                                                      temp_.mutable_cpu_data());
+  }
+
   dnnError_t e;
   void* BatchNorm_res[dnnResourceNumber];
   BatchNorm_res[dnnResourceSrc] = bottom_data;
@@ -250,11 +321,18 @@ template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  void* bottom_data =
-    reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
-  if (NULL == bottom_data) {
+  void *bottom_data = NULL;
+  if (bottom[0] == top[0]) {
+    bottom_data = reinterpret_cast<void *>(
+                        const_cast<Dtype*>(temp_.cpu_data()));
+  } else {
     bottom_data =
-      reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
+            reinterpret_cast<void *>(
+                        const_cast<Dtype*>(bottom[0]->prv_data()));
+    if (NULL == bottom_data)
+      bottom_data =
+            reinterpret_cast<void *>(
+                        const_cast<Dtype*>(bottom[0]->cpu_data()));
   }
 
   dnnError_t e;

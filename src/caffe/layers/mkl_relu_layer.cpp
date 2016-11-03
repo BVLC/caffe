@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKL2017_SUPPORTED
 #include <algorithm>
 #include <vector>
@@ -12,32 +49,82 @@ MKLReLULayer<Dtype>::~MKLReLULayer() {
 }
 
 template <typename Dtype>
-void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLReLULayer<Dtype>::Init(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-//  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
   size_t dim = bottom[0]->shape().size();
-  size_t sizes[dim], strides[dim];
+  this->sizes_.resize(dim);
+  this->strides_.resize(dim);
   for (size_t d = 0; d < dim; ++d) {
-      sizes[d] = bottom[0]->shape()[dim - 1 - d];
-      strides[d] = (d == 0) ? 1 : strides[d-1]*sizes[d-1];
+      this->sizes_[d] = bottom[0]->shape()[dim - 1 - d];
+      this->strides_[d] = (d == 0) ? 1 : this->strides_[d-1]*this->sizes_[d-1];
   }
 
   // Names are for debugging only
-  fwd_bottom_data_->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data_->name =    "fwd_top_data      @ " + this->layer_param_.name();
-  bwd_bottom_diff_->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
-  bwd_top_diff_->name =    "bwd_top_diff      @ " + this->layer_param_.name();
+  this->fwd_bottom_data_->name = "fwd_bottom_data   @ " +
+                                 this->layer_param_.name();
+  this->fwd_top_data_->name =    "fwd_top_data      @ " +
+                                 this->layer_param_.name();
+  this->bwd_bottom_diff_->name = "bwd_bottom_diff   @ " +
+                                 this->layer_param_.name();
+  this->bwd_top_diff_->name =    "bwd_top_diff      @ " +
+                                 this->layer_param_.name();
 
-  fwd_bottom_data_->create_user_layout(dim, sizes, strides);
-  fwd_top_data_   ->create_user_layout(dim, sizes, strides);
-  bwd_bottom_diff_->create_user_layout(dim, sizes, strides);
-  bwd_top_diff_   ->create_user_layout(dim, sizes, strides);
+  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
+  this->bwd_top_diff_   ->create_user_layout(dim, &(this->sizes_[0]),
+                                             &(this->strides_[0]), false);
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
-  reluFwd_ = NULL;  // Will be allocated in a "lazy" way in first forward pass
-  reluBwd_ = NULL;  // Will be allocated in a "lazy" way in first backward pass
+  dnnDelete<Dtype>(reluFwd_);
+  dnnDelete<Dtype>(reluBwd_);
 }
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+//  CHECK_EQ(top[0]->shape(), bottom[0]->shape());
+    Init(bottom, top);
+}
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  NeuronLayer<Dtype>::Reshape(bottom, top);
+
+  // Here I check for sizes whther to destroy primitives
+  size_t dim = bottom[0]->shape().size();
+
+  // If dimensions of blobs are the same as they were then
+  // do not really destroy primitives
+  if (dim == this->sizes_.size()) {
+    // .. check for strides and size dims if they corresspond each other
+
+    // TODO: speedup comparison?
+    bool is_match = true;
+    for (size_t d = 0; d < dim; ++d) {
+        is_match = is_match && (this->sizes_[d] ==
+                                bottom[0]->shape()[dim - 1 - d]);
+        is_match = is_match && (this->strides_[d] == ((d == 0) ? 1 :
+                                this->strides_[d-1]*this->sizes_[d-1]));
+    }
+
+    // If no new modification was done to layout sizes,
+    // strides realtivly to previous iteration then
+    // no primitives recreation is needed
+    if (is_match) {
+      return;
+    }
+  }
+
+  Init(bottom, top);
+}
+
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -96,8 +183,8 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   relu_res[dnnResourceSrc] = bottom_data;
 
   if (fwd_top_data_->conversion_needed()) {
-    if (NULL != bottom[0]->get_prv_data_descriptor()) {
-      top[0]->set_prv_data_descriptor(fwd_bottom_data_);
+    if (bottom[0] == top[0]) {
+//      top[0]->set_prv_data_descriptor(fwd_bottom_data_);
       DLOG(INFO) << "Using bottom as top (in-place) in mklReLU.";
     } else {
       top[0]->set_prv_data_descriptor(fwd_top_data_);

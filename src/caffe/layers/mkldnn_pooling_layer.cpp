@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <cfloat>
@@ -125,13 +162,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
-    pooling::algorithm pooling_algorithm;
+    algorithm pooling_algorithm;
     switch (this->layer_param_.pooling_param().pool()) {
     case PoolingParameter_PoolMethod_MAX:
-        pooling_algorithm = pooling::algorithm::max;
+        pooling_algorithm = algorithm::pooling_max;
         break;
     case PoolingParameter_PoolMethod_AVE:
-        NOT_IMPLEMENTED;
+        pooling_algorithm = algorithm::pooling_avg;
         break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
         NOT_IMPLEMENTED;
@@ -140,18 +177,18 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
         LOG(FATAL) << "Unknown pooling method.";
     }
 
-    uint32_t n = this->num_;
-    uint32_t c = this->channels_;
-    uint32_t ih = this->height_;
-    uint32_t iw = this->width_;
-    uint32_t oh = this->height_out_;
-    uint32_t ow = this->width_out_;
+    int32_t n = this->num_;
+    int32_t c = this->channels_;
+    int32_t ih = this->height_;
+    int32_t iw = this->width_;
+    int32_t oh = this->height_out_;
+    int32_t ow = this->width_out_;
 
-    uint32_t kh = this->kernel_h_;
-    uint32_t kw = this->kernel_w_;
+    int32_t kh = this->kernel_h_;
+    int32_t kw = this->kernel_w_;
 
-    uint32_t sh = this->stride_h_;
-    uint32_t sw = this->stride_w_;
+    int32_t sh = this->stride_h_;
+    int32_t sw = this->stride_w_;
 
     int32_t ph = this->pad_h_;
     int32_t pw = this->pad_w_;
@@ -159,9 +196,9 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::precision mpcsn = memory::precision::f32;
-    tensor::dims input_tz = {n, c, ih, iw};
-    tensor::dims output_tz = {n, c, oh, ow};
+    memory::data_type mpcsn = memory::data_type::f32;
+    memory::dims input_tz = {n, c, ih, iw};
+    memory::dims output_tz = {n, c, oh, ow};
     memory::format mfmt_nchw = memory::format::nchw;
 
     // ---- Initialize memory descriptors -------------
@@ -169,10 +206,8 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     memory::format cmfmt = mfmt_nchw;
     if (bottom_data_is_prv) {
-        CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(), PrvMemDescr::PRV_DESCR_MKLDNN);
-        shared_ptr<MKLDNNData<Dtype> > mem_descr
-            = boost::static_pointer_cast<MKLDNNData<Dtype> >(bottom[0]->get_prv_data_descriptor());
-        CHECK(mem_descr != NULL);
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+            = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
     }
     shared_ptr<memory::desc> input_md(new memory::desc({input_tz}, mpcsn, cmfmt));
@@ -188,13 +223,11 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     }
 
     // ---- Initialize pooling primitive descriptor -------------
-    pooling::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md
-                                    ,*output_md, {sh, sw}, {kh, kw}, {ph, pw}, padding_kind::zero);
-    poolingFwd_pd.reset(new pooling::primitive_desc(poolingFwd_desc, cpu_engine));
+    pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md,*output_md
+                                        , {sh, sw}, {kh, kw}, {ph, pw}, {ph, pw}, padding_kind::zero);
+    poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc, cpu_engine));
 
     // ---- Create priv memory  ---------------------
-    shared_ptr<memory::desc> indices_md(new memory::desc(poolingFwd_pd->data.indices_primitive_desc.memory_desc));
-    indices_pd.reset(new MemPD(*indices_md, cpu_engine));
 
     // We'll output the mask to top[1] if it's of size >1.
     uint32_t* mask = NULL;  // suppress warnings about uninitalized variables
@@ -202,7 +235,6 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     const bool use_top_mask = top.size() > 1;
     mask = (use_top_mask) ?  reinterpret_cast<uint32_t*>(top[1]->mutable_cpu_data())
             : max_idx_.mutable_cpu_data();
-    indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_mpd, prv_input_mpd, bottom[0], this));
@@ -211,7 +243,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_mpd, prv_output_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    poolingFwd.reset(new pooling(*poolingFwd_pd, *input_primitive, *indices_memory, *output_memory));
+    if ( propagation == prop_kind::forward_training && pooling_algorithm != algorithm::pooling_avg) {
+        indices_pd.reset(new MemPD(poolingFwd_pd->workspace_primitive_desc()));
+        indices_memory.reset(new memory(*indices_pd, reinterpret_cast<void *>(mask)));
+        poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory, *indices_memory));
+    } else {
+        poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *input_primitive, *output_memory));
+    }
     fwd_bottom_data->set_mkldnn_primitive(poolingFwd);
     fwd_top_data->set_mkldnn_primitive(poolingFwd);
 }

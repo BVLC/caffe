@@ -11,6 +11,7 @@ layer {
     mean_file: "examples/cifar10/mean.binaryproto"
   }
   data_param {
+    shuffle: true
     source: "examples/cifar10/cifar10_train_lmdb"
     batch_size: 100
     backend: LMDB

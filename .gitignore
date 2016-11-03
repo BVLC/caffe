@@ -95,3 +95,7 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+# Ignore MKL files (except prepare_mkl.sh)
+/external/mkl/*
+!/external/mkl/prepare_mkl.sh

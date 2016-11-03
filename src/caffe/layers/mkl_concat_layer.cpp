@@ -1,3 +1,40 @@
+/*
+All modification made by Intel Corporation: © 2016 Intel Corporation
+
+All contributions by the University of California:
+Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
+All rights reserved.
+
+All other contributions:
+Copyright (c) 2014, 2015, the respective contributors
+All rights reserved.
+For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Intel Corporation nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #if defined(MKL2017_SUPPORTED)
 #include <vector>
 
@@ -9,10 +46,11 @@ namespace caffe {
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
+  delete[] split_channels_;
 }
 
 template <typename Dtype>
-void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
   size_t dim_src = bottom[0]->shape().size();
   size_t dim_dst = dim_src;
@@ -26,6 +64,8 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(bottom[0]->width(), bottom[i]->width());
   }
 
+
+  delete[] split_channels_;
   split_channels_ = new size_t[num_concats_];
   for (size_t i = 0; i < num_concats_; ++i) {
     CHECK_EQ(dim_src, bottom[i]->shape().size());
@@ -44,8 +84,14 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     split_channels_[i] = bottom[i]->channels();
     channels_ += split_channels_[i];
-    fwd_bottom_data_[i]->create_user_layout(dim_src, sizes_src, strides_src);
-    bwd_bottom_diff_[i]->create_user_layout(dim_src, sizes_src, strides_src);
+    fwd_bottom_data_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
+    bwd_bottom_diff_[i]->create_user_layout(dim_src,
+                                            sizes_src,
+                                            strides_src,
+                                            false);
   }
 
   // XXX: almost the same computations as above for src
@@ -57,21 +103,37 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       sizes_dst[d] = bottom[0]->shape()[dim_dst - 1 - d];
     strides_dst[d] = (d == 0) ? 1 : strides_dst[d - 1] * sizes_dst[d - 1];
   }
-  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst);
-  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst);
+  bwd_top_diff_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
+  fwd_top_data_->create_user_layout(dim_dst, sizes_dst, strides_dst, false);
 
-  concatFwd_ = NULL;
-  concatBwd_ = NULL;
+  dnnDelete<Dtype>(concatFwd_);
+  dnnDelete<Dtype>(concatBwd_);
+}
+
+template <typename Dtype>
+void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  const vector<Blob<Dtype>*>& top) {
+  num_ = 0;
+  height_ = 0;
+  width_ = 0;
+  Init(bottom,top);
 }
 
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+  if ((num_ == bottom[0]->num()) &&
+       height_ == bottom[0]->height() &&
+       width_ == bottom[0]->width()) {
+       top[0]->Reshape(num_, channels_, height_, width_);
+    return;
+  }
+
   num_ = bottom[0]->num();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-
   top[0]->Reshape(num_, channels_, height_, width_);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -81,10 +143,8 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
   vector<void*> bottom_data;
   bool isFirstPass = (concatFwd_ == NULL);
   dnnLayout_t *layouts = NULL;
-  bool *isBottomDataFilled = NULL;
   if (isFirstPass) {
       layouts = new dnnLayout_t[num_concats_];
-      isBottomDataFilled = new bool[num_concats_]();
   }
 
   for (size_t n = 0; n < num_concats_; n++) {
@@ -96,7 +156,6 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
         reinterpret_cast<void *>(const_cast<Dtype*>(bottom[n]->cpu_data()));
       if (isFirstPass) {
         layouts[n] = fwd_bottom_data_[n]->layout_usr;
-        isBottomDataFilled[n] = true;
       }
     } else if (isFirstPass) {
       CHECK((bottom[n]->get_prv_data_descriptor())->get_descr_type() ==
@@ -123,17 +182,12 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
     CHECK_EQ(e, E_SUCCESS);
 
     for (size_t n = 0; n < num_concats_; ++n) {
-      if (isBottomDataFilled[n]) continue;
-
-      fwd_bottom_data_[n]->create_internal_layout(concatFwd_,
-          (dnnResourceType_t)(dnnResourceMultipleSrc + n));
       bwd_bottom_diff_[n]->create_internal_layout(concatBwd_,
           (dnnResourceType_t)(dnnResourceMultipleDst + n));
     }
   }
 
   delete[] layouts;
-  delete[] isBottomDataFilled;
 
   void *concat_res[dnnResourceNumber];
   for (int n = 0; n < num_concats_; ++n) {
