@@ -43,7 +43,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
-    vector<int> dim_blob_shape(1, 2);
+    vector<int> dim_blob_shape = {2};//(1, 2);
     blob_kernel_shape_->Reshape(dim_blob_shape);
     blob_stride_->Reshape(dim_blob_shape);
     blob_pad_->Reshape(dim_blob_shape);
