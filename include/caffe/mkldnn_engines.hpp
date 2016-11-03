@@ -1,87 +1,124 @@
 #ifndef CAFFE_MKLDNN_ENGINES_HPP_
 #define CAFFE_MKLDNN_ENGINES_HPP_
 
+#include <iostream>
+#include <cstring>
+#include <string>
 #include <vector>
+
 #include "caffe/layers/mkldnn_layers.hpp"
 
-class EngineSequenceParser
+class EngineParser
 {
     public:
 
-        void parse(const char *engineSequence)
+        bool parse(const char *subEngineString)
         {
-            clear();
+            // Initialize containers
+            engineName.clear();
+            subEngines.clear();
+            subEngines.reserve(4);
 
-            parseSequence(engineSequence);
+            // Ignore whitespaces
+            subEngineString = parseWhitespaces(subEngineString);
 
-            useDefaultEngineForEmptySequences();
-        }
+            // Extract engine identifier. It can be empty at this point
+            const char *beginOfIdentifier = subEngineString;
+            subEngineString = parseIdentifier(subEngineString);
+            engineName.assign(beginOfIdentifier, subEngineString - beginOfIdentifier);
 
-        void clear()
-        {
-            engines.clear();
-            engines.reserve(8);
-        }
+            // Ignore whitespaces
+            subEngineString = parseWhitespaces(subEngineString);
 
-        unsigned getNumberOfEngines() const
-        {
-            return engines.size();
-        }
+            // String termination is allowed at this place
+            if(!*subEngineString)
+                return true;
 
-        engine &getEngine(unsigned engineIndex)
-        {
-            return engines[engineIndex];
-        }
+            // Otherwise colon must be specified and engine identifier cannot be empty string
+            if(!engineName.length() ||  (*subEngineString != ':'))
+                return false;
 
+            // Process sub engines
+            subEngineString++;
+            while(true) {
 
-    private:
+                // Ignore separators
+                subEngineString = parseSeparators(subEngineString);
 
-        std::vector<engine> engines;
+                // String termination is allowed at this place
+                if(!*subEngineString)
+                    return true;
 
-        void parseSequence(std::string engineSequenceCopy)
-        {
-            static const char *delimiters = "\t ,;#";
+                // Extract sub engine identifier
+                const char *beginOfIdentifier = subEngineString;
+                subEngineString = parseIdentifier(subEngineString);
 
-            char *context;
-            const char *engineName = strtok_r(&engineSequenceCopy[0], delimiters, &context);
+                // Identifier can not be empty nor contain invalid characters
+                if(beginOfIdentifier == subEngineString)
+                    return false;
 
-            while(engineName) {
-                addEngineByName(engineName);
-                engineName = strtok_r(NULL, delimiters, &context);
+                // Collect all valid sub engine names
+                std::string subEngineName;
+                subEngineName.assign(beginOfIdentifier, subEngineString - beginOfIdentifier);
+                subEngines.push_back(subEngineName);
             }
         }
 
-        void useDefaultEngineForEmptySequences()
+        const char *getEngineName() const
         {
-            if(engines.empty())
-                addEngineByName("CPU");
+            return engineName.c_str();
         }
 
-        void addEngineByName(const char *engineName)
+        unsigned getNumberOfSubEngines() const
         {
-            engine *newEngine = getEngineByName(engineName);
-
-            if(newEngine)
-                engines.push_back(*newEngine);
-
-            else
-                handleUnsupportedEngine(engineName);
+            return subEngines.size();
         }
 
-        engine *getEngineByName(const char *engineName)
+        engine &getSubEngine(unsigned engineIndex) const
         {
+            const char *engineName = subEngines[engineIndex].c_str();
+
             if(!stricmp(engineName, "CPU"))
                 return &CpuEngine::Instance().get_engine();
 
             if(!stricmp(engineName, "FPGA"))
                 return &CpuEngine::Instance().get_engine();
 
-            return NULL;
+            // ERROR
+            // ...
         }
 
-        void handleUnsupportedEngine(const char *engineName) const
+
+    private:
+
+        std::string engineName;
+        std::vector<std::string> subEngines;
+
+        const char *parseWhitespaces(const char *subEngineString) const
         {
-            CHECK(0) << "Unknown engine specified: '" << current_engine << "'";
+            while(isspace(*subEngineString))
+                subEngineString++;
+
+            return subEngineString;
+        }
+
+        const char *parseSeparators(const char *subEngineString) const
+        {
+            while(isspace(*subEngineString) || (*subEngineString == ',') || (*subEngineString == ';'))
+                subEngineString++;
+
+            return subEngineString;
+        }
+
+        const char *parseIdentifier(const char *subEngineString) const
+        {
+            if(!isalpha(*subEngineString) && (*subEngineString != '_'))
+                return subEngineString;
+
+            do subEngineString++;
+            while(isalnum(*subEngineString) || (*subEngineString == '_'));
+
+            return subEngineString;
         }
 };
 
