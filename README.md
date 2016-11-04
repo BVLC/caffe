@@ -8,6 +8,7 @@ Improvements and new features include:
 - Various fixes, including ability to run the exact same job in parallel
 - Makefile fixes with default build supporting all NVIDIA architectures
 - Sparse inputs and CPU/GPU computations
+- Support for class weights applied to Softmax loss, useful for training over imbalanced datasets
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors.
 
