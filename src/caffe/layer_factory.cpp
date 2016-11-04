@@ -97,24 +97,24 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #endif
 
   // New, more flexible way of providing engine
-  if (!use_dilation && param.engine_sequence() != "") {
+  if (param.engine_sequence() != "") {
     EngineParser ep(param.engine_sequence());
 
     if (ep.isEngine("CAFFE")) {
       engine = ConvolutionParameter_Engine_CAFFE;
     }
 #ifdef USE_CUDNN
-    else if (ep.isEngine("CUDNN")) {
+    else if (!use_dilation && ep.isEngine("CUDNN")) {
       engine = ConvolutionParameter_Engine_CUDNN;
     }
 #endif
 #ifdef MKL2017_SUPPORTED
-    else if (ep.isEngine("MKL2017")) {
+    else if (!use_dilation && ep.isEngine("MKL2017")) {
       engine = ConvolutionParameter_Engine_MKL2017;
     }
 #endif
 #ifdef MKLDNN_SUPPORTED
-    else if (ep.isEngine("MKLDNN")) {
+    else if (!use_dilation && ep.isEngine("MKLDNN")) {
       engine = ConvolutionParameter_Engine_MKLDNN;
     }
 #endif

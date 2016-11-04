@@ -11,6 +11,7 @@
 #include "caffe/layers/mkldnn_layers.hpp"
 #endif
 
+static const char* supportedEngines[] = {"CAFFE","CUDNN","MKL2017","MKLDNN"};
 class EngineParser
 {
  public:
@@ -54,8 +55,6 @@ class EngineParser
     private:
 
         std::string engineName;
-        std::vector<std::string> supportedEngines =
-            {"CAFFE","CUDNN","MKL2017","MKLDNN"};
         std::vector<std::string> subEngines;
         
         bool parse(const char *subEngineString)
@@ -125,7 +124,8 @@ class EngineParser
             if (engineName == "MKLDNN")
                 LOG(FATAL) << "Support for MKLDNN is not enabled";
 #endif
-            for (unsigned i = 0; i < supportedEngines.size(); i++ )
+            for (unsigned i = 0;
+                 i < sizeof(supportedEngines)/sizeof(supportedEngines[0]); i++ )
                 if (supportedEngines[i] == engineName)
                     return;
             LOG(FATAL) << "Unknown engine: " << engineName;

@@ -79,7 +79,6 @@ python/caffe/proto/
 cmake_build
 .cmake_build
 nbproject/*
-external/*
 
 # Generated documentation
 docs/_site
