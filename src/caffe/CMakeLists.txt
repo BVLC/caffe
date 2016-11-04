@@ -3,7 +3,8 @@ file(GLOB proto_files proto/*.proto)
 caffe_protobuf_generate_cpp_py(${proto_gen_folder} proto_srcs proto_hdrs proto_python ${proto_files})
 
 # include python files either to force generation
-add_library(proto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
+#add_library(proto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
+add_library(proto SHARED ${proto_hdrs} ${proto_srcs} ${proto_python})
 set(Caffe_LINKER_LIBS proto ${Caffe_LINKER_LIBS}) # note, crucial to prepend!
 caffe_default_properties(proto)
 

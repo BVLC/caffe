@@ -4,7 +4,8 @@ endif()
 
 # Known NVIDIA GPU achitectures Caffe can be compiled for.
 # This list will be used for CUDA_ARCH_NAME = All option
-set(Caffe_known_gpu_archs "20 21(20) 30 35 50")
+#set(Caffe_known_gpu_archs "20 21(20) 30 35 50")
+set(Caffe_known_gpu_archs "30 35 50")
 
 ################################################################################################
 # A function for automatic detection of GPUs installed  (if autodetection is enabled)
@@ -45,6 +46,7 @@ function(caffe_detect_installed_gpus out_variable)
     message(STATUS "Automatic GPU detection failed. Building for all known architectures.")
     set(${out_variable} ${Caffe_known_gpu_archs} PARENT_SCOPE)
   else()
+    message(STATUS "Setting ${out_variable} to ${CUDA_gpu_detect_output}")
     set(${out_variable} ${CUDA_gpu_detect_output} PARENT_SCOPE)
   endif()
 endfunction()
