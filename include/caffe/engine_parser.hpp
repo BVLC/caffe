@@ -7,10 +7,12 @@
 #include <vector>
 
 #ifdef MKLDNN_SUPPORTED
-#include "caffe/layers/mkldnn_layers.hpp"
+#include "caffe/mkldnn_base.hpp"
 #endif
 
-static const char* supportedEngines[] = {"CAFFE", "CUDNN", "MKL2017", "MKLDNN"};
+namespace caffe {
+static const char* supportedEngines[] =
+    {"CAFFE", "CUDNN", "MKL2017", "MKLDNN"};
 class EngineParser {
  public:
   explicit EngineParser(const std::string subEngineString) {
@@ -31,16 +33,17 @@ class EngineParser {
   }
 
 #ifdef MKLDNN_SUPPORTED
-  engine &getSubEngine(unsigned engineIndex) const {
+  engine& getSubEngine(unsigned engineIndex) const {
     const char *engineName = subEngines[engineIndex].c_str();
 
-    if (!stricmp(engineName, "CPU"))
-      return &CpuEngine::Instance().get_engine();
+    if (!strcmp(engineName, "CPU"))
+      return CpuEngine::Instance().get_engine();
 
-    if (!stricmp(engineName, "FPGA"))
-      return &CpuEngine::Instance().get_engine();  // TODO: change
+    // TODO: change
+    if (!strcmp(engineName, "FPGA"))
+      return CpuEngine::Instance().get_engine();
 
-    LOG(FATAL) << "EngineParser: Unknown subengine";
+    LOG(FATAL) << "EngineParser: Unknown subengine: " << engineName;
   }
 #endif
 
@@ -100,8 +103,6 @@ class EngineParser {
   }
 
   void validateEngine() {
-    if (subEngines.size() > 0 && engineName != "MKLDNN")
-      LOG(FATAL) << "Engine " << engineName << " does not support subengines";
 #ifndef USE_CUDNN
     if (engineName == "CUDNN")
         LOG(FATAL) << "Support for CUDNN is not enabled";
@@ -116,8 +117,12 @@ class EngineParser {
 #endif
     for (unsigned i = 0;
          i < sizeof(supportedEngines)/sizeof(supportedEngines[0]); i++ )
-        if (supportedEngines[i] == engineName)
+        if (supportedEngines[i] == engineName) {
+            if (subEngines.size() > 0 && engineName != "MKLDNN")
+              LOG(FATAL) << "Engine " << engineName
+                         << " does not support subengines";
             return;
+        }
     LOG(FATAL) << "Unknown engine: " << engineName;
   }
 
@@ -147,5 +152,5 @@ class EngineParser {
     return subEngineString;
   }
 };
-
+}  // namespace caffe
 #endif

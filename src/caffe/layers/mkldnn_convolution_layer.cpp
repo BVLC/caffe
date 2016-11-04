@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <vector>
 
-#include "caffe/engine_parser.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
@@ -155,10 +154,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }
 
-    EngineParser ep(this->layer_param_.engine_sequence());
-    unsigned numberOfSubEngines = ep.getNumberOfSubEngines();
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine_sequence();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
-    for(subEngineIndex; subEngineIndex < numberOfSubEngines; subEngineIndex++) {
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
                 ep.getSubEngine(subEngineIndex)));
@@ -166,12 +168,12 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
       catch(...) {
         continue;
       }
-      
       break;
     }
 
     CHECK(convFwd_pd);
     engine engine = ep.getSubEngine(subEngineIndex);
+
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 

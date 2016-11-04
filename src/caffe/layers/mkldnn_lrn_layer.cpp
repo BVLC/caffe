@@ -115,7 +115,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
-    engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
@@ -128,13 +127,35 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
         prv_mpd = mem_descr->prv_memory_pd();
     } else {
         input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
-        usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
+
     // ---- Initialize LRN primitive descriptor -------------
     lrn_forward::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
                             , size_, alpha_, beta_);
-    lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc, cpu_engine));
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine_sequence();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc,
+                ep.getSubEngine(subEngineIndex)));
+      }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(lrnFwd_pd);
+    engine engine = ep.getSubEngine(subEngineIndex);
+
+    // ---- Initialize remaining memory descriptors -------------
+    if (!bottom_data_is_prv)
+      usr_mpd.reset(new memory::primitive_desc(*input_md, engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));

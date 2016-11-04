@@ -82,7 +82,6 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
-    engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
@@ -95,14 +94,35 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
         prv_mpd = mem_descr->prv_memory_pd();
     } else {
         input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
-        usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
 
     // ---- Initialize relu primitive descriptor -------------
     relu_forward::desc reluFwd_desc(propagation, *input_md, negative_slope);
-    reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc, cpu_engine));
 
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine_sequence();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc,
+                ep.getSubEngine(subEngineIndex)));
+      }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(reluFwd_pd);
+    engine engine = ep.getSubEngine(subEngineIndex);
+
+    // ---- Initialize remaining memory descriptors -------------
+    if (!bottom_data_is_prv)
+      usr_mpd.reset(new memory::primitive_desc(*input_md, engine));
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
     input_primitive = fwd_bottom_data->create_input(false);
