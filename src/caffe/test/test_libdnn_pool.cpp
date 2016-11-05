@@ -1,3 +1,6 @@
+#ifdef USE_LIBDNN
+
+
 #include <algorithm>
 #include <vector>
 
@@ -786,3 +789,4 @@ TYPED_TEST(LibDNNPoolingLayerNDTest, TestBackward) {
 }
 
 }  // namespace caffe
+#endif  // USE_LIBDNN
