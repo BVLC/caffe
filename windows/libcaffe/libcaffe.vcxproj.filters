@@ -336,6 +336,12 @@
     <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp">
       <Filter>src\util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\solvers\HebbianSolver.cpp">
+      <Filter>src\solvers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -638,6 +644,12 @@
     <ClInclude Include="..\..\include\caffe\layers\scale_layer.hpp">
       <Filter>include\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\HebbianSolver.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\HebbianConvLayer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu">
@@ -810,6 +822,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu">
       <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cu">
+      <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

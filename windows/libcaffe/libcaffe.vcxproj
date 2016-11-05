@@ -131,6 +131,7 @@
     <ClCompile Include="..\..\src\caffe\layers\flatten_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hdf5_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hdf5_output_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hinge_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\im2col_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\image_data_layer.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="..\..\src\caffe\solvers\adadelta_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\adagrad_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\adam_solver.cpp" />
+    <ClCompile Include="..\..\src\caffe\solvers\HebbianSolver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\nesterov_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\rmsprop_solver.cpp" />
     <ClCompile Include="..\..\src\caffe\solvers\sgd_solver.cpp" />
@@ -197,6 +199,7 @@
     <ClInclude Include="..\..\include\caffe\data_reader.hpp" />
     <ClInclude Include="..\..\include\caffe\data_transformer.hpp" />
     <ClInclude Include="..\..\include\caffe\filler.hpp" />
+    <ClInclude Include="..\..\include\caffe\HebbianSolver.hpp" />
     <ClInclude Include="..\..\include\caffe\internal_thread.hpp" />
     <ClInclude Include="..\..\include\caffe\layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\absval_layer.hpp" />
@@ -233,6 +236,7 @@
     <ClInclude Include="..\..\include\caffe\layers\flatten_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hdf5_data_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hdf5_output_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\HebbianConvLayer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hinge_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\im2col_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\image_data_layer.hpp" />
@@ -353,6 +357,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)\CommonSettings.targets" />
