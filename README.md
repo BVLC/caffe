@@ -58,16 +58,16 @@ In case one of the steps in the above procedure is not working please refer to t
 
 ### Use cuDNN
 
-To use cuDNN you need to define the CUDNN_ROOT cache variable to point to where you unpacked the cuDNN files. For example, the build command above would become:
+To use cuDNN you need to define the CUDNN_ROOT cache variable to point to where you unpacked the cuDNN files e.g. `C:/Users/myuser/Projects/machine-learning/cudnn-8.0-windows10-x64-v5.1/cuda`. For example, the build command above would become:
 
 ```
 > set CMAKE_GENERATOR=Ninja
 > set CMAKE_CONFIGURATION=Release
 > mkdir build
 > cd build
-> cmake -G%CMAKE_GENERATOR% -DBLAS=Open -DCMAKE_BUILD_TYPE=%CMAKE_CONFIGURATION% -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=<install_path> -DCUDNNROOT=<path_to_cudnn> -C %CAFFE_DEPENDENCIES%\caffe-builder-config.cmake  ..\
+> cmake -G%CMAKE_GENERATOR% -DBLAS=Open -DCMAKE_BUILD_TYPE=%CMAKE_CONFIGURATION% -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=<install_path> -DCUDNN_ROOT=C:/Users/myuser/Projects/machine-learning/cudnn-8.0-windows10-x64-v5.1/cuda -C %CAFFE_DEPENDENCIES%\caffe-builder-config.cmake  ..\
 > cmake --build . --config %CMAKE_CONFIGURATION%
-> cmake
+> cmake --build . --config %CMAKE_CONFIGURATION% --target install
 ```
 Make sure to use forward slashes (`/`) in the path. You will need to add the folder containing the cuDNN DLL to your PATH.
 
