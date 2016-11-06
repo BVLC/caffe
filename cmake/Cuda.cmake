@@ -216,12 +216,13 @@ function(detect_cuDNN)
 
     string(COMPARE LESS "${CUDNN_VERSION_MAJOR}" 3 cuDNNVersionIncompatible)
     if(cuDNNVersionIncompatible)
-      message(FATAL_ERROR "cuDNN version >3 is required.")
+      message(STATUS "cuDNN version >3 is supported. Build without cuDNN.")
+      set(HAVE_CUDNN  FALSE PARENT_SCOPE)
+      set(CUDNN_FOUND FALSE PARENT_SCOPE)
+    else()
+      set(CUDNN_VERSION "${CUDNN_VERSION}" PARENT_SCOPE)
+      mark_as_advanced(CUDNN_INCLUDE CUDNN_LIBRARY CUDNN_ROOT)
     endif()
-
-    set(CUDNN_VERSION "${CUDNN_VERSION}" PARENT_SCOPE)
-    mark_as_advanced(CUDNN_INCLUDE CUDNN_LIBRARY CUDNN_ROOT)
-
   endif()
 endfunction()
 
