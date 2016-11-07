@@ -238,9 +238,9 @@ int train() {
   caffe::SolverParameter solver_param;
   caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
-  // Override engine_sequence if provided in cmd line
+  // Override engine if provided in cmd line
   if (FLAGS_engine != "")
-    solver_param.set_engine_sequence(FLAGS_engine);
+    solver_param.set_engine(FLAGS_engine);
 
   solver_param.mutable_train_state()->set_level(FLAGS_level);
   for (int i = 0; i < stages.size(); i++) {

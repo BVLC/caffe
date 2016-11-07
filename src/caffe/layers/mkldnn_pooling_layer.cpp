@@ -216,7 +216,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md,*output_md
                                         , {sh, sw}, {kh, kw}, {ph, pw}, {ph, pw}, padding_kind::zero);
     // ---- Determining engine to use -----------------------
-    std::string subengines = this->layer_param_.engine_sequence();
+    std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);

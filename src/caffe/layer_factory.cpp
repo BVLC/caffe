@@ -97,8 +97,8 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #endif
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
     if (ep.isEngine("CAFFE")) {
       engine = ConvolutionParameter_Engine_CAFFE;
@@ -177,8 +177,8 @@ shared_ptr<Layer<Dtype> > GetInnerProductLayer(
   InnerProductParameter_Engine engine = ip_param.engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE")) {
       engine = InnerProductParameter_Engine_CAFFE;
     }
@@ -222,8 +222,8 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
 
     // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
     if (ep.isEngine("CAFFE")) {
       engine = PoolingParameter_Engine_CAFFE;
@@ -302,8 +302,8 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   LRNParameter_Engine engine = param.lrn_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
     if (ep.isEngine("CAFFE"))
       engine = LRNParameter_Engine_CAFFE;
@@ -376,14 +376,18 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   BatchNormParameter_Engine engine = param.batch_norm_param().engine();
 
 // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
   if (ep.isEngine("CAFFE"))
     engine = BatchNormParameter_Engine_CAFFE;
 #if defined(MKL2017_SUPPORTED)
   else if (ep.isEngine("MKL2017"))
     engine = BatchNormParameter_Engine_MKL2017;
+#endif
+#if defined(MKLDNN_SUPPORTED)
+  else if (ep.isEngine("MKLDNN"))
+    engine = BatchNormParameter_Engine_MKLDNN;
 #endif
   }
 
@@ -420,8 +424,8 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
   SplitParameter_Engine engine = param.split_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE"))
       engine = SplitParameter_Engine_CAFFE;
 #if defined(MKL2017_SUPPORTED)
@@ -457,8 +461,8 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
     if (ep.isEngine("CAFFE"))
       engine = ReLUParameter_Engine_CAFFE;
@@ -513,14 +517,18 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   ConcatParameter_Engine engine = param.concat_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
 
     if (ep.isEngine("CAFFE"))
-      engine = ConcatParameter_Engine_MKL2017;
+      engine = ConcatParameter_Engine_CAFFE;
 #if defined(MKL2017_SUPPORTED)
     else if (ep.isEngine("MKL2017") && param.concat_param().axis() == 1)
       engine = ConcatParameter_Engine_MKL2017;
+#endif
+#if defined(MKLDNN_SUPPORTED)
+    else if (ep.isEngine("MKLDNN"))
+      engine = ConcatParameter_Engine_MKLDNN;
 #endif
   }
 
@@ -556,8 +564,8 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   EltwiseParameter_Engine engine = param.eltwise_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE"))
       engine = EltwiseParameter_Engine_CAFFE;
 #if defined(MKL2017_SUPPORTED)
@@ -592,8 +600,8 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   SigmoidParameter_Engine engine = param.sigmoid_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE"))
       engine = SigmoidParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
@@ -627,8 +635,8 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   SoftmaxParameter_Engine engine = param.softmax_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE"))
       engine = SoftmaxParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
@@ -662,8 +670,8 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   TanHParameter_Engine engine = param.tanh_param().engine();
 
   // New, more flexible way of providing engine
-  if (param.engine_sequence() != "") {
-    EngineParser ep(param.engine_sequence());
+  if (param.engine() != "") {
+    EngineParser ep(param.engine());
     if (ep.isEngine("CAFFE"))
       engine = TanHParameter_Engine_CAFFE;
 #ifdef USE_CUDNN

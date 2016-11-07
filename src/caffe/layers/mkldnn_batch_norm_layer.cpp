@@ -146,7 +146,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     // ---- Initialize BatchNorm primitive descriptor -------------
     batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_);
     // ---- Determining engine to use -----------------------
-    std::string subengines = this->layer_param_.engine_sequence();
+    std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);

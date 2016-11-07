@@ -101,7 +101,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     relu_forward::desc reluFwd_desc(propagation, *input_md, negative_slope);
 
     // ---- Determining engine to use -----------------------
-    std::string subengines = this->layer_param_.engine_sequence();
+    std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);

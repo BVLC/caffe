@@ -134,7 +134,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     lrn_forward::desc lrnFwd_desc(propagation, lrn_algorithm, *input_md
                             , size_, alpha_, beta_);
     // ---- Determining engine to use -----------------------
-    std::string subengines = this->layer_param_.engine_sequence();
+    std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);

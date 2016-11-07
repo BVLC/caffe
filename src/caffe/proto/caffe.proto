@@ -142,7 +142,7 @@ message NetParameter {
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
 
-  optional string engine_sequence = 9 [default = ""];
+  optional string engine = 9 [default = ""];
 
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
@@ -155,7 +155,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 44 (last added: engine_sequence)
+// SolverParameter next available ID: 44 (last added: engine)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -299,7 +299,7 @@ message SolverParameter {
 
   optional MultinodeParameter multinode_param = 41;
   optional bool disabled_update = 42 [default = false];
-  optional string engine_sequence = 43 [default = ""];
+  optional string engine = 43 [default = ""];
 }
 
 // A message that stores the solver snapshots
@@ -367,7 +367,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: engine_sequence)
+// LayerParameter next available layer-specific ID: 150 (last added: engine)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -467,7 +467,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
   optional RemoteDataParameter remote_data_param = 148;
 
-  optional string engine_sequence = 149 [default = ""];
+  optional string engine = 149 [default = ""];
 }
 
 // Message that stores parameters used to apply transformation

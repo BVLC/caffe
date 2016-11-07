@@ -20,9 +20,6 @@ class EngineParser {
     // Check for wrong engine name
     validateEngine();
   }
-  const char *getEngineName() const {
-    return engineName.c_str();
-  }
 
   const bool isEngine(const char* name) const {
     return (engineName == name);
@@ -34,6 +31,7 @@ class EngineParser {
 
 #ifdef MKLDNN_SUPPORTED
   engine& getSubEngine(unsigned engineIndex) const {
+    CHECK(engineIndex < getNumberOfSubEngines());
     const char *engineName = subEngines[engineIndex].c_str();
 
     if (!strcmp(engineName, "CPU"))
@@ -52,10 +50,6 @@ class EngineParser {
   std::vector<std::string> subEngines;
 
   bool parse(const char *subEngineString) {
-    // Initialize containers
-    engineName.clear();
-    subEngines.clear();
-    subEngines.reserve(4);
 
     // Ignore whitespaces
     subEngineString = parseWhitespaces(subEngineString);

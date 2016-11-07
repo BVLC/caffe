@@ -127,7 +127,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     }
 
     // ---- Determining engine to use -----------------------
-    std::string subengines = this->layer_param_.engine_sequence();
+    std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
