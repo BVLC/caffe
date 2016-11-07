@@ -934,8 +934,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DKERNEL_HEIGHT=" << kernel_h_ <<
         " -DSTRIDE_X=" << stride_w_ <<
         " -DSTRIDE_Y=" << stride_h_ <<
-        " -D_IW=" << width_ <<
-        " -D_IH=" << height_ <<
+        " -DINPUT_WIDTH=" << width_ <<
+        " -DINPUT_HEIGHT=" << height_ <<
         " -DINPUT_DEPTH=" << channels_ <<
         " -DWIDTH1=" << alignedFilterWidth <<
         " -DOUT_PADDING_LEFT=" << 0 <<
@@ -956,13 +956,13 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
 
   if (need_padding_)
-    optionsString << " -D_IWPAD=" << 0 << " -D_IHPAD=" << 0
+    optionsString << " -DINPUT_PAD_W=" << 0 << " -DINPUT_PAD_H=" << 0
                   << " -DALIGNED_INPUT_SIZE=" << padded_height_ * padded_width_ * channels_
                   << " -DROW_PITCH=" <<   padded_width_
                   << " -DSLICE_PITCH=" << padded_width_ * padded_height_
                   << " -DBATCH_PITCH=" << padded_width_ * padded_height_ * M_;
   else
-    optionsString << " -D_IWPAD=" << pad_w_ << " -D_IHPAD=" << pad_h_
+    optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_
                   << " -DALIGNED_INPUT_SIZE=" << height_ * width_ * channels_
                   << " -DROW_PITCH=" <<   width_
                   << " -DSLICE_PITCH=" << width_ * height_
@@ -1060,6 +1060,10 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
       / output_block_height, (size_t) num_batches * ((num_output_maps + 15) & ~15) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
+  int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_) + 3) & ~3;
+  int tile_y = (output_block_height -1) * stride_h_ + kernel_h_;
+  int tile_y_stride = 64 / tile_x;
+  int invec_size = (tile_y + tile_y_stride - 1) / tile_y_stride;
 
   optionsString << " -D SIMD_SIZE=" << simd_size
                 << " -D filter_qualifier=__global" << " -D OUT_BLOCK_WIDTH="
@@ -1076,12 +1080,17 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -DKERNEL_HEIGHT=" << kernel_h_
                 << " -DNUM_FILTERS=" << M_ << " -DSTRIDEX=" << stride_w_
                 << " -DSTRIDEY=" << stride_h_ << " -DOWPAD=" << 0 << " -DOHPAD="
-                << 0 << " -DOUT_BUFF_OFFSET=" << 0;
+                << 0 << " -DOUT_BUFF_OFFSET=" << 0
+                << " -DTILE_X=" << tile_x
+                << " -DTILE_Y=" << tile_y
+                << " -DTILE_Y_STRIDE=" << tile_y_stride
+                << " -DINVEC_SIZE=" << invec_size
+                << " -DALIGNED_NUM_FILTERS=" << ((M_ + 15) & ~15);
 
   if (need_padding_)
-    optionsString << " -D_IWPAD=" << 0 << " -D_IHPAD=" << 0;
+    optionsString << " -DINPUT_PAD_W=" << 0 << " -DINPUT_PAD_H=" << 0;
   else
-    optionsString << " -D_IWPAD=" << pad_w_ << " -D_IHPAD=" << pad_h_;
+    optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
 
   string options = optionsString.str();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
