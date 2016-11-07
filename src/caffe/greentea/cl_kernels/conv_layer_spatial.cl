@@ -310,38 +310,16 @@ __kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp 
 #ifdef IDLF
 
 #define activation_function(x) (x)
-
-#define _ID INPUT_DEPTH
-#define _OD NUM_FILTERS
-
-#define FILTER_DEPTH INPUT_DEPTH
-#define NUM_INPUT INPUT_DEPTH
-#define NUM_OUTPUT NUM_FILTERS
-
 #define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
 
-#ifndef MASTER_OUT_BLOCK_WIDTH
-#define MASTER_OUT_BLOCK_WIDTH OUT_BLOCK_WIDTH
-#endif
-#ifndef MASTER_OUT_BLOCK_HEIGHT
-#define MASTER_OUT_BLOCK_HEIGHT OUT_BLOCK_HEIGHT
-#endif
-
-// Each work-item computes a 4x6 region of one output map.
-// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same 4x6 region of the imput image.
-// NDRange:  (_OW+pad)/ OUT_BLOCK_WIDTH, (_OH+pad)/OUT_BLOCK_HEIGHT, _OD/OUT_BLOCK_DEPTH
+// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.
+// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same region of the imput image.
+// NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH
 
 //#define SIMD_SIZE 16
-// NOTE: this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
 #ifdef SIMD16
 
-#define TILE_X ((((OUT_BLOCK_WIDTH - 1) * STRIDEX + KERNEL_WIDTH) + 3) & ~3)
-#define TILE_Y ((OUT_BLOCK_HEIGHT - 1) * STRIDEY + KERNEL_HEIGHT)
-
-#define TILE_Y_STRIDE (64 / TILE_X)
-#define INVEC_NUM ((TILE_Y + TILE_Y_STRIDE - 1) / TILE_Y_STRIDE)
-
-#define ALIGNED_OD ((_OD + 15) & ~15)
+// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
 __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
 convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
@@ -349,18 +327,18 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     filter_qualifier float* weights_base,
     __global float* biases_base,
     __global float* outputs_base,
-    const ushort _IW,
-    const ushort _IH,
-    const ushort _OW,
-    const ushort _OH)
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height)
 {
   __global float* outputs = outputs_base;
   __global float* inputs = inputs_base;
   filter_qualifier float* weights = weights_base;
   __global float* biases = biases_base;
 
-  uint_tp oc = get_global_id(0) * MASTER_OUT_BLOCK_WIDTH;  // oc = Output Column
-  uint_tp or = get_global_id(1) * MASTER_OUT_BLOCK_HEIGHT;// or = Output Row
+  uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column
+  uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row
   uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
   uint_tp fmg = get_group_id(2);
   uint_tp lid = get_local_id(2);
@@ -370,65 +348,55 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   int_tp in_addr;
 
   // find weights adress of given neuron (lid is index)
-  uint_tp weight_addr = (fmg % (ALIGNED_OD/SIMD_SIZE)) * INPUT_DEPTH * KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE + lid;
+  uint_tp weight_addr = (fmg % (ALIGNED_NUM_FILTERS/SIMD_SIZE)) * INPUT_DEPTH * KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE + lid;
 
   for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {
     out[i]=0.0f;
   }
 
-  uint_tp num_in_batch = ( fm ) / ALIGNED_OD;
+  uint_tp num_in_batch = ( fm ) / ALIGNED_NUM_FILTERS;
 
-  uint_tp input_batch_offset = num_in_batch * _IH * _IW * TOTAL_INPUT_DEPTH_SIZE;
+  uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;
 
   int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );
   int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;
-#if _IWPAD != 0 || _IHPAD != 0
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
   int saved_y = curr_y;
 #endif
-  in_addr = input_batch_offset + INPUT_START_Z * _IH * _IW
-            +  (curr_y - _IHPAD) * _IW             // y tile offset
-            +   curr_x - _IWPAD;                        // x tile offset
+  in_addr = input_batch_offset + INPUT_START_Z * input_height * input_width
+            +  (curr_y - INPUT_PAD_H) * input_width             // y tile offset
+            +   curr_x - INPUT_PAD_W;                        // x tile offset
   union {
-    float4 in_vec[INVEC_NUM];
-    float in_array[INVEC_NUM * 4];
+    float4 in_vec[INVEC_SIZE];
+    float in_array[INVEC_SIZE * 4];
   } in_buf;
 
-  for(int_tp kd = 0; kd < _ID; kd++)
+  for(int_tp kd = 0; kd < INPUT_DEPTH; kd++)
   {
     int_tp in_offset = in_addr;
     int_tp reg = 0;
-#if INVEC_NUM == 1
-    LOOP(1, reg,
-#elif INVEC_NUM == 2
-    LOOP(2, reg,
-#elif INVEC_NUM == 3
-    LOOP(3, reg,
-#elif INVEC_NUM == 4
-    LOOP(4, reg,
-#else
-    #error too large invec_num.
-#endif
+    LOOP(INVEC_SIZE, reg,
       {
-#if _IWPAD != 0 || _IHPAD != 0
-        if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x + 3 >= _IWPAD && curr_x < _IW + _IWPAD) {
-          if (curr_x < _IWPAD) {
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
+        if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {
+          if (curr_x < INPUT_PAD_W) {
             in_buf.in_vec[reg].s0 = 0;
-            if (curr_x + 1 >= _IWPAD)
+            if (curr_x + 1 >= INPUT_PAD_W)
               in_buf.in_vec[reg].s1 = *(inputs + in_offset + 1);
             else
               in_buf.in_vec[reg].s1 = 0;
-            if (curr_x + 2 >= _IWPAD)
+            if (curr_x + 2 >= INPUT_PAD_W)
               in_buf.in_vec[reg].s2 = *(inputs + in_offset + 2);
             else
               in_buf.in_vec[reg].s2 = 0;
             in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);
           } else {
             in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
-            if (curr_x + 1 >= _IW + _IWPAD)
+            if (curr_x + 1 >= input_width + INPUT_PAD_W)
               in_buf.in_vec[reg].s1 = 0;
-            if (curr_x + 2 >= _IW + _IWPAD)
+            if (curr_x + 2 >= input_width + INPUT_PAD_W)
               in_buf.in_vec[reg].s2 = 0;
-            if (curr_x + 3 >= _IW + _IWPAD)
+            if (curr_x + 3 >= input_width + INPUT_PAD_W)
               in_buf.in_vec[reg].s3 = 0;
           }
         } else {
@@ -438,10 +406,10 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 #else
         in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
 #endif
-        in_offset += _IW * TILE_Y_STRIDE;
+        in_offset += input_width * TILE_Y_STRIDE;
       });
-    in_addr += _IH * _IW;
-#if _IWPAD != 0 || _IHPAD != 0
+    in_addr += input_height * input_width;
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
     curr_y = saved_y;
 #endif
 
@@ -468,8 +436,6 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                 for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
                   for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
                     float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);
-                    //if (fm == 0 && oc == 0 && br == 1 && bc == 1 && num_in_batch == 0)
-                    //  printf("TILE_X %d TILE_Y_STRIDE %d out %d %d ch %d fm %d input %d %d %f %f :", TILE_X, TILE_Y_STRIDE, br, bc, kd, fm, br * STRIDEY + kr, bc * STRIDEX + kc, input, weight_buf.w[w_idx % WEIGHT_PREF]);
                     out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
                   }
                 }
@@ -502,18 +468,18 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     weight_addr = orig_weight_addr + KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE;
 
   }
-  if (ALIGNED_OD != _OD && fm > 0xfffffffeul) {
+  // dead code to work around possible compiler bug.
+  if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {
     printf("%f", BLOCK_IN(fm % 16));
   }
 
   // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_OD) ) * _OW * _OH;
+  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_NUM_FILTERS) ) * output_width * output_height;
+  out_addr += or * output_width + oc;  // offset for the 4x3 block that this workitem is working on;
 
-  out_addr += or * _OW + oc;  // offset for the 4x3 block that this workitem is working on;
-
-  if (ALIGNED_OD == _OD || (fm % ALIGNED_OD) < _OD) {
+  if (ALIGNED_NUM_FILTERS == NUM_FILTERS || (fm % ALIGNED_NUM_FILTERS) < NUM_FILTERS) {
   // we need this address calculation for biases because we support views and batching
-  float bias = biases[(fm) % _OD ];
+  float bias = biases[(fm) % NUM_FILTERS ];
 #ifndef WRITE_PADDED_VALUES
   if(get_global_id(0) != (get_global_size(0)-1) &&
       get_global_id(1) != (get_global_size(1)-1) )
@@ -522,7 +488,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
         // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
 #ifndef WRITE_PADDED_VALUES
@@ -530,7 +496,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -538,7 +504,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -546,7 +512,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   {
     for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
       for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * _OW + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
   }
@@ -646,13 +612,13 @@ __kernel void Conv_Interleaved(
 
     int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;
     int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;
-#if _IHPAD != 0 || _IWPAD != 0
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
     int saved_y = curr_y;
 #endif
     const __global float *src0_read = src0
      + ALIGNED_INPUT_SIZE * global_z                            // batch offset
-     + (curr_y - _IHPAD) * ROW_PITCH      // y offset
-     + (curr_x - _IWPAD);                 // x offset
+     + (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset
+     + (curr_x - INPUT_PAD_W);                 // x offset
 
 
     // Src1 (filter) is directly used as btile.
@@ -680,7 +646,7 @@ __kernel void Conv_Interleaved(
     do
     {
         int patch_row = 0;
-#if _IHPAD != 0 || _IWPAD != 0
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
         curr_y = saved_y;
 #endif
         do
@@ -696,7 +662,7 @@ __kernel void Conv_Interleaved(
             // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
             // ...
             const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-#if _IWPAD == 0 && _IHPAD == 0
+#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0
             float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];
             float*  pblockA00 = (float*)(&blockA00);
 #else
@@ -705,7 +671,7 @@ __kernel void Conv_Interleaved(
             int pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y >= _IHPAD && curr_y < _IH + _IHPAD && curr_x + pos >= _IWPAD && curr_x + pos < _IW + _IWPAD)
+              if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)
                 pblockA00[pos] = src0_read[pos];
               else
                 pblockA00[pos] = 0;
@@ -905,18 +871,18 @@ __kernel void Conv_Interleaved(
     int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;
     int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;
     int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;
-#if _IHPAD != 0 || _IWPAD != 0
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
     int saved_y0 = curr_y0;
     int saved_y1 = curr_y1;
 #endif
     const __global float *src0_read0 = src0
      + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
-     + (curr_y0 - _IHPAD) * ROW_PITCH   // y offset
-     + curr_x0 - _IWPAD;                // x offset
+     + (curr_y0 - INPUT_PAD_H) * ROW_PITCH   // y offset
+     + curr_x0 - INPUT_PAD_W;                // x offset
     const __global float *src0_read1 = src0
      + ALIGNED_INPUT_SIZE * global_z                                            // batch offset
-     + (curr_y1 - _IHPAD) * ROW_PITCH   // y offset
-     + curr_x1 - _IWPAD;                // x offset
+     + (curr_y1 - INPUT_PAD_H) * ROW_PITCH   // y offset
+     + curr_x1 - INPUT_PAD_W;                // x offset
 
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
@@ -956,7 +922,7 @@ __kernel void Conv_Interleaved(
             // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
             // ...
             const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-#if _IHPAD == 0 && _IWPAD == 0
+#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0
             float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;
             float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;
             float*  pblockA00 = (float*)(&blockA00);
@@ -967,7 +933,7 @@ __kernel void Conv_Interleaved(
             int pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y0 >= _IHPAD && curr_y0 < _IH + _IHPAD && curr_x0 + pos >= _IWPAD && curr_x0 + pos< _IW + _IWPAD)
+              if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)
                 pblockA00[pos] = src0_read0[pos];
               else
                 pblockA00[pos] = 0;
@@ -978,7 +944,7 @@ __kernel void Conv_Interleaved(
             pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y1 >= _IHPAD && curr_y1 < _IH + _IHPAD && curr_x1 + pos >= _IWPAD && curr_x1 + pos < _IW + _IWPAD)
+              if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)
                 pblockA01[pos] = src0_read1[pos];
               else
                 pblockA01[pos] = 0;
@@ -1043,7 +1009,7 @@ __kernel void Conv_Interleaved(
 
         //while( ++patch_row < 1 ); //debug
         while( ++patch_row < KERNEL_HEIGHT );
-#if _IWPAD != 0 || _IHPAD != 0
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
         curr_y0 = saved_y0;
         curr_y1 = saved_y1;
 #endif
