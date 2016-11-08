@@ -76,6 +76,32 @@ private:
     engine _cpu_engine;
 };
 
+#ifdef FPGA_ENABLED
+// =====  FPGAEngine =======================================
+// fpga_engine singleton
+class FPGAEngine
+{
+public:
+    static FPGAEngine & Instance()
+    {
+        // I's thread-safe in C++11.
+        static FPGAEngine myInstance;
+        return myInstance;
+    }
+    FPGAEngine(FPGAEngine const&) = delete;             // Copy construct
+    FPGAEngine(FPGAEngine&&) = delete;                  // Move construct
+    FPGAEngine& operator=(FPGAEngine const&) = delete;  // Copy assign
+    FPGAEngine& operator=(FPGAEngine &&) = delete;      // Move assign
+
+    engine & get_engine() { return _fpga_engine; }
+protected:
+    FPGAEngine() : _fpga_engine(engine::fpga, 0) {}
+    ~FPGAEngine() {}
+private:
+    engine _fpga_engine;
+};
+#endif // #ifdef FPGA_ENABLED
+
 // =====  MKLDNNStream =======================================
 class MKLDNNStream {
 public:
