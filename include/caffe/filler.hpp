@@ -342,13 +342,12 @@ layer {
 #define sqr(a) ((a) * (a))
 template <typename Dtype>
 class GaborFiller : public Filler<Dtype> {
-
   struct FilterParameters
   {
         double lambda, theta, psi, sigma, gamma;
-  };
+  } filterParams;
 
-  double gabor(int c, int y, int x, const FilterParameters &filterParameters)
+  double gabor(int order, int c, int y, int x, const FilterParameters &filterParameters)
   {
     const double range = 1;
     const double dx = 2 * range * x / (order - 1) - range;
@@ -371,23 +370,22 @@ class GaborFiller : public Filler<Dtype> {
 
  public:
   explicit GaborFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param)
+      , filterParams({param.lambda(),param.theta(),param.psi(),param.sigma(),param.gamma()}) {}
+
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK_LE(blob->num_axes(), 3) << "Blob must be 3 dim or less.";
     CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
 
     Dtype* data = blob->mutable_cpu_data();
-    int 2d_area = sqr(blob->width());
+    int order = blob->width();
+    int area2d = sqr(order);
 
     for (int i = 0; i < blob->count(); ++i) {
       int x = i % blob->width();
       int y = (i / blob->width()) % blob->height();
-      int c = (i / 2d_area) % blob->channels();
-      data[i] = gabor(c, y, x, FilterParameters{lambda = param.lambda,
-                                                theta  = param.theta,
-                                                psi    = param.psi,
-                                                sigma  = param.sigma,
-                                                gamma  = param.gamma});
+      int c = (i / area2d) % blob->channels();
+      data[i] = gabor(order, c, y, x, filterParams);
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
