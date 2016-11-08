@@ -195,6 +195,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
+    engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     memory::dims input_tz = {n, c, ih, iw};
     memory::dims output_tz = {n, c, oh, ow};
@@ -212,6 +213,8 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     shared_ptr<memory::desc> input_md(new memory::desc({input_tz}, mpcsn, cmfmt));
     shared_ptr<memory::desc> output_md(new memory::desc({output_tz}, mpcsn, cmfmt));
 
+    shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_output_mpd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     // ---- Initialize pooling primitive descriptor -------------
     pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md,*output_md
                                         , {sh, sw}, {kh, kw}, {ph, pw}, {ph, pw}, padding_kind::zero);
@@ -236,8 +239,6 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // ---- Initialize remaining memory descriptors -------------
-    shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, engine));
-    shared_ptr<MemPD> usr_output_mpd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, engine));
     shared_ptr<MemPD> prv_input_mpd(NULL);
     shared_ptr<MemPD> prv_output_mpd(NULL);
     if (bottom_data_is_prv) {

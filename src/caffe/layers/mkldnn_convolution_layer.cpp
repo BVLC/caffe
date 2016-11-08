@@ -172,7 +172,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     }
 
     CHECK(convFwd_pd);
-    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
+    engine cpu_engine = CpuEngine::Instance().get_engine();
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
@@ -184,10 +184,10 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
     memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, engine));
-    shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, engine));
-    shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, engine));
-    shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, engine));
+    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
+    shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
 
     // ---  init primitive and prv_memory descriptors ----------------------

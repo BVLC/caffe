@@ -128,6 +128,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
+    engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
@@ -140,6 +141,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         prv_mpd = mem_descr->prv_memory_pd();
     } else {
         input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
+        usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
 
@@ -163,10 +165,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     }
 
     CHECK(BatchNormFwd_pd);
-    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
-    if(!bottom_data_is_prv)
-      usr_mpd.reset(new memory::primitive_desc(*input_md, engine));
     // ---- Create memory  ---------------------
     scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
 
