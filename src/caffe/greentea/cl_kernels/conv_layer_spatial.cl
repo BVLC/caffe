@@ -28,19 +28,20 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
 #define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))
 
 #ifdef MULTI
-__kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
+__kernel void CFMulti(__global Dtype* image_data,
+    int_tp image_offset,
     __global Dtype* kernel_data, int_tp kernel_offset,
     __global Dtype* bias,const int_tp bias_offset,
     __global Dtype* convolved_image,const int_tp convolved_image_offset,
-    const ushort WIDTH,
-    const ushort HEIGHT,
-    const ushort OUTPUT_W,
-    const ushort OUTPUT_H) {
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height) {
 
   const int_tp outputX = get_global_id(0);
   const int_tp outputY = get_global_id(1);
   const int_tp kernelNum = get_global_id(2)*ZPAR;
-  if(outputX < OUTPUT_W && outputY < OUTPUT_H)
+  if(outputX < output_width && outputY < output_height)
   {
     Dtype sum[ZPAR];
     Dtype4 vectorSum[ZPAR];
@@ -52,8 +53,8 @@ __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
 
     const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;
     const int_tp biasIndex=bias_offset + kernelNum;
-    const int_tp local_image_offset = outputY*STRIDE_H*WIDTH + outputX*STRIDE_W;
-    const int_tp imageSize = WIDTH*HEIGHT;
+    const int_tp local_image_offset = outputY*STRIDE_H*input_width + outputX*STRIDE_W;
+    const int_tp imageSize = input_width*input_height;
     const int_tp float4Reads = KERNEL_W / 4;
     const int_tp floatReads = KERNEL_W % 4;
     Dtype4 imageCache;
@@ -94,10 +95,10 @@ __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
           vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;
         }
 
-        image_dataPtrFloat += WIDTH;
+        image_dataPtrFloat += input_width;
         kernel_dataPtrFloat += KERNEL_W;
       }
-      image_dataPtrFloat += imageSize - WIDTH*KERNEL_H;
+      image_dataPtrFloat += imageSize - input_width*KERNEL_H;
     }
     for(int_tp kern =0; kern < ZPAR; kern++)
     sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;
@@ -106,205 +107,18 @@ __kernel void CFMulti(__global Dtype* image_data, int_tp image_offset,
     {
       for(int_tp kern = 0; kern < ZPAR; kern++)
       if(kernelNum+kern < OUTPUT_Z)
-      convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX] =
+      convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] =
       sum[kern] + bias[biasIndex +kern];
     }
     else
     for(int_tp kern = 0; kern < ZPAR; kern++)
     if(kernelNum+kern < OUTPUT_Z)
-    convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX] = sum[kern];
+    convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] = sum[kern];
   }
 }
 
 #endif
 
-
-#ifdef MULTI_11
-__kernel void CFMulti_11_11_4(__global Dtype* image_data, int_tp image_offset,
-    __global Dtype* kernel_data, int_tp kernel_offset,
-    __global Dtype* bias,const int_tp bias_offset,
-    __global Dtype* convolved_image,const int_tp convolved_image_offset,
-    const ushort WIDTH,
-    const ushort HEIGHT,
-    const ushort OUTPUT_W,
-    const ushort OUTPUT_H) {
-
-  int_tp outputX = get_global_id(0)*XPAR;
-  int_tp outputY = get_global_id(1)*YPAR;
-  int_tp kernelNum = get_global_id(2)*ZPAR;
-  if(outputX < OUTPUT_W && outputY < OUTPUT_H)
-  {
-    Dtype sum[XPAR*YPAR*ZPAR];
-    for(int_tp kern =0; kern < XPAR*YPAR*ZPAR; kern++)
-    {
-      sum[kern] = 0.0f;
-    }
-
-    int_tp currentKernelOffset = kernel_offset + kernelNum*KERNELSIZE*CHANNELS;
-    int_tp biasIndex=bias_offset + kernelNum;
-    int_tp local_image_offset = outputY*STRIDE_H*WIDTH + outputX*STRIDE_W;
-    int_tp imageSize = WIDTH*HEIGHT;
-    int_tp index;
-
-    __global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));
-    __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
-
-    Dtype16 imageCache;
-    Dtype8 imageCacheR;
-    Dtype8 kernelCache;
-    Dtype4 kernelCacheR;
-
-    for(int_tp c = 0; c < CHANNELS; c++)
-    {
-      for(int_tp y = 0; y < 11; y++)
-      {
-        imageCache = ((__global Dtype16*)image_dataPtrFloat)[0];
-        imageCacheR =((__global Dtype8*)image_dataPtrFloat)[2];
-
-        for(int_tp kern =0; kern < ZPAR; kern++)
-        {
-          kernelCache = ((__global Dtype8*)&(kernel_dataPtrFloat[kern*KERNELSIZE*CHANNELS]))[0];
-          kernelCacheR = ((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNELSIZE*CHANNELS]))[2];
-
-          index = kern*XPAR;
-          sum[index + 0] += dot(imageCache.S0123,kernelCache.S0123);
-          sum[index + 1] += dot(imageCache.S4567,kernelCache.S0123);
-          sum[index + 2] += dot(imageCache.S89AB,kernelCache.S0123);
-          sum[index + 3] += dot(imageCache.SCDEF,kernelCache.S0123);
-
-          sum[index + 0] += dot(imageCache.S4567,kernelCache.S4567);
-          sum[index + 1] += dot(imageCache.S89AB,kernelCache.S4567);
-          sum[index + 2] += dot(imageCache.SCDEF,kernelCache.S4567);
-          sum[index + 3] += dot(imageCacheR.S0123,kernelCache.S4567);
-
-          sum[index + 0] += dot(imageCache.S89A,kernelCacheR.S012);
-          sum[index + 1] += dot(imageCache.SCDE,kernelCacheR.S012);
-          sum[index + 2] += dot(imageCacheR.S012,kernelCacheR.S012);
-          sum[index + 3] += dot(imageCacheR.S456,kernelCacheR.S012);
-        }
-
-        image_dataPtrFloat += WIDTH;
-        kernel_dataPtrFloat += KERNEL_W;
-      }
-      image_dataPtrFloat += imageSize - WIDTH*KERNEL_H;
-    }
-
-    if(APPLY_BIAS == 1)
-    {
-      for(int_tp kern = 0; kern < ZPAR; kern++)
-      {
-        for(int_tp wi =0; wi < XPAR; wi++)
-        if(kernelNum+kern < OUTPUT_Z && outputX + wi < OUTPUT_W)
-        convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX + wi] =
-        sum[kern*XPAR + wi] + bias[biasIndex +kern];
-      }
-    }
-    else
-    for(int_tp kern = 0; kern < ZPAR; kern++)
-    for(int_tp wi =0; wi < XPAR; wi++)
-    if(kernelNum+kern < OUTPUT_Z && outputX + wi < OUTPUT_W)
-    convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + outputY*OUTPUT_W + outputX + wi] = sum[kern*XPAR + wi];
-  }
-}
-
-#endif
-
-#ifdef MULTI_GEN
-__kernel void CFMulti_6(__global const Dtype* restrict image_data, const int_tp image_offset,
-    __global const Dtype* restrict kernel_data, const int_tp kernel_offset,
-    __global const Dtype* restrict bias,const int_tp bias_offset,
-    __global Dtype* restrict convolved_image,const int_tp convolved_image_offset,
-    const ushort WIDTH,
-    const ushort HEIGHT,
-    const ushort OUTPUT_W,
-    const ushort OUTPUT_H) {
-
-  const int_tp outputX = get_global_id(0)*XPAR;
-  const int_tp outputY = get_global_id(1)*YPAR;
-  const int_tp kernelNum = get_global_id(2)*ZPAR;
-
-  if(outputX < OUTPUT_W && outputY < OUTPUT_H)
-  {
-    Dtype sum[XPAR*YPAR*ZPAR];
-    for(uint_tp kern = 0; kern < XPAR*YPAR*ZPAR; kern++)
-    sum[kern] = 0.0f;
-
-    const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNELSIZE*CHANNELS;
-    const int_tp biasIndex=bias_offset + kernelNum;
-    const int_tp local_image_offset = outputY*STRIDE_H*WIDTH + outputX*STRIDE_W;
-    const int_tp imageSize = WIDTH*HEIGHT;
-    int_tp index;
-
-    __global const Dtype* image_dataPtrFloat[2];
-    image_dataPtrFloat[0] = (image_data + (image_offset + local_image_offset));
-    image_dataPtrFloat[1] = image_dataPtrFloat[0];
-    __global const Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
-
-    DTImage imageCache[YPAR];
-    DTKernel kernelCache;
-    Dtype4 temp;
-
-    for(uint_tp c = 0; c < CHANNELS; c++)
-    {
-      imageCache[0] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-      for(uint_tp preload = 1; preload < YPAR; preload++)
-      {
-        image_dataPtrFloat[1] += WIDTH;
-        imageCache[preload] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-      }
-
-      int_tp y =0;
-      LOOP(KERNEL_H, y,
-          {
-            int_tp kern=0;
-            LOOP(ZPAR, kern,
-                {
-                  kernelCache = ((__global DTKernel*)&(kernel_dataPtrFloat[kern*KERNELSIZE*CHANNELS]))[0];
-                  index = kern*XPAR*YPAR;
-
-                  for(uint_tp y_par = 0; y_par < YPAR; y_par++)
-                  {
-                    temp = floatDotV4(imageCache[y_par],kernelCache);
-                    sum[index + y_par*XPAR + 0] += temp.s0;
-                    sum[index + y_par*XPAR + 1] += temp.s1;
-                    sum[index + y_par*XPAR + 2] += temp.s2;
-                    sum[index + y_par*XPAR + 3] += temp.s3;
-                  }
-                });
-
-            kernel_dataPtrFloat += KERNEL_W;
-
-            for(uint_tp rotateData = 0; rotateData < YPAR - 1; rotateData++)
-            imageCache[rotateData] = imageCache[rotateData + 1];
-
-            image_dataPtrFloat[1] += WIDTH;
-            imageCache[YPAR - 1] = ((__global DTImage*)image_dataPtrFloat[1])[0];
-          });
-
-      image_dataPtrFloat[0] += imageSize;
-      image_dataPtrFloat[1] = image_dataPtrFloat[0];
-    }
-
-    if(APPLY_BIAS == 1)
-    {
-      for(uint_tp kern = 0; kern < ZPAR; kern++)
-      {
-        for(uint_tp hi =0; hi < YPAR; hi++)
-        for(uint_tp wi =0; wi < XPAR; wi++)
-        if(kernelNum+kern < OUTPUT_Z && outputX + wi < OUTPUT_W && outputY + hi < OUTPUT_H)
-        convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + (outputY +hi)*OUTPUT_W + outputX + wi] =
-        sum[kern*XPAR*YPAR + XPAR*hi + wi] + bias[biasIndex +kern];
-      }
-    }
-    else
-    for(uint_tp kern = 0; kern < ZPAR; kern++)
-    for(uint_tp hi =0; hi < YPAR; hi++)
-    for(uint_tp wi =0; wi < XPAR; wi++)
-    if(kernelNum+kern < OUTPUT_Z && outputX + wi < OUTPUT_W && outputY + hi < OUTPUT_H)
-    convolved_image[convolved_image_offset + (kernelNum+kern)*OUTPUT_H*OUTPUT_W + (outputY + hi)*OUTPUT_W + outputX + wi] = sum[kern*XPAR*YPAR +XPAR*hi +wi];
-  }
-}
-#endif
 
 //Begin IDLF kernels below here
 #ifdef IDLF

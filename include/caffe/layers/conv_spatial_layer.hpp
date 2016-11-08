@@ -123,11 +123,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
-  virtual bool generate_kernel(const vector<Blob<Dtype>*>& bottom,
-                               const vector<Blob<Dtype>*>& top,
-                               int_tp blockWidth,
-                               int_tp blockHeight,
-                               int_tp blockDepth);
   virtual void setup_convolution(const vector<Blob<Dtype>*>& bottom,
                                  const vector<Blob<Dtype>*>& top,
                                  const Blob<Dtype> &verify_blob);
