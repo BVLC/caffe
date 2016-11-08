@@ -37,10 +37,10 @@ class EngineParser {
     if (!strcmp(engineName, "CPU"))
       return CpuEngine::Instance().get_engine();
 
-    // TODO: change
+#ifdef FPGA_ENABLED
     if (!strcmp(engineName, "FPGA"))
-      return CpuEngine::Instance().get_engine();
-
+      return FPGAEngine::Instance().get_engine();
+#endif
     LOG(FATAL) << "EngineParser: Unknown subengine: " << engineName;
   }
 #endif

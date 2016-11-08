@@ -202,8 +202,9 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
   EXPECT_EQ(2, ep3.getNumberOfSubEngines());
 
   EXPECT_EQ(&ep3.getMKLDNNSubEngine(0), &CpuEngine::Instance().get_engine());
-  // EXPECT_EQ(&ep3.getMKLDNNSubEngine(1), &FPGAEngine::Instance().get_engine());
-
+#ifdef FPGA_ENABLED
+   EXPECT_EQ(&ep3.getMKLDNNSubEngine(1), &FPGAEngine::Instance().get_engine());
+#endif
   EngineParser ep4("MKLDNN:FPGA,CPU,FPGA");
   EXPECT_FALSE(ep4.isEngine("CAFFE"));
   EXPECT_TRUE(ep4.isEngine("MKLDNN"));
@@ -212,9 +213,13 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
 
   EXPECT_EQ(3, ep4.getNumberOfSubEngines());
 
-  // EXPECT_EQ(&ep4.getMKLDNNSubEngine(0), &FPGAEngine::Instance().get_engine());
+#ifdef FPGA_ENABLED
+  EXPECT_EQ(&ep4.getMKLDNNSubEngine(0), &FPGAEngine::Instance().get_engine());
+#endif
   EXPECT_EQ(&ep4.getMKLDNNSubEngine(1), &CpuEngine::Instance().get_engine());
-  // EXPECT_EQ(&ep4.getMKLDNNSubEngine(2), &FPGAEngine::Instance().get_engine());
+#ifdef FPGA_ENABLED
+  EXPECT_EQ(&ep4.getMKLDNNSubEngine(2), &FPGAEngine::Instance().get_engine());
+#endif
 #endif
 
 #ifdef USE_CUDNN
@@ -294,7 +299,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetCAFFE) {
   // Do all the automatically inserted splits have correct engine?
   const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
   for (int i = 0; i < layers.size(); i++) {
-    if(layers[i]->layer_param().type() == "Split"){
+    if (layers[i]->layer_param().type() == "Split"){
       string name = layers[i]->layer_param().name();
       Layer<Dtype>* split_layer = net->layer_by_name(name).get();
       SplitLayer<Dtype>* split_caffe =
@@ -368,7 +373,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKL2017) {
   // Do all the automatically inserted splits have correct engine?
   const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
   for (int i = 0; i < layers.size(); i++) {
-    if(layers[i]->layer_param().type() == "Split"){
+    if (layers[i]->layer_param().type() == "Split"){
       string name = layers[i]->layer_param().name();
       Layer<Dtype>* split_layer = net->layer_by_name(name).get();
       MKLSplitLayer<Dtype>* split_mkl =
@@ -443,7 +448,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
   // Do all the automatically inserted splits have correct engine?
   const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
   for (int i = 0; i < layers.size(); i++) {
-    if(layers[i]->layer_param().type() == "Split"){
+    if (layers[i]->layer_param().type() == "Split"){
       string name = layers[i]->layer_param().name();
       Layer<Dtype>* split_layer = net->layer_by_name(name).get();
       SplitLayer<Dtype>* split_caffe =
