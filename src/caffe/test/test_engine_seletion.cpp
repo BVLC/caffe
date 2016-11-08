@@ -213,14 +213,14 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
 
   EXPECT_EQ(3, ep4.getNumberOfSubEngines());
 
+  EXPECT_EQ(&ep4.getMKLDNNSubEngine(1), &CpuEngine::Instance().get_engine());
+
 #ifdef FPGA_ENABLED
   EXPECT_EQ(&ep4.getMKLDNNSubEngine(0), &FPGAEngine::Instance().get_engine());
-#endif
-  EXPECT_EQ(&ep4.getMKLDNNSubEngine(1), &CpuEngine::Instance().get_engine());
-#ifdef FPGA_ENABLED
   EXPECT_EQ(&ep4.getMKLDNNSubEngine(2), &FPGAEngine::Instance().get_engine());
 #endif
-#endif
+
+#endif  // #ifdef MKLDNN_SUPPORTED
 
 #ifdef USE_CUDNN
   EngineParser ep5("CUDNN");
