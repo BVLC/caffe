@@ -246,6 +246,11 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetCAFFE) {
           dynamic_cast<MKLConvolutionLayer<Dtype>* >(conv1_layer);
   EXPECT_EQ(null_ptr, conv1_mkl);
 #endif
+#ifdef MKLDNN_SUPPORTED
+  MKLDNNConvolutionLayer<Dtype>* conv1_mkldnn =
+          dynamic_cast<MKLDNNConvolutionLayer<Dtype>* >(conv1_layer);
+  EXPECT_EQ(null_ptr, conv1_mkldnn);
+#endif
   // relu1 verification
   Layer<Dtype>* relu1_layer = net->layer_by_name("relu1").get();
   ReLULayer<Dtype>* relu1_caffe =
