@@ -178,8 +178,6 @@ class TestEngineSelection : public MultiDeviceTest<TypeParam> {
 TYPED_TEST_CASE(TestEngineSelection, TestDtypesAndDevices);
 
 TYPED_TEST(TestEngineSelection, TestEngineParser) {
-  typedef typename TypeParam::Dtype Dtype;
-
   EngineParser ep1("CAFFE");
   EXPECT_TRUE(ep1.isEngine("CAFFE"));
   EXPECT_FALSE(ep1.isEngine("MKLDNN"));
