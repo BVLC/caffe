@@ -298,6 +298,101 @@ class BilinearFiller : public Filler<Dtype> {
   }
 };
 
+/*!
+@brief Fills a Blob with Gabor filters.
+
+A common use case is with the first convolutional layer for edge detection.
+You can specify coefficients as lambda theta psi sigma and gamma using
+the following proto.
+\code
+layer {
+  name: "conv1/7x7_s2"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1/7x7_s2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 3
+    kernel_size: 7
+    stride: 2
+    weight_filler {
+      type: "gabor"
+      lambda: 1
+      theta: 1
+      psi: 1
+      sigma: 1
+      gamma: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+\endcode
+ */
+#define sqr(a) ((a) * (a))
+template <typename Dtype>
+class GaborFiller : public Filler<Dtype> {
+
+  struct FilterParameters
+  {
+        double lambda, theta, psi, sigma, gamma;
+  };
+
+  double gabor(int c, int y, int x, const FilterParameters &filterParameters)
+  {
+    const double range = 1;
+    const double dx = 2 * range * x / (order - 1) - range;
+    const double dy = 2 * range * y / (order - 1) - range;
+    const double xp = dx * cos(filterParameters.theta) + dy * sin(filterParameters.theta);
+    const double yp = dx * -sin(filterParameters.theta) + dy * cos(filterParameters.theta);
+
+    double base = exp(-(sqr(xp) + sqr(filterParameters.gamma) * sqr(yp)) / (2 * sqr(filterParameters.sigma)));
+    double real = base * cos(2 * M_PI * xp / filterParameters.lambda + filterParameters.psi);
+    double imag = base * sin(2 * M_PI * xp / filterParameters.lambda + filterParameters.psi);
+
+    switch(c) {
+      case 0: return real;
+      case 1: return imag;
+      case 2: return hypot(real, imag);
+    }
+
+    return 0;
+  }
+
+ public:
+  explicit GaborFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    CHECK_LE(blob->num_axes(), 3) << "Blob must be 3 dim or less.";
+    CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
+
+    Dtype* data = blob->mutable_cpu_data();
+    int 2d_area = sqr(blob->width());
+
+    for (int i = 0; i < blob->count(); ++i) {
+      int x = i % blob->width();
+      int y = (i / blob->width()) % blob->height();
+      int c = (i / 2d_area) % blob->channels();
+      data[i] = gabor(c, y, x, FilterParameters{lambda = param.lambda,
+                                                theta  = param.theta,
+                                                psi    = param.psi,
+                                                sigma  = param.sigma,
+                                                gamma  = param.gamma});
+    }
+    CHECK_EQ(this->filler_param_.sparse(), -1)
+         << "Sparsity not supported by this Filler.";
+  }
+};
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
@@ -321,6 +416,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+  } else if (type == "gabor") {
+    return new GaborFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
