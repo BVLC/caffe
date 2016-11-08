@@ -142,7 +142,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc,
-                ep.getSubEngine(subEngineIndex)));
+                ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -151,7 +151,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRN(const vector<Blob<Dtype>*>& bottom, const ve
     }
 
     CHECK(lrnFwd_pd);
-    engine engine = ep.getSubEngine(subEngineIndex);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // ---- Initialize remaining memory descriptors -------------
     if (!bottom_data_is_prv)

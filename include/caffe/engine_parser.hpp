@@ -30,7 +30,7 @@ class EngineParser {
   }
 
 #ifdef MKLDNN_SUPPORTED
-  engine& getSubEngine(unsigned engineIndex) const {
+  engine& getMKLDNNSubEngine(unsigned engineIndex) const {
     CHECK(engineIndex < getNumberOfSubEngines());
     const char *engineName = subEngines[engineIndex].c_str();
 
@@ -50,7 +50,6 @@ class EngineParser {
   std::vector<std::string> subEngines;
 
   bool parse(const char *subEngineString) {
-
     // Ignore whitespaces
     subEngineString = parseWhitespaces(subEngineString);
 

@@ -163,7 +163,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
-                ep.getSubEngine(subEngineIndex)));
+                ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -172,7 +172,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     }
 
     CHECK(convFwd_pd);
-    engine engine = ep.getSubEngine(subEngineIndex);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc

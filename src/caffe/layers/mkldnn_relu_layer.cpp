@@ -109,7 +109,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc,
-                ep.getSubEngine(subEngineIndex)));
+                ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -118,7 +118,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     }
 
     CHECK(reluFwd_pd);
-    engine engine = ep.getSubEngine(subEngineIndex);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // ---- Initialize remaining memory descriptors -------------
     if (!bottom_data_is_prv)

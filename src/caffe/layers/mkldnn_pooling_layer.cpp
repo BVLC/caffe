@@ -224,7 +224,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc,
-                ep.getSubEngine(subEngineIndex)));
+                ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -233,7 +233,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
     }
 
     CHECK(poolingFwd_pd);
-    engine engine = ep.getSubEngine(subEngineIndex);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // ---- Initialize remaining memory descriptors -------------
     shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, engine));

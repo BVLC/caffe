@@ -35,6 +35,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <string>
 #include <vector>
 
 #include "google/protobuf/text_format.h"
@@ -72,25 +73,10 @@ namespace caffe {
 template <typename TypeParam>
 class TestEngineSelection : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
+
  protected:
-  TestEngineSelection()
-    : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
-      blob_top_(new Blob<Dtype>()) {
-    // fill the values
-    FillerParameter filler_param;
-    GaussianFiller<Dtype> filler(filler_param);
-    filler.Fill(this->blob_bottom_);
-    blob_bottom_vec_.push_back(blob_bottom_);
-    blob_top_vec_.push_back(blob_top_);
-  }
-
-  virtual ~TestEngineSelection() { delete blob_bottom_; delete blob_top_; }
-
-  Blob<Dtype>* const blob_bottom_;
-  Blob<Dtype>* const blob_top_;
-  vector<Blob<Dtype>*> blob_bottom_vec_;
-  vector<Blob<Dtype>*> blob_top_vec_;
-
+  TestEngineSelection() {}
+  virtual ~TestEngineSelection() {}
 
   virtual void InitNetFromProtoString(const string& proto) {
     NetParameter param;
@@ -98,7 +84,7 @@ class TestEngineSelection : public MultiDeviceTest<TypeParam> {
     net_.reset(new Net<Dtype>(param));
   }
 
-  virtual void InitNet(const string& net_engine = "") {
+  virtual void InitNet(const string& net_engine) {
     string proto =
         "engine: '" + net_engine + "' "
         "layer { "
@@ -169,17 +155,17 @@ class TestEngineSelection : public MultiDeviceTest<TypeParam> {
         "   type: 'Concat'"
         " } "
         " layer { "
-	"   bottom: 'concat1' "
         "   bottom: 'concat1' "
-	"   top: 'eltw1' "
-	"   name: 'eltw1' "
-	"   type: 'Eltwise' "
+        "   bottom: 'concat1' "
+        "   top: 'eltw1' "
+        "   name: 'eltw1' "
+        "   type: 'Eltwise' "
         "}"
         " layer { "
-	"   bottom: 'eltw1' "
-	"   top: 'split1' "
-	"   name: 'split1' "
-	"   type: 'Split' "
+        "   bottom: 'eltw1' "
+        "   top: 'split1' "
+        "   name: 'split1' "
+        "   type: 'Split' "
         "}"
         ;
 
@@ -195,7 +181,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
   typedef typename TypeParam::Dtype Dtype;
 
   EngineParser ep1("CAFFE");
-  EXPECT_TRUE (ep1.isEngine("CAFFE"));
+  EXPECT_TRUE(ep1.isEngine("CAFFE"));
   EXPECT_FALSE(ep1.isEngine("MKLDNN"));
   EXPECT_FALSE(ep1.isEngine("MKL2017"));
   EXPECT_FALSE(ep1.isEngine("CUDNN"));
@@ -204,33 +190,33 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
   EngineParser ep2("MKL2017");
   EXPECT_FALSE(ep2.isEngine("CAFFE"));
   EXPECT_FALSE(ep2.isEngine("MKLDNN"));
-  EXPECT_TRUE (ep2.isEngine("MKL2017"));
+  EXPECT_TRUE(ep2.isEngine("MKL2017"));
   EXPECT_FALSE(ep2.isEngine("CUDNN"));
 #endif
 
 #ifdef MKLDNN_SUPPORTED
   EngineParser ep3("MKLDNN:CPU,FPGA");
   EXPECT_FALSE(ep3.isEngine("CAFFE"));
-  EXPECT_TRUE (ep3.isEngine("MKLDNN"));
+  EXPECT_TRUE(ep3.isEngine("MKLDNN"));
   EXPECT_FALSE(ep3.isEngine("MKL2017"));
   EXPECT_FALSE(ep3.isEngine("CUDNN"));
 
   EXPECT_EQ(2, ep3.getNumberOfSubEngines());
 
-  EXPECT_EQ(&ep3.getSubEngine(0), &CpuEngine::Instance().get_engine());
-  //EXPECT_EQ(&ep3.getSubEngine(1), &FPGAEngine::Instance().get_engine());
+  EXPECT_EQ(&ep3.getMKLDNNSubEngine(0), &CpuEngine::Instance().get_engine());
+  // EXPECT_EQ(&ep3.getMKLDNNSubEngine(1), &FPGAEngine::Instance().get_engine());
 
   EngineParser ep4("MKLDNN:FPGA,CPU,FPGA");
   EXPECT_FALSE(ep4.isEngine("CAFFE"));
-  EXPECT_TRUE (ep4.isEngine("MKLDNN"));
+  EXPECT_TRUE(ep4.isEngine("MKLDNN"));
   EXPECT_FALSE(ep4.isEngine("MKL2017"));
   EXPECT_FALSE(ep4.isEngine("CUDNN"));
 
   EXPECT_EQ(3, ep4.getNumberOfSubEngines());
 
-  //EXPECT_EQ(&ep4.getSubEngine(0), &FPGAEngine::Instance().get_engine());
-  EXPECT_EQ(&ep4.getSubEngine(1), &CpuEngine::Instance().get_engine());
-  //EXPECT_EQ(&ep4.getSubEngine(2), &FPGAEngine::Instance().get_engine());
+  // EXPECT_EQ(&ep4.getMKLDNNSubEngine(0), &FPGAEngine::Instance().get_engine());
+  EXPECT_EQ(&ep4.getMKLDNNSubEngine(1), &CpuEngine::Instance().get_engine());
+  // EXPECT_EQ(&ep4.getMKLDNNSubEngine(2), &FPGAEngine::Instance().get_engine());
 #endif
 
 #ifdef USE_CUDNN
@@ -238,7 +224,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
   EXPECT_FALSE(ep5.isEngine("CAFFE"));
   EXPECT_FALSE(ep5.isEngine("MKLDNN"));
   EXPECT_FALSE(ep5.isEngine("MKL2017"));
-  EXPECT_TRUE (ep5.isEngine("CUDNN"));
+  EXPECT_TRUE(ep5.isEngine("CUDNN"));
 #endif
 }
 
@@ -383,7 +369,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
 
   void* null_ptr = NULL;
-  this->InitNet("MKLDNN");
+  this->InitNet("MKLDNN:CPU");
   Net<Dtype>* net = this->net_.get();
 
   // conv1 verification
@@ -392,7 +378,7 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
           dynamic_cast<MKLDNNConvolutionLayer<Dtype>* >(conv1_layer);
   EXPECT_NE(null_ptr, conv1_mkldnn);
 
-  // ConvolutionLayer is a base for MKLDNNConvolutionLayer, so this is not nullptr
+  // MKLDNNConvolutionLayer is derived from ConvolutionLayer, so this is OK
   ConvolutionLayer<Dtype>* conv1_caffe =
           dynamic_cast<ConvolutionLayer<Dtype>* >(conv1_layer);
   EXPECT_NE(null_ptr, conv1_caffe);

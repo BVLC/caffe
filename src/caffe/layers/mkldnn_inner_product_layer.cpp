@@ -135,7 +135,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc,
-                ep.getSubEngine(subEngineIndex)));
+                ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
         continue;
@@ -144,7 +144,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     }
 
     CHECK(ipFwd_pd);
-    engine engine = ep.getSubEngine(subEngineIndex);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
 
     // Create priv memory primitive descriptors stored as class members
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
