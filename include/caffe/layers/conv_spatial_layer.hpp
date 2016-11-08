@@ -230,7 +230,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   bool tuned_;
   // if need_padding_ is true, we need to pad the input image,
-  // otherwise, we don't need to pad it then the convolution kernel need to handle it.
+  // otherwise, we don't need to pad it then the convolution kernel
+  // need to handle it.
   bool need_padding_;
 
   std::string key_;

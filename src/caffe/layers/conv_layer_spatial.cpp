@@ -305,7 +305,8 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     oclk_copy_weight.arg(argIdx++, channels);
     oclk_copy_weight.arg(argIdx++, this->num_output_);
     oclk_copy_weight.arg(argIdx++, swizzled_factor);
-    const size_t global_work_size_Copy[3] = { (size_t) (((this->num_output_ + 15) & ~15)
+    const size_t global_work_size_Copy[3] = {
+        (size_t) (((this->num_output_ + 15) & ~15)
         * channels * kernel_w_ * kernel_h_), 1, 1 };
 
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
@@ -837,7 +838,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
 
   if (need_padding_)
     optionsString << " -DINPUT_PAD_W=" << 0 << " -DINPUT_PAD_H=" << 0
-                  << " -DALIGNED_INPUT_SIZE=" << padded_height_ * padded_width_ * channels_
+                  << " -DALIGNED_INPUT_SIZE="
+                  << padded_height_ * padded_width_ * channels_
                   << " -DROW_PITCH=" <<   padded_width_
                   << " -DSLICE_PITCH=" << padded_width_ * padded_height_
                   << " -DBATCH_PITCH=" << padded_width_ * padded_height_ * M_;
@@ -937,7 +939,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
 
   size_t global_size[3] = { (size_t) (output_width + output_block_width - 1)
       / output_block_width, (size_t) (output_height + output_block_height - 1)
-      / output_block_height, (size_t) num_batches * ((num_output_maps + 15) & ~15) };
+      / output_block_height,
+      (size_t) num_batches * ((num_output_maps + 15) & ~15) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
   int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_) + 3) & ~3;
