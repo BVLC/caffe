@@ -241,10 +241,11 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetCAFFE) {
           dynamic_cast<ConvolutionLayer<Dtype>* >(conv1_layer);
   EXPECT_NE(null_ptr, conv1_caffe);
 
+#ifdef MKL2017_SUPPORTED
   MKLConvolutionLayer<Dtype>* conv1_mkl =
           dynamic_cast<MKLConvolutionLayer<Dtype>* >(conv1_layer);
   EXPECT_EQ(null_ptr, conv1_mkl);
-
+#endif
   // relu1 verification
   Layer<Dtype>* relu1_layer = net->layer_by_name("relu1").get();
   ReLULayer<Dtype>* relu1_caffe =
@@ -287,11 +288,17 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetCAFFE) {
           dynamic_cast<EltwiseLayer<Dtype>* >(eltw1_layer);
   EXPECT_NE(null_ptr, eltw1_caffe);
 
-  // split1 verification
-  Layer<Dtype>* split1_layer = net->layer_by_name("split1").get();
-  SplitLayer<Dtype>* split1_caffe =
-          dynamic_cast<SplitLayer<Dtype>* >(split1_layer);
-  EXPECT_NE(null_ptr, split1_caffe);
+  // Do all the automatically inserted splits have correct engine?
+  const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
+  for (int i = 0; i < layers.size(); i++) {
+    if(layers[i]->layer_param().type() == "Split"){
+      string name = layers[i]->layer_param().name();
+      Layer<Dtype>* split_layer = net->layer_by_name(name).get();
+      SplitLayer<Dtype>* split_caffe =
+          dynamic_cast<SplitLayer<Dtype>* >(split_layer);
+      EXPECT_NE(null_ptr, split_caffe);
+    }
+  }
 }
 
 #ifdef MKL2017_SUPPORTED
@@ -355,13 +362,18 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKL2017) {
           dynamic_cast<MKLEltwiseLayer<Dtype>* >(eltw1_layer);
   EXPECT_NE(null_ptr, eltw1_mkl);
 
-  // split1 verification
-  Layer<Dtype>* split1_layer = net->layer_by_name("split1").get();
-  MKLSplitLayer<Dtype>* split1_mkl =
-          dynamic_cast<MKLSplitLayer<Dtype>* >(split1_layer);
-  EXPECT_NE(null_ptr, split1_mkl);
+  // Do all the automatically inserted splits have correct engine?
+  const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
+  for (int i = 0; i < layers.size(); i++) {
+    if(layers[i]->layer_param().type() == "Split"){
+      string name = layers[i]->layer_param().name();
+      Layer<Dtype>* split_layer = net->layer_by_name(name).get();
+      MKLSplitLayer<Dtype>* split_mkl =
+          dynamic_cast<MKLSplitLayer<Dtype>* >(split_layer);
+      EXPECT_NE(null_ptr, split_mkl);
+    }
+  }
 }
-
 #endif
 
 #ifdef MKLDNN_SUPPORTED
@@ -425,11 +437,17 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
           dynamic_cast<EltwiseLayer<Dtype>* >(eltw1_layer);
   EXPECT_NE(null_ptr, eltw1_caffe);
 
-  // split1 verification
-  Layer<Dtype>* split1_layer = net->layer_by_name("split1").get();
-  SplitLayer<Dtype>* split1_caffe =
-          dynamic_cast<SplitLayer<Dtype>* >(split1_layer);
-  EXPECT_NE(null_ptr, split1_caffe);
+  // Do all the automatically inserted splits have correct engine?
+  const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
+  for (int i = 0; i < layers.size(); i++) {
+    if(layers[i]->layer_param().type() == "Split"){
+      string name = layers[i]->layer_param().name();
+      Layer<Dtype>* split_layer = net->layer_by_name(name).get();
+      SplitLayer<Dtype>* split_caffe =
+          dynamic_cast<SplitLayer<Dtype>* >(split_layer);
+      EXPECT_NE(null_ptr, split_caffe);
+    }
+  }
 }
 
 #endif
