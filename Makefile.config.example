@@ -2,7 +2,8 @@
 # Contributions simplifying and improving our build system are welcome!
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
-# USE_CUDNN := 1
+USE_CUDNN := 1
+CUDNN_PATH := /home/libs/cuda-5.0
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
@@ -25,7 +26,7 @@
 # CUSTOM_CXX := g++
 
 # CUDA directory contains bin/ and lib/ directories that we need.
-CUDA_DIR := /usr/local/cuda
+CUDA_DIR := /usr/local/cuda-7.5
 # On Ubuntu 14.04, if cuda tools are installed via
 # "sudo apt-get install nvidia-cuda-toolkit" then use this instead:
 # CUDA_DIR := /usr
@@ -43,12 +44,12 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := atlas
+BLAS := open
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-# BLAS_INCLUDE := /path/to/your/blas
-# BLAS_LIB := /path/to/your/blas
+BLAS_INCLUDE := /opt/OpenBLAS/include
+BLAS_LIB := /opt/OpenBLAS/lib
 
 # Homebrew puts openblas in a directory that is not on the standard search path
 # BLAS_INCLUDE := $(shell brew --prefix openblas)/include
@@ -87,8 +88,8 @@ PYTHON_LIB := /usr/lib
 # WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
-INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
-LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include $(CUDNN_PATH)/include
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib $(CUDNN_PATH)/lib64
 
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
@@ -98,7 +99,6 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
-# N.B. both build and distribute dirs are cleared on `make clean`
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
 
