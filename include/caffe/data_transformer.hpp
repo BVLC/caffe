@@ -37,6 +37,16 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
+#ifndef CPU_ONLY
+  void TransformGPU(int N, int C, int H, int W,
+              const Dtype *in, Dtype *out, int *);
+#endif
+  void Copy(const Datum& datum, Dtype *data);
+  void Copy(const cv::Mat& datum, Dtype *data);
+  void CopyPtrEntry(string* str, Dtype* transformed_ptr,
+                    bool output_labels, Dtype *label,
+                    BlockingQueue<string*>* free);
+
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data.
@@ -149,7 +159,7 @@ class DataTransformer {
    * @param datum
    *    Datum containing the data to be transformed.
    */
-  vector<int> InferBlobShape(const Datum& datum);
+  vector<int> InferBlobShape(const Datum& datum, bool use_gpu = false);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -176,10 +186,11 @@ class DataTransformer {
    * @param cv_img
    *    cv::Mat containing the data to be transformed.
    */
-  vector<int> InferBlobShape(const cv::Mat& cv_img);
+  vector<int> InferBlobShape(const cv::Mat& cv_img, bool use_gpu = false);
 #endif  // USE_OPENCV
 
  protected:
+  void TransformGPU(const Datum& datum, Dtype* transformed_data);
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
@@ -190,6 +201,7 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  Dtype *mean_values_gpu_ptr_;
 };
 
 }  // namespace caffe

@@ -15,7 +15,7 @@ namespace caffe {
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
-    : param_(param), phase_(phase) {
+    : param_(param), phase_(phase), mean_values_gpu_ptr_(NULL) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -37,6 +37,145 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     }
   }
 }
+
+#ifdef USE_OPENCV
+template <typename Dtype>
+void DataTransformer<Dtype>::Copy(const cv::Mat& cv_img,
+                                                  Dtype *data) {
+  const int channels = cv_img.channels();
+  const int height = cv_img.rows;
+  const int width = cv_img.cols;
+
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+
+  int top_index;
+  for (int c = 0; c < channels; ++c) {
+    for (int h = 0; h < height; ++h) {
+      const uchar* ptr = cv_img.ptr<uchar>(h);
+      for (int w = 0; w < width; ++w) {
+        int img_index = w*channels + c;
+        top_index = (c * height + h) * width + w;
+        // int top_index = (c * height + h) * width + w;
+        Dtype pixel = static_cast<Dtype>(ptr[img_index]);
+
+              data[top_index] = pixel;
+      }
+    }
+  }
+}
+#endif
+
+template <typename Dtype>
+void DataTransformer<Dtype>::Copy(const Datum& datum,
+                                  Dtype *data) {
+  // If datum is encoded, decoded and transform the cv::image.
+  if (datum.encoded()) {
+#ifdef USE_OPENCV
+    CHECK(!(param_.force_color() && param_.force_gray()))
+        << "cannot set both force_color and force_gray";
+    cv::Mat cv_img;
+    if (param_.force_color() || param_.force_gray()) {
+    // If force_color then decode in color otherwise decode in gray.
+      cv_img = DecodeDatumToCVMat(datum, param_.force_color());
+    } else {
+      cv_img = DecodeDatumToCVMatNative(datum);
+    }
+    // Transform the cv::image into blob.
+    return Copy(cv_img, data);
+#else
+    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
+  } else {
+    if (param_.force_color() || param_.force_gray()) {
+      LOG(ERROR) << "force_color and force_gray only for encoded datum";
+    }
+  }
+
+  const string& datum_data = datum.data();
+  const int datum_channels = datum.channels();
+  const int datum_height = datum.height();
+  const int datum_width = datum.width();
+
+  const bool has_uint8 = datum_data.size() > 0;
+
+  for (int c = 0; c < datum_channels; ++c) {
+    for (int h = 0; h < datum_height; ++h) {
+      for (int w = 0; w < datum_width; ++w) {
+        int idx = (c*datum_height + h)*datum_width + w;
+
+        Dtype element;
+
+        if (has_uint8) {
+          element =
+            static_cast<Dtype>(static_cast<uint8_t>(datum_data[idx]));
+        } else {
+          element = datum.float_data(idx);
+        }
+
+        data[idx] = element;
+      }
+    }
+  }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::CopyPtrEntry(string* str,
+                                          Dtype* transformed_ptr,
+                                          bool output_labels, Dtype *label,
+                                          BlockingQueue<string*>* free_) {
+  Datum datum;
+  datum.ParseFromString(*str);
+  free_->push(str);
+
+  if (output_labels) {
+    *label = datum.label();
+  }
+
+  Copy(datum, transformed_ptr);
+
+  // free_->push(datum);
+}
+
+
+#ifndef CPU_ONLY
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformGPU(const Datum& datum,
+                                       Dtype* transformed_data) {
+  Blob<int> random_vec_;
+
+  vector<int> random_vec_shape_;
+  random_vec_shape_.push_back(3);
+  random_vec_.Reshape(random_vec_shape_);
+
+  int rand1 = 0, rand2 = 0, rand3 = 0;
+  if (param_.mirror()) {
+    rand1 = Rand(RAND_MAX)+1;
+  }
+  if (phase_ == TRAIN && param_.crop_size()) {
+    rand2 = Rand(RAND_MAX)+1;
+    rand3 = Rand(RAND_MAX)+1;
+  }
+  random_vec_.mutable_cpu_data()[0] = rand1;
+  random_vec_.mutable_cpu_data()[1] = rand2;
+  random_vec_.mutable_cpu_data()[2] = rand3;
+
+  vector<int> datum_shape = InferBlobShape(datum, 1);
+  Blob<Dtype> original_data;
+  original_data.Reshape(datum_shape);
+
+  Dtype* original_data_cpu_ptr = original_data.mutable_cpu_data();
+  Copy(datum, original_data_cpu_ptr);
+  Dtype* original_data_gpu_ptr = original_data.mutable_gpu_data();
+
+  TransformGPU(1,
+                datum.channels(),
+                datum.height(),
+                datum.width(),
+                original_data_gpu_ptr,
+                transformed_data,
+                random_vec_.mutable_gpu_data());
+}
+#endif
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
@@ -311,8 +450,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     CHECK_EQ(datum_width, width);
   }
 
+#ifndef CPU_ONLY
+  bool use_gpu_transform = param_.use_gpu_transform() &&
+                           (Caffe::mode() == Caffe::GPU);
+  if (use_gpu_transform) {
+    Dtype* transformed_data_gpu = transformed_blob->mutable_gpu_data();
+    TransformGPU(datum, transformed_data_gpu);
+    transformed_blob->cpu_data();
+  } else {
+    Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+    Transform(datum, transformed_data);
+  }
+#else
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   Transform(datum, transformed_data);
+#endif
 }
 
 template<typename Dtype>
@@ -664,7 +816,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 }
 
 template<typename Dtype>
-vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
+vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum,
+                                                   bool use_gpu) {
   if (datum.encoded()) {
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
@@ -677,7 +830,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // InferBlobShape using the cv::image.
-    return InferBlobShape(cv_img);
+    return InferBlobShape(cv_img, use_gpu);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -694,8 +847,14 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = datum_channels;
-  shape[2] = (crop_size)? crop_size: datum_height;
-  shape[3] = (crop_size)? crop_size: datum_width;
+  // if using GPU transform, don't crop
+  if (use_gpu) {
+    shape[2] = datum_height;
+    shape[3] = datum_width;
+  } else {
+    shape[2] = (crop_size)? crop_size: datum_height;
+    shape[3] = (crop_size)? crop_size: datum_width;
+  }
   return shape;
 }
 
@@ -713,7 +872,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 
 #ifdef USE_OPENCV
 template<typename Dtype>
-vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
+vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img,
+                                                   bool use_gpu) {
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -726,8 +886,13 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = img_channels;
-  shape[2] = (crop_size)? crop_size: img_height;
-  shape[3] = (crop_size)? crop_size: img_width;
+  if (use_gpu) {
+    shape[2] = img_height;
+    shape[3] = img_width;
+  } else {
+    shape[2] = (crop_size)? crop_size: img_height;
+    shape[3] = (crop_size)? crop_size: img_width;
+  }
   return shape;
 }
 

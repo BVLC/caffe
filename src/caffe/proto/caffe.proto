@@ -440,6 +440,8 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // Run the transform (synchronously) on the GPU
+  optional bool use_gpu_transform = 8 [default = false];
 }
 // Message that stores parameters used to create gridbox ground truth
 message DetectNetGroundTruthParameter {

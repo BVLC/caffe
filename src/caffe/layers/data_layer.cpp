@@ -58,6 +58,8 @@ template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.data_param().batch_size();
+  bool use_gpu_transform = this->transform_param_.use_gpu_transform() &&
+                           (Caffe::mode() == Caffe::GPU);
   // Read a data point, and use it to initialize the top blob.
   string& str = *(reader_.full().peek());
   // Parse this data point so we can use the datum to infer things
@@ -65,17 +67,27 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   datum.ParseFromString(str);
 
   // Use data_transformer to infer the expected blob shape from datum.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum,
+                                                   use_gpu_transform);
   this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
+  top_shape = this->data_transformer_->InferBlobShape(datum);
   top_shape[0] = batch_size;
   top[0]->Reshape(top_shape);
+
+  LOG(INFO) << "ReshapePrefetch " << top_shape[0] << ", " << top_shape[1]
+      << ", " << top_shape[2] << ", " << top_shape[3];
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].data_.Reshape(top_shape);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
+  if (use_gpu_transform) {
+    LOG(INFO) << "prefetch data size: " << top_shape[0] << ","
+        << top_shape[1] << "," << top_shape[2] << ","
+        << top_shape[3];
+  }
   // label
   if (this->output_labels_) {
     vector<int> label_shape(1, batch_size);
@@ -96,14 +108,25 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
 
+  bool use_gpu_transform = this->transform_param_.use_gpu_transform() &&
+                           (Caffe::mode() == Caffe::GPU);
+
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
+  // vector to store generated random numbers
+  if (use_gpu_transform) {
+    vector<int> random_vec_shape_;
+    random_vec_shape_.push_back(batch_size * 3);
+    batch->random_vec_.Reshape(random_vec_shape_);
+  }
+
   string& str = *(reader_.full().peek());
   Datum datum;
   datum.ParseFromString(str);
   // Use data_transformer to infer the expected blob shape from datum.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum,
+                                                   use_gpu_transform);
   this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
@@ -142,11 +165,22 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
          rand3 = this->data_transformer_->Rand(RAND_MAX)+1;
       }
 
-      pool_->runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
-                                this->data_transformer_.get(), str, ptr,
-                                rand1, rand2, rand3,
-                                this->output_labels_, label_ptr,
-                                &(reader_.free())));
+      if (use_gpu_transform) {
+        // store the generated random numbers and enqueue the copy
+        batch->random_vec_.mutable_cpu_data()[item_id*3    ] = rand1;
+        batch->random_vec_.mutable_cpu_data()[item_id*3 + 1] = rand2;
+        batch->random_vec_.mutable_cpu_data()[item_id*3 + 2] = rand3;
+        pool_->runTask(boost::bind(&DataTransformer<Dtype>::CopyPtrEntry,
+                                  this->data_transformer_.get(), str, ptr,
+                                  this->output_labels_, label_ptr,
+                                  &(reader_.free())));
+      } else {
+        pool_->runTask(boost::bind(&DataTransformer<Dtype>::TransformPtrEntry,
+                                  this->data_transformer_.get(), str, ptr,
+                                  rand1, rand2, rand3,
+                                  this->output_labels_, label_ptr,
+                                  &(reader_.free())));
+      }
   }
   timer.Stop();
 
