@@ -219,7 +219,7 @@ message SolverParameter {
 
   // RMSProp decay value
   // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
-  optional float rms_decay = 38;
+  optional float rms_decay = 38 [default = 0.99];
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
