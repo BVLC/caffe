@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CAFFE_FILLER_HPP
 
 #include <string>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -342,51 +343,136 @@ layer {
 #define sqr(a) ((a) * (a))
 template <typename Dtype>
 class GaborFiller : public Filler<Dtype> {
-  struct FilterParameters
-  {
-        double lambda, theta, psi, sigma, gamma;
-  } filterParams;
+  enum GaborParam { lambda, theta, psi, sigma, gamma };
 
-  double gabor(int order, int c, int y, int x, const FilterParameters &filterParameters)
-  {
+  struct FilterParameters {
+        double lambda, theta, psi, sigma, gamma;
+  };
+
+  vector<FilterParameters> filterParams;
+
+  static double gabor(int order,
+                      /*int c,*/
+                      int y,
+                      int x,
+                      const FilterParameters &filterParameters) {
     const double range = 1;
     const double dx = 2 * range * x / (order - 1) - range;
     const double dy = 2 * range * y / (order - 1) - range;
-    const double xp = dx * cos(filterParameters.theta) + dy * sin(filterParameters.theta);
-    const double yp = dx * -sin(filterParameters.theta) + dy * cos(filterParameters.theta);
+    const double xp = dx * cos(filterParameters.theta) +
+                      dy * sin(filterParameters.theta);
+    const double yp = dx * -sin(filterParameters.theta) +
+                      dy * cos(filterParameters.theta);
 
-    double base = exp(-(sqr(xp) + sqr(filterParameters.gamma) * sqr(yp)) / (2 * sqr(filterParameters.sigma)));
-    double real = base * cos(2 * M_PI * xp / filterParameters.lambda + filterParameters.psi);
-    double imag = base * sin(2 * M_PI * xp / filterParameters.lambda + filterParameters.psi);
+    double base = exp(-(sqr(xp) + sqr(filterParameters.gamma) * sqr(yp)) /
+                  (2 * sqr(filterParameters.sigma)));
+    double real = base * cos(2 * M_PI * xp /
+                             filterParameters.lambda + filterParameters.psi);
+    // double imag = base * sin(2 * M_PI * xp /
+    //                       filterParameters.lambda + filterParameters.psi);
 
-    switch(c) {
-      case 0: return real;
-      case 1: return imag;
-      case 2: return hypot(real, imag);
-    }
+    // switch(c) {
+      // case 0: return real;
+      // case 1: return imag;
+      // case 2: return hypot(real, imag);
+    // }
 
-    return 0;
+    // return 0;
+    return real;
   }
+
+  // TODO: change default parameter generation
+  double getGaborParams(GaborParam g, const int& f) const {
+      switch (g) {
+        case GaborParam::lambda:
+          if (this->filler_param_.lambda_size() > f)
+            return this->filler_param_.lambda(f);
+          else
+            return 1.;
+
+        case GaborParam::theta:
+          if (this->filler_param_.theta_size() > f)
+            return this->filler_param_.theta(f);
+          else
+            return 1.;
+
+        case GaborParam::psi:
+          if (this->filler_param_.psi_size() > f)
+            return this->filler_param_.psi(f);
+          else
+            return 1.;
+
+        case GaborParam::sigma:
+          if (this->filler_param_.sigma_size() > f)
+            return this->filler_param_.sigma(f);
+          else
+            return 1.;
+
+        case GaborParam::gamma:
+          if (this->filler_param_.gamma_size() > f)
+            return this->filler_param_.gamma(f);
+          else
+            return 1.;
+
+        default:
+          LOG(FATAL) << "Unexpected Gabor filler parameter";
+      }
+  }
+
+//  int logFilter(int channels, int order, Dtype *filter) {
+//      static FILE *logFile = fopen("log.txt", "w+t");
+//      if(!logFile)
+//          return 1;
+//
+//      for(int c = 0; c < channels; c++) {
+//          for(int y = 0; y < order; y++) {
+//              for(int x = 0; x < order; x++)
+//                  fprintf(logFile, "%9.6f ",
+//                            filter[c * sqr(order) + y * order + x]);
+//              fprintf(logFile, "\n");
+//          }
+//
+//          fprintf(logFile, "\n");
+//      }
+//
+//      fclose(logFile);
+//      return 0;
+//  }
 
  public:
   explicit GaborFiller(const FillerParameter& param)
-      : Filler<Dtype>(param)
-      , filterParams({param.lambda(),param.theta(),param.psi(),param.sigma(),param.gamma()}) {}
+      : Filler<Dtype>(param) {}
 
   virtual void Fill(Blob<Dtype>* blob) {
-    CHECK_LE(blob->num_axes(), 3) << "Blob must be 3 dim or less.";
-    CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
+    CHECK_LE(blob->num_axes(), 4) << "Blob must be 4 dim or less.";
+    CHECK_EQ(blob->width(), blob->height())
+              << "Filter must be square in first two dimensions.";
+    //LOG(INFO) << "Blob dimensions are " << blob->shape_string();
 
     Dtype* data = blob->mutable_cpu_data();
     int order = blob->width();
     int area2d = sqr(order);
+    int area3d = area2d * blob->channels();
+
+    for (int i = 0; i < blob->num(); ++i) {
+      FilterParameters fp;
+      fp.lambda = getGaborParams(GaborParam::lambda, i);
+      fp.theta  = getGaborParams(GaborParam::theta, i);
+      fp.psi    = getGaborParams(GaborParam::psi, i);
+      fp.sigma  = getGaborParams(GaborParam::sigma, i);
+      fp.gamma  = getGaborParams(GaborParam::gamma, i);
+      filterParams.push_back(fp);
+    }
 
     for (int i = 0; i < blob->count(); ++i) {
       int x = i % blob->width();
       int y = (i / blob->width()) % blob->height();
-      int c = (i / area2d) % blob->channels();
-      data[i] = gabor(order, c, y, x, filterParams);
+      // int c = (i / area2d) % blob->channels();
+      int f = (i / area3d) % blob->num();
+      data[i] = gabor(order, /* c,*/ y, x, filterParams[f]);
     }
+
+//    static int error = logFilter(blob->channels(), order,  data);
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
