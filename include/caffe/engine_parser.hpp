@@ -66,7 +66,8 @@ class EngineParser {
         return true;
 
     // Otherwise colon must be specified and engine identifier cannot be empty
-    if (!engineName.length() ||  (*subEngineString != ':'))
+    if (!engineName.length() ||  (*subEngineString != ':')
+            ||  (*(subEngineString+1) == '\0'))
         LOG(FATAL) << "Wrong engine specification";
 
     // Process sub engines
