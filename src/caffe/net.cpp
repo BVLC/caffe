@@ -706,14 +706,30 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
 }
 
+#include "performance.h"
+namespace Performance {
+  Monitor monitor;
+};
+using namespace Performance;
+
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
+
+    Measurement m;
+    m.start();
+
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+
+    m.stop();
+    std::string s = "FW_" + layer_names_[i];
+    int eventId = monitor.getEventIdByName(s.c_str());
+    monitor.updateEventById(eventId, m);
+
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -758,8 +774,17 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+      Measurement m;
+      m.start();
+
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+
+      m.stop();
+      std::string s = "BW_" + layer_names_[i];
+      int eventId = monitor.getEventIdByName(s.c_str());
+      monitor.updateEventById(eventId, m);
+
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }

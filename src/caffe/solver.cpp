@@ -340,11 +340,18 @@ void Solver<Dtype>::Step(int iters) {
   }
 }
 
+
+#include "performance.h"
+using namespace Performance;
+
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  monitor.enableMeasurements();
+  monitor.markAsInitialized();
 
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
