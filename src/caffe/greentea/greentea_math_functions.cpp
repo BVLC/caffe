@@ -15,7 +15,9 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
-#include <sys/time.h>
+#include <Windows.h>
+#undef min
+#undef max
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -23,6 +25,7 @@
 #include <limits>
 #include <random>
 #include <vector>
+
 
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/ocl/backend.hpp"

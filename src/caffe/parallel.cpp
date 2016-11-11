@@ -1,4 +1,4 @@
-#ifdef CMAKE_BUILD
+#ifdef CMAKE_WINDOWS_BUILD
   #include "caffe_config.h"
 #endif
 

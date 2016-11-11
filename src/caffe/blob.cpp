@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
-
 #include "../../include/caffe/device.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
@@ -15,7 +14,7 @@
 
 namespace caffe {
 
-template<typename Dtype>
+template <typename Dtype>
 bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels,
                           const int_tp height, const int_tp width) {
   vector<int_tp> shape(4);
@@ -26,7 +25,7 @@ bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels,
   return Reshape(shape);
 }
 
-template<typename Dtype>
+template <typename Dtype>
 bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
@@ -58,7 +57,7 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   return false;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 bool Blob<Dtype>::Reshape(const BlobShape& shape) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
   vector<int_tp> shape_vec(shape.dim_size());
@@ -73,7 +72,7 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
   return Reshape(other.shape());
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Blob<Dtype>::Blob(const int_tp num, const int_tp channels, const int_tp height,
                   const int_tp width, device *device_context)
     // capacity_ must be initialized before calling Reshape
@@ -81,7 +80,7 @@ Blob<Dtype>::Blob(const int_tp num, const int_tp channels, const int_tp height,
   Reshape(num, channels, height, width);
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Blob<Dtype>::Blob(const vector<int_tp>& shape, device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_(device_context) {
@@ -100,61 +99,61 @@ const Dtype* Blob<Dtype>::cpu_data() const {
   return (const Dtype*) data_->cpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   data_->set_cpu_data(data);
 }
 
-template<typename Dtype>
+template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
-  return (const Dtype*) data_->gpu_data();
+  return (const Dtype*)data_->gpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*) diff_->cpu_data();
+  return (const Dtype*)diff_->cpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*) diff_->gpu_data();
+  return (const Dtype*)diff_->gpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
@@ -162,15 +161,11 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
-// Blob<int_tp> or Blob<uint_tp>.
-template<> void Blob<uint_tp>::Update() {
-  NOT_IMPLEMENTED;
-}
-template<> void Blob<int_tp>::Update() {
-  NOT_IMPLEMENTED;
-}
+// Blob<int> or Blob<unsigned int>.
+template <> void Blob<uint_tp>::Update() { NOT_IMPLEMENTED; }
+template <> void Blob<int_tp>::Update() { NOT_IMPLEMENTED; }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
@@ -224,7 +219,7 @@ template<> int_tp Blob<int_tp>::asum_data() const {
   return 0;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) {
     return 0;
@@ -271,7 +266,7 @@ template<> int_tp Blob<int_tp>::asum_diff() const {
   return 0;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) {
     return 0;
@@ -318,7 +313,7 @@ template<> int_tp Blob<int_tp>::sumsq_data() const {
   return 0;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
   const Dtype* data;
@@ -368,7 +363,7 @@ template<> int_tp Blob<int_tp>::sumsq_diff() const {
   return 0;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
   const Dtype* diff;
@@ -416,7 +411,7 @@ template<> void Blob<int_tp>::scale_data(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
   if (!data_) {
@@ -462,7 +457,7 @@ template<> void Blob<int_tp>::scale_diff(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
   if (!diff_) {
@@ -500,7 +495,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     }
   }
 
-template<typename Dtype>
+template <typename Dtype>
 bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
   if (other.has_num() || other.has_channels() || other.has_height()
       || other.has_width()) {
@@ -522,7 +517,7 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
   return shape_ == other_shape;
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
@@ -573,7 +568,7 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   if (reshape) {
     vector<int_tp> shape;
