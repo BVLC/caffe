@@ -325,8 +325,8 @@ void ModifiedPermutohedral::init_cpu(const float* features, int num_dimensions, 
 	
 	// Compute the simplex each feature lies in
 	for( int k=0; k<N_; k++ ){
-		// Elevate the feature ( y = Ep, see p.5 in [Adams etal 2010])
-		const float * f = (feature + k * num_dimensions);
+		// Elevate the features ( y = Ep, see p.5 in [Adams etal 2010])
+		const float * f = (features + k * num_dimensions);
 		
 		// sm contains the sum of 1..n of our faeture vector
 		float sm = 0;
