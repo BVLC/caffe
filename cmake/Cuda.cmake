@@ -36,8 +36,12 @@ function(caffe_detect_installed_gpus out_variable)
                     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     if(__nvcc_res EQUAL 0)
+      # nvcc outputs text containing line breaks when building with MSVC.
+      # The line below prevents CMake from inserting a variable with line
+      # breaks in the cache
+      string(REGEX MATCH "([1-9].[0-9])" __nvcc_out "${__nvcc_out}")
       string(REPLACE "2.1" "2.1(2.0)" __nvcc_out "${__nvcc_out}")
-      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)
+      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)      
     endif()
   endif()
 
@@ -145,7 +149,7 @@ macro(caffe_cuda_compile objlist_variable)
   endforeach()
 
   if(UNIX OR APPLE)
-    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC -std c++11)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
   endif()
 
   if(APPLE)
@@ -172,11 +176,21 @@ function(detect_cuDNN)
 
   find_path(CUDNN_INCLUDE cudnn.h
             PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDA_TOOLKIT_INCLUDE}
+            PATH_SUFFIXES include
             DOC "Path to cuDNN include directory." )
+           
+  unset(_path_suffixes)
+  if(MSVC AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    set(_path_suffixes PATH_SUFFIXES lib/x64)
+  else()
+    set(_path_suffixes PATH_SUFFIXES lib/Win32)    
+  endif()
 
   # dynamic libs have different suffix in mac and linux
   if(APPLE)
     set(CUDNN_LIB_NAME "libcudnn.dylib")
+  elseif(MSVC)
+    set(CUDNN_LIB_NAME "cudnn")
   else()
     set(CUDNN_LIB_NAME "libcudnn.so")
   endif()
@@ -184,6 +198,7 @@ function(detect_cuDNN)
   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
   find_library(CUDNN_LIBRARY NAMES ${CUDNN_LIB_NAME}
    PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
+   ${_path_suffixes}
    DOC "Path to cuDNN library.")
   
   if(CUDNN_INCLUDE AND CUDNN_LIBRARY)
@@ -238,20 +253,17 @@ endif()
 
 set(HAVE_CUDA TRUE)
 message(STATUS "CUDA detected: " ${CUDA_VERSION})
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${CUDA_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDA_CUDART_LIBRARY}
-                                     ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
-list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CUDA)
+include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS ${CUDA_CUDART_LIBRARY}
+                              ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
 
 # cudnn detection
 if(USE_CUDNN)
   detect_cuDNN()
   if(HAVE_CUDNN)
-    list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CUDNN)
-    list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${CUDNN_INCLUDE})
-    list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDNN_LIBRARY})
-  else()
-    message(FATAL_ERROR "CuDNN requested, but not found.")
+    add_definitions(-DUSE_CUDNN)
+    include_directories(SYSTEM ${CUDNN_INCLUDE})
+    list(APPEND Caffe_LINKER_LIBS ${CUDNN_LIBRARY})
   endif()
 endif()
 

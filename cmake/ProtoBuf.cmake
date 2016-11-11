@@ -1,9 +1,15 @@
 # Finds Google Protocol Buffers library and compilers and extends
 # the standard cmake script with version and python generation support
 
-find_package( Protobuf REQUIRED )
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${PROTOBUF_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${PROTOBUF_LIBRARIES})
+if(MSVC)
+  # search using protobuf-config.cmake
+  find_package( Protobuf REQUIRED NO_MODULE)
+  set(PROTOBUF_INCLUDE_DIR ${PROTOBUF_INCLUDE_DIRS})
+else()
+  find_package( Protobuf REQUIRED )
+endif()
+include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIR})
+list(APPEND Caffe_LINKER_LIBS ${PROTOBUF_LIBRARIES})
 
 # As of Ubuntu 14.04 protoc is no longer a part of libprotobuf-dev package
 # and should be installed separately as in: sudo apt-get install protobuf-compiler
