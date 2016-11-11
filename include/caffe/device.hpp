@@ -4,12 +4,11 @@
  *  Created on: Jun 26, 2015
  *      Author: Fabian Tschopp
  */
-
 #ifndef CAFFE_device_HPP_
 #define CAFFE_device_HPP_
 
-#ifdef CMAKE_BUILD
-#include "caffe_config.h"
+#ifdef CMAKE_WINDOWS_BUILD
+  #include "caffe_config.h"
 #endif
 
 #include <boost/shared_ptr.hpp>

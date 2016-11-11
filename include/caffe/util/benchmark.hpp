@@ -7,6 +7,7 @@
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #endif
+
 namespace caffe {
 
 class Timer {
