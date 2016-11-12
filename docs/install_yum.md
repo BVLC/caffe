@@ -1,5 +1,5 @@
 ---
-title: Installation: RHEL / Fedora / CentOS
+title: "Installation: RHEL / Fedora / CentOS"
 ---
 
 # RHEL / Fedora / CentOS Installation
