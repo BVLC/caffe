@@ -14,9 +14,8 @@
 
 namespace caffe {
 
-#ifndef CPU_ONLY
 template <typename Dtype>
-class SmoothL1LossLayerTest : public GPUDeviceTest<Dtype> {
+class SmoothL1LossLayerTest : public MultiDeviceTest<Dtype> {
  protected:
   SmoothL1LossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
@@ -80,6 +79,5 @@ TYPED_TEST(SmoothL1LossLayerTest, TestGradient) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 1);
 }
-#endif
 
 }  // namespace caffe
