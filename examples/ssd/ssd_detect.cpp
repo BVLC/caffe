@@ -291,6 +291,8 @@ int main(int argc, char** argv) {
       CHECK(!img.empty()) << "Unable to decode image " << file;
       std::vector<vector<float> > detections = detector.Detect(img);
 
+      std::vector<std::pair<cv::Point,cv::Point> > dpoints;
+      
       /* Print the detection results. */
       for (int i = 0; i < detections.size(); ++i) {
         const vector<float>& d = detections[i];
@@ -305,8 +307,18 @@ int main(int argc, char** argv) {
           out << static_cast<int>(d[4] * img.rows) << " ";
           out << static_cast<int>(d[5] * img.cols) << " ";
           out << static_cast<int>(d[6] * img.rows) << std::endl;
-        }
+      
+	  cv::Point c1(d[3]*img.cols,d[4]*img.rows);
+	  cv::Point c2(d[5]*img.cols,d[6]*img.rows);
+	  dpoints.push_back(std::pair<cv::Point,cv::Point>(c1,c2));
+	}
       }
+      cv::namedWindow("MyWindow", CV_WINDOW_AUTOSIZE); //create a window with the name "MyWindow"
+      for (size_t p=0;p<dpoints.size();p++)
+	cv::rectangle(img,dpoints.at(p).first,dpoints.at(p).second,CV_RGB(255,0,0),2);
+      cv::imshow("MyWindow", img); //display the image which is stored in the 'img' in the "MyWindow" window
+      cv::waitKey(0);
+      cv::destroyWindow("MyWindow");
     } else if (file_type == "video") {
       cv::VideoCapture cap(file);
       if (!cap.isOpened()) {
