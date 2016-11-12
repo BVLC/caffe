@@ -49,16 +49,16 @@ void SmoothL1LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
     int count = bottom[0]->count();
     caffe_sub(
-        count, 
-        bottom[0]->cpu_data(), 
-        bottom[1]->cpu_data(), 
+        count,
+        bottom[0]->cpu_data(),
+        bottom[1]->cpu_data(),
         diff_.mutable_cpu_data());    // d := b0 - b1
     if (has_weights_) {
         // apply "inside" weights
         caffe_mul(
-            count, 
-            bottom[2]->cpu_data(), 
-            diff_.cpu_data(), 
+            count,
+            bottom[2]->cpu_data(),
+            diff_.cpu_data(),
             diff_.mutable_cpu_data());  // d := w_in * (b0 - b1)
     }
     for (int index = 0; index < count; index++) {
@@ -73,10 +73,10 @@ void SmoothL1LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (has_weights_) {
         // apply "outside" weights
         caffe_mul(
-            count, 
-            bottom[3]->cpu_data(), 
-            errors_.cpu_data(), 
-            errors_.mutable_cpu_data()); 
+            count,
+            bottom[3]->cpu_data(),
+            errors_.cpu_data(),
+            errors_.mutable_cpu_data());
         // d := w_out * SmoothL1(w_in * (b0 - b1))
     }
 
@@ -88,7 +88,7 @@ template <typename Dtype>
 void SmoothL1LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     // after forwards, diff_ holds w_in * (b0 - b1)
-    int count = diff_.count();    
+    int count = diff_.count();
     for (int index = 0; index < count; index++) {
         // f'(x) = sigma * sigma * x         if |x| < 1 / sigma / sigma
         //       = sign(x)                   otherwise
