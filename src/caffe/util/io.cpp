@@ -472,6 +472,7 @@ bool ReadTxtToAnnotatedDatum(const string& labelfile, const int height,
     Annotation* anno = NULL;
     int instance_id = 0;
     bool found_group = false;
+    //TODO: convert label as string to int if / when needed
     for (int g = 0; g < anno_datum->annotation_group_size(); ++g) {
       AnnotationGroup* anno_group = anno_datum->mutable_annotation_group(g);
       if (label == anno_group->group_label()) {
@@ -510,15 +511,15 @@ bool ReadTxtToAnnotatedDatum(const string& labelfile, const int height,
     LOG_IF(WARNING, ymax < 0) << labelfile <<
       " bounding box exceeds image boundary.";
     LOG_IF(WARNING, xmin > xmax) << labelfile <<
-      " bounding box irregular.";
+      " bounding box irregular xmin > xmax." << xmin << " " << xmax;
     LOG_IF(WARNING, ymin > ymax) << labelfile <<
-      " bounding box irregular.";
+      " bounding box irregular ymin > ymax." << ymin << " " << ymax;
     // Store the normalized bounding box.
     NormalizedBBox* bbox = anno->mutable_bbox();
-    bbox->set_xmin(xmin / width);
-    bbox->set_ymin(ymin / height);
-    bbox->set_xmax(xmax / width);
-    bbox->set_ymax(ymax / height);
+    bbox->set_xmin(std::max(xmin,0.f) / width);
+    bbox->set_ymin(std::max(ymin,0.f) / height);
+    bbox->set_xmax(std::min(xmax,static_cast<float>(width)) / width);
+    bbox->set_ymax(std::min(ymax,static_cast<float>(height)) / height);
     bbox->set_difficult(false);
   }
   return true;
