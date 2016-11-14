@@ -110,6 +110,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
+
+  // Backward compatibility for obsolete compile-time flags
+#ifdef USE_MKL2017_AS_DEFAULT_ENGINE
+  if (filtered_param.engine() == "")
+    filtered_param.set_engine("MKL2017");
+#endif
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+  if (filtered_param.engine() == "")
+    filtered_param.set_engine("MKLDNN");
+#endif
+
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
   InsertSplits(filtered_param, &param_with_splits);
@@ -395,7 +406,6 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
           (const_cast<NetParameter&>(param)).mutable_layer(i);
-    const string& layer_name = layer_param->name();
     bool layer_included = true;
 
     // Optimization rule 1:
@@ -408,10 +418,9 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
     if ((layer_param->type().compare("BatchNorm") == 0) &&
        ((layer_param->batch_norm_param().engine() ==
          BatchNormParameter_Engine_MKL2017)
-#if defined(USE_MKL2017_AS_DEFAULT_ENGINE)
-       || (layer_param->batch_norm_param().engine() ==
-           BatchNormParameter_Engine_DEFAULT)
-#endif
+       || ((layer_param->batch_norm_param().engine() ==
+           BatchNormParameter_Engine_DEFAULT) &&
+            param.engine().compare("MKL2017") == 0)
        )) {
       const LayerParameter& consumer_layer_param =
             GetBlobConsumer(layer_param->top(0), param, i+1);
