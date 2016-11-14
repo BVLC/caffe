@@ -339,6 +339,9 @@ template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) { return 0; }
   switch (diff_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+    return caffe_cpu_asum(count_, prv_diff());
   case SyncedMemory::HEAD_AT_CPU:
     return caffe_cpu_asum(count_, cpu_diff());
   case SyncedMemory::HEAD_AT_GPU:
@@ -378,12 +381,9 @@ Dtype Blob<Dtype>::sumsq_data() const {
   switch (data_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
-    if ((data_->head() == SyncedMemory::SYNCED_PRV) ||
-        (data_->head() == SyncedMemory::HEAD_AT_PRV)) {
       data = prv_data();
       sumsq = caffe_cpu_dot(count_, data, data);
       break;
-    }
   case SyncedMemory::HEAD_AT_CPU:
     data = cpu_data();
     sumsq = caffe_cpu_dot(count_, data, data);
@@ -423,12 +423,9 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   switch (diff_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
-    if ((diff_->head() == SyncedMemory::SYNCED_PRV) ||
-        (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
       diff = prv_diff();
       sumsq = caffe_cpu_dot(count_, diff, diff);
       break;
-    }
   case SyncedMemory::HEAD_AT_CPU:
     diff = cpu_diff();
     sumsq = caffe_cpu_dot(count_, diff, diff);
@@ -463,6 +460,11 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
   if (!data_) { return; }
   switch (data_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+      data = mutable_prv_data();
+      caffe_scal(count_, scale_factor, data);
+      break;
   case SyncedMemory::HEAD_AT_CPU:
     data = mutable_cpu_data();
     caffe_scal(count_, scale_factor, data);
@@ -496,6 +498,11 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
   if (!diff_) { return; }
   switch (diff_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+      diff = mutable_prv_diff();
+      caffe_scal(count_, scale_factor, diff);
+      break;
   case SyncedMemory::HEAD_AT_CPU:
     diff = mutable_cpu_diff();
     caffe_scal(count_, scale_factor, diff);
