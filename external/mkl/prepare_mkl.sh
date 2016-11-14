@@ -38,7 +38,19 @@
 #
 FindLibrary() 
 {
-LOCALMKL=`find $1 -name libmklml_intel.so`   # name of MKL lib
+# there may be more than one MKL libraries present
+  local mkls=`find $1 -name libmklml_intel.so`
+  
+# iterate over the found MKLs and find correct version  
+  for m in $mkls; do
+    local lib=`echo $m | sed -e 's/lib.*$//'`
+    local version=`GetVersionName $lib`
+    
+    if [ $version -gt $VERSION_MATCH ]; then
+# set the most recent version of MKL as LOCALMKL      
+      LOCALMKL=$m
+    fi
+  done
 }
 
 GetVersionName()
