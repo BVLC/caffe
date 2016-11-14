@@ -375,7 +375,12 @@ else
 	ifeq ($(LINUX), 1)
 		ifeq ($(BLAS), atlas)
 			# Linux simply has cblas and atlas
-			LIBRARIES += cblas atlas
+			# For Redhat, they're called satlas and tatlas
+			ifneq ("$(wildcard /etc/redhat-release)","")
+				LIBRARIES += satlas tatlas
+			else
+				LIBRARIES += cblas atlas
+			endif
 		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
