@@ -116,7 +116,7 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   num_ = 0;
   height_ = 0;
   width_ = 0;
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>

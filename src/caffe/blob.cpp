@@ -84,7 +84,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 #endif
   }
   // We restart sync objects when there was change of shape
-  // requested count is bgger than current capacity 
+  // requested count is bgger than current capacity
   if ( (actual_reshaping == true) || (count_ > capacity_) ) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
@@ -376,6 +376,14 @@ Dtype Blob<Dtype>::sumsq_data() const {
   const Dtype* data;
   if (!data_) { return 0; }
   switch (data_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+    if ((data_->head() == SyncedMemory::SYNCED_PRV) ||
+        (data_->head() == SyncedMemory::HEAD_AT_PRV)) {
+      data = prv_data();
+      sumsq = caffe_cpu_dot(count_, data, data);
+      break;
+    }
   case SyncedMemory::HEAD_AT_CPU:
     data = cpu_data();
     sumsq = caffe_cpu_dot(count_, data, data);
@@ -413,6 +421,14 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   const Dtype* diff;
   if (!diff_) { return 0; }
   switch (diff_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+    if ((diff_->head() == SyncedMemory::SYNCED_PRV) ||
+        (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
+      diff = prv_diff();
+      sumsq = caffe_cpu_dot(count_, diff, diff);
+      break;
+    }
   case SyncedMemory::HEAD_AT_CPU:
     diff = cpu_diff();
     sumsq = caffe_cpu_dot(count_, diff, diff);
@@ -429,7 +445,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   case SyncedMemory::UNINITIALIZED:
     return 0;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
   return sumsq;
 }
