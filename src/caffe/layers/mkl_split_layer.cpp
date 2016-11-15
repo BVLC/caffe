@@ -43,7 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
 
 template <typename Dtype>
 MKLSplitLayer<Dtype>::~MKLSplitLayer() {
@@ -223,8 +225,8 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   m.start();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
   m.stop();
-  const char* name = "BW_mkl_split";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "BW_mkl_split";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }

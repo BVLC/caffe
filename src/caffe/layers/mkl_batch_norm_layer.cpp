@@ -45,7 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
 
 template <typename Dtype>
 MKLBatchNormLayer<Dtype>::~MKLBatchNormLayer() {
@@ -319,10 +321,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
   m.start();
   e = dnnExecute<Dtype>(batchNormFwd, BatchNorm_res);
   m.stop();
-  const char* name = "FW_mkl_batch_norm";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "FW_mkl_batch_norm";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
-  
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -363,10 +365,10 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
   m.start();
   e = dnnExecute<Dtype>(batchNormBwdData, BatchNorm_res);
   m.stop();
-  const char* name = "BW_mkl_batch_norm";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "BW_mkl_batch_norm";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
-  
+
   CHECK_EQ(e, E_SUCCESS);
 
   if (use_weight_bias_) {
@@ -376,14 +378,13 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     BatchNormBwdScaleShift_res[dnnResourceDiffScaleShift] = scaleShift_buffer_;
     BatchNormBwdScaleShift_res[dnnResourceDiffDst] =
         BatchNorm_res[dnnResourceDiffDst];
-		
-    m.start();	
+
+    m.start();
     e = dnnExecute<Dtype>(batchNormBwdScaleShift, BatchNormBwdScaleShift_res);
-	m.stop();
-    const char* name = "BW_mkl_batch_norm";
-    int eventId = monitor.getEventIdByName(name);
+    m.stop();
+    static int eventId = monitor.getEventIdByName(measurementName);
     monitor.updateEventById(eventId, m);
-	
+
     CHECK_EQ(e, E_SUCCESS);
     // Store ScaleShift blobs
     Dtype* diff_scale = this->blobs_[0]->mutable_cpu_diff();

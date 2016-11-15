@@ -43,7 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
+
 
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
   dnnDelete<Dtype>(concatFwd_);
@@ -118,7 +121,7 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   num_ = 0;
   height_ = 0;
   width_ = 0;
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -209,8 +212,8 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
   m.start();
   e = dnnExecute<Dtype>(concatFwd_, concat_res);
   m.stop();
-  const char* name = "FW_mkl_concat";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "FW_mkl_concat";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -245,8 +248,8 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   m.start();
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
   m.stop();
-  const char* name = "BW_mkl_concat";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "BW_mkl_concat";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }

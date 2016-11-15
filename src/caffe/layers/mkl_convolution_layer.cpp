@@ -57,7 +57,9 @@ static int getMKLBuildDate() {
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
 
 template <typename Dtype>
 MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
@@ -395,10 +397,10 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   m.start();
   status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
   m.stop();
-  const char* name = "FW_mkl_convolution";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "FW_mkl_convolution";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
-  
+
   CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
 }
 
@@ -449,14 +451,14 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
     }
-	Measurement m;
+    Measurement m;
     m.start();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
-	m.stop();
-    const char* name = "BW_mkl_convolution";
-    int eventId = monitor.getEventIdByName(name);
+    m.stop();
+    static const char* measurementName = "BW_mkl_convolution";
+    static int eventId = monitor.getEventIdByName(measurementName);
     monitor.updateEventById(eventId, m);
-	
+
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
 
@@ -493,14 +495,14 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
     }
-	Measurement m;
+    Measurement m;
     m.start();
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
-	m.stop();
-    const char* name = "BW_mkl_convolution";
-    int eventId = monitor.getEventIdByName(name);
+    m.stop();
+    static const char* measurementName = "BW_mkl_convolution";
+    static int eventId = monitor.getEventIdByName(measurementName);
     monitor.updateEventById(eventId, m);
-	
+
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
 
     if (bwdf2fwd_filter_diff->conversion_needed()) {
@@ -532,15 +534,15 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
 
-	  Measurement m;
+      Measurement m;
       m.start();
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
               convert_resources);
-	  m.stop();
-	  const char* name = "BW_mkl_convolution";
-      int eventId = monitor.getEventIdByName(name);
+      m.stop();
+      static const char* measurementName = "BW_mkl_convolution";
+      static int eventId = monitor.getEventIdByName(measurementName);
       monitor.updateEventById(eventId, m);
-	  
+
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
     }
 
@@ -579,14 +581,14 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       }
     }
 
-	Measurement m;
+    Measurement m;
     m.start();
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
-	m.stop();
-	const char* name = "BW_mkl_convolution";
-	int eventId = monitor.getEventIdByName(name);
-	monitor.updateEventById(eventId, m);
-	
+    m.stop();
+    static const char* measurementName = "BW_mkl_convolution";
+    static int eventId = monitor.getEventIdByName(measurementName);
+    monitor.updateEventById(eventId, m);
+
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
 
     if (Caffe::iter_size() > 1) {

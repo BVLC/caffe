@@ -49,7 +49,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
 
 template <typename Dtype>
 MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
@@ -325,13 +327,13 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     pooling_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
     DLOG(INFO) << "Using cpu_data for top in DnnPooling.";
-  }  
+  }
   Measurement m;
   m.start();
   status = dnnExecute<Dtype>(poolingFwd, pooling_res);
   m.stop();
-  const char* name = "FW_mkl_pooling";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "FW_mkl_pooling";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
   CHECK_EQ(status, E_SUCCESS);
 }
@@ -372,8 +374,8 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   m.start();
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
   m.stop();
-  const char* name = "BW_mkl_pooling";
-  int eventId = monitor.getEventIdByName(name);
+  static const char* measurementName = "BW_mkl_pooling";
+  static int eventId = monitor.getEventIdByName(measurementName);
   monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }

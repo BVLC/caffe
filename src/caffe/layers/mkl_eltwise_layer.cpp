@@ -44,7 +44,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 #include "performance.h"
-using namespace Performance;
+using Performance::Measurement;
+using Performance::Monitor;
+extern Monitor monitor;
 
 template <typename Dtype>
 MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
@@ -93,7 +95,7 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
                                              false);
   }
 
-  fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src,false);
+  fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src, false);
 
   dnnDelete<Dtype>(sumPrimitive);
 }
@@ -114,14 +116,14 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     EltwiseParameter_EltwiseOp_SUM)
       << "MKLEltwise Layer only process summation.";
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  for (int i = 1; i < bottom.size(); ++i) {
+      for (int i = 1; i < bottom.size(); ++i) {
     CHECK(bottom[i]->shape() == bottom[0]->shape());
   }
   top[0]->ReshapeLike(*bottom[0]);
@@ -139,7 +141,7 @@ void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     return;
   }
 
-  Init(bottom,top);
+  Init(bottom, top);
 }
 
 template <typename Dtype>
@@ -198,6 +200,8 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
   }
 
   Measurement m;
+  static const char* measurementName = "FW_mkl_eltwise";
+  static int eventId = monitor.getEventIdByName(measurementName);
   switch (op_) {
   case EltwiseParameter_EltwiseOp_SUM:
     void *eltwise_res[dnnResourceNumber];
@@ -220,10 +224,10 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
     }
 
-	m.start();
+    m.start();
     e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
-	m.stop();
-    monitor.updateEventById(monitor.getEventIdByName("FW_mkl_eltwise"), m);
+    m.stop();
+    monitor.updateEventById(eventId, m);
     CHECK_EQ(e, E_SUCCESS);
 
     break;

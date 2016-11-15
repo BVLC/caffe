@@ -70,17 +70,13 @@ namespace Performance {
 
 		void start()
 		{
-			processTimeStamp = PreciseTime::getProcessTime();
 			monotonicTimeStamp = PreciseTime::getMonotonicTime();
+			processTimeStamp = PreciseTime::getProcessTime();
 		}
 
 		void stop()
 		{
 			processTimeStamp = PreciseTime::getProcessTime() - processTimeStamp;
-			const unsigned numberOfThreads = 44; // Collection::getTotalNumberOfCpuCores();
-			const uint64_t averageProcessTime = processTimeStamp / numberOfThreads;
-			processTimeStamp = averageProcessTime;
-			
 			monotonicTimeStamp = PreciseTime::getMonotonicTime() - monotonicTimeStamp;
 		}
 
@@ -120,17 +116,17 @@ namespace Performance {
 
 		void update(const Measurement &measurement)
 		{
-			const PreciseTime &timeStamp = measurement.getProcessTimeStamp();
+			const PreciseTime &processTimeStamp = measurement.getProcessTimeStamp();
 			const PreciseTime &monotonicTimeStamp = measurement.getmonotonicTimeStamp();
 
-			totalProcessTime = totalProcessTime + timeStamp;
+			totalProcessTime = totalProcessTime + processTimeStamp;
 			totalMonotonicTime = totalMonotonicTime + monotonicTimeStamp;
 			
-			if (minimalProcessTime > timeStamp || !numberOfCalls)
-				minimalProcessTime = timeStamp;
+			if (minimalProcessTime > processTimeStamp || !numberOfCalls)
+				minimalProcessTime = processTimeStamp;
 
-			if (maximalProcessTime < timeStamp || !numberOfCalls)
-				maximalProcessTime = timeStamp;
+			if (maximalProcessTime < processTimeStamp || !numberOfCalls)
+				maximalProcessTime = processTimeStamp;
 				
 			if (minimalMonotonicTime > monotonicTimeStamp || !numberOfCalls)
 				minimalMonotonicTime = monotonicTimeStamp;
