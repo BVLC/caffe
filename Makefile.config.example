@@ -43,11 +43,17 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
-# Uncomment to use optimized MKL2017 primitives by default for supported layers
-# USE_MKL2017_AS_DEFAULT_ENGINE := 1
+# USE_MKL2017_AS_DEFAULT_ENGINE flag is OBSOLETE
+# Put this at the top your train_val.protoxt or solver.prototxt file:
+# engine: "MKL2017" 
+# or use this option with caffe tool:
+# -engine "MKL2017"
 
-# Uncomment to use MKLDNN primitives as default engine (EXPERIMENTAL)
-# USE_MKLDNN_AS_DEFAULT_ENGINE := 1
+# USE_MKLDNN_AS_DEFAULT_ENGINE flag is OBSOLETE
+# Put this at the top your train_val.protoxt or solver.prototxt file:
+# engine: "MKLDNN" 
+# or use this option with caffe tool:
+# -engine "MKLDNN"
 
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
