@@ -222,9 +222,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #endif
 #ifdef MKL2017_SUPPORTED
     else if (ep.isEngine("MKL2017")) {
-      PoolingParameter_PoolMethod method = param.pooling_param().pool();
-      if (method == PoolingParameter_PoolMethod_MAX)
-        engine = PoolingParameter_Engine_MKL2017;
+      engine = PoolingParameter_Engine_MKL2017;
     }
 #endif
 #ifdef MKLDNN_SUPPORTED
