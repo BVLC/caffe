@@ -25,6 +25,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <glog/logging.h>
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)

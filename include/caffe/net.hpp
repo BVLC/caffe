@@ -124,6 +124,8 @@ class Net {
   inline const string& name() const { return name_; }
   /// @brief returns the layer names
   inline const vector<string>& layer_names() const { return layer_names_; }
+  /// @brief returns the layer names index
+  inline const map<string, int>& layer_names_index() const { return layer_names_index_; }
   /// @brief returns the blob names
   inline const vector<string>& blob_names() const { return blob_names_; }
   /// @brief returns the blobs

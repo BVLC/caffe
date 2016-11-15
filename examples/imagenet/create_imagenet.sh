@@ -3,19 +3,19 @@
 # N.B. set the path to the imagenet train + val data dirs
 set -e
 
-EXAMPLE=examples/imagenet
-DATA=data/ilsvrc12
+EXAMPLE=/media/dd2/projects/deepdetect/datasets/imagenet/ilsvrc15/
+DATA=/media/data/datasets/imagenet/ILSVRC2015/ImageSets/CLS-LOC/caffe/
 TOOLS=build/tools
 
-TRAIN_DATA_ROOT=/path/to/imagenet/train/
-VAL_DATA_ROOT=/path/to/imagenet/val/
+TRAIN_DATA_ROOT=/media/data/datasets/imagenet/ILSVRC2015/Data/CLS-LOC/train/
+VAL_DATA_ROOT=/media/data/datasets/imagenet/ILSVRC2015/Data/CLS-LOC/val/
 
 # Set RESIZE=true to resize the images to 256x256. Leave as false if images have
 # already been resized using another tool.
-RESIZE=false
+RESIZE=true
 if $RESIZE; then
-  RESIZE_HEIGHT=256
-  RESIZE_WIDTH=256
+  RESIZE_HEIGHT=224
+  RESIZE_WIDTH=224
 else
   RESIZE_HEIGHT=0
   RESIZE_WIDTH=0
@@ -35,15 +35,16 @@ if [ ! -d "$VAL_DATA_ROOT" ]; then
   exit 1
 fi
 
-echo "Creating train lmdb..."
+#echo "Creating train lmdb..."
 
-GLOG_logtostderr=1 $TOOLS/convert_imageset \
-    --resize_height=$RESIZE_HEIGHT \
-    --resize_width=$RESIZE_WIDTH \
-    --shuffle \
-    $TRAIN_DATA_ROOT \
-    $DATA/train.txt \
-    $EXAMPLE/ilsvrc12_train_lmdb
+#GLOG_logtostderr=1 $TOOLS/convert_imageset \
+#    --resize_height=$RESIZE_HEIGHT \
+#    --resize_width=$RESIZE_WIDTH \
+#    --shuffle \
+#    --encoded \
+#    $TRAIN_DATA_ROOT \
+#    $DATA/train.txt \
+#    $EXAMPLE/ilsvrc15_train_lmdb
 
 echo "Creating val lmdb..."
 
@@ -51,8 +52,10 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
+    --encoded \
+    --encode_type jpg \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    $EXAMPLE/ilsvrc12_val_lmdb
+    $EXAMPLE/ilsvrc15_val_lmdb
 
 echo "Done."

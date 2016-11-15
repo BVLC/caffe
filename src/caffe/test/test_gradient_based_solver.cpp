@@ -397,7 +397,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   }
 
   void CheckAccumulation(const Dtype kLearningRate, const Dtype kWeightDecay,
-      const Dtype kMomentum, const int kNumIters, const int kIterSize) {
+      const Dtype kMomentum, const int kNumIters,
+      const int kIterSize) {
     const double kPrecision = 1e-2;
     const double kMinPrecision = 1e-7;
     // Solve without accumulation and save parameters.

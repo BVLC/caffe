@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "caffe/common.hpp"
 #include "caffe/data_reader.hpp"
@@ -13,21 +14,19 @@ namespace caffe {
 
 using boost::weak_ptr;
 
-// It has to explicitly initialize the map<> in order to work. It seems to be a
-// gcc bug.
-// http://www.cplusplus.com/forum/beginner/31576/
-template <>
-map<const string, weak_ptr<DataReader<Datum>::Body> >
-  DataReader<Datum>::bodies_
-  = map<const string, weak_ptr<DataReader<Datum>::Body> >();
-template <>
-map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >
-  DataReader<AnnotatedDatum>::bodies_
-  = map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >();
+template<>
+map<const string, weak_ptr<DataReader<Datum>::Body> > DataReader<Datum>::bodies_ = {};
+template<>
+map<const string, weak_ptr<DataReader<SparseDatum>::Body> > DataReader<SparseDatum>::bodies_ = {};
+template<>
+map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> > DataReader<AnnotatedDatum>::bodies_ = {};  
 static boost::mutex bodies_mutex_;
-
-template <typename T>
-DataReader<T>::DataReader(const LayerParameter& param)
+template<>
+std::hash<std::thread::id> DataReader<Datum>::idhasher_ = std::hash<std::thread::id>();
+template<>
+std::hash<std::thread::id> DataReader<SparseDatum>::idhasher_ = std::hash<std::thread::id>();
+template<class TDatum>
+DataReader<TDatum>::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
         param.data_param().prefetch() * param.data_param().batch_size())) {
   // Get or create a body
@@ -42,8 +41,8 @@ DataReader<T>::DataReader(const LayerParameter& param)
   body_->new_queue_pairs_.push(queue_pair_);
 }
 
-template <typename T>
-DataReader<T>::~DataReader() {
+template<class TDatum>
+DataReader<TDatum>::~DataReader() {
   string key = source_key(body_->param_);
   body_.reset();
   boost::mutex::scoped_lock lock(bodies_mutex_);
@@ -52,51 +51,58 @@ DataReader<T>::~DataReader() {
   }
 }
 
-template <typename T>
-DataReader<T>::QueuePair::QueuePair(int size) {
-  // Initialize the free queue with requested number of data
+//
+template<class TDatum>
+DataReader<TDatum>::QueuePair::QueuePair(int size) {
+  // Initialize the free queue with requested number of datums
   for (int i = 0; i < size; ++i) {
-    free_.push(new T());
+    free_.push(new TDatum());
   }
 }
 
-template <typename T>
-DataReader<T>::QueuePair::~QueuePair() {
-  T* t;
-  while (free_.try_pop(&t)) {
-    delete t;
+template<class TDatum>
+DataReader<TDatum>::QueuePair::~QueuePair() {
+  TDatum* datum;
+  while (free_.try_pop(&datum)) {
+    delete datum;
   }
-  while (full_.try_pop(&t)) {
-    delete t;
+  while (full_.try_pop(&datum)) {
+    delete datum;
   }
 }
 
-template <typename T>
-DataReader<T>::Body::Body(const LayerParameter& param)
+//
+template<class TDatum>
+DataReader<TDatum>::Body::Body(const LayerParameter& param)
     : param_(param),
       new_queue_pairs_() {
   StartInternalThread();
 }
 
-template <typename T>
-DataReader<T>::Body::~Body() {
+
+template<class TDatum>
+DataReader<TDatum>::Body::~Body() {
   StopInternalThread();
 }
 
-template <typename T>
-void DataReader<T>::Body::InternalThreadEntry() {
+template<class TDatum>
+void DataReader<TDatum>::Body::InternalThreadEntry() {
   shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
+  //std::cerr << "\nopening db\n";
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
+    //std::cerr << "\nsolver_count=" << solver_count << std::endl;
+
     // To ensure deterministic runs, only start running once all solvers
     // are ready. But solvers need to peek on one item during initialization,
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
+      //std::cerr << "\nreading one\n";
       read_one(cursor.get(), qp.get());
       qps.push_back(qp);
     }
@@ -116,12 +122,12 @@ void DataReader<T>::Body::InternalThreadEntry() {
   }
 }
 
-template <typename T>
-void DataReader<T>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
-  T* t = qp->free_.pop();
+template<class TDatum>
+void DataReader<TDatum>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
+  TDatum* datum = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
-  t->ParseFromString(cursor->value());
-  qp->full_.push(t);
+  datum->ParseFromString(cursor->value());
+  qp->full_.push(datum);
 
   // go to the next iter
   cursor->Next();
@@ -131,8 +137,9 @@ void DataReader<T>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
   }
 }
 
-// Instance class
+// Instance classes
 template class DataReader<Datum>;
+template class DataReader<SparseDatum>;
 template class DataReader<AnnotatedDatum>;
 
 }  // namespace caffe

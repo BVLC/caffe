@@ -19,6 +19,7 @@ template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
     : param_(param), phase_(phase) {
+  rd_ = std::uniform_int_distribution<int>(0,3);
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -522,6 +523,30 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   }
   CHECK(cv_cropped_image.data);
 
+  if (param_.rotate() && phase_ == TRAIN)
+  {  
+    int r = rd_(rg_);
+    if (r > 0)
+      {
+	CHECK(height == width) << "If random rotation is enabled, the image must be square";
+	if (r != 2)
+	  {
+	    cv::Mat cv_timg;
+	    transpose(cv_cropped_image,cv_timg);
+	    if (r == 1) // 90
+	      flip(cv_timg,cv_cropped_image,1);
+	    else if (r == 3) // 270
+	      flip(cv_timg,cv_cropped_image,0);
+	  }
+	else // 180
+	  {
+	    cv::Mat cv_imgr;
+	    flip(cv_cropped_image,cv_imgr,-1);
+	    cv_cropped_image = cv_imgr;
+	  }
+      }
+  }
+  
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
@@ -827,6 +852,15 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   shape[1] = datum_channels;
   shape[2] = (crop_h)? crop_h: datum_height;
   shape[3] = (crop_w)? crop_w: datum_width;
+  return shape;
+}
+
+template<typename Dtype>
+vector<int> DataTransformer<Dtype>::InferBlobShape(const SparseDatum& datum) {
+  // Build BlobShape.
+  vector<int> shape(2);
+  shape[0] = 1;
+  shape[1] = datum.size();
   return shape;
 }
 

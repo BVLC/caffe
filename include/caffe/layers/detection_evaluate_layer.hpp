@@ -51,7 +51,7 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
   /// @brief Not implemented
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    NOT_IMPLEMENTED;
+    CAFFE_NOT_IMPLEMENTED;
   }
 
   int num_classes_;

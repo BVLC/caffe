@@ -1,9 +1,10 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#include <exception>
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
-#include <glog/logging.h>
+#include "llogging.h"
 
 #include <climits>
 #include <cmath>
@@ -67,8 +68,8 @@ private:\
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
-#define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
-
+#define CAFFE_NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
+  
 // See PR #1236
 namespace cv { class Mat; }
 
@@ -133,6 +134,12 @@ class Caffe {
   }
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
+  inline static cusparseHandle_t cusparse_handle() {
+      return Get().cusparse_handle_;
+  }
+  inline static cusparseMatDescr_t cusparse_mat_descr() {
+      return Get().cusparse_mat_descr_;
+  }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
@@ -167,6 +174,8 @@ class Caffe {
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
+  cusparseHandle_t cusparse_handle_;
+  cusparseMatDescr_t cusparse_mat_descr_;
   curandGenerator_t curand_generator_;
 #endif
   shared_ptr<RNG> random_generator_;

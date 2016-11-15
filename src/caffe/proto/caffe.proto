@@ -33,7 +33,7 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5;
+  optional float label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
@@ -152,6 +152,14 @@ message AnnotatedDatum {
   optional AnnotationType type = 2;
   // Each group contains annotation for a particular class.
   repeated AnnotationGroup annotation_group = 3;
+}
+
+message SparseDatum {
+  optional int32 size = 1 [default = 0];
+  optional int32 nnz = 2 [default = 0];  //number of non zeros entries
+  repeated int32 indices = 3 [packed=true];
+  optional float label = 4;
+  repeated float data = 5 [packed=true];
 }
 
 message FillerParameter {
@@ -566,6 +574,8 @@ message TransformationParameter {
   optional NoiseParameter noise_param = 9;
   // Constraint for emitting the annotation after transformation.
   optional EmitConstraint emit_constraint = 10;
+  // Random 90 degrees step image rotation.
+  optional bool rotate = 13 [default = false];
 }
 
 // Message that stores parameters used by data transformer for transformation policy
@@ -614,7 +624,7 @@ message SaltPepperParameter {
 // Message that stores parameters used by data transformer for transformation
 // policy
 message NoiseParameter {
-  //Probability of using this resize policy
+  //Probability of using this noise policy
   optional float prob = 1 [default = 0];
   // Histogram equalized
   optional bool hist_eq = 2 [default = false];
@@ -1110,6 +1120,8 @@ message ImageDataParameter {
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
+  // axis of prob.
+  optional int32 axis = 2 [default = 1];
 }
 
 message InnerProductParameter {
@@ -1531,6 +1543,7 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
+// Message that stores parameters used by TanHLayer
 message TanHParameter {
   enum Engine {
     DEFAULT = 0;

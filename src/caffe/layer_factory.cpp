@@ -5,6 +5,8 @@
 #endif
 #include <string>
 
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/layers/conv_layer.hpp"
@@ -26,6 +28,8 @@
 #include "caffe/layers/cudnn_softmax_layer.hpp"
 #include "caffe/layers/cudnn_tanh_layer.hpp"
 #endif
+
+#include "caffe/sparse_blob.hpp"
 
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
@@ -68,6 +72,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
@@ -105,6 +110,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return 0;
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
@@ -142,6 +148,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return 0;
 }
 
 REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
@@ -165,6 +172,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();
 }
 
 REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
@@ -188,6 +196,7 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();
 }
 
 REGISTER_LAYER_CREATOR(Sigmoid, GetSigmoidLayer);
@@ -211,6 +220,7 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();
 }
 
 REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer);
@@ -234,9 +244,29 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();
 }
 
 REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
+
+// Layers that use their constructor as their default creator should be
+// registered in their corresponding cpp files. Do not register them here.
+template<typename Dtype>
+Blob<Dtype>* GetTopBlob(const shared_ptr<LayerParameter>& param, int pos) {
+  if (param->type() == "SparseData" || param->type() == "MemorySparseData") {
+    if (pos == 0) {
+      return new SparseBlob<Dtype>();
+    } else {
+      return new Blob<Dtype>();
+    }
+  }
+  return new Blob<Dtype>();
+}
+
+template Blob<float>* GetTopBlob(const shared_ptr<LayerParameter>& param,
+                                 int pos);
+template Blob<double>* GetTopBlob(const shared_ptr<LayerParameter>& param,
+                                  int pos);
 
 #ifdef WITH_PYTHON_LAYER
 template <typename Dtype>

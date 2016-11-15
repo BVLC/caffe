@@ -2,6 +2,7 @@
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <vector>
+#include <random>
 
 #include "google/protobuf/repeated_field.h"
 
@@ -171,6 +172,7 @@ class DataTransformer {
    *    Datum containing the data to be transformed.
    */
   vector<int> InferBlobShape(const Datum& datum);
+  vector<int> InferBlobShape(const SparseDatum &datum);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -231,6 +233,8 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  std::mt19937 rg_;
+  std::uniform_int_distribution<int> rd_;
 };
 
 }  // namespace caffe

@@ -48,8 +48,10 @@ template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
-  LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
-    << std::endl << param.DebugString();
+  LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: ";
+#ifdef DEBUG
+  LOG_IF(INFO, Caffe::root_solver()) << std::endl << param.DebugString();
+#endif
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();

@@ -74,9 +74,10 @@ class Solver {
   }
   int iter() { return iter_; }
 
+ public:
   // Invoked at specific points during an iteration
   class Callback {
-   protected:
+   public:
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
@@ -88,13 +89,13 @@ class Solver {
     callbacks_.push_back(value);
   }
 
+ public:
   void CheckSnapshotWritePermissions();
   /**
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
 
- protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   string SnapshotFilename(const string extension);

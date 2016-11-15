@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
-
-#include "glog/logging.h"
+#include <cstring> // for memset
 
 #include "caffe/common.hpp"
 #include "caffe/util/device_alternate.hpp"
@@ -20,6 +19,14 @@ void caffe_cpu_gemm(const CBLAS_TRANSPOSE TransA,
     const Dtype alpha, const Dtype* A, const Dtype* B, const Dtype beta,
     Dtype* C);
 
+template<typename Dtype>
+void caffe_cpu_csr_gemm(const CBLAS_TRANSPOSE TransA,
+                        const CBLAS_TRANSPOSE TransB, const int M, const int N,
+                        const int K, const Dtype alpha, const int nzz,
+                        const Dtype* A, const int* indices, const int* ptr,
+                        const Dtype* B, const Dtype beta, Dtype* C,
+                        const CBLAS_ORDER orderC);
+
 template <typename Dtype>
 void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
     const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
@@ -27,7 +34,7 @@ void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
 
 template <typename Dtype>
 void caffe_axpy(const int N, const Dtype alpha, const Dtype* X,
-    Dtype* Y);
+    Dtype* Y, const int ldx = 1, const int ldy = 1);
 
 template <typename Dtype>
 void caffe_cpu_axpby(const int N, const Dtype alpha, const Dtype* X,
@@ -152,6 +159,13 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const Dtype alpha, const Dtype* A, const Dtype* B, const Dtype beta,
     Dtype* C);
+
+template<typename Dtype>
+void caffe_gpu_csr_gemm(const CBLAS_TRANSPOSE TransA,
+                        const CBLAS_TRANSPOSE TransB, const int M, const int N,
+                        const int K, const Dtype alpha, int nzz, const Dtype* A,
+                        const int* indices, const int* ptr, const Dtype* B,
+                        const Dtype beta, Dtype* C, const CBLAS_ORDER orderC);
 
 template <typename Dtype>
 void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
