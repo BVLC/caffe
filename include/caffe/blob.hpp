@@ -266,9 +266,9 @@ class Blob {
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
 
-  size_t prv_data_count() {
+  size_t prv_data_count() const {
       CHECK(data_); return data_->prv_descriptor_->prv_count();}
-  size_t prv_diff_count() {
+  size_t prv_diff_count() const {
       CHECK(diff_); return diff_->prv_descriptor_->prv_count();}
 
   const Dtype* prv_data() const;
