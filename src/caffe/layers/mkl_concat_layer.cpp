@@ -42,6 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 
 namespace caffe {
+#include "performance.h"
+using namespace Performance;
 
 template <typename Dtype> MKLConcatLayer<Dtype>::~MKLConcatLayer() {
   dnnDelete<Dtype>(concatFwd_);
@@ -203,8 +205,13 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
     concat_res[dnnResourceDst] =
       reinterpret_cast<void*>(top[0]->mutable_cpu_data());
   }
-
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(concatFwd_, concat_res);
+  m.stop();
+  const char* name = "FW_mkl_concat";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -234,7 +241,13 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
+  m.stop();
+  const char* name = "BW_mkl_concat";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 

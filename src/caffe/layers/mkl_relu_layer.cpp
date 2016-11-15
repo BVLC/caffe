@@ -42,6 +42,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 
 namespace caffe {
+#include "performance.h"
+using namespace Performance;
+
 template <typename Dtype>
 MKLReLULayer<Dtype>::~MKLReLULayer() {
     dnnDelete<Dtype>(reluFwd_);
@@ -198,7 +201,13 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using cpu_data for top in mklReLU.";
   }
 
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
+  m.stop();
+  const char* name = "FW_mkl_relu";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -234,7 +243,13 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       DLOG(INFO) << "Using mutable_prv (out-of-place) in mklReLU-backward.";
     }
 
+	Measurement m;
+	m.start();
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
+	m.stop();
+	const char* name = "BW_mkl_relu";
+	int eventId = monitor.getEventIdByName(name);
+	monitor.updateEventById(eventId, m);
     CHECK_EQ(e, E_SUCCESS);
   }
 }

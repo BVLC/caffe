@@ -42,6 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+#include "performance.h"
+using namespace Performance;
 
 template <typename Dtype>
 MKLSplitLayer<Dtype>::~MKLSplitLayer() {
@@ -217,7 +219,13 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
   }
 
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
+  m.stop();
+  const char* name = "BW_mkl_split";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 

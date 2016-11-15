@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+#include "performance.h"
+using namespace Performance;
 
 template <typename Dtype>
 MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
@@ -195,6 +197,7 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
     }
   }
 
+  Measurement m;
   switch (op_) {
   case EltwiseParameter_EltwiseOp_SUM:
     void *eltwise_res[dnnResourceNumber];
@@ -217,7 +220,10 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
     }
 
+	m.start();
     e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
+	m.stop();
+    monitor.updateEventById(monitor.getEventIdByName("FW_mkl_eltwise"), m);
     CHECK_EQ(e, E_SUCCESS);
 
     break;

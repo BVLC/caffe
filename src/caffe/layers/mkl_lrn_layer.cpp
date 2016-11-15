@@ -44,6 +44,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
+#include "performance.h"
+using namespace Performance;
+
 template <typename Dtype>
 MKLLRNLayer<Dtype>::~MKLLRNLayer() {
   dnnDelete<Dtype>(lrnFwd);
@@ -236,7 +239,14 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
 
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
+  m.stop();
+  const char* name = "FW_mkl_lrn";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
+  
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -274,7 +284,14 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
   } else {
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
+  
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
+  m.stop();
+  const char* name = "BW_mkl_lrn";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 

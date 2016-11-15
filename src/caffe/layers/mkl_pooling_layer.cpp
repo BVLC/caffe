@@ -48,6 +48,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 namespace caffe {
+#include "performance.h"
+using namespace Performance;
+
 template <typename Dtype>
 MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
   dnnDelete<Dtype>(poolingFwd);
@@ -322,8 +325,14 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     pooling_res[dnnResourceDst] =
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
     DLOG(INFO) << "Using cpu_data for top in DnnPooling.";
-  }
+  }  
+  Measurement m;
+  m.start();
   status = dnnExecute<Dtype>(poolingFwd, pooling_res);
+  m.stop();
+  const char* name = "FW_mkl_pooling";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(status, E_SUCCESS);
 }
 
@@ -359,7 +368,13 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   caffe_set(bottom[0]->count(), Dtype(0),
           reinterpret_cast<Dtype *>(pooling_res[dnnResourceDiffSrc]));
+  Measurement m;
+  m.start();
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
+  m.stop();
+  const char* name = "BW_mkl_pooling";
+  int eventId = monitor.getEventIdByName(name);
+  monitor.updateEventById(eventId, m);
   CHECK_EQ(e, E_SUCCESS);
 }
 

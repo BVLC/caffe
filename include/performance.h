@@ -10,7 +10,6 @@
 
 // #include "caffe/util/cpu_info.hpp"
 
-
 namespace Performance {
 
 	class PreciseTime
@@ -61,7 +60,7 @@ namespace Performance {
 	class Measurement
 	{
 		PreciseTime processTimeStamp;
-		PreciseTime systemTimeStamp;
+		PreciseTime monotonicTimeStamp;
 
 	public:
 
@@ -72,25 +71,17 @@ namespace Performance {
 		void start()
 		{
 			processTimeStamp = PreciseTime::getProcessTime();
-			systemTimeStamp = PreciseTime::getMonotonicTime();
+			monotonicTimeStamp = PreciseTime::getMonotonicTime();
 		}
 
 		void stop()
 		{
 			processTimeStamp = PreciseTime::getProcessTime() - processTimeStamp;
-			const uint64_t monotonicTime = PreciseTime::getMonotonicTime();
-
-			// TODO: Make these variables static fields of this class.
-			// caffe::cpu::CpuInfo cpuInfo;
-			// caffe::cpu::Collection collection(&cpuInfo);
-			// printf("%d - num of cpu cores ", collection.getTotalNumberOfCpuCores());
+			const unsigned numberOfThreads = 44; // Collection::getTotalNumberOfCpuCores();
+			const uint64_t averageProcessTime = processTimeStamp / numberOfThreads;
+			processTimeStamp = averageProcessTime;
 			
-			const unsigned numberOfThreads = 44; // TEMP, TODO: Replace this value with call to Collection::getTotalNumberOfCpuCores().
-			const uint64_t realProcessTime = processTimeStamp / numberOfThreads;
-			
-			processTimeStamp = realProcessTime;
-			
-			systemTimeStamp = monotonicTime - systemTimeStamp;
+			monotonicTimeStamp = PreciseTime::getMonotonicTime() - monotonicTimeStamp;
 		}
 
 		const PreciseTime &getProcessTimeStamp() const
@@ -98,9 +89,9 @@ namespace Performance {
 			return processTimeStamp;
 		}
 
-		const PreciseTime &getSystemTimeStamp() const
+		const PreciseTime &getmonotonicTimeStamp() const
 		{
-			return systemTimeStamp;
+			return monotonicTimeStamp;
 		}
 	};
 
@@ -111,23 +102,29 @@ namespace Performance {
 		PreciseTime minimalProcessTime;
 		PreciseTime maximalProcessTime;
 		
-		PreciseTime totalSystemTime;
-		PreciseTime minimalSystemTime;
-		PreciseTime maximalSystemTime;
+		PreciseTime totalMonotonicTime;
+		PreciseTime minimalMonotonicTime;
+		PreciseTime maximalMonotonicTime;
 
 	public:
 
-		Event() : numberOfCalls(0), totalProcessTime(0), minimalProcessTime(0), maximalProcessTime(0), totalSystemTime(0), minimalSystemTime(0), maximalSystemTime(0)
+		Event() : numberOfCalls(0), 
+				  totalProcessTime(0), 
+				  minimalProcessTime(0), 
+				  maximalProcessTime(0), 
+				  totalMonotonicTime(0), 
+				  minimalMonotonicTime(0), 
+				  maximalMonotonicTime(0)
 		{
 		}
 
 		void update(const Measurement &measurement)
 		{
 			const PreciseTime &timeStamp = measurement.getProcessTimeStamp();
-			const PreciseTime &systemTimeStamp = measurement.getSystemTimeStamp();
+			const PreciseTime &monotonicTimeStamp = measurement.getmonotonicTimeStamp();
 
 			totalProcessTime = totalProcessTime + timeStamp;
-			totalSystemTime = totalSystemTime + systemTimeStamp;
+			totalMonotonicTime = totalMonotonicTime + monotonicTimeStamp;
 			
 			if (minimalProcessTime > timeStamp || !numberOfCalls)
 				minimalProcessTime = timeStamp;
@@ -135,33 +132,33 @@ namespace Performance {
 			if (maximalProcessTime < timeStamp || !numberOfCalls)
 				maximalProcessTime = timeStamp;
 				
-			if (minimalSystemTime > systemTimeStamp || !numberOfCalls)
-				minimalSystemTime = systemTimeStamp;
+			if (minimalMonotonicTime > monotonicTimeStamp || !numberOfCalls)
+				minimalMonotonicTime = monotonicTimeStamp;
 
-			if (maximalSystemTime < systemTimeStamp || !numberOfCalls)
-				maximalSystemTime = systemTimeStamp;
+			if (maximalMonotonicTime < monotonicTimeStamp || !numberOfCalls)
+				maximalMonotonicTime = monotonicTimeStamp;
 
 			numberOfCalls++;
 		}
 
-		PreciseTime getTotalTime() const
+		PreciseTime getTotalProcessTime() const
 		{
 			return totalProcessTime;
 		}
 
-		PreciseTime getAverageSystemTime() const
+		PreciseTime getAverageMonotonicTime() const
 		{
-			return numberOfCalls ? totalSystemTime / numberOfCalls : 0;
+			return numberOfCalls ? totalMonotonicTime / numberOfCalls : 0;
 		}
 
-		PreciseTime getMinimalSystemTime() const
+		PreciseTime getMinimalMonotonicTime() const
 		{
-			return minimalSystemTime;
+			return minimalMonotonicTime;
 		}
 
-		PreciseTime getMaximalSystemTime() const
+		PreciseTime getMaximalMonotonicTime() const
 		{
-			return maximalSystemTime;
+			return maximalMonotonicTime;
 		}
 		
 		PreciseTime getAverageTime() const
@@ -210,9 +207,9 @@ namespace Performance {
 				(uint64_t)event.getAverageTime(),
 				(uint64_t)event.getMinimalTime(),
 				(uint64_t)event.getMaximalTime(),
-				(uint64_t)event.getAverageSystemTime(),
-				(uint64_t)event.getMinimalSystemTime(),
-				(uint64_t)event.getMaximalSystemTime(),
+				(uint64_t)event.getAverageMonotonicTime(),
+				(uint64_t)event.getMinimalMonotonicTime(),
+				(uint64_t)event.getMaximalMonotonicTime(),
 				(uint64_t)event.getNumberOfCalls());
 		}
 	};
@@ -279,7 +276,7 @@ namespace Performance {
 		{
 			Iterator iterator = eventNameIdMap.begin();
 			for (; iterator != eventNameIdMap.end(); iterator++)
-				Log::write(iterator->first.c_str(), events[iterator->second].getTotalTime());
+				Log::write(iterator->first.c_str(), events[iterator->second].getTotalProcessTime());
 		}
 
 		void dumpDetailedEventInformation()
@@ -294,7 +291,7 @@ namespace Performance {
 			totalEventsTime = 0;
 			Iterator iterator = eventNameIdMap.begin();
 			for (; iterator != eventNameIdMap.end(); iterator++)
-				totalEventsTime = totalEventsTime + events[iterator->second].getTotalTime();
+				totalEventsTime = totalEventsTime + events[iterator->second].getTotalProcessTime();
 		}
 
 	public:
