@@ -15,6 +15,17 @@ __global__ void SigmoidCrossEntropyLossForwardGPU(const int nthreads,
 }
 
 template <typename Dtype>
+__global__ void SigmoidCrossEntropyLossIgnoreGPU(const int count,
+    const int ignore_label, const Dtype* target, Dtype* reference) {
+  CUDA_KERNEL_LOOP(index, count) {
+    const int target_value = static_cast<int>(target[index]);
+    if (target_value == ignore_label) {
+      reference[index] = 0;
+    }
+  }
+}
+
+template <typename Dtype>
 void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // The forward pass computes the sigmoid outputs.
@@ -33,6 +44,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
   // NOLINT_NEXT_LINE(whitespace/operators)
   SigmoidCrossEntropyLossForwardGPU<Dtype><<<CAFFE_GET_BLOCKS(count),
       CAFFE_CUDA_NUM_THREADS>>>(count, input_data, target, loss_data);
+  // Zero out loss of ignored targets.
+  if (has_ignore_label_) {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    SigmoidCrossEntropyLossIgnoreGPU<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, ignore_label_, target, loss_data);
+  }
   Dtype loss;
   caffe_gpu_asum(count, loss_data, &loss);
   top[0]->mutable_cpu_data()[0] = loss / num;
@@ -58,6 +75,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
     // Scale down gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     caffe_gpu_scal(count, loss_weight / num, bottom_diff);
+    // Zero out gradient of ignored targets.
+    if (has_ignore_label_) {
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      SigmoidCrossEntropyLossIgnoreGPU<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(count, ignore_label_, target, bottom_diff);
+    }
   }
 }
 

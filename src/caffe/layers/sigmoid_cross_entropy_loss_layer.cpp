@@ -14,6 +14,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
   sigmoid_top_vec_.clear();
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, sigmoid_top_vec_);
+
+  has_ignore_label_ =
+    this->layer_param_.loss_param().has_ignore_label();
+  if (has_ignore_label_) {
+    ignore_label_ = this->layer_param_.loss_param().ignore_label();
+  }
 }
 
 template <typename Dtype>
@@ -39,6 +45,10 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const Dtype* target = bottom[1]->cpu_data();
   Dtype loss = 0;
   for (int i = 0; i < count; ++i) {
+    const int target_value = static_cast<int>(target[i]);
+    if (has_ignore_label_ && target_value == ignore_label_) {
+      continue;
+    }
     loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
   }
@@ -64,6 +74,15 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     // Scale down gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     caffe_scal(count, loss_weight / num, bottom_diff);
+    // Zero out gradient of ignored targets.
+    if (has_ignore_label_) {
+      for (int i = 0; i < count; ++i) {
+        const int target_value = static_cast<int>(target[i]);
+        if (target_value == ignore_label_) {
+          bottom_diff[i] = 0;
+        }
+      }
+    }
   }
 }
 
