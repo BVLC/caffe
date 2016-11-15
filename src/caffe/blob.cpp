@@ -341,7 +341,7 @@ Dtype Blob<Dtype>::asum_diff() const {
   switch (diff_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
-    return caffe_cpu_asum(count_, prv_diff());
+    return caffe_cpu_asum( prv_diff_count(), prv_diff());
   case SyncedMemory::HEAD_AT_CPU:
     return caffe_cpu_asum(count_, cpu_diff());
   case SyncedMemory::HEAD_AT_GPU:
@@ -382,7 +382,7 @@ Dtype Blob<Dtype>::sumsq_data() const {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
       data = prv_data();
-      sumsq = caffe_cpu_dot(count_, data, data);
+      sumsq = caffe_cpu_dot(prv_data_count(), data, data);
       break;
   case SyncedMemory::HEAD_AT_CPU:
     data = cpu_data();
@@ -424,7 +424,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
       diff = prv_diff();
-      sumsq = caffe_cpu_dot(count_, diff, diff);
+      sumsq = caffe_cpu_dot(prv_diff_count(), diff, diff);
       break;
   case SyncedMemory::HEAD_AT_CPU:
     diff = cpu_diff();
@@ -463,7 +463,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
       data = mutable_prv_data();
-      caffe_scal(count_, scale_factor, data);
+      caffe_scal(prv_data_count(), scale_factor, data);
       break;
   case SyncedMemory::HEAD_AT_CPU:
     data = mutable_cpu_data();
@@ -501,7 +501,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
       diff = mutable_prv_diff();
-      caffe_scal(count_, scale_factor, diff);
+      caffe_scal(prv_diff_count(), scale_factor, diff);
       break;
   case SyncedMemory::HEAD_AT_CPU:
     diff = mutable_cpu_diff();
