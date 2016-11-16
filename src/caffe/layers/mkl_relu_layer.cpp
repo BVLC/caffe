@@ -44,8 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 #include "performance.h"
 using Performance::Measurement;
-using Performance::Monitor;
-extern Monitor monitor;
+using Performance::monitor;
 
 template <typename Dtype>
 MKLReLULayer<Dtype>::~MKLReLULayer() {
@@ -203,13 +202,10 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using cpu_data for top in mklReLU.";
   }
 
-  Measurement m;
-  m.start();
+  PERFORMANCE_MEASUREMENT_BEGIN()
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
-  m.stop();
-  static const char* measurementName = "FW_mkl_relu";
-  static int eventId = monitor.getEventIdByName(measurementName);
-  monitor.updateEventById(eventId, m);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_relu")
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -245,13 +241,10 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       DLOG(INFO) << "Using mutable_prv (out-of-place) in mklReLU-backward.";
     }
 
-    Measurement m;
-    m.start();
+    PERFORMANCE_MEASUREMENT_BEGIN()
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
-    m.stop();
-    static const char* measurementName = "BW_mkl_relu";
-    static int eventId = monitor.getEventIdByName(measurementName);
-    monitor.updateEventById(eventId, m);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_relu")
+
     CHECK_EQ(e, E_SUCCESS);
   }
 }

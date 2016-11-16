@@ -45,8 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 #include "performance.h"
 using Performance::Measurement;
-using Performance::Monitor;
-extern Monitor monitor;
+using Performance::monitor;
 
 template <typename Dtype>
 MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
@@ -199,9 +198,6 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
     }
   }
 
-  Measurement m;
-  static const char* measurementName = "FW_mkl_eltwise";
-  static int eventId = monitor.getEventIdByName(measurementName);
   switch (op_) {
   case EltwiseParameter_EltwiseOp_SUM:
     void *eltwise_res[dnnResourceNumber];
@@ -224,10 +220,11 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
     }
 
-    m.start();
-    e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
-    m.stop();
-    monitor.updateEventById(eventId, m);
+    { // local scope needed since the macro below contains variable declaration
+      PERFORMANCE_MEASUREMENT_BEGIN()
+      e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
+      PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_eltwise")
+    }
     CHECK_EQ(e, E_SUCCESS);
 
     break;

@@ -1,12 +1,37 @@
 #ifndef PerformanceH
 #define PerformanceH
 
+#define PERFORMANCE_MONITORING
+
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <string>
 #include <vector>
 #include <map>
+
+#ifdef PERFORMANCE_MONITORING
+#define PERFORMANCE_MEASUREMENT_BEGIN() \
+    Measurement m_MACRO;                \
+    m_MACRO.start();
+
+#define PERFORMANCE_MEASUREMENT_END(name)             \
+    m_MACRO.stop();                                   \
+    const char* n_MACRO = name;                       \
+    int id_MACRO = monitor.getEventIdByName(n_MACRO); \
+    monitor.updateEventById(id_MACRO, m_MACRO);
+
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)             \
+    m_MACRO.stop();                                          \
+    static const char* n_MACRO = name;                       \
+    static int id_MACRO = monitor.getEventIdByName(n_MACRO); \
+    monitor.updateEventById(id_MACRO, m_MACRO);              \
+
+#else
+#define PERFORMANCE_MEASUREMENT_BEGIN()
+#define PERFORMANCE_MEASUREMENT_END(name)
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)
+#endif
 
 // #include "caffe/util/cpu_info.hpp"
 

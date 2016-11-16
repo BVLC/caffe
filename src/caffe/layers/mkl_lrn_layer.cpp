@@ -46,8 +46,7 @@ namespace caffe {
 
 #include "performance.h"
 using Performance::Measurement;
-using Performance::Monitor;
-extern Monitor monitor;
+using Performance::monitor;
 
 template <typename Dtype>
 MKLLRNLayer<Dtype>::~MKLLRNLayer() {
@@ -241,13 +240,9 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
 
-  Measurement m;
-  m.start();
+  PERFORMANCE_MEASUREMENT_BEGIN()
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
-  m.stop();
-  static const char* measurementName = "FW_mkl_lrn";
-  static int eventId = monitor.getEventIdByName(measurementName);
-  monitor.updateEventById(eventId, m);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_lrn")
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -287,13 +282,10 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
-  Measurement m;
-  m.start();
+  PERFORMANCE_MEASUREMENT_BEGIN()
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
-  m.stop();
-  static const char* measurementName = "BW_mkl_lrn";
-  static int eventId = monitor.getEventIdByName(measurementName);
-  monitor.updateEventById(eventId, m);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_lrn")
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
