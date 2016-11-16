@@ -14,7 +14,7 @@ The official Makefile and `Makefile.config` build are complemented by a [communi
 - [Ubuntu installation](install_apt.html) *the standard platform*
 - [OS X installation](install_osx.html)
 - [RHEL / CentOS / Fedora installation](install_yum.html)
-- [Windows](https://github.com/BVLC/caffe/tree/windows) *see the Windows branch led by Microsoft*
+- [Windows](https://github.com/BVLC/caffe/tree/windows) *see the Windows branch led by Guillaume Dumont*
 - [OpenCL](https://github.com/BVLC/caffe/tree/opencl) *see the OpenCL branch led by Fabian Tschopp*
 
 **Overview**:
