@@ -121,8 +121,7 @@ void MKLEltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
-      for (int i = 1; i < bottom.size(); ++i) {
+  for (int i = 1; i < bottom.size(); ++i) {
     CHECK(bottom[i]->shape() == bottom[0]->shape());
   }
   top[0]->ReshapeLike(*bottom[0]);
