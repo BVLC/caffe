@@ -38,16 +38,25 @@
 #
 FindLibrary()
 {
+# Find all the instances of the MKL libraries present in Caffe
   MKL_LIBS=`find $1 -name libmklml_intel.so`
-  SORTED_VERSIONS=`echo "$MKL_LIBS" \
+
+# Sort libraries based on build date in $MKL/include/mkl_version.h. 
+# Cut out everything but build date tagged with __INTEL_MKL_BUILD_DATE.
+# The format of sorted lines is: "build_date:path_to_mkl_lib/include/mkl_version.h".
+# Sort lines based on the first column (build_date), in reversed order (the recent on the top).
+# Cut out include/mkl_version.h.
+  RECENT_VERSION=`echo "$MKL_LIBS" \
                  | sed -e 's/lib.*$/include\/mkl_version.h/' \
                  | xargs grep __INTEL_MKL_BUILD_DATE /dev/null \
                  | sed -e 's/\(.*\):.* \([0-9]*\)/\2:\1/' \
                  | sort -rk1 -t: | head -n1 | cut -d ":" -f 2- \
                  | sed -e 's/include\/mkl_version.h//'`
 
-  RECENT=`find $SORTED_VERSIONS -name libmklml_intel.so`
-  LOCALMKL=$RECENT
+# Find once again libmklml_intel.so to obtain the path with most recent MKL lib.
+# TODO: obtain path from MKL_LIBS.
+  RECENT_MKL=`find $RECENT_VERSION -name libmklml_intel.so`
+  LOCALMKL=$RECENT_MKL
 }
 
 GetVersionName()
