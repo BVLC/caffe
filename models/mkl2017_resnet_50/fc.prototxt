@@ -1,0 +1,14 @@
+
+# fcnode
+
+start_layer : "fc1000"
+end_layers : "prob"
+num_splits : 1
+
+node_info {
+  router_port : 2003
+  pub_port : 2004
+  position : 0
+}
+
+
