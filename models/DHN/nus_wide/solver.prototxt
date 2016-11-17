@@ -1,0 +1,16 @@
+net: "models/DHN/nus_wide/train_val.prototxt"
+# lr for fine-tuning should be lower than when starting from scratch
+base_lr: 0.00002
+lr_policy: "step"
+gamma: 0.5
+# stepsize should also be lower, as we're closer to being done
+stepsize: 500
+display: 20
+max_iter: 3000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 1000
+snapshot_prefix: "models/DHN/nus_wide/finetune_model"
+snapshot_after_train: false
+# uncomment the following to default to CPU mode solving
+# solver_mode: CPU
