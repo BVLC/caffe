@@ -1,0 +1,14 @@
+
+# fcnode
+
+start_layer : "loss3/classifier"
+end_layers : "loss3/loss"
+num_splits : 1
+
+node_info {
+  router_port : 2007
+  pub_port : 2008
+  position : 0
+}
+
+

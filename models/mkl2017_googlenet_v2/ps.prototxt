@@ -1,0 +1,17 @@
+
+# conv clients
+
+start_layer : "data"
+end_layers : "loss1/conv/bn/relu"
+end_layers : "loss2/conv/bn/relu"
+end_layers : "pool5/7x7_s1"
+num_splits : 1
+
+node_info {
+  router_port : 2001
+  pub_port : 2002
+  position : 0
+  staleness : 0
+}
+
+
