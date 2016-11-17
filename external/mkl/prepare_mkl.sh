@@ -42,33 +42,12 @@ FindLibrary()
   SORTED_VERSIONS=`echo "$MKL_LIBS" \
                  | sed -e 's/lib.*$/include\/mkl_version.h/' \
                  | xargs grep __INTEL_MKL_BUILD_DATE /dev/null \
-                 | awk 'BEGIN { FS=":"; OFS=":"; } \
-                              { version=$2; \
-                                sub(/.* /, "", version); \
-                                mkls[version] = $1; } \
-                        END   { for(i in mkls) print i,mkls[i] }' \
+                 | sed -e 's/\(.*\):.* \([0-9]*\)/\2:\1/' \
                  | sort -rk1 -t: | head -n1 | cut -d ":" -f 2- \
                  | sed -e 's/include\/mkl_version.h//'`
 
-
   RECENT=`find $SORTED_VERSIONS -name libmklml_intel.so`
   LOCALMKL=$RECENT
-
-  #LOCALMKL=`find $RECENT_MKL -name libmklml_intel.so`
-
-# there may be more than one MKL libraries present
-# iterate over the found MKLs and find correct version  
-  #for m in `find $1 -name libmklml_intel.so`; do
-  #  local lib=`echo $m | sed -e 's/lib.*$//'`
-  #  local recent=0
-  #  local version=`GetVersionName $lib`
-
-  #  if [ $recent -lt $version ]; then
-# set the most recent version of MKL as LOCALMKL      
-  #    LOCALMKL=$m
-  #    recent=$version
-  #  fi
-  #done
 }
 
 GetVersionName()
