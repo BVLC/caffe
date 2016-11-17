@@ -36,21 +36,39 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-FindLibrary() 
+FindLibrary()
 {
+  MKL_LIBS=`find $1 -name libmklml_intel.so`
+  SORTED_VERSIONS=`echo "$MKL_LIBS" \
+                 | sed -e 's/lib.*$/include\/mkl_version.h/' \
+                 | xargs grep __INTEL_MKL_BUILD_DATE /dev/null \
+                 | awk 'BEGIN { FS=":"; OFS=":"; } \
+                              { version=$2; \
+                                sub(/.* /, "", version); \
+                                mkls[version] = $1; } \
+                        END   { for(i in mkls) print i,mkls[i] }' \
+                 | sort -rk1 -t: | head -n1 | cut -d ":" -f 2- \
+                 | sed -e 's/include\/mkl_version.h//'`
+
+
+  RECENT=`find $SORTED_VERSIONS -name libmklml_intel.so`
+  LOCALMKL=$RECENT
+
+  #LOCALMKL=`find $RECENT_MKL -name libmklml_intel.so`
+
 # there may be more than one MKL libraries present
-  local mkls=`find $1 -name libmklml_intel.so`
-  
 # iterate over the found MKLs and find correct version  
-  for m in $mkls; do
-    local lib=`echo $m | sed -e 's/lib.*$//'`
-    local version=`GetVersionName $lib`
-    
-    if [ $version -gt $VERSION_MATCH ]; then
+  #for m in `find $1 -name libmklml_intel.so`; do
+  #  local lib=`echo $m | sed -e 's/lib.*$//'`
+  #  local recent=0
+  #  local version=`GetVersionName $lib`
+
+  #  if [ $recent -lt $version ]; then
 # set the most recent version of MKL as LOCALMKL      
-      LOCALMKL=$m
-    fi
-  done
+  #    LOCALMKL=$m
+  #    recent=$version
+  #  fi
+  #done
 }
 
 GetVersionName()
