@@ -23,8 +23,8 @@ class SoftmaxLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Softmax"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -36,12 +36,12 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int outer_num_;
-  int inner_num_;
-  int softmax_axis_;
+  int_tp outer_num_;
+  int_tp inner_num_;
+  int_tp softmax_axis_;
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
-  /// scale is an intermediate Blob to hold temporary results.
+  /// scale is an int_tpermediate Blob to hold temporary results.
   Blob<Dtype> scale_;
 };
 

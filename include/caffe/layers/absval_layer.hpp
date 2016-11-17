@@ -30,8 +30,8 @@ class AbsValLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "AbsVal"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /// @copydoc AbsValLayer

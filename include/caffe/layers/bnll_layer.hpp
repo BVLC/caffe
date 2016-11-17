@@ -11,6 +11,8 @@
 
 namespace caffe {
 
+const float kBNLL_THRESHOLD = 50.;
+
 /**
  * @brief Computes @f$ y = x + \log(1 + \exp(-x)) @f$ if @f$ x > 0 @f$;
  *        @f$ y = \log(1 + \exp(x)) @f$ otherwise.

@@ -28,8 +28,8 @@ class CropLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Crop"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -41,15 +41,15 @@ class CropLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  vector<int> offsets;
+  vector<int_tp> offsets;
 
  private:
   // Recursive copy function.
   void crop_copy(const vector<Blob<Dtype>*>& bottom,
                const vector<Blob<Dtype>*>& top,
-               const vector<int>& offsets,
-               vector<int> indices,
-               int cur_dim,
+               const vector<int_tp>& offsets,
+               vector<int_tp> indices,
+               int_tp cur_dim,
                const Dtype* src_data,
                Dtype* dest_data,
                bool is_forward);
@@ -64,9 +64,9 @@ class CropLayer : public Layer<Dtype> {
   // these dimensions.
   void crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
                 const vector<Blob<Dtype>*>& top,
-                const vector<int>& offsets,
-                vector<int> indices,
-                int cur_dim,
+                const vector<int_tp>& offsets,
+                vector<int_tp> indices,
+                int_tp cur_dim,
                 const Dtype* src_data,
                 Dtype* dest_data,
                 bool is_forward);

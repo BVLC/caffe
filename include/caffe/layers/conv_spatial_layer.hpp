@@ -123,11 +123,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
-  virtual bool generate_kernel(const vector<Blob<Dtype>*>& bottom,
-                               const vector<Blob<Dtype>*>& top,
-                               int_tp blockWidth,
-                               int_tp blockHeight,
-                               int_tp blockDepth);
   virtual void setup_convolution(const vector<Blob<Dtype>*>& bottom,
                                  const vector<Blob<Dtype>*>& top,
                                  const Blob<Dtype> &verify_blob);
@@ -174,7 +169,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                          const vector<Blob<Dtype>*>& top,
                          int_tp image_offset, kernelConfig* config,
                          int_tp imgNum);
-  virtual void generate_key();
+  virtual void generate_key(bool need_padding = true);
   virtual std::string generate_unique_key();
   virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
   int_tp blockHeight,
@@ -234,6 +229,10 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp N_;
 
   bool tuned_;
+  // if need_padding_ is true, we need to pad the input image,
+  // otherwise, we don't need to pad it then the convolution kernel
+  // need to handle it.
+  bool need_padding_;
 
   std::string key_;
   std::string kernel_name_;

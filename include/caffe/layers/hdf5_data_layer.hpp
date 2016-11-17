@@ -34,8 +34,8 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "HDF5Data"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -49,12 +49,12 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
-  unsigned int num_files_;
-  unsigned int current_file_;
+  uint_tp num_files_;
+  uint_tp current_file_;
   hsize_t current_row_;
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
-  std::vector<unsigned int> data_permutation_;
-  std::vector<unsigned int> file_permutation_;
+  std::vector<uint_tp> data_permutation_;
+  std::vector<uint_tp> file_permutation_;
 };
 
 }  // namespace caffe

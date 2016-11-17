@@ -34,9 +34,9 @@ class ScaleLayer: public Layer<Dtype> {
 
   virtual inline const char* type() const { return "Scale"; }
   // Scale
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MaxBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp MaxBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -70,13 +70,13 @@ class ScaleLayer: public Layer<Dtype> {
   shared_ptr<Layer<Dtype> > bias_layer_;
   vector<Blob<Dtype>*> bias_bottom_vec_;
   vector<bool> bias_propagate_down_;
-  int bias_param_id_;
+  int_tp bias_param_id_;
 
   Blob<Dtype> sum_multiplier_;
   Blob<Dtype> sum_result_;
   Blob<Dtype> temp_;
-  int axis_;
-  int outer_dim_, scale_dim_, inner_dim_;
+  int_tp axis_;
+  int_tp outer_dim_, scale_dim_, inner_dim_;
 };
 
 
