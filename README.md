@@ -45,7 +45,7 @@ Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-ac
 ## Multinode Training
 Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
 
-To understand how it works and read some tutorials, go to our Wiki. Start from https://github.com/intelcaffe/caffe/wiki/Multinode-guide.
+To understand how it works and read some tutorials, go to our Wiki. Start from [Multinode guide](https://github.com/intel/caffe/wiki/Multinode-guide).
 
 ## License and Citation
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
