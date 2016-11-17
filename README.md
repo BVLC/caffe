@@ -7,7 +7,7 @@ This is a caffe repository for learning to hash. We fork the repository from [Ca
 
 Data Preparation
 ---------------
-In `data/nus_wide/train.txt`, we give an example to show how to prepare training data. In `data/nus_wide/parallel/`, the list of testing and database images are splitted to 12 part, which could be processed parallelly when predicting.
+In `data/nus_wide/train.txt`, we give an example to show how to prepare training data. In `data/nus_wide/parallel/`, the list of testing and database images are splitted to 12 parts, which could be processed parallelly when predicting.
 
 Training Model
 ---------------
