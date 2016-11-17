@@ -3,12 +3,12 @@
 # load the kernels to ViennaCL/OpenCL contexts.
 # Outputs (overwrites): cl_kernels.hpp and cl_kernels.cpp
 
-declare -a CL_HEADERS_32=("src/caffe/greentea/cl_headers/header.cl" "src/caffe/greentea/cl_headers/definitions_32.cl")
-declare -a CL_HEADERS_64=("src/caffe/greentea/cl_headers/header.cl" "src/caffe/greentea/cl_headers/definitions_64.cl")
-CL_KERNELDIR="src/caffe/greentea/cl_kernels/*.cl"
-HEADER='include/caffe/greentea/cl_kernels.hpp'
-INCHEADER='caffe/greentea/cl_kernels.hpp'
-SOURCE='src/caffe/greentea/cl_kernels.cpp'
+declare -a CL_HEADERS_32=("cl_headers/header.cl" "cl_headers/definitions_32.cl")
+declare -a CL_HEADERS_64=("cl_headers/header.cl" "cl_headers/definitions_64.cl")
+CL_KERNELDIR="cl_kernels/*.cl"
+HEADER='cl_kernels.hpp'
+INCHEADER='cl_kernels.hpp'
+SOURCE='cl_kernels.cpp'
 
 echo "// AUTOMATICALLY GENERATED FILE, DO NOT EDIT" > $HEADER
 echo "// AUTOMATICALLY GENERATED FILE, DO NOT EDIT" > $SOURCE

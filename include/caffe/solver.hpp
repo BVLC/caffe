@@ -1,5 +1,7 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
+
+#define BOOST_PYTHON_STATIC_LIB
 #include <boost/function.hpp>
 #include <string>
 #include <vector>

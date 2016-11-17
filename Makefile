@@ -7,15 +7,6 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
-ifeq ($(CPU_ONLY),1)
-	USE_CUDA := 0
-	USE_GREENTEA := 0
-endif
-
-CXXFLAGS += -std=c++11 -Wno-deprecated-declarations
-LINKFLAGS += -std=c++11 -Wno-deprecated-declarations
-NVCCFLAGS +=  -std=c++11 -Xcompiler "-Wno-deprecated-declarations -D__CORRECT_ISO_CPP11_MATH_H_PROTO" -Xlinker "-Wno-deprecated-declarations" -Xarchive "-Wno-deprecated-declarations" -Xnvlink "-Wno-deprecated-declarations"
-
 BUILD_DIR_LINK := $(BUILD_DIR)
 ifeq ($(RELEASE_BUILD_DIR),)
 	RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
@@ -177,16 +168,14 @@ CUDA_LIB_DIR :=
 # add <cuda>/lib64 only if it exists
 ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 	CUDA_LIB_DIR += $(CUDA_DIR)/lib64
-	CUDA_LIB_DIR += $(CUDA_DIR)/lib64/stubs
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
-CUDA_LIB_DIR += $(CUDA_DIR)/lib/stubs
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
-ifeq ($(USE_CUDA), 1)
+ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
-	LIBRARY_DIRS += $(CUDA_LIB_DIR) $(CUDA_LIB_DIR)/stubs
-	LIBRARIES := cudart cublas curand nvrtc cuda
+	LIBRARY_DIRS += $(CUDA_LIB_DIR)
+	LIBRARIES := cudart cublas curand
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
@@ -217,6 +206,7 @@ WARNINGS := -Wall -Wno-sign-compare
 # Set build directories
 ##############################
 
+DISTRIBUTE_DIR ?= distribute
 DISTRIBUTE_SUBDIRS := $(DISTRIBUTE_DIR)/bin $(DISTRIBUTE_DIR)/lib
 DIST_ALIASES := dist
 ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
@@ -279,15 +269,16 @@ endif
 # OS X:
 # clang++ instead of g++
 # libstdc++ for NVCC compatibility on OS X >= 10.9 with CUDA < 7.0
-# Current Xcode does not officially support openmp
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	ifeq ($(USE_CUDA), 1)
+	ifneq ($(CPU_ONLY), 1)
 		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release [0-9.]*' | tr -d '[a-z ]')
 		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
 		endif
+		# clang throws this warning for cuda headers
+		WARNINGS += -Wno-unneeded-internal-declaration
 		# 10.11 strips DYLD_* env vars so link CUDA (rpath is available on 10.5+)
 		OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
 		OSX_10_5_OR_LATER := $(shell [ $(OSX_MINOR_VERSION) -ge 5 ] && echo true)
@@ -297,10 +288,6 @@ ifeq ($(OSX), 1)
 			endif
 		endif
 	endif
-	# clang throws this warning for cuda headers
-	ifneq ($(CPU_ONLY), 1)
-		WARNINGS += -Wno-unneeded-internal-declaration
-	endif
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
@@ -309,110 +296,7 @@ ifeq ($(OSX), 1)
 	ORIGIN := @loader_path
 	VERSIONFLAGS += -Wl,-install_name,@rpath/$(DYNAMIC_VERSIONED_NAME_SHORT) -Wl,-rpath,$(ORIGIN)/../../build/lib
 else
-	ifeq (${USE_OPENMP}, 1)
-		CXXFLAGS += -fopenmp
-		LINKFLAGS += -fopenmp
-	endif
 	ORIGIN := \$$ORIGIN
-endif
-
-# GreenTea backend related define, include, and lib
-ifeq ($(USE_LIBDNN), 1)
-	COMMON_FLAGS += -DUSE_LIBDNN
-endif
-
-ifeq ($(USE_INTEL_SPATIAL), 1)
-	COMMON_FLAGS += -DUSE_INTEL_SPATIAL
-endif
-
-ifeq ($(USE_CUDA), 1)
-	COMMON_FLAGS += -DUSE_CUDA
-endif
-
-ifeq ($(USE_INDEX_64),1)
-	COMMON_FLAGS += -DUSE_INDEX_64
-endif
-
-ifeq ($(USE_GREENTEA),1)
-	# Find a valid OpenCL library
-	# TODO: Validate and complete this based on different SDKs
-	ifdef OPENCL_INC
-		CLLINC = '$(OPENCL_INC)'
-	endif
-	
-	ifdef OPENCL_LIB
-		CLLIBS = '$(OPENCL_LIB)'
-	endif
-	
-	ifdef OPENCLROOT
-		CLLIBS = '$(OPENCLROOT)'
-	endif
-	
-	ifdef CUDA_PATH
-		CLLIBS = '$(CUDA_PATH)/lib/x64'
-	endif
-	
-	ifdef INTELOCLSDKROOT
-		CLLIBS = '$(INTELOCLSDKROOT)/lib/x64'
-	endif
-	
-	ifdef AMDAPPSDKROOT
-		CLLIBS = '$(AMDAPPSDKROOT)/lib/x86_64'
-		CLLINC = '$(AMDAPPSDKROOT)/include'
-	endif
-	
-	# Use AMD clBLAS
-	ifeq ($(USE_CLBLAS), 1)
-		LIBRARY_DIRS += $(CLBLAS_LIB)
-		INCLUDE_DIRS += $(CLBLAS_INCLUDE)
-		LIBRARIES += clBLAS
-		COMMON_FLAGS += -DUSE_CLBLAS
-	endif
-	
-	# Use CLBlast as clBLAS replacement
-	ifeq ($(USE_CLBLAST), 1)
-		LIBRARY_DIRS += $(CLBLAST_LIB)
-		INCLUDE_DIRS += $(CLBLAST_INCLUDE)
-		LIBRARIES += clblast
-		COMMON_FLAGS += -DUSE_CLBLAST
-	endif
-
-	# Use ISAAC as clBLAS replacement
-	ifeq ($(USE_ISAAC), 1)
-		LIBRARIES += isaac
-		COMMON_FLAGS += -DUSE_CLBLAS
-	endif
-
-	ifeq ($(USE_FFT), 1)
-		CLFFT_INCLUDE_DIR := /usr/include
-		CLFFT_LIB_DIR := /usr/lib64/clfft
-		INCLUDE_DIRS += $(CLFFT_INCLUDE_DIR)
-		LIBRARY_DIRS += $(CLFFT_LIB_DIR)
-		LIBRARIES += clFFT
-	endif
-	
-	# Requires valid OpenCL library
-	LIBRARY_DIRS += $(CLLIBS)
-	# Requires valid OpenCL headers and valid ViennaCL
-	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
-	# Requires OpenCL compile library flag and librt
-	ifeq ($(OSX), 1)
-		LDFLAGS += -framework OpenCL
-	else
-		LIBRARIES += OpenCL rt
-	endif
-	# Additional flags
-	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
-	
-	# Viennacl runtime debug output
-	ifeq ($(VIENNACL_DEBUG), 1)
-		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
-	endif
-	
-	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
-	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
-	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
-	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
 endif
 
 # Custom compiler
@@ -511,16 +395,6 @@ else
 		endif
 	endif
 endif
-
-# FFT
-USE_FFT ?= 0
-ifeq ($(USE_FFT), 1)
-	ifneq ($(BLAS), mkl)
-		LIBRARIES += fftw3f fftw3
-	endif
-	COMMON_FLAGS += -DUSE_FFT
-endif
-
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
@@ -572,7 +446,7 @@ endif
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: $(CL_KERNELS_CPP) lib tools examples
+all: lib tools examples
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
@@ -711,19 +585,12 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 	@ cat $@.$(WARNS_EXT)
 
 $(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
-ifeq ($(USE_CUDA), 1)
 	@ echo NVCC $<
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
-else
-	@ echo CXX $<
-	$(Q)$(CXX) $(CXXFLAGS) -c -x c++ $< -o $@ 2> $@.$(WARNS_EXT) \
-		|| (cat $@.$(WARNS_EXT); exit 1)
-	@ cat $@.$(WARNS_EXT)
-endif
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
 		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
@@ -757,11 +624,6 @@ $(EXAMPLE_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@
 	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(LIBRARY_NAME) $(LDFLAGS) \
 		-Wl,-rpath,$(ORIGIN)/../../lib
-
-# Copy the OpenCL kernels into C++ char strings
-$(CL_KERNELS_CPP) : $(CL_HEADERS) $(CL_KERNELS)
-	chmod +x $(CL_KERNELS_SH)
-	$(CL_KERNELS_SH)
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 

@@ -27,7 +27,7 @@ class device;
 /**
  * @brief A wrapper around SyncedMemory holders serving as the basic
  *        computational unit through which Layer%s, Net%s, and Solver%s
- *        interact.
+ *        int_tperact.
  *
  * TODO(dox): more thorough description.
  */
@@ -48,11 +48,17 @@ class Blob {
         capacity_(0),
         device_(device_context) {
   }
+
+  /// @brief Deprecated; use <code>Blob(const vector<int_tp>& shape)</code>.
   explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
                 const int_tp width, device *device_context =
                     Caffe::GetDefaultDevice());
   explicit Blob(const vector<int_tp>& shape, device *device_context =
                     Caffe::GetDefaultDevice());
+
+  /// @brief Deprecated; use <code>Reshape(const vector<int_tp>& shape)</code>.
+  bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
+               const int_tp width);
 
   /**
    * @brief Change the dimensions of the blob, allocating new memory if
@@ -67,13 +73,9 @@ class Blob {
    * Note that reshaping an input blob and immediately calling Net::Backward is
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
-   *
-   * Reshape returns true if new memory was allocated.
    */
   bool Reshape(const vector<int_tp>& shape);
   bool Reshape(const BlobShape& shape);
-  bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
-               const int_tp width);
   bool ReshapeLike(const Blob& other);
   inline string shape_string() const {
     ostringstream stream;
@@ -160,16 +162,16 @@ class Blob {
   }
 
   /// @brief Deprecated legacy shape accessor num: use shape(0) instead.
-  inline int_tp num() const {return LegacyShape(0);}
+  inline int_tp num() const { return LegacyShape(0); }
   /// @brief Deprecated legacy shape accessor channels: use shape(1) instead.
-  inline int_tp channels() const {return LegacyShape(1);}
+  inline int_tp channels() const { return LegacyShape(1); }
   /// @brief Deprecated legacy shape accessor height: use shape(2) instead.
-  inline int_tp height() const {return LegacyShape(2);}
+  inline int_tp height() const { return LegacyShape(2); }
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
-  inline int_tp width() const {return LegacyShape(3);}
+  inline int_tp width() const { return LegacyShape(3); }
   inline int_tp LegacyShape(int_tp index) const {
     CHECK_LE(num_axes(), 4)
-    << "Cannot use legacy accessors on Blobs with > 4 axes.";
+        << "Cannot use legacy accessors on Blobs with > 4 axes.";
     CHECK_LT(index, 4);
     CHECK_GE(index, -4);
     if (index >= num_axes() || index < -num_axes()) {
@@ -180,6 +182,7 @@ class Blob {
     }
     return shape(index);
   }
+
   inline int_tp offset(const int_tp n, const int_tp c = 0, const int_tp h = 0,
       const int_tp w = 0) const {
     CHECK_GE(n, 0);
@@ -275,8 +278,8 @@ class Blob {
   void scale_diff(Dtype scale_factor);
 
   /**
-   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
-   *        data_ of Blob other -- useful in Layer&s which simply perform a copy
+   * @brief Set the data_ shared_ptr to point_tp to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer%s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
@@ -284,8 +287,8 @@ class Blob {
    */
   void ShareData(const Blob& other);
   /**
-   * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
-   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+   * @brief Set the diff_ shared_ptr to point_tp to the SyncedMemory holding the
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as
@@ -294,7 +297,7 @@ class Blob {
   void ShareDiff(const Blob& other);
 
   bool ShapeEquals(const BlobProto& other);
-
+  
   /**
    * @brief Return the device context to which this blob and shared memory belongs
    */
@@ -310,8 +313,7 @@ class Blob {
   device *device_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
-};
-// class Blob
+};  // class Blob
 
 }  // namespace caffe
 

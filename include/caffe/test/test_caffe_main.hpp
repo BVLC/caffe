@@ -11,11 +11,12 @@
 
 #include "../device.hpp"
 #include "caffe/common.hpp"
+#include "caffe/util/io.hpp"
 
 using std::cout;
 using std::endl;
 
-#ifdef CMAKE_BUILD
+#ifdef CMAKE_WINDOWS_BUILD
   #include "caffe_config.h"
 #else
   #define TEST_DEVICE -1
@@ -36,6 +37,7 @@ class MultiDeviceTest : public ::testing::Test {
   MultiDeviceTest() {
     Caffe::set_mode(TypeParam::device);
   }
+  // Caffe tests may create some temporary files, here we will do the cleanup.
   virtual ~MultiDeviceTest() {}
 };
 

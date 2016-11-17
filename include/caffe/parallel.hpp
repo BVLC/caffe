@@ -1,7 +1,7 @@
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
-#ifdef CMAKE_BUILD
+#ifdef CMAKE_WINDOWS_BUILD
   #include "caffe_config.h"
 #endif
 
@@ -30,7 +30,7 @@ class Params {
   virtual ~Params() {
   }
 
-  inline uint_tp size() const {
+  inline size_t size() const {
     return size_;
   }
   inline Dtype* data() const {
@@ -41,7 +41,7 @@ class Params {
   }
 
  protected:
-  const uint_tp size_;           // Size of buffers
+  const size_t size_;           // Size of buffers
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
 
@@ -99,7 +99,6 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   inline const shared_ptr<Solver<Dtype> >& solver() const {
     return solver_;
   }
-
 
   void Run(const vector<device*>& gpus);
   void Prepare(const vector<device*>& gpus,

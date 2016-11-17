@@ -1,7 +1,7 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
-#ifdef CMAKE_BUILD
+#ifdef CMAKE_WINDOWS_BUILD
   #include "caffe_config.h"
 #endif
 
@@ -9,7 +9,6 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include <math.h>
 #include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
@@ -20,6 +19,10 @@
 #include <string>
 #include <utility>  // pair
 #include <vector>
+
+#ifdef CMAKE_WINDOWS_BUILD
+  #include "caffe/export.hpp"
+#endif
 
 #include "caffe/definitions.hpp"
 #include "caffe/greentea/greentea.hpp"

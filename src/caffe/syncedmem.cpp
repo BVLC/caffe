@@ -4,6 +4,7 @@
 
 #include "../../include/caffe/device.hpp"
 #include "caffe/util/math_functions.hpp"
+#define posix_memalign(p, a, s) (((*(p)) = _aligned_malloc((s), (a))), *(p) ?0 :errno)
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
