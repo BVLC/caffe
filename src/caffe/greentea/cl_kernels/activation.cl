@@ -107,12 +107,35 @@ __kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp 
   }
 }
 
-__kernel void TEMPLATE(sigmoid_cross_entropy_loss_forward,Dtype)(const int_tp nthreads,
+__kernel void TEMPLATE(sce_loss_forward,Dtype)(const int_tp nthreads,
                                         __global const Dtype* input_data,
                                         __global const Dtype* target,
-                                        __global Dtype* loss) {
+                                        __global Dtype* loss,
+                                        const int_tp has_ignore_label_,
+                                        const int_tp ignore_label_,
+                                        __global Dtype* counts) {
   for (int_tp i = get_global_id(0); i < nthreads; i += get_global_size(0)) {
-    loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0)) -
-        log(1.0 + exp(input_data[i] - 2.0 * input_data[i] * (input_data[i] >= 0.0)));
+    const int_tp target_value = (int_tp)(target[i]);
+    if (has_ignore_label_ == 1 && target_value == ignore_label_) {
+      loss[i] = 0.0;
+      counts[i] = 0.0;
+    } else {
+      loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0.0)) -
+          log(1.0 + exp(input_data[i] - 2.0 * input_data[i] *
+          (input_data[i] >= 0.0)));
+      counts[i] = 1.0;
+    }
+  }
+}
+
+__kernel void TEMPLATE(sce_loss_ignore_diff,Dtype)(const int_tp count,
+                                        const int_tp ignore_label,
+                                        __global const Dtype* target,
+                                        __global Dtype* diff) {
+  for (int_tp i = get_global_id(0); i < count; i += get_global_size(0)) {
+    const int_tp target_value = (int_tp)(target[i]);
+    if (target_value == ignore_label) {
+      diff[i] = 0.0;
+    }
   }
 }
