@@ -172,6 +172,6 @@ STUB_GPU(TransformerConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(TransformerConvolutionLayer);
-//REGISTER_LAYER_CLASS(TransformerConvolution);
+REGISTER_LAYER_CLASS(TransformerConvolution);
 
 }  // namespace caffe
