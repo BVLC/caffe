@@ -48,8 +48,13 @@ def parse_log(path_to_log):
                 # iteration
                 continue
 
-            time = extract_seconds.extract_datetime_from_line(line,
-                                                              logfile_year)
+            try:
+                time = extract_seconds.extract_datetime_from_line(line,
+                                                                  logfile_year)
+            except ValueError:
+                # Skip lines with bad formatting, for example when resuming solver
+                continue
+
             seconds = (time - start_time).total_seconds()
 
             learning_rate_match = regex_learning_rate.search(line)
