@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include "glog/logging.h"
-
 #include "caffe/caffe.hpp"
 
 namespace caffe {
