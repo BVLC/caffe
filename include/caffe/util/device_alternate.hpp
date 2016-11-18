@@ -4,6 +4,7 @@
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 #include <vector>
+#include <algorithm>
 
 // Stub out GPU calls as unavailable.
 
