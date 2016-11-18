@@ -167,6 +167,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   }
 }
 
-INSTANTIATE_CLASS(TransformerConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(TransformerConvolutionLayer);
 
 }  // namespace caffe
