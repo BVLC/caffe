@@ -128,8 +128,15 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
 // Net constructor
 shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
     const int level, const bp::object& stages,
-    const bp::object& weights) {
+    const bp::object& weights,
+    const bp::object& engine) {
   CheckFile(network_file);
+
+  // Extract engine if specified
+  string engine_str = "";
+  if (!engine.is_none()) {
+    engine_str = bp::extract<std::string>(engine);
+  }
 
   // Convert stages from list to vector
   vector<string> stages_vector;
@@ -141,7 +148,7 @@ shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
 
   // Initialize net
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(network_file,
-        static_cast<Phase>(phase), level, &stages_vector));
+        static_cast<Phase>(phase), level, &stages_vector, NULL, engine_str));
 
   // Load weights
   if (!weights.is_none()) {
@@ -333,7 +340,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("__init__", bp::make_constructor(&Net_Init,
           bp::default_call_policies(), (bp::arg("network_file"), "phase",
             bp::arg("level")=0, bp::arg("stages")=bp::object(),
-            bp::arg("weights")=bp::object())))
+            bp::arg("weights")=bp::object(),
+            bp::arg("engine")=bp::object())))
     // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
