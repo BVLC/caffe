@@ -67,6 +67,8 @@ class TransformerConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   virtual inline const char* type() const { return "TransformerConvolution"; }
 
  protected:
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -77,6 +79,10 @@ class TransformerConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return false; }
   virtual void compute_output_shape();
+  virtual vector<Dtype*> get_trans_weights(const Dtype* weight,
+      TransformerConvParameter param);
+  virtual void get_weight_diff(vector<Dtype*> weight_diffs, 
+      Dtype* weight_diff, TransformerConvParameter param);
 };
 
 }  // namespace caffe

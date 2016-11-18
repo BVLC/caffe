@@ -25,10 +25,10 @@ void TransformerConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bot
 
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
-  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
-  const int* stride_data = this->stride_.cpu_data();
-  const int* pad_data = this->pad_.cpu_data();
-  const int* dilation_data = this->dilation_.cpu_data();
+  const int* kernel_shape_data = this->kernel_shape_.gpu_data();
+  const int* stride_data = this->stride_.gpu_data();
+  const int* pad_data = this->pad_.gpu_data();
+  const int* dilation_data = this->dilation_.gpu_data();
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
@@ -90,22 +90,22 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
 
 
 template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
+  const Dtype* weight = this->blobs_[0]->gpu_data();
   vector<Dtype*> weights = get_trans_weights(weight, param);
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* top_data = top[i]->mutable_cpu_data();
+    const Dtype* bottom_data = bottom[i]->gpu_data();
+    Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
       for (int j = 0; j < weight_size; ++j){
-        this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weights[j],
+        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weights[j],
             top_data + (n*weight_size+j) * this->top_dim_);
         if (this->bias_term_) {
-          const Dtype* bias = this->blobs_[1]->cpu_data();
-          this->forward_cpu_bias(top_data + (n*weight_size+j) * this->top_dim_, bias);
+          const Dtype* bias = this->blobs_[1]->gpu_data();
+          this->forward_gpu_bias(top_data + (n*weight_size+j) * this->top_dim_, bias);
         } 
       }
     }
@@ -116,27 +116,27 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
 }
 
 template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
-  Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+  const Dtype* weight = this->blobs_[0]->gpu_data();
+  Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   vector<Dtype*> weights = get_trans_weights(weight, param);
   vector<Dtype*> weight_diffs = get_trans_weights(weight_diff, param);
   int weight_size = weights.size();
   for (int i = 0; i < top.size(); ++i) {
-    const Dtype* top_diff = top[i]->cpu_diff();
-    const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+    const Dtype* top_diff = top[i]->gpu_diff();
+    const Dtype* bottom_data = bottom[i]->gpu_data();
+    Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
     for (int k = 0; k < this->bottom_dim_; ++k){
       LOG(INFO) << "===bottom diff init: "<< " -- " << bottom_diff[k];
     }
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
-      Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
+      Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
         for (int j = 0; j < weight_size; ++j){
-          this->backward_cpu_bias(bias_diff, top_diff + (n*weight_size+j) * this->top_dim_);
+          this->backward_gpu_bias(bias_diff, top_diff + (n*weight_size+j) * this->top_dim_);
         }
       }
     }
@@ -146,12 +146,12 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
           Dtype bottom_diff_temp[this->bottom_dim_];
           // gradient w.r.t. weight. Note that we will accumulate diffs.
           if (this->param_propagate_down_[0]) {
-            this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+            this->weight_gpu_gemm(bottom_data + n * this->bottom_dim_,
                 top_diff + (n*weight_size+j) * this->top_dim_, weight_diffs[j]);
           }
           // gradient w.r.t. bottom data, if necessary.
           if (propagate_down[i]) {
-            this->backward_cpu_gemm(top_diff + (n*weight_size+j) * this->top_dim_, weights[j],
+            this->backward_gpu_gemm(top_diff + (n*weight_size+j) * this->top_dim_, weights[j],
                 bottom_diff_temp);
             caffe_add(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_diff_temp,
                 bottom_diff + n * this->bottom_dim_);
