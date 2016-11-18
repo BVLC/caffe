@@ -92,7 +92,7 @@ inline int CAFFE_GET_BLOCKS(const int N) {
   CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
   int max_blocks = prop.maxGridSize[0];
-  return num_blocks < max_blocks ? num_blocks : max_blocks;
+  return std::min<int>(num_blocks, max_blocks);
 }
 
 }  // namespace caffe
