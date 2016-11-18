@@ -167,11 +167,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(TransformerConvolutionLayer);
-#endif
-
 INSTANTIATE_CLASS(TransformerConvolutionLayer);
-REGISTER_LAYER_CLASS(TransformerConvolution);
 
 }  // namespace caffe
