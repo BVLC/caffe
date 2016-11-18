@@ -56,7 +56,7 @@ else
       dh-autoreconf \
       unzip
 
-    wget https://github.com/google/protobuf/archive/3.0.0-GA.tar.gz -O protobuf3.tar.gz
+    wget https://github.com/google/protobuf/archive/3.0.x.tar.gz -O protobuf3.tar.gz
     tar -xzf protobuf3.tar.gz -C $PROTOBUF3_DIR --strip 1
     rm protobuf3.tar.gz
     cd $PROTOBUF3_DIR
@@ -84,7 +84,7 @@ if $WITH_CUDA ; then
   rm $CUDA_REPO_PKG
 
   if $WITH_CUDNN ; then
-    ML_REPO_PKG=nvidia-machine-learning-repo_4.0-2_amd64.deb
+    ML_REPO_PKG=nvidia-machine-learning-repo-ubuntu1404_4.0-2_amd64.deb
     wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1404/x86_64/$ML_REPO_PKG
     dpkg -i $ML_REPO_PKG
   fi
