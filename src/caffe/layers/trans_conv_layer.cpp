@@ -63,8 +63,6 @@ template <typename Dtype>
 vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype* weight,
       TransformerConvParameter param){
   Dtype* input =  new Dtype[9 * this->channels_ * this->num_output_];
-  LOG(INFO) << "======get_trans_weights=2=======: " << 9 * this->channels_ * this->num_output_;
-  LOG(INFO) << "Weight shape: =====> " << this->blobs_[0]->shape_string();
   caffe_copy(9 * this->channels_ * this->num_output_, weight, input);
   LOG(INFO) << "======get_trans_weights=1=======";
   vector<Dtype*> weights(8);
@@ -75,10 +73,12 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
     for (int step = 1; step < 8; ++step){
       Dtype* curWeight = new Dtype[9 * this->channels_ * this->num_output_];
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
-        curWeight[i*9+4] = input[i*9+4];
+        caffe_set(1, input[i*9+4], curWeight+i*9+4);
+        // curWeight[i*9+4] = input[i*9+4];
         for (int j = 0; j < 8; ++j){
-          int new_idnex = circle[(j+step)%8];
-          curWeight[i*9+new_idnex] = input[i*9+circle[j]];
+          int new_index = circle[(j+step)%8];
+          caffe_set(1, input[i*9+circle[j]], curWeight+i*9+new_index);
+          // curWeight[i*9+new_index] = input[i*9+circle[j]];
         }
       }
       weights[step] = curWeight;
