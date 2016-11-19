@@ -64,7 +64,7 @@ template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const Dtype* weight,
       TransformerConvParameter param){
   int count = 9 * this->channels_ * this->num_output_;
-  caffe_copy(count, weight, weights);
+  //caffe_copy(count, weight, weights);
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
