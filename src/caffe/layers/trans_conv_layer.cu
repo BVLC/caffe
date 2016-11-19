@@ -46,14 +46,22 @@ void TransformerConvolutionLayer<Dtype>::get_weight_diff(Dtype* weight_diffs,
     Dtype* weight_diff, TransformerConvParameter param){
   int count = 9 * this->channels_ * this->num_output_;
   Dtype diff_temp[count];
+  LOG(INFO) << "get_weight_diff===1==>";
   caffe_set(count, (Dtype) 0.0, diff_temp);
+  LOG(INFO) << "get_weight_diff===2==>";
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
+    LOG(INFO) << "get_weight_diff===1==>";
     for (int i = 0; i < 8; ++i){
-      diff_temp[4] += weight_diffs[i*count+4];
-      for (int j = 0; j < 8; ++j){
-        diff_temp[circle[i]] += weight_diffs[j*count+circle[(i+j)%8]];
+      for (int n = 0; n < this->channels_ * this->num_output_; ++n){
+        LOG(INFO) << "get_weight_diff===2==>";
+        diff_temp[n*9+4] += weight_diffs[i*count+n*9+4];
+        LOG(INFO) << "get_weight_diff===3==>";
+        for (int j = 0; j < 8; ++j){
+          diff_temp[circle[i]] += weight_diffs[j*count+circle[(i+j)%8]];
+        }
+        LOG(INFO) << "get_weight_diff===4==>";
       }
     }
   }else if (param.action() == 1){ // flip 3 kernels
