@@ -112,7 +112,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
       }
     }
   }
-  CaffeFreeHost((void*) curWeight, &cpu_malloc_use_cuda_);
+  CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
   LOG(INFO) << "Forward_gpu===ok==>";
 }
 
