@@ -63,7 +63,7 @@ template <typename Dtype>
 vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype* weight,
       TransformerConvParameter param){
   Dtype* input =  new Dtype[9 * this->channels_ * this->num_output_];
-  LOG(INFO) << "======get_trans_weights=2=======";
+  LOG(INFO) << "======get_trans_weights=2=======: " << 9 * this->channels_ * this->num_output_;
   LOG(INFO) << "Weight shape: =====> " << this->blobs_[0]->shape_string();
   for (int i = 0; i < 9 * this->channels_ * this->num_output_; ++i){
     input[i] = weight[i];
