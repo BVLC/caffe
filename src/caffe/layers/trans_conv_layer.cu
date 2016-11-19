@@ -95,7 +95,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
   Dtype* curWeight;
-  CaffeMallocHost((void**) &curWeight, count, &(this->cpu_malloc_use_cuda_));
+  CaffeMallocHost((void**) &curWeight, count, true);
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
