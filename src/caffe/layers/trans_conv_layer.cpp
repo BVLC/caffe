@@ -116,6 +116,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  LOG(INFO) << "Backward_cpu===4==>";
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
