@@ -96,6 +96,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
       const vector<Blob<Dtype>*>& top) {
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
+  LOG(INFO) << "Weight shape: =====> " << this->blobs_[0]->shape_string();
   vector<Dtype*> weights = get_trans_weights(weight, param);
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
