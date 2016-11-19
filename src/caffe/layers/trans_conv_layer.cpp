@@ -70,7 +70,7 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
     Dtype curWeight[count];
     for (int step = 1; step < 8; ++step){
-      //LOG(INFO) << "========get weights cpp==2==";
+      LOG(INFO) << "========get weights cpp==2==";
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
         //LOG(INFO) << "========get weights cpp==2.5=="<<weight[i*9+4];
         //caffe_set(1, weight[i*9+4], curWeight+i*9+4);
@@ -84,7 +84,7 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
         //LOG(INFO) << "========get weights cpp==4==";
       }
       caffe_copy(count, curWeight, weights+step*count);
-      //LOG(INFO) << "========get weights cpp==5==";
+      LOG(INFO) << "========get weights cpp==5==";
     }
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
