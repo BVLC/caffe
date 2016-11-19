@@ -101,7 +101,6 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      LOG(INFO) << "Forward_gpu===1==>" << n;
       for (int j = 0; j < 8; ++j){
         caffe_gpu_memcpy(count, weights+j*count, (Dtype*) curWeight);
         this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, curWeight,
@@ -112,16 +111,15 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
         } 
       }
     }
-    LOG(INFO) << "Forward_gpu===2==>" << i;
   }
-  LOG(INFO) << "Forward_gpu===3==>";
   CaffeFreeHost((void*) curWeight, &cpu_malloc_use_cuda_);
-  LOG(INFO) << "Forward_gpu===4==>";
+  LOG(INFO) << "Forward_gpu===ok==>";
 }
 
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  LOG(INFO) << "Backward_gpu===4==>";
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
