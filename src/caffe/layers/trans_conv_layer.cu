@@ -126,8 +126,11 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype weights[8 * count];
   Dtype weight_diffs[8 * count];
-  Dtype curWeight[count];
-  Dtype curDiff[count];
+  Dtype* curWeight;
+  bool cpu_malloc_use_cuda_;
+  CaffeMallocHost((void**) &curWeight, count, &cpu_malloc_use_cuda_);
+  Dtype* curDiff;
+  CaffeMallocHost((void**) &curDiff, count, &cpu_malloc_use_cuda_);
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
   for (int i = 0; i < top.size(); ++i) {
@@ -166,6 +169,9 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
     }
     get_weight_diff(weight_diffs, weight_diff, param);
   }
+  CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
+  CaffeFreeHost((void*) curDiff, cpu_malloc_use_cuda_);
+  LOG(INFO) << "Forward_gpu===ok==>";
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(TransformerConvolutionLayer);
