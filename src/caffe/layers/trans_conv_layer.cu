@@ -130,6 +130,7 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   Dtype weights[8 * count];
   Dtype weight_diffs[8 * count];
   Dtype diff_temp[count];
+  Dtype bottom_temp[this->bottom_dim_];
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
   for (int i = 0; i < top.size(); ++i) {
@@ -170,11 +171,12 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
             caffe_copy(count, weights+j*count, weight);
             this->backward_gpu_gemm(top_diff + (n*8+j) * this->top_dim_, weight,
                 bottom_diff + n * this->bottom_dim_);
-            caffe_add(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_diff_temp,
-                bottom_diff_temp);
+            caffe_copy(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_temp);
+            caffe_add(this->bottom_dim_, bottom_temp, bottom_diff_temp, bottom_diff_temp);
           }
           LOG(INFO) << "Backward_gpu===7==>";
         }
+        caffe_copy(this->bottom_dim_, bottom_diff_temp, bottom_diff + n * this->bottom_dim_);
       }
     }
   }
