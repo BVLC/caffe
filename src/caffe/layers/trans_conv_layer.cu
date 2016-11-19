@@ -96,8 +96,8 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
   // Dtype* curWeight;
-  // bool cpu_malloc_use_cuda_;
-  // CaffeMallocHost((void**) &curWeight, count, &cpu_malloc_use_cuda_);
+  // bool gpu_malloc_use_cuda_;
+  // CaffeMallocHost((void**) &curWeight, count, &gpu_malloc_use_cuda_);
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
@@ -115,7 +115,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
     }
   }
   caffe_copy(count, weights, weight);
-  // CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
+  // CaffeFreeHost((void*) curWeight, gpu_malloc_use_cuda_);
   LOG(INFO) << "Forward_gpu===ok==>";
 }
 
@@ -125,15 +125,10 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   LOG(INFO) << "Backward_gpu===4==>";
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
-  const Dtype* weight = this->blobs_[0]->gpu_data();
+  Dtype* weight = this->blobs_[0]->mutable_gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype weights[8 * count];
   Dtype weight_diffs[8 * count];
-  Dtype* curWeight;
-  bool cpu_malloc_use_cuda_;
-  CaffeMallocHost((void**) &curWeight, count, &cpu_malloc_use_cuda_);
-  Dtype* curDiff;
-  CaffeMallocHost((void**) &curDiff, count, &cpu_malloc_use_cuda_);
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
   for (int i = 0; i < top.size(); ++i) {
@@ -155,14 +150,15 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
           Dtype bottom_diff_temp[this->bottom_dim_];
           // gradient w.r.t. weight. Note that we will accumulate diffs.
           if (this->param_propagate_down_[0]) {
-            caffe_copy(count, weight_diffs+j*count, curDiff);
+            caffe_set(count, (Dtype) 0.0, weight_diff);
             this->weight_gpu_gemm(bottom_data + n * this->bottom_dim_,
-                top_diff + (n*8+j) * this->top_dim_, curDiff);
+                top_diff + (n*8+j) * this->top_dim_, weight_diff);
+            caffe_add(count, weight_diff, weight_diffs+j*count, weight_diffs+j*count);
           }
           // gradient w.r.t. bottom data, if necessary.
           if (propagate_down[i]) {
-            caffe_copy(count, weights+j*count, curWeight);
-            this->backward_gpu_gemm(top_diff + (n*8+j) * this->top_dim_, curWeight,
+            caffe_copy(count, weights+j*count, weight);
+            this->backward_gpu_gemm(top_diff + (n*8+j) * this->top_dim_, weight,
                 bottom_diff_temp);
             caffe_add(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_diff_temp,
                 bottom_diff + n * this->bottom_dim_);
@@ -170,11 +166,10 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
         }
       }
     }
-    get_weight_diff(weight_diffs, weight_diff, param);
   }
-  CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
-  CaffeFreeHost((void*) curDiff, cpu_malloc_use_cuda_);
-  LOG(INFO) << "Forward_gpu===ok==>";
+  caffe_set(count, (Dtype) 0.0, weight_diff);
+  caffe_copy(count, weights, weight);
+  get_weight_diff(weight_diffs, weight_diff, param);
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(TransformerConvolutionLayer);
