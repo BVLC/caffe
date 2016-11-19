@@ -44,7 +44,6 @@ void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_weight_diff(vector<Dtype*> weight_diffs, 
     Dtype* weight_diff, TransformerConvParameter param){
-  LOG(INFO) << "======get_weight_diff=1=======";
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
@@ -81,14 +80,11 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
           // curWeight[i*9+new_index] = input[i*9+circle[j]];
         }
       }
-      LOG(INFO) << "======get_trans_weights=1=======";
       weights[step] = curWeight;
-      LOG(INFO) << "======get_trans_weights=2=======";
     }
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
   }
-  LOG(INFO) << "======get_trans_weights=3=======";
   return weights;
 }
 
@@ -99,17 +95,14 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   vector<Dtype*> weights = get_trans_weights(weight, param);
-  LOG(INFO) << "======Forward_cpu=1=======";
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    LOG(INFO) << "======Forward_cpu=2=======";
     for (int n = 0; n < this->num_; ++n) {
       for (int j = 0; j < weight_size; ++j){
         this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weights[j],
             top_data + (n*weight_size+j) * this->top_dim_);
-        LOG(INFO) << "======Forward_cpu=3=======";
         if (this->bias_term_) {
           const Dtype* bias = this->blobs_[1]->cpu_data();
           this->forward_cpu_bias(top_data + (n*weight_size+j) * this->top_dim_, bias);
@@ -128,10 +121,8 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  LOG(INFO) << "======Backward_cpu=1=======";
   vector<Dtype*> weights = get_trans_weights(weight, param);
   vector<Dtype*> weight_diffs = get_trans_weights(weight_diff, param);
-  LOG(INFO) << "======Backward_cpu=3=======";
   int weight_size = weights.size();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
