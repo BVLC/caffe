@@ -75,7 +75,7 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
       Dtype curWeight[count];
       LOG(INFO) << "========get weights ==3==";
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
-        caffe_set(1, weight[i*9+4], curWeight+i*9+4);
+        caffe_copy(1, weight+i*9+4, curWeight+i*9+4);
         // curWeight[i*9+4] = input[i*9+4];
         LOG(INFO) << "========get weights ==5==";
         for (int j = 0; j < 8; ++j){
@@ -102,7 +102,6 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   LOG(INFO) << "======== Forward_gpu ==2==";
-  LOG(INFO) << "======== Forward_gpu ==2.6=="<<weight[4];
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
   Dtype curWeight[count];
