@@ -99,14 +99,10 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   vector<Dtype*> weights = get_trans_weights(weight, param);
-  LOG(INFO) << "======Forward_gpu=1=======";
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
-    LOG(INFO) << "======Forward_gpu=2=======";
     const Dtype* bottom_data = bottom[i]->gpu_data();
-    LOG(INFO) << "======Forward_gpu=3=======";
     Dtype* top_data = top[i]->mutable_gpu_data();
-    LOG(INFO) << "======Forward_gpu=4=======";
     for (int n = 0; n < this->num_; ++n) {
       for (int j = 0; j < weight_size; ++j){
         this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weights[j],
@@ -115,13 +111,16 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
         if (this->bias_term_) {
           const Dtype* bias = this->blobs_[1]->gpu_data();
           this->forward_gpu_bias(top_data + (n*weight_size+j) * this->top_dim_, bias);
-        } 
+        }
+        LOG(INFO) << "======Forward_gpu=6=======";
       }
     }
   }
+  LOG(INFO) << "======Forward_gpu=7=======";
   for (int i = 0; i < weight_size; ++i){
     delete[] weights[i];
   }
+  LOG(INFO) << "======Forward_gpu=8=======";
 }
 
 template <typename Dtype>
