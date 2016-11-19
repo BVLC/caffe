@@ -70,11 +70,12 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
+    Dtype curWeight[count];
     for (int step = 1; step < 8; ++step){
-      Dtype curWeight[count];
       LOG(INFO) << "========get weights cpp==2==";
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
         //caffe_set(1, weight[i*9+4], curWeight+i*9+4);
+        LOG(INFO) << "========get weights cpp==2.5==";
         curWeight[i*9+4] = weight[i*9+4];
         LOG(INFO) << "========get weights cpp==3==";
         for (int j = 0; j < 8; ++j){
