@@ -72,20 +72,17 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
     for (int step = 1; step < 8; ++step){
       Dtype* curWeight = new Dtype[9 * this->channels_ * this->num_output_];
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
-        LOG(INFO) << "======get_trans_weights=1=======";
         caffe_set(1, input[i*9+4], curWeight+i*9+4);
         // curWeight[i*9+4] = input[i*9+4];
-        LOG(INFO) << "======get_trans_weights=2=======";
         for (int j = 0; j < 8; ++j){
-          LOG(INFO) << "======get_trans_weights=2.5=======";
           int new_index = circle[(j+step)%8];
-          LOG(INFO) << "======get_trans_weights=3=======";
           caffe_set(1, input[i*9+circle[j]], curWeight+i*9+new_index);
-          LOG(INFO) << "======get_trans_weights=4=======";
           // curWeight[i*9+new_index] = input[i*9+circle[j]];
         }
       }
+      LOG(INFO) << "======get_trans_weights=1=======";
       weights[step] = curWeight;
+      LOG(INFO) << "======get_trans_weights=1=======";
     }
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
