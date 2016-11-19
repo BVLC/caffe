@@ -75,13 +75,13 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
         //LOG(INFO) << "========get weights cpp==2.5=="<<weight[i*9+4];
         //caffe_set(1, weight[i*9+4], curWeight+i*9+4);
         curWeight[i*9+4] = weight[i*9+4];
-        //LOG(INFO) << "========get weights cpp==3==";
+        LOG(INFO) << "========get weights cpp==3==";
         for (int j = 0; j < 8; ++j){
           int new_index = circle[(j+step)%8];
           curWeight[i*9+new_index] = weight[i*9+circle[j]];
           //caffe_set(1, weight[i*9+circle[j]], curWeight+i*9+new_index);
         }
-        //LOG(INFO) << "========get weights cpp==4==";
+        LOG(INFO) << "========get weights cpp==4==";
       }
       caffe_copy(count, curWeight, weights+step*count);
       LOG(INFO) << "========get weights cpp==5==";
