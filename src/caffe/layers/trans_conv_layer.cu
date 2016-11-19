@@ -129,11 +129,8 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   Dtype weights[8 * count];
   Dtype weight_diffs[8 * count];
-  LOG(INFO) << "Backward_gpu===2==>";
   get_trans_weights(weights, weight, param);
-  LOG(INFO) << "Backward_gpu===3==>";
   get_trans_weights(weight_diffs, weight_diff, param);
-  LOG(INFO) << "Backward_gpu===4==>";
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -164,9 +161,9 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
           if (propagate_down[i]) {
             caffe_copy(count, weights+j*count, weight);
             this->backward_gpu_gemm(top_diff + (n*8+j) * this->top_dim_, weight,
-                bottom_diff_temp);
-            caffe_add(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_diff_temp,
                 bottom_diff + n * this->bottom_dim_);
+            caffe_add(this->bottom_dim_, bottom_diff + n * this->bottom_dim_, bottom_diff_temp,
+                bottom_diff_temp);
           }
           LOG(INFO) << "Backward_gpu===7==>";
         }
