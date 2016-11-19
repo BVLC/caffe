@@ -92,7 +92,8 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  LOG(INFO) << "======== Forward_cpu ==2.6=="<<weight[4];
+  Dtype* weight2 = this->blobs_[0]->mutable_cpu_data();
+  LOG(INFO) << "======== Forward_cpu ==2.6==";
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
   Dtype curWeight[count];

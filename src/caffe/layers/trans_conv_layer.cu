@@ -91,19 +91,21 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
       const vector<Blob<Dtype>*>& top) {
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
-  const Dtype* weight = this->blobs_[0]->gpu_data();
+  //const Dtype* weight = this->blobs_[0]->gpu_data();
+  Dtype* weight = this->blobs_[0]->mutable_gpu_data();
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
-  Dtype* curWeight;
-  bool cpu_malloc_use_cuda_;
-  CaffeMallocHost((void**) &curWeight, count, &cpu_malloc_use_cuda_);
+  // Dtype* curWeight;
+  // bool cpu_malloc_use_cuda_;
+  // CaffeMallocHost((void**) &curWeight, count, &cpu_malloc_use_cuda_);
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
       for (int j = 0; j < 8; ++j){
-        caffe_gpu_memcpy(count, weights+j*count, (Dtype*) curWeight);
-        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, curWeight,
+        //caffe_gpu_memcpy(count, weights+j*count, (Dtype*) curWeight);
+        caffe_copy(count, weights+j*count, weight);
+        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
             top_data + (n*8+j) * this->top_dim_);
         if (this->bias_term_) {
           const Dtype* bias = this->blobs_[1]->gpu_data();
@@ -112,7 +114,8 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
       }
     }
   }
-  CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
+  caffe_copy(count, weights, weight);
+  // CaffeFreeHost((void*) curWeight, cpu_malloc_use_cuda_);
   LOG(INFO) << "Forward_gpu===ok==>";
 }
 
