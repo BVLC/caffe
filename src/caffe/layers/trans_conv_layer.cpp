@@ -64,6 +64,7 @@ template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const Dtype* weight,
       TransformerConvParameter param){
   int count = 9 * this->channels_ * this->num_output_;
+  int new_index;
   caffe_copy(count, weight, weights);
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
@@ -77,9 +78,9 @@ void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const
         //curWeight[i*9+4] = weight[i*9+4];
         LOG(INFO) << "========get weights cpp==3==";
         for (int j = 0; j < 8; ++j){
-          int new_index = circle[(j+step)%8];
-          curWeight[i*9+new_index] = weight[i*9+circle[j]];
-          //caffe_set(1, weight[i*9+circle[j]], curWeight+i*9+new_index);
+          new_index = circle[(j+step)%8];
+          //curWeight[i*9+new_index] = weight[i*9+circle[j]];
+          caffe_copy(1, weight+i*9+circle[j], curWeight+i*9+new_index);
         }
         LOG(INFO) << "========get weights cpp==4==";
       }
