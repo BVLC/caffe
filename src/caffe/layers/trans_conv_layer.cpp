@@ -98,6 +98,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
       const vector<Blob<Dtype>*>& top) {
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
+  LOG(INFO) << "======Forward_cpu=1=======";
   vector<Dtype*> weights = get_trans_weights(weight, param);
   LOG(INFO) << "======Forward_cpu=3=======";
   int weight_size = weights.size();
@@ -126,6 +127,7 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+  LOG(INFO) << "======Backward_cpu=1=======";
   vector<Dtype*> weights = get_trans_weights(weight, param);
   vector<Dtype*> weight_diffs = get_trans_weights(weight_diff, param);
   LOG(INFO) << "======Backward_cpu=3=======";
