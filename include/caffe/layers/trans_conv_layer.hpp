@@ -79,9 +79,9 @@ class TransformerConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return false; }
   virtual void compute_output_shape();
-  virtual vector<Dtype*> get_trans_weights(const Dtype* weight,
+  virtual void get_trans_weights(Dtype* weights, const Dtype* weight,
       TransformerConvParameter param);
-  virtual void get_weight_diff(vector<Dtype*> weight_diffs, 
+  virtual void get_weight_diff(Dtype* weight_diffs, 
       Dtype* weight_diff, TransformerConvParameter param);
 };
 
