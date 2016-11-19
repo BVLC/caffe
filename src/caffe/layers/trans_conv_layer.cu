@@ -100,6 +100,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
+  LOG(INFO) << "======== Forward_gpu ==2.6=="<<weight[4];
   Dtype weights[8 * count];
   get_trans_weights(weights, weight, param);
   Dtype curWeight[count];
