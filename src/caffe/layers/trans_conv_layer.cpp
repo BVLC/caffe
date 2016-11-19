@@ -58,7 +58,7 @@ void TransformerConvolutionLayer<Dtype>::get_weight_diff(Dtype* weight_diffs,
         diff_temp[n*9+4] += weight_diffs[i*count+n*9+4];
         LOG(INFO) << "get_weight_diff===3==>";
         for (int j = 0; j < 8; ++j){
-          diff_temp[circle[i]] += weight_diffs[j*count+circle[(i+j)%8]];
+          diff_temp[n*9+circle[i]] += weight_diffs[i*count+n*9+circle[(i+j)%8]];
         }
         LOG(INFO) << "get_weight_diff===4==>";
       }
