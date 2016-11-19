@@ -107,7 +107,6 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
       for (int j = 0; j < weight_size; ++j){
         this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weights[j],
             top_data + (n*weight_size+j) * this->top_dim_);
-        LOG(INFO) << "======Forward_gpu=5=======";
         if (this->bias_term_) {
           LOG(INFO) << "======Forward_gpu=5.5=======";
           const Dtype* bias = this->blobs_[1]->gpu_data();
