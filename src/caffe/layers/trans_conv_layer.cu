@@ -116,6 +116,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   }
   LOG(INFO) << "Forward_gpu===3==>";
   CaffeFreeHost((void*) curWeight, &cpu_malloc_use_cuda_);
+  LOG(INFO) << "Forward_gpu===4==>";
 }
 
 template <typename Dtype>
