@@ -62,7 +62,9 @@ void TransformerConvolutionLayer<Dtype>::get_weight_diff(vector<Dtype*> weight_d
 template <typename Dtype>
 vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype* weight,
       TransformerConvParameter param){
+  LOG(INFO) << "======get_trans_weights=1=======";
   Dtype* input =  new Dtype[9 * this->channels_ * this->num_output_];
+  LOG(INFO) << "======get_trans_weights=2=======";
   for (int i = 0; i < 9 * this->channels_ * this->num_output_; ++i){
     input[i] = weight[i];
   }
