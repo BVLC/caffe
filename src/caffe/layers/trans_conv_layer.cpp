@@ -44,6 +44,7 @@ void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_weight_diff(vector<Dtype*> weight_diffs, 
     Dtype* weight_diff, TransformerConvParameter param){
+  LOG(INFO) << "======get_weight_diff=1=======";
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
@@ -82,7 +83,7 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
       }
       LOG(INFO) << "======get_trans_weights=1=======";
       weights[step] = curWeight;
-      LOG(INFO) << "======get_trans_weights=1=======";
+      LOG(INFO) << "======get_trans_weights=2=======";
     }
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
@@ -125,14 +126,12 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   vector<Dtype*> weights = get_trans_weights(weight, param);
   vector<Dtype*> weight_diffs = get_trans_weights(weight_diff, param);
+  LOG(INFO) << "======Backward_cpu=3=======";
   int weight_size = weights.size();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
-    for (int k = 0; k < this->bottom_dim_; ++k){
-      LOG(INFO) << "===bottom diff init: "<< " -- " << bottom_diff[k];
-    }
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
