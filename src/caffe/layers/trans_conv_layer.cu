@@ -44,6 +44,7 @@ void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_weight_diff(vector<Dtype*> weight_diffs, 
     Dtype* weight_diff, TransformerConvParameter param){
+  LOG(INFO) << "======get_weight_diff=1=======";
   if (param.action() == 0){ // rotation 8 kernels
     // only used for 3x3 kernel
     int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
@@ -63,9 +64,7 @@ template <typename Dtype>
 vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype* weight,
       TransformerConvParameter param){
   Dtype* input =  new Dtype[9 * this->channels_ * this->num_output_];
-  for (int i = 0; i < 9 * this->channels_ * this->num_output_; ++i){
-    input[i] = weight[i];
-  }
+  caffe_copy(9 * this->channels_ * this->num_output_, weight, input);
   vector<Dtype*> weights(8);
   weights[0] = input;
   if (param.action() == 0){ // rotation 8 kernels
@@ -74,17 +73,22 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
     for (int step = 1; step < 8; ++step){
       Dtype* curWeight = new Dtype[9 * this->channels_ * this->num_output_];
       for (int i = 0; i < this->channels_*this->num_output_; ++i){
-        curWeight[i*9+4] = input[i*9+4];
+        caffe_set(1, input[i*9+4], curWeight+i*9+4);
+        // curWeight[i*9+4] = input[i*9+4];
         for (int j = 0; j < 8; ++j){
-          int new_idnex = circle[(j+step)%8];
-          curWeight[i*9+new_idnex] = input[i*9+circle[j]];
+          int new_index = circle[(j+step)%8];
+          caffe_set(1, input[i*9+circle[j]], curWeight+i*9+new_index);
+          // curWeight[i*9+new_index] = input[i*9+circle[j]];
         }
       }
+      LOG(INFO) << "======get_trans_weights=1=======";
       weights[step] = curWeight;
+      LOG(INFO) << "======get_trans_weights=2=======";
     }
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
   }
+  LOG(INFO) << "======get_trans_weights=3=======";
   return weights;
 }
 
@@ -94,7 +98,9 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
       const vector<Blob<Dtype>*>& top) {
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
+  LOG(INFO) << "======Forward_gpu=1=======";
   vector<Dtype*> weights = get_trans_weights(weight, param);
+  LOG(INFO) << "======Forward_gpu=3=======";
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -121,16 +127,15 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
+  LOG(INFO) << "======Backward_gpu=1=======";
   vector<Dtype*> weights = get_trans_weights(weight, param);
   vector<Dtype*> weight_diffs = get_trans_weights(weight_diff, param);
+  LOG(INFO) << "======Backward_gpu=3=======";
   int weight_size = weights.size();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-    for (int k = 0; k < this->bottom_dim_; ++k){
-      LOG(INFO) << "===bottom diff init: "<< " -- " << bottom_diff[k];
-    }
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
