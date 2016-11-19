@@ -102,7 +102,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
       for (int j = 0; j < 8; ++j){
-        LOG(INFO) << "Forward_gpu=====>" << i;
+        LOG(INFO) << "Forward_gpu=====>" << i*8+j;
         caffe_gpu_memcpy(count, weights+j*count, (Dtype*) curWeight);
         this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, curWeight,
             top_data + (n*8+j) * this->top_dim_);
