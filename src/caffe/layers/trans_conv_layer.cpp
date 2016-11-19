@@ -65,10 +65,7 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
   Dtype* input =  new Dtype[9 * this->channels_ * this->num_output_];
   LOG(INFO) << "======get_trans_weights=2=======: " << 9 * this->channels_ * this->num_output_;
   LOG(INFO) << "Weight shape: =====> " << this->blobs_[0]->shape_string();
-  for (int i = 0; i < 9 * this->channels_ * this->num_output_; ++i){
-    LOG(INFO) << "input: =====> " << i;
-    input[i] = weight[i];
-  }
+  caffe_copy(9 * this->channels_ * this->num_output_, weight, input);
   LOG(INFO) << "======get_trans_weights=1=======";
   vector<Dtype*> weights(8);
   weights[0] = input;
