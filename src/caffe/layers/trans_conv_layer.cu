@@ -181,7 +181,8 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
     }
   }
   LOG(INFO) << "Backward_gpu===8==>";
-  caffe_set(count, (Dtype) 0.0, weight_diff);
+  caffe_set(count, (Dtype) 0.0, diff_temp);
+  caffe_copy(count, diff_temp, weight_diff);
   LOG(INFO) << "Backward_gpu===9==>";
   caffe_copy(count, weights, weight);
   LOG(INFO) << "Backward_gpu===10==>";
