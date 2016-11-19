@@ -88,6 +88,7 @@ vector<Dtype*> TransformerConvolutionLayer<Dtype>::get_trans_weights(const Dtype
   }else if (param.action() == 1){ // flip 3 kernels
     // not implemented
   }
+  LOG(INFO) << "======get_trans_weights=3=======";
   return weights;
 }
 
@@ -98,6 +99,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>&
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   vector<Dtype*> weights = get_trans_weights(weight, param);
+  LOG(INFO) << "======Forward_cpu=3=======";
   int weight_size = weights.size();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
