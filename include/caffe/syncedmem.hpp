@@ -15,11 +15,13 @@ namespace caffe {
 inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
+    LOG(INFO) << "CaffeMallocHost=============>USING GPU";
     CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
     return;
   }
 #endif
+  LOG(INFO) << "CaffeMallocHost=============>USING CPU";
   *ptr = malloc(size);
   *use_cuda = false;
   CHECK(*ptr) << "host allocation of size " << size << " failed";
