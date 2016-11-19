@@ -42,62 +42,6 @@ void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
 
 
 template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::get_weight_diff(Dtype* weight_diffs, 
-    Dtype* weight_diff, TransformerConvParameter param){
-  int count = 9 * this->channels_ * this->num_output_;
-  Dtype diff_temp[count];
-  LOG(INFO) << "get_weight_diff===1==>";
-  caffe_set(count, (Dtype) 0.0, diff_temp);
-  LOG(INFO) << "get_weight_diff===2==>";
-  if (param.action() == 0){ // rotation 8 kernels
-    // only used for 3x3 kernel
-    int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
-    LOG(INFO) << "get_weight_diff===1==>";
-    for (int i = 0; i < 8; ++i){
-      for (int n = 0; n < this->channels_ * this->num_output_; ++n){
-        LOG(INFO) << "get_weight_diff===2==>";
-        diff_temp[n*9+4] += weight_diffs[i*count+n*9+4];
-        LOG(INFO) << "get_weight_diff===3==>";
-        for (int j = 0; j < 8; ++j){
-          diff_temp[circle[i]] += weight_diffs[j*count+circle[(i+j)%8]];
-        }
-        LOG(INFO) << "get_weight_diff===4==>";
-      }
-    }
-  }else if (param.action() == 1){ // flip 3 kernels
-    // not implemented
-  }
-  caffe_copy(count, diff_temp, weight_diff);
-}
-
-
-template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const Dtype* weight,
-      TransformerConvParameter param){
-  int count = 9 * this->channels_ * this->num_output_;
-  int new_index;
-  caffe_copy(count, weight, weights);
-  if (param.action() == 0){ // rotation 8 kernels
-    // only used for 3x3 kernel
-    int circle[8] = {0, 1, 2, 5, 8, 7, 6, 3};
-    Dtype curWeight[count];
-    for (int step = 1; step < 8; ++step){
-      for (int i = 0; i < this->channels_*this->num_output_; ++i){
-        caffe_copy(1, weight+i*9+4, curWeight+i*9+4);
-        for (int j = 0; j < 8; ++j){
-          new_index = circle[(j+step)%8];
-          caffe_copy(1, weight+i*9+circle[j], curWeight+i*9+new_index);
-        }
-      }
-      caffe_copy(count, curWeight, weights+step*count);
-    }
-  }else if (param.action() == 1){ // flip 3 kernels
-    // not implemented
-  }
-}
-
-
-template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int count = 9 * this->channels_ * this->num_output_;
