@@ -63,6 +63,7 @@ void TransformerConvolutionLayer<Dtype>::get_weight_diff(Dtype* weight_diffs,
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::get_trans_weights(Dtype* weights, const Dtype* weight,
       TransformerConvParameter param){
+  LOG(INFO) << "========get weights cpp==0==";
   int count = 9 * this->channels_ * this->num_output_;
   caffe_copy(count, weight, weights);
   if (param.action() == 0){ // rotation 8 kernels
