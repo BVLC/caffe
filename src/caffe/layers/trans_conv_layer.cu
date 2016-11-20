@@ -30,7 +30,6 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
     }
   }
   caffe_copy(count, weights, weight);
-  LOG(INFO) << "Forward_gpu===ok==>";
 }
 
 
@@ -89,7 +88,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   }
   caffe_copy(count, weights, weight);
   get_weight_diff(weight_diffs, weight_diff, param);
-  LOG(INFO) << "Backward_gpu===ok==>";
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(TransformerConvolutionLayer);
