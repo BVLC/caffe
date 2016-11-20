@@ -37,7 +37,6 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  LOG(INFO) << "Backward_gpu===1==>";
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   Dtype* weight = this->blobs_[0]->mutable_gpu_data();
@@ -46,6 +45,7 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   Dtype weight_diffs[8 * count];
   Dtype diff_temp[count];
   Dtype bottom_temp[this->bottom_dim_];
+  Dtype bottom_diff_temp[this->bottom_dim_];
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
   for (int i = 0; i < top.size(); ++i) {
@@ -63,7 +63,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
-        Dtype bottom_diff_temp[this->bottom_dim_];
         caffe_set(this->bottom_dim_, (Dtype)0.0, bottom_diff_temp);
         for (int j = 0; j < 8; ++j){
           // gradient w.r.t. weight. Note that we will accumulate diffs.
@@ -89,7 +88,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
     }
   }
   caffe_copy(count, weights, weight);
-  LOG(INFO) << "Backward_gpu===10==>";
   get_weight_diff(weight_diffs, weight_diff, param);
   LOG(INFO) << "Backward_gpu===ok==>";
 }
