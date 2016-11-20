@@ -116,7 +116,9 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Configure output channels and groups.
   channels_ = bottom[0]->shape(channel_axis_);
-  num_output_ = this->layer_param_.convolution_param().num_output();
+  if (this->layer_param_.type() == "Convolution"){
+    num_output_ = this->layer_param_.convolution_param().num_output();
+  }
   CHECK_GT(num_output_, 0);
   group_ = this->layer_param_.convolution_param().group();
   CHECK_EQ(channels_ % group_, 0);

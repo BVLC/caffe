@@ -1,8 +1,64 @@
 #include <vector>
 
+#include "caffe/filler.hpp"
 #include "caffe/layers/trans_conv_layer.hpp"
 
 namespace caffe {
+
+
+template <typename Dtype>
+void TransformerConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  // Configure the kernel size, padding, stride, and inputs.
+  this->num_output_ = this->layer_param_.convolution_param().num_output();
+  this->num_output_ /= 8;
+  BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+
+  // ConvolutionParameter conv_param = this->layer_param_.convolution_param();
+  // int* kernel_shape_data = this->kernel_shape_.mutable_cpu_data();
+  // if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
+  //   kernel_shape_data[0] = conv_param.kernel_h();
+  //   kernel_shape_data[1] = conv_param.kernel_w();
+  // } else {
+  //   const int num_kernel_dims = conv_param.kernel_size_size();
+  //   for (int i = 0; i < this->num_spatial_axes_; ++i) {
+  //     kernel_shape_data[i] =
+  //         conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
+  //   }
+  // }
+  // // Configure output channels and groups.
+  // this->channels_ = bottom[0]->shape(this->channel_axis_);
+  // this->num_output_ = this->layer_param_.convolution_param().num_output();
+  // this->num_output_ /= 8;
+  // this->group_ = this->layer_param_.convolution_param().group();
+  // // Handle the parameters: weights and biases.
+  // // - blobs_[0] holds the filter weights
+  // // - blobs_[1] holds the biases (optional)
+  // vector<int> weight_shape(2);
+  // weight_shape[0] = this->num_output_;
+  // weight_shape[1] = this->channels_ / this->group_;
+  // for (int i = 0; i < this->num_spatial_axes_; ++i) {
+  //   weight_shape.push_back(kernel_shape_data[i]);
+  // }
+  // this->bias_term_ = this->layer_param_.convolution_param().bias_term();
+  // vector<int> bias_shape(this->bias_term_, this->num_output_);
+  // // Initialize and fill the weights:
+  // // output channels x input channels per-group x kernel height x kernel width
+  // this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
+  // shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+  //     this->layer_param_.convolution_param().weight_filler()));
+  // weight_filler->Fill(this->blobs_[0].get());
+  // // If necessary, initialize and fill the biases.
+  // if (this->bias_term_) {
+  //   this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
+  //   shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+  //       this->layer_param_.convolution_param().bias_filler()));
+  //   bias_filler->Fill(this->blobs_[1].get());
+  // }
+  // this->weight_offset_ = this->num_output_ * this->blobs_[0]->count(1) / this->group_;
+  // // Propagate gradients to the parameters (as directed by backward pass).
+  // this->param_propagate_down_.resize(this->blobs_.size(), true);
+}
 
 
 template <typename Dtype>
@@ -17,6 +73,7 @@ void TransformerConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bot
     top_shape.push_back(this->output_shape_[i]);
   }
   top_shape[this->channel_axis_] *= 8;
+  LOG(INFO) << "RESHAPE======>" << top_shape[0] << top_shape[1] << top_shape[2] << top_shape[3];
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(top_shape);
   }
@@ -123,6 +180,10 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
   int count = 9 * this->channels_ * this->num_output_;
   TransformerConvParameter param = this->layer_param_.trans_conv_param();
   Dtype* weight = this->blobs_[0]->mutable_cpu_data();
+  for (int i = 0; i < count; ++i){
+    LOG(INFO) << "Backward_cpu===2==>" << weight[i]; 
+  }
+
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   Dtype weights[8 * count];
   Dtype weight_diffs[8 * count];
@@ -130,6 +191,7 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
   Dtype bottom_temp[this->bottom_dim_];
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
+  Dtype bottom_diff_temp[this->bottom_dim_];
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -145,7 +207,6 @@ void TransformerConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
-        Dtype bottom_diff_temp[this->bottom_dim_];
         caffe_set(this->bottom_dim_, (Dtype)0.0, bottom_diff_temp);
         for (int j = 0; j < 8; ++j){
           // gradient w.r.t. weight. Note that we will accumulate diffs.
