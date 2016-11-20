@@ -6,42 +6,6 @@ namespace caffe {
 
 
 template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
-  
-  vector<int> top_shape(bottom[0]->shape().begin(),
-      bottom[0]->shape().begin() + this->channel_axis_);
-  top_shape.push_back(this->num_output_);
-  for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    top_shape.push_back(this->output_shape_[i]);
-  }
-  top_shape[this->channel_axis_] *= 8;
-  for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(top_shape);
-  }
-}
-
-
-template <typename Dtype>
-void TransformerConvolutionLayer<Dtype>::compute_output_shape() {
-  const int* kernel_shape_data = this->kernel_shape_.gpu_data();
-  const int* stride_data = this->stride_.gpu_data();
-  const int* pad_data = this->pad_.gpu_data();
-  const int* dilation_data = this->dilation_.gpu_data();
-  this->output_shape_.clear();
-  for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    // i + 1 to skip channel axis
-    const int input_dim = this->input_shape(i + 1);
-    const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
-    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
-        / stride_data[i] + 1;
-    this->output_shape_.push_back(output_dim);
-  }
-}
-
-
-template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int count = 9 * this->channels_ * this->num_output_;
@@ -68,6 +32,7 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   caffe_copy(count, weights, weight);
   LOG(INFO) << "Forward_gpu===ok==>";
 }
+
 
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
