@@ -118,6 +118,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->shape(channel_axis_);
   if (this->layer_param_.type() == "Convolution"){
     num_output_ = this->layer_param_.convolution_param().num_output();
+  }else{
+    LOG(INFO) << "This is not convolution_param: ===========>" <<num_output_;
   }
   CHECK_GT(num_output_, 0);
   group_ = this->layer_param_.convolution_param().group();

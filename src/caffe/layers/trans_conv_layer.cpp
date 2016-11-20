@@ -9,55 +9,9 @@ namespace caffe {
 template <typename Dtype>
 void TransformerConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Configure the kernel size, padding, stride, and inputs.
   this->num_output_ = this->layer_param_.convolution_param().num_output();
   this->num_output_ /= 8;
   BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
-
-  // ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  // int* kernel_shape_data = this->kernel_shape_.mutable_cpu_data();
-  // if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
-  //   kernel_shape_data[0] = conv_param.kernel_h();
-  //   kernel_shape_data[1] = conv_param.kernel_w();
-  // } else {
-  //   const int num_kernel_dims = conv_param.kernel_size_size();
-  //   for (int i = 0; i < this->num_spatial_axes_; ++i) {
-  //     kernel_shape_data[i] =
-  //         conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
-  //   }
-  // }
-  // // Configure output channels and groups.
-  // this->channels_ = bottom[0]->shape(this->channel_axis_);
-  // this->num_output_ = this->layer_param_.convolution_param().num_output();
-  // this->num_output_ /= 8;
-  // this->group_ = this->layer_param_.convolution_param().group();
-  // // Handle the parameters: weights and biases.
-  // // - blobs_[0] holds the filter weights
-  // // - blobs_[1] holds the biases (optional)
-  // vector<int> weight_shape(2);
-  // weight_shape[0] = this->num_output_;
-  // weight_shape[1] = this->channels_ / this->group_;
-  // for (int i = 0; i < this->num_spatial_axes_; ++i) {
-  //   weight_shape.push_back(kernel_shape_data[i]);
-  // }
-  // this->bias_term_ = this->layer_param_.convolution_param().bias_term();
-  // vector<int> bias_shape(this->bias_term_, this->num_output_);
-  // // Initialize and fill the weights:
-  // // output channels x input channels per-group x kernel height x kernel width
-  // this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
-  // shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-  //     this->layer_param_.convolution_param().weight_filler()));
-  // weight_filler->Fill(this->blobs_[0].get());
-  // // If necessary, initialize and fill the biases.
-  // if (this->bias_term_) {
-  //   this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
-  //   shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-  //       this->layer_param_.convolution_param().bias_filler()));
-  //   bias_filler->Fill(this->blobs_[1].get());
-  // }
-  // this->weight_offset_ = this->num_output_ * this->blobs_[0]->count(1) / this->group_;
-  // // Propagate gradients to the parameters (as directed by backward pass).
-  // this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 
