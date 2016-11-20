@@ -73,7 +73,6 @@ void TransformerConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bot
     top_shape.push_back(this->output_shape_[i]);
   }
   top_shape[this->channel_axis_] *= 8;
-  LOG(INFO) << "RESHAPE======>" << top_shape[0] << top_shape[1] << top_shape[2] << top_shape[3];
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(top_shape);
   }
