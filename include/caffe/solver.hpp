@@ -108,6 +108,8 @@ class Solver {
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
   void DisplayOutputBlobs(const int net_id);
   void UpdateSmoothedLoss(Dtype loss, int start_iter, int average_loss);
+  /// Harmonize solver class type with configured proto type.
+  void CheckType(SolverParameter* param);
 
   SolverParameter param_;
   int iter_;
