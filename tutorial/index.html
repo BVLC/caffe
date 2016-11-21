@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Caffe Tutorial
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="caffe-tutorial">Caffe Tutorial</h1>
+
+<p>Caffe is a deep learning framework and this tutorial explains its philosophy, architecture, and usage.
+This is a practical guide and framework introduction, so the full frontier, context, and history of deep learning cannot be covered here.
+While explanations will be given where possible, a background in machine learning and neural networks is helpful.</p>
+
+<h2 id="philosophy">Philosophy</h2>
+
+<p>In one sip, Caffe is brewed for</p>
+
+<ul>
+  <li>Expression: models and optimizations are defined as plaintext schemas instead of code.</li>
+  <li>Speed: for research and industry alike speed is crucial for state-of-the-art models and massive data.</li>
+  <li>Modularity: new tasks and settings require flexibility and extension.</li>
+  <li>Openness: scientific and applied progress call for common code, reference models, and reproducibility.</li>
+  <li>Community: academic research, startup prototypes, and industrial applications all share strength by joint discussion and development in a BSD-2 project.</li>
+</ul>
+
+<p>and these principles direct the project.</p>
+
+<h2 id="tour">Tour</h2>
+
+<ul>
+  <li><a href="net_layer_blob.html">Nets, Layers, and Blobs</a>: the anatomy of a Caffe model.</li>
+  <li><a href="forward_backward.html">Forward / Backward</a>: the essential computations of layered compositional models.</li>
+  <li><a href="loss.html">Loss</a>: the task to be learned is defined by the loss.</li>
+  <li><a href="solver.html">Solver</a>: the solver coordinates model optimization.</li>
+  <li><a href="layers.html">Layer Catalogue</a>: the layer is the fundamental unit of modeling and computation – Caffe’s catalogue includes layers for state-of-the-art models.</li>
+  <li><a href="interfaces.html">Interfaces</a>: command line, Python, and MATLAB Caffe.</li>
+  <li><a href="data.html">Data</a>: how to caffeinate data for model input.</li>
+</ul>
+
+<p>For a closer look at a few details:</p>
+
+<ul>
+  <li><a href="convolution.html">Caffeinated Convolution</a>: how Caffe computes convolutions.</li>
+</ul>
+
+<h2 id="deeper-learning">Deeper Learning</h2>
+
+<p>There are helpful references freely online for deep learning that complement our hands-on tutorial.
+These cover introductory and advanced material, background and history, and the latest advances.</p>
+
+<p>The <a href="https://sites.google.com/site/deeplearningcvpr2014/">Tutorial on Deep Learning for Vision</a> from CVPR ‘14 is a good companion tutorial for researchers.
+Once you have the framework and practice foundations from the Caffe tutorial, explore the fundamental ideas and advanced research directions in the CVPR ‘14 tutorial.</p>
+
+<p>A broad introduction is given in the free online draft of <a href="http://neuralnetworksanddeeplearning.com/index.html">Neural Networks and Deep Learning</a> by Michael Nielsen. In particular the chapters on using neural nets and how backpropagation works are helpful if you are new to the subject.</p>
+
+<p>These recent academic tutorials cover deep learning for researchers in machine learning and vision:</p>
+
+<ul>
+  <li><a href="http://www.cs.nyu.edu/~yann/talks/lecun-ranzato-icml2013.pdf">Deep Learning Tutorial</a> by Yann LeCun (NYU, Facebook) and Marc’Aurelio Ranzato (Facebook). ICML 2013 tutorial.</li>
+  <li><a href="http://deeplearning.net/tutorial/deeplearning.pdf">LISA Deep Learning Tutorial</a> by the LISA Lab directed by Yoshua Bengio (U. Montréal).</li>
+</ul>
+
+<p>For an exposition of neural networks in circuits and code, check out <a href="http://karpathy.github.io/neuralnets/">Understanding Neural Networks from a Programmer’s Perspective</a> by Andrej Karpathy (Stanford).</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

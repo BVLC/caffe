@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Deep Learning Framework
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="caffe">Caffe</h1>
+
+<p>Caffe is a deep learning framework made with expression, speed, and modularity in mind.
+It is developed by the Berkeley Vision and Learning Center (<a href="http://bvlc.eecs.berkeley.edu">BVLC</a>) and by community contributors.
+<a href="http://daggerfs.com">Yangqing Jia</a> created the project during his PhD at UC Berkeley.
+Caffe is released under the <a href="https://github.com/BVLC/caffe/blob/master/LICENSE">BSD 2-Clause license</a>.</p>
+
+<p>Check out our web image classification <a href="http://demo.caffe.berkeleyvision.org">demo</a>!</p>
+
+<h2 id="why-caffe">Why Caffe?</h2>
+
+<p><strong>Expressive architecture</strong> encourages application and innovation.
+Models and optimization are defined by configuration without hard-coding.
+Switch between CPU and GPU by setting a single flag to train on a GPU machine then deploy to commodity clusters or mobile devices.</p>
+
+<p><strong>Extensible code</strong> fosters active development.
+In Caffe’s first year, it has been forked by over 1,000 developers and had many significant changes contributed back.
+Thanks to these contributors the framework tracks the state-of-the-art in both code and models.</p>
+
+<p><strong>Speed</strong> makes Caffe perfect for research experiments and industry deployment.
+Caffe can process <strong>over 60M images per day</strong> with a single NVIDIA K40 GPU*.
+That’s 1 ms/image for inference and 4 ms/image for learning.
+We believe that Caffe is the fastest convnet implementation available.</p>
+
+<p><strong>Community</strong>: Caffe already powers academic research projects, startup prototypes, and even large-scale industrial applications in vision, speech, and multimedia.
+Join our community of brewers on the <a href="https://groups.google.com/forum/#!forum/caffe-users">caffe-users group</a> and <a href="https://github.com/BVLC/caffe/">Github</a>.</p>
+
+<p class="footnote">
+* With the ILSVRC2012-winning <a href="http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf">SuperVision</a> model and caching IO.
+Consult performance <a href="/performance_hardware.html">details</a>.
+</p>
+
+<h2 id="documentation">Documentation</h2>
+
+<ul>
+  <li><a href="https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p">DIY Deep Learning for Vision with Caffe</a><br />
+Tutorial presentation.</li>
+  <li><a href="/tutorial">Tutorial Documentation</a><br />
+Practical guide and framework reference.</li>
+  <li><a href="http://arxiv.org/abs/1408.5093">arXiv / ACM MM ‘14 paper</a><br />
+A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).</li>
+  <li><a href="/installation.html">Installation instructions</a><br />
+Tested on Ubuntu, Red Hat, OS X.</li>
+  <li><a href="/model_zoo.html">Model Zoo</a><br />
+BVLC suggests a standard distribution format for Caffe models, and provides trained models.</li>
+  <li><a href="/development.html">Developing &amp; Contributing</a><br />
+Guidelines for development and contributing to Caffe.</li>
+  <li><a href="/doxygen/annotated.html">API Documentation</a><br />
+Developer documentation automagically generated from code comments.</li>
+</ul>
+
+<h3 id="examples">Examples</h3>
+
+<ul>
+  <li>
+    <div><a href="/gathered/examples/imagenet.html">ImageNet tutorial</a><br />Train and test "CaffeNet" on ImageNet data.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/mnist.html">LeNet MNIST Tutorial</a><br />Train and test "LeNet" on the MNIST handwritten digit data.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/cifar10.html">CIFAR-10 tutorial</a><br />Train and test Caffe on CIFAR-10 data.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/finetune_flickr_style.html">Fine-tuning for style recognition</a><br />Fine-tune the ImageNet-trained CaffeNet on the "Flickr Style" dataset.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/feature_extraction.html">Feature extraction with Caffe C++ code.</a><br />Extract CaffeNet / AlexNet features using the Caffe utility.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/cpp_classification.html">CaffeNet C++ Classification example</a><br />A simple example performing image classification using the low-level C++ API.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/web_demo.html">Web demo</a><br />Image classification demo running as a Flask web server.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/siamese.html">Siamese Network Tutorial</a><br />Train and test a siamese network on MNIST data.</div>
+  </li>
+</ul>
+
+<h3 id="notebook-examples">Notebook Examples</h3>
+
+<ul>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb">Image Classification and Filter Visualization</a><br />Instant recognition with a pre-trained model and a tour of the net interface for visualizing features and parameters layer-by-layer.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/01-learning-lenet.ipynb">Learning LeNet</a><br />Define, train, and test the classic LeNet with the Python interface.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/02-fine-tuning.ipynb">Fine-tuning for Style Recognition</a><br />Fine-tune the ImageNet-trained CaffeNet on new data.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/brewing-logreg.ipynb">Off-the-shelf SGD for classification</a><br />Use Caffe as a generic SGD optimizer to train logistic regression on non-image HDF5 data.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/pascal-multilabel-with-datalayer.ipynb">Multilabel Classification with Python Data Layer</a><br />Multilabel classification on PASCAL VOC using a Python data layer.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/net_surgery.ipynb">Editing model parameters</a><br />How to do net surgery and manually change model parameters for custom use.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb">R-CNN detection</a><br />Run a pretrained model as a detector in Python.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/siamese/mnist_siamese.ipynb">Siamese network embedding</a><br />Extracting features and plotting the Siamese network embedding.</div>
+  </li>
+</ul>
+
+<h2 id="citing-caffe">Citing Caffe</h2>
+
+<p>Please cite Caffe in your publications if it helps your research:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>@article{jia2014caffe,
+  Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
+  Journal = {arXiv preprint arXiv:1408.5093},
+  Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+  Year = {2014}
+}
+</code></pre>
+</div>
+
+<p>If you do publish a paper where Caffe helped your research, we encourage you to update the <a href="https://github.com/BVLC/caffe/wiki/Publications">publications wiki</a>.
+Citations are also tracked automatically by <a href="http://scholar.google.com/scholar?oi=bibs&amp;hl=en&amp;cites=17333247995453974016">Google Scholar</a>.</p>
+
+<h2 id="contacting-us">Contacting Us</h2>
+
+<p>Join the <a href="https://groups.google.com/forum/#!forum/caffe-users">caffe-users group</a> to ask questions and discuss methods and models. This is where we talk about usage, installation, and applications.</p>
+
+<p>Framework development discussions and thorough bug reports are collected on <a href="https://github.com/BVLC/caffe/issues">Issues</a>.</p>
+
+<p>Contact <a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#099;&#097;&#102;&#102;&#101;&#045;&#100;&#101;&#118;&#064;&#103;&#111;&#111;&#103;&#108;&#101;&#103;&#114;&#111;&#117;&#112;&#115;&#046;&#099;&#111;&#109;">caffe-dev</a> if you have a confidential proposal for the framework <em>and the ability to act on it</em>.
+Requests for features, explanations, or personal help will be ignored; post to <a href="https://groups.google.com/forum/#!forum/caffe-users">caffe-users</a> instead.</p>
+
+<p>The core Caffe developers offer <a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#099;&#097;&#102;&#102;&#101;&#045;&#099;&#111;&#108;&#100;&#112;&#114;&#101;&#115;&#115;&#064;&#103;&#111;&#111;&#103;&#108;&#101;&#103;&#114;&#111;&#117;&#112;&#115;&#046;&#099;&#111;&#109;">consulting services</a> for appropriate projects.</p>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+
+<p>The BVLC Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BVLC PI <a href="http://www.eecs.berkeley.edu/~trevor/">Trevor Darrell</a> for guidance.</p>
+
+<p>The BVLC members who have contributed to Caffe are (alphabetical by first name):
+<a href="https://github.com/erictzeng">Eric Tzeng</a>, <a href="http://imaginarynumber.net/">Evan Shelhamer</a>, <a href="http://jeffdonahue.com/">Jeff Donahue</a>, <a href="https://github.com/longjon">Jon Long</a>, <a href="http://www.cs.berkeley.edu/~rbg/">Ross Girshick</a>, <a href="http://sergeykarayev.com/">Sergey Karayev</a>, <a href="http://www.eecs.berkeley.edu/~sguada/">Sergio Guadarrama</a>, and <a href="http://daggerfs.com/">Yangqing Jia</a>.</p>
+
+<p>The open-source community plays an important and growing role in Caffe’s development.
+Check out the Github <a href="https://github.com/BVLC/caffe/pulse">project pulse</a> for recent activity and the <a href="https://github.com/BVLC/caffe/graphs/contributors">contributors</a> for the full list.</p>
+
+<p>We sincerely appreciate your interest and contributions!
+If you’d like to contribute, please read the <a href="development.html">developing &amp; contributing</a> guide.</p>
+
+<p>Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for discussions along the journey, and BVLC PI <a href="http://www.eecs.berkeley.edu/~trevor/">Trevor Darrell</a> for advice.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>
