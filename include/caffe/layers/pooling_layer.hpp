@@ -55,6 +55,30 @@ class PoolingLayer : public Layer<Dtype> {
   Blob<int> max_idx_;
 };
 
+template <typename Dtype>
+__global__ void MaxPoolBackward(const int nthreads, const Dtype* const top_diff,
+	const int* const mask, const Dtype* const top_mask, const int num,
+	const int channels, const int height, const int width,
+	const int pooled_height, const int pooled_width, const int kernel_h,
+	const int kernel_w, const int stride_h, const int stride_w, const int pad_h,
+	const int pad_w, Dtype* const bottom_diff);
+
+template <typename Dtype>
+__global__ void AvePoolBackward(const int nthreads, const Dtype* const top_diff,
+	const int num, const int channels, const int height,
+	const int width, const int pooled_height, const int pooled_width,
+	const int kernel_h, const int kernel_w, const int stride_h,
+	const int stride_w, const int pad_h, const int pad_w,
+	Dtype* const bottom_diff);
+
+template <typename Dtype>
+__global__ void StoPoolBackward(const int nthreads,
+	const Dtype* const rand_idx, const Dtype* const top_diff,
+	const int num, const int channels, const int height,
+	const int width, const int pooled_height, const int pooled_width,
+	const int kernel_h, const int kernel_w, const int stride_h,
+	const int stride_w, Dtype* const bottom_diff);
+
 }  // namespace caffe
 
 #endif  // CAFFE_POOLING_LAYER_HPP_

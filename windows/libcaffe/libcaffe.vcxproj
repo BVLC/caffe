@@ -131,7 +131,8 @@
     <ClCompile Include="..\..\src\caffe\layers\flatten_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hdf5_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hdf5_output_layer.cpp" />
-    <ClCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\hebbian_conv_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\hebbian_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hinge_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\im2col_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\image_data_layer.cpp" />
@@ -236,7 +237,8 @@
     <ClInclude Include="..\..\include\caffe\layers\flatten_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hdf5_data_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hdf5_output_layer.hpp" />
-    <ClInclude Include="..\..\include\caffe\layers\HebbianConvLayer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\hebbian_conv_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\hebbian_pooling_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\hinge_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\im2col_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\image_data_layer.hpp" />
@@ -359,7 +361,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\hebbian_conv_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\hebbian_pooling_layer.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)\CommonSettings.targets" />

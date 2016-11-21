@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layers/HebbianConvLayer.hpp"
+#include "caffe/layers/hebbian_conv_layer.hpp"
 
 namespace caffe {
 

@@ -339,7 +339,10 @@
     <ClCompile Include="..\..\src\caffe\solvers\HebbianSolver.cpp">
       <Filter>src\solvers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cpp">
+    <ClCompile Include="..\..\src\caffe\layers\hebbian_conv_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\hebbian_pooling_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -647,7 +650,10 @@
     <ClInclude Include="..\..\include\caffe\HebbianSolver.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\caffe\layers\HebbianConvLayer.hpp">
+    <ClInclude Include="..\..\include\caffe\layers\hebbian_conv_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\hebbian_pooling_layer.hpp">
       <Filter>include\layers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -823,7 +829,10 @@
     <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu">
       <Filter>cu\solvers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\HebbianConvLayer.cu">
+    <CudaCompile Include="..\..\src\caffe\layers\hebbian_conv_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\hebbian_pooling_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>
