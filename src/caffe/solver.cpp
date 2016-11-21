@@ -38,7 +38,19 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
       requested_early_exit_(false) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
+  CheckType(&param);
   Init(param);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::CheckType(SolverParameter* param) {
+  // Harmonize solver class type with configured type to avoid confusion.
+  if (param->has_type()) {
+    CHECK_EQ(param->type(), this->type())
+        << "Solver type must agree with instantiated solver class.";
+  } else {
+    param->set_type(this->type());
+  }
 }
 
 template <typename Dtype>
