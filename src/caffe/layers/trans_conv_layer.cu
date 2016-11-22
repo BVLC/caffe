@@ -6,8 +6,9 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void TransForward(const int nthreads, Dtype* weights, Dtype* weight,
-      const Dtype* bottom_data, Dtype* top_data){
+__global__ void TransForward(TransformerConvolutionLayer<Dtype>* this, 
+      const int nthreads, Dtype* weights, Dtype* weight,
+      const Dtype* bottom_data, Dtype* top_data, const Dtype* bias){
   CUDA_KERNEL_LOOP(index, nthreads) {
     n = index / 8;
     j = index % 8;
@@ -15,7 +16,6 @@ __global__ void TransForward(const int nthreads, Dtype* weights, Dtype* weight,
     this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
         top_data + (n*8+j) * this->top_dim_);
     if (this->bias_term_) {
-      const Dtype* bias = this->blobs_[1]->gpu_data();
       this->forward_gpu_bias(top_data + (n*8+j) * this->top_dim_, bias);
     }
   }
@@ -34,15 +34,16 @@ void TransformerConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
+    const Dtype* bias = this->blobs_[1]->gpu_data();
     TransForward<Dtype><<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
-      nthreads, weights, weight, bottom_data, top_data);
+      this, nthreads, weights, weight, bottom_data, top_data);
   }
   caffe_copy(count, weights, weight);
 }
 
 
-__global__ void TransForwardBias(const int nthreads, Dtype* bias_diff,
-    Dtype* top_diff){
+__global__ void TransBackwardBias(TransformerConvolutionLayer<Dtype>* this,
+    const int nthreads, Dtype* bias_diff, Dtype* top_diff){
   CUDA_KERNEL_LOOP(index, nthreads) {
     n = index / 8;
     j = index % 8;
@@ -50,9 +51,10 @@ __global__ void TransForwardBias(const int nthreads, Dtype* bias_diff,
   }
 }
 
-__global__ void TransBackward(const int nthreads, int count, Dtype* weights, Dtype* weight,
-      const Dtype* bottom_data, Dtype* weight_diff,
-      Dtype* weight_diffs, Dtype* top_diff, Dtype* bottom_diff, const bool propagate_down){
+__global__ void TransBackward(TransformerConvolutionLayer<Dtype>* this,
+      const int nthreads, int count, Dtype* weights, Dtype* weight,
+      const Dtype* bottom_data, Dtype* weight_diff, Dtype* weight_diffs, Dtype* top_diff, 
+      Dtype* bottom_diff, const bool propagate_down){
   int pre_n = -1;
   Dtype diff_temp[count];
   Dtype bottom_temp[this->bottom_dim_];
@@ -107,11 +109,12 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
       TransBackwardBias<Dtype><<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
-          nthreads, bias_diff, top_diff);
+          this, nthreads, bias_diff, top_diff);
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       TransBackward<Dtype><<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
-          nthreads, weights, weight, bottom_data, top_data);
+          this, nthreads, count, Dtype* weights, Dtype* weight, bottom_data, weight_diff, 
+          weight_diffs, top_diff, bottom_diff, propagate_down[i]);
   }
   caffe_copy(count, weights, weight);
   get_weight_diff(weight_diffs, weight_diff, param);
