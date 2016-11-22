@@ -2992,6 +2992,112 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
+"const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp size,",    // NOLINT
+"const Dtype alpha_over_size, const Dtype k,",    // NOLINT
+"__global Dtype* const out,",    // NOLINT
+"const Dtype negative_beta) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp n = index / width / height;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"__global const Dtype* in_off = in + offset;",    // NOLINT
+"__global Dtype* out_off = out + offset;",    // NOLINT
+"Dtype scale_val;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_scale = 0;",    // NOLINT
+"// fill the scale at [n, :, h, w]",    // NOLINT
+"// accumulate values",    // NOLINT
+"while (head < post_pad && head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// both add and subtract",    // NOLINT
+"while (head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_val = k + accum_scale * alpha_over_size;",    // NOLINT
+"out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// subtract only",    // NOLINT
+"while (head < channels + post_pad) {",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_val = k + accum_scale * alpha_over_size;",    // NOLINT
+"out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
+"const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp size,",    // NOLINT
+"const Dtype alpha_over_size, const Dtype k,",    // NOLINT
+"__global Dtype* const scale,",    // NOLINT
+"__global Dtype* const out,",    // NOLINT
+"const Dtype negative_beta) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp n = index / width / height;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"__global const Dtype* in_off = in + offset;",    // NOLINT
+"__global Dtype* out_off = out + offset;",    // NOLINT
+"__global Dtype* scale_off = scale + offset;",    // NOLINT
+"Dtype scale_val;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_scale = 0;",    // NOLINT
+"// fill the scale at [n, :, h, w]",    // NOLINT
+"// accumulate values",    // NOLINT
+"while (head < post_pad && head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// both add and subtract",    // NOLINT
+"while (head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_val = k + accum_scale * alpha_over_size;",    // NOLINT
+"scale_off[(head - post_pad) * step] = scale_val;",    // NOLINT
+"out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// subtract only",    // NOLINT
+"while (head < channels + post_pad) {",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_val = k + accum_scale * alpha_over_size;",    // NOLINT
+"scale_off[(head - post_pad) * step] = scale_val;",    // NOLINT
+"out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
