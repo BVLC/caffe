@@ -49,7 +49,7 @@ void TransformerConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>
   get_trans_weights(weights, weight, param);
   get_trans_weights(weight_diffs, weight_diff, param);
   int nthreads = this->num_ * 8;
-  int n, j
+  int n, j;
   int pre_n = -1;
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
