@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include "caffe/common.hpp"
+#include "caffe/util/io.hpp"
 
 using std::cout;
 using std::endl;
@@ -35,7 +36,8 @@ class MultiDeviceTest : public ::testing::Test {
   MultiDeviceTest() {
     Caffe::set_mode(TypeParam::device);
   }
-  virtual ~MultiDeviceTest() {}
+  // Caffe tests may create some temporary files, here we will do the cleanup.
+  virtual ~MultiDeviceTest() { RemoveCaffeTempDir(); }
 };
 
 typedef ::testing::Types<float, double> TestDtypes;

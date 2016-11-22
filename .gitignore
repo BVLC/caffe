@@ -96,3 +96,11 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+#Visual Studio files
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.pdb
+*.props
