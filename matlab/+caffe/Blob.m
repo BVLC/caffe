@@ -33,6 +33,9 @@ classdef Blob < handle
       diff = self.check_and_preprocess_data(diff);
       caffe_('blob_set_diff', self.hBlob_self, diff);
     end
+    function copy_data_from(self, blob)
+      caffe_('blob_copy_data', self.hBlob_self, blob.hBlob_self);  
+    end
   end
   
   methods (Access = private)

@@ -279,11 +279,10 @@ class CuDNNLRNLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-template <typename TypeParam>
-void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
-    const Blob<TypeParam>& blob_bottom, const LayerParameter& layer_param,
-    Blob<TypeParam>* blob_top) {
-  typedef TypeParam Dtype;
+template <typename Dtype>
+void CuDNNLRNLayerTest<Dtype>::ReferenceLRNForward(
+    const Blob<Dtype>& blob_bottom, const LayerParameter& layer_param,
+    Blob<Dtype>* blob_top) {
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
       blob_bottom.height(), blob_bottom.width());
   Dtype* top_data = blob_top->mutable_cpu_data();
