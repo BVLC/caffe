@@ -284,13 +284,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::SetPhase(Phase phase){
-	// set all layers 
-	for (int i = 0; i < layers_.size(); ++i){
-		layers_[i]->set_phase(phase);
-	}
-	// set net phase
-	phase_ = phase;
+void Net<Dtype>::SetPhase(Phase phase) {
+  // set all layers
+  for (int i = 0; i < layers_.size(); ++i) {
+    layers_[i]->set_phase(phase);
+  }
+  // set net phase
+  phase_ = phase;
 }
 
 template <typename Dtype>

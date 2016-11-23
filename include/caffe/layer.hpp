@@ -320,7 +320,7 @@ class Layer {
    * @brief set phase
    *		   enable train and test with one network, for saving memory
    */
-  virtual inline void set_phase(Phase phase){
+  virtual inline void set_phase(Phase phase) {
     phase_ = phase;
   }
 

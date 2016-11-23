@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "mex.h"
 #include "gpu/mxGPUArray.h"
+#include "mex.h"
 
 #include "caffe/caffe.hpp"
 
@@ -60,17 +60,17 @@ static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
 
   const float* mat_mem_ptr = NULL;
   mxGPUArray const *mx_mat_gpu;
-  if (mxIsGPUArray(mx_mat)){
-	  mxInitGPU();
-	  mx_mat_gpu = mxGPUCreateFromMxArray(mx_mat);
-	  mat_mem_ptr = reinterpret_cast<const float*>(mxGPUGetDataReadOnly(mx_mat_gpu));
-	  mxCHECK(blob->count() == mxGPUGetNumberOfElements(mx_mat_gpu),
-		  "number of elements in target blob doesn't match that in input mxArray");
-  }
-  else{
-	  mxCHECK(blob->count() == mxGetNumberOfElements(mx_mat),
-		  "number of elements in target blob doesn't match that in input mxArray");
-	  mat_mem_ptr = reinterpret_cast<const float*>(mxGetData(mx_mat));
+  if (mxIsGPUArray(mx_mat)) {
+    mxInitGPU();
+    mx_mat_gpu = mxGPUCreateFromMxArray(mx_mat);
+    mat_mem_ptr = reinterpret_cast<const float*>(
+      mxGPUGetDataReadOnly(mx_mat_gpu));
+    mxCHECK(blob->count() == mxGPUGetNumberOfElements(mx_mat_gpu),
+      "number of elements in target blob doesn't match that in input mxArray");
+  } else {
+    mxCHECK(blob->count() == mxGetNumberOfElements(mx_mat),
+      "number of elements in target blob doesn't match that in input mxArray");
+    mat_mem_ptr = reinterpret_cast<const float*>(mxGetData(mx_mat));
   }
   float* blob_mem_ptr = NULL;
   switch (Caffe::mode()) {
@@ -87,8 +87,8 @@ static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
   }
   caffe_copy(blob->count(), mat_mem_ptr, blob_mem_ptr);
 
-  if (mxIsGPUArray(mx_mat)){
-	  mxGPUDestroyGPUArray(mx_mat_gpu);
+  if (mxIsGPUArray(mx_mat)) {
+    mxGPUDestroyGPUArray(mx_mat_gpu);
   }
 }
 
@@ -135,12 +135,13 @@ static mxArray* int_vec_to_mx_vec(const vector<int>& int_vec) {
 
 
 // Convert vector<vector<int> > to matlab cell of (row vector)s
-static mxArray* int_vec_vec_to_mx_cell_vec(const vector<vector<int> >& int_vec_vec) {
-	mxArray* mx_cell_vec = mxCreateCellMatrix(int_vec_vec.size(), 1);
-	for (int i = 0; i < int_vec_vec.size(); i++){
-		mxSetCell(mx_cell_vec, i, int_vec_to_mx_vec(int_vec_vec[i]));
-	}
-	return mx_cell_vec;
+static mxArray* int_vec_vec_to_mx_cell_vec(
+  const vector<vector<int> >& int_vec_vec) {
+  mxArray* mx_cell_vec = mxCreateCellMatrix(int_vec_vec.size(), 1);
+  for (int i = 0; i < int_vec_vec.size(); i++) {
+    mxSetCell(mx_cell_vec, i, int_vec_to_mx_vec(int_vec_vec[i]));
+  }
+  return mx_cell_vec;
 }
 
 // Convert vector<string> to matlab cell vector of strings
@@ -250,10 +251,10 @@ static void solver_get_iter(MEX_ARGS) {
 
 // Usage: caffe_('solver_get_max_iter', hSolver)
 static void solver_get_max_iter(MEX_ARGS) {
-	mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
-		"Usage: caffe_('solver_get_max_iter', hSolver)");
-	Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
-	plhs[0] = mxCreateDoubleScalar(solver->max_iter());
+  mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+    "Usage: caffe_('solver_get_max_iter', hSolver)");
+  Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
+  plhs[0] = mxCreateDoubleScalar(solver->max_iter());
 }
 
 // Usage: caffe_('solver_restore', hSolver, snapshot_file)
@@ -308,22 +309,20 @@ static void get_net(MEX_ARGS) {
 
 // Usage: caffe_('net_set_phase', hNet, phase_name)
 static void net_set_phase(MEX_ARGS) {
-	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsChar(prhs[1]),
-		"Usage: caffe_('net_set_phase', hNet, phase_name)");
-	Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-	char* phase_name = mxArrayToString(prhs[1]);
-	Phase phase;
-	if (strcmp(phase_name, "train") == 0) {
-		phase = TRAIN;
-	}
-	else if (strcmp(phase_name, "test") == 0) {
-		phase = TEST;
-	}
-	else {
-		mxERROR("Unknown phase");
-	}
-	net->SetPhase(phase);
-	mxFree(phase_name);
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsChar(prhs[1]),
+    "Usage: caffe_('net_set_phase', hNet, phase_name)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  char* phase_name = mxArrayToString(prhs[1]);
+  Phase phase;
+  if (strcmp(phase_name, "train") == 0) {
+    phase = TRAIN;
+  } else if (strcmp(phase_name, "test") == 0) {
+    phase = TEST;
+  } else {
+    mxERROR("Unknown phase");
+  }
+  net->SetPhase(phase);
+  mxFree(phase_name);
 }
 
 // Usage: caffe_('net_get_attr', hNet)
@@ -333,7 +332,8 @@ static void net_get_attr(MEX_ARGS) {
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
   const int net_attr_num = 8;
   const char* net_attrs[net_attr_num] = { "hLayer_layers", "hBlob_blobs",
-	  "input_blob_indices", "output_blob_indices", "layer_names", "blob_names", "bottom_id_vecs", "top_id_vecs" };
+    "input_blob_indices", "output_blob_indices",
+    "layer_names", "blob_names", "bottom_id_vecs", "top_id_vecs" };
   mxArray* mx_net_attr = mxCreateStructMatrix(1, 1, net_attr_num,
       net_attrs);
   mxSetField(mx_net_attr, 0, "hLayer_layers",
@@ -349,9 +349,9 @@ static void net_get_attr(MEX_ARGS) {
   mxSetField(mx_net_attr, 0, "blob_names",
       str_vec_to_mx_strcell(net->blob_names()));
   mxSetField(mx_net_attr, 0, "bottom_id_vecs",
-	  int_vec_vec_to_mx_cell_vec(net->bottom_id_vecs()));
+    int_vec_vec_to_mx_cell_vec(net->bottom_id_vecs()));
   mxSetField(mx_net_attr, 0, "top_id_vecs",
-	  int_vec_vec_to_mx_cell_vec(net->top_id_vecs()));
+    int_vec_vec_to_mx_cell_vec(net->top_id_vecs()));
   plhs[0] = mx_net_attr;
 }
 
@@ -384,11 +384,11 @@ static void net_copy_from(MEX_ARGS) {
 
 // Usage: caffe_('net_shared_with', hNet, hNet_trained)
 static void net_share_trained_layers_with(MEX_ARGS) {
-	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
-		"Usage: caffe_('net_shared_with', hNet, hNet_trained)");
-	Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-	Net<float>* net_trained = handle_to_ptr<Net<float> >(prhs[1]);
-	net->ShareTrainedLayersWith(net_trained);
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
+    "Usage: caffe_('net_shared_with', hNet, hNet_trained)");
+  Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+  Net<float>* net_trained = handle_to_ptr<Net<float> >(prhs[1]);
+  net->ShareTrainedLayersWith(net_trained);
 }
 
 // Usage: caffe_('net_reshape', hNet)
@@ -474,22 +474,23 @@ static void blob_get_data(MEX_ARGS) {
 
 // Usage: caffe_('blob_set_data', hBlob, new_data)
 static void blob_set_data(MEX_ARGS) {
-  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && (mxIsSingle(prhs[1]) || mxIsGPUArray(prhs[1])),
-      "Usage: caffe_('blob_set_data', hBlob, new_data)");
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) &&
+    (mxIsSingle(prhs[1]) || mxIsGPUArray(prhs[1])),
+    "Usage: caffe_('blob_set_data', hBlob, new_data)");
   Blob<float>* blob = handle_to_ptr<Blob<float> >(prhs[0]);
   mx_mat_to_blob(prhs[1], blob, DATA);
 }
 
 // Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)
 static void blob_copy_data(MEX_ARGS) {
-	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
-		"Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)");
-	Blob<float>* blob_to = handle_to_ptr<Blob<float> >(prhs[0]);
-	Blob<float>* blob_from = handle_to_ptr<Blob<float> >(prhs[1]);
-	//mxCHECK(blob_from->count() == blob_to->count(),
-	//	"number of elements in target blob doesn't match that in source blob");
-	
-	blob_to->CopyFrom(*blob_from, false, true); 
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
+    "Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)");
+  Blob<float>* blob_to = handle_to_ptr<Blob<float> >(prhs[0]);
+  Blob<float>* blob_from = handle_to_ptr<Blob<float> >(prhs[1]);
+  // mxCHECK(blob_from->count() == blob_to->count(),
+  //  "number of elements in target blob doesn't match that in source blob");
+
+  blob_to->CopyFrom(*blob_from, false, true);
 }
 
 // Usage: caffe_('blob_get_diff', hBlob)
@@ -548,50 +549,49 @@ static void reset(MEX_ARGS) {
 
 // Usage: caffe_('set_random_seed', random_seed)
 static void set_random_seed(MEX_ARGS) {
-	mxCHECK(nrhs == 1 && mxIsDouble(prhs[0]),
-		"Usage: caffe_('set_random_seed', random_seed)");
-	int random_seed = static_cast<unsigned int>(mxGetScalar(prhs[0]));
-	Caffe::set_random_seed(random_seed);
+  mxCHECK(nrhs == 1 && mxIsDouble(prhs[0]),
+    "Usage: caffe_('set_random_seed', random_seed)");
+  int random_seed = static_cast<unsigned int>(mxGetScalar(prhs[0]));
+  Caffe::set_random_seed(random_seed);
 }
 
-static void glog_failure_handler(){
-	static bool is_glog_failure = false;
-	if (!is_glog_failure)
-	{
-		is_glog_failure = true;
-		::google::FlushLogFiles(0);
-		mexErrMsgTxt("glog check error, please check log and clear mex");
-	}
+static void glog_failure_handler() {
+  static bool is_glog_failure = false;
+  if (!is_glog_failure) {
+    is_glog_failure = true;
+    ::google::FlushLogFiles(0);
+    mexErrMsgTxt("glog check error, please check log and clear mex");
+  }
 }
 
-static void protobuf_log_handler(::google::protobuf::LogLevel level, const char* filename, int line,
-	const std::string& message)
-{
-	const int max_err_length = 512;
-	char err_message[max_err_length];
-	snprintf(err_message, max_err_length, "Protobuf : %s . at %s Line %d",
+static void protobuf_log_handler(::google::protobuf::LogLevel level,
+  const char* filename, int line, const std::string& message) {
+  // const int max_err_length = 512;
+  #define kMaxErrLength 512
+  char err_message[kMaxErrLength];
+  snprintf(err_message, kMaxErrLength, "Protobuf : %s . at %s Line %d",
            message.c_str(), filename, line);
-	LOG(INFO) << err_message;
-	::google::FlushLogFiles(0);
-	mexErrMsgTxt(err_message);
+  LOG(INFO) << err_message;
+  ::google::FlushLogFiles(0);
+  mexErrMsgTxt(err_message);
 }
 
 // Usage: caffe_('init_log', log_base_filename)
 static void init_log(MEX_ARGS) {
-	static bool is_log_inited = false;
+  static bool is_log_inited = false;
 
-	mxCHECK(nrhs == 1 && mxIsChar(prhs[0]),
-		"Usage: caffe_('init_log', log_dir)");
-	if (is_log_inited)
-		::google::ShutdownGoogleLogging();
-	char* log_base_filename = mxArrayToString(prhs[0]);
-	::google::SetLogDestination(0, log_base_filename);
-	mxFree(log_base_filename);
-	::google::protobuf::SetLogHandler(&protobuf_log_handler);
-	::google::InitGoogleLogging("caffe_mex");
-	::google::InstallFailureFunction(&glog_failure_handler);
+  mxCHECK(nrhs == 1 && mxIsChar(prhs[0]),
+    "Usage: caffe_('init_log', log_dir)");
+  if (is_log_inited)
+    ::google::ShutdownGoogleLogging();
+  char* log_base_filename = mxArrayToString(prhs[0]);
+  ::google::SetLogDestination(0, log_base_filename);
+  mxFree(log_base_filename);
+  ::google::protobuf::SetLogHandler(&protobuf_log_handler);
+  ::google::InitGoogleLogging("caffe_mex");
+  ::google::InstallFailureFunction(&glog_failure_handler);
 
-	is_log_inited = true;
+  is_log_inited = true;
 }
 
 // Usage: caffe_('read_mean', mean_proto_file)
@@ -671,7 +671,7 @@ static handler_registry handlers[] = {
   { "blob_reshape",                  blob_reshape                   },
   { "blob_get_data",                 blob_get_data                  },
   { "blob_set_data",                 blob_set_data                  },
-  { "blob_copy_data",				 blob_copy_data					},
+  { "blob_copy_data",         blob_copy_data          },
   { "blob_get_diff",                 blob_get_diff                  },
   { "blob_set_diff",                 blob_set_diff                  },
   { "set_mode_cpu",                  set_mode_cpu                   },
@@ -693,7 +693,7 @@ static handler_registry handlers[] = {
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
 void mexFunction(MEX_ARGS) {
-  //mexLock();  // Avoid clearing the mex file.
+  // mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
   // Handle input command
   char* cmd = mxArrayToString(prhs[0]);
