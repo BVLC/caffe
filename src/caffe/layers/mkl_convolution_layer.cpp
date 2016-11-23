@@ -331,15 +331,16 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  bool reinitialize = (this->width_ == bottom[0]->width() &&
+                       this->height_ == bottom[0]->height() &&
+                       this->channels_ == bottom[0]->channels() &&
+                       this->num_ == bottom[0]->num()) ? false : true;
+
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 
-  if (this->width_ == bottom[0]->width() &&
-      this->height_ == bottom[0]->height() &&
-      this->channels_ == bottom[0]->channels() &&
-      this->num_ == bottom[0]->num())
-    return;
-
-  Init(bottom, top);
+  if (reinitialize == true) {
+    Init(bottom, top);
+  }
 }
 
 template <typename Dtype>
