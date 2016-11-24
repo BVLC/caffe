@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PerformanceH
 #define PerformanceH
 
-#define PERFORMANCE_MONITORING
-
 #ifdef PERFORMANCE_MONITORING
 #define PERFORMANCE_MEASUREMENT_BEGIN()              \
     performance::Measurement m_MACRO;                \
