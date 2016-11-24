@@ -41,12 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
-
-#include "performance.h"
-using Performance::Measurement;
-using Performance::monitor;
 
 template <typename Dtype>
 MKLLRNLayer<Dtype>::~MKLLRNLayer() {
@@ -240,9 +237,9 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
 
-  PERFORMANCE_MEASUREMENT_BEGIN()
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_lrn")
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_lrn");
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -282,9 +279,9 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
-  PERFORMANCE_MEASUREMENT_BEGIN()
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_lrn")
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_lrn");
 
   CHECK_EQ(e, E_SUCCESS);
 }

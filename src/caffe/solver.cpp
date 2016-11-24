@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 namespace caffe {
@@ -340,18 +341,13 @@ void Solver<Dtype>::Step(int iters) {
   }
 }
 
-
-#include "performance.h"
-using namespace Performance;
-
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
 
-  monitor.enableMeasurements();
-  monitor.markAsInitialized();
+  PERFORMANCE_INIT_MONITOR();
 
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
@@ -396,7 +392,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 #endif
   }
 
-#ifndef USE_MPI // in multinode last test must be done after weights update
+#ifndef USE_MPI  // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();
 #endif

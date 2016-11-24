@@ -41,11 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
-#include "performance.h"
-using Performance::Measurement;
-using Performance::monitor;
 
 template <typename Dtype>
 MKLEltwiseLayer<Dtype>::~MKLEltwiseLayer() {
@@ -220,9 +218,9 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
     }
 
     { // local scope needed since the macro below contains variable declaration
-      PERFORMANCE_MEASUREMENT_BEGIN()
+      PERFORMANCE_MEASUREMENT_BEGIN();
       e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
-      PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_eltwise")
+      PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_eltwise");
     }
     CHECK_EQ(e, E_SUCCESS);
 
