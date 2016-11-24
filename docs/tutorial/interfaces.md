@@ -19,8 +19,8 @@ For example, you can run:
 
     # train LeNet
     caffe train -solver examples/mnist/lenet_solver.prototxt
-    # train on GPU 2
-    caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 2
+    # train LeNet using CAFFE engine
+    caffe train -solver examples/mnist/lenet_solver.prototxt -engine CAFFE
     # resume training from the half-way point snapshot
     caffe train -solver examples/mnist/lenet_solver.prototxt -snapshot examples/mnist/lenet_iter_5000.solverstate
 
@@ -33,29 +33,63 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 
     # score the learned LeNet model on the validation set as defined in the
     # model architeture lenet_train_test.prototxt
-    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -iterations 100
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
 
     # (These example calls require you complete the LeNet / MNIST example first.)
     # time LeNet training on CPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
-    # time LeNet training on GPU for the default 50 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
-    # time a model architecture with the given weights on the first GPU for 10 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+    # time LeNet forward pass only for the default 50 iterations using engine: MKLDNN
+    caffe time -model examples/mnist/lenet_train_test.prototxt -forward_only -engine MKLDNN
+    # time a model architecture with the given weights using MKL2017 engine for 10 iterations
+    caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -engine MKL2017 -iterations 10
 
-**Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
+## C++
 
-    # query the first device
-    caffe device_query -gpu 0
+To use caffe from C++ code you would need headers and caffe lib (libcaffe.so). All of this is provided in convenient way when "make distribute" (Makefiles) or make install (cmake builds) targets are executed.
 
-**Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
+Example of c++ program using caffe (classification done using already trained Lenet model, using MKL2017 engine):
 
-    # train on GPUs 0 & 1 (doubling the batch size)
-    caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 0,1
-    # train on all GPUs (multiplying batch size by number of devices)
-    caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
+	#include "caffe/blob.hpp"
+	#include "caffe/common.hpp"
+	#include "caffe/net.hpp"
+	#include "caffe/proto/caffe.pb.h"
+	#include "caffe/util/db.hpp"
+	#include "caffe/util/io.hpp"
+	
+	#include <memory>
+	
+	using namespace caffe;
+	
+	int main(void) {
+	
+	  // Lenet model and weights of trained model
+	  const std::string model_path = "<Path to Caffe>/examples/mnist/lenet.prototxt";
+	  const std::string weights_path = "<Path to Caffe>/examples/mnist/lenet_iter_10000.caffemodel";
+	
+	  // Engine to be used (default is CAFFE)
+	  const std::string engine_name = std::string("MKL2017");
+	  //const std::string engine_name = std::string("MKLDNN");
+	  const std::vector<string> stages(1,"");
+	  const int level = 0;
+	
+	  caffe::Caffe::set_mode(Caffe::CPU);
+	  std::unique_ptr<caffe::Net<float>> net{
+	    new caffe::Net<float>(model_path, caffe::TEST, level, &stages, NULL, engine_name)};
+	
+	  net->CopyTrainedLayersFrom(weights_path);
+	
+	  const boost::shared_ptr<caffe::Blob<float>> input_blob{
+	    net->blob_by_name("data")};
+
+    // Fill input data container with some data
+    float* input_data = input_blob->mutable_cpu_data();
+	
+	  net->Forward();
+	}
+
+More examples can be find in __examples/cpp_classification/classification.cpp__ 
 
 ## Python
 
