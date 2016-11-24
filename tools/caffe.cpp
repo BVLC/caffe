@@ -227,6 +227,53 @@ caffe::SolverAction::Enum GetRequestedAction(
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
 }
 
+void multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params) {
+  LOG(INFO) << "Running multiphase solver.";
+  caffe::NetParameter solver_phase_net_param;
+  caffe::NetParameter topology_net_param;
+  caffe::SolverParameter solver_param;
+  CHECK(caffe::ReadProtoFromTextFile(
+      multi_solver_params->params_pair(0).solver_params().net(),
+      &topology_net_param))
+        << "Could not read from net parameter of solver proto file";
+
+  for (int j = 0; j < multi_solver_params->params_pair_size(); j++) {
+    solver_param = multi_solver_params->params_pair(j).solver_params();
+    solver_param.set_snapshot_prefix(solver_param.snapshot_prefix() +
+        "_phase_" + boost::lexical_cast<string>(j));
+    CHECK(solver_param.solver_mode() == caffe::SolverParameter_SolverMode_CPU)
+        << "CPU solver mode supported";
+
+    if (multi_solver_params->params_pair(j).has_batch_size()) {
+      for (int i = 0; i < topology_net_param.layer_size(); i++) {
+        if (topology_net_param.layer(i).type() == "Data") {
+          topology_net_param.mutable_layer(i)->mutable_data_param()->
+              set_batch_size(multi_solver_params->params_pair(j).batch_size());
+          break;
+        }
+      }
+    }
+
+    solver_param.set_allocated_net_param(&topology_net_param);
+    solver_param.clear_net();
+
+    shared_ptr<caffe::Solver<float> >
+        solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
+
+    topology_net_param = *solver_param.release_net_param();
+
+    solver->net()->CopyTrainedLayersFrom(solver_phase_net_param);
+    for (int i = 0; i < solver->test_nets().size(); ++i) {
+      solver->test_nets()[i]->CopyTrainedLayersFrom(solver_phase_net_param);
+    }
+
+    solver->Solve();
+    solver->net()->ToProto(&solver_phase_net_param, solver->param().snapshot_diff());
+  }
+
+  LOG(INFO) << "Optimization Done.";
+}
+
 // Train / Finetune a model.
 int train() {
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
@@ -236,12 +283,20 @@ int train() {
   vector<string> stages = get_stages_from_flags();
 
   caffe::SolverParameter solver_param;
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
+  if (!caffe::ReadProtoFromTextFile(FLAGS_solver, &solver_param))
+  {
+    caffe::MultiPhaseSolverParameter multi_solver_params;
+    CHECK(caffe::ReadProtoFromTextFile(FLAGS_solver, &multi_solver_params))
+      << "Failed to parse SolverParameter file: "  <<  FLAGS_solver;
+    multiphase_train(&multi_solver_params);
+    return 0;
+  }
 
-  // Override engine if provided in cmd line
-  if (FLAGS_engine != "")
+  // Override engine if provided in cmd line 
+  if (FLAGS_engine != "") 
     solver_param.set_engine(FLAGS_engine);
 
+  caffe::UpgradeSolverAsNeeded(FLAGS_solver, &solver_param);
   solver_param.mutable_train_state()->set_level(FLAGS_level);
   for (int i = 0; i < stages.size(); i++) {
     solver_param.mutable_train_state()->add_stage(stages[i]);
