@@ -54,12 +54,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-template <typename TypeParam>
-class NetTest : public MultiDeviceTest<TypeParam> {
-  typedef typename TypeParam::Dtype Dtype;
+
+template <typename ParentType>
+class ParentTest : public ParentType {
+  typedef typename ParentType::Dtype Dtype;
 
  protected:
-  NetTest() : seed_(1701) {}
+  ParentTest() : seed_(1701) {}
 
   virtual void InitNetFromProtoString(const string& proto) {
     NetParameter param;
@@ -880,7 +881,17 @@ class NetTest : public MultiDeviceTest<TypeParam> {
   shared_ptr<Net<Dtype> > net_;
 };
 
+template <typename TypeParam>
+class NetTest : public ParentTest<MultiDeviceTest<TypeParam>> {
+};
+
+template <typename TypeParam>
+class NetTestCPU : public ParentTest<CPUDeviceTest<TypeParam>> {
+};
+
+
 TYPED_TEST_CASE(NetTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(NetTestCPU, TestDtypes);
 
 TYPED_TEST(NetTest, TestHasBlob) {
   this->InitTinyNet();
@@ -2489,8 +2500,8 @@ TYPED_TEST(NetTest, TestReshape) {
 #ifdef MKL2017_SUPPORTED
 // This test is just checking if this
 // configuration does not explode
-TYPED_TEST(NetTest, TestForwardReshapeForward) {
-  typedef typename TypeParam::Dtype Dtype;
+TYPED_TEST(NetTestCPU, TestForwardReshapeForward) {
+  typedef TypeParam Dtype;
   const string& proto =
       "name: 'TestNetwork' "
       " layer {"

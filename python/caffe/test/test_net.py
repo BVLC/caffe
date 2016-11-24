@@ -71,6 +71,21 @@ def simple_net_file(num_output):
     return f.name
 
 
+class TestEngine(unittest.TestCase):
+    def setUp(self):
+        self.num_output = 13
+        net_file = simple_net_file(self.num_output)
+        self.net = caffe.Net(net_file, caffe.TRAIN, engine='MKL2017')
+        # fill in valid labels
+        self.net.blobs['label'].data[...] = \
+                np.random.randint(self.num_output,
+                    size=self.net.blobs['label'].data.shape)
+        os.remove(net_file)
+
+    def test_forward_backward(self):
+        self.net.forward()
+        self.net.backward()
+
 class TestNet(unittest.TestCase):
     def setUp(self):
         self.num_output = 13
