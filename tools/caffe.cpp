@@ -292,11 +292,12 @@ int train() {
     return 0;
   }
 
+  caffe::UpgradeSolverAsNeeded(FLAGS_solver, &solver_param);
+
   // Override engine if provided in cmd line 
   if (FLAGS_engine != "") 
     solver_param.set_engine(FLAGS_engine);
 
-  caffe::UpgradeSolverAsNeeded(FLAGS_solver, &solver_param);
   solver_param.mutable_train_state()->set_level(FLAGS_level);
   for (int i = 0; i < stages.size(); i++) {
     solver_param.mutable_train_state()->add_stage(stages[i]);
