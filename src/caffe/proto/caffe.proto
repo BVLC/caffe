@@ -152,15 +152,6 @@ message NetParameter {
   repeated V1LayerParameter layers = 2;
 }
 
-message MultiPhaseSolverParameter {
-  repeated SolverBatchSizePair params_pair = 1;
-}
-
-message SolverBatchSizePair {
-  required SolverParameter solver_params = 1;
-  optional uint32 batch_size = 2;
-}
-
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
@@ -664,7 +655,7 @@ message ConvolutionParameter {
   repeated uint32 stride = 6; // The stride; defaults to 1
   // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
   // holes. (Kernel dilation is sometimes referred to by its use in the
-  // algorithme à trous from Holschneider et al. 1987.)
+  // algorithme Ã  trous from Holschneider et al. 1987.)
   repeated uint32 dilation = 18; // The dilation; defaults to 1
 
   // For 2D convolution only, the *_h and *_w versions may also be used to
