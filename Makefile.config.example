@@ -40,8 +40,7 @@ VIENNACL_DIR = ../ViennaCL
 # USE_FFT := 1
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
-USE_CUDNN := 1
-CUDNN_DIR := /usr/local/cudnn
+# USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
@@ -110,7 +109,7 @@ BLAS := open
 
 # NOTE: this is required only if you will compile the python interface.
 # We need to be able to find Python.h and numpy/arrayobject.h.
-# PYTHON_INCLUDE := /usr/include/python2.7 \
+PYTHON_INCLUDE := /usr/include/python2.7 \
 		/usr/lib/python2.7/dist-packages/numpy/core/include
 # Anaconda Python distribution is quite popular. Include path:
 # Verify anaconda location, sometimes it's in root.
@@ -136,8 +135,8 @@ PYTHON_LIB := /usr/lib
 # WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
-INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include $(CUDNN_DIR)/include
-LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib $(CUDNN_DIR)/lib64
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
