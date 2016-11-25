@@ -694,11 +694,6 @@ TYPED_TEST(SGDSolverTest, TestSnapshotShare) {
   }
 }
 
-TYPED_TEST(SGDSolverTest, TestSolverType) {
-  this->TestLeastSquaresUpdate();
-  EXPECT_NE(this->solver_->type(), string(""));
-  EXPECT_EQ(this->solver_->type(), this->solver_->param().type());
-}
 
 template <typename TypeParam>
 class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
