@@ -45,9 +45,42 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
                               const int old_width, const int old_height,
                               NormalizedBBox* bbox);
 
+void InferNewSize(const ResizeParameter& resize_param,
+                  const int old_width, const int old_height,
+                  int* new_width, int* new_height);
+
 cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param);
 
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param);
+
+
+void RandomBrightness(const cv::Mat& in_img, cv::Mat* out_img,
+    const float brightness_prob, const float brightness_delta);
+
+void AdjustBrightness(const cv::Mat& in_img, const float delta,
+                      cv::Mat* out_img);
+
+void RandomContrast(const cv::Mat& in_img, cv::Mat* out_img,
+    const float contrast_prob, const float lower, const float upper);
+
+void AdjustContrast(const cv::Mat& in_img, const float delta,
+                    cv::Mat* out_img);
+
+void RandomSaturation(const cv::Mat& in_img, cv::Mat* out_img,
+    const float saturation_prob, const float lower, const float upper);
+
+void AdjustSaturation(const cv::Mat& in_img, const float delta,
+                      cv::Mat* out_img);
+
+void RandomHue(const cv::Mat& in_img, cv::Mat* out_img,
+               const float hue_prob, const float hue_delta);
+
+void AdjustHue(const cv::Mat& in_img, const float delta, cv::Mat* out_img);
+
+void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
+                         const float random_order_prob);
+
+cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param);
 
 }  // namespace caffe
 

@@ -177,9 +177,11 @@ train_transform_param = {
         'mean_value': [104, 117, 123],
         'resize_param': {
                 'prob': 1,
-                'resize_mode': P.Resize.WARP,
+                'resize_mode': P.Resize.FIT_SMALL_SIZE,
                 'height': resize_height,
                 'width': resize_width,
+                'height_scale': resize_height,
+                'width_scale': resize_width,
                 'interp_mode': [
                         P.Resize.LINEAR,
                         P.Resize.AREA,
@@ -209,15 +211,18 @@ train_transform_param = {
             'emit_type': caffe_pb2.EmitConstraint.CENTER,
             }
         }
+resize_param = {
+        'prob': 1,
+        'resize_mode': P.Resize.FIT_SMALL_SIZE,
+        'height': resize_height,
+        'width': resize_width,
+        'height_scale': resize_height,
+        'width_scale': resize_height,
+        'interp_mode': [P.Resize.LINEAR],
+        }
 test_transform_param = {
         'mean_value': [104, 117, 123],
-        'resize_param': {
-                'prob': 1,
-                'resize_mode': P.Resize.WARP,
-                'height': resize_height,
-                'width': resize_width,
-                'interp_mode': [P.Resize.LINEAR],
-                },
+        'resize_param': resize_param,
         }
 
 # If true, use batch norm for all newly added layers.
@@ -232,7 +237,7 @@ else:
     base_lr = 0.00004
 
 # Modify the job name if you want.
-job_name = "SSD_{}".format(resize)
+job_name = "SSD_{}_orig".format(resize)
 # The name of the model. Modify it if you want.
 model_name = "VGG_VOC0712_{}".format(job_name)
 
@@ -334,7 +339,7 @@ gpulist = gpus.split(",")
 num_gpus = len(gpulist)
 
 # Divide the mini-batch to different GPUs.
-batch_size = 32
+batch_size = num_gpus
 accum_batch_size = 32
 iter_size = accum_batch_size / batch_size
 solver_mode = P.Solver.CPU
@@ -357,7 +362,7 @@ elif normalization_mode == P.Loss.FULL:
 
 # Evaluate on whole test set.
 num_test_image = 4952
-test_batch_size = 8
+test_batch_size = 1
 test_iter = num_test_image / test_batch_size
 
 solver_param = {
@@ -399,6 +404,7 @@ det_out_param = {
         'label_map_file': label_map_file,
         'name_size_file': name_size_file,
         'num_test_image': num_test_image,
+        'resize_param': resize_param,
         },
     'keep_top_k': 200,
     'confidence_threshold': 0.01,
@@ -412,6 +418,7 @@ det_eval_param = {
     'overlap_threshold': 0.5,
     'evaluate_difficult_gt': False,
     'name_size_file': name_size_file,
+    'resize_param': resize_param,
     }
 
 ### Hopefully you don't need to change the following ###
@@ -437,7 +444,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
+        aspect_ratios=aspect_ratios, steps=steps, img_height=resize_height,
+        img_width=resize_width, normalizations=normalizations,
         num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
         prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult)
 
@@ -466,7 +474,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
+        aspect_ratios=aspect_ratios, steps=steps, img_height=resize_height,
+        img_width=resize_width, normalizations=normalizations,
         num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
         prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult)
 

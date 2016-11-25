@@ -24,58 +24,53 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   const int num = bottom[0]->num();
 
   // Decode predictions.
-  Blob<Dtype> bbox_preds;
-  bbox_preds.ReshapeLike(*(bottom[0]));
-  Dtype* bbox_data = bbox_preds.mutable_gpu_data();
-  const int loc_count = bbox_preds.count();
+  Dtype* bbox_data = bbox_preds_.mutable_gpu_data();
+  const int loc_count = bbox_preds_.count();
+  const bool clip_bbox = false;
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
-      num_loc_classes_, background_label_id_, bbox_data);
+      num_loc_classes_, background_label_id_, clip_bbox, bbox_data);
   // Retrieve all decoded location predictions.
-  const Dtype* bbox_cpu_data = bbox_preds.cpu_data();
-  vector<LabelBBox> all_decode_bboxes;
-  GetLocPredictions(bbox_cpu_data, num, num_priors_, num_loc_classes_,
-      share_location_, &all_decode_bboxes);
+  const Dtype* bbox_cpu_data;
+  if (!share_location_) {
+    Dtype* bbox_permute_data = bbox_permute_.mutable_gpu_data();
+    PermuteDataGPU<Dtype>(loc_count, bbox_data, num_loc_classes_, num_priors_,
+        4, bbox_permute_data);
+    bbox_cpu_data = bbox_permute_.cpu_data();
+  } else {
+    bbox_cpu_data = bbox_preds_.cpu_data();
+  }
 
   // Retrieve all confidences.
-  const Dtype* conf_data;
-  Blob<Dtype> conf_permute;
-  conf_permute.ReshapeLike(*(bottom[1]));
-  Dtype* conf_permute_data = conf_permute.mutable_gpu_data();
-  PermuteDataGPU<Dtype>(conf_permute.count(), bottom[1]->gpu_data(),
+  Dtype* conf_permute_data = conf_permute_.mutable_gpu_data();
+  PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(),
       num_classes_, num_priors_, 1, conf_permute_data);
-  conf_data = conf_permute.cpu_data();
-  const bool class_major = true;
-  vector<map<int, vector<float> > > all_conf_scores;
-  GetConfidenceScores(conf_data, num, num_priors_, num_classes_,
-      class_major, &all_conf_scores);
+  const Dtype* conf_cpu_data = conf_permute_.cpu_data();
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
   for (int i = 0; i < num; ++i) {
-    const LabelBBox& decode_bboxes = all_decode_bboxes[i];
-    const map<int, vector<float> >& conf_scores = all_conf_scores[i];
     map<int, vector<int> > indices;
     int num_det = 0;
+    const int conf_idx = i * num_classes_ * num_priors_;
+    int bbox_idx;
+    if (share_location_) {
+      bbox_idx = i * num_priors_ * 4;
+    } else {
+      bbox_idx = conf_idx * 4;
+    }
     for (int c = 0; c < num_classes_; ++c) {
       if (c == background_label_id_) {
         // Ignore background class.
         continue;
       }
-      if (conf_scores.find(c) == conf_scores.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for label " << c;
+      const Dtype* cur_conf_data = conf_cpu_data + conf_idx + c * num_priors_;
+      const Dtype* cur_bbox_data = bbox_cpu_data + bbox_idx;
+      if (!share_location_) {
+        cur_bbox_data += c * num_priors_ * 4;
       }
-      const vector<float>& scores = conf_scores.find(c)->second;
-      int label = share_location_ ? -1 : c;
-      if (decode_bboxes.find(label) == decode_bboxes.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
-        continue;
-      }
-      const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
-      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_,
-          top_k_, &(indices[c]));
+      ApplyNMSFast(cur_bbox_data, cur_conf_data, num_priors_,
+          confidence_threshold_, nms_threshold_, eta_, top_k_, &(indices[c]));
       num_det += indices[c].size();
     }
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
@@ -84,17 +79,11 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
            it != indices.end(); ++it) {
         int label = it->first;
         const vector<int>& label_indices = it->second;
-        if (conf_scores.find(label) == conf_scores.end()) {
-          // Something bad happened for current label.
-          LOG(FATAL) << "Could not find location predictions for " << label;
-          continue;
-        }
-        const vector<float>& scores = conf_scores.find(label)->second;
         for (int j = 0; j < label_indices.size(); ++j) {
           int idx = label_indices[j];
-          CHECK_LT(idx, scores.size());
+          float score = conf_cpu_data[conf_idx + label * num_priors_ + idx];
           score_index_pairs.push_back(std::make_pair(
-                  scores[idx], std::make_pair(label, idx)));
+                  score, std::make_pair(label, idx)));
         }
       }
       // Keep top k results per image.
@@ -119,64 +108,71 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
+  Dtype* top_data;
   if (num_kept == 0) {
     LOG(INFO) << "Couldn't find any detections";
-    top_shape[2] = 1;
+    top_shape[2] = num;
     top[0]->Reshape(top_shape);
-    caffe_set<Dtype>(top[0]->count(), -1, top[0]->mutable_cpu_data());
-    return;
+    top_data = top[0]->mutable_cpu_data();
+    caffe_set<Dtype>(top[0]->count(), -1, top_data);
+    // Generate fake results per image.
+    for (int i = 0; i < num; ++i) {
+      top_data[0] = i;
+      top_data += 7;
+    }
+  } else {
+    top[0]->Reshape(top_shape);
+    top_data = top[0]->mutable_cpu_data();
   }
-  top[0]->Reshape(top_shape);
-  Dtype* top_data = top[0]->mutable_cpu_data();
 
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
-    const map<int, vector<float> >& conf_scores = all_conf_scores[i];
-    const LabelBBox& decode_bboxes = all_decode_bboxes[i];
+    const int conf_idx = i * num_classes_ * num_priors_;
+    int bbox_idx;
+    if (share_location_) {
+      bbox_idx = i * num_priors_ * 4;
+    } else {
+      bbox_idx = conf_idx * 4;
+    }
     for (map<int, vector<int> >::iterator it = all_indices[i].begin();
          it != all_indices[i].end(); ++it) {
       int label = it->first;
-      if (conf_scores.find(label) == conf_scores.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for " << label;
-        continue;
-      }
-      const vector<float>& scores = conf_scores.find(label)->second;
-      int loc_label = share_location_ ? -1 : label;
-      if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for " << loc_label;
-        continue;
-      }
-      const vector<NormalizedBBox>& bboxes =
-          decode_bboxes.find(loc_label)->second;
       vector<int>& indices = it->second;
       if (need_save_) {
         CHECK(label_to_name_.find(label) != label_to_name_.end())
           << "Cannot find label: " << label << " in the label map.";
         CHECK_LT(name_count_, names_.size());
       }
+      const Dtype* cur_conf_data =
+        conf_cpu_data + conf_idx + label * num_priors_;
+      const Dtype* cur_bbox_data = bbox_cpu_data + bbox_idx;
+      if (!share_location_) {
+        cur_bbox_data += label * num_priors_ * 4;
+      }
       for (int j = 0; j < indices.size(); ++j) {
         int idx = indices[j];
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
-        top_data[count * 7 + 2] = scores[idx];
-        NormalizedBBox clip_bbox;
-        ClipBBox(bboxes[idx], &clip_bbox);
-        top_data[count * 7 + 3] = clip_bbox.xmin();
-        top_data[count * 7 + 4] = clip_bbox.ymin();
-        top_data[count * 7 + 5] = clip_bbox.xmax();
-        top_data[count * 7 + 6] = clip_bbox.ymax();
+        top_data[count * 7 + 2] = cur_conf_data[idx];
+        for (int k = 0; k < 4; ++k) {
+          top_data[count * 7 + 3 + k] = cur_bbox_data[idx * 4 + k];
+        }
         if (need_save_) {
-          NormalizedBBox scale_bbox;
-          ScaleBBox(clip_bbox, sizes_[name_count_].first,
-                    sizes_[name_count_].second, &scale_bbox);
+          // Generate output bbox.
+          NormalizedBBox bbox;
+          bbox.set_xmin(top_data[count * 7 + 3]);
+          bbox.set_ymin(top_data[count * 7 + 4]);
+          bbox.set_xmax(top_data[count * 7 + 5]);
+          bbox.set_ymax(top_data[count * 7 + 6]);
+          NormalizedBBox out_bbox;
+          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
+                     &out_bbox);
           float score = top_data[count * 7 + 2];
-          float xmin = scale_bbox.xmin();
-          float ymin = scale_bbox.ymin();
-          float xmax = scale_bbox.xmax();
-          float ymax = scale_bbox.ymax();
+          float xmin = out_bbox.xmin();
+          float ymin = out_bbox.ymin();
+          float xmax = out_bbox.xmax();
+          float ymax = out_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);
@@ -298,7 +294,7 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
     this->data_transformer_->TransformInv(bottom[3], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_);
+        label_to_display_name_, save_file_);
 #endif  // USE_OPENCV
   }
 }

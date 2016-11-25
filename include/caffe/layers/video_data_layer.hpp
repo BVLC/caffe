@@ -45,6 +45,8 @@ class VideoDataLayer : public BasePrefetchingDataLayer<Dtype> {
   VideoDataParameter_VideoType video_type_;
   cv::VideoCapture cap_;
 
+  int skip_frames_;
+
   int total_frames_;
   int processed_frames_;
   vector<int> top_shape_;

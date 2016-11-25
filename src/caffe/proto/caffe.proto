@@ -212,7 +212,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 43 (last added: ap_version)
+// SolverParameter next available ID: 44 (last added: plateau_winsize)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -289,6 +289,8 @@ message SolverParameter {
   //      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
   //    - sigmoid: the effective learning rate follows a sigmod decay
   //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
+  //    - plateau: decreases lr
+  //              if the minimum loss isn't updated for 'plateau_winsize' iters
   //
   // where base_lr, max_iter, gamma, step, stepvalue and power are defined
   // in the solver parameter protocol buffer, and iter is the current iteration.
@@ -304,6 +306,8 @@ message SolverParameter {
   optional int32 stepsize = 13;
   // the stepsize for learning rate policy "multistep"
   repeated int32 stepvalue = 34;
+  // the stepsize for learning rate policy "plateau"
+  repeated int32 plateau_winsize = 43;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -370,6 +374,8 @@ message SolverState {
   optional string learned_net = 2; // The file that stores the learned net.
   repeated BlobProto history = 3; // The history for sgd solvers
   optional int32 current_step = 4 [default = 0]; // The current step for learning rate
+  optional float minimum_loss = 5 [default = 1E38]; // Historical minimum loss
+  optional int32 iter_last_event = 6 [default = 0]; // The iteration when last lr-update or min_loss-update happend
 }
 
 enum Phase {
@@ -564,11 +570,15 @@ message TransformationParameter {
   optional ResizeParameter resize_param = 8;
   // Noise policy
   optional NoiseParameter noise_param = 9;
+  // Distortion policy
+  optional DistortionParameter distort_param = 13;
+  // Expand policy
+  optional ExpansionParameter expand_param = 14;
   // Constraint for emitting the annotation after transformation.
   optional EmitConstraint emit_constraint = 10;
 }
 
-// Message that stores parameters used by data transformer for transformation policy
+// Message that stores parameters used by data transformer for resize policy
 message ResizeParameter {
   //Probability of using this resize policy
   optional float prob = 1 [default = 1];
@@ -581,6 +591,9 @@ message ResizeParameter {
   optional Resize_mode resize_mode = 2 [default = WARP];
   optional uint32 height = 3 [default = 0];
   optional uint32 width = 4 [default = 0];
+  // A parameter used to update bbox in FIT_SMALL_SIZE mode.
+  optional uint32 height_scale = 8 [default = 0];
+  optional uint32 width_scale = 9 [default = 0];
 
   enum Pad_mode {
     CONSTANT = 1;
@@ -649,6 +662,47 @@ message NoiseParameter {
   optional bool convert_to_lab = 13 [default = false];
 }
 
+// Message that stores parameters used by data transformer for distortion policy
+message DistortionParameter {
+  // The probability of adjusting brightness.
+  optional float brightness_prob = 1 [default = 0.0];
+  // Amount to add to the pixel values within [-delta, delta].
+  // The possible value is within [0, 255]. Recommend 32.
+  optional float brightness_delta = 2 [default = 0.0];
+
+  // The probability of adjusting contrast.
+  optional float contrast_prob = 3 [default = 0.0];
+  // Lower bound for random contrast factor. Recommend 0.5.
+  optional float contrast_lower = 4 [default = 0.0];
+  // Upper bound for random contrast factor. Recommend 1.5.
+  optional float contrast_upper = 5 [default = 0.0];
+
+  // The probability of adjusting hue.
+  optional float hue_prob = 6 [default = 0.0];
+  // Amount to add to the hue channel within [-delta, delta].
+  // The possible value is within [0, 180]. Recommend 36.
+  optional float hue_delta = 7 [default = 0.0];
+
+  // The probability of adjusting saturation.
+  optional float saturation_prob = 8 [default = 0.0];
+  // Lower bound for the random saturation factor. Recommend 0.5.
+  optional float saturation_lower = 9 [default = 0.0];
+  // Upper bound for the random saturation factor. Recommend 1.5.
+  optional float saturation_upper = 10 [default = 0.0];
+
+  // The probability of randomly order the image channels.
+  optional float random_order_prob = 11 [default = 0.0];
+}
+
+// Message that stores parameters used by data transformer for expansion policy
+message ExpansionParameter {
+  //Probability of using this expansion policy
+  optional float prob = 1 [default = 1];
+
+  // The ratio to expand the image.
+  optional float max_expand_ratio = 2 [default = 1.];
+}
+
 // Message that stores parameters shared by loss layers
 message LossParameter {
   // If specified, ignore instances with the given label.
@@ -703,6 +757,9 @@ message AnnotatedDataParameter {
   repeated BatchSampler batch_sampler = 1;
   // Store label name and label id in LabelMap format.
   optional string label_map_file = 2;
+  // If provided, it will replace the AnnotationType stored in each
+  // AnnotatedDatum.
+  optional AnnotatedDatum.AnnotationType anno_type = 3;
 }
 
 message ArgMaxParameter {
@@ -906,6 +963,8 @@ message DetectionEvaluateParameter {
   // If provided, we will scale the prediction and ground truth NormalizedBBox
   // for evaluation.
   optional string name_size_file = 5;
+  // The resize parameter used in converting NormalizedBBox to original image.
+  optional ResizeParameter resize_param = 6;
 }
 
 message NonMaximumSuppressionParameter {
@@ -913,6 +972,8 @@ message NonMaximumSuppressionParameter {
   optional float nms_threshold = 1 [default = 0.3];
   // Maximum number of results to be kept.
   optional int32 top_k = 2;
+  // Parameter for adaptive nms.
+  optional float eta = 3 [default = 1.0];
 }
 
 message SaveOutputParameter {
@@ -937,6 +998,8 @@ message SaveOutputParameter {
   // name_size_file. For example, when we only want to evaluate on part
   // of the test images.
   optional uint32 num_test_image = 6;
+  // The resize parameter used in saving the data.
+  optional ResizeParameter resize_param = 7;
 }
 
 // Message that store parameters used by DetectionOutputLayer
@@ -967,6 +1030,8 @@ message DetectionOutputParameter {
   optional bool visualize = 10 [default = false];
   // The threshold used to visualize the detection results.
   optional float visualize_threshold = 11;
+  // If provided, save outputs to video file.
+  optional string save_file = 12;
 }
 
 message DropoutParameter {
@@ -1211,7 +1276,8 @@ message MultiBoxLossParameter {
   // If true, also consider difficult ground truth.
   optional bool use_difficult_gt = 10 [default = true];
   // If true, perform negative mining.
-  optional bool do_neg_mining = 11 [default = true];
+  // DEPRECATED: use mining_type instead.
+  optional bool do_neg_mining = 11;
   // The negative/positive ratio.
   optional float neg_pos_ratio = 12 [default = 3.0];
   // The negative overlap upperbound for the unmatched predictions.
@@ -1224,6 +1290,26 @@ message MultiBoxLossParameter {
   // If true, map all object classes to agnostic class. It is useful for learning
   // objectness detector.
   optional bool map_object_to_agnostic = 17 [default = false];
+  // If true, ignore cross boundary bbox during matching.
+  // Cross boundary bbox is a bbox who is outside of the image region.
+  optional bool ignore_cross_boundary_bbox = 18 [default = false];
+  // If true, only backpropagate on corners which are inside of the image
+  // region when encode_type is CORNER or CORNER_SIZE.
+  optional bool bp_inside = 19 [default = false];
+  // Mining type during training.
+  //   NONE : use all negatives.
+  //   MAX_NEGATIVE : select negatives based on the score.
+  //   HARD_EXAMPLE : select hard examples based on "Training Region-based Object Detectors with Online Hard Example Mining", Shrivastava et.al.
+  enum MiningType {
+    NONE = 0;
+    MAX_NEGATIVE = 1;
+    HARD_EXAMPLE = 2;
+  }
+  optional MiningType mining_type = 20 [default = MAX_NEGATIVE];
+  // Parameters used for non maximum suppression durig hard example mining.
+  optional NonMaximumSuppressionParameter nms_param = 21;
+  optional int32 sample_size = 22 [default = 64];
+  optional bool use_prior_for_nms = 23 [default = false];
 }
 
 message MVNParameter {
@@ -1301,11 +1387,12 @@ message PriorBoxParameter {
   enum CodeType {
     CORNER = 1;
     CENTER_SIZE = 2;
+    CORNER_SIZE = 3;
   }
   // Minimum box size (in pixels). Required!
-  optional float min_size = 1;
+  repeated float min_size = 1;
   // Maximum box size (in pixels). Required!
-  optional float max_size = 2;
+  repeated float max_size = 2;
   // Various of aspect ratios. Duplicate ratios will be ignored.
   // If none is provided, we use default ratio 1.
   repeated float aspect_ratio = 3;
@@ -1314,9 +1401,26 @@ message PriorBoxParameter {
   // we will generate aspect ratio "1.0/r" as well.
   optional bool flip = 4 [default = true];
   // If true, will clip the prior so that it is within [0, 1]
-  optional bool clip = 5 [default = true];
+  optional bool clip = 5 [default = false];
   // Variance for adjusting the prior bboxes.
   repeated float variance = 6;
+  // By default, we calculate img_height, img_width, step_x, step_y based on
+  // bottom[0] (feat) and bottom[1] (img). Unless these values are explicitely
+  // provided.
+  // Explicitly provide the img_size.
+  optional uint32 img_size = 7;
+  // Either img_size or img_h/img_w should be specified; not both.
+  optional uint32 img_h = 8;
+  optional uint32 img_w = 9;
+
+  // Explicitly provide the step size.
+  optional float step = 10;
+  // Either step or step_h/step_w should be specified; not both.
+  optional float step_h = 11;
+  optional float step_w = 12;
+
+  // Offset to the top left corner of each cell.
+  optional float offset = 13 [default = 0.5];
 }
 
 message PythonParameter {
@@ -1564,6 +1668,8 @@ message VideoDataParameter{
   optional VideoType video_type = 1 [default = WEBCAM];
   optional int32 device_id = 2 [default = 0];
   optional string video_file = 3;
+  // Number of frames to be skipped before processing a frame.
+  optional uint32 skip_frames = 4 [default = 0];
 }
 
 message WindowDataParameter {
