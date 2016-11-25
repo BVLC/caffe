@@ -227,6 +227,21 @@ caffe::SolverAction::Enum GetRequestedAction(
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
 }
 
+void use_command_line_params(caffe::SolverParameter* solver_param) {
+  caffe::UpgradeSolverAsNeeded(FLAGS_solver, solver_param);
+  vector<string> stages = get_stages_from_flags();
+
+  // Override engine if provided in cmd line 
+  if (FLAGS_engine != "") {
+    solver_param->set_engine(FLAGS_engine);
+  }
+
+  solver_param->mutable_train_state()->set_level(FLAGS_level);
+  for (int i = 0; i < stages.size(); i++) {
+    solver_param->mutable_train_state()->add_stage(stages[i]);
+  }
+}
+
 void multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params) {
   LOG(INFO) << "Running multiphase solver.";
   caffe::NetParameter solver_phase_net_param;
@@ -257,6 +272,8 @@ void multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params) {
     solver_param.set_allocated_net_param(&topology_net_param);
     solver_param.clear_net();
 
+    use_command_line_params(&solver_param);
+
     shared_ptr<caffe::Solver<float> >
         solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
@@ -268,7 +285,9 @@ void multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params) {
     }
 
     solver->Solve();
-    solver->net()->ToProto(&solver_phase_net_param, solver->param().snapshot_diff());
+    solver->net()->ToProto(
+      &solver_phase_net_param,
+      solver->param().snapshot_diff());
   }
 
   LOG(INFO) << "Optimization Done.";
@@ -280,7 +299,6 @@ int train() {
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
       "but not both.";
-  vector<string> stages = get_stages_from_flags();
 
   caffe::SolverParameter solver_param;
   if (!caffe::ReadProtoFromTextFile(FLAGS_solver, &solver_param))
@@ -292,16 +310,7 @@ int train() {
     return 0;
   }
 
-  caffe::UpgradeSolverAsNeeded(FLAGS_solver, &solver_param);
-
-  // Override engine if provided in cmd line 
-  if (FLAGS_engine != "") 
-    solver_param.set_engine(FLAGS_engine);
-
-  solver_param.mutable_train_state()->set_level(FLAGS_level);
-  for (int i = 0; i < stages.size(); i++) {
-    solver_param.mutable_train_state()->add_stage(stages[i]);
-  }
+  use_command_line_params(&solver_param);
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
