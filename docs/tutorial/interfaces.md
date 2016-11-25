@@ -40,10 +40,12 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
     # (These example calls require you complete the LeNet / MNIST example first.)
     # time LeNet training on CPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+    # it is very useful to combine "time" with engine option as it will allow to get measures for diffrent engines
+    caffe time -model examples/mnist/lenet_train_test.prototxt -engine MKL2017 -iterations 10
+    caffe time -model examples/mnist/lenet_train_test.prototxt -engine CAFFE -iterations 10
+    caffe time -model examples/mnist/lenet_train_test.prototxt -engine MKLDNN -iterations 10
     # time LeNet forward pass only for the default 50 iterations using engine: MKLDNN
     caffe time -model examples/mnist/lenet_train_test.prototxt -forward_only -engine MKLDNN
-    # time a model architecture with the given weights using MKL2017 engine for 10 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -engine MKL2017 -iterations 10
 
 ## C++
 
@@ -51,45 +53,45 @@ To use caffe from C++ code you would need headers and caffe lib (libcaffe.so). A
 
 Example of c++ program using caffe (classification done using already trained Lenet model, using MKL2017 engine):
 
-	#include "caffe/blob.hpp"
-	#include "caffe/common.hpp"
-	#include "caffe/net.hpp"
-	#include "caffe/proto/caffe.pb.h"
-	#include "caffe/util/db.hpp"
-	#include "caffe/util/io.hpp"
-	
-	#include <memory>
-	
-	using namespace caffe;
-	
-	int main(void) {
-	
-	  // Lenet model and weights of trained model
-	  const std::string model_path = "<Path to Caffe>/examples/mnist/lenet.prototxt";
-	  const std::string weights_path = "<Path to Caffe>/examples/mnist/lenet_iter_10000.caffemodel";
-	
-	  // Engine to be used (default is CAFFE)
-	  const std::string engine_name = std::string("MKL2017");
-	  //const std::string engine_name = std::string("MKLDNN");
-	  const std::vector<string> stages(1,"");
-	  const int level = 0;
-	
-	  caffe::Caffe::set_mode(Caffe::CPU);
-	  std::unique_ptr<caffe::Net<float>> net{
-	    new caffe::Net<float>(model_path, caffe::TEST, level, &stages, NULL, engine_name)};
-	
-	  net->CopyTrainedLayersFrom(weights_path);
-	
-	  const boost::shared_ptr<caffe::Blob<float>> input_blob{
-	    net->blob_by_name("data")};
-
+  #include "caffe/blob.hpp"
+  #include "caffe/common.hpp"
+  #include "caffe/net.hpp"
+  #include "caffe/proto/caffe.pb.h"
+  #include "caffe/util/db.hpp"
+  #include "caffe/util/io.hpp"
+  
+  #include <memory>
+  
+  using namespace caffe;
+  
+  int main(void) {
+  
+    // Lenet model and weights of trained model
+    const std::string model_path = "<Path to Caffe>/examples/mnist/lenet.prototxt";
+    const std::string weights_path = "<Path to Caffe>/examples/mnist/lenet_iter_10000.caffemodel";
+    
+    // Engine to be used (default is CAFFE)
+    const std::string engine_name = std::string("MKL2017");
+    //const std::string engine_name = std::string("MKLDNN");
+    const std::vector<string> stages(1,"");
+    const int level = 0;
+    
+    caffe::Caffe::set_mode(Caffe::CPU);
+    std::unique_ptr<caffe::Net<float>> net{
+      new caffe::Net<float>(model_path, caffe::TEST, level, &stages, NULL, engine_name)};
+    
+    net->CopyTrainedLayersFrom(weights_path);
+    
+    const boost::shared_ptr<caffe::Blob<float>> input_blob{
+      net->blob_by_name("data")};
+    
     // Fill input data container with some data
     float* input_data = input_blob->mutable_cpu_data();
-	
-	  net->Forward();
-	}
+    
+    net->Forward();
+  }
 
-More examples can be find in __examples/cpp_classification/classification.cpp__ 
+More examples can be found in __examples/cpp_classification/classification.cpp__ 
 
 ## Python
 
