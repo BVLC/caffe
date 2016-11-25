@@ -99,6 +99,26 @@ float BBoxSize(const NormalizedBBox& bbox, const bool normalized) {
   }
 }
 
+template <typename Dtype>
+Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
+  if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) {
+    // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
+    return Dtype(0.);
+  } else {
+    const Dtype width = bbox[2] - bbox[0];
+    const Dtype height = bbox[3] - bbox[1];
+    if (normalized) {
+      return width * height;
+    } else {
+      // If bbox is not within range [0, 1].
+      return (width + 1) * (height + 1);
+    }
+  }
+}
+
+template float BBoxSize(const float* bbox, const bool normalized);
+template double BBoxSize(const double* bbox, const bool normalized);
+
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
   clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f));
   clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f));
@@ -272,6 +292,31 @@ float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
     return 0.;
   }
 }
+
+template <typename Dtype>
+Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2) {
+  if (bbox2[0] > bbox1[2] || bbox2[2] < bbox1[0] ||
+      bbox2[1] > bbox1[3] || bbox2[3] < bbox1[1]) {
+    return Dtype(0.);
+  } else {
+    const Dtype inter_xmin = std::max(bbox1[0], bbox2[0]);
+    const Dtype inter_ymin = std::max(bbox1[1], bbox2[1]);
+    const Dtype inter_xmax = std::min(bbox1[2], bbox2[2]);
+    const Dtype inter_ymax = std::min(bbox1[3], bbox2[3]);
+
+    const Dtype inter_width = inter_xmax - inter_xmin;
+    const Dtype inter_height = inter_ymax - inter_ymin;
+    const Dtype inter_size = inter_width * inter_height;
+
+    const Dtype bbox1_size = BBoxSize(bbox1);
+    const Dtype bbox2_size = BBoxSize(bbox2);
+
+    return inter_size / (bbox1_size + bbox2_size - inter_size);
+  }
+}
+
+template float JaccardOverlap(const float* bbox1, const float* bbox2);
+template double JaccardOverlap(const double* bbox1, const double* bbox2);
 
 float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
   NormalizedBBox intersect_bbox;
@@ -1907,8 +1952,7 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
     for (int k = 0; k < indices->size(); ++k) {
       if (keep) {
         const int kept_idx = (*indices)[k];
-        float overlap =
-            JaccardOverlapGPU(bboxes + idx * 4, bboxes + kept_idx * 4);
+        float overlap = JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4);
         keep = overlap <= adaptive_threshold;
       } else {
         break;

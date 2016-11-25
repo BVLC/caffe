@@ -62,6 +62,9 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
 // Compute bbox size.
 float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true);
 
+template <typename Dtype>
+Dtype BBoxSize(const Dtype* bbox, const bool normalized = true);
+
 // Clip the NormalizedBBox such that the range for each corner is [0, 1].
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
 
@@ -94,6 +97,9 @@ void ExtrapolateBBox(const ResizeParameter& param, const int height,
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized = true);
+
+template <typename Dtype>
+Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2);
 
 // Compute the coverage of bbox1 by bbox2.
 float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
