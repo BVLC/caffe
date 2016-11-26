@@ -1,9 +1,10 @@
-#ifdef USE_OPENCV
 #ifndef IM_TRANSFORMS_HPP
 #define IM_TRANSFORMS_HPP
 
+#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
 
 #include <vector>
 
@@ -15,6 +16,15 @@ namespace caffe {
 // Generate random number given the probablities for each number.
 int roll_weighted_die(const std::vector<float>& probabilities);
 
+void UpdateBBoxByResizePolicy(const ResizeParameter& param,
+                              const int old_width, const int old_height,
+                              NormalizedBBox* bbox);
+
+void InferNewSize(const ResizeParameter& resize_param,
+                  const int old_width, const int old_height,
+                  int* new_width, int* new_height);
+
+#ifdef USE_OPENCV
 template <typename T>
 bool is_border(const cv::Mat& edge, T color);
 
@@ -40,14 +50,6 @@ cv::Mat AspectKeepingResizeBySmall(const cv::Mat& in_img,
                                    const int interp_mode = cv::INTER_LINEAR);
 
 void constantNoise(const int n, const vector<uchar>& val, cv::Mat* image);
-
-void UpdateBBoxByResizePolicy(const ResizeParameter& param,
-                              const int old_width, const int old_height,
-                              NormalizedBBox* bbox);
-
-void InferNewSize(const ResizeParameter& resize_param,
-                  const int old_width, const int old_height,
-                  int* new_width, int* new_height);
 
 cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param);
 
@@ -81,8 +83,8 @@ void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
                          const float random_order_prob);
 
 cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param);
+#endif  // USE_OPENCV
 
 }  // namespace caffe
 
 #endif  // IM_TRANSFORMS_HPP
-#endif  // USE_OPENCV
