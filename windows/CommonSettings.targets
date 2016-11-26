@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CheckUserMacros" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(CpuOnlyBuild)|$(UseCuDNN)'=='true|true'" Text="CPU only build with cuDNN is not allowed."/> 
+  </Target>
+  <Target Name="CheckProps" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(SolutionDir)CommonSettings.props')" Text="CommonSettings.props not found!
+To resolve this copy '$(SolutionDir)CommonSettings.props.example' to '$(SolutionDir)CommonSettings.props'.
+Review all build options in CommonSettings.props, and make sure they fit your needs!"/> 
+  </Target>
+</Project>

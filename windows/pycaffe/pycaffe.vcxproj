@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\NugetPackages\protoc_x64.2.6.1\build\native\protoc_x64.props" Condition="Exists('..\..\..\NugetPackages\protoc_x64.2.6.1\build\native\protoc_x64.props')" />
+  <Import Project="..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.props" Condition="Exists('..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.props')" />
+  <Import Project="..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props" Condition="Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props')" />
+  <Import Project="..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props" Condition="Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{38B6CE09-4B1A-4E72-A547-8A3299D8DA60}</ProjectGuid>
+    <RootNamespace>pycaffe</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <PlatformToolset>v120</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="Exists('$(SolutionDir)\CommonSettings.props')">
+    <Import Project="$(SolutionDir)\CommonSettings.props" />
+  </ImportGroup>
+  <PropertyGroup>
+    <TargetExt>.pyd</TargetExt>
+    <TargetName>_caffe</TargetName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(PythonDir)\Lib\site-packages\numpy\core\include\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <DisableSpecificWarnings>4003</DisableSpecificWarnings>
+    </ClCompile>
+    <PreBuildEvent>
+      <Command>"$(ScriptsDir)\PythonPreBuild.cmd" "$(SolutionDir)" "$(ProtocDir)" "$(OutDir)"</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>"$(ScriptsDir)\PythonPostBuild.cmd" "$(SolutionDir)" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\python\caffe\_caffe.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libcaffe\libcaffe.vcxproj">
+      <Project>{a9acef83-7b63-4574-a554-89ce869ea141}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(SolutionDir)\CommonSettings.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\..\NugetPackages\boost.1.59.0.0\build\native\boost.targets" Condition="Exists('..\..\..\NugetPackages\boost.1.59.0.0\build\native\boost.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_filesystem-vc120.1.59.0.0\build\native\boost_filesystem-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_filesystem-vc120.1.59.0.0\build\native\boost_filesystem-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_system-vc120.1.59.0.0\build\native\boost_system-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_system-vc120.1.59.0.0\build\native\boost_system-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_thread-vc120.1.59.0.0\build\native\boost_thread-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_thread-vc120.1.59.0.0\build\native\boost_thread-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets" Condition="Exists('..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets')" />
+    <Import Project="..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets" Condition="Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets')" />
+    <Import Project="..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets" Condition="Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets')" />
+    <Import Project="..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets" Condition="Exists('..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" />
+    <Import Project="..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets" Condition="Exists('..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets')" />
+    <Import Project="..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets" Condition="Exists('..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets')" />
+    <Import Project="..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.2\build\native\hdf5-v120.targets" Condition="Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.2\build\native\hdf5-v120.targets')" />
+    <Import Project="..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets" Condition="Exists('..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets')" />
+  </ImportGroup>
+  <!-- Build this project only if Python support is enabled in CommonSettings.props -->
+  <PropertyGroup>
+    <OriginalBuildTargets>$(BuildDependsOn)</OriginalBuildTargets>
+    <BuildDependsOn>OriginalBuild;SkipBuild</BuildDependsOn>
+    <NuGetPackageImportStamp>ce4167c6</NuGetPackageImportStamp>
+  </PropertyGroup>
+  <Target Name="OriginalBuild" Condition="'$(PythonSupport)'=='true'" DependsOnTargets="$(OriginalBuildTargets)" />
+  <Target Name="SkipBuild" Condition="'$(PythonSupport)'!='true'">
+    <Message Text="Skipping project $(ProjectName), Python support is not enabled in CommonSettings.props." Importance="High" />
+  </Target>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost.1.59.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost.1.59.0.0\build\native\boost.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_filesystem-vc120.1.59.0.0\build\native\boost_filesystem-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_filesystem-vc120.1.59.0.0\build\native\boost_filesystem-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_system-vc120.1.59.0.0\build\native\boost_system-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_system-vc120.1.59.0.0\build\native\boost_system-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_thread-vc120.1.59.0.0\build\native\boost_thread-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_thread-vc120.1.59.0.0\build\native\boost_thread-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.props'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\protoc_x64.2.6.1\build\native\protoc_x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\protoc_x64.2.6.1\build\native\protoc_x64.props'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.2\build\native\hdf5-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.2\build\native\hdf5-v120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets'))" />
+  </Target>
+</Project>
