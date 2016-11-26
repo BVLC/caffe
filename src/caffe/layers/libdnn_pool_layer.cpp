@@ -67,6 +67,23 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
 
     config.global_pooling = this->global_pooling_;
 
+
+    if ((std::is_same<Dtype, float>::value
+        && (this->device_->CheckCapability(
+                "cl_khr_int32_base_atomics") ||
+            this->device_->CheckCapability(
+                "cl_khr_global_int32_base_atomics") ||
+            this->device_->CheckCapability(
+                "cl_khr_global_int32_extended_atomics"))) ||
+        (std::is_same<Dtype, double>::value
+        && (this->device_->CheckCapability("cl_khr_int64_base_atomics") ||
+            this->device_->CheckCapability("cl_khr_int64_extended_atomics")))) {
+      config.bwalgo = LIBDNN_POOLING_BW_ALGO_ATOMIC;
+    } else {
+      config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
+    }
+
+
     LibDNNPool<Dtype>* libdnn = new LibDNNPool<Dtype>(config);
 
     libdnn_.reset(libdnn);

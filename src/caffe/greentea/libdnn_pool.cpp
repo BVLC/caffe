@@ -22,7 +22,7 @@ LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
   num_axes_ = spatial_dims;
 
   pool_method_ = config.pool_method;
-  pool_bw_algo_ = config.pool_bw_algo;
+  bwalgo_ = config.bwalgo;
   use_top_mask_ = config.use_top_mask;
 
   skip_range_check_ = true;
@@ -260,7 +260,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
   if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
     int_tp ave = std::accumulate(kernel_shape_.begin(),
                                  kernel_shape_.end(),
-                                  1, std::multiplies<int>());
+                                  1, std::multiplies<int_tp><int>());
     ss << "int_tp ave = " << ave << ";" << std::endl;
   }
 
@@ -443,7 +443,8 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
   ss << "int_tp channels, ";
   ss << "int_tp batch_size";
   ss << ") {" << std::endl;
-  if (pool_bw_algo_ == LIBDNN_POOLING_BW_ALGO_ATOMIC) {
+  if (bwalgo_ == LIBDNN_POOLING_BW_ALGO_ATOMIC) {
+    // Atomic kernel
     ss << "int_tp in_idx = get_global_id(0);" << std::endl;
     ss << "if (get_global_id(1) >= channels * batch_size) {return;}"
        << std::endl;
@@ -498,7 +499,7 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
       int_tp ave = std::accumulate(kernel_shape_.begin(),
                                    kernel_shape_.end(),
-                                    1, std::multiplies<int>());
+                                    1, std::multiplies<int_tp>());
       ss << "int_tp ave = " << ave << ";" << std::endl;
       ss << "Dtype val = in_ptr[0];" << std::endl;
     }
@@ -602,7 +603,79 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     }
 
   } else {
-    // TODO: Deterministic backward kernel variant
+    // Direct, deterministic kernel
+    ss << "int_tp in_idx = get_global_id(0);" << std::endl;
+    ss << "if (get_global_id(1) >= channels * batch_size) {return;}"
+       << std::endl;
+    ss << "int_tp idx_0 = get_global_id(0);" << std::endl;
+    ss << "Dtype gradient = 0.0" << std::endl;
+
+    for (int_tp i = num_axes_ - 1; i >= 1; --i) {
+      ss << "int_tp idx_" << i << " = (idx_0 % v_imsi_" << i << ");"
+         << std::endl;
+      ss << "idx_0 /= v_imsi_" << i << ";" << std::endl;
+    }
+    ss << "if (idx_0 >= v_imsi_0) {return;}" << std::endl;
+
+    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
+      ss << "__global Dtype* out_ptr = bottom_diff "
+         << "+ get_global_id(1) * v_imsi + out_idx;" << std::endl;
+    } else {
+      ss << "__global Dtype* out_ptr = bottom_diff "
+         << "+ get_global_id(1) * v_imsi;" << std::endl;
+    }
+    ss << "__global const Dtype* in_ptr = top_diff "
+       << "+ get_global_id(1) * v_imso;" << std::endl;
+
+    if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
+      if (use_top_mask_) {
+        ss << "__global const Dtype* mask_ptr = top_mask "
+           << "+ get_global_id(1) * v_imso;" << std::endl;
+      } else {
+        ss << "__global const int_tp* mask_ptr = mask "
+           << "+ get_global_id(1) * v_imso;" << std::endl;
+      }
+    }
+
+    if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
+      ss << "__global const Dtype* rand_ptr = rand_idx "
+         << "+ get_global_id(1) * v_imso;" << std::endl;
+    }
+
+    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
+      ss << "int_tp ave = " << 0 << ";" << std::endl;
+    }
+
+    std::vector<int_tp> d_start(num_axes_);
+    std::vector<int_tp> d_end(num_axes_);
+
+    for (int_tp i = num_axes_ - 1; i >= 0; --i) {
+      d_start[i] =
+          (d_idx[i] < ext_kernel_size[i]) ?
+              d_idx[i] % dilation[i] : (d_idx[i] - ext_kernel_size[i]) + 1;
+      d_end[i] =
+          (d_idx[i] >= pooled_size[i]) ?
+              (pooled_size[i] - 1)
+                  - (pooled_size[i] - 1 - d_start[i]) % dilation[i] :
+              d_idx[i];
+
+      if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
+        ss << "if ((int_tp)mask_ptr[idx] == get_global_id(0)) {" << std::endl;
+      } else if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
+        ss << "if ((int_tp)rand_ptr[idx] == get_global_id(0)) {" << std::endl;
+      } else {
+        ss << "{" << std::endl;
+        ss << "++ave;" << std::endl;
+      }
+      ss << "gradient += in_ptr[idx]";
+      ss << "}" << std::endl;
+    }
+
+    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
+      ss << "out_ptr[0] = gradient / (Dtype)ave;" << std::endl;
+    } else {
+      ss << "out_ptr[0] = gradient;" << std::endl;
+    }
   }
   ss << "}" << std::endl;  // Kernel
 
@@ -634,9 +707,9 @@ void LibDNNPool<Dtype>::Forward(const Dtype* bottom_data,
                                 Dtype* top_mask,
                                 Dtype* rand_idx) {
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
-                                1, std::multiplies<int>());
+                                1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
-                                1, std::multiplies<int>());
+                                1, std::multiplies<int_tp>());
 
   int_tp lw0 = fw_tuner_->get_param<int_tp>("LW0");
   int_tp lw1 = fw_tuner_->get_param<int_tp>("LW1");
@@ -765,9 +838,18 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
                                 const Dtype* top_mask,
                                 const Dtype* rand_idx) {
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
-                                1, std::multiplies<int>());
+                                1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
-                                1, std::multiplies<int>());
+                                1, std::multiplies<int_tp>());
+
+  int_tp imsw = 0;
+  if (bwalgo_ == LIBDNN_POOLING_BW_ALGO_DIRECT) {
+    // Direct kernel iterates over input size
+    imsw = imsi;
+  } else {
+    // Atomic kernel iterates over output size
+    imsw = imso;
+  }
 
   int_tp lw0 = bw_tuner_->get_param<int_tp>("LW0");
   int_tp lw1 = bw_tuner_->get_param<int_tp>("LW1");
@@ -783,7 +865,7 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
     kernel.local_work_size(1, lw1);
     kernel.local_work_size(2, 1);
 
-    kernel.global_work_size(0, ((imso - 1) / lw0 + 1) * lw0);
+    kernel.global_work_size(0, ((imsw - 1) / lw0 + 1) * lw0);
     kernel.global_work_size(1, ((channels * batch_size - 1) / lw1 + 1) * lw1);
     kernel.global_work_size(2, 1);
 
@@ -839,7 +921,7 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
           void *args[] = { &top_diff, &bottom_diff, &top_mask,
               &channels, &batch_size };
           cuLaunchKernel(kernel,
-                         (imso - 1) / lw0 + 1,                   // Grid X
+                         (imsw - 1) / lw0 + 1,                   // Grid X
                          (channels * batch_size - 1) / lw1 + 1,  // Grid Y
                          1,                                      // Grid Z
                          lw0, lw1, 1,                            // Local
@@ -848,7 +930,7 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
           void *args[] = { &top_diff, &bottom_diff, &mask,
               &channels, &batch_size };
           cuLaunchKernel(kernel,
-                         (imso - 1) / lw0 + 1,                   // Grid X
+                         (imsw - 1) / lw0 + 1,                   // Grid X
                          (channels * batch_size - 1) / lw1 + 1,  // Grid Y
                          1,                                      // Grid Z
                          lw0, lw1, 1,                            // Local
@@ -860,7 +942,7 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
         void *args[] = { &top_diff, &bottom_diff,
             &channels, &batch_size };
         cuLaunchKernel(kernel,
-                       (imso - 1) / lw0 + 1,                   // Grid X
+                       (imsw - 1) / lw0 + 1,                   // Grid X
                        (channels * batch_size - 1) / lw1 + 1,  // Grid Y
                        1,                                      // Grid Z
                        lw0, lw1, 1,                            // Local
@@ -871,7 +953,7 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
         void *args[] = { &top_diff, &bottom_diff, &rand_idx,
             &channels, &batch_size };
         cuLaunchKernel(kernel,
-                       (imso - 1) / lw0 + 1,                   // Grid X
+                       (imsw - 1) / lw0 + 1,                   // Grid X
                        (channels * batch_size - 1) / lw1 + 1,  // Grid Y
                        1,                                      // Grid Z
                        lw0, lw1, 1,                            // Local
