@@ -1859,7 +1859,7 @@ void LibDNNConv<Dtype>::Tune(Dtype* top_data, Dtype* top_diff, Dtype* weight,
   fw_tuner_->set_setup_routine([&]() -> bool {
     try {
       self->GenerateKernels();
-      return self->LibDNN<Dtype>::CompileKernels();
+      return self->CompileKernels();
     } catch(...) {
       return false;
     }
@@ -1912,7 +1912,7 @@ void LibDNNConv<Dtype>::Tune(Dtype* top_data, Dtype* top_diff, Dtype* weight,
   wg_tuner_->set_setup_routine([&]() -> bool {
     try {
       self->GenerateKernels();
-      return self->LibDNN<Dtype>::CompileKernels();
+      return self->CompileKernels();
     } catch(...) {
       return false;
     }
