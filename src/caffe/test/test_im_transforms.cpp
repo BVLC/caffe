@@ -68,6 +68,7 @@ TEST_F(ImTransformsTest, TestUpdateBBoxByResizePolicy) {
   EXPECT_NEAR(out_bbox.ymax(), 0.6, eps);
 }
 
+#ifdef USE_OPENCV
 TEST_F(ImTransformsTest, TestApplyResize) {
   cv::Mat in_img(60, 100, CV_8UC3);
   cv::Mat out_img;
@@ -91,5 +92,6 @@ TEST_F(ImTransformsTest, TestApplyResize) {
   CHECK_EQ(out_img.cols, 30);
   CHECK_EQ(out_img.rows, 30);
 }
+#endif  // USE_OPENCV
 
 }  // namespace caffe
