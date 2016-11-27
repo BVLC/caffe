@@ -39,7 +39,7 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestForward() {
     // Get the loss without a specified objective weight -- should be
-    // equivalent to explicitly specifiying a weight of 1.
+    // equivalent to explicitly specifying a weight of 1.
     LayerParameter layer_param;
     EuclideanLossLayer<Dtype> layer_weight_1(layer_param);
     layer_weight_1.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
