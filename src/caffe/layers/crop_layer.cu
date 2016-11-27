@@ -39,7 +39,7 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
                 src_data, dest_data, is_forward);
     }
   } else {
-    // We are at the last two dimensions, which are stored continously in memory
+    // We are at the last two dimensions, which are stored continuously in memory
     // With (N,C,H,W)
     //      (0,1,2,3) cur_dim   -> H
     //                cur_dim+1 -> W
