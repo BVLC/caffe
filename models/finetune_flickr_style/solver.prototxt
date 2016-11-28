@@ -14,4 +14,4 @@ weight_decay: 0.0005
 snapshot: 10000
 snapshot_prefix: "models/finetune_flickr_style/finetune_flickr_style"
 # uncomment the following to default to CPU mode solving
-# solver_mode: CPU
+solver_mode: CPU
