@@ -189,7 +189,6 @@ class MKLDNNConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
 #define OC 16
 
  protected:
-
   MKLDNNConvolutionLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, IC, 7, 7)),
         blob_bottom_2_(new Blob<Dtype>(2, IC, 7, 7)),
@@ -252,7 +251,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNN) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), OC );
+  EXPECT_EQ(this->blob_top_2_->channels(), OC);
   EXPECT_EQ(this->blob_top_2_->height(), 3);
   EXPECT_EQ(this->blob_top_2_->width(), 3);
   // setting group should not change the shape
