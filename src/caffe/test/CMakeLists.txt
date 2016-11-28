@@ -1,7 +1,7 @@
 # The option allows to include in build only selected test files and exclude all others
 # Usage example:
 #  cmake -DBUILD_only_tests="common,net,blob,im2col_kernel"
-set(BUILD_only_tests "" CACHE STRING "Blank or comma-separated list of test files to build without 'test_' prefix and extention")
+set(BUILD_only_tests "" CACHE STRING "Blank or comma-separated list of test files to build without 'test_' prefix and extension")
 caffe_leave_only_selected_tests(test_srcs ${BUILD_only_tests})
 caffe_leave_only_selected_tests(test_cuda ${BUILD_only_tests})
 
