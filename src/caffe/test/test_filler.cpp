@@ -239,11 +239,8 @@ class GaborFillerTest : public ::testing::Test {
     EXPECT_TRUE(this->blob_);
     const int count = this->blob_->count();
     const Dtype* data = this->blob_->cpu_data();
-    //TODO: ADD CHECKING FOR CORNER VALUES
-    //for (int i = 0; i < count; ++i) {
-    //EXPECT_NEAR(,);
-    //}
   }
+
   virtual ~GaborFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;

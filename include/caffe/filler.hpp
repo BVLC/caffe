@@ -356,19 +356,22 @@ class GaborFiller : public Filler<Dtype> {
            kernelGenerator.getKernelData(),
            kernelGenerator.getSizeOfKernelData());
 
-    static bool error = logFilter(kernelGenerator.getSizeOfKernelData(),  data);
+    /*
+    static bool error =
+    logFilter(kernelGenerator.getSizeOfKernelData(),  data);
     (void) error;
+    */
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
-
+/*
   bool logFilter(int numberOfElements, void* kernelData) {
     FILE *outputBinaryFile = fopen("gabor_filters_dump.txt", "w+b");
     fwrite(kernelData, 1, numberOfElements, outputBinaryFile);
     fclose(outputBinaryFile);
     return false;
   }
-
+*/
 };
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
