@@ -2,53 +2,46 @@ version: 1.0.{build}
 clone_folder: c:\projects\caffe
 environment:
   matrix:
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 14
-      CMAKE_GENERATOR: Ninja
+    - MSVC_VERSION: 14
+      WITH_NINJA: 0
       CMAKE_CONFIG: Release
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 14
-      CMAKE_GENERATOR: Ninja
+    - MSVC_VERSION: 14
+      WITH_NINJA: 0
       CMAKE_CONFIG: Debug
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 14
-      CMAKE_GENERATOR: Visual Studio 14 2015 Win64
+    - MSVC_VERSION: 14
+      WITH_NINJA: 1
       CMAKE_CONFIG: Release
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 14
-      CMAKE_GENERATOR: Visual Studio 14 2015 Win64
+    - MSVC_VERSION: 14
+      WITH_NINJA: 1
       CMAKE_CONFIG: Debug
-      CMAKE_BUILD_SHARED_LIBS: OFF
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 12
-      CMAKE_GENERATOR: Ninja
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 12
+      WITH_NINJA: 0
       CMAKE_CONFIG: Release
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 12
-      CMAKE_GENERATOR: Ninja
+    - MSVC_VERSION: 12
+      WITH_NINJA: 0
       CMAKE_CONFIG: Debug
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 12
-      CMAKE_GENERATOR: Visual Studio 12 2013 Win64
+    - MSVC_VERSION: 12
+      WITH_NINJA: 1
       CMAKE_CONFIG: Release
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
-    - WITH_CMAKE: 1
-      MSVC_VERSION: 12
-      CMAKE_GENERATOR: Visual Studio 12 2013 Win64
+    - MSVC_VERSION: 12
+      WITH_NINJA: 1
       CMAKE_CONFIG: Debug
-      CMAKE_BUILD_SHARED_LIBS: OFF
+      CMAKE_BUILD_SHARED_LIBS: 0
 
 build_script:
 - cmd: >-
-    call scripts\appveyor\appveyor_build_and_test.cmd
+    call scripts\build_win.cmd

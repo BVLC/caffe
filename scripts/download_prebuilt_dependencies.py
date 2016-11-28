@@ -11,12 +11,14 @@ import tarfile
 from six.moves import urllib
 from download_model_binary import reporthook
 
-WIN_DEPENDENCIES_URLS = dict(
-    v120=("https://github.com/willyd/caffe-builder/releases/download/v1.0.1/libraries_v120_x64_py27_1.0.1.tar.bz2",
-          "3f45fe3f27b27a7809f9de1bd85e56888b01dbe2"),
-    v140=("https://github.com/willyd/caffe-builder/releases/download/v1.0.1/libraries_v140_x64_py27_1.0.1.tar.bz2",
-          "427faf33745cf8cd70c7d043c85db7dda7243122"),
-)
+WIN_DEPENDENCIES_URLS = {
+    ('v120', '2.7'):("https://github.com/willyd/caffe-builder/releases/download/v1.0.1/libraries_v120_x64_py27_1.0.1.tar.bz2",
+                  "3f45fe3f27b27a7809f9de1bd85e56888b01dbe2"),
+    ('v140', '2.7'):("https://github.com/willyd/caffe-builder/releases/download/v1.0.1/libraries_v140_x64_py27_1.0.1.tar.bz2",
+                  "427faf33745cf8cd70c7d043c85db7dda7243122"),
+    ('v140', '3.5'):("https://github.com/willyd/caffe-builder/releases/download/v1.0.1/libraries_v140_x64_py35_1.0.1.tar.bz2",
+                  "1f55dac54aeab7ae3a1cda145ca272dea606bdf9"),
+}
 
 # function for checking SHA1.
 def model_checks_out(filename, sha1):
@@ -31,15 +33,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # get the appropriate url
+    pyver = '{:d}.{:d}'.format(sys.version_info.major, sys.version_info.minor)
     try:
-        url, sha1 = WIN_DEPENDENCIES_URLS[args.msvc_version]
+        url, sha1 = WIN_DEPENDENCIES_URLS[(args.msvc_version, pyver)]
     except KeyError:
-        print('ERROR: Could not find url for MSVC version = {}.'.format(args.msvc_version))
+        print('ERROR: Could not find url for MSVC version = {} and Python version = {}.\n{}'
+              .format(args.msvc_version, pyver,
+              'Available combinations are: {}'.format(list(WIN_DEPENDENCIES_URLS.keys()))))
         sys.exit(1)
 
     dep_filename = os.path.split(url)[1]
     # Download binaries
-    print("Downloading dependencies. Please wait...")
+    print("Downloading dependencies ({}). Please wait...".format(dep_filename))
     urllib.request.urlretrieve(url, dep_filename, reporthook)
     if not model_checks_out(dep_filename, sha1):
         print('ERROR: dependencies did not download correctly! Run this again.')
