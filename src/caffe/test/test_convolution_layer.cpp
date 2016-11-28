@@ -6,6 +6,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/hebbian_conv_layer.hpp"
 
 #ifdef USE_CUDNN
 #include "caffe/layers/cudnn_conv_layer.hpp"
@@ -809,6 +810,420 @@ TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+
+template <typename TypeParam>
+class HebbianConvolutionLayerTest : public ConvolutionLayerTest<TypeParam> {
+	typedef typename TypeParam::Dtype Dtype;
+};
+
+TYPED_TEST_CASE(HebbianConvolutionLayerTest, TestDtypesAndDevices);
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestSetup) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_stride(2);
+	convolution_param->set_num_output(4);
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	EXPECT_EQ(this->blob_top_->num(), 2);
+	EXPECT_EQ(this->blob_top_->channels(), 4);
+	EXPECT_EQ(this->blob_top_->height(), 2);
+	EXPECT_EQ(this->blob_top_->width(), 1);
+	EXPECT_EQ(this->blob_top_2_->num(), 2);
+	EXPECT_EQ(this->blob_top_2_->channels(), 4);
+	EXPECT_EQ(this->blob_top_2_->height(), 2);
+	EXPECT_EQ(this->blob_top_2_->width(), 1);
+	// setting group should not change the shape
+	convolution_param->set_num_output(3);
+	convolution_param->set_group(3);
+	layer.reset(new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	EXPECT_EQ(this->blob_top_->num(), 2);
+	EXPECT_EQ(this->blob_top_->channels(), 3);
+	EXPECT_EQ(this->blob_top_->height(), 2);
+	EXPECT_EQ(this->blob_top_->width(), 1);
+	EXPECT_EQ(this->blob_top_2_->num(), 2);
+	EXPECT_EQ(this->blob_top_2_->channels(), 3);
+	EXPECT_EQ(this->blob_top_2_->height(), 2);
+	EXPECT_EQ(this->blob_top_2_->width(), 1);
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestSimpleConvolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_stride(2);
+	convolution_param->set_num_output(4);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("constant");
+	convolution_param->mutable_bias_filler()->set_value(0.1);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	const Dtype* feedbackWeights = layer->blobs()[0]->cpu_diff();
+	int count = layer->blobs()[0]->count();
+	bool found_nonzero = false;
+	for (int i = 0; i < count; i++) {
+		if (feedbackWeights[i] > Dtype(0)) {
+			found_nonzero = true;
+			EXPECT_FALSE(found_nonzero) << "non-zero feedback: i = " << i << ", value = " << feedbackWeights[i];
+		}
+	}
+	EXPECT_FALSE(found_nonzero); // all feedback weights should be zero because there is no feedback in this test (no pooling layer, and feedback method not called)
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+	caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_2_));
+	top_data = this->blob_top_2_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestDilatedConvolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	vector<int> bottom_shape;
+	bottom_shape.push_back(2);
+	bottom_shape.push_back(3);
+	bottom_shape.push_back(8);
+	bottom_shape.push_back(7);
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+		this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+	}
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_dilation(2);
+	convolution_param->set_num_output(4);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("constant");
+	convolution_param->mutable_bias_filler()->set_value(0.1);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+	caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_2_));
+	top_data = this->blob_top_2_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, Test0DConvolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	const int kNumOutput = 3;
+	convolution_param->set_num_output(kNumOutput);
+	convolution_param->set_axis(3);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("gaussian");
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	vector<int> top_shape = this->blob_bottom_->shape();
+	top_shape[3] = kNumOutput;
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	EXPECT_EQ(top_shape, this->blob_top_->shape());
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	vector<int> weight_offset(2);
+	const Blob<Dtype>* weight = layer->blobs()[0].get();
+	const Blob<Dtype>* bias = layer->blobs()[1].get();
+	const int num = this->blob_top_->count(3);
+	const int dim = this->blob_top_->shape(3);
+	const int bottom_dim = this->blob_bottom_->shape(3);
+	for (int n = 0; n < num; ++n) {
+		for (int d = 0; d < dim; ++d) {
+			weight_offset[0] = d;
+			Dtype value = bias->cpu_data()[d];
+			for (int bottom_d = 0; bottom_d < bottom_dim; ++bottom_d) {
+				weight_offset[1] = bottom_d;
+				value += weight->data_at(weight_offset) *
+					this->blob_bottom_->cpu_data()[n * bottom_dim + bottom_d];
+			}
+			EXPECT_NEAR(value, this->blob_top_->cpu_data()[n * dim + d], 1e-4);
+		}
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestSimple3DConvolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	vector<int> bottom_shape(5);
+	bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
+	bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
+	bottom_shape[2] = 5;
+	bottom_shape[3] = this->blob_bottom_vec_[0]->shape(2);
+	bottom_shape[4] = this->blob_bottom_vec_[0]->shape(3);
+	FillerParameter filler_param;
+	GaussianFiller<Dtype> filler(filler_param);
+	for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+		this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+		filler.Fill(this->blob_bottom_vec_[i]);
+	}
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_stride(2);
+	convolution_param->set_num_output(4);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("gaussian");
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+	caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_2_));
+	top_data = this->blob_top_2_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestDilated3DConvolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	vector<int> bottom_shape(5);
+	bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
+	bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
+	bottom_shape[2] = 6;
+	bottom_shape[3] = 7;
+	bottom_shape[4] = 8;
+	FillerParameter filler_param;
+	GaussianFiller<Dtype> filler(filler_param);
+	for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+		this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+		filler.Fill(this->blob_bottom_vec_[i]);
+	}
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_dilation(2);
+	convolution_param->set_num_output(4);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("gaussian");
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+	caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_2_));
+	top_data = this->blob_top_2_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, Test1x1Convolution) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(1);
+	convolution_param->add_stride(1);
+	convolution_param->set_num_output(4);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("constant");
+	convolution_param->mutable_bias_filler()->set_value(0.1);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestSimpleConvolutionGroup) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_stride(2);
+	convolution_param->set_num_output(3);
+	convolution_param->set_group(3);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("constant");
+	convolution_param->mutable_bias_filler()->set_value(0.1);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Check against reference convolution.
+	const Dtype* top_data;
+	const Dtype* ref_top_data;
+	caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+		this->MakeReferenceTop(this->blob_top_));
+	top_data = this->blob_top_->cpu_data();
+	ref_top_data = this->ref_blob_top_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+	}
+}
+
+TYPED_TEST(HebbianConvolutionLayerTest, TestSobelConvolution) {
+	// Test separable convolution by computing the Sobel operator
+	// as a single filter then comparing the result
+	// as the convolution of two rectangular filters.
+	typedef typename TypeParam::Dtype Dtype;
+	// Fill bottoms with identical Gaussian noise.
+	shared_ptr<GaussianFiller<Dtype> > filler;
+	FillerParameter filler_param;
+	filler_param.set_value(1.);
+	filler.reset(new GaussianFiller<Dtype>(filler_param));
+	filler->Fill(this->blob_bottom_);
+	this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
+	// Compute Sobel G_x operator as 3 x 3 convolution.
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	convolution_param->add_kernel_size(3);
+	convolution_param->add_stride(2);
+	convolution_param->set_num_output(1);
+	convolution_param->set_bias_term(false);
+	shared_ptr<Layer<Dtype> > layer(
+		new HebbianConvLayer<Dtype>(layer_param));
+	layer->blobs().resize(1);
+	layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
+	Dtype* weights = layer->blobs()[0]->mutable_cpu_data();
+	for (int c = 0; c < 3; ++c) {
+		int i = c * 9;  // 3 x 3 filter
+		weights[i + 0] = -1;
+		weights[i + 1] = 0;
+		weights[i + 2] = 1;
+		weights[i + 3] = -2;
+		weights[i + 4] = 0;
+		weights[i + 5] = 2;
+		weights[i + 6] = -1;
+		weights[i + 7] = 0;
+		weights[i + 8] = 1;
+	}
+	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+	// (1) the [1 2 1] column filter
+	vector<Blob<Dtype>*> sep_blob_bottom_vec;
+	vector<Blob<Dtype>*> sep_blob_top_vec;
+	shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
+	sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
+	sep_blob_top_vec.push_back(this->blob_top_2_);
+	convolution_param->clear_kernel_size();
+	convolution_param->clear_stride();
+	convolution_param->set_kernel_h(3);
+	convolution_param->set_kernel_w(1);
+	convolution_param->set_stride_h(2);
+	convolution_param->set_stride_w(1);
+	convolution_param->set_num_output(1);
+	convolution_param->set_bias_term(false);
+	layer.reset(new HebbianConvLayer<Dtype>(layer_param));
+	layer->blobs().resize(1);
+	layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1));
+	Dtype* weights_1 = layer->blobs()[0]->mutable_cpu_data();
+	for (int c = 0; c < 3; ++c) {
+		int i = c * 3;  // 3 x 1 filter
+		weights_1[i + 0] = 1;
+		weights_1[i + 1] = 2;
+		weights_1[i + 2] = 1;
+	}
+	layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+	layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+	// (2) the [-1 0 1] row filter
+	blob_sep->CopyFrom(*this->blob_top_2_, false, true);
+	sep_blob_bottom_vec.clear();
+	sep_blob_bottom_vec.push_back(blob_sep.get());
+	convolution_param->set_kernel_h(1);
+	convolution_param->set_kernel_w(3);
+	convolution_param->set_stride_h(1);
+	convolution_param->set_stride_w(2);
+	convolution_param->set_num_output(1);
+	convolution_param->set_bias_term(false);
+	layer.reset(new HebbianConvLayer<Dtype>(layer_param));
+	layer->blobs().resize(1);
+	layer->blobs()[0].reset(new Blob<Dtype>(1, 1, 1, 3));
+	Dtype* weights_2 = layer->blobs()[0]->mutable_cpu_data();
+	weights_2[0] = -1;
+	weights_2[1] = 0;
+	weights_2[2] = 1;
+	layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+	layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+	// Test equivalence of full and separable filters.
+	const Dtype* top_data = this->blob_top_->cpu_data();
+	const Dtype* sep_top_data = this->blob_top_2_->cpu_data();
+	for (int i = 0; i < this->blob_top_->count(); ++i) {
+		EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
+	}
 }
 
 #ifdef USE_CUDNN

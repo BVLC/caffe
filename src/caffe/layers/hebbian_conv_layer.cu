@@ -33,12 +33,11 @@ namespace caffe {
 		// Hebbian learning (Oja's rule)
 		Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 		for (int i = 0; i < top.size(); ++i) {
-			const Dtype* top_data = top[i]->gpu_data();
+			const Dtype* top_diff = top[i]->gpu_diff(); // top_diff is set by layer above, which must be a pooling layer (in which it is "bottom_diff")
 			const Dtype* bottom_data = bottom[i]->gpu_data();
 			for (int n = 0; n < this->num_; ++n) {
-				// FIXME: init weight_diffs to zeroes.
 				this->weight_gpu_gemm(bottom_data + n * this->bottom_dim_,
-						top_data + n * this->top_dim_, weight_diff);
+						top_diff + n * this->top_dim_, weight_diff);
 			}
 		}
 	}

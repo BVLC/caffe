@@ -44,6 +44,7 @@ namespace caffe {
 	void HebbianConvLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 		// backward: top to bottom
+		throw -1; // FIXME: this is unimplemented
 	}
 
 	INSTANTIATE_CLASS(HebbianConvLayer);
