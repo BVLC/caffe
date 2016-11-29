@@ -63,7 +63,7 @@ class Net {
   explicit Net(const NetParameter& param, const Net* root_net = NULL);
   explicit Net(const string& param_file, Phase phase,
       const int level = 0, const vector<string>* stages = NULL,
-      const Net* root_net = NULL);
+      const Net* root_net = NULL, std::string engine = "");
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
@@ -271,7 +271,7 @@ class Net {
    *        computational performance.
    */
   static void CompileNet(const NetParameter& param,
-    NetParameter* param_compiled); 
+    NetParameter* param_compiled);
 
   /**
   * @brief This is rule that analyze layer if it is of type Scale and if that is the case
@@ -283,7 +283,8 @@ class Net {
                                  NetParameter* param_compiled);
 
   static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find,
-                                               const NetParameter& param, int layer_id);
+                                               const NetParameter& param,
+                                               int layer_id);
 
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,

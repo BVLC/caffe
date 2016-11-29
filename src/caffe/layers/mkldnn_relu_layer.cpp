@@ -101,7 +101,25 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
 
     // ---- Initialize relu primitive descriptor -------------
     relu_forward::desc reluFwd_desc(propagation, *input_md, negative_slope);
-    reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc, cpu_engine));
+
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+      }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(reluFwd_pd);
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));

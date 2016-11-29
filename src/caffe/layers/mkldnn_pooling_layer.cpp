@@ -215,17 +215,36 @@ void MKLDNNPoolingLayer<Dtype>::InitPooling(const vector<Blob<Dtype>*>& bottom, 
 
     shared_ptr<MemPD> usr_input_mpd(new MemPD({{input_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_output_mpd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
-    shared_ptr<MemPD> prv_input_mpd(NULL);
-    shared_ptr<MemPD> prv_output_mpd(NULL);
-    if (bottom_data_is_prv) {
-        prv_input_mpd.reset(new MemPD(*input_md, cpu_engine));
-        prv_output_mpd.reset(new MemPD(*output_md, cpu_engine));
-    }
-
     // ---- Initialize pooling primitive descriptor -------------
     pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *input_md,*output_md
                                         , {sh, sw}, {kh, kw}, {ph, pw}, {ph, pw}, padding_kind::zero);
-    poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc, cpu_engine));
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+      }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(poolingFwd_pd);
+    engine engine = ep.getMKLDNNSubEngine(subEngineIndex);
+
+    // ---- Initialize remaining memory descriptors -------------
+    shared_ptr<MemPD> prv_input_mpd(NULL);
+    shared_ptr<MemPD> prv_output_mpd(NULL);
+    if (bottom_data_is_prv) {
+        prv_input_mpd.reset(new MemPD(*input_md, engine));
+        prv_output_mpd.reset(new MemPD(*output_md, engine));
+    }
 
     // ---- Create priv memory  ---------------------
 

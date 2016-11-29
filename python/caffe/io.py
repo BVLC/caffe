@@ -338,6 +338,22 @@ def load_image(filename, color=True):
         img = img[:, :, :3]
     return img
 
+def flip_image(im, scale=128, is_flow=False):
+    """
+    Flip image.
+
+    Take
+    im: (H x W x K) ndarray
+    scale: scale needed for flipping
+    is_flow: indicates if image is flow image
+
+    Give
+    im: flipped image with shape (HxWxK)
+    """
+    im = im[:, ::-1, :]  # flip for mirrors
+    if is_flow:  #if using a flow input, should flip first channel which corresponds to x-flow
+      im[:,:,0] = scale-im[:,:,0]
+    return im
 
 def resize_image(im, new_dims, interp_order=1):
     """

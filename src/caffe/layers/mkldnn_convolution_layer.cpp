@@ -130,7 +130,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
-    engine cpu_engine = CpuEngine::Instance().get_engine();
 
     memory::dims input_tz = {n, ic, ih, iw};
     memory::dims bias_tz = {oc};
@@ -155,7 +154,25 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }
 
-    convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc, cpu_engine));
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+      }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(convFwd_pd);
+    engine cpu_engine = CpuEngine::Instance().get_engine();
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
@@ -171,6 +188,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
     shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_memory_pd, prv_input_memory_pd, bottom[0], this));

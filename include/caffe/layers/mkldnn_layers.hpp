@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/enable_shared_from_this.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/engine_parser.hpp"
 #include "caffe/layers/base_conv_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/inner_product_layer.hpp"
