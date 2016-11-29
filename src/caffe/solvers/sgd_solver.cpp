@@ -154,6 +154,12 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
 
+  // If Learning rate for this learnable params is zero then skip
+  // updating params
+  if (this->net_->params_lr()[param_id] == 0) {
+    return;
+  }
+
   Normalize(param_id);
   Regularize(param_id);
   ComputeUpdateValue(param_id, rate);
