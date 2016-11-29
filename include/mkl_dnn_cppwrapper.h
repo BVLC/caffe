@@ -804,6 +804,48 @@ SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward<double>(
         attributes,
         dataLayout, eps); }
 
+TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateForward_v2(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags);
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward_v2<float>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags)
+{return dnnBatchNormalizationCreateForward_v2_F32(
+        pBatchNormalization,
+        attributes,
+        dataLayout, eps, flags); }
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateForward_v2<double>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags)
+{return dnnBatchNormalizationCreateForward_v2_F64(
+        pBatchNormalization,
+        attributes,
+        dataLayout, eps, flags); }
+
+TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackward_v2(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags);
+SPEC_PREFIX  dnnError_t dnnBatchNormalizationCreateBackward<float>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags)
+{return dnnBatchNormalizationCreateBackward_v2_F32(
+        pBatchNormalization,
+        attributes,
+        dataLayout, eps, flags); }
+
+SPEC_PREFIX dnnError_t dnnBatchNormalizationCreateBackward_v2<double>(
+        dnnPrimitive_t* pBatchNormalization,
+        dnnPrimitiveAttributes_t attributes,
+        const dnnLayout_t dataLayout, float eps, unsigned int flags)
+{return dnnBatchNormalizationCreateBackward_v2_F64(
+        pBatchNormalization,
+        attributes,
+        dataLayout, eps, flags); }
 
 TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackwardData(
         dnnPrimitive_t* pBatchNormalization,
