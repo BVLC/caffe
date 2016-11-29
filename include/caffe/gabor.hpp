@@ -4,9 +4,16 @@ class KernelParameters
 {
     public:
 
-        double r = 1, g = 1, b = 1;
-        double lambda = 1, sigma = 0.6;
-        double omega = M_PI, phi = 0, theta = 0;
+        double r, g, b;
+        double lambda, sigma;
+        double omega, phi, theta;
+
+        KernelParameters() :
+            r(1), g(1), b(1),
+            lambda(1), sigma(0.6),
+            omega(M_PI), phi(0), theta(0)
+        {
+        }
 
         void generateCifarLike(int kernelId, int kernelSize)
         {
@@ -130,24 +137,24 @@ class KernelParameters
 
             else if(kernelId < 32) {
                 omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 8 + M_PI / 128;
             }
 
             else if(kernelId < 40) {
                 omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 16) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
             }
 
             else if(kernelId < 48) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 16) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
             }
 
             else if(kernelId < 56) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 16) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
                 r = 1;
                 g = -1;
@@ -156,7 +163,7 @@ class KernelParameters
 
             else if(kernelId < 64) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
                 r = -1;
                 g = 1;
@@ -165,7 +172,7 @@ class KernelParameters
 
             else if(kernelId < 72) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
                 r = -1;
                 g = -1;
@@ -174,7 +181,7 @@ class KernelParameters
 
             else if(kernelId < 80) {
                 omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
                 r = -1;
                 g = 0;
@@ -183,7 +190,7 @@ class KernelParameters
 
             else if(kernelId < 84) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
                 phi = M_PI / 2;
                 r = -1;
                 g = 1;
@@ -192,29 +199,29 @@ class KernelParameters
 
             else if(kernelId < 88) {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 0;
-                g = 1;
-                b = -1;
-            }
-
-            else if(kernelId < 92) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
                 phi = M_PI / 2;
                 r = 1;
                 g = 1;
                 b = 0;
             }
 
+            else if(kernelId < 92) {
+                omega = M_PI * (kernelSize - 1) / 2 / 8;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
+                phi = M_PI / 2;
+                r = 0;
+                g = -1;
+                b = 1;
+            }
+
             else {
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
                 phi = M_PI / 2;
                 r = 1;
                 g = 0;
-                b = 1;
+                b = -1;
             }
         }
 };
