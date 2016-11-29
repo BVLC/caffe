@@ -40,8 +40,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "caffe/layers/mkl_layers.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
+
 template <typename Dtype>
 MKLReLULayer<Dtype>::~MKLReLULayer() {
     dnnDelete<Dtype>(reluFwd_);
@@ -198,7 +200,10 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using cpu_data for top in mklReLU.";
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_relu");
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -234,7 +239,10 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       DLOG(INFO) << "Using mutable_prv (out-of-place) in mklReLU-backward.";
     }
 
+    PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_relu");
+
     CHECK_EQ(e, E_SUCCESS);
   }
 }

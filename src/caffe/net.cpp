@@ -53,9 +53,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+
+PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
 
@@ -715,14 +718,21 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
 }
 
+
+
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
+    PERFORMANCE_MEASUREMENT_BEGIN();
+
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+
+    PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());
+
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -767,8 +777,13 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+      PERFORMANCE_MEASUREMENT_BEGIN();
+
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+
+      PERFORMANCE_MEASUREMENT_END((std::string("BW_")+layer_names_[i]).c_str());
+
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }

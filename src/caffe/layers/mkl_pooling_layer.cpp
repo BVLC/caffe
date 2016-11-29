@@ -45,9 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
+
 template <typename Dtype>
 MKLPoolingLayer<Dtype>::~MKLPoolingLayer() {
   dnnDelete<Dtype>(poolingFwd);
@@ -323,7 +324,10 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             reinterpret_cast<void *>(top[0]->mutable_cpu_data());
     DLOG(INFO) << "Using cpu_data for top in DnnPooling.";
   }
+  PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(poolingFwd, pooling_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_pooling");
+
   CHECK_EQ(status, E_SUCCESS);
 }
 
@@ -359,7 +363,11 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   caffe_set(bottom[0]->count(), Dtype(0),
           reinterpret_cast<Dtype *>(pooling_res[dnnResourceDiffSrc]));
+
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_pooling");
+
   CHECK_EQ(e, E_SUCCESS);
 }
 

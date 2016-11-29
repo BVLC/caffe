@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -313,7 +314,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     DLOG(INFO) << "Using cpu_data for top in DnnBatchNorm.";
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormFwd, BatchNorm_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -350,7 +354,10 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwdData, BatchNorm_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+
   CHECK_EQ(e, E_SUCCESS);
 
   if (use_weight_bias_) {
@@ -360,7 +367,11 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     BatchNormBwdScaleShift_res[dnnResourceDiffScaleShift] = scaleShift_buffer_;
     BatchNormBwdScaleShift_res[dnnResourceDiffDst] =
         BatchNorm_res[dnnResourceDiffDst];
+
+    PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(batchNormBwdScaleShift, BatchNormBwdScaleShift_res);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+
     CHECK_EQ(e, E_SUCCESS);
     // Store ScaleShift blobs
     Dtype* diff_scale = this->blobs_[0]->mutable_cpu_diff();

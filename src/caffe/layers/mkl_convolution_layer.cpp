@@ -43,7 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
+#include "caffe/util/performance.hpp"
 #include "mkl_service.h"
+
 
 static int getMKLBuildDate() {
   static int build = 0;
@@ -389,7 +391,10 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   } else {
     res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
   }
+  PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_convolution");
+
   CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
 }
 
@@ -440,8 +445,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
     }
-
+    PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_convolution");
+
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
 
@@ -478,7 +485,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
     }
+    PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_convolution");
+
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
 
     if (bwdf2fwd_filter_diff->conversion_needed()) {
@@ -510,8 +520,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
 
+      PERFORMANCE_MEASUREMENT_BEGIN();
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
               convert_resources);
+      PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_convolution");
+
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
     }
 
@@ -550,7 +563,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       }
     }
 
+    PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
+    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_convolution");
+
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
 
     if (Caffe::iter_size() > 1) {

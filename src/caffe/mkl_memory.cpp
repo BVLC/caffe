@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #ifdef MKL2017_SUPPORTED
+#include "caffe/util/performance.hpp"
+
 #include "caffe/mkl_memory.hpp"
 
 // Uncomment to see where the layout conversions are done
@@ -192,7 +194,11 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_prv(void* cpu_ptr) {
 
   convert_resources[dnnResourceFrom] = this->prv_ptr();
   convert_resources[dnnResourceTo]   = cpu_ptr;
+
+  PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
+  PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
   CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
 }
 
@@ -208,7 +214,11 @@ void MKLMemoryDescriptorBase<Dtype>::convert_to_prv(void* cpu_ptr) {
 
   convert_resources[dnnResourceFrom] = cpu_ptr;
   convert_resources[dnnResourceTo]   = this->prv_ptr();
+
+  PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
+  PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
   CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
 }
 
@@ -249,7 +259,11 @@ void MKLMemoryDescriptorBase<Dtype>::convert_from_other(
   void *convert_resources[dnnResourceNumber];
   convert_resources[dnnResourceFrom] = other_descr->prv_ptr();
   convert_resources[dnnResourceTo]   = this->prv_ptr();
+
+  PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(convert, convert_resources);
+  PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
   CHECK_EQ(status, 0) << "Conversion from other failed with status "
                       << status;
 
@@ -289,7 +303,10 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       convert_resources[dnnResourceTo] =
               reinterpret_cast<void *>(this->internal_ptr);
 
+      PERFORMANCE_MEASUREMENT_BEGIN();
       status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
+      PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
       if (set_prv_ptr) {
@@ -354,7 +371,10 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
           convert_resources[dnnResourceTo] =
             reinterpret_cast<void*>(this->internal_ptr);
 
+          PERFORMANCE_MEASUREMENT_BEGIN();
           status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
+          PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
@@ -365,7 +385,11 @@ Dtype* MKLMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
             reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
           convert_resources[dnnResourceTo] =
                   reinterpret_cast<void *>(this->internal_ptr);
+
+          PERFORMANCE_MEASUREMENT_BEGIN();
           status = dnnExecute<Dtype>(this->convert_prv2prv, convert_resources);
+          PERFORMANCE_MEASUREMENT_END_STATIC("mkl_conversion");
+
           CHECK_EQ(status, 0) << "Conversion failed with status " << status;
         }
 
