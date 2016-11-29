@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
-#include "mkl_service.h"
+//#include "mkl_service.h"
 
 // TODO: Correct process case if there are no bias
 // TODO: Exception handling - mkl-dnn produces exceptions on errors
