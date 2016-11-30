@@ -25,7 +25,6 @@ function(Download_MKLDNN)
 
   set(MKLDNN_INCLUDE_DIR ${MKLDNN_INSTALL_DIR}/include CACHE PATH "Include files for MKLDNN")
   set(MKLDNN_LIB_DIR ${MKLDNN_INSTALL_DIR}/lib)
-  #include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
   add_library(mkldnn SHARED IMPORTED ${MKLDNN_INSTALL_DIR})
   set_property(TARGET mkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/libmkldnn.so)
   add_dependencies(mkldnn MKLDNN_Build)
