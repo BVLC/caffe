@@ -1,7 +1,7 @@
 #ifdef USE_LIBDNN
 
-
 #include <algorithm>
+#include <random>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -13,6 +13,11 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+
+// Comparative check difference limit
+#define kappa 0.05
+// Comparative check shape size limit
+#define element_limit 100000
 
 namespace caffe {
 
@@ -786,6 +791,408 @@ TYPED_TEST(LibDNNPoolingLayerNDTest, TestForward) {
 
 TYPED_TEST(LibDNNPoolingLayerNDTest, TestBackward) {
   this->TestBackward();
+}
+
+template<typename TypeParam>
+class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
+ protected:
+  LibDNNComparativePoolTest()
+      : blob_bottom_(new Blob<TypeParam>()),
+        blob_bottom_ref_(new Blob<TypeParam>()),
+        blob_top_(new Blob<TypeParam>()),
+        blob_top_ref_(new Blob<TypeParam>()),
+        rng_(rd_()) {
+  }
+
+  virtual void SetUp() {
+    // fill the values
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_bottom_vec_ref_.push_back(blob_bottom_ref_);
+    blob_top_vec_.push_back(blob_top_);
+    blob_top_vec_ref_.push_back(blob_top_ref_);
+  }
+
+  virtual ~LibDNNComparativePoolTest() {
+    delete blob_bottom_;
+    delete blob_bottom_ref_;
+    delete blob_top_;
+    delete blob_top_ref_;
+  }
+
+  bool TestForward(int_tp testIdx) {
+    std::cout << "==== Test Case " << testIdx << " ====" << std::endl;
+
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param =
+        layer_param.mutable_pooling_param();
+
+    std::uniform_int_distribution<int_tp> dimsRand(1, 3);
+    std::uniform_int_distribution<int_tp> dilationRand(1, 1);
+    std::uniform_int_distribution<int_tp> kernelRand(2, 4);
+    std::uniform_int_distribution<int_tp> padRand(0, 3);
+    std::uniform_int_distribution<int_tp> strideRand(1, 3);
+    std::uniform_int_distribution<int_tp> batchRand(1, 6);
+    std::uniform_int_distribution<int_tp> fmapRand(1, 32);
+
+    int_tp batchsize = batchRand(this->rng_);
+    int_tp fmaps = fmapRand(this->rng_);
+
+    int dims = dimsRand(this->rng_);
+
+    std::uniform_int_distribution<int_tp> sizeRand(1,
+                pow(element_limit / (fmaps * batchsize),
+                1.0 / (static_cast<double>(dims))));
+
+
+    BlobShape shape;
+    shape.add_dim(batchsize);  // Batch
+    shape.add_dim(fmaps);   // Channels
+
+
+    for (int_tp i = 0; i < dims; ++i) {
+      pooling_param->add_kernel_size(kernelRand(this->rng_));
+      pooling_param->add_dilation(dilationRand(this->rng_));
+      pooling_param->add_pad(padRand(this->rng_));
+      pooling_param->add_stride(strideRand(this->rng_));
+
+      int_tp size = sizeRand(this->rng_);
+      int_tp kernel_extent = pooling_param->dilation(i)
+          * (pooling_param->kernel_size(i) - 1) + 1;
+      size = std::max((int_tp)size,
+                      (int_tp)(kernel_extent - 2 * pooling_param->pad(i)));
+      shape.add_dim(size);
+    }
+
+    std::cout << "Shape in: [";
+    for (int i = 0; i < dims + 2; ++i) {
+      std::cout << shape.dim(i);
+      if (i < dims + 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Kernel: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->kernel_size(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Dilation: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->dilation(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Stride: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->stride(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Pad: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->pad(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    blob_bottom_->Reshape(shape);
+    blob_bottom_ref_->Reshape(shape);
+
+    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    PoolingLayer<TypeParam> ref_layer(layer_param);
+    ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
+
+    for (int_tp i = 0; i < layer.blobs().size(); ++i) {
+      caffe_cpu_copy(layer.blobs()[i]->count(),
+                     layer.blobs()[i]->cpu_data(),
+                     ref_layer.blobs()[i]->mutable_cpu_data());
+    }
+
+    caffe_rng_uniform(blob_bottom_->count(), (TypeParam)-5.0, (TypeParam)5.0,
+                      blob_bottom_->mutable_cpu_data());
+
+    caffe_cpu_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
+                   blob_bottom_ref_->mutable_cpu_data());
+
+    caffe_set(blob_top_->count(),
+              (TypeParam)0.0, blob_top_->mutable_cpu_data());
+    caffe_set(blob_top_ref_->count(),
+              (TypeParam)0.0, blob_top_ref_->mutable_cpu_data());
+
+    /*layer.Tune(this->blob_top_vec_[0]->mutable_gpu_data(), nullptr,
+               this->blob_bottom_vec_[0]->mutable_gpu_data(), nullptr,
+               batchsize);*/
+
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
+
+    EXPECT_EQ(blob_top_->count(), blob_top_ref_->count());
+
+    const TypeParam *top_data = blob_top_->cpu_data();
+    const TypeParam *ref_top_data = blob_top_ref_->cpu_data();
+
+    std::cout << "Shape out: [";
+    for (int i = 0; i < dims + 2; ++i) {
+      std::cout << blob_top_->shape()[i];
+      if (i < dims + 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    bool failure = false;
+    double tot_error = 0;
+    double tot_value = 0;
+    double tot_value_ref = 0;
+    int_tp failure_count = 0;
+
+    for (int_tp i = 0; i < blob_top_->count(); ++i) {
+      bool fail = (fabs(top_data[i] - ref_top_data[i]) >= kappa);
+      if (fail) {
+        std::cout << "Value: " << top_data[i]
+                  << ", expected: " << ref_top_data[i] << " (at " << i << ")"
+                  << std::endl;
+        tot_error += fabs(top_data[i] - ref_top_data[i]);
+        tot_value += fabs(top_data[i]);
+        tot_value_ref += fabs(ref_top_data[i]);
+        ++failure_count;
+      }
+      failure |= fail;
+    }
+    std::cout << "Error count: " << failure_count
+              << "/" << blob_top_->count() << std::endl;
+    std::cout << "Difference: " << tot_error
+              << " (value: " << tot_value << " vs " << tot_value_ref << ")"
+              << std::endl;
+
+    EXPECT_EQ(failure, false);
+    return failure;
+  }
+
+  bool TestBackward(int_tp testIdx) {
+    std::cout << "==== Test Case " << testIdx << " ====" << std::endl;
+
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param =
+        layer_param.mutable_pooling_param();
+
+    std::uniform_int_distribution<int_tp> dimsRand(1, 3);
+    std::uniform_int_distribution<int_tp> dilationRand(1, 1);
+    std::uniform_int_distribution<int_tp> kernelRand(2, 4);
+    std::uniform_int_distribution<int_tp> padRand(0, 3);
+    std::uniform_int_distribution<int_tp> strideRand(1, 3);
+    std::uniform_int_distribution<int_tp> batchRand(1, 6);
+    std::uniform_int_distribution<int_tp> fmapRand(1, 32);
+
+    int_tp batchsize = batchRand(this->rng_);
+    int_tp fmaps = fmapRand(this->rng_);
+
+    int dims = dimsRand(this->rng_);
+
+    std::uniform_int_distribution<int_tp> sizeRand(1,
+                pow(element_limit / (fmaps * batchsize),
+                1.0 / (static_cast<double>(dims))));
+
+
+    BlobShape shape;
+    shape.add_dim(batchsize);  // Batch
+    shape.add_dim(fmaps);   // Channels
+
+    for (int_tp i = 0; i < dims; ++i) {
+      pooling_param->add_kernel_size(kernelRand(this->rng_));
+      pooling_param->add_dilation(dilationRand(this->rng_));
+      pooling_param->add_pad(padRand(this->rng_));
+      pooling_param->add_stride(strideRand(this->rng_));
+
+      int_tp size = sizeRand(this->rng_);
+      int_tp kernel_extent = pooling_param->dilation(i)
+          * (pooling_param->kernel_size(i) - 1) + 1;
+      size = std::max((int_tp)size,
+                      (int_tp)(kernel_extent - 2 * pooling_param->pad(i)));
+      shape.add_dim(size);
+    }
+
+    std::cout << "Shape in: [";
+    for (int i = 0; i < dims + 2; ++i) {
+      std::cout << shape.dim(i);
+      if (i < dims + 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Kernel: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->kernel_size(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Dilation: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->dilation(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Stride: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->stride(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    std::cout << "Pad: [";
+    for (int i = 0; i < dims; ++i) {
+      std::cout << pooling_param->pad(i);
+      if (i < dims - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    blob_bottom_->Reshape(shape);
+    blob_bottom_ref_->Reshape(shape);
+
+    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    PoolingLayer<TypeParam> ref_layer(layer_param);
+    ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
+
+    for (int_tp i = 0; i < layer.blobs().size(); ++i) {
+      caffe_cpu_copy(layer.blobs()[i]->count(),
+                     layer.blobs()[i]->cpu_data(),
+                     ref_layer.blobs()[i]->mutable_cpu_data());
+    }
+
+    caffe_rng_uniform(blob_top_->count(), (TypeParam)-5.0, (TypeParam)5.0,
+                      blob_top_->mutable_cpu_diff());
+
+    caffe_cpu_copy(blob_top_->count(), blob_top_->cpu_diff(),
+                   blob_top_ref_->mutable_cpu_diff());
+
+    caffe_rng_uniform(blob_bottom_->count(), (TypeParam)-5.0, (TypeParam)5.0,
+                      blob_bottom_->mutable_cpu_data());
+
+    caffe_cpu_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
+                   blob_bottom_ref_->mutable_cpu_data());
+
+
+    caffe_set(blob_top_->count(),  (TypeParam)0.0,
+              blob_top_->mutable_cpu_data());
+    caffe_set(blob_top_ref_->count(), (TypeParam)0.0,
+              blob_top_ref_->mutable_cpu_data());
+
+    caffe_set(blob_bottom_->count(),  (TypeParam)0.0,
+              blob_bottom_->mutable_cpu_diff());
+    caffe_set(blob_bottom_ref_->count(), (TypeParam)0.0,
+              blob_bottom_ref_->mutable_cpu_diff());
+
+
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
+
+    std::vector<bool> prop_down(1, true);
+
+    layer.Backward(blob_top_vec_, prop_down, blob_bottom_vec_);
+    ref_layer.Backward(blob_top_vec_ref_, prop_down, blob_bottom_vec_ref_);
+
+    EXPECT_EQ(blob_bottom_->count(), blob_bottom_ref_->count());
+
+    const TypeParam *bottom_diff = blob_bottom_->cpu_diff();
+    const TypeParam *ref_bottom_diff = blob_bottom_ref_->cpu_diff();
+
+    std::cout << "Shape out: [";
+    for (int i = 0; i < dims + 2; ++i) {
+      std::cout << blob_top_->shape()[i];
+      if (i < dims + 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << "]"<< std::endl;
+
+    bool failure = false;
+    double tot_error = 0;
+    double tot_value = 0;
+    double tot_value_ref = 0;
+    int_tp failure_count = 0;
+
+    for (int_tp i = 0; i < blob_bottom_->count(); ++i) {
+      bool fail = (fabs(bottom_diff[i] - ref_bottom_diff[i]) >= kappa);
+      if (fail) {
+        std::cout << "Value: " << bottom_diff[i]
+                  << ", expected: " << ref_bottom_diff[i] << " (at " << i << ")"
+                  << std::endl;
+        tot_error += fabs(bottom_diff[i] - ref_bottom_diff[i]);
+        tot_value += fabs(bottom_diff[i]);
+        tot_value_ref += fabs(ref_bottom_diff[i]);
+        ++failure_count;
+      }
+      failure |= fail;
+    }
+
+    std::cout << "Error count: " << failure_count
+        << "/" << blob_bottom_->count() << std::endl;
+    std::cout << "Difference: " << tot_error
+        << " (value: " << tot_value << " vs " << tot_value_ref << ")"
+        << std::endl;
+
+    EXPECT_EQ(failure, false);
+    return failure;
+  }
+
+  Blob<TypeParam>* const blob_bottom_;
+  Blob<TypeParam>* const blob_bottom_ref_;
+  Blob<TypeParam>* const blob_top_;
+  Blob<TypeParam>* const blob_top_ref_;
+
+  vector<Blob<TypeParam>*> blob_bottom_vec_;
+  vector<Blob<TypeParam>*> blob_bottom_vec_ref_;
+  vector<Blob<TypeParam>*> blob_top_vec_;
+  vector<Blob<TypeParam>*> blob_top_vec_ref_;
+
+  std::random_device rd_;
+  std::mt19937 rng_;
+};
+
+TYPED_TEST_CASE(LibDNNComparativePoolTest, TestDtypes);
+
+TYPED_TEST(LibDNNComparativePoolTest, TestForward) {
+  for (int i = 0; i < 100; ++i) {
+    if (this->TestForward(i)) {
+      break;
+    }
+  }
+}
+
+TYPED_TEST(LibDNNComparativePoolTest, TestBackward) {
+  for (int i = 0; i < 100; ++i) {
+    if (this->TestBackward(i)) {
+      break;
+    }
+  }
 }
 
 }  // namespace caffe
