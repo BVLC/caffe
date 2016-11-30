@@ -164,7 +164,9 @@ std::string LibDNNPool<Dtype>::generate_bw_defs() {
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", num_axes_);
-
+  for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
+    LibDNN<Dtype>::add_def(ss, "v_k_" + std::to_string(i), kernel_shape_[i]);
+  }
   for (int_tp i = 0; i < pad_.size(); ++i) {
     LibDNN<Dtype>::add_def(ss, "v_p_" + std::to_string(i), pad_[i]);
   }
@@ -174,6 +176,17 @@ std::string LibDNNPool<Dtype>::generate_bw_defs() {
   for (int_tp i = 0; i < dilation_.size(); ++i) {
     LibDNN<Dtype>::add_def(ss, "v_d_" + std::to_string(i), dilation_[i]);
   }
+
+  int_tp imsi = 1;
+  int_tp imso = 1;
+  for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+    LibDNN<Dtype>::add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    imsi *= im_in_shape_[i];
+    LibDNN<Dtype>::add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    imso *= im_out_shape_[i];
+  }
+  LibDNN<Dtype>::add_def(ss, "v_imsi", imsi);
+  LibDNN<Dtype>::add_def(ss, "v_imso", imso);
 
   return ss.str();
 }
@@ -260,7 +273,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
   if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
     int_tp ave = std::accumulate(kernel_shape_.begin(),
                                  kernel_shape_.end(),
-                                  1, std::multiplies<int_tp><int>());
+                                  1, std::multiplies<int_tp>());
     ss << "int_tp ave = " << ave << ";" << std::endl;
   }
 
@@ -490,7 +503,6 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     }
 
     std::vector<int_tp> d_iter;
-    int_tp curr_idx = 0;
 
     for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
       d_iter.push_back(0);
@@ -604,11 +616,14 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
 
   } else {
     // Direct, deterministic kernel
-    ss << "int_tp in_idx = get_global_id(0);" << std::endl;
+    ss << "int_tp d_start[" << num_axes_ << "];" << std::endl;
+    ss << "int_tp d_end[" << num_axes_ << "];" << std::endl;
+    ss << "int_tp d_iter[" << num_axes_ << "];" << std::endl;
+
+    ss << "int_tp out_idx = get_global_id(0);" << std::endl;
+    ss << "int_tp idx_0 = get_global_id(0);" << std::endl;
     ss << "if (get_global_id(1) >= channels * batch_size) {return;}"
        << std::endl;
-    ss << "int_tp idx_0 = get_global_id(0);" << std::endl;
-    ss << "Dtype gradient = 0.0" << std::endl;
 
     for (int_tp i = num_axes_ - 1; i >= 1; --i) {
       ss << "int_tp idx_" << i << " = (idx_0 % v_imsi_" << i << ");"
@@ -617,12 +632,24 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     }
     ss << "if (idx_0 >= v_imsi_0) {return;}" << std::endl;
 
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      ss << "d_start[" << i << "] = (idx_" << i << " + v_p_" << i << " < "
+         << "((v_k_" << i << " - 1) * v_d_" << i << " + 1)) ? 0 : (idx_" << i
+         << " + v_p_" << i
+         << " - ((v_k_" << i << " - 1) * v_d_" << i << " + 1))"
+         << " / v_s_" << i << " + 1;" << std::endl;
+      ss << "d_end[" << i << "] = min(v_imso_" << i << " - 1, "
+         << "(idx_" << i << " + v_p_" << i << ")"
+         << " / v_s_" << i << ");" << std::endl;
+      ss << "d_iter[" << i << "] = d_start[" << i << "];" << std::endl;
+    }
+
     if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
       ss << "__global Dtype* out_ptr = bottom_diff "
          << "+ get_global_id(1) * v_imsi + out_idx;" << std::endl;
     } else {
       ss << "__global Dtype* out_ptr = bottom_diff "
-         << "+ get_global_id(1) * v_imsi;" << std::endl;
+         << "+ get_global_id(1) * v_imsi + out_idx;" << std::endl;
     }
     ss << "__global const Dtype* in_ptr = top_diff "
        << "+ get_global_id(1) * v_imso;" << std::endl;
@@ -643,40 +670,64 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     }
 
     if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-      ss << "int_tp ave = " << 0 << ";" << std::endl;
-    }
-
-    std::vector<int_tp> d_start(num_axes_);
-    std::vector<int_tp> d_end(num_axes_);
-
-    for (int_tp i = num_axes_ - 1; i >= 0; --i) {
-      d_start[i] =
-          (d_idx[i] < ext_kernel_size[i]) ?
-              d_idx[i] % dilation[i] : (d_idx[i] - ext_kernel_size[i]) + 1;
-      d_end[i] =
-          (d_idx[i] >= pooled_size[i]) ?
-              (pooled_size[i] - 1)
-                  - (pooled_size[i] - 1 - d_start[i]) % dilation[i] :
-              d_idx[i];
-
-      if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
-        ss << "if ((int_tp)mask_ptr[idx] == get_global_id(0)) {" << std::endl;
-      } else if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
-        ss << "if ((int_tp)rand_ptr[idx] == get_global_id(0)) {" << std::endl;
-      } else {
-        ss << "{" << std::endl;
-        ss << "++ave;" << std::endl;
+      ss << "int_tp ave = 1;" << std::endl;
+      ss << "int_tp av_start;" << std::endl;
+      ss << "int_tp av_end;" << std::endl;
+      for (int_tp i = 0; i < num_axes_; ++i) {
+        ss << "av_start = v_imso_" << i << " * v_s_" << i
+        << " - v_p_" << i << ";" << std::endl;
+        ss << "av_end = min(av_start + ((v_k_" << i << " - 1) * v_d_"
+           << i << " + 1), v_imsi_" << i << " + v_p_" << i << ");"
+           << std::endl;
+        ss << "ave *= (av_end - av_start);" << std::endl;
       }
-      ss << "gradient += in_ptr[idx]";
-      ss << "}" << std::endl;
     }
-
-    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-      ss << "out_ptr[0] = gradient / (Dtype)ave;" << std::endl;
+    // ss << "printf(\"%f\\n\", (float)ave);" << std::endl;
+    ss << "Dtype gradient = 0.0;" << std::endl;
+    ss << "bool incremented;" << std::endl;
+    ss << "do {" << std::endl;
+    ss << "int_tp offset = 0;" << std::endl;
+    for (int_tp i = 0; i < num_axes_; ++i) {
+      ss << "offset += d_iter[" << i << "];" << std::endl;
+      if (i < num_axes_ - 1) {
+        ss << "offset *= v_imso_" << (i + 1) << ";" << std::endl;
+      }
+    }
+    // Dilation filters
+    /*if (dila) {
+      ss << "if ()" << std::endl;
+    }*/
+    /*ss << "if (get_global_id(1) == 5 && (out_idx == 10 || out_idx == 20)) {" << std::endl;
+    ss << "printf(\"[%f, %f), [%f, %f), %f, %f, %f, %f, %f, %f\\n\", (float)d_start[0], (float)d_end[0], (float)d_start[1], (float)d_end[1], (float)out_idx, (float)idx_0, (float)idx_1, (float)offset, (float)mask_ptr[offset], (float)in_ptr[offset]);" << std::endl;
+    ss << "}" << std::endl;*/
+    if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
+      ss << "if ((int_tp)mask_ptr[offset] == out_idx) {" << std::endl;
+    } else if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
+      ss << "if ((int_tp)rand_ptr[offset] == out_idx) {" << std::endl;
     } else {
-      ss << "out_ptr[0] = gradient;" << std::endl;
+      ss << "{" << std::endl;
     }
-  }
+    ss << "gradient += in_ptr[offset]";
+    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
+      ss << " / (Dtype)ave;" << std::endl;
+    } else {
+      ss << ";" << std::endl;
+    }
+    ss << "}" << std::endl;
+    // Increment
+    ss << "incremented = false;" << std::endl;
+    ss << "for (int_tp i = v_nax - 1; i >= 0; --i) {" << std::endl;
+    ss << "if (d_iter[i] >= d_end[i]) {" << std::endl;
+    ss << "d_iter[i] = d_start[i];" << std::endl;
+    ss << "} else {" << std::endl;
+    ss << "++d_iter[i];" << std::endl;
+    ss << "incremented = true;" << std::endl;
+    ss << "break;" << std::endl;
+    ss << "}}} while (incremented);" << std::endl;
+
+    ss << "out_ptr[0] = gradient;" << std::endl;
+    // ss << "printf(\"Gradient: %f\\n\", gradient);" << std::endl;
+  }  // Deterministic kernel
   ss << "}" << std::endl;  // Kernel
 
   return ss.str();
