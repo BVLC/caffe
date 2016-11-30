@@ -6,6 +6,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/data_reader.hpp"
+#include "caffe/layers/annotated_data_layer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -17,11 +18,9 @@ template<>
 map<const string, weak_ptr<DataReader<Datum>::Body> > DataReader<Datum>::bodies_ = {};
 template<>
 map<const string, weak_ptr<DataReader<SparseDatum>::Body> > DataReader<SparseDatum>::bodies_ = {};
-static boost::mutex bodies_mutex_;
-/*template<>
-boost::mutex DataReader<Datum>::bodies_mutex_;
 template<>
-boost::mutex DataReader<SparseDatum>::bodies_mutex_;*/
+map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> > DataReader<AnnotatedDatum>::bodies_ = {};  
+static boost::mutex bodies_mutex_;
 template<>
 std::hash<std::thread::id> DataReader<Datum>::idhasher_ = std::hash<std::thread::id>();
 template<>
@@ -56,7 +55,6 @@ DataReader<TDatum>::~DataReader() {
 template<class TDatum>
 DataReader<TDatum>::QueuePair::QueuePair(int size) {
   // Initialize the free queue with requested number of datums
-  //std::cerr << "\ninitializing queue pair=" << size << std::endl;
   for (int i = 0; i < size; ++i) {
     free_.push(new TDatum());
   }
@@ -80,6 +78,7 @@ DataReader<TDatum>::Body::Body(const LayerParameter& param)
       new_queue_pairs_() {
   StartInternalThread();
 }
+
 
 template<class TDatum>
 DataReader<TDatum>::Body::~Body() {
@@ -125,13 +124,9 @@ void DataReader<TDatum>::Body::InternalThreadEntry() {
 
 template<class TDatum>
 void DataReader<TDatum>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
-  //std::cerr << "\nin readone\n";
-  //std::cerr << "queue size=" << qp->free_.size() << std::endl;
   TDatum* datum = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
   datum->ParseFromString(cursor->value());
-  //std::cerr << "read_one datum label=" << datum->label() << std::endl;
-//std::cerr << "\nread datum\n";
   qp->full_.push(datum);
 
   // go to the next iter
@@ -142,7 +137,9 @@ void DataReader<TDatum>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
   }
 }
 
+// Instance classes
 template class DataReader<Datum>;
 template class DataReader<SparseDatum>;
+template class DataReader<AnnotatedDatum>;
 
 }  // namespace caffe

@@ -178,7 +178,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas cusparse curand
 endif
 
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem boost_regex m hdf5_hl hdf5
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -192,10 +192,10 @@ ifeq ($(USE_LMDB), 1)
 	LIBRARIES += lmdb
 endif
 ifeq ($(USE_OPENCV), 1)
-	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 
+	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
 
 	ifeq ($(OPENCV_VERSION), 3)
-		LIBRARIES += opencv_imgcodecs
+		LIBRARIES += opencv_imgcodecs opencv_videoio
 	endif
 		
 endif
@@ -319,7 +319,7 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0 -D_MWAITXINTRIN_H_INCLUDED
 	NVCCFLAGS += -G
 else
-	COMMON_FLAGS += -DNDEBUG -O2 -D_MWAITXINTRIN_H_INCLUDED
+	COMMON_FLAGS += -DNDEBUG -g -O2 -D_MWAITXINTRIN_H_INCLUDED
 endif
 
 # cuDNN acceleration configuration.
@@ -382,8 +382,11 @@ else
 		LIBRARIES += cblas
 		# 10.10 has accelerate while 10.9 has veclib
 		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep 'version' | sed 's/[^0-9]*\([0-9]\).*/\1/')
+		XCODE_CLT_GEQ_7 := $(shell [ $(XCODE_CLT_VER) -gt 6 ] && echo 1)
 		XCODE_CLT_GEQ_6 := $(shell [ $(XCODE_CLT_VER) -gt 5 ] && echo 1)
-		ifeq ($(XCODE_CLT_GEQ_6), 1)
+		ifeq ($(XCODE_CLT_GEQ_7), 1)
+			BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/Headers
+		else ifeq ($(XCODE_CLT_GEQ_6), 1)
 			BLAS_INCLUDE ?= /System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
 			LDFLAGS += -framework Accelerate
 		else
@@ -401,6 +404,7 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 CXXFLAGS += -MMD -MP -std=c++11
 
 # Complete build flags.
+#COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-isystem $(includedir))
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) -std=c++11
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -D_FORCE_INLINES -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)

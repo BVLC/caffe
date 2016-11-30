@@ -17,7 +17,7 @@ momentum: 0.9
 lr_policy: "step"
 gamma: 1
 stepsize: 5000
-# Display every 200 iterations
+# Display every 100 iterations
 display: 100
 # The maximum number of iterations
 max_iter: 60000

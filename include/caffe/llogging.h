@@ -142,12 +142,12 @@ static std::ostream nullstream(0);
 inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout)
 {
   if (severity != FATAL)
-    {
+  {
       DateLogger pretty_date;
       out << std::endl;
       out << severity << " - " << pretty_date.HumanDate() << " - ";
       return out;
-    }
+  }
   else
     {
       throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Fatal Caffe error"); // XXX: cannot report the exact location of the trigger...

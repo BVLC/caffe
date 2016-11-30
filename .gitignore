@@ -47,6 +47,9 @@
 # PyCharm files
 .idea
 
+# Visual Studio Code files
+.vscode
+
 # OSX dir files
 .DS_Store
 
@@ -93,3 +96,8 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+# temporary directories
+jobs
+temp
+examples/*/*lmdb

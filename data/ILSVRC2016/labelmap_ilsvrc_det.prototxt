@@ -1,0 +1,1005 @@
+item {
+  name: "none_of_the_above"
+  label: 0
+  display_name: "background"
+}
+item {
+  name: "n02672831"
+  label: 1
+  display_name: "accordion"
+}
+item {
+  name: "n02691156"
+  label: 2
+  display_name: "airplane"
+}
+item {
+  name: "n02219486"
+  label: 3
+  display_name: "ant"
+}
+item {
+  name: "n02419796"
+  label: 4
+  display_name: "antelope"
+}
+item {
+  name: "n07739125"
+  label: 5
+  display_name: "apple"
+}
+item {
+  name: "n02454379"
+  label: 6
+  display_name: "armadillo"
+}
+item {
+  name: "n07718747"
+  label: 7
+  display_name: "artichoke"
+}
+item {
+  name: "n02764044"
+  label: 8
+  display_name: "axe"
+}
+item {
+  name: "n02766320"
+  label: 9
+  display_name: "baby_bed"
+}
+item {
+  name: "n02769748"
+  label: 10
+  display_name: "backpack"
+}
+item {
+  name: "n07693725"
+  label: 11
+  display_name: "bagel"
+}
+item {
+  name: "n02777292"
+  label: 12
+  display_name: "balance_beam"
+}
+item {
+  name: "n07753592"
+  label: 13
+  display_name: "banana"
+}
+item {
+  name: "n02786058"
+  label: 14
+  display_name: "band_aid"
+}
+item {
+  name: "n02787622"
+  label: 15
+  display_name: "banjo"
+}
+item {
+  name: "n02799071"
+  label: 16
+  display_name: "baseball"
+}
+item {
+  name: "n02802426"
+  label: 17
+  display_name: "basketball"
+}
+item {
+  name: "n02807133"
+  label: 18
+  display_name: "bathing_cap"
+}
+item {
+  name: "n02815834"
+  label: 19
+  display_name: "beaker"
+}
+item {
+  name: "n02131653"
+  label: 20
+  display_name: "bear"
+}
+item {
+  name: "n02206856"
+  label: 21
+  display_name: "bee"
+}
+item {
+  name: "n07720875"
+  label: 22
+  display_name: "bell_pepper"
+}
+item {
+  name: "n02828884"
+  label: 23
+  display_name: "bench"
+}
+item {
+  name: "n02834778"
+  label: 24
+  display_name: "bicycle"
+}
+item {
+  name: "n02840245"
+  label: 25
+  display_name: "binder"
+}
+item {
+  name: "n01503061"
+  label: 26
+  display_name: "bird"
+}
+item {
+  name: "n02870880"
+  label: 27
+  display_name: "bookshelf"
+}
+item {
+  name: "n02883205"
+  label: 28
+  display_name: "bow_tie"
+}
+item {
+  name: "n02879718"
+  label: 29
+  display_name: "bow"
+}
+item {
+  name: "n02880940"
+  label: 30
+  display_name: "bowl"
+}
+item {
+  name: "n02892767"
+  label: 31
+  display_name: "brassiere"
+}
+item {
+  name: "n07880968"
+  label: 32
+  display_name: "burrito"
+}
+item {
+  name: "n02924116"
+  label: 33
+  display_name: "bus"
+}
+item {
+  name: "n02274259"
+  label: 34
+  display_name: "butterfly"
+}
+item {
+  name: "n02437136"
+  label: 35
+  display_name: "camel"
+}
+item {
+  name: "n02951585"
+  label: 36
+  display_name: "can_opener"
+}
+item {
+  name: "n02958343"
+  label: 37
+  display_name: "car"
+}
+item {
+  name: "n02970849"
+  label: 38
+  display_name: "cart"
+}
+item {
+  name: "n02402425"
+  label: 39
+  display_name: "cattle"
+}
+item {
+  name: "n02992211"
+  label: 40
+  display_name: "cello"
+}
+item {
+  name: "n01784675"
+  label: 41
+  display_name: "centipede"
+}
+item {
+  name: "n03000684"
+  label: 42
+  display_name: "chain_saw"
+}
+item {
+  name: "n03001627"
+  label: 43
+  display_name: "chair"
+}
+item {
+  name: "n03017168"
+  label: 44
+  display_name: "chime"
+}
+item {
+  name: "n03062245"
+  label: 45
+  display_name: "cocktail_shaker"
+}
+item {
+  name: "n03063338"
+  label: 46
+  display_name: "coffee_maker"
+}
+item {
+  name: "n03085013"
+  label: 47
+  display_name: "computer_keyboard"
+}
+item {
+  name: "n03793489"
+  label: 48
+  display_name: "computer_mouse"
+}
+item {
+  name: "n03109150"
+  label: 49
+  display_name: "corkscrew"
+}
+item {
+  name: "n03128519"
+  label: 50
+  display_name: "cream"
+}
+item {
+  name: "n03134739"
+  label: 51
+  display_name: "croquet_ball"
+}
+item {
+  name: "n03141823"
+  label: 52
+  display_name: "crutch"
+}
+item {
+  name: "n07718472"
+  label: 53
+  display_name: "cucumber"
+}
+item {
+  name: "n03797390"
+  label: 54
+  display_name: "cup_or_mug"
+}
+item {
+  name: "n03188531"
+  label: 55
+  display_name: "diaper"
+}
+item {
+  name: "n03196217"
+  label: 56
+  display_name: "digital_clock"
+}
+item {
+  name: "n03207941"
+  label: 57
+  display_name: "dishwasher"
+}
+item {
+  name: "n02084071"
+  label: 58
+  display_name: "dog"
+}
+item {
+  name: "n02121808"
+  label: 59
+  display_name: "domestic_cat"
+}
+item {
+  name: "n02268443"
+  label: 60
+  display_name: "dragonfly"
+}
+item {
+  name: "n03249569"
+  label: 61
+  display_name: "drum"
+}
+item {
+  name: "n03255030"
+  label: 62
+  display_name: "dumbbell"
+}
+item {
+  name: "n03271574"
+  label: 63
+  display_name: "electric_fan"
+}
+item {
+  name: "n02503517"
+  label: 64
+  display_name: "elephant"
+}
+item {
+  name: "n03314780"
+  label: 65
+  display_name: "face_powder"
+}
+item {
+  name: "n07753113"
+  label: 66
+  display_name: "fig"
+}
+item {
+  name: "n03337140"
+  label: 67
+  display_name: "filing_cabinet"
+}
+item {
+  name: "n03991062"
+  label: 68
+  display_name: "flower_pot"
+}
+item {
+  name: "n03372029"
+  label: 69
+  display_name: "flute"
+}
+item {
+  name: "n02118333"
+  label: 70
+  display_name: "fox"
+}
+item {
+  name: "n03394916"
+  label: 71
+  display_name: "french_horn"
+}
+item {
+  name: "n01639765"
+  label: 72
+  display_name: "frog"
+}
+item {
+  name: "n03400231"
+  label: 73
+  display_name: "frying_pan"
+}
+item {
+  name: "n02510455"
+  label: 74
+  display_name: "giant_panda"
+}
+item {
+  name: "n01443537"
+  label: 75
+  display_name: "goldfish"
+}
+item {
+  name: "n03445777"
+  label: 76
+  display_name: "golf_ball"
+}
+item {
+  name: "n03445924"
+  label: 77
+  display_name: "golfcart"
+}
+item {
+  name: "n07583066"
+  label: 78
+  display_name: "guacamole"
+}
+item {
+  name: "n03467517"
+  label: 79
+  display_name: "guitar"
+}
+item {
+  name: "n03483316"
+  label: 80
+  display_name: "hair_dryer"
+}
+item {
+  name: "n03476991"
+  label: 81
+  display_name: "hair_spray"
+}
+item {
+  name: "n07697100"
+  label: 82
+  display_name: "hamburger"
+}
+item {
+  name: "n03481172"
+  label: 83
+  display_name: "hammer"
+}
+item {
+  name: "n02342885"
+  label: 84
+  display_name: "hamster"
+}
+item {
+  name: "n03494278"
+  label: 85
+  display_name: "harmonica"
+}
+item {
+  name: "n03495258"
+  label: 86
+  display_name: "harp"
+}
+item {
+  name: "n03124170"
+  label: 87
+  display_name: "hat_with_a_wide_brim"
+}
+item {
+  name: "n07714571"
+  label: 88
+  display_name: "head_cabbage"
+}
+item {
+  name: "n03513137"
+  label: 89
+  display_name: "helmet"
+}
+item {
+  name: "n02398521"
+  label: 90
+  display_name: "hippopotamus"
+}
+item {
+  name: "n03535780"
+  label: 91
+  display_name: "horizontal_bar"
+}
+item {
+  name: "n02374451"
+  label: 92
+  display_name: "horse"
+}
+item {
+  name: "n07697537"
+  label: 93
+  display_name: "hotdog"
+}
+item {
+  name: "n03584254"
+  label: 94
+  display_name: "iPod"
+}
+item {
+  name: "n01990800"
+  label: 95
+  display_name: "isopod"
+}
+item {
+  name: "n01910747"
+  label: 96
+  display_name: "jellyfish"
+}
+item {
+  name: "n01882714"
+  label: 97
+  display_name: "koala_bear"
+}
+item {
+  name: "n03633091"
+  label: 98
+  display_name: "ladle"
+}
+item {
+  name: "n02165456"
+  label: 99
+  display_name: "ladybug"
+}
+item {
+  name: "n03636649"
+  label: 100
+  display_name: "lamp"
+}
+item {
+  name: "n03642806"
+  label: 101
+  display_name: "laptop"
+}
+item {
+  name: "n07749582"
+  label: 102
+  display_name: "lemon"
+}
+item {
+  name: "n02129165"
+  label: 103
+  display_name: "lion"
+}
+item {
+  name: "n03676483"
+  label: 104
+  display_name: "lipstick"
+}
+item {
+  name: "n01674464"
+  label: 105
+  display_name: "lizard"
+}
+item {
+  name: "n01982650"
+  label: 106
+  display_name: "lobster"
+}
+item {
+  name: "n03710721"
+  label: 107
+  display_name: "maillot"
+}
+item {
+  name: "n03720891"
+  label: 108
+  display_name: "maraca"
+}
+item {
+  name: "n03759954"
+  label: 109
+  display_name: "microphone"
+}
+item {
+  name: "n03761084"
+  label: 110
+  display_name: "microwave"
+}
+item {
+  name: "n03764736"
+  label: 111
+  display_name: "milk_can"
+}
+item {
+  name: "n03770439"
+  label: 112
+  display_name: "miniskirt"
+}
+item {
+  name: "n02484322"
+  label: 113
+  display_name: "monkey"
+}
+item {
+  name: "n03790512"
+  label: 114
+  display_name: "motorcycle"
+}
+item {
+  name: "n07734744"
+  label: 115
+  display_name: "mushroom"
+}
+item {
+  name: "n03804744"
+  label: 116
+  display_name: "nail"
+}
+item {
+  name: "n03814639"
+  label: 117
+  display_name: "neck_brace"
+}
+item {
+  name: "n03838899"
+  label: 118
+  display_name: "oboe"
+}
+item {
+  name: "n07747607"
+  label: 119
+  display_name: "orange"
+}
+item {
+  name: "n02444819"
+  label: 120
+  display_name: "otter"
+}
+item {
+  name: "n03908618"
+  label: 121
+  display_name: "pencil_box"
+}
+item {
+  name: "n03908714"
+  label: 122
+  display_name: "pencil_sharpener"
+}
+item {
+  name: "n03916031"
+  label: 123
+  display_name: "perfume"
+}
+item {
+  name: "n00007846"
+  label: 124
+  display_name: "person"
+}
+item {
+  name: "n03928116"
+  label: 125
+  display_name: "piano"
+}
+item {
+  name: "n07753275"
+  label: 126
+  display_name: "pineapple"
+}
+item {
+  name: "n03942813"
+  label: 127
+  display_name: "ping-pong_ball"
+}
+item {
+  name: "n03950228"
+  label: 128
+  display_name: "pitcher"
+}
+item {
+  name: "n07873807"
+  label: 129
+  display_name: "pizza"
+}
+item {
+  name: "n03958227"
+  label: 130
+  display_name: "plastic_bag"
+}
+item {
+  name: "n03961711"
+  label: 131
+  display_name: "plate_rack"
+}
+item {
+  name: "n07768694"
+  label: 132
+  display_name: "pomegranate"
+}
+item {
+  name: "n07615774"
+  label: 133
+  display_name: "popsicle"
+}
+item {
+  name: "n02346627"
+  label: 134
+  display_name: "porcupine"
+}
+item {
+  name: "n03995372"
+  label: 135
+  display_name: "power_drill"
+}
+item {
+  name: "n07695742"
+  label: 136
+  display_name: "pretzel"
+}
+item {
+  name: "n04004767"
+  label: 137
+  display_name: "printer"
+}
+item {
+  name: "n04019541"
+  label: 138
+  display_name: "puck"
+}
+item {
+  name: "n04023962"
+  label: 139
+  display_name: "punching_bag"
+}
+item {
+  name: "n04026417"
+  label: 140
+  display_name: "purse"
+}
+item {
+  name: "n02324045"
+  label: 141
+  display_name: "rabbit"
+}
+item {
+  name: "n04039381"
+  label: 142
+  display_name: "racket"
+}
+item {
+  name: "n01495701"
+  label: 143
+  display_name: "ray"
+}
+item {
+  name: "n02509815"
+  label: 144
+  display_name: "red_panda"
+}
+item {
+  name: "n04070727"
+  label: 145
+  display_name: "refrigerator"
+}
+item {
+  name: "n04074963"
+  label: 146
+  display_name: "remote_control"
+}
+item {
+  name: "n04116512"
+  label: 147
+  display_name: "rubber_eraser"
+}
+item {
+  name: "n04118538"
+  label: 148
+  display_name: "rugby_ball"
+}
+item {
+  name: "n04118776"
+  label: 149
+  display_name: "ruler"
+}
+item {
+  name: "n04131690"
+  label: 150
+  display_name: "salt_or_pepper_shaker"
+}
+item {
+  name: "n04141076"
+  label: 151
+  display_name: "saxophone"
+}
+item {
+  name: "n01770393"
+  label: 152
+  display_name: "scorpion"
+}
+item {
+  name: "n04154565"
+  label: 153
+  display_name: "screwdriver"
+}
+item {
+  name: "n02076196"
+  label: 154
+  display_name: "seal"
+}
+item {
+  name: "n02411705"
+  label: 155
+  display_name: "sheep"
+}
+item {
+  name: "n04228054"
+  label: 156
+  display_name: "ski"
+}
+item {
+  name: "n02445715"
+  label: 157
+  display_name: "skunk"
+}
+item {
+  name: "n01944390"
+  label: 158
+  display_name: "snail"
+}
+item {
+  name: "n01726692"
+  label: 159
+  display_name: "snake"
+}
+item {
+  name: "n04252077"
+  label: 160
+  display_name: "snowmobile"
+}
+item {
+  name: "n04252225"
+  label: 161
+  display_name: "snowplow"
+}
+item {
+  name: "n04254120"
+  label: 162
+  display_name: "soap_dispenser"
+}
+item {
+  name: "n04254680"
+  label: 163
+  display_name: "soccer_ball"
+}
+item {
+  name: "n04256520"
+  label: 164
+  display_name: "sofa"
+}
+item {
+  name: "n04270147"
+  label: 165
+  display_name: "spatula"
+}
+item {
+  name: "n02355227"
+  label: 166
+  display_name: "squirrel"
+}
+item {
+  name: "n02317335"
+  label: 167
+  display_name: "starfish"
+}
+item {
+  name: "n04317175"
+  label: 168
+  display_name: "stethoscope"
+}
+item {
+  name: "n04330267"
+  label: 169
+  display_name: "stove"
+}
+item {
+  name: "n04332243"
+  label: 170
+  display_name: "strainer"
+}
+item {
+  name: "n07745940"
+  label: 171
+  display_name: "strawberry"
+}
+item {
+  name: "n04336792"
+  label: 172
+  display_name: "stretcher"
+}
+item {
+  name: "n04356056"
+  label: 173
+  display_name: "sunglasses"
+}
+item {
+  name: "n04371430"
+  label: 174
+  display_name: "swimming_trunks"
+}
+item {
+  name: "n02395003"
+  label: 175
+  display_name: "swine"
+}
+item {
+  name: "n04376876"
+  label: 176
+  display_name: "syringe"
+}
+item {
+  name: "n04379243"
+  label: 177
+  display_name: "table"
+}
+item {
+  name: "n04392985"
+  label: 178
+  display_name: "tape_player"
+}
+item {
+  name: "n04409515"
+  label: 179
+  display_name: "tennis_ball"
+}
+item {
+  name: "n01776313"
+  label: 180
+  display_name: "tick"
+}
+item {
+  name: "n04591157"
+  label: 181
+  display_name: "tie"
+}
+item {
+  name: "n02129604"
+  label: 182
+  display_name: "tiger"
+}
+item {
+  name: "n04442312"
+  label: 183
+  display_name: "toaster"
+}
+item {
+  name: "n06874185"
+  label: 184
+  display_name: "traffic_light"
+}
+item {
+  name: "n04468005"
+  label: 185
+  display_name: "train"
+}
+item {
+  name: "n04487394"
+  label: 186
+  display_name: "trombone"
+}
+item {
+  name: "n03110669"
+  label: 187
+  display_name: "trumpet"
+}
+item {
+  name: "n01662784"
+  label: 188
+  display_name: "turtle"
+}
+item {
+  name: "n03211117"
+  label: 189
+  display_name: "tv_or_monitor"
+}
+item {
+  name: "n04509417"
+  label: 190
+  display_name: "unicycle"
+}
+item {
+  name: "n04517823"
+  label: 191
+  display_name: "vacuum"
+}
+item {
+  name: "n04536866"
+  label: 192
+  display_name: "violin"
+}
+item {
+  name: "n04540053"
+  label: 193
+  display_name: "volleyball"
+}
+item {
+  name: "n04542943"
+  label: 194
+  display_name: "waffle_iron"
+}
+item {
+  name: "n04554684"
+  label: 195
+  display_name: "washer"
+}
+item {
+  name: "n04557648"
+  label: 196
+  display_name: "water_bottle"
+}
+item {
+  name: "n04530566"
+  label: 197
+  display_name: "watercraft"
+}
+item {
+  name: "n02062744"
+  label: 198
+  display_name: "whale"
+}
+item {
+  name: "n04591713"
+  label: 199
+  display_name: "wine_bottle"
+}
+item {
+  name: "n02391049"
+  label: 200
+  display_name: "zebra"
+}
