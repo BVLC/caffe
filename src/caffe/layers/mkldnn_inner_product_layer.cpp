@@ -57,9 +57,9 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), InnerProductLayer<Dtype>(param)
-            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , ipFwd_pd(NULL), output_memory(NULL)
-            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL)
+            , fwd_bottom_data(), fwd_top_data(), fwd_weights_data(), fwd_bias_data()
+            , ipFwd_pd(), output_memory()
+            , input_primitive(), weights_primitive(), bias_primitive()
             , w_(0), h_(0)
 {
 }

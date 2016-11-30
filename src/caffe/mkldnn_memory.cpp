@@ -47,8 +47,8 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , Blob<Dtype>* blob
                                                             , MKLDNNLayer<Dtype>* mkldnn_layer)
                                     : name("MKLDNNMemoryDescriptorBase")
-                                    , _reorder_usr2prv_pd(NULL), _reorder_prv2usr_pd(NULL), _reorder_extprv2prv_pd(NULL)
-                                    ,_prv_memory(NULL), _internal_ptr(NULL), _usr_memory(NULL), _cpu_ptr(NULL)
+                                    , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
+                                    ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd);
@@ -57,7 +57,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
     this->_blob = blob;
     // !! TODO: check code below (there is error on second and other iterations without it) .
     if (_blob->data()->cpu_ptr())
-        _blob->set_prv_data_descriptor(NULL);
+        _blob->set_prv_data_descriptor(shared_ptr<caffe::PrvMemDescr>());
 }
 
 template <typename Dtype>
@@ -225,7 +225,7 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
                                             ,MKLDNNMemoryDescriptor<Dtype,is_diff>* converted_in_fwd)
 {
     if (!this->conversion_needed()) {
-        return NULL; // TODO: may be CHECK ?
+        return shared_ptr<primitive>(); // TODO: may be CHECK ?
     }
 
     // Conversion is needed
@@ -263,7 +263,7 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         return blob_prv_mkldnn_mem_descr->aprimitive();
     }
     NOT_IMPLEMENTED;
-    return NULL;
+    return shared_ptr<mkldnn::primitive>();
 }
 
 template <typename Dtype, bool is_diff>
@@ -353,5 +353,14 @@ template class MKLDNNMemoryDescriptor<float, false>;
 template class MKLDNNMemoryDescriptor<double, false>;
 template class MKLDNNMemoryDescriptorBase<float>;
 template class MKLDNNMemoryDescriptorBase<double>;
+
+template
+shared_ptr<MKLDNNMemoryDescriptor<double, true> > get_mkldnn_prv_descriptor<double, true>(Blob<double>* blob);
+template
+shared_ptr<MKLDNNMemoryDescriptor<float, true> > get_mkldnn_prv_descriptor<float, true>(Blob<float>* blob);
+template
+shared_ptr<MKLDNNMemoryDescriptor<double, false> > get_mkldnn_prv_descriptor<double, false>(Blob<double>* blob);
+template
+shared_ptr<MKLDNNMemoryDescriptor<float, false> > get_mkldnn_prv_descriptor<float, false>(Blob<float>* blob);
 }  // namespace caffe
 #endif  // #ifdef MKLDNN_SUPPORTED

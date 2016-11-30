@@ -156,7 +156,7 @@ public:
         _current_stream->prepare();
     }
 protected:
-    StreamHolder() : _current_stream(NULL) {}
+    StreamHolder() : _current_stream() {}
     ~StreamHolder() {}
 private:
     shared_ptr<MKLDNNStream> _current_stream;
@@ -174,7 +174,7 @@ public:
 template <typename Dtype>
 class MKLDNNPrimitive {
 public:
-    explicit MKLDNNPrimitive():aprimitive(NULL), mkldnn_stream(NULL) {}
+    explicit MKLDNNPrimitive():aprimitive(), mkldnn_stream() {}
     virtual ~MKLDNNPrimitive() {}
     void reset(primitive* pprimitive) { this->aprimitive.reset(pprimitive);}
     shared_ptr<primitive> aprimitive;
