@@ -268,18 +268,16 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       is_first_pass = 1;
 
       dnnError_t e;
-      e = dnnBatchNormalizationCreateForward<Dtype>(
-        &batchNormFwd, NULL, layout_usr_, eps_);
-      CHECK_EQ(e, E_SUCCESS);
-           e = dnnBatchNormalizationCreateForward_v2<Dtype>(
-        &batchNormFwd, NULL, layout_usr_, eps_, 
+        e = dnnBatchNormalizationCreateForward_v2<Dtype>(
+      &batchNormFwd, NULL, layout_usr_, eps_, 
                                     dnnUseScaleShift | dnnUseInputMeanVariance);
+      CHECK_EQ(e, E_SUCCESS);
 
   /*    e = dnnBatchNormalizationCreateBackwardData<Dtype>(
         &batchNormBwdData, NULL, layout_usr_, eps_);
       CHECK_EQ(e, E_SUCCESS);*/
       
-       e = dnnBatchNormalizationCreateBackward<Dtype>(
+       e = dnnBatchNormalizationCreateBackward_v2<Dtype>(
         &batchNormBwd, NULL, layout_usr_, eps_, dnnUseScaleShift);
       CHECK_EQ(e, E_SUCCESS);
 

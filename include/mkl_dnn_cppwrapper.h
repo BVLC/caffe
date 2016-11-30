@@ -829,7 +829,7 @@ TEMPLATE_PREFIX dnnError_t dnnBatchNormalizationCreateBackward_v2(
         dnnPrimitive_t* pBatchNormalization,
         dnnPrimitiveAttributes_t attributes,
         const dnnLayout_t dataLayout, float eps, unsigned int flags);
-SPEC_PREFIX  dnnError_t dnnBatchNormalizationCreateBackward<float>(
+SPEC_PREFIX  dnnError_t dnnBatchNormalizationCreateBackward_v2<float>(
         dnnPrimitive_t* pBatchNormalization,
         dnnPrimitiveAttributes_t attributes,
         const dnnLayout_t dataLayout, float eps, unsigned int flags)
