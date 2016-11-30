@@ -473,7 +473,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
       diff_scale[i] =  diffScaleShift_buffer_[i];
       diff_shift[i] =  0;
       if (bias_term_) {
-         diff_shift[i] =  diffScaleShift_buffer_[i];
+         diff_shift[i] =  diffScaleShift_buffer_[channels_ + i];
       }
     }
   }
