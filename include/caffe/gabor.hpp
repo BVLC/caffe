@@ -15,15 +15,38 @@ class KernelParameters
         {
         }
 
+        void generate(int kernelId, int numberOfKernels, int kernelSize)
+        {
+            if((numberOfKernels == 32) && (kernelSize == 5))
+                generateCifarLike(kernelId, kernelSize);
+            else if((numberOfKernels == 64) && (kernelSize == 7))
+                generateGoogleNetLike(kernelId, kernelSize);
+            else if((numberOfKernels == 64) && (kernelSize == 3))
+                generateVggLike(kernelId, kernelSize);
+            else if((numberOfKernels == 96) && (kernelSize == 11))
+                generateAlexNetLike(kernelId, kernelSize);
+            else
+                LOG(FATAL) << "No predefined gabor filters for this topology.";
+        }
+
         void generateCifarLike(int kernelId, int kernelSize)
         {
             if(kernelId < 8) {
                 omega = M_PI * (kernelSize - 1) / 2 / 1;
                 theta = (kernelId % 8) * M_PI / 8;
             }
-            else if(kernelId < 16) {
+            else if(kernelId < 14) {
                 omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
+                theta = ((kernelId - 2) % 6) * M_PI / 6 + M_PI / 12;
+            }
+            else if(kernelId < 16) {
+                lambda = 0.5;
+                sigma = 0.75;
+                omega = M_PI * (kernelSize - 1) / 2 / 8;
+                phi = (kernelId % 2) * M_PI;
+                r = 1;
+                g = -1;
+                b = 1;
             }
             else {
                 omega = M_PI * (kernelSize - 1) / 2 / 4;
@@ -41,12 +64,12 @@ class KernelParameters
                 theta = (kernelId % 2) * M_PI / 2 + M_PI / 4 - M_PI / 8;
                 r = -1;
                 g = 1;
-                b = 1;
+                b = -1;
             }
             else if(kernelId >= 24) {
                 r = -1;
                 g = 1;
-                b = -1;
+                b = 1;
             }
             else if(kernelId >= 20) {
                 r = 1;
@@ -273,7 +296,7 @@ class KernelGenerator
         void generateKernel(int kernelId, double lambda)
         {
             KernelParameters param;
-            getKernelParams(param, kernelId);
+            param.generate(kernelId, numberOfKernels, kernelSize);
 
             for(int ky = 0; ky < kernelSize; ky++)
                 for(int kx = 0; kx < kernelSize; kx++) {
@@ -291,23 +314,5 @@ class KernelGenerator
                 }
         }
 
-        void getKernelParams(KernelParameters &param, int kernelId)
-        {
-            if((numberOfKernels == 32) && (kernelSize == 5))
-                param.generateCifarLike(kernelId, kernelSize);
-            else if((numberOfKernels == 64) && (kernelSize == 7))
-                param.generateGoogleNetLike(kernelId, kernelSize);
-            else if((numberOfKernels == 64) && (kernelSize == 3))
-                param.generateVggLike(kernelId, kernelSize);
-            else if((numberOfKernels == 96) && (kernelSize == 11))
-                param.generateAlexNetLike(kernelId, kernelSize);
-            else
-                LOG(FATAL) << "No predefined gabor filters for this topology.";
-        }
 };
-
-// EXAMPLE USAGE:
-// KernelGenerator kernelGenerator(numberOfKernels, kernelSize);
-// kernelGenerator.generate(lambda);
-// memcpy(dest, kernelGenerator.getKernelData(), kernelGenerator.getSizeOfKernelData());
 }; //namespace cafffe
