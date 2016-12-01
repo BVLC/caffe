@@ -439,6 +439,11 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+# Performance monitoring
+ifeq ($(PERFORMANCE_MONITORING), 1)
+	CXXFLAGS += -DPERFORMANCE_MONITORING
+endif
+
 # MKLDNN configuration
 # detect support for mkl-dnn primitives
 MKLDNN_LDFLAGS=
