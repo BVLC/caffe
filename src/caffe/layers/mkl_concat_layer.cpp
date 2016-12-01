@@ -1,4 +1,4 @@
-/*
+ /*
 All modification made by Intel Corporation: © 2016 Intel Corporation
 
 All contributions by the University of California:
@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -204,7 +205,10 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
       reinterpret_cast<void*>(top[0]->mutable_cpu_data());
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN()
   e = dnnExecute<Dtype>(concatFwd_, concat_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_concat")
+
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -234,7 +238,10 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_concat");
+
   CHECK_EQ(e, E_SUCCESS);
 }
 

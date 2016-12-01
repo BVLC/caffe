@@ -74,7 +74,7 @@ namespace caffe {
       blob_bottom_vec_.push_back(blob_bottom_);
       blob_top_vec_.push_back(blob_top_);
     }
-    virtual ~MKLDNNBatchNormLayerTest() { delete blob_bottom_; delete blob_top_; }
+    virtual ~MKLDNNBatchNormLayerTest() {delete blob_bottom_; delete blob_top_;}
     Blob<Dtype>* const blob_bottom_;
     Blob<Dtype>* const blob_top_;
     vector<Blob<Dtype>*> blob_bottom_vec_;

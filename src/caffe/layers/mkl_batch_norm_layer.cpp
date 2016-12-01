@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -348,10 +349,8 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
 
   dnnError_t e;
   void* BatchNorm_res[dnnResourceNumber];
-
   BatchNorm_res[dnnResourceMean] = mean_buffer_;
   BatchNorm_res[dnnResourceVariance] = variance_buffer_;
-
   BatchNorm_res[dnnResourceSrc] = bottom_data;
   BatchNorm_res[dnnResourceScaleShift] = scaleShift_buffer_;
   if (fwd_top_data->conversion_needed()) {
@@ -364,9 +363,12 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     DLOG(INFO) << "Using cpu_data for top in DnnBatchNorm.";
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(use_global_stats_? batchNormFwdInference : batchNormFwd,
                                                                  BatchNorm_res);
   CHECK_EQ(e, E_SUCCESS);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+ 
 
   if (!use_global_stats_) {
      // compute and save moving average
@@ -417,8 +419,11 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
+
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwd, BatchNorm_res);
   CHECK_EQ(e, E_SUCCESS);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
 
   if (use_weight_bias_) {
     caffe_cpu_copy(this->blobs_[3]->count(),
