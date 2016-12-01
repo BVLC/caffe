@@ -248,17 +248,17 @@ namespace performance {
     }
 
     static void WriteHeaders() {
-      printf("\n%32s %13s %13s %18s %20s %21s %11s\n\n",
+      printf("\n%47s %13s %13s %18s %20s %21s %11s\n\n",
         "Avg(proc)", "Min(proc)", "Max(proc)",
         "Avg(total)", "Min(total)", "Max(total)", "Calls");
     }
 
     static void Write(const char *string, const PreciseTime &time) {
-      printf("%16s : %lu [nsec]\n", string, (uint64_t)time);
+      printf("%31s : %lu [nsec]\n", string, (uint64_t)time);
     }
 
     static void Write(const char *string, const Event &event) {
-      printf("%16s : %12lu, %12lu, %12lu, %16lu, %20lu, %20lu, %12lu\n", string,
+      printf("%31s : %12lu, %12lu, %12lu, %16lu, %20lu, %20lu, %12lu\n", string,
           (uint64_t)event.GetAverageProcessTime(),
           (uint64_t)event.GetMinimalProcessTime(),
           (uint64_t)event.GetMaximalProcessTime(),
