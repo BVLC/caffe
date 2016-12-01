@@ -7,7 +7,7 @@ By [Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](https://www.link
 
 ### Introduction
 
-SSD is an unified framework for object detection with a single network. You can use the code to train/evaluate a network for object detection task. For more details, please refer to our [arXiv paper](http://arxiv.org/abs/1512.02325).
+SSD is an unified framework for object detection with a single network. You can use the code to train/evaluate a network for object detection task. For more details, please refer to our [arXiv paper](http://arxiv.org/abs/1512.02325) and our [slide](http://www.cs.unc.edu/~wliu/papers/ssd_eccv2016_slide.pdf).
 
 <p align="center">
 <img src="http://www.cs.unc.edu/~wliu/papers/ssd.png" alt="SSD Framework" width="600px">
@@ -56,11 +56,6 @@ Please cite SSD in your publications if it helps your research:
   make test -j8
   # (Optional)
   make runtest -j8
-  # If you have multiple GPUs installed in your machine, make runtest might fail. If so, try following:
-  export CUDA_VISIBLE_DEVICES=0; make runtest -j8
-  # If you have error: "Check failed: error == cudaSuccess (10 vs. 0)  invalid device ordinal",
-  # first make sure you have the specified GPUs, or try following if you have multiple GPUs:
-  unset CUDA_VISIBLE_DEVICES
   ```
 
 ### Preparation
@@ -129,7 +124,7 @@ We have provided the latest models that are trained from different datasets. To 
 1. PASCAL VOC models:
    * 07+12: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_512x512.tar.gz)
    * 07++12: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712Plus_SSD_300x300.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712Plus_SSD_512x512.tar.gz)
-   * COCO [^1]: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300_coco.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_512x512_coco.tar.gz)
+   * COCO<sup>[1]</sup>: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300_coco.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_512x512_coco.tar.gz)
    * 07+12+COCO: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300_ft.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_512x512_ft.tar.gz)
    * 07++12+COCO: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712Plus_SSD_300x300_ft.tar.gz), [SSD512*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712Plus_SSD_512x512_ft.tar.gz)
 
@@ -139,4 +134,4 @@ We have provided the latest models that are trained from different datasets. To 
 3. ILSVRC models:
    * trainval1: [SSD300*](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_ILSVRC2016_SSD_300x300.tar.gz), [SSD500](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_ilsvrc15_SSD_500x500.tar.gz)
 
-[^1]: We use [`examples/convert_model.ipynb`](https://github.com/weiliu89/caffe/blob/ssd/examples/convert_model.ipynb) to extract a VOC model from a pretrained COCO model.
+<sup>[1]</sup>We use [`examples/convert_model.ipynb`](https://github.com/weiliu89/caffe/blob/ssd/examples/convert_model.ipynb) to extract a VOC model from a pretrained COCO model.
