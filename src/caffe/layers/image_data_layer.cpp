@@ -1,40 +1,3 @@
-/*
-All modification made by Intel Corporation: © 2016 Intel Corporation
-
-All contributions by the University of California:
-Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
-All rights reserved.
-
-All other contributions:
-Copyright (c) 2014, 2015, the respective contributors
-All rights reserved.
-For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
-
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of Intel Corporation nor the names of its contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 
@@ -137,6 +100,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 
+// This function is called on prefetch thread
 template <typename Dtype>
 void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -170,49 +134,20 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   // datum scales
   const int lines_size = lines_.size();
-
-#ifdef _OPENMP
-  #pragma omp parallel if (batch_size > 1)
-  #pragma omp single nowait
-#endif
-  for (int item_id = 0; item_id < batch_size; ++item_id)  {
+  for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
-#ifndef _OPENMP
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
-// Apply transformations (mirror, crop...) to the image
-
+    // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
-#else
-    read_time = 0;
-    trans_time = 0;
-
-    int offset = batch->data_.offset(item_id);
-    std::string img_file_name = lines_[lines_id_].first;
-    PreclcRandomNumbers precalculated_rand_numbers;
-    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
-    #pragma omp task firstprivate(offset, img_file_name, \
-                                                    precalculated_rand_numbers)
-    {
-        cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
-            new_height, new_width, is_color);
-        CHECK(cv_img.data) << "Could not load " << img_file_name;
-
-        Blob<Dtype> tmp_data;
-        tmp_data.Reshape(top_shape);
-        tmp_data.set_cpu_data(prefetch_data + offset);
-        this->data_transformer_->Transform(cv_img, &tmp_data, 
-                                                  precalculated_rand_numbers);
-    }
-#endif
 
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
@@ -226,15 +161,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
     }
   }
-
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
-
-
-
 
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
