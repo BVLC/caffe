@@ -368,9 +368,6 @@ class MKLBatchNormLayer : public Layer<Dtype> {
         batchNormFwd(static_cast<dnnPrimitive_t>(NULL)),
         batchNormFwdInference(static_cast<dnnPrimitive_t>(NULL)),
         batchNormBwd(static_cast<dnnPrimitive_t>(NULL)),
-        // batchNormBwdData(static_cast<dnnPrimitive_t>(NULL)),
-        // batchNormBwdScaleShift(static_cast<dnnPrimitive_t>(NULL)),
-        // workspace_buffer_(static_cast<Dtype*>(NULL)),
         mean_buffer_(static_cast<Dtype*>(NULL)),
         variance_buffer_(static_cast<Dtype*>(NULL)),
         scaleShift_buffer_(static_cast<Dtype*>(NULL)),
@@ -418,7 +415,6 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
   Blob<Dtype> temp_;
   dnnPrimitive_t batchNormFwd, batchNormFwdInference, batchNormBwd;
-  // Dtype *workspace_buffer_;
   Dtype *mean_buffer_;
   Dtype *variance_buffer_;
   Dtype *scaleShift_buffer_;
