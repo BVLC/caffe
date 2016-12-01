@@ -25,7 +25,7 @@ set -e
 # executed.
 #
 # In order to provide additional flexibility, the following shell (environment)
-# variables can be used to controll the execution of each of the phases:
+# variables can be used to control the execution of each of the phases:
 #
 # DOWNLOAD_DATA: Enable (1) or disable (0) the downloading of the MNIST dataset
 # CREATE_LMDB: Enable (1) or disable (0) the creation of the LMDB database
