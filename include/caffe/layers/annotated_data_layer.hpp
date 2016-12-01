@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_LAYER_HPP_
 #define CAFFE_DATA_LAYER_HPP_
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -15,23 +16,26 @@
 namespace caffe {
 
 template <typename Dtype>
-class DataLayer : public BasePrefetchingDataLayer<Dtype> {
+class AnnotatedDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
-  explicit DataLayer(const LayerParameter& param);
-  virtual ~DataLayer();
+  explicit AnnotatedDataLayer(const LayerParameter& param);
+  virtual ~AnnotatedDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  // DataLayer uses DataReader instead for sharing for parallelism
+  // AnnotatedDataLayer uses DataReader instead for sharing for parallelism
   virtual inline bool ShareInParallel() const { return false; }
-  virtual inline const char* type() const { return "Data"; }
+  virtual inline const char* type() const { return "AnnotatedData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
 
-  DataReader<Datum> reader_;
+  DataReader<AnnotatedDatum> reader_;
+  bool has_anno_type_;
+  AnnotatedDatum_AnnotationType anno_type_;
+  vector<BatchSampler> batch_samplers_;
+  string label_map_file_;
 };
 
 }  // namespace caffe
