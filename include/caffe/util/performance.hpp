@@ -248,7 +248,7 @@ namespace performance {
     }
 
     static void WriteHeaders() {
-      printf("\n%47s %13s %13s %18s %20s %21s %11s\n\n",
+      printf("\n%52s %18s %18s %18s %18s %18s %18s\n\n",
         "Avg(proc)", "Min(proc)", "Max(proc)",
         "Avg(total)", "Min(total)", "Max(total)", "Calls");
     }
@@ -258,7 +258,7 @@ namespace performance {
     }
 
     static void Write(const char *string, const Event &event) {
-      printf("%31s : %12lu, %12lu, %12lu, %16lu, %20lu, %20lu, %12lu\n", string,
+      printf("%31s : %18lu %18lu %18lu %18lu %18lu %18lu %18lu\n", string,
           (uint64_t)event.GetAverageProcessTime(),
           (uint64_t)event.GetMinimalProcessTime(),
           (uint64_t)event.GetMaximalProcessTime(),
