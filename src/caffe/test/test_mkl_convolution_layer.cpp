@@ -170,6 +170,25 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       }
     }
   }
+  //relu
+  if (conv_param->relu()){
+    for (int n = 0; n < out->shape(0); n++) {
+      for (int o = 0; o < out->shape(1); o++) {
+        for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
+          for (int y = 0; y < out->shape(2 + has_depth); y++) {
+            for (int x = 0; x < out->shape(3 + has_depth); x++) {
+              out_offset[0] = n;
+              out_offset[1] = o;
+              if (has_depth) { out_offset[2] = z; }
+              out_offset[2 + has_depth] = y;
+              out_offset[3 + has_depth] = x;
+              if(out_data[out->offset(out_offset)] < 0) out_data[out->offset(out_offset)] = 0;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 template void caffe_conv(const Blob<float>* in,

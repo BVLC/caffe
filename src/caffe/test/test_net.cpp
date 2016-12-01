@@ -2801,7 +2801,7 @@ class CompileNetTest : public ::testing::Test {
 // If BatchNorm of engine MKL2017
 // produce blob consumed by
 // Scale Layer then Scale Layer can be dropped
-TEST_F(CompileNetTest, TestCompileNet) {
+TEST_F(CompileNetTest, TestCompileNetBatchNorm) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layer { "
@@ -2857,6 +2857,161 @@ TEST_F(CompileNetTest, TestCompileNet) {
       "  name: 'loss' "
       "  type: 'SoftmaxWithLoss' "
       "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+#endif
+
+
+#ifdef MKLDNN_SUPPORTED
+// If Convolution of engine MKLDNN
+// is followed by ReLU of engine MKLDNN
+TEST_F(CompileNetTest, TestCompileNetConvolution) {
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'conv' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  bottom: 'conv' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'relu' "
+      " top: 'relu' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'conv' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "   bias_term: true "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'conv' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "   relu: true "
+      "negative_slope: 0"
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+#endif
+
+#if defined(MKL2017_SUPPORTED) && defined(MKLDNN_SUPPORTED)
+// Combined Batch Norm and Conv ReLU
+TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution){
+    
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'relu' "
+      " top: 'relu' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "   relu: true "
+      "negative_slope: 0"
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
       "  bottom: 'label' "
       "} ";
   this->RunCompilerNetTest(input_proto, output_proto);
