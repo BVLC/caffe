@@ -173,6 +173,19 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
     caffe_set(this->blobs_[i]->count(), Dtype(0),
               this->blobs_[i]->mutable_cpu_data());
   }
+  
+  // Mask statistics from optimization by setting local learning rates
+  // for mean, variance, and the bias correction to zero.
+  for (int i = 0; i < 3; ++i) {
+    if (this->layer_param_.param_size() == i) {
+      ParamSpec* fixed_param_spec = this->layer_param_.add_param();
+      fixed_param_spec->set_lr_mult(0.f);
+    } else {
+      CHECK_EQ(this->layer_param_.param(i).lr_mult(), 0.f)
+          << "Cannot configure batch normalization statistics as layer "
+          << "parameters.";
+    }
+  }
 }
 
 template <typename Dtype>
