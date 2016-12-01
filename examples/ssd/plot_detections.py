@@ -1,3 +1,7 @@
+'''
+Plot the detection results output by ssd_detect.cpp.
+'''
+
 import argparse
 from collections import OrderedDict
 from google.protobuf import text_format
@@ -68,7 +72,7 @@ def showResults(img_file, results, labelmap=None, threshold=None, display=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-            description = "Plot the detection results by ssd_detect.")
+            description = "Plot the detection results output by ssd_detect.")
     parser.add_argument("resultfile",
             help = "A file which contains all the detection results.")
     parser.add_argument("imgdir",
