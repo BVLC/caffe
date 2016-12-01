@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
-#include "mkl_service.h"
+//#include "mkl_service.h"
 
 // TODO: Correct process case if there are no bias
 // TODO: Exception handling - mkl-dnn produces exceptions on errors
@@ -53,9 +53,9 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), ConvolutionLayer<Dtype>(param)
-            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , convFwd_pd(NULL), output_memory(NULL)
-            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL)
+            , fwd_bottom_data(), fwd_top_data(), fwd_weights_data(), fwd_bias_data()
+            , convFwd_pd(), output_memory()
+            , input_primitive(), weights_primitive(), bias_primitive()
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
             , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
 {

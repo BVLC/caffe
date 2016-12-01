@@ -42,8 +42,10 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(USE_SYSTEMTAP "Build for SystemTap" OFF)
-
+#caffe_option(USE_GITHUB_MKLDNN "Download and use MKL-DNN available on github" OFF)
+ 
 # ---[ Dependencies
+include(cmake/MKLDNN.cmake)
 include(cmake/Dependencies.cmake)
 
 # ---[ Flags
