@@ -1,5 +1,5 @@
 ---
-title: Installation: Ubuntu
+title: "Installation: Ubuntu"
 ---
 
 # Ubuntu Installation

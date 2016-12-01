@@ -418,7 +418,7 @@ message TransformationParameter {
   optional uint32 crop_size = 3 [default = 0];
   // mean_file and mean_value cannot be specified at the same time
   optional string mean_file = 4;
-  // if specified can be repeated once (would substract it from all the channels)
+  // if specified can be repeated once (would subtract it from all the channels)
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
@@ -434,7 +434,7 @@ message LossParameter {
   optional int32 ignore_label = 1;
   // How to normalize the loss for loss layers that aggregate across batches,
   // spatial dimensions, or other dimensions.  Currently only implemented in
-  // SoftmaxWithLoss layer.
+  // SoftmaxWithLoss and SigmoidCrossEntropyLoss layers.
   enum NormalizationMode {
     // Divide by the number of examples in the batch times spatial dimensions.
     // Outputs that receive the ignore label will NOT be ignored in computing
@@ -448,6 +448,8 @@ message LossParameter {
     // Do not normalize the loss.
     NONE = 3;
   }
+  // For historical reasons, the default normalization for
+  // SigmoidCrossEntropyLoss is BATCH_SIZE and *not* VALID.
   optional NormalizationMode normalization = 3 [default = VALID];
   // Deprecated.  Ignored if normalization is specified.  If normalization
   // is not specified, then setting this to false will be equivalent to
@@ -1394,6 +1396,6 @@ message PReLUParameter {
 
   // Initial value of a_i. Default is a_i=0.25 for all i.
   optional FillerParameter filler = 1;
-  // Whether or not slope paramters are shared across channels.
+  // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
