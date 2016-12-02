@@ -624,14 +624,18 @@ message SaltPepperParameter {
 // Message that stores parameters used by data transformer for transformation
 // policy
 message NoiseParameter {
-  //Probability of using this noise policy
+  // Probability of using this noise policy
   optional float prob = 1 [default = 0];
+  
   // Histogram equalized
   optional bool hist_eq = 2 [default = false];
+  
   // Color inversion
   optional bool inverse = 3 [default = false];
+  
   // Grayscale
   optional bool decolorize = 4 [default = false];
+  
   // Gaussian blur
   optional bool gauss_blur = 5 [default = false];
 
@@ -657,6 +661,9 @@ message NoiseParameter {
 
   // Color space conversion
   optional bool convert_to_lab = 13 [default = false];
+
+  // Whether to use all effects
+  optional bool all_effects = 14 [default = false];
 }
 
 // Message that stores parameters shared by loss layers

@@ -395,7 +395,25 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
   cv::Mat out_img;
 
-  if (param.decolorize()) {
+  bool decolorize = param.decolorize();
+  bool hist_eq = param.hist_eq();
+  bool inverse = param.inverse();
+  bool gauss_blur = param.gauss_blur();
+  bool posterize = param.posterize();
+  bool erode = param.erode();
+  bool saltpepper = param.saltpepper();
+  bool clahe = param.clahe();
+  bool convert_to_hsv = param.convert_to_hsv();
+  bool convert_to_lab = param.convert_to_lab();
+  
+  if (param.all_effects())
+    decolorize = true;
+  vector<float> binary_probs;
+  if (param.prob() > 0.0)
+    binary_probs = {param.prob(),1.f-param.prob()};
+  
+  decolorize = param.prob() ? roll_weighted_die(binary_probs) == 1 : decolorize;
+  if (decolorize) {
     cv::Mat grayscale_img;
     cv::cvtColor(in_img, grayscale_img, CV_BGR2GRAY);
     cv::cvtColor(grayscale_img, out_img,  CV_GRAY2BGR);
@@ -403,11 +421,13 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     out_img = in_img;
   }
 
-  if (param.gauss_blur()) {
+  gauss_blur = param.prob() ? roll_weighted_die(binary_probs) == 1 : gauss_blur;
+  if (gauss_blur) {
     cv::GaussianBlur(out_img, out_img, cv::Size(7, 7), 1.5);
   }
 
-  if (param.hist_eq()) {
+  hist_eq = param.prob() ? roll_weighted_die(binary_probs) == 1 : hist_eq;
+  if (hist_eq) {
     if (out_img.channels() > 1) {
       cv::Mat ycrcb_image;
       cv::cvtColor(out_img, ycrcb_image, CV_BGR2YCrCb);
@@ -428,7 +448,8 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     }
   }
 
-  if (param.clahe()) {
+  clahe = param.prob() ? roll_weighted_die(binary_probs) == 1 : clahe;
+  if (clahe) {
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
     clahe->setClipLimit(4);
     if (out_img.channels() > 1) {
@@ -462,19 +483,22 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     out_img = cv::imdecode(buf, CV_LOAD_IMAGE_COLOR);
   }
 
-  if (param.erode()) {
+  erode = param.prob() ? roll_weighted_die(binary_probs) == 1 : erode;
+  if (erode) {
     cv::Mat element = cv::getStructuringElement(
         2, cv::Size(3, 3), cv::Point(1, 1));
     cv::erode(out_img, out_img, element);
   }
 
-  if (param.posterize()) {
+  posterize = param.prob() ? roll_weighted_die(binary_probs) == 1 : posterize;
+  if (posterize) {
     cv::Mat tmp_img;
     tmp_img = colorReduce(out_img);
     out_img = tmp_img;
   }
 
-  if (param.inverse()) {
+  inverse = param.prob() ? roll_weighted_die(binary_probs) == 1 : inverse;
+  if (inverse) {
     cv::Mat tmp_img;
     cv::bitwise_not(out_img, tmp_img);
     out_img = tmp_img;
@@ -498,19 +522,22 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
       }
     }
   }
-  if (param.saltpepper()) {
+  saltpepper = param.prob() ? roll_weighted_die(binary_probs) == 1 : saltpepper;
+  if (saltpepper) {
     const int noise_pixels_num =
         floor(param.saltpepper_param().fraction()
               * out_img.cols * out_img.rows);
     constantNoise(noise_pixels_num, noise_values, &out_img);
   }
 
-  if (param.convert_to_hsv()) {
+  convert_to_hsv = param.prob() ? roll_weighted_die(binary_probs) == 1 : convert_to_hsv;
+  if (convert_to_hsv) {
     cv::Mat hsv_image;
     cv::cvtColor(out_img, hsv_image, CV_BGR2HSV);
     out_img = hsv_image;
   }
-  if (param.convert_to_lab()) {
+  convert_to_lab = param.prob() ? roll_weighted_die(binary_probs) == 1 : convert_to_lab;
+  if (convert_to_lab) {
     cv::Mat lab_image;
     out_img.convertTo(lab_image, CV_32F);
     lab_image *= 1.0 / 255;
