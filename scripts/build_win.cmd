@@ -30,6 +30,11 @@ if DEFINED APPVEYOR (
     :: Todo create protobuf package for vc14
     conda install --yes cmake ninja numpy scipy protobuf==3.1.0.vc12 six scikit-image
 
+    if ERRORLEVEL 1  (
+      echo ERROR: Conda update or install failed
+      exit /b 1
+    )
+
     :: Disable the tests in debug config
     if "%CMAKE_CONFIG%" == "Debug" (
         echo Disabling tests on appveyor with config == %CMAKE_CONFIG%
@@ -150,7 +155,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
       "%~dp0\.."
 
 if ERRORLEVEL 1 (
-  echo Configure failed
+  echo ERROR: Configure failed
   exit /b 1
 )
 
@@ -160,7 +165,7 @@ if %RUN_LINT% EQU 1 (
 )
 
 if ERRORLEVEL 1 (
-  echo Lint failed
+  echo ERROR: Lint failed
   exit /b 1
 )
 
@@ -168,7 +173,7 @@ if ERRORLEVEL 1 (
 cmake --build . --config %CMAKE_CONFIG%
 
 if ERRORLEVEL 1 (
-  echo Build failed
+  echo ERROR: Build failed
   exit /b 1
 )
 
@@ -177,7 +182,7 @@ if !RUN_TESTS! EQU 1 (
     cmake --build . --target runtest --config %CMAKE_CONFIG%
 
     if ERRORLEVEL 1 (
-        echo Tests failed
+        echo ERROR: Tests failed
         exit /b 1
     )
 
@@ -190,7 +195,7 @@ if !RUN_TESTS! EQU 1 (
                 cmake --build . --target pytest
 
                 if ERRORLEVEL 1 (
-                    echo Python tests failed
+                    echo ERROR: Python tests failed
                     exit /b 1
                 )
             )
