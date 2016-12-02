@@ -1,6 +1,7 @@
 #ifndef CAFFE_GREENTEA_LIBDNN_HPP_
 #define CAFFE_GREENTEA_LIBDNN_HPP_
 
+#include <iomanip>
 #include <memory>
 #include <string>
 #include <vector>

@@ -81,34 +81,30 @@ __kernel void TEMPLATE(max_pool_backward_sk,Dtype)(
     int_tp c = (index / width / height) % channels;
     int_tp n = index / width / height / channels;
 
-    int_tp pooled_height_1 = pooled_height - 1;
-    int_tp pooled_width_1 = pooled_width - 1;
     int_tp phstart =
-        (h < ext_kernel_h) ? h % dilation_h : (h - ext_kernel_h) + 1;
-    int_tp phend =
-        (h >= pooled_height) ?
-            pooled_height_1 - (pooled_height_1 - phstart) % dilation_h : h;
+        (h + pad_h < ext_kernel_h) ? 0 : (h + pad_h - ext_kernel_h) / stride_h + 1;
+    int_tp phend = min(((h + pad_h) / stride_h + 1),
+                       pooled_height);
     int_tp pwstart =
-        (w < ext_kernel_w) ? w % dilation_w : (w - ext_kernel_w) + 1;
-    int_tp pwend =
-        (w >= pooled_width) ?
-            pooled_width_1 - (pooled_width_1 - pwstart) % dilation_w : w;
+        (w + pad_w < ext_kernel_w) ? 0 : (w + pad_w - ext_kernel_w) / stride_w + 1;
+    int_tp pwend = min(((w + pad_w) / stride_w + 1),
+                       pooled_width);
 
-    Dtype gradient = 0;
+    Dtype gradient = 0.0;
     int_tp offset = (n * channels + c) * pooled_height * pooled_width;
     top_diff_ptr += offset;
     if (use_mask == 1) {
       mask_ptr += offset;
-      for (int_tp ph = phstart; ph <= phend; ph += dilation_h) {
-        for (int_tp pw = pwstart; pw <= pwend; pw += dilation_w) {
+      for (int_tp ph = phstart; ph < phend; ++ph) {
+        for (int_tp pw = pwstart; pw < pwend; ++pw) {
           if (mask_ptr[ph * pooled_width + pw] == h * width + w) {
             gradient += top_diff_ptr[ph * pooled_width + pw];
           }
         }
       }
     } else {
-      for (int_tp ph = phstart; ph <= phend; ph += dilation_h) {
-        for (int_tp pw = pwstart; pw <= pwend; pw += dilation_w) {
+      for (int_tp ph = phstart; ph < phend; ++ph) {
+        for (int_tp pw = pwstart; pw < pwend; ++pw) {
           if (top_mask[ph * pooled_width + pw] == h * width + w) {
             gradient += top_diff_ptr[ph * pooled_width + pw];
           }
@@ -148,8 +144,8 @@ __kernel void TEMPLATE(ave_pool_forward_sk,Dtype)(
     __global const Dtype* bottom_data_ptr = bottom_data;
     bottom_data_ptr += (n * channels + c) * height * width;
     int_tp pool_size = 0;
-    for (int_tp h = hstart; h < hend; ++h) {
-      for (int_tp w = wstart; w < wend; ++w) {
+    for (int_tp h = hstart; h < hend; h += dilation_h) {
+      for (int_tp w = wstart; w < wend; w += dilation_w) {
         aveval += bottom_data_ptr[h * width + w];
         ++pool_size;
       }

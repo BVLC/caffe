@@ -17,7 +17,7 @@
 // Comparative check difference limit
 #define kappa 0.05
 // Comparative check shape size limit
-#define element_limit 100000
+#define element_limit 10000
 
 namespace caffe {
 
@@ -826,18 +826,33 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
 
+    std::uniform_int_distribution<int_tp> pickRand(0, 1);
+    bool dilation = pickRand(this->rng_) == 1;
+
+    // Unlike LibDNN, the Caffe engine does not yet have support
+    // for all combinations of parameters (dilation <--> padding,
+    // ND <--> stochastic)
+
     std::uniform_int_distribution<int_tp> dimsRand(1, 3);
-    std::uniform_int_distribution<int_tp> dilationRand(1, 1);
+
+    int_tp dims = dimsRand(this->rng_);
+
+    std::uniform_int_distribution<int_tp> dilationRand(1, dilation ? 4 : 1);
+    std::uniform_int_distribution<int_tp> padRand(0, dilation ? 0 : 5);
     std::uniform_int_distribution<int_tp> kernelRand(2, 4);
-    std::uniform_int_distribution<int_tp> padRand(0, 3);
-    std::uniform_int_distribution<int_tp> strideRand(1, 3);
-    std::uniform_int_distribution<int_tp> batchRand(1, 6);
+    std::uniform_int_distribution<int_tp> strideRand(1, 5);
+    std::uniform_int_distribution<int_tp> batchRand(1, 8);
     std::uniform_int_distribution<int_tp> fmapRand(1, 32);
+    std::uniform_int_distribution<int_tp> poolMethodRand(0, dims != 2 ? 0 : 0);
 
     int_tp batchsize = batchRand(this->rng_);
     int_tp fmaps = fmapRand(this->rng_);
 
-    int dims = dimsRand(this->rng_);
+
+    // Reduce test range for compatibility with Caffe engine
+    pooling_param->set_pool(
+        static_cast<PoolingParameter_PoolMethod>(poolMethodRand(this->rng_)));
+
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
                 pow(element_limit / (fmaps * batchsize),
@@ -849,10 +864,13 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     shape.add_dim(fmaps);   // Channels
 
 
+    std::vector<int_tp> pooled_size(dims);
+
     for (int_tp i = 0; i < dims; ++i) {
       pooling_param->add_kernel_size(kernelRand(this->rng_));
       pooling_param->add_dilation(dilationRand(this->rng_));
-      pooling_param->add_pad(padRand(this->rng_));
+      pooling_param->add_pad(std::min(static_cast<int_tp>(padRand(this->rng_)),
+                      static_cast<int_tp>(pooling_param->kernel_size(i) - 1)));
       pooling_param->add_stride(strideRand(this->rng_));
 
       int_tp size = sizeRand(this->rng_);
@@ -861,7 +879,27 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
       size = std::max((int_tp)size,
                       (int_tp)(kernel_extent - 2 * pooling_param->pad(i)));
       shape.add_dim(size);
+
+      pooled_size[i] = static_cast<int_tp>(ceil(
+        static_cast<float>(size + 2 * pooling_param->pad(i)
+            - kernel_extent) / pooling_param->stride(i))) + 1;
+      if (pooling_param->pad(i) > 0) {
+        // If we have padding, ensure that the last pooling starts strictly
+        // inside the image (instead of at the padding);
+        // otherwise clip the last.
+        if ((pooled_size[i] - 1) * pooling_param->stride(i)
+            >= size + pooling_param->pad(i)) {
+          --pooled_size[i];
+        }
+        while ((pooled_size[i] - 1) * pooling_param->stride(i)
+            >= size + pooling_param->pad(i) && (pooling_param->pad(i) >= 1)) {
+          pooling_param->set_pad(i, pooling_param->pad(i) - 1);
+        }
+      }
     }
+
+
+    std::cout << "Pool method: " << pooling_param->pool() << std::endl;
 
     std::cout << "Shape in: [";
     for (int i = 0; i < dims + 2; ++i) {
@@ -911,6 +949,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     blob_bottom_->Reshape(shape);
     blob_bottom_ref_->Reshape(shape);
 
+
     LibDNNPoolingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -933,10 +972,6 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
               (TypeParam)0.0, blob_top_->mutable_cpu_data());
     caffe_set(blob_top_ref_->count(),
               (TypeParam)0.0, blob_top_ref_->mutable_cpu_data());
-
-    /*layer.Tune(this->blob_top_vec_[0]->mutable_gpu_data(), nullptr,
-               this->blob_bottom_vec_[0]->mutable_gpu_data(), nullptr,
-               batchsize);*/
 
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
@@ -991,18 +1026,34 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
 
+    std::uniform_int_distribution<int_tp> pickRand(0, 1);
+    bool dilation = pickRand(this->rng_) == 1;
+
+    // Unlike LibDNN, the Caffe engine does not yet have support
+    // for all combinations of parameters (dilation <--> padding,
+    // ND <--> stochastic)
+
     std::uniform_int_distribution<int_tp> dimsRand(1, 3);
-    std::uniform_int_distribution<int_tp> dilationRand(1, 1);
+
+    int_tp dims = dimsRand(this->rng_);
+
+    std::uniform_int_distribution<int_tp> dilationRand(1, dilation ? 4 : 1);
+    std::uniform_int_distribution<int_tp> padRand(0, dilation ? 0 : 5);
     std::uniform_int_distribution<int_tp> kernelRand(2, 4);
-    std::uniform_int_distribution<int_tp> padRand(0, 3);
-    std::uniform_int_distribution<int_tp> strideRand(1, 3);
-    std::uniform_int_distribution<int_tp> batchRand(1, 6);
+    std::uniform_int_distribution<int_tp> strideRand(1, 5);
+    std::uniform_int_distribution<int_tp> batchRand(1, 8);
     std::uniform_int_distribution<int_tp> fmapRand(1, 32);
+    std::uniform_int_distribution<int_tp> poolMethodRand(0,
+                                          (dims != 2 || dilation) ? 0 : 0);
 
     int_tp batchsize = batchRand(this->rng_);
     int_tp fmaps = fmapRand(this->rng_);
 
-    int dims = dimsRand(this->rng_);
+
+    // Reduce test range for compatibility with Caffe engine
+    pooling_param->set_pool(
+        static_cast<PoolingParameter_PoolMethod>(poolMethodRand(this->rng_)));
+
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
                 pow(element_limit / (fmaps * batchsize),
@@ -1013,10 +1064,14 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     shape.add_dim(batchsize);  // Batch
     shape.add_dim(fmaps);   // Channels
 
+
+    std::vector<int_tp> pooled_size(dims);
+
     for (int_tp i = 0; i < dims; ++i) {
       pooling_param->add_kernel_size(kernelRand(this->rng_));
       pooling_param->add_dilation(dilationRand(this->rng_));
-      pooling_param->add_pad(padRand(this->rng_));
+      pooling_param->add_pad(std::min(static_cast<int_tp>(padRand(this->rng_)),
+                      static_cast<int_tp>(pooling_param->kernel_size(i) - 1)));
       pooling_param->add_stride(strideRand(this->rng_));
 
       int_tp size = sizeRand(this->rng_);
@@ -1025,7 +1080,26 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
       size = std::max((int_tp)size,
                       (int_tp)(kernel_extent - 2 * pooling_param->pad(i)));
       shape.add_dim(size);
+
+      pooled_size[i] = static_cast<int_tp>(ceil(
+        static_cast<float>(size + 2 * pooling_param->pad(i)
+            - kernel_extent) / pooling_param->stride(i))) + 1;
+      if (pooling_param->pad(i) > 0) {
+        // If we have padding, ensure that the last pooling starts strictly
+        // inside the image (instead of at the padding);
+        // otherwise clip the last.
+        if ((pooled_size[i] - 1) * pooling_param->stride(i)
+            >= size + pooling_param->pad(i)) {
+          --pooled_size[i];
+        }
+        while ((pooled_size[i] - 1) * pooling_param->stride(i)
+            >= size + pooling_param->pad(i) && (pooling_param->pad(i) >= 1)) {
+          pooling_param->set_pad(i, pooling_param->pad(i) - 1);
+        }
+      }
     }
+
+    std::cout << "Pool method: " << pooling_param->pool() << std::endl;
 
     std::cout << "Shape in: [";
     for (int i = 0; i < dims + 2; ++i) {
