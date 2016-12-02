@@ -45,3 +45,9 @@ environment:
 build_script:
 - cmd: >-
     call scripts\build_win.cmd
+
+artifacts:
+  - path: build\install
+    name: caffe
+  - path: build\libraries
+    name: dependencies
