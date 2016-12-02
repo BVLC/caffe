@@ -82,7 +82,6 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
     } else {
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
     }
-    // TODO; Remove
     // config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
 
 
@@ -122,19 +121,21 @@ void LibDNNPoolingLayer<Dtype>::Forward_gpu(
       }
       break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
-      if (this->device_->backend() == BACKEND_CUDA) {
+      if (!test_mode) {
+        if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-        caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
-          this->rand_idx_.mutable_gpu_data());
+          caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+            this->rand_idx_.mutable_gpu_data());
 #endif  // USE_CUDA
-      } else {
+        } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_rng_uniform(this->device_->id(), count,
-          Dtype(0), Dtype(1),
-          (cl_mem)(this->rand_idx_.mutable_gpu_data()), 0);
+          greentea_gpu_rng_uniform(this->device_->id(), count,
+            Dtype(0), Dtype(1),
+            (cl_mem)(this->rand_idx_.mutable_gpu_data()), 0);
 #endif  // USE_GREENTEA
+        }
+        rand_idx = this->rand_idx_.mutable_gpu_data();
       }
-      rand_idx = this->rand_idx_.mutable_gpu_data();
       break;
   }
 
