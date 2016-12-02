@@ -47,7 +47,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
 // instead of duplicated here and in SoftMaxWithLossLayer
 template <typename Dtype>
 Dtype SigmoidCrossEntropyLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
