@@ -182,17 +182,23 @@ SSD is an unified framework for object detection with a single network. You can 
 | [YOLO (customized)](http://pjreddie.com/darknet/yolo/) | 63.4 | 45 | 98 | 448 x 448 |
 | SSD300* (VGG16) | 77.2 | 46 | 8732 | 300 x 300 |
 | SSD512* (VGG16) | **79.8** | 19 | 24564 | 512 x 512 |
+
+
+<p align="left">
+<img src="http://www.cs.unc.edu/~wliu/papers/ssd_results.png" alt="SSD results on multiple datasets" width="800px">
+</p>
+
 _Note: SSD300* and SSD512* are the latest models. Current code should reproduce these results._
 
 ### Citing SSD
 
 Please cite SSD in your publications if it helps your research:
 
-    @article{liu15ssd,
-      Title = {{SSD}: Single Shot MultiBox Detector},
-      Author = {Liu, Wei and Anguelov, Dragomir and Erhan, Dumitru and Szegedy, Christian and Reed, Scott},
-      Journal = {arXiv preprint arXiv:1512.02325},
-      Year = {2015}
+    @inproceedings{liu2016ssd,
+      title = {{SSD}: Single Shot MultiBox Detector},
+      author = {Liu, Wei and Anguelov, Dragomir and Erhan, Dumitru and Szegedy, Christian and Reed, Scott and Fu, Cheng-Yang and Berg, Alexander C.},
+      booktitle = {ECCV},
+      year = {2016}
     }
 
 ### Contents
