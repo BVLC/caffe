@@ -407,7 +407,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
   bool convert_to_lab = param.convert_to_lab();
   
   if (param.all_effects())
-    decolorize = true;
+    decolorize = hist_eq = inverse = gauss_blur = posterize = erode = saltpepper = clahe = convert_to_hsv = convert_to_lab = true;
   vector<float> binary_probs;
   if (param.prob() > 0.0)
     binary_probs = {param.prob(),1.f-param.prob()};
