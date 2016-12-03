@@ -237,8 +237,8 @@ class GaborFillerTest : public ::testing::Test {
     this->filler_.reset(new GaborFiller<Dtype>(this->filler_param_));
     this->filler_->Fill(blob_);
     EXPECT_TRUE(this->blob_);
-    const int count = this->blob_->count();
-    const Dtype* data = this->blob_->cpu_data();
+    //const int count = this->blob_->count();
+    //const Dtype* data = this->blob_->cpu_data();
   }
 
   virtual ~GaborFillerTest() { delete blob_; }

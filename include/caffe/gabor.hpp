@@ -31,6 +31,8 @@ class KernelParameters
 
         void generateCifarLike(int kernelId, int kernelSize)
         {
+            lambda = 0.5;
+
             if(kernelId < 8) {
                 omega = M_PI * (kernelSize - 1) / 2 / 1;
                 theta = (kernelId % 8) * M_PI / 8;
@@ -80,59 +82,69 @@ class KernelParameters
 
         void generateGoogleNetLike(int kernelId, int kernelSize)
         {
-            if(kernelId < 8) {
-                omega = M_PI * (kernelSize - 1) / 2 / 1;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
-            }
-            else if(kernelId < 16) {
-                omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
-            }
-            else if(kernelId < 24) {
-                omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 16;
-                phi = M_PI / 2;
-            }
-            else if(kernelId < 32) {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 16;
-                phi = M_PI / 2;
-            }
-            else if(kernelId < 36) {
-                omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 1;
-                g = 0;
-                b = -1;
+            if(kernelId < 32) {
+                int rotation = kernelId / 8;
+                int frequency = kernelId % 8;
+                int phase = kernelId % 2;
+                lambda = 1 / (1 + frequency / 8.);
+                sigma = 0.4 + 0.2 * frequency / 8;
+                omega = M_PI * (kernelSize - 1) / 2 / (1 + frequency / 2.);
+                phi = phase * M_PI + M_PI * 12 / 32;
+                theta = rotation * M_PI / 4;
             }
             else if(kernelId < 40) {
-                omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 4) * M_PI / 4 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 0;
-                g = 1;
-                b = -1;
+                sigma = 0.45;
+                lambda = 0.5;
+                omega = M_PI * (kernelSize - 1) / 2;
+                theta = (kernelId % 8) * M_PI / 8;
+                phi = M_PI;
+            }
+            else if(kernelId < 46) {
+                int phase = (kernelId - 1) / 3;
+                int size = (kernelId - 1) % 3;
+                lambda = 1 / (1 + size / 2.);
+                sigma = 1. / (2.5 - size / 2.);
+                omega = M_PI / 4;
+                phi = phase * M_PI;
+                r = 0.25;
+                g = -1;
+                b = 1;
             }
             else if(kernelId < 48) {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 16;
+                lambda = 2. / 3;
+                sigma = 1;
+                omega = M_PI * (kernelSize - 1) / 2 / 12;
+                theta = (kernelId % 8) * M_PI + M_PI / 8;
                 phi = M_PI / 2;
                 r = 1;
-                g = -1;
-                b = -1;
+                g = 0.1;
+                b = -0.5;
             }
             else if(kernelId < 56) {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 16;
+                lambda = 2. / 3;
+                sigma = 1;
+                omega = M_PI * (kernelSize - 1) / 2 / 12;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
-                r = -1;
-                g = 1;
-                b = -1;
+                r = -0.5;
+                g = 0.1;
+                b = 1;
+            }
+            else if(kernelId < 60) {
+                lambda = 1;
+                sigma = 1;
+                omega = M_PI * (kernelSize - 1) / 2 / 12;
+                theta = (kernelId % 8) * M_PI / 2 + M_PI / 8;
+                phi = M_PI / 2;
+                r = 0.25;
+                g = -1;
+                b = 1;
             }
             else {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 16;
+                lambda = 2. / 3;
+                sigma = 1;
+                omega = M_PI * (kernelSize - 1) / 2 / 12;
+                theta = (kernelId % 8) * M_PI / 2 + M_PI / 8;
                 phi = M_PI / 2;
                 r = -1;
                 g = -1;
@@ -148,52 +160,72 @@ class KernelParameters
 
         void generateAlexNetLike(int kernelId, int kernelSize)
         {
-            if(kernelId < 8) {
-                omega = M_PI * (kernelSize - 1) / 2 / 1;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 32;
-            }
+            lambda = 1. / 3;
 
-            else if(kernelId < 24) {
-                omega = M_PI * (kernelSize - 1) / 2 / 2;
-                theta = (kernelId % 16) * M_PI / 16 + M_PI / 128;
+            if(kernelId < 48) {
+                int rotation = kernelId / 8;
+                int frequency = kernelId % 8;
+                int phase = kernelId % 2;
+                lambda /= (1 + frequency / 8.);
+                sigma = 0.5 + 0.2 * frequency / 8;
+                omega = M_PI * (kernelSize - 1) / 2 / (1 + frequency / 2.);
+                phi = phase * M_PI + M_PI * 12 / 32;
+                theta = rotation * M_PI / 6;
             }
-
-            else if(kernelId < 32) {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 8 + M_PI / 128;
-            }
-
-            else if(kernelId < 40) {
-                omega = M_PI * (kernelSize - 1) / 2 / 4;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
-                phi = M_PI / 2;
-            }
-
-            else if(kernelId < 48) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
-                phi = M_PI / 2;
-            }
-
             else if(kernelId < 56) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
-                phi = M_PI / 2;
-                r = 1;
+                int phase = kernelId / 4;
+                int size = kernelId % 4;
+                lambda /= (1 + size / 2.);
+                sigma = 1. / (2.5 - size / 2.);
+                omega = M_PI / 4;
+                phi = phase * M_PI;
+                r = 0.25;
                 g = -1;
-                b = -1;
+                b = 1;
             }
-
-            else if(kernelId < 64) {
+            else if(kernelId < 60) {
+                lambda /= 1.5;
+                sigma = 0.75;
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 8;
                 phi = M_PI / 2;
                 r = -1;
                 g = 1;
-                b = -1;
+                b = -0.5;
             }
-
+            else if(kernelId < 64) {
+                lambda /= 3;
+                sigma = 2;
+                omega = M_PI * (kernelSize - 1) / 2 / 8;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 8;
+                phi = M_PI / 2;
+                r = 1;
+                g = -0.5;
+                b = -0.75;
+            }
             else if(kernelId < 72) {
+                lambda /= 1.5;
+                sigma = 0.75;
+                omega = M_PI * (kernelSize - 1) / 2 / 4;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
+                phi = M_PI / 2;
+                r = 1;
+                g = 0.1;
+                b = -0.75;
+            }
+            else if(kernelId < 80) {
+                lambda /= 1.5;
+                sigma = 1;
+                omega = M_PI * (kernelSize - 1) / 2 / 12;
+                theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
+                phi = M_PI / 2;
+                r = -0.5;
+                g = 0.1;
+                b = 1;
+            }
+            else if(kernelId < 88) {
+                lambda /= 2.5;
+                sigma = 1;
                 omega = M_PI * (kernelSize - 1) / 2 / 8;
                 theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
@@ -201,50 +233,20 @@ class KernelParameters
                 g = -1;
                 b = 1;
             }
-
-            else if(kernelId < 80) {
+            else if(kernelId < 92) {
+                omega = M_PI * (kernelSize - 1) / 2 / 16;
+                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
+                phi = M_PI / 2;
+            }
+            else {
+                lambda /= 4;
+                sigma = 0.75;
                 omega = M_PI * (kernelSize - 1) / 2 / 4;
                 theta = (kernelId % 8) * M_PI / 4 + M_PI / 32;
                 phi = M_PI / 2;
                 r = -1;
-                g = 0;
-                b = 1;
-            }
-
-            else if(kernelId < 84) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
-                phi = M_PI / 2;
-                r = -1;
-                g = 1;
-                b = 0;
-            }
-
-            else if(kernelId < 88) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 1;
-                g = 1;
-                b = 0;
-            }
-
-            else if(kernelId < 92) {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 0;
                 g = -1;
                 b = 1;
-            }
-
-            else {
-                omega = M_PI * (kernelSize - 1) / 2 / 8;
-                theta = (kernelId % 4) * M_PI / 2 + M_PI / 16;
-                phi = M_PI / 2;
-                r = 1;
-                g = 0;
-                b = -1;
             }
         }
 };
@@ -265,10 +267,10 @@ class KernelGenerator
             delete [] kernels;
         }
 
-        void generate(double lambda)
+        void generate()
         {
             for(int kernelId = 0; kernelId < numberOfKernels; kernelId++)
-                generateKernel(kernelId, lambda);
+                generateKernel(kernelId);
         }
 
         const Real *getKernelData() const
@@ -293,7 +295,7 @@ class KernelGenerator
             return numberOfKernels * 3 * kernelSize * kernelSize;
         }
 
-        void generateKernel(int kernelId, double lambda)
+        void generateKernel(int kernelId)
         {
             KernelParameters param;
             param.generate(kernelId, numberOfKernels, kernelSize);
@@ -306,13 +308,12 @@ class KernelGenerator
                     double dis = exp(-(x * x + y * y) / (2 * param.sigma * param.sigma));
                     double arg = x * cos(param.theta) - y * sin(param.theta);
                     double per = cos(arg * param.omega + param.phi);
-                    double val = lambda * dis * per;
+                    double val = param.lambda * dis * per;
 
                     kernels[kx + kernelSize * (ky + kernelSize * (0 + 3 * kernelId))] = (Real) (param.r * val);
                     kernels[kx + kernelSize * (ky + kernelSize * (1 + 3 * kernelId))] = (Real) (param.g * val);
                     kernels[kx + kernelSize * (ky + kernelSize * (2 + 3 * kernelId))] = (Real) (param.b * val);
                 }
         }
-
 };
 }; //namespace cafffe

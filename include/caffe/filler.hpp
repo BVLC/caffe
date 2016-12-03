@@ -351,7 +351,7 @@ class GaborFiller : public Filler<Dtype> {
       << "Blob must have 3 channels to use Gabor filler";
     Dtype* data = blob->mutable_cpu_data();
     KernelGenerator<Dtype> kernelGenerator(blob->num(), blob->width());
-    kernelGenerator.generate(this->filler_param_.lambda());
+    kernelGenerator.generate(/*this->filler_param_.lambda()*/);
     memcpy(data,
            kernelGenerator.getKernelData(),
            kernelGenerator.getSizeOfKernelData());
