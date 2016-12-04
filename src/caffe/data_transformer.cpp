@@ -344,7 +344,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
           if (has_sd_file) {
             transformed_data[top_index] =
-              (pixel - mean[mean_index]) / sd[sd_index] * scale;
+              (pixel - mean[mean_index]) / sd[mean_index] * scale;
           } else {
             transformed_data[top_index] =
               (pixel - mean[mean_index]) * scale;
