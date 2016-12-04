@@ -826,13 +826,6 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
 
-    std::uniform_int_distribution<int_tp> pickRand(0, 1);
-    bool dilation = pickRand(this->rng_) == 1;
-
-    // Unlike LibDNN, the Caffe engine does not yet have support
-    // for all combinations of parameters (dilation <--> padding,
-    // ND <--> stochastic)
-
     std::uniform_int_distribution<int_tp> dimsRand(1, 3);
 
     int_tp dims = dimsRand(this->rng_);
@@ -1025,13 +1018,6 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     LayerParameter layer_param;
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
-
-    std::uniform_int_distribution<int_tp> pickRand(0, 1);
-    bool dilation = pickRand(this->rng_) == 1;
-
-    // Unlike LibDNN, the Caffe engine does not yet have support
-    // for all combinations of parameters (dilation <--> padding,
-    // ND <--> stochastic)
 
     std::uniform_int_distribution<int_tp> dimsRand(1, 3);
 
