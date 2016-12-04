@@ -32,7 +32,10 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
       d_idx[i] = num % pooled_size[i];
       d_start[i] = d_idx[i] * stride[i] - pad[i];
       d_end[i] = min(d_start[i] + ext_kernel_size[i], size[i]);
-      d_start[i] = max(d_start[i], (int_tp)0);
+      while (d_start[i] < 0) {
+        d_start[i] += dilation[i];
+      }
+
       num /= pooled_size[i];
       offset *= size[i];
       d_iter[i] = d_start[i];

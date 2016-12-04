@@ -837,13 +837,13 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
 
     int_tp dims = dimsRand(this->rng_);
 
-    std::uniform_int_distribution<int_tp> dilationRand(1, dilation ? 4 : 1);
-    std::uniform_int_distribution<int_tp> padRand(0, dilation ? 0 : 5);
+    std::uniform_int_distribution<int_tp> dilationRand(1, 4);
+    std::uniform_int_distribution<int_tp> padRand(0, 5);
     std::uniform_int_distribution<int_tp> kernelRand(2, 4);
     std::uniform_int_distribution<int_tp> strideRand(1, 5);
     std::uniform_int_distribution<int_tp> batchRand(1, 8);
     std::uniform_int_distribution<int_tp> fmapRand(1, 32);
-    std::uniform_int_distribution<int_tp> poolMethodRand(0, dims != 2 ? 0 : 0);
+    std::uniform_int_distribution<int_tp> poolMethodRand(0, dims != 2 ? 0 : 1);
 
     int_tp batchsize = batchRand(this->rng_);
     int_tp fmaps = fmapRand(this->rng_);
@@ -1037,14 +1037,13 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
 
     int_tp dims = dimsRand(this->rng_);
 
-    std::uniform_int_distribution<int_tp> dilationRand(1, dilation ? 4 : 1);
-    std::uniform_int_distribution<int_tp> padRand(0, dilation ? 0 : 5);
+    std::uniform_int_distribution<int_tp> dilationRand(1, 4);
+    std::uniform_int_distribution<int_tp> padRand(0, 5);
     std::uniform_int_distribution<int_tp> kernelRand(2, 4);
     std::uniform_int_distribution<int_tp> strideRand(1, 5);
     std::uniform_int_distribution<int_tp> batchRand(1, 8);
     std::uniform_int_distribution<int_tp> fmapRand(1, 32);
-    std::uniform_int_distribution<int_tp> poolMethodRand(0,
-                                          (dims != 2 || dilation) ? 0 : 0);
+    std::uniform_int_distribution<int_tp> poolMethodRand(0, dims != 2 ? 0 : 1);
 
     int_tp batchsize = batchRand(this->rng_);
     int_tp fmaps = fmapRand(this->rng_);
