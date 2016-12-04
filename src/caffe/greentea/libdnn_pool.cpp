@@ -923,6 +923,13 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
                                 const int_tp* mask,
                                 const Dtype* top_mask,
                                 const Dtype* rand_idx) {
+
+  int_tp ims = batch_size * channels;
+  for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
+    ims *= im_in_shape_[i];
+  }
+  LibDNN<Dtype>::SetMemory(bottom_diff, ims, 0, (Dtype) 0);
+
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
                                 1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
