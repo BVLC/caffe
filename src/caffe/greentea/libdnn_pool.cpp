@@ -722,7 +722,6 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     if (has_dilation &&
         (pool_method_ == LIBDNN_POOLING_METHOD_AVE ||
         pool_method_ == LIBDNN_POOLING_METHOD_STO)) {
-      // TODO
       ss << "if (";
       for (int i  = 0; i < num_axes_; ++i) {
         ss << "idx_" << i << " >= av_start[" << i << "] && ";
