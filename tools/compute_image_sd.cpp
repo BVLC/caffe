@@ -49,7 +49,6 @@ int main(int argc, char** argv) {
   BlobProto mean_blob;
   ReadProtoFromBinaryFileOrDie(argv[2], &mean_blob);
 
-
   BlobProto sum_blob;
   int count = 0;
   // load first datum
@@ -85,14 +84,14 @@ int main(int argc, char** argv) {
       CHECK_EQ(data.size(), size_in_datum);
       for (int i = 0; i < size_in_datum; ++i) {
         float val = (uint8_t)data[i];
-		val -= mean_blob.data(i);
+        val -= mean_blob.data(i);
         sum_blob.set_data(i, sum_blob.data(i) + val*val);
       }
     } else {
       CHECK_EQ(datum.float_data_size(), size_in_datum);
       for (int i = 0; i < size_in_datum; ++i) {
         float val = static_cast<float>(datum.float_data(i));
-		val -= mean_blob.data(i);
+        val -= mean_blob.data(i);
         sum_blob.set_data(i, sum_blob.data(i) + val*val);
       }
     }
