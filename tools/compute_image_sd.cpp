@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   gflags::SetUsageMessage("Compute the sd_image of a set of images given by"
         " a leveldb/lmdb\n"
         "Usage:\n"
-        "    compute_image_sd [FLAGS] INPUT_DB MEAN_FILE [OUTPUT_FILE]\n");
+        "    compute_image_sd [FLAGS] INPUT_DB MEAN_FILE OUTPUT_FILE\n");
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 

@@ -131,21 +131,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           datum_element = datum.float_data(data_index);
         }
         if (has_mean_file) {
-          datum_element =
-            (datum_element - mean[data_index]) * scale;
+          if (has_sd_file) {
+            transformed_data[top_index] =
+              (datum_element - mean[data_index]) / sd[data_index] * scale;
+          } else {
+            transformed_data[top_index] =
+              (datum_element - mean[data_index]) * scale;
+          }
         } else {
           if (has_mean_values) {
-            datum_element =
+            transformed_data[top_index] =
               (datum_element - mean_values_[c]) * scale;
           } else {
-            datum_element = datum_element * scale;
+            transformed_data[top_index] = datum_element * scale;
           }
         }
-		if (has_sd_file) {
-	      transformed_data[top_index] = datum_element / sd[data_index];
-		} else {
-		  transformed_data[top_index] = datum_element;
-		}
       }
     }
   }
@@ -342,20 +342,21 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
-          pixel = (pixel - mean[mean_index]) * scale;
+          if (has_sd_file) {
+            transformed_data[top_index] =
+              (pixel - mean[mean_index]) / sd[sd_index] * scale;
+          } else {
+            transformed_data[top_index] =
+              (pixel - mean[mean_index]) * scale;
+          }
         } else {
           if (has_mean_values) {
-            pixel = (pixel - mean_values_[c]) * scale;
+            transformed_data[top_index] =
+              (pixel - mean_values_[c]) * scale;
           } else {
-            pixel = pixel * scale;
+            transformed_data[top_index] = pixel * scale;
           }
         }
-		if (has_sd_file) {
-			int sd_index = (c * img_height + h_off + h) * img_width + w_off + w;
-			transformed_data[top_index] = pixel / sd[sd_index];
-		} else {
-			transformed_data[top_index] = pixel;
-		}
       }
     }
   }
