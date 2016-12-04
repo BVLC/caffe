@@ -308,7 +308,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
           pad_guard = true;
         }
         if ((im_out_shape_[i] - 1) * stride_[i] + d_iter[i]
-             * dilation_[i] - pad_[i] >= im_in_shape_[i] + pad_[i]) {
+             * dilation_[i] - pad_[i] >= im_in_shape_[i]) {
           overspill_guard = true;
         }
       }
@@ -358,7 +358,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
           for (int_tp i = 0; i < num_axes_; ++i) {
             if ((im_out_shape_[i] - 1) * stride_[i]
                 + d_iter[i] * dilation_[i] - pad_[i]
-                >= im_in_shape_[i] + pad_[i]) {
+                >= im_in_shape_[i]) {
               ss << "idx_" << i << " + " << d_iter[i] * dilation_[i]
                  << " >= v_imsi_" << i << " + "
                  << pad_[i] << " || ";
@@ -549,38 +549,39 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
             pad_guard = true;
           }
           if ((im_out_shape_[i] - 1) * stride_[i] + d_iter[i]
-               * dilation_[i] - pad_[i] >= im_in_shape_[i] + pad_[i]) {
+               * dilation_[i] - pad_[i] >= im_in_shape_[i]) {
             overspill_guard = true;
           }
         }
 
-        if (((ave_idx == 1) && pad_guard) || overspill_guard) {
+        if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
           ss << "if (";
         }
-        if (((ave_idx == 1) && pad_guard) || overspill_guard) {
+        if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
           for (int_tp i = 0; i < num_axes_; ++i) {
             if (d_iter[i] * dilation_[i] < pad_[i]) {
-              ss << "idx_" << i << " >= 0 && ";
+              ss << "idx_" << i << " >= -" << (d_iter[i] * dilation_[i])
+                 << " && ";
             }
             if ((d_iter[i] * dilation_[i] >= ((kernel_shape_[i] - 1)
                 * dilation_[i] + 1) - pad_[i]) ||
                 ((im_out_shape_[i] - 1) * stride_[i]
                 + d_iter[i] * dilation_[i] - pad_[i]
-                >= im_in_shape_[i] + pad_[i])) {
+                >= im_in_shape_[i])) {
               ss << "idx_" << i << " < v_imsi_" << i << " - "
                  << (d_iter[i] * dilation_[i]) << " && ";
             }
           }
         }
         if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-          if (((ave_idx == 1) && pad_guard) || overspill_guard) {
+          if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
             ss << "true) {" << std::endl;
           }
           if (ave_idx == 1) {
             ss << "atomicAdd((&out_ptr[" << kernel_offset << "]), val);"
                << std::endl;
           }
-          if (((ave_idx == 1) && pad_guard) || overspill_guard) {
+          if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
             ss << "}" << std::endl;
           }
           if (overspill_guard && ave_idx == 0) {
@@ -588,7 +589,7 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
             for (int_tp i = 0; i < num_axes_; ++i) {
               if ((im_out_shape_[i] - 1) * stride_[i]
                   + d_iter[i] * dilation_[i] - pad_[i]
-                  >= im_in_shape_[i] + pad_[i]) {
+                  >= im_in_shape_[i]) {
                 ss << "idx_" << i << " + " << d_iter[i] * dilation_[i]
                    << " >= v_imsi_" << i << " + "
                    << pad_[i] << " || ";
@@ -683,17 +684,8 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     }
 
     if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-      ss << "int_tp ave = 1;" << std::endl;
-      ss << "int_tp av_start;" << std::endl;
-      ss << "int_tp av_end;" << std::endl;
-      for (int_tp i = 0; i < num_axes_; ++i) {
-        ss << "av_start = v_imso_" << i << " * v_s_" << i
-        << " - v_p_" << i << ";" << std::endl;
-        ss << "av_end = min(av_start + ((v_k_" << i << " - 1) * v_d_"
-           << i << " + 1), v_imsi_" << i << " + v_p_" << i << ");"
-           << std::endl;
-        ss << "ave *= (av_end - av_start);" << std::endl;
-      }
+      ss << "int_tp av_start[" << num_axes_ << "];" << std::endl;
+      ss << "int_tp av_end[" << num_axes_ << "];" << std::endl;
     }
     // ss << "printf(\"%f\\n\", (float)ave);" << std::endl;
     ss << "Dtype gradient = 0.0;" << std::endl;
@@ -704,6 +696,20 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
       ss << "offset += d_iter[" << i << "];" << std::endl;
       if (i < num_axes_ - 1) {
         ss << "offset *= v_imso_" << (i + 1) << ";" << std::endl;
+      }
+    }
+    if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
+      ss << "int_tp ave = 1;" << std::endl;
+      for (int_tp i = 0; i < num_axes_; ++i) {
+        ss << "av_start[" << i << "] = d_iter[" << i << "] * v_s_" << i
+        << " - v_p_" << i << ";" << std::endl;
+        ss << "av_end[" << i << "] = min(av_start[" << i << "] + ((v_k_"
+           << i << " - 1) * v_d_"
+           << i << " + 1), v_imsi_" << i << " + v_p_" << i << ");"
+           << std::endl;
+        ss << "ave *= ((av_end[" << i << "] - av_start[" << i << "] - 1) / v_d_"
+           << i << " + 1);"
+           << std::endl;
       }
     }
     // Dilation filters
@@ -717,11 +723,15 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
         (pool_method_ == LIBDNN_POOLING_METHOD_AVE ||
         pool_method_ == LIBDNN_POOLING_METHOD_STO)) {
       // TODO
-      ss << "if () {" << std::endl;
+      ss << "if (";
+      for (int i  = 0; i < num_axes_; ++i) {
+        ss << "idx_" << i << " >= av_start[" << i << "] && ";
+        ss << "idx_" << i << " < av_end[" << i << "] && ";
+        ss << "(idx_" << i <<" - av_start[" << i << "]) % v_d_" << i << " == 0"
+           << " && ";
+      }
+      ss << "true) {" << std::endl;
     }
-    /*ss << "if (get_global_id(1) == 5 && (out_idx == 10 || out_idx == 20)) {" << std::endl;
-    ss << "printf(\"[%f, %f), [%f, %f), %f, %f, %f, %f, %f, %f\\n\", (float)d_start[0], (float)d_end[0], (float)d_start[1], (float)d_end[1], (float)out_idx, (float)idx_0, (float)idx_1, (float)offset, (float)mask_ptr[offset], (float)in_ptr[offset]);" << std::endl;
-    ss << "}" << std::endl;*/
     if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
       ss << "if ((int_tp)mask_ptr[offset] == out_idx) {" << std::endl;
     } else if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
@@ -753,7 +763,6 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
     ss << "}}} while (incremented);" << std::endl;
 
     ss << "out_ptr[0] = gradient;" << std::endl;
-    // ss << "printf(\"Gradient: %f\\n\", gradient);" << std::endl;
   }  // Deterministic kernel
   ss << "}" << std::endl;  // Kernel
 
