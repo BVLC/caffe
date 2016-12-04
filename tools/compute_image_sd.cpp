@@ -105,14 +105,31 @@ int main(int argc, char** argv) {
   if (count % 10000 != 0) {
     LOG(INFO) << "Processed " << count << " files.";
   }
+
+  // Compute per channel standard deviation
+  const int channels = sum_blob.channels();
+  const int dim = sum_blob.height() * sum_blob.width();
+  std::vector<float> sd_values(channels, 0.0);
+  LOG(INFO) << "Number of channels: " << channels;
+  for (int c = 0; c < channels; ++c) {
+    for (int i = 0; i < dim; ++i) {
+      sd_values[c] += sum_blob.data(dim * c + i);
+    }
+	sd_values[c] = static_cast<float>((double)sd_values[c] / (double)count * (double)dim);
+    LOG(INFO) << "sd_value channel [" << c << "]:" << std::sqrt(sd_values[c]);
+  }
+
+  // Compute per element standard deviation
   for (int i = 0; i < sum_blob.data_size(); ++i) {
     float sd = sum_blob.data(i) / count;
     sd = std::sqrt(sd);
     sum_blob.set_data(i, sd);
   }
   // Write to disk
-  LOG(INFO) << "Write to " << argv[3];
-  WriteProtoToBinaryFile(sum_blob, argv[3]);
+  if (argc == 4) {
+	LOG(INFO) << "Write to " << argv[3];
+	WriteProtoToBinaryFile(sum_blob, argv[3]);
+  }  
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
