@@ -54,7 +54,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
   if (param_.sd_value_size() > 0) {
     CHECK(param_.has_sd_file() == false)
       << "Cannot specify sd_file and sd_value at the same time";
-    CHECK(param_.mean_value_size() > 0)
+    CHECK_GT(param_.mean_value_size(), 0)
       << "mean_value is required for standardization";
     for (int c = 0; c < param_.sd_value_size(); ++c) {
       sd_values_.push_back(param_.sd_value(c));
@@ -111,7 +111,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   if (has_sd_values) {
     CHECK(sd_values_.size() == 1 || sd_values_.size() == datum_channels)
       << "Specify either 1 sd_value or as many as channels: " << datum_channels;
-    if(datum_channels > 1 && sd_values_.size() == 1) {
+    if (datum_channels > 1 && sd_values_.size() == 1) {
       for (int c = 1; c < datum_channels; ++c) {
         sd_values_.push_back(sd_values_[0]);
       }
@@ -335,7 +335,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   if (has_sd_values) {
     CHECK(sd_values_.size() == 1 || sd_values_.size() == img_channels)
       << "Specify either 1 sd_value or as many as channels: " << img_channels;
-    if(img_channels > 1 && sd_values_.size() == 1) {
+    if (img_channels > 1 && sd_values_.size() == 1) {
       for (int c = 1; c < img_channels; ++c) {
         sd_values_.push_back(sd_values_[0]);
       }
@@ -501,11 +501,11 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       caffe_div(data_sd_.count(), input_data + offset,
                 data_sd_.cpu_data(), input_data + offset);
     }
-  }  
+  }
   if (has_sd_values) {
     CHECK(sd_values_.size() == 1 || sd_values_.size() == input_channels)
       << "Specify either 1 sd_value or as many as channels: " << input_channels;
-    if(sd_values_.size() == 1) {
+    if (sd_values_.size() == 1) {
       caffe_scal(input_blob->count(), Dtype(1.0 / sd_values_[0]), input_data);
     } else {
       for (int n = 0; n < input_num; ++n) {

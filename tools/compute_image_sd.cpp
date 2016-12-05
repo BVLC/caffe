@@ -111,12 +111,14 @@ int main(int argc, char** argv) {
   const int dim = sum_blob.height() * sum_blob.width();
   std::vector<float> sd_values(channels, 0.0);
   LOG(INFO) << "Number of channels: " << channels;
+  const double channel_denominator = static_cast<double>(count) *
+                                     static_cast<double>(dim);
   for (int c = 0; c < channels; ++c) {
     for (int i = 0; i < dim; ++i) {
       sd_values[c] += sum_blob.data(dim * c + i);
     }
-    sd_values[c] = static_cast<float>((double)sd_values[c] / ((double)count * 
-                                                              (double)dim));
+    double val = static_cast<double>(sd_values[c]);
+    sd_values[c] = val / channel_denominator;
     LOG(INFO) << "sd_value channel [" << c << "]:" << std::sqrt(sd_values[c]);
   }
 
@@ -128,9 +130,9 @@ int main(int argc, char** argv) {
   }
   // Write to disk
   if (argc == 4) {
-	LOG(INFO) << "Write to " << argv[3];
-	WriteProtoToBinaryFile(sum_blob, argv[3]);
-  }  
+    LOG(INFO) << "Write to " << argv[3];
+    WriteProtoToBinaryFile(sum_blob, argv[3]);
+  }
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
