@@ -199,7 +199,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   Dtype* top_data;
   Dtype* col_data;
   const Dtype* weight;
-  Dtype* swizzled_weights;
+  const Dtype* weight_cpu;
+  Dtype* swizzled_weights_;
   int_tp weight_offset;
   int_tp col_offset;
   int_tp top_offset;
@@ -237,7 +238,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   std::string key_;
   std::string kernel_name_;
   Blob<Dtype> spatial_col_buffer_;
-  Blob<Dtype> swizzled_weights_;
+  Blob<Dtype> swizzled_weights_blob_;
   Blob<Dtype> bias_multiplier_;
 
   int_tp kernel_index_;
