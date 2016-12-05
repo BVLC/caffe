@@ -341,10 +341,13 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
   }
 
   if (use_global_stats_) {
-    caffe_cpu_copy(
-      this->blobs_[0]->count(), this->blobs_[0]->cpu_data(), mean_buffer_);
-    caffe_cpu_copy(
-      this->blobs_[1]->count(), this->blobs_[1]->cpu_data(), variance_buffer_);
+    // use the stored mean/variance estimates.
+    const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
+        0 : 1 / this->blobs_[2]->cpu_data()[0];
+    caffe_cpu_scale(this->blobs_[0]->count(), scale_factor,
+                    this->blobs_[0]->cpu_data(), mean_buffer_);
+    caffe_cpu_scale(this->blobs_[1]->count(), scale_factor,
+                    this->blobs_[1]->cpu_data(), variance_buffer_);
   }
 
   dnnError_t e;
