@@ -343,9 +343,8 @@ void LibDNN<Dtype>::AllocateMemory(void** ptr, uint_tp size, int_tp flags) {
 }
 
 template<typename Dtype>
-void LibDNN<Dtype>::SetMemory(Dtype* memory, int_tp count,
-int_tp offset,
-                                  Dtype value) {
+void LibDNN<Dtype>::SetMemory(Dtype* memory, int_tp count, int_tp offset,
+                              Dtype value) {
   if (dev_ptr_->backend() == BACKEND_OpenCL) {
 #ifdef USE_GREENTEA
     viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("fill_memory");

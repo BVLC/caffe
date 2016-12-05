@@ -21,7 +21,15 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
 
   PoolingLayer<Dtype>::Reshape(bottom, top);
 
-  if (libdnn_.get() == nullptr) {
+  bool shapes_changed = false;
+  if (libdnn_.get() != nullptr) {
+    shapes_changed = shapes_changed || (libdnn_.get()->get_config().in_shape
+        != bottom[0]->shape());
+    shapes_changed = shapes_changed || (libdnn_.get()->get_config().out_shape
+        != top[0]->shape());
+  }
+
+  if (libdnn_.get() == nullptr || shapes_changed) {
     int_tp* kernel_shape_data = this->kernel_shape_.mutable_cpu_data();
     int_tp* pad_data = this->pad_.mutable_cpu_data();
     int_tp* stride_data = this->stride_.mutable_cpu_data();
@@ -82,6 +90,7 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
     } else {
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
     }
+    config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
 
     LibDNNPool<Dtype>* libdnn = new LibDNNPool<Dtype>(config);
 

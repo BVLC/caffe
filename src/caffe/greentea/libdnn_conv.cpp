@@ -12,6 +12,7 @@ namespace caffe {
 
 template<typename Dtype>
 LibDNNConv<Dtype>::LibDNNConv(LibDNNConvConfig config) {
+  config_ = config;
   LibDNN<Dtype>::dev_ptr_ = config.dev_ptr;
   bias_term_ = config.bias_term;
   bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
@@ -207,6 +208,11 @@ LibDNNConv<Dtype>::LibDNNConv(LibDNNConvConfig config) {
 
   GenerateKernels();
   LibDNN<Dtype>::CompileKernels();
+}
+
+template<typename Dtype>
+const LibDNNConvConfig LibDNNConv<Dtype>::get_config() {
+  return config_;
 }
 
 template<typename Dtype>
@@ -1701,6 +1707,19 @@ void LibDNNConv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
       ims *= im_in_shape_[i];
     }
     LibDNN<Dtype>::SetMemory(bottom_diff, ims, 0, (Dtype) 0);
+  }
+
+  if (prop_down_weights && wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
+    int_tp wms = fmaps_in_ * fmaps_out_;
+    for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
+      wms *= kernel_shape_[i];
+    }
+    LibDNN<Dtype>::SetMemory(bottom_diff, wms, 0, (Dtype) 0);
+  }
+
+  if (bias_term_ && prop_down_weights &&
+      wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
+    LibDNN<Dtype>::SetMemory(bias_diff, fmaps_out_, 0, (Dtype) 0);
   }
 
 #ifdef USE_GREENTEA

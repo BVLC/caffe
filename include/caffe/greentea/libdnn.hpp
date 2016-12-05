@@ -171,6 +171,8 @@ class LibDNNConv : public LibDNN<Dtype> {
             Dtype* bottom_data, Dtype* bottom_diff,
             int_tp batch_size);
 
+  const LibDNNConvConfig get_config();
+
  protected:
   void GenerateKernels();
   std::string string_identifier();
@@ -186,6 +188,8 @@ class LibDNNConv : public LibDNN<Dtype> {
   std::string generate_wg_kernels(std::string name);
 
  private:
+  LibDNNConvConfig config_;
+
   // Autotuners
   std::shared_ptr<LibDNNTuner> fw_tuner_;
   std::shared_ptr<LibDNNTuner> bw_tuner_;
@@ -273,6 +277,8 @@ class LibDNNPool : public LibDNN<Dtype> {
                 const int_tp* mask, const Dtype* top_mask,
                 const Dtype* rand_idx);
 
+  const LibDNNPoolConfig get_config();
+
  protected:
   void Forward(const Dtype* bottom_data, Dtype* top_data,
                int_tp channels, int_tp batch_size,
@@ -288,6 +294,8 @@ class LibDNNPool : public LibDNN<Dtype> {
   std::string generate_bw_kernels(std::string name);
 
  private:
+  LibDNNPoolConfig config_;
+
   // Autotuners
   std::shared_ptr<LibDNNTuner> fw_tuner_;
   std::shared_ptr<LibDNNTuner> bw_tuner_;
