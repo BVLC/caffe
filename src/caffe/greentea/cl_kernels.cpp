@@ -172,6 +172,49 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(batch_norm_use_global_stats_in_place,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"const Dtype scale, const Dtype eps,",    // NOLINT
+"__global const Dtype* mean,",    // NOLINT
+"__global const Dtype* variance,",    // NOLINT
+"__global Dtype* top) {",    // NOLINT
+"const int_tp idx_num = get_global_id(0);",    // NOLINT
+"const int_tp idx_chans = get_global_id(1);",    // NOLINT
+"const int_tp idx_spatial_dim = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"Dtype m = mean[idx_chans];",    // NOLINT
+"Dtype v = variance[idx_chans];",    // NOLINT
+"",    // NOLINT
+"m = -scale * m;",    // NOLINT
+"v = native_powr((Dtype)mad(scale, v, eps), (Dtype)-0.5);",    // NOLINT
+"",    // NOLINT
+"const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;",    // NOLINT
+"top[out_off] = v * (top[out_off] + m);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(batch_norm_use_global_stats,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"const Dtype scale, const Dtype eps,",    // NOLINT
+"__global const Dtype* mean,",    // NOLINT
+"__global const Dtype* variance,",    // NOLINT
+"__global const Dtype* bottom,",    // NOLINT
+"__global Dtype* top) {",    // NOLINT
+"const int_tp idx_num = get_global_id(0);",    // NOLINT
+"const int_tp idx_chans = get_global_id(1);",    // NOLINT
+"const int_tp idx_spatial_dim = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"Dtype m = mean[idx_chans];",    // NOLINT
+"Dtype v = variance[idx_chans];",    // NOLINT
+"",    // NOLINT
+"m = -scale * m;",    // NOLINT
+"v = native_powr((Dtype)mad(scale, v, eps), (Dtype)-0.5);",    // NOLINT
+"",    // NOLINT
+"const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;",    // NOLINT
+"top[out_off] = v * (bottom[out_off] + m);",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(br_forward,Dtype)(const int_tp count, const int_tp inner_dim,",    // NOLINT
 "__global const Dtype* in,",    // NOLINT
 "__global const Dtype* permut,",    // NOLINT
@@ -4508,6 +4551,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 static std::string cl_kernel_names[] = {
     "activation",   // NOLINT
     "auxiliary",   // NOLINT
+    "batch_norm",   // NOLINT
     "batch_reindex",   // NOLINT
     "benchmark",   // NOLINT
     "bias",   // NOLINT
