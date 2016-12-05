@@ -90,7 +90,6 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
     } else {
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
     }
-    config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
 
     LibDNNPool<Dtype>* libdnn = new LibDNNPool<Dtype>(config);
 
