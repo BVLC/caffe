@@ -254,6 +254,8 @@ message SolverParameter {
   //    MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
   //    Integral: the natural integral of the precision-recall curve.
   optional string ap_version = 42 [default = "Integral"];
+  // If true, display per class result.
+  optional bool show_per_class_result = 44 [default = false];
 
   // The number of iterations for each test net.
   repeated int64 test_iter = 3;

@@ -541,6 +541,9 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
       ComputeAP(label_true_pos, label_num_pos, label_false_pos,
                 param_.ap_version(), &prec, &rec, &(APs[label]));
       mAP += APs[label];
+      if (param_.show_per_class_result()) {
+        LOG(INFO) << "class" << label << ": " << APs[label];
+      }
     }
     mAP /= num_pos.size();
     const int output_blob_index = test_net->output_blob_indices()[i];
