@@ -115,7 +115,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim; ++i) {
       sd_values[c] += sum_blob.data(dim * c + i);
     }
-	sd_values[c] = static_cast<float>((double)sd_values[c] / (double)count * (double)dim);
+    sd_values[c] = static_cast<float>((double)sd_values[c] / ((double)count * 
+                                                              (double)dim));
     LOG(INFO) << "sd_value channel [" << c << "]:" << std::sqrt(sd_values[c]);
   }
 
