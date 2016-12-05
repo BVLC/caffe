@@ -147,8 +147,9 @@ class XavierFiller : public Filler<Dtype> {
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int fan_in = blob->count() / blob->num();
-    int fan_out = blob->count() / blob->channels();
+	int fan_in = blob->count() / blob->shape(0);
+	//Compatible for both Convolution and InnerProduct layer
+	int fan_out = blob->num_axis() == 2 ? blob->shape(0) : blob->count() / blob->shape(1);
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm() ==
         FillerParameter_VarianceNorm_AVERAGE) {
