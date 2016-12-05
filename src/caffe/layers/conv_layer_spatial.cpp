@@ -57,8 +57,10 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   stride_w_ = stride_data[1];
   M_ = this->num_output_ / this->group_;
   K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
-  swizzled_weights_.Reshape((this->num_output_ + 15) & ~15, this->channels_,
+  swizzled_weights_blob_.Reshape((this->num_output_ + 15) & ~15, this->channels_,
                             kernel_h_, (kernel_w_ + 1) & ~1);
+  swizzled_weights_ = NULL;
+  bias_ = NULL;
 }
 
 template<typename Dtype>
@@ -158,7 +160,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
 
-//  #define dbg
+  #define dbg
 #ifdef dbg
 #define dbgPrint(x) (x)
 #else
@@ -289,6 +291,18 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     const vector<Blob<Dtype>*>& top,
     int_tp swizzled_factor,
     bool interleave) {
+
+  // Simply skip the weight swizzle if we already got a swizzled_weights_
+  // in test phase and not in auto tuning
+  // This requires we always call convolve again with the winner configuration
+  // during the auto tuning stage.
+  if (tuned_ &&
+      swizzled_weights_ != NULL &&
+      this->phase_ == TEST)
+    return;
+
+  swizzled_weights_ = swizzled_weights_blob_.mutable_gpu_data();
+
   if (!interleave) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
@@ -299,7 +313,7 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
 
     int_tp channels = this->channels_ / this->group_;
     oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights, &ctx));
+    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights_, &ctx));
     oclk_copy_weight.arg(argIdx++, kernel_w_);
     oclk_copy_weight.arg(argIdx++, kernel_h_);
     oclk_copy_weight.arg(argIdx++, channels);
@@ -314,8 +328,7 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
                                      global_work_size_Copy, NULL, 0, NULL,
                                      NULL));
   } else {
-    const Dtype *cpu_weight = this->blobs_[0]->cpu_data();
-    Dtype *cpu_swizzled_weight = swizzled_weights_.mutable_cpu_data();
+    Dtype *cpu_swizzled_weight = swizzled_weights_blob_.mutable_cpu_data();
     int interleavedRows = (kernel_w_ / 2) * 2;
     int nonInterleavedRows = kernel_w_ % 2;
     int blockWidth = swizzled_factor;  // should equal to SIMD size.
@@ -326,13 +339,13 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
                                   malloc(interleaved_filter_size));
     CHECK_EQ(tmpSwizzledWeight != NULL, true)
       << "Failed to allocate temporary swizzled weight";
-    for (int od = 0; od < M_; od++)
-      for (int id = 0; id < this->channels_; id++)
-        for (int r = 0; r < kernel_h_; r++)
-          for (int c = 0; c < kernel_w_; c++)
+    for( int od = 0; od < M_; od++)
+      for( int id = 0; id < this->channels_; id++)
+        for( int r = 0; r < kernel_h_; r++)
+          for( int c = 0; c < kernel_w_; c++)
             tmpSwizzledWeight[((id * kernel_h_ + r)
                 * kernel_w_ + c) * M_ + od]
-                = cpu_weight[((od * this->channels_ + id)
+                = weight_cpu[((od * this->channels_ + id)
                 * kernel_h_ + r) * kernel_w_ + c ];
     interleaveMatrix(cpu_swizzled_weight, tmpSwizzledWeight,
               kernel_w_ * kernel_h_ * this->channels_, M_,
@@ -410,6 +423,8 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
   spatial_col_buffer_.Reshape(this->num_, this->channels_,
                               height_ + 2 * pad_h_,
                               width_ + 2 * pad_w_);
+
+  col_data = spatial_col_buffer_.mutable_gpu_data();
   std::stringstream keyBuilder;
   std::stringstream multFunctionBuilder;
   std::string stringBuilder;
@@ -436,8 +451,8 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
                 << bias_term_ << " -D OUTPUT_Z=" << M_
                 << " -D XPAR=" << workItemOutput[0] << " -D YPAR="
                 << workItemOutput[1] << " -D ZPAR=" << workItemOutput[2]
-                << " -D " << kernelDef.c_str() << " -D CFMulti=U"
-                << kernelUKey.c_str() << "_BASIC";
+                << " -D " << kernelDef.c_str() << " -D CFMulti="
+                << kernel_name_;
 
   string options = optionsString.str();
 
@@ -546,7 +561,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                          image_offset, total_bottom_size - image_offset,
                          true, false);
       setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
-                         (cl_mem) swizzled_weights,
+                         (cl_mem) swizzled_weights_,
                          kernel_offset, total_kernel_size - kernel_offset,
                          true, true);
       setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
@@ -607,7 +622,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                          image_offset, total_bottom_size - image_offset,
                          true, false);
       setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
-                         (cl_mem) swizzled_weights,
+                         (cl_mem) swizzled_weights_,
                          kernel_offset, total_kernel_size - kernel_offset,
                          true, true);
       setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
@@ -927,8 +942,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math " << " -D IDLF" << " -D "
-                << kernelDef.c_str() << " -D convolve_simd16=U"
-                << kernelUKey.c_str() << "_SIMD16";
+                << kernelDef.c_str() << " -D convolve_simd16="
+                << kernel_name_;
 
   const int_tp last_block_width =
       (output_width % output_block_width == 0) ?
@@ -1213,6 +1228,9 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   dbgPrint(std::cout << "Convolution Time:"
                      << kernelQueue[kernel_index_]->executionTime << std::endl);
 
+  if (bestKernelConfig->kernelType != 2 && bestKernelConfig->kernelType != 5)
+    swizzled_weights_ = NULL;
+
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (x != kernel_index_) {
       viennacl::ocl::current_context().delete_program(
@@ -1263,23 +1281,20 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
 template<>
 void ConvolutionLayerSpatial<float>::Forward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+  
+  weight = this->blobs_[0]->gpu_data();
+  weight_cpu = (float*)this->blobs_[0]->cpu_data();
+  if (bias_term_)
+    bias_ = this->blobs_[1]->gpu_data();
 
   for (int_tp i = 0; i < bottom.size(); ++i) {
     bottom_index_ = i;
     bottom_data = bottom[i]->gpu_data();
     top_data = top[i]->mutable_gpu_data();
-    weight = this->blobs_[0]->gpu_data();
-    swizzled_weights = swizzled_weights_.mutable_gpu_data();
-
     weight_offset = M_ * K_;
     col_offset = K_ * N_;
     top_offset = M_ * N_;
-
-    bias_ = NULL;
     bias_offset_ = 0;
-
-    if (bias_term_)
-      bias_ = this->blobs_[1]->gpu_data();
 
     if (!tuned_) {
       Blob<float> verify_blob;
@@ -1358,11 +1373,9 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   if (tuned_) {
     if (key_.compare(previous_key) == 0)
       return;
-    if (pad_w_ == 0 && pad_h_ == 0) {
-      generate_key();
-      if (key_.compare(previous_key) == 0)
-        return;
-    }
+    generate_key();
+    if (key_.compare(previous_key) == 0)
+      return;
     tuned_ = false;
     viennacl::ocl::current_context().
       delete_program(bestKernelConfig->kernelName);
@@ -1379,11 +1392,9 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   std::ifstream cachedKernel(outputFile.c_str());
   if (!cachedKernel) {
     // Find existing padding record.
-    if (pad_w_ == 0 && pad_h_ == 0) {
-      generate_key();
-      outputFile = CACHE_DIRECTORY + key_;
-      cachedKernel.open(outputFile.c_str(), std::ios_base::in);
-    }
+    generate_key();
+    outputFile = CACHE_DIRECTORY + key_;
+    cachedKernel.open(outputFile.c_str(), std::ios_base::in);
   }
 
   if (cachedKernel) {
