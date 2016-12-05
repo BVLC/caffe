@@ -14,6 +14,7 @@ namespace caffe {
 
 template<typename Dtype>
 LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
+  config_ = config;
   LibDNN<Dtype>::dev_ptr_ = config.dev_ptr;
   LibDNN<Dtype>::fast_unsafe_math_ = config.fast_unsafe_math;
   int_tp dims = config.in_shape.size();
@@ -50,6 +51,11 @@ LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
 
   GenerateKernels();
   LibDNN<Dtype>::CompileKernels();
+}
+
+template<typename Dtype>
+const LibDNNPoolConfig LibDNNPool<Dtype>::get_config() {
+  return config_;
 }
 
 
@@ -923,7 +929,6 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
                                 const int_tp* mask,
                                 const Dtype* top_mask,
                                 const Dtype* rand_idx) {
-
   int_tp ims = batch_size * channels;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     ims *= im_in_shape_[i];
