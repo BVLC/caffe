@@ -68,7 +68,6 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   // assert(dim == channels);
-
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -132,7 +131,6 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
       scale_data[k] = max_val;
     }
-
     // subtraction
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
         1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data);
