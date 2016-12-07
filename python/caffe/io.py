@@ -34,6 +34,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+"""
+Use AGG matplotlib backend, so no X11 display is needed.
+skimage.io imports matplotlib.pyplot so backend needs to be set before.
+"""
+import matplotlib
+matplotlib.use('AGG')
 import numpy as np
 import skimage.io
 from scipy.ndimage import zoom
