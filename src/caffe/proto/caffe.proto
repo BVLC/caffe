@@ -157,7 +157,7 @@ message MultiPhaseSolverParameter {
 }
 
 message SolverBatchSizePair {
-  required SolverParameter solver_params = 1;
+  optional SolverParameter solver_params = 1;
   optional uint32 batch_size = 2;
 }
 
