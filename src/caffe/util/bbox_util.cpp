@@ -1889,25 +1889,6 @@ void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
   }
 }
 
-void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
-      const int top_k, vector<pair<float, int> >* score_index_vec) {
-  // Generate index score pairs.
-  for (int i = 0; i < scores.size(); ++i) {
-    if (scores[i] > threshold) {
-      score_index_vec->push_back(std::make_pair(scores[i], i));
-    }
-  }
-
-  // Sort the score pair according to the scores in descending order
-  std::stable_sort(score_index_vec->begin(), score_index_vec->end(),
-                   SortScorePairDescend<int>);
-
-  // Keep top_k scores if needed.
-  if (top_k > -1 && top_k < score_index_vec->size()) {
-    score_index_vec->resize(top_k);
-  }
-}
-
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const vector<float>& scores, const float score_threshold,
       const float nms_threshold, const int top_k, vector<int>* indices) {

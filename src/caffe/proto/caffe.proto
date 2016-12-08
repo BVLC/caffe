@@ -1725,6 +1725,7 @@ message VideoDataParameter{
   optional VideoType video_type = 1 [default = WEBCAM];
   optional int32 device_id = 2 [default = 0];
   optional string video_file = 3;
+  optional uint32 skip_frames = 4 [default = 0];
 }
 
 message WindowDataParameter {
