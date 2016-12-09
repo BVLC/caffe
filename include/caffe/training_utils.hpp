@@ -77,18 +77,24 @@ int multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params,
   caffe::NetParameter solver_phase_net_param;
   caffe::NetParameter topology_net_param;
   caffe::SolverParameter solver_param;
+  CHECK(multi_solver_params->params_pair(0).has_solver_params())
+      << "Solver parameters should be provided in at least first params pair";
   CHECK(caffe::ReadProtoFromTextFile(
       multi_solver_params->params_pair(0).solver_params().net(),
       &topology_net_param))
         << "Could not read from net parameter of solver proto file";
+  string snapshot_prefix = multi_solver_params->
+    params_pair(0).solver_params().snapshot_prefix() + "_phase_";
 
   for (int j = 0; j < multi_solver_params->params_pair_size(); j++) {
-    solver_param = multi_solver_params->params_pair(j).solver_params();
-    solver_param.set_snapshot_prefix(solver_param.snapshot_prefix() +
-        "_phase_" + boost::lexical_cast<string>(j));
-    if (solver_param.solver_mode() != caffe::SolverParameter_SolverMode_CPU) {
-        LOG(ERROR) << "CPU mode supported only";
-        return -1;
+    if (multi_solver_params->params_pair(j).has_solver_params()) {
+      solver_param = multi_solver_params->params_pair(j).solver_params();
+
+      if (solver_param.solver_mode() !=
+        caffe::SolverParameter_SolverMode_CPU) {
+          LOG(ERROR) << "CPU mode supported only";
+          return -1;
+      }
     }
 
     if (multi_solver_params->params_pair(j).has_batch_size()) {
@@ -100,6 +106,9 @@ int multiphase_train(caffe::MultiPhaseSolverParameter* multi_solver_params,
         }
       }
     }
+
+    solver_param.set_snapshot_prefix(snapshot_prefix
+      + boost::lexical_cast<string>(j));
 
     solver_param.set_allocated_net_param(&topology_net_param);
     solver_param.clear_net();
