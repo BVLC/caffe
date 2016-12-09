@@ -502,7 +502,12 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
       // Consumer lauyer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
       if ((consumer_layer_param.type().compare("ReLU") == 0) &&
-           (consumer_layer_param.bottom_size() == 1)) {
+        ((consumer_layer_param.relu_param().engine() ==
+          ReLUParameter_Engine_MKLDNN)
+        || ((consumer_layer_param.relu_param().engine() ==
+            ReLUParameter_Engine_DEFAULT) &&
+             param.engine().compare("MKLDNN") == 0)
+        )) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);

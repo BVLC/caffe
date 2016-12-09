@@ -2863,11 +2863,9 @@ TEST_F(CompileNetTest, TestCompileNetBatchNorm) {
 }
 #endif
 
-
-#ifdef MKLDNN_SUPPORTED
-// If Convolution of engine MKLDNN
-// is followed by ReLU of engine MKLDNN
-TEST_F(CompileNetTest, TestCompileNetConvolution) {
+#if defined(MKL2017_SUPPORTED) && defined(MKLDNN_SUPPORTED)
+// Combined Batch Norm and Conv ReLU
+TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layer { "
@@ -2908,6 +2906,9 @@ TEST_F(CompileNetTest, TestCompileNetConvolution) {
       " top: 'relu' "
       " name: 'relu' "
       " type: 'ReLU' "
+      " relu_param { "
+      "  engine: MKLDNN "
+      " } "
       "}"
       "layer { "
       "  name: 'loss' "
@@ -2955,9 +2956,10 @@ TEST_F(CompileNetTest, TestCompileNetConvolution) {
 }
 #endif
 
-#if defined(MKL2017_SUPPORTED) && defined(MKLDNN_SUPPORTED)
-// Combined Batch Norm and Conv ReLU
-TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution){
+#ifdef MKLDNN_SUPPORTED
+// If Convolution of engine MKLDNN
+// is followed by ReLU of engine MKLDNN
+TEST_F(CompileNetTest, TestCompileNetConvolution){
     
   const string& input_proto =
       "name: 'TestNetwork' "
@@ -2981,6 +2983,9 @@ TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution){
       " top: 'relu' "
       " name: 'relu' "
       " type: 'ReLU' "
+      " relu_param { "
+      "  engine: MKLDNN "
+      " } "
       "}"
       "layer { "
       "  name: 'loss' "
