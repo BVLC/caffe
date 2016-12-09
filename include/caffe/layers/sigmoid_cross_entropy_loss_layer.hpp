@@ -97,6 +97,13 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /// Read the normalization mode parameter and compute the normalizer based
+  /// on the blob size.  If normalization_mode is VALID, the count of valid
+  /// outputs will be read from valid_count, unless it is -1 in which case
+  /// all outputs are assumed to be valid.
+  virtual Dtype get_normalizer(
+      LossParameter_NormalizationMode normalization_mode, int valid_count);
+
   /// The internal SigmoidLayer used to map predictions to probabilities.
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
@@ -105,6 +112,15 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_bottom_vec_;
   /// top vector holder to call the underlying SigmoidLayer::Forward
   vector<Blob<Dtype>*> sigmoid_top_vec_;
+
+  /// Whether to ignore instances with a certain label.
+  bool has_ignore_label_;
+  /// The label indicating that an instance should be ignored.
+  int ignore_label_;
+  /// How to normalize the loss.
+  LossParameter_NormalizationMode normalization_;
+  Dtype normalizer_;
+  int outer_num_, inner_num_;
 };
 
 }  // namespace caffe
