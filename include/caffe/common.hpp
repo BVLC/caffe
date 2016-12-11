@@ -23,6 +23,11 @@
 
 #include "caffe/definitions.hpp"
 #include "caffe/greentea/greentea.hpp"
+
+#ifdef CMAKE_WINDOWS_BUILD
+  #include "caffe/export.hpp"
+#endif
+
 #include "caffe/util/device_alternate.hpp"
 
 // Convert macro to string

@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ImportGroup Label="PropertySheets" />
+    <PropertyGroup Label="UserMacros">
+        <BuildDir>$(SolutionDir)..\Build</BuildDir>
+        <!--NOTE: CpuOnlyBuild and UseCuDNN flags can't be set at the same time.-->
+        <CpuOnlyBuild>false</CpuOnlyBuild>
+        <UseCuDNN>true</UseCuDNN>
+        <CudaVersion>7.5</CudaVersion>
+        <!-- NOTE: If Python support is enabled, PythonDir (below) needs to be
+         set to the root of your Python installation. If your Python installation
+         does not contain debug libraries, debug build will not work. -->
+        <PythonSupport>false</PythonSupport>
+        <!-- NOTE: If Matlab support is enabled, MatlabDir (below) needs to be
+         set to the root of your Matlab installation. -->
+        <MatlabSupport>false</MatlabSupport>
+        <CudaDependencies></CudaDependencies>
+
+        <!-- Set CUDA architecture suitable for your GPU.
+         Setting proper architecture is important to mimize your run and compile time. -->
+        <CudaArchitecture>compute_35,sm_35;compute_52,sm_52</CudaArchitecture>
+
+        <!-- CuDNN 3 and 4 are supported -->
+        <CuDnnPath></CuDnnPath>
+        <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
+        <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
+        <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseCuDNN)'=='true' And $(CuDnnPath)!=''">
+        <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>
+        <IncludePath>$(CuDnnPath)\cuda\include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutDir>$(BuildDir)\$(Platform)\$(Configuration)\</OutDir>
+        <IntDir>$(BuildDir)\Int\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    </PropertyGroup>
+    <PropertyGroup>
+        <LibraryPath>$(OutDir);$(CUDA_PATH)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+        <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\caffe\proto;$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(PythonSupport)'=='true'">
+        <PythonDir>C:\Miniconda2\</PythonDir>
+        <LibraryPath>$(PythonDir)\libs;$(LibraryPath)</LibraryPath>
+        <IncludePath>$(PythonDir)\include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(MatlabSupport)'=='true'">
+        <MatlabDir>C:\Program Files\MATLAB\R2014b</MatlabDir>
+        <LibraryPath>$(MatlabDir)\extern\lib\win64\microsoft;$(LibraryPath)</LibraryPath>
+        <IncludePath>$(MatlabDir)\extern\include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
+    <ItemDefinitionGroup Condition="'$(CpuOnlyBuild)'=='true'">
+        <ClCompile>
+            <PreprocessorDefinitions>CPU_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(UseCuDNN)'=='true'">
+        <ClCompile>
+            <PreprocessorDefinitions>USE_CUDNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+        </ClCompile>
+        <CudaCompile>
+            <Defines>USE_CUDNN</Defines>
+        </CudaCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(PythonSupport)'=='true'">
+        <ClCompile>
+            <PreprocessorDefinitions>WITH_PYTHON_LAYER;BOOST_PYTHON_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(MatlabSupport)'=='true'">
+        <ClCompile>
+            <PreprocessorDefinitions>MATLAB_MEX_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup>
+        <ClCompile>
+            <MinimalRebuild>false</MinimalRebuild>
+            <MultiProcessorCompilation>true</MultiProcessorCompilation>
+            <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;USE_OPENCV;USE_LEVELDB;USE_LMDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+            <TreatWarningAsError>true</TreatWarningAsError>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <ClCompile>
+            <Optimization>Full</Optimization>
+            <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+            <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+            <FunctionLevelLinking>true</FunctionLevelLinking>
+        </ClCompile>
+        <Link>
+            <EnableCOMDATFolding>true</EnableCOMDATFolding>
+            <GenerateDebugInformation>true</GenerateDebugInformation>
+            <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+            <OptimizeReferences>true</OptimizeReferences>
+        </Link>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <ClCompile>
+            <Optimization>Disabled</Optimization>
+            <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+            <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+        </ClCompile>
+        <Link>
+            <GenerateDebugInformation>true</GenerateDebugInformation>
+        </Link>
+    </ItemDefinitionGroup>
+</Project>

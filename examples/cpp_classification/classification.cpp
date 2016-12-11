@@ -111,10 +111,11 @@ static bool PairCompare(const std::pair<float, int_tp>& lhs,
 }
 
 /* Return the indices of the top N values of vector v. */
-static std::vector<int_tp> Argmax(const std::vector<float>& v, int_tp N) {
+static std::vector<int> Argmax(const std::vector<float>& v, int_tp N) {
   std::vector<std::pair<float, int_tp> > pairs;
-  for (uint_tp i = 0; i < v.size(); ++i)
-    pairs.push_back(std::make_pair(v[i], i));
+  for (size_t i = 0; i < v.size(); ++i) {
+    pairs.push_back(std::make_pair(v[i], static_cast<int_tp>(i)));
+  }
   std::partial_sort(pairs.begin(), pairs.begin() + N, pairs.end(), PairCompare);
 
   std::vector<int_tp> result;
