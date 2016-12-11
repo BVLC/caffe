@@ -1286,4 +1286,4 @@ template void greentea_gpu_rng_gaussian<double>(const int_tp ctx_id,
                                                 const int_tp offr);
 
 }  // namespace caffe
-#endif
+#endif  // USE_GREENTEA
