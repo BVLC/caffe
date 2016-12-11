@@ -1,5 +1,3 @@
-#include <Python.h>  // NOLINT(build/include_alpha)
-
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -40,6 +38,32 @@
     bp::register_ptr_to_python<shared_ptr<PTR > >(); \
   } \
 } while (0)
+
+#if defined(_MSC_VER) && (_MSC_FULL_VER >= 190024210)
+// Workaround for VS 2015 Update 3 which breaks boost python
+// See: http://stackoverflow.com/questions/38261530/unresolved-external-symbols-since-visual-studio-2015-update-3-boost-python-link
+// and https://msdn.microsoft.com/vs-knownissues/vs2015-update3
+#define BP_GET_POINTER(cls, dtype) \
+namespace boost { \
+template <> \
+caffe::cls<dtype> const volatile * \
+get_pointer<class caffe::cls<dtype> const volatile >( \
+  class caffe::cls<dtype> const volatile *c) { \
+    return c; \
+} \
+}
+
+BP_GET_POINTER(Net, float);
+BP_GET_POINTER(Layer, float);
+BP_GET_POINTER(Solver, float);
+BP_GET_POINTER(SGDSolver, float);
+BP_GET_POINTER(NesterovSolver, float);
+BP_GET_POINTER(AdaGradSolver, float);
+BP_GET_POINTER(RMSPropSolver, float);
+BP_GET_POINTER(AdaDeltaSolver, float);
+BP_GET_POINTER(AdamSolver, float);
+
+#endif
 
 namespace bp = boost::python;
 

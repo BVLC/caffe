@@ -1,0 +1,53 @@
+version: 1.0.{build}
+clone_folder: c:\projects\caffe
+environment:
+  matrix:
+    - MSVC_VERSION: 14
+      WITH_NINJA: 0
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 14
+      WITH_NINJA: 0
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 14
+      WITH_NINJA: 1
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 14
+      WITH_NINJA: 1
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 12
+      WITH_NINJA: 0
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 12
+      WITH_NINJA: 0
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 12
+      WITH_NINJA: 1
+      CMAKE_CONFIG: Release
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+    - MSVC_VERSION: 12
+      WITH_NINJA: 1
+      CMAKE_CONFIG: Debug
+      CMAKE_BUILD_SHARED_LIBS: 0
+
+build_script:
+- cmd: >-
+    call scripts\build_win.cmd
+
+artifacts:
+  - path: build\install
+    name: caffe
+  - path: build\libraries
+    name: dependencies

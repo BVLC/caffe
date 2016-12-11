@@ -16,6 +16,11 @@
 #include <lmdb.h>
 #endif
 
+#if defined(_MSC_VER)
+#include <direct.h>
+#define mkdir(X, Y) _mkdir(X)
+#endif
+
 #include <stdint.h>
 #include <sys/stat.h>
 

@@ -6,8 +6,16 @@ set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+add_definitions(-DBOOST_ALL_NO_LIB)
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
+
+
+if(DEFINED MSVC)
+  # We should define this only when necessary,
+  # i.e VS 2013 Update 4 or earlier.
+  add_definitions(-DBOOST_NO_CXX11_TEMPLATE_ALIASES)
+endif()
 
 # ---[ Threads
 find_package(Threads REQUIRED)
@@ -27,9 +35,20 @@ list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
 include(cmake/ProtoBuf.cmake)
 
 # ---[ HDF5
-find_package(HDF5 COMPONENTS HL REQUIRED)
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
+if(MSVC)
+  # Find HDF5 using it's hdf5-config.cmake file with MSVC
+  if(DEFINED HDF5_DIR)
+    list(APPEND CMAKE_MODULE_PATH ${HDF5_DIR})
+  endif()
+  find_package(HDF5 COMPONENTS C HL REQUIRED)
+  set(HDF5_LIBRARIES hdf5-shared)
+  set(HDF5_HL_LIBRARIES hdf5_hl-shared)
+else()
+  find_package(HDF5 COMPONENTS HL REQUIRED)
+endif()
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
 
 # ---[ LMDB
 if(USE_LMDB)
@@ -222,18 +241,18 @@ if(BUILD_python)
     find_package(NumPy 1.7.1)
     # Find the matching boost python implementation
     set(version ${PYTHONLIBS_VERSION_STRING})
-    
+
     STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
     find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
     set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-    
+
     while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
       STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
-      
+
       STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
       find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
       set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-      
+
       STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
       if("${has_more_version}" STREQUAL "")
         break()
@@ -251,6 +270,9 @@ if(BUILD_python)
   endif()
   if(PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND)
     set(HAVE_PYTHON TRUE)
+    if(Boost_USE_STATIC_LIBS AND MSVC)
+      add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+    endif()
     if(BUILD_python_layer)
       list(APPEND Caffe_DEFINITIONS PRIVATE -DWITH_PYTHON_LAYER)
       list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} PUBLIC ${Boost_INCLUDE_DIRS})
