@@ -2,8 +2,8 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layers/mvn_layer.hpp"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 

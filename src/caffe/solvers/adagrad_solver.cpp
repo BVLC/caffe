@@ -4,6 +4,12 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY
+template <typename Dtype>
+void adagrad_update_gpu(int N, Dtype* g, Dtype* h, Dtype delta,
+    Dtype local_rate);
+#endif
+
 template <typename Dtype>
 void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   CHECK(Caffe::root_solver());
@@ -45,34 +51,9 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    // compute square of gradient in update
-    caffe_gpu_powx(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(), Dtype(2),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // update history
-    caffe_gpu_add(net_params[param_id]->count(),
-        this->update_[param_id]->gpu_data(),
-        this->history_[param_id]->gpu_data(),
-        this->history_[param_id]->mutable_gpu_data());
-
-    // prepare update
-    caffe_gpu_powx(net_params[param_id]->count(),
-              this->history_[param_id]->gpu_data(), Dtype(0.5),
-              this->update_[param_id]->mutable_gpu_data());
-
-    caffe_gpu_add_scalar(net_params[param_id]->count(),
-              delta, this->update_[param_id]->mutable_gpu_data());
-
-    caffe_gpu_div(net_params[param_id]->count(),
-              net_params[param_id]->gpu_diff(),
-              this->update_[param_id]->gpu_data(),
-              this->update_[param_id]->mutable_gpu_data());
-
-    // scale and copy
-    caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-        this->update_[param_id]->gpu_data(), Dtype(0),
-        net_params[param_id]->mutable_gpu_diff());
+    adagrad_update_gpu(net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        this->history_[param_id]->mutable_gpu_data(), delta, local_rate);
 #else
     NO_GPU;
 #endif

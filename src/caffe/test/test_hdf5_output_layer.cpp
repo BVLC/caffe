@@ -5,7 +5,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/data_layers.hpp"
+#include "caffe/layers/hdf5_output_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"

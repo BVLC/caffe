@@ -61,7 +61,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
 
-- `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classsifier` and `caffe.Detector` provide convenience interfaces for common tasks.
+- `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classifier` and `caffe.Detector` provide convenience interfaces for common tasks.
 - `caffe.SGDSolver` exposes the solving interface.
 - `caffe.io` handles input / output with preprocessing and protocol buffers.
 - `caffe.draw` visualizes network architectures.

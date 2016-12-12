@@ -12,7 +12,10 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
-#include "caffe/data_layers.hpp"
+#include "caffe/data_transformer.hpp"
+#include "caffe/internal_thread.hpp"
+#include "caffe/layers/base_data_layer.hpp"
+#include "caffe/layers/window_data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -262,6 +265,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int num_samples[2] = { batch_size - num_fg, num_fg };
 
   int item_id = 0;
+  CHECK_GT(fg_windows_.size(), 0);
+  CHECK_GT(bg_windows_.size(), 0);
+
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {

@@ -1,7 +1,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/vision_layers.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/layers/concat_layer.hpp"
+#include "caffe/layers/flatten_layer.hpp"
+#include "caffe/layers/pooling_layer.hpp"
+#include "caffe/layers/split_layer.hpp"
+#include "caffe/layers/spp_layer.hpp"
 
 namespace caffe {
 
@@ -216,7 +221,6 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   split_layer_->Backward(split_top_vec_, propagate_down, bottom);
 }
-
 
 INSTANTIATE_CLASS(SPPLayer);
 REGISTER_LAYER_CLASS(SPP);

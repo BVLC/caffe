@@ -2,7 +2,9 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
-#include "caffe/neuron_layers.hpp"
+
+#include "caffe/layers/neuron_layer.hpp"
+#include "caffe/layers/prelu_layer.hpp"
 
 namespace caffe {
 

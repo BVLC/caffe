@@ -4,6 +4,12 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY
+template <typename Dtype>
+void nesterov_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
+    Dtype local_rate);
+#endif
+
 template <typename Dtype>
 void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   CHECK(Caffe::root_solver());
@@ -36,25 +42,10 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    // save history momentum for stepping back
-    caffe_copy(net_params[param_id]->count(),
-        this->history_[param_id]->gpu_data(),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // update history
-    caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->gpu_diff(), momentum,
-              this->history_[param_id]->mutable_gpu_data());
-
-    // compute update: step back then over step
-    caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
-        this->history_[param_id]->gpu_data(), -momentum,
-        this->update_[param_id]->mutable_gpu_data());
-
-    // copy
-    caffe_copy(net_params[param_id]->count(),
-        this->update_[param_id]->gpu_data(),
-        net_params[param_id]->mutable_gpu_diff());
+    nesterov_update_gpu(net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        this->history_[param_id]->mutable_gpu_data(),
+        momentum, local_rate);
 #else
     NO_GPU;
 #endif

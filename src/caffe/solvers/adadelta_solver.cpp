@@ -16,6 +16,12 @@ void AdaDeltaSolver<Dtype>::AdaDeltaPreSolve() {
   }
 }
 
+#ifndef CPU_ONLY
+template <typename Dtype>
+void adadelta_update_gpu(int N, Dtype* g, Dtype* h, Dtype* h2, Dtype momentum,
+    Dtype delta, Dtype local_rate);
+#endif
+
 template <typename Dtype>
 void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
@@ -85,61 +91,11 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    // compute square of gradient in update
-    caffe_gpu_powx(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(), Dtype(2),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // update history of gradients
-    caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) - momentum,
-        this->update_[param_id]->gpu_data(), momentum,
-        this->history_[param_id]->mutable_gpu_data());
-
-    // add delta to history to guard against dividing by zero later
-    caffe_gpu_set(net_params[param_id]->count(), delta,
-        this->temp_[param_id]->mutable_gpu_data());
-
-    caffe_gpu_add(net_params[param_id]->count(),
-        this->temp_[param_id]->gpu_data(),
-        this->history_[update_history_offset + param_id]->gpu_data(),
-        this->update_[param_id]->mutable_gpu_data());
-
-    caffe_gpu_add(net_params[param_id]->count(),
-        this->temp_[param_id]->gpu_data(),
-        this->history_[param_id]->gpu_data(),
-        this->temp_[param_id]->mutable_gpu_data());
-
-    // divide history of updates by history of gradients
-    caffe_gpu_div(net_params[param_id]->count(),
-        this->update_[param_id]->gpu_data(),
-        this->temp_[param_id]->gpu_data(),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // jointly compute the RMS of both for update and gradient history
-    caffe_gpu_powx(net_params[param_id]->count(),
-        this->update_[param_id]->gpu_data(), Dtype(0.5),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // compute the update and copy to net_diff
-    caffe_gpu_mul(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(),
-        this->update_[param_id]->gpu_data(),
-        net_params[param_id]->mutable_gpu_diff());
-
-    // compute square of update
-    caffe_gpu_powx(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(), Dtype(2),
-        this->update_[param_id]->mutable_gpu_data());
-
-    // update history of updates
-    caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) - momentum,
-        this->update_[param_id]->gpu_data(), momentum,
-        this->history_[update_history_offset + param_id]->mutable_gpu_data());
-
-    // apply learning rate
-    caffe_gpu_scale(net_params[param_id]->count(), local_rate,
-        net_params[param_id]->gpu_diff(),
-        net_params[param_id]->mutable_gpu_diff());
+    adadelta_update_gpu(net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        this->history_[param_id]->mutable_gpu_data(),
+        this->history_[update_history_offset + param_id]->mutable_gpu_data(),
+        momentum, delta, local_rate);
 #else
     NO_GPU;
 #endif

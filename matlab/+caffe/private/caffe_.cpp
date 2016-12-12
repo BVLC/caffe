@@ -44,7 +44,7 @@ void mxCHECK_FILE_EXIST(const char* file) {
 // The pointers to caffe::Solver and caffe::Net instances
 static vector<shared_ptr<Solver<float> > > solvers_;
 static vector<shared_ptr<Net<float> > > nets_;
-// init_key is generated at the beginning and everytime you call reset
+// init_key is generated at the beginning and every time you call reset
 static double init_key = static_cast<double>(caffe_rng_rand());
 
 /** -----------------------------------------------------------------
@@ -504,6 +504,13 @@ static void write_mean(MEX_ARGS) {
   mxFree(mean_proto_file);
 }
 
+// Usage: caffe_('version')
+static void version(MEX_ARGS) {
+  mxCHECK(nrhs == 0, "Usage: caffe_('version')");
+  // Return version string
+  plhs[0] = mxCreateString(AS_STRING(CAFFE_VERSION));
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -542,6 +549,7 @@ static handler_registry handlers[] = {
   { "reset",              reset           },
   { "read_mean",          read_mean       },
   { "write_mean",         write_mean      },
+  { "version",            version         },
   // The end.
   { "END",                NULL            },
 };

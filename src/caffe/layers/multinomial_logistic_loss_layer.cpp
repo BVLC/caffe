@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/multinomial_logistic_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

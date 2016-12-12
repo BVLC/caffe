@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/argmax_layer.hpp"
 
 namespace caffe {
 

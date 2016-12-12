@@ -12,7 +12,7 @@ namespace caffe {
 /**
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
-  * a client may optionally provide in order to request early termination
+  * client may optionally provide in order to request early termination
   * or saving a snapshot without exiting. In the executable caffe, this
   * mechanism is used to allow the snapshot to be saved when stopping
   * execution with a SIGINT (Ctrl-C).
@@ -107,6 +107,7 @@ class Solver {
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
   void DisplayOutputBlobs(const int net_id);
+  void UpdateSmoothedLoss(Dtype loss, int start_iter, int average_loss);
 
   SolverParameter param_;
   int iter_;
@@ -114,6 +115,8 @@ class Solver {
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
+  vector<Dtype> losses_;
+  Dtype smoothed_loss_;
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism

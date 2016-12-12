@@ -59,6 +59,18 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 
+// Return true iff the Net contains input fields.
+bool NetNeedsInputUpgrade(const NetParameter& net_param);
+
+// Perform all necessary transformations to upgrade input fields into layers.
+void UpgradeNetInput(NetParameter* net_param);
+
+// Return true iff the Net contains batch norm layers with manual local LRs.
+bool NetNeedsBatchNormUpgrade(const NetParameter& net_param);
+
+// Perform all necessary transformations to upgrade batch norm layers.
+void UpgradeNetBatchNorm(NetParameter* net_param);
+
 // Return true iff the solver contains any old solver_type specified as enums
 bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
 

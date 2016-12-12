@@ -203,6 +203,12 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
   }
 }
 
+#ifndef CPU_ONLY
+template <typename Dtype>
+void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
+    Dtype local_rate);
+#endif
+
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
@@ -222,12 +228,10 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->gpu_diff(), momentum,
-              history_[param_id]->mutable_gpu_data());
-    caffe_copy(net_params[param_id]->count(),
-        history_[param_id]->gpu_data(),
-        net_params[param_id]->mutable_gpu_diff());
+    sgd_update_gpu(net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        history_[param_id]->mutable_gpu_data(),
+        momentum, local_rate);
 #else
     NO_GPU;
 #endif

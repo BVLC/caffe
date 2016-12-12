@@ -4,7 +4,7 @@
 # Be warned that the fields in the training log may change in the future.
 # You had better check the data files before designing your own plots.
 
-# Please generate the neccessary data files with 
+# Please generate the necessary data files with 
 # /path/to/caffe/tools/extra/parse_log.sh before plotting.
 # Example usage: 
 #     ./parse_log.sh mnist.log

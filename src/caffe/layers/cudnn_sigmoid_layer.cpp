@@ -1,7 +1,7 @@
 #ifdef USE_CUDNN
 #include <vector>
 
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/cudnn_sigmoid_layer.hpp"
 
 namespace caffe {
 
@@ -13,6 +13,8 @@ void CuDNNSigmoidLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+  cudnn::createActivationDescriptor<Dtype>(&activ_desc_,
+      CUDNN_ACTIVATION_SIGMOID);
   handles_setup_ = true;
 }
 
