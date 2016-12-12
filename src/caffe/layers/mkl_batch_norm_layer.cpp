@@ -295,6 +295,11 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     // In-place computation; need to store bottom data before overwriting it.
     // Note that this is only necessary for Backward; we skip this if not
     // doing Backward
+//    if(bottom[0]->prv_data_count() != bottom[0]->count()) {
+//      LOG(FATAL) << "!! MKLBATCH NORM PRV_COUNT != COUNT ";
+//    }
+     // TODO: change count() into prv_count() if applicable eg.
+     // make a caffe_coppy working on blobs 
     caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
                                                       temp_.mutable_cpu_data());
   }
