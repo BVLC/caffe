@@ -4565,6 +4565,74 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"// Copied from caffe.pb.h, must keep consistent with the original definition",    // NOLINT
+"#if TYPE==TYPE_FLOAT",    // NOLINT
+"enum LossParameter_NormalizationMode {",    // NOLINT
+"LossParameter_NormalizationMode_FULL = 0,",    // NOLINT
+"LossParameter_NormalizationMode_VALID = 1,",    // NOLINT
+"LossParameter_NormalizationMode_BATCH_SIZE = 2,",    // NOLINT
+"LossParameter_NormalizationMode_NONE = 3",    // NOLINT
+"};",    // NOLINT
+"#endif",    // NOLINT
+"// Copied from softmax_loss_layer.cpp, must keep consistent with the orignal implementation",    // NOLINT
+"Dtype TEMPLATE(get_normalizer, Dtype)(",    // NOLINT
+"enum LossParameter_NormalizationMode normalization_mode, int_tp valid_count,",    // NOLINT
+"int_tp outer_num_, int_tp inner_num_) {",    // NOLINT
+"Dtype normalizer;",    // NOLINT
+"switch (normalization_mode) {",    // NOLINT
+"case LossParameter_NormalizationMode_FULL:",    // NOLINT
+"normalizer = (Dtype)(outer_num_ * inner_num_);",    // NOLINT
+"break;",    // NOLINT
+"case LossParameter_NormalizationMode_VALID:",    // NOLINT
+"if (valid_count == -1) {",    // NOLINT
+"normalizer = (Dtype)(outer_num_ * inner_num_);",    // NOLINT
+"} else {",    // NOLINT
+"normalizer = (Dtype)(valid_count);",    // NOLINT
+"}",    // NOLINT
+"break;",    // NOLINT
+"case LossParameter_NormalizationMode_BATCH_SIZE:",    // NOLINT
+"normalizer = (Dtype)(outer_num_);",    // NOLINT
+"break;",    // NOLINT
+"case LossParameter_NormalizationMode_NONE:",    // NOLINT
+"normalizer = (Dtype)(1);",    // NOLINT
+"break;",    // NOLINT
+"default:",    // NOLINT
+"normalizer = (Dtype)(0);",    // NOLINT
+"}",    // NOLINT
+"// Some users will have no labels for some examples in order to 'turn off' a",    // NOLINT
+"// particular loss in a multi-task setup. The max prevents NaNs in that case.",    // NOLINT
+"return fmax((Dtype)(1.0), normalizer);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data) {",    // NOLINT
+"__local Dtype sum_tmp[16];",    // NOLINT
+"Dtype sum = 0;",    // NOLINT
+"for(int_tp i = get_global_id(0); i < n; i += get_global_size(0)) {",    // NOLINT
+"sum += data[i];",    // NOLINT
+"}",    // NOLINT
+"sum = sub_group_reduce_add(sum);",    // NOLINT
+"sum_tmp[get_sub_group_id()] = sum;",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if (get_sub_group_id() == 0)",    // NOLINT
+"sum = sub_group_reduce_add(sum_tmp[get_sub_group_local_id()]);",    // NOLINT
+"return sum;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_loss_forward_asum, Dtype)(",    // NOLINT
+"int_tp n, int_tp outer_num_, int_tp inner_num_,",    // NOLINT
+"int_tp compute_count_sum, int_tp normalization_type,",    // NOLINT
+"__global const Dtype *loss,",    // NOLINT
+"__global const Dtype *counts, __global Dtype *out) {",    // NOLINT
+"",    // NOLINT
+"Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss);",    // NOLINT
+"Dtype counts_sum = -1;",    // NOLINT
+"if (compute_count_sum)",    // NOLINT
+"counts_sum = TEMPLATE(asum, Dtype)(n, counts);",    // NOLINT
+"",    // NOLINT
+"if (get_global_id(0) == 0)",    // NOLINT
+"out[0] = loss_sum / TEMPLATE(get_normalizer, Dtype)(normalization_type, counts_sum, outer_num_, inner_num_);",    // NOLINT
+"}",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
