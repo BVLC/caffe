@@ -438,7 +438,7 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
        )) {
       
       std::vector<const LayerParameter*> consumer_layer_params; 
-      GetBlobConsumers(consumer_layer_params, layer_param->top(0), param, i+1);
+      GetBlobConsumers(consumer_layer_params, layer_param->top(0), param, i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param = 
                                     consumer_layer_params.size() > 0 ?
                                     *(consumer_layer_params[0]) : *layer_param;
@@ -505,7 +505,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
             param.engine().compare("MKLDNN") == 0)
        )) {
       std::vector<const LayerParameter*> consumer_layer_params; 
-      GetBlobConsumers(consumer_layer_params, layer_param->top(0), param, i+1);
+      GetBlobConsumers(consumer_layer_params, layer_param->top(0), param, i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param = 
                                     consumer_layer_params.size() > 0 ?
                                     *(consumer_layer_params[0]) : *layer_param;
@@ -576,7 +576,7 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
       std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
    
       std::vector<const LayerParameter*> consumer_layer_params; 
-      GetBlobConsumers(consumer_layer_params,batch_norm_top, param, i+1);
+      GetBlobConsumers(consumer_layer_params,batch_norm_top, param, i+1 < param.layer_size() ? i+1 : i);
 
       for (std::vector<const LayerParameter*>::iterator it =
         consumer_layer_params.begin();
