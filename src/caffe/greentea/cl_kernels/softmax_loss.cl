@@ -57,3 +57,71 @@ __kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,
     }
   }
 }
+
+// Copied from caffe.pb.h, must keep consistent with the original definition
+#if TYPE==TYPE_FLOAT
+enum LossParameter_NormalizationMode {
+  LossParameter_NormalizationMode_FULL = 0,
+  LossParameter_NormalizationMode_VALID = 1,
+  LossParameter_NormalizationMode_BATCH_SIZE = 2,
+  LossParameter_NormalizationMode_NONE = 3
+};
+#endif
+// Copied from softmax_loss_layer.cpp, must keep consistent with the orignal implementation
+Dtype TEMPLATE(get_normalizer, Dtype)(
+    enum LossParameter_NormalizationMode normalization_mode, int_tp valid_count,
+    int_tp outer_num_, int_tp inner_num_) {
+  Dtype normalizer;
+  switch (normalization_mode) {
+    case LossParameter_NormalizationMode_FULL:
+      normalizer = (Dtype)(outer_num_ * inner_num_);
+      break;
+    case LossParameter_NormalizationMode_VALID:
+      if (valid_count == -1) {
+        normalizer = (Dtype)(outer_num_ * inner_num_);
+      } else {
+        normalizer = (Dtype)(valid_count);
+      }
+      break;
+    case LossParameter_NormalizationMode_BATCH_SIZE:
+      normalizer = (Dtype)(outer_num_);
+      break;
+    case LossParameter_NormalizationMode_NONE:
+      normalizer = (Dtype)(1);
+      break;
+    default:
+      normalizer = (Dtype)(0);
+  }
+  // Some users will have no labels for some examples in order to 'turn off' a
+  // particular loss in a multi-task setup. The max prevents NaNs in that case.
+  return fmax((Dtype)(1.0), normalizer);
+}
+
+Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data) {
+  __local Dtype sum_tmp[16];
+  Dtype sum = 0;
+  for(int_tp i = get_global_id(0); i < n; i += get_global_size(0)) {
+    sum += data[i];
+  }
+  sum = sub_group_reduce_add(sum);
+  sum_tmp[get_sub_group_id()] = sum;
+  barrier(CLK_LOCAL_MEM_FENCE);
+  if (get_sub_group_id() == 0)
+    sum = sub_group_reduce_add(sum_tmp[get_sub_group_local_id()]);
+  return sum;
+}
+
+__kernel void TEMPLATE(softmax_loss_forward_asum, Dtype)(
+    int_tp n, int_tp outer_num_, int_tp inner_num_,
+    int_tp compute_count_sum, int_tp normalization_type,
+    __global const Dtype *loss,
+    __global const Dtype *counts, __global Dtype *out) {
+
+    Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss);
+    Dtype counts_sum = -1;
+    if (compute_count_sum)
+      counts_sum = TEMPLATE(asum, Dtype)(n, counts);
+
+    if (get_global_id(0) == 0)
+      out[0] = loss_sum / TEMPLATE(get_normalizer, Dtype)(normalization_type, counts_sum, outer_num_, inner_num_);
+}
