@@ -53,6 +53,7 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 #ifdef USE_CUDA
+__constant__ float kBNLL_THRESHOLD = 50.;
 template<typename Dtype>
 __global__ void BNLLBackward(const int_tp n, const Dtype* in_diff,
                              const Dtype* in_data, Dtype* out_diff) {
