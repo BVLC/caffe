@@ -47,7 +47,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
     if NOT DEFINED WITH_NINJA set WITH_NINJA=0
-    :: Change to 1 to build caffe without CUDA support
+    :: Change to 1 to build caffe without CUDA or OpenCL support
     if NOT DEFINED CPU_ONLY set CPU_ONLY=0
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
@@ -65,6 +65,10 @@ if DEFINED APPVEYOR (
     if NOT DEFINED RUN_LINT set RUN_LINT=0
     :: Build the install target
     if NOT DEFINED RUN_INSTALL set RUN_INSTALL=0
+
+    if NOT DEFINED USE_CUDA set USE_CUDA=0
+    if NOT DEFINED USE_GREENTEA set USE_GREENTEA=1
+    if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
 )
 
 :: Set the appropriate CMake generator
@@ -92,6 +96,10 @@ echo INFO: MSVC_VERSION               = !MSVC_VERSION!
 echo INFO: WITH_NINJA                 = !WITH_NINJA!
 echo INFO: CMAKE_GENERATOR            = "!CMAKE_GENERATOR!"
 echo INFO: CPU_ONLY                   = !CPU_ONLY!
+echo INFO: USE_CUDA                   = !USE_CUDA!
+echo INFO: USE_CUDNN                  = !USE_CUDNN!
+echo INFO: USE_GREENTEA               = !USE_GREENTEA!
+echo INFO: USE_LIBDNN                 = !USE_LIBDNN!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
 echo INFO: BUILD_PYTHON               = !BUILD_PYTHON!
@@ -151,6 +159,9 @@ cmake -G"!CMAKE_GENERATOR!" ^
       -DBUILD_python_layer:BOOL=%BUILD_PYTHON_LAYER% ^
       -DBUILD_matlab:BOOL=%BUILD_MATLAB% ^
       -DCPU_ONLY:BOOL=%CPU_ONLY% ^
+	  -DUSE_CUDA:BOOL=%USE_CUDA% ^
+	  -DUSE_LIBDNN:BOOL=%USE_LIBDNN% ^
+	  -DUSE_GREENTEA:BOOL=%USE_GREENTEA% ^
       -C "%cd%\libraries\caffe-builder-config.cmake" ^
       "%~dp0\.."
 

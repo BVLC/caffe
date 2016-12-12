@@ -1,7 +1,11 @@
 SET(ViennaCL_WITH_OPENCL TRUE)
 
 SET(VIENNACL_INCLUDE_SEARCH_PATHS
+  viennacl
+  viennacl-dev
   ..
+  ../viennacl
+  ../viennacl-dev
   /usr/include
   /usr/local/include
   /opt/ViennaCL/include
