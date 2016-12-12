@@ -4373,6 +4373,143 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(softmax_forward_slm,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global Dtype* scale,",    // NOLINT
+"__global const Dtype* data,",    // NOLINT
+"__global Dtype* out,",    // NOLINT
+"__local Dtype *out_tmp,",    // NOLINT
+"__local Dtype *scale_tmp,",    // NOLINT
+"__local Dtype *group_tmp) {",    // NOLINT
+"",    // NOLINT
+"int_tp n = get_global_id(1);",    // NOLINT
+"for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=",    // NOLINT
+"get_global_size(0), ++s) {",    // NOLINT
+"float maxval = -FLT_MAX;",    // NOLINT
+"for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {",    // NOLINT
+"Dtype tmp = data[(n * channels + c) * spatial_dim + s];",    // NOLINT
+"maxval = max((Dtype)tmp, (Dtype)maxval);",    // NOLINT
+"}",    // NOLINT
+"maxval = sub_group_reduce_max(maxval);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"group_tmp[get_sub_group_id() * spatial_dim + s] = maxval;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < spatial_dim * get_max_sub_group_size(); index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp s = index / get_max_sub_group_size();",    // NOLINT
+"Dtype maxval = sub_group_reduce_max(group_tmp[get_sub_group_local_id() * spatial_dim + s]);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"scale_tmp[s] = maxval;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < channels * spatial_dim;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"out_tmp[index] = exp(data[n * channels * spatial_dim + index] - scale_tmp[s]);",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=",    // NOLINT
+"get_global_size(0), ++s) {",    // NOLINT
+"Dtype sum = 0;",    // NOLINT
+"for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {",    // NOLINT
+"sum += out_tmp[c * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"sum = sub_group_reduce_add(sum);",    // NOLINT
+"group_tmp[get_sub_group_id() * spatial_dim + s] = sum;",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < spatial_dim * get_max_sub_group_size(); index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp s = index / get_max_sub_group_size();",    // NOLINT
+"Dtype sum = sub_group_reduce_add(group_tmp[get_sub_group_local_id() * spatial_dim + s]);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"scale_tmp[s] = sum;",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < channels * spatial_dim;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"out[n * channels * spatial_dim + index] = out_tmp[index] / scale_tmp[s];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_forward,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global Dtype* scale,",    // NOLINT
+"__global const Dtype* data,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"",    // NOLINT
+"int_tp n = get_global_id(1);",    // NOLINT
+"__global Dtype *group_tmp = scale + spatial_dim * num + n * get_max_sub_group_size() * spatial_dim;",    // NOLINT
+"for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=",    // NOLINT
+"get_global_size(0), ++s) {",    // NOLINT
+"float maxval = -FLT_MAX;",    // NOLINT
+"for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {",    // NOLINT
+"Dtype tmp = data[(n * channels + c) * spatial_dim + s];",    // NOLINT
+"maxval = max((Dtype)tmp, (Dtype)maxval);",    // NOLINT
+"}",    // NOLINT
+"maxval = sub_group_reduce_max(maxval);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"group_tmp[get_sub_group_id() * spatial_dim + s] = maxval;",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_GLOBAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < spatial_dim * get_max_sub_group_size(); index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp s = index / get_max_sub_group_size();",    // NOLINT
+"Dtype maxval = sub_group_reduce_max(group_tmp[get_sub_group_local_id() * spatial_dim + s]);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"scale[n * spatial_dim + s] = maxval;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"barrier(CLK_GLOBAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < channels * spatial_dim;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"out[n * channels * spatial_dim + index] = exp(data[n * channels * spatial_dim + index] - scale[n * spatial_dim + s]);",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_GLOBAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=",    // NOLINT
+"get_global_size(0), ++s) {",    // NOLINT
+"Dtype sum = 0;",    // NOLINT
+"for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {",    // NOLINT
+"sum += out[n * channels * spatial_dim + c * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"sum = sub_group_reduce_add(sum);",    // NOLINT
+"group_tmp[get_sub_group_id() * spatial_dim + s] = sum;",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_GLOBAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < spatial_dim * get_max_sub_group_size(); index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp s = index / get_max_sub_group_size();",    // NOLINT
+"Dtype sum = sub_group_reduce_add(group_tmp[get_sub_group_local_id() * spatial_dim + s]);",    // NOLINT
+"//if (get_sub_group_local_id() == 0)",    // NOLINT
+"scale[n * spatial_dim + s] = sum;",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_GLOBAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < channels * spatial_dim;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"out[n * channels * spatial_dim + index] /= scale[n * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(softmax_loss_forward,Dtype)(",    // NOLINT
 "int_tp n, __global const Dtype* prob_data, __global const Dtype* label,",    // NOLINT
 "__global Dtype* loss,",    // NOLINT
@@ -4578,6 +4715,7 @@ static std::string cl_kernel_names[] = {
     "pooling_nd",   // NOLINT
     "pooling_sk",   // NOLINT
     "slice",   // NOLINT
+    "softmax",   // NOLINT
     "softmax_loss",   // NOLINT
     "solvers",   // NOLINT
     "tile"   // NOLINT
