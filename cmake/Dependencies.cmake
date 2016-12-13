@@ -153,6 +153,8 @@ if(BUILD_python)
       include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
       list(APPEND Caffe_LINKER_LIBS ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
     endif()
+  else()
+    warning("Condition `PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND` not satisfied, pycaffe wouldn't build without this condition.")
   endif()
 endif()
 
