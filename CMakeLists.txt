@@ -33,6 +33,7 @@ include(cmake/Misc.cmake)
 include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 include(cmake/WindowsCreateLinkHeader.cmake)
+include(cmake/TargetResolvePrerequesites.cmake)
 
 # ---[ Options
 caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
@@ -53,8 +54,14 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(protobuf_MODULE_COMPATIBLE "Make the protobuf-config.cmake compatible with the module mode" ON IF MSVC)
+caffe_option(COPY_PREREQUISITES "Copy the prerequisites next to each executable or shared library directory" ON IF MSVC)
+caffe_option(INSTALL_PREREQUISITES "Install the prerequisites next to each executable or shared library directory" ON IF MSVC)
 
 if(MSVC AND BUILD_SHARED_LIBS)
+  if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    # see issue https://gitlab.kitware.com/cmake/cmake/issues/16552#note_215236
+    message(FATAL_ERROR "The Visual Studio generator cannot build a shared library. Use the Ninja generator instead.")
+  endif()
   # Some tests (solver tests) fail when caffe is built as a shared library. The problem comes
   # from protobuf that has a global static empty_string_ variable. Since caffe and test.testbin
   # link to a static protobuf library both end up with their own instance of the empty_string_
@@ -62,6 +69,9 @@ if(MSVC AND BUILD_SHARED_LIBS)
   # to protobuf this problem should not happen. Use at your own risk.
   message(WARNING "Some tests (solvers) will fail when building as a shared library with MSVC")
 endif()
+
+# ---[ Prebuild dependencies on windows
+include(cmake/WindowsDownloadPrebuiltDependencies.cmake)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
