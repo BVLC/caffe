@@ -15,7 +15,6 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
-#include <sys/time.h>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>

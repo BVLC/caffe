@@ -15,37 +15,4389 @@ static std::string header = "#ifndef __OPENCL_VERSION__\n#define __kernel\n#defi
 static std::string definitions_32 = "// Types used for parameters, offset computations and so on\n#define int_tp int\n#define uint_tp unsigned int\n\n// Definitions used to cast the types above as needed\n#define int_tpc int\n#define uint_tpc unsigned int";  // NOLINT
 #endif
 static std::vector<std::vector<std::string>> cl_kernels{
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(relu_forward,Dtype)(const int_tp n,\n                                           __global const Dtype* in,\n                                           __global Dtype* out,\n                                           Dtype negative_slope) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = in[index] > 0 ? in[index] : in[index] * negative_slope;\n  }\n}\n\n__kernel void TEMPLATE(relu_backward,Dtype)(const int_tp n,\n                                            __global const Dtype* in_diff,\n                                            __global const Dtype* in_data,\n                                            __global Dtype* out_diff,\n                                            Dtype negative_slope) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out_diff[index] = in_diff[index]\n        * ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * negative_slope);\n  }\n}\n\n__kernel void TEMPLATE(tanh_forward,Dtype)(const int_tp n,\n                                           __global const Dtype* in,\n                                           __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = tanh(in[index]);\n  }\n}\n\n__kernel void TEMPLATE(tanh_backward,Dtype)(const int_tp n,\n                                            __global const Dtype* in_diff,\n                                            __global const Dtype* out_data,\n                                            __global Dtype* out_diff) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    Dtype tanhx = out_data[index];\n    out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);\n  }\n}\n\n__kernel void TEMPLATE(sigmoid_forward,Dtype)(const int_tp n,\n                                              __global const Dtype* in,\n                                              __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = 1.0 / (1.0 + exp(-in[index]));\n  }\n}\n\n__kernel void TEMPLATE(sigmoid_backward,Dtype)(const int_tp n,\n                                               __global const Dtype* in_diff,\n                                               __global const Dtype* out_data,\n                                               __global Dtype* out_diff) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    const Dtype sigmoid_x = out_data[index];\n    out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);\n  }\n}\n\n__kernel void TEMPLATE(threshold,Dtype)(const int_tp n, const Dtype threshold,\n                                        __global const Dtype* in,\n                                        __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = in[index] > threshold ? 1.0 : 0.0;\n  }\n}\n\n__kernel void TEMPLATE(prelu_forward,Dtype)(const int_tp n, const int_tp channels,\n                                            const int_tp dim,\n                                            __global const Dtype* in,\n                                            __global Dtype* out,\n                                            __global const Dtype* slope_data,\n                                            const int_tp div_factor) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    int_tp c = (index / dim) % channels / div_factor;\n    out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[c];\n  }\n}\n\n__kernel void TEMPLATE(prelu_backward,Dtype)(const int_tp n, const int_tp channels,\n                                             const int_tp dim,\n                                             __global const Dtype* in_diff,\n                                             __global const Dtype* in_data,\n                                             __global Dtype* out_diff,\n                                             __global const Dtype* slope_data,\n                                             const int_tp div_factor) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    int_tp c = (index / dim) % channels / div_factor;\n    out_diff[index] = in_diff[index]\n        * ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * slope_data[c]);\n  }\n}\n\n__kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp rows,\n                                                   const int_tp rowPitch,\n                                                   __global const Dtype* in_diff,\n                                                   __global const Dtype* in_data,\n                                                   __global Dtype* out_diff) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0?1.0:0.0);\n    for (int k = 1; k < rows; k++) {\n      out_diff[index] += in_diff[index + k * rowPitch]\n          * in_data[index + k * rowPitch]\n          * (in_data[index + k * rowPitch] <= 0?1.0:0.0);\n    }\n  }\n}\n\n__kernel void TEMPLATE(sce_loss_forward,Dtype)(const int_tp nthreads,\n                                        __global const Dtype* input_data,\n                                        __global const Dtype* target,\n                                        __global Dtype* loss,\n                                        const int_tp has_ignore_label_,\n                                        const int_tp ignore_label_,\n                                        __global Dtype* counts) {\n  for (int_tp i = get_global_id(0); i < nthreads; i += get_global_size(0)) {\n    const int_tp target_value = (int_tp)(target[i]);\n    if (has_ignore_label_ == 1 && target_value == ignore_label_) {\n      loss[i] = 0.0;\n      counts[i] = 0.0;\n    } else {\n      loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0.0)) -\n          log(1.0 + exp(input_data[i] - 2.0 * input_data[i] *\n          (input_data[i] >= 0.0)));\n      counts[i] = 1.0;\n    }\n  }\n}\n\n__kernel void TEMPLATE(sce_loss_ignore_diff,Dtype)(const int_tp count,\n                                        const int_tp ignore_label,\n                                        __global const Dtype* target,\n                                        __global Dtype* diff) {\n  for (int_tp i = get_global_id(0); i < count; i += get_global_size(0)) {\n    const int_tp target_value = (int_tp)(target[i]);\n    if (target_value == ignore_label) {\n      diff[i] = 0.0;\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(gpu_set,Dtype)(const int_tp n, const Dtype alpha, __global Dtype* y) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[index] = alpha;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(br_forward,Dtype)(const int_tp count, const int_tp inner_dim,\n                                         __global const Dtype* in,\n                                         __global const Dtype* permut,\n                                         __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < count;\n      index += get_global_size(0)) {\n    int_tp n = index / (inner_dim);\n    int_tp in_n = (int_tp) (permut[n]);\n    out[index] = in[in_n * (inner_dim) + index % (inner_dim)];\n  }\n}\n\n__kernel void TEMPLATE(br_backward,Dtype)(const int_tp count, const int_tp inner_dim,\n                                          __global const Dtype* in,\n                                          __global const Dtype* top_indexes,\n                                          __global const Dtype* begins,\n                                          __global const Dtype* counts,\n                                          __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < count;\n      index += get_global_size(0)) {\n    int_tp n = index / (inner_dim);\n    out[index] = 0;\n    int_tp lower = (int_tp) (begins[n]);\n    int_tp upper = lower + (int_tp) (counts[n]);\n    for (int_tp i = lower; i < upper; ++i) {\n      int_tp in_n = (int_tp) (top_indexes[i]);\n      out[index] += in[in_n * (inner_dim) + index % (inner_dim)];\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(null_kernel,Dtype)(Dtype arg) {\n  Dtype out = arg;\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(bias_forward,Dtype)(const int_tp n,\n                                           __global const Dtype* in,\n                                           __global const Dtype* bias,\n                                           const int_tp bias_dim,\n                                           const int_tp inner_dim,\n                                           __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    const int_tp bias_index = (index / inner_dim) % bias_dim;\n    out[index] = in[index] + bias[bias_index];\n  }\n}\n\n__kernel void TEMPLATE(scale_forward,Dtype)(const int_tp n,\n                                            __global const Dtype* in,\n                                            __global const Dtype* scale,\n                                            const int_tp scale_dim,\n                                            const int_tp inner_dim,\n                                            __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    const int_tp scale_index = (index / inner_dim) % scale_dim;\n    out[index] = in[index] * scale[scale_index];\n  }\n}\n\n__kernel void TEMPLATE(scale_bias_forward,Dtype)(const int_tp n,\n                                                 __global const Dtype* in,\n                                                 __global const Dtype* scale,\n                                                 __global const Dtype* bias,\n                                                 const int_tp scale_dim,\n                                                 const int_tp inner_dim,\n                                                 __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    const int_tp scale_index = (index / inner_dim) % scale_dim;\n    out[index] = in[index] * scale[scale_index] + bias[scale_index];\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(bnll_forward,Dtype)(const int_tp n,\n                                           __global const Dtype* in,\n                                           __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    if (in[index] > 0.0f) {\n      out[index] = in[index] + log((Dtype) (1.0 + exp(-in[index])));\n    } else {\n      out[index] = log((Dtype) (1.0 + exp(in[index])));\n    }\n  }\n}\n\n__kernel void TEMPLATE(bnll_backward,Dtype)(const int_tp n,\n                                            __global const Dtype* in_diff,\n                                            __global const Dtype* in_data,\n                                            __global Dtype* out_diff) {\n  Dtype kBNLL_THRESHOLD = 50.;\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    Dtype expval = exp(min(in_data[index], kBNLL_THRESHOLD));\n    out_diff[index] = in_diff[index] * expval / (expval + 1.);\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(kernel_channel_max,Dtype)(const int_tp num, const int_tp channels,\n                                   const int_tp spatial_dim,\n                                   __global const Dtype* data,\n                                   __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=\n      get_global_size(0)) {\n    int_tp n = index / spatial_dim;\n    int_tp s = index % spatial_dim;\n    float maxval = -FLT_MAX;\n    for (int_tp c = 0; c < channels; ++c) {\n      maxval = max((Dtype)(data[(n * channels + c) * spatial_dim + s]), (Dtype)maxval);\n    }\n    out[index] = maxval;\n  }\n}\n\n__kernel void TEMPLATE(kernel_channel_subtract,Dtype)(const int_tp count, const int_tp num,\n                                        const int_tp channels,\n                                        const int_tp spatial_dim,\n                                        __global const Dtype* channel_max,\n                                        __global Dtype* data) {\n  for (int_tp index = get_global_id(0); index < count;\n      index += get_global_size(0)) {\n    int_tp n = index / channels / spatial_dim;\n    int_tp s = index % spatial_dim;\n    data[index] -= channel_max[n * spatial_dim + s];\n  }\n}\n\n__kernel void TEMPLATE(kernel_exp,Dtype)(const int_tp count, __global const Dtype* data,\n                           __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < count;\n      index += get_global_size(0)) {\n    out[index] = exp(data[index]);\n  }\n}\n\n__kernel void TEMPLATE(kernel_channel_sum,Dtype)(const int_tp num, const int_tp channels,\n                                   const int_tp spatial_dim,\n                                   __global const Dtype* data,\n                                   __global Dtype* channel_sum) {\n  for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=\n      get_global_size(0)) {\n    int_tp n = index / spatial_dim;\n    int_tp s = index % spatial_dim;\n    Dtype sum = 0;\n    for (int_tp c = 0; c < channels; ++c) {\n      sum += data[(n * channels + c) * spatial_dim + s];\n    }\n    channel_sum[index] = sum;\n  }\n}\n\n__kernel void TEMPLATE(kernel_channel_div,Dtype)(const int_tp count, const int_tp num,\n                                   const int_tp channels, const int_tp spatial_dim,\n                                   __global const Dtype* channel_sum,\n                                   __global Dtype* data) {\n  for (int_tp index = get_global_id(0); index < count;\n      index += get_global_size(0)) {\n    int_tp n = index / channels / spatial_dim;\n    int_tp s = index % spatial_dim;\n    data[index] /= channel_sum[n * spatial_dim + s];\n  }\n}\n\n__kernel void TEMPLATE(kernel_channel_dot,Dtype)(const int_tp num, const int_tp channels,\n                                   const int_tp spatial_dim,\n                                   __global const Dtype* data_1,\n                                   __global const Dtype* data_2,\n                                   __global Dtype* channel_dot) {\n  for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=\n      get_global_size(0)) {\n    int_tp n = index / spatial_dim;\n    int_tp s = index % spatial_dim;\n    Dtype dot = 0;\n    for (int_tp c = 0; c < channels; ++c) {\n      dot += (data_1[(n * channels + c) * spatial_dim + s]\n          * data_2[(n * channels + c) * spatial_dim + s]);\n    }\n    channel_dot[index] = dot;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(concat,Dtype)(const int_tp nthreads, __global const Dtype* in_data,\n                                     const int forward, const int_tp num_concats,\n                                     const int_tp concat_size,\n                                     const int_tp top_concat_axis,\n                                     const int_tp bottom_concat_axis,\n                                     const int_tp offset_concat_axis,\n                                     __global Dtype* out_data) {\n\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp total_concat_size = concat_size * bottom_concat_axis;\n    const int_tp concat_num = index / total_concat_size;\n    const int_tp concat_index = index % total_concat_size;\n    const int_tp top_index = concat_index\n        + (concat_num * top_concat_axis + offset_concat_axis) * concat_size;\n    if (forward == 1) {\n      out_data[top_index] = in_data[index];\n    } else {\n      out_data[index] = in_data[top_index];\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp channels,\n                            const Dtype margin, const Dtype alpha, __global const Dtype* y,\n                            __global const Dtype* diff, __global const Dtype* dist_sq,\n                            __global Dtype *bottom_diff) {\n  for (int_tp i = get_global_id(0); i < count;\n      i += get_global_size(0)) {\n    int_tp n = i / channels;  // the num index, to access y and dist_sq\n    if (trunc(y[n]) != 0.) {  // similar pairs\n      bottom_diff[i] = alpha * diff[i];\n    } else {  // dissimilar pairs\n      Dtype mdist = 0.;\n      Dtype beta = 0.;\n      Dtype dist = sqrt(dist_sq[n]);\n      mdist = (margin - dist);\n      beta = -alpha * mdist / (dist + 1e-4) * diff[i];\n      if (mdist > 0.) {\n        bottom_diff[i] = beta;\n      } else {\n        bottom_diff[i] = 0;\n      }\n    }\n  }\n}\n\n__kernel void TEMPLATE(cll_backward_legacy,Dtype)(const int count, const int channels,\n    const Dtype margin, const Dtype alpha, __global Dtype* y,\n    __global Dtype* diff, __global Dtype* dist_sq,\n    __global Dtype* bottom_diff) {\n    for (int_tp i = get_global_id(0); i < count;\n      i += get_global_size(0)) {\n    int n = i / channels;  // the num index, to access y and dist_sq\n    if (trunc(y[n]) != 0.) {  // similar pairs\n      bottom_diff[i] = alpha * diff[i];\n    } else {  // dissimilar pairs\n      Dtype mdist = 0.;\n      Dtype beta = 0.;\n      mdist = (margin - dist_sq[n]);\n      beta = -alpha;\n      if (mdist > 0.) {\n        bottom_diff[i] = beta;\n      } else {\n        bottom_diff[i] = 0;\n      }\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {\n  Dtype out = arg;\n}\n\n#define __CAT(x, y) x##y\n#define CAT(x, y) __CAT(x, y)\n#define LOOP0(VAR, STMT)\n#define LOOP1(VAR, STMT) (STMT); (VAR)++;\n#define LOOP2(VAR, STMT) LOOP1(VAR, STMT); (STMT); (VAR)++;\n#define LOOP3(VAR, STMT) LOOP2(VAR, STMT); (STMT); (VAR)++;\n#define LOOP4(VAR, STMT) LOOP3(VAR, STMT); (STMT); (VAR)++;\n#define LOOP5(VAR, STMT) LOOP4(VAR, STMT); (STMT); (VAR)++;\n#define LOOP6(VAR, STMT) LOOP5(VAR, STMT); (STMT); (VAR)++;\n#define LOOP7(VAR, STMT) LOOP6(VAR, STMT); (STMT); (VAR)++;\n#define LOOP8(VAR, STMT) LOOP7(VAR, STMT); (STMT); (VAR)++;\n#define LOOP9(VAR, STMT) LOOP8(VAR, STMT); (STMT); (VAR)++;\n#define LOOP10(VAR, STMT) LOOP9(VAR, STMT); (STMT); (VAR)++;\n#define LOOP11(VAR, STMT) LOOP10(VAR, STMT); (STMT); (VAR)++;\n#define LOOP12(VAR, STMT) LOOP11(VAR, STMT); (STMT); (VAR)++;\n#define LOOP13(VAR, STMT) LOOP12(VAR, STMT); (STMT); (VAR)++;\n#define LOOP14(VAR, STMT) LOOP13(VAR, STMT); (STMT); (VAR)++;\n#define LOOP15(VAR, STMT) LOOP14(VAR, STMT); (STMT); (VAR)++;\n#define LOOP16(VAR, STMT) LOOP15(VAR, STMT); (STMT); (VAR)++;\n#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))\n\n#ifdef MULTI\n__kernel void CFMulti(__global Dtype* image_data,\n    int_tp image_offset,\n    __global Dtype* kernel_data, int_tp kernel_offset,\n    __global Dtype* bias,const int_tp bias_offset,\n    __global Dtype* convolved_image,const int_tp convolved_image_offset,\n    const ushort input_width,\n    const ushort input_height,\n    const ushort output_width,\n    const ushort output_height) {\n\n  const int_tp outputX = get_global_id(0);\n  const int_tp outputY = get_global_id(1);\n  const int_tp kernelNum = get_global_id(2)*ZPAR;\n  if(outputX < output_width && outputY < output_height)\n  {\n    Dtype sum[ZPAR];\n    Dtype4 vectorSum[ZPAR];\n    for(int_tp kern =0; kern < ZPAR; kern++)\n    {\n      sum[kern] = 0.0f;\n      vectorSum[kern] = (0.0f,0.0f,0.0f,0.0f);\n    }\n\n    const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;\n    const int_tp biasIndex=bias_offset + kernelNum;\n    const int_tp local_image_offset = outputY*STRIDE_H*input_width + outputX*STRIDE_W;\n    const int_tp imageSize = input_width*input_height;\n    const int_tp float4Reads = KERNEL_W / 4;\n    const int_tp floatReads = KERNEL_W % 4;\n    Dtype4 imageCache;\n\n    __global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));\n    __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));\n\n    for(int_tp c = 0; c < CHANNELS; c++)\n    {\n      for(int_tp y = 0; y < KERNEL_H; y++)\n      {\n\n        for(int_tp x=0; x< float4Reads; x++)\n        {\n          imageCache = ((__global Dtype4*)image_dataPtrFloat)[x];\n          for(int_tp kern =0; kern < ZPAR; kern++)\n          {\n            vectorSum[kern] += imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[x];\n          }\n        }\n\n        if(floatReads == 1)\n        {\n          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];\n          for(int_tp kern =0; kern < ZPAR; kern++)\n          vectorSum[kern].s0 += ( imageCache * ( (__global Dtype4*) &(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]) )[float4Reads] ).s0;\n        }\n        else if(floatReads == 2)\n        {\n          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];\n          for(int_tp kern =0; kern < ZPAR; kern++)\n          vectorSum[kern].s01 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s01;\n        }\n        else if(floatReads == 3)\n        {\n          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];\n          for(int_tp kern =0; kern < ZPAR; kern++)\n          vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;\n        }\n\n        image_dataPtrFloat += input_width;\n        kernel_dataPtrFloat += KERNEL_W;\n      }\n      image_dataPtrFloat += imageSize - input_width*KERNEL_H;\n    }\n    for(int_tp kern =0; kern < ZPAR; kern++)\n    sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;\n\n    if(APPLY_BIAS == 1)\n    {\n      for(int_tp kern = 0; kern < ZPAR; kern++)\n      if(kernelNum+kern < OUTPUT_Z)\n      convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] =\n      sum[kern] + bias[biasIndex +kern];\n    }\n    else\n    for(int_tp kern = 0; kern < ZPAR; kern++)\n    if(kernelNum+kern < OUTPUT_Z)\n    convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] = sum[kern];\n  }\n}\n\n#endif\n\n\n//Begin IDLF kernels below here\n#ifdef IDLF\n\n#define activation_function(x) (x)\n#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)\n\n// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.\n// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same region of the imput image.\n// NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH\n\n//#define SIMD_SIZE 16\n#ifdef SIMD16\n\n// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.\n__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))\nkernel void\nconvolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs\n    __global float* inputs_base,\n    filter_qualifier float* weights_base,\n    __global float* biases_base,\n    __global float* outputs_base,\n    const ushort input_width,\n    const ushort input_height,\n    const ushort output_width,\n    const ushort output_height)\n{\n  __global float* outputs = outputs_base;\n  __global float* inputs = inputs_base;\n  filter_qualifier float* weights = weights_base;\n  __global float* biases = biases_base;\n\n  uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column\n  uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row\n  uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth\n  uint_tp fmg = get_group_id(2);\n  uint_tp lid = get_local_id(2);\n\n  float out[OUT_BLOCK_SIZE];\n\n  int_tp in_addr;\n\n  // find weights adress of given neuron (lid is index)\n  uint_tp weight_addr = (fmg % (ALIGNED_NUM_FILTERS/SIMD_SIZE)) * INPUT_DEPTH * KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE + lid;\n\n  for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {\n    out[i]=0.0f;\n  }\n\n  uint_tp num_in_batch = ( fm ) / ALIGNED_NUM_FILTERS;\n\n  uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;\n\n  int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );\n  int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;\n#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0\n  int saved_y = curr_y;\n#endif\n  in_addr = input_batch_offset + INPUT_START_Z * input_height * input_width\n            +  (curr_y - INPUT_PAD_H) * input_width             // y tile offset\n            +   curr_x - INPUT_PAD_W;                        // x tile offset\n  union {\n    float4 in_vec[INVEC_SIZE];\n    float in_array[INVEC_SIZE * 4];\n  } in_buf;\n\n  for(int_tp kd = 0; kd < INPUT_DEPTH; kd++)\n  {\n    int_tp in_offset = in_addr;\n    int_tp reg = 0;\n    LOOP(INVEC_SIZE, reg,\n      {\n#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0\n        if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {\n          if (curr_x < INPUT_PAD_W) {\n            in_buf.in_vec[reg].s0 = 0;\n            if (curr_x + 1 >= INPUT_PAD_W)\n              in_buf.in_vec[reg].s1 = *(inputs + in_offset + 1);\n            else\n              in_buf.in_vec[reg].s1 = 0;\n            if (curr_x + 2 >= INPUT_PAD_W)\n              in_buf.in_vec[reg].s2 = *(inputs + in_offset + 2);\n            else\n              in_buf.in_vec[reg].s2 = 0;\n            in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);\n          } else {\n            in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements\n            if (curr_x + 1 >= input_width + INPUT_PAD_W)\n              in_buf.in_vec[reg].s1 = 0;\n            if (curr_x + 2 >= input_width + INPUT_PAD_W)\n              in_buf.in_vec[reg].s2 = 0;\n            if (curr_x + 3 >= input_width + INPUT_PAD_W)\n              in_buf.in_vec[reg].s3 = 0;\n          }\n        } else {\n          in_buf.in_vec[reg] = 0;\n        }\n        curr_y += TILE_Y_STRIDE;\n#else\n        in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements\n#endif\n        in_offset += input_width * TILE_Y_STRIDE;\n      });\n    in_addr += input_height * input_width;\n#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0\n    curr_y = saved_y;\n#endif\n\n// PREF could be 4 or 8, could not be other values.\n#define WEIGHT_PREF 8\n    union {\n      float w[WEIGHT_PREF];\n      uint8 ui8;\n    } weight_buf;\n    int_tp w_idx=0;\n\n    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);\n    uint_tp orig_weight_addr = weight_addr;\n    weight_addr += SIMD_SIZE * WEIGHT_PREF;\n\n#define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))\n\n    int_tp kr = 0;  // kr = Kernel Row\n    LOOP(KERNEL_HEIGHT, kr,// LOOP is a macro that unrolls the loop.\n        {\n          int_tp kc = 0;  // kc = Kernel Column\n          LOOP(KERNEL_WIDTH, kc,\n              {\n                for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {\n                  for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {\n                    float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);\n                    out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);\n                  }\n                }\n                // We assume KERNEL_W is equal to KERNEL_H here.\n                if ((w_idx + 1) % WEIGHT_PREF == 0\n                #if KERNEL_WIDTH * KERNEL_HEIGHT % 8 != 0\n                && ((w_idx + 1) <= (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF))\n                #endif\n                    ) {\n                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);\n                  weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.\n                }\n              #if KERNEL_WIDTH*KERNEL_HEIGHT % 8 == 0\n                // need to do nothing\n              #else\n                else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF)))\n                #if KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 1\n                  weight_buf.w[0] = weights[weight_addr];\n                #elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 2\n                  weight_buf.ui8.s01 = intel_sub_group_block_read2((__global uint *)&weights[weight_addr]);\n                #elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 <= 4\n                  weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);\n                #else\n                  weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);\n                #endif\n              #endif\n                ++w_idx;\n              });\n        });\n    weight_addr = orig_weight_addr + KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE;\n\n  }\n  // dead code to work around possible compiler bug.\n  if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {\n    printf(\"%f\", BLOCK_IN(fm % 16));\n  }\n\n  // we need this address calculation for outputs because we support views and batching\n  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_NUM_FILTERS) ) * output_width * output_height;\n  out_addr += or * output_width + oc;  // offset for the 4x3 block that this workitem is working on;\n\n  if (ALIGNED_NUM_FILTERS == NUM_FILTERS || (fm % ALIGNED_NUM_FILTERS) < NUM_FILTERS) {\n  // we need this address calculation for biases because we support views and batching\n  float bias = biases[(fm) % NUM_FILTERS ];\n#ifndef WRITE_PADDED_VALUES\n  if(get_global_id(0) != (get_global_size(0)-1) &&\n      get_global_id(1) != (get_global_size(1)-1) )\n  {\n#endif\n    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {\n      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {\n        // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.\n        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);\n      }\n    }\n#ifndef WRITE_PADDED_VALUES\n  } else if ( get_global_id(1) != (get_global_size(1)-1) )\n  {\n    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {\n      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {\n        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);\n      }\n    }\n  }\n  else if ( get_global_id(0) != (get_global_size(0)-1) )\n  {\n    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {\n      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {\n        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);\n      }\n    }\n  }\n  else\n  {\n    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {\n      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {\n        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);\n      }\n    }\n  }\n#endif //#ifndef WRITE_PADDED_VALUES\n  }\n}\n#endif // Stride > 2\n#endif\n\n/*******************************************************************************\nCopyright © 2016, Intel Corporation\n\n    Permission is hereby granted, free of charge, to any person obtaining a\n    copy of this software and associated documentation files (the \"Software\"),\n    to deal in the Software without restriction, including without limitation\n    the rights to use, copy, modify, merge, publish, distribute, sublicense,\n    and/or sell copies of the Software, and to permit persons to whom the\n    Software is furnished to do so, subject to the following conditions:\n\n    The above copyright notice and this permission notice shall be included in\n    all copies or substantial portions of the Software.\n\n    THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL\n    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\n    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\n    DEALINGS IN THE SOFTWARE.\n******************************************************************************/\n#ifdef Conv_Interleaved\ntypedef struct float1 { float s0; } float1;\ntypedef struct float5 { float s0; float s1; float s2; float s3; float s4; } float5;\ntypedef struct float6 { float s0; float s1; float s2; float s3; float s4; float s5; } float6;\ntypedef struct float7 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; } float7;\ntypedef struct float9 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; float s7; float s8; } float9;\ntypedef struct float10 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9;} float10;\ntypedef struct float11 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9; float sa;} float11;\ntypedef struct float12 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9; float sa; float sb; } float12;\ntypedef struct float13 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9; float sa; float sb; float sc;} float13;\ntypedef struct float14 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; } float14;\ntypedef struct float15 { float s0; float s1; float s2; float s3; float s4; float s5;\n                         float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; float se; } float15;\ntypedef struct float0 { float s0; } float0; //never used but makes compiler happy.\n#endif\n\n\n\n#ifdef GEMM_LIKE_CONV_32_1\n//////////////////////////////////////////////////////////////////////////////\n// Conv_Interleaved_32_1\n//\n// Convolution: each workitem computes 1 patch x 32 filters worth of output\n// data.  Kernel's inner loop works on a single tile consisting of one\n// row from each patch and the filter data corresponding to that row.  Filter\n// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked\n// by rows and then by slices.  Relies on sub_group extension for block\n// reads and SIMD broadcast.\n\n#define TILE_M          1\n#define TILE_K          KERNEL_WIDTH\n#define TILE_N          32\n\n#ifndef __BEIGNET__\n__attribute__((intel_reqd_sub_group_size(8)))\n#endif\n__kernel void Conv_Interleaved(\n    const __global float *src0,\n    const __global float *src1,\n    const __global float *biases,\n    __global float *dst)\n{\n    const int group_x = get_group_id(0);\n    const int group_y = get_group_id(1);\n    const int global_x = get_global_id(0);\n    const int global_y = get_global_id(1);\n    const int global_z = get_global_id(2);\n    int interleaved_y;\n    int kernel_y;\n    int kernel_idx;\n\n    // Result ctile (*dst) is M rows x N columns\n    // LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.\n    float8  blockC00 = 0.f;\n    float8  blockC10 = 0.f;\n    float8  blockC20 = 0.f;\n    float8  blockC30 = 0.f;\n\n    // Src0 (patch input) is directly used as atile.\n    // Each work item points to the start of a different patch.\n    // atile is M rows x K columns.\n\n    int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;\n    int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;\n#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0\n    int saved_y = curr_y;\n#endif\n    const __global float *src0_read = src0\n     + ALIGNED_INPUT_SIZE * global_z                            // batch offset\n     + (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset\n     + (curr_x - INPUT_PAD_W);                 // x offset\n\n\n    // Src1 (filter) is directly used as btile.\n    // It starts at the top of src1 and walks down.\n    // btile is K rows x N columns.\n    const __global float *src1_read = src1 + ( global_x * TILE_N  * 2);\n\n#define DOT_PRODUCT_8( _result, _rowA, colB )    \\\n    {   \\\n        _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );  \\\n        _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );  \\\n        _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );  \\\n        _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );  \\\n        _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );  \\\n        _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );  \\\n        _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );  \\\n        _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );  \\\n    }\n    typedef CAT( float, KERNEL_WIDTH ) float_t;\n\n    // Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.\n    // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch\n    // and KERNEL_WIDTH/2 rows of interleaved filter.\n    int patch_depth = 0;\n    do\n    {\n        int patch_row = 0;\n#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0\n        curr_y = saved_y;\n#endif\n        do\n        {\n            // Load atile and btile.\n            // Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.\n            // The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non\n            // interleaved row is padded with zero to ensure same size as interleaved rows. This\n            // interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the\n            // kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.\n            // (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..\n            // (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...\n            // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...\n            // ...\n            const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;\n#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0\n            float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];\n            float*  pblockA00 = (float*)(&blockA00);\n#else\n            float_t blockA00;\n            float*  pblockA00 = (float*)(&blockA00);\n            int pos = 0;\n            LOOP(KERNEL_WIDTH, pos,\n            {\n              if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)\n                pblockA00[pos] = src0_read[pos];\n              else\n                pblockA00[pos] = 0;\n            })\n            curr_y++;\n#endif\n            src0_read += ROW_PITCH;\n\n            float blockB00[KERNEL_WIDTH*4];\n            float8* p8BlockB00 = (float8*)blockB00;\n            float4* p4BlockB00 = (float4*)blockB00;\n            float*  pBlockB00 =  (float* )blockB00;\n\n            interleaved_y = 0;\n            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,\n            {\n                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );\n                src1_read += WIDTH1 * 2;\n            } )\n            if ( kernel_width_is_odd )\n            {\n                p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );\n                src1_read += WIDTH1 * 2;\n            }\n\n            // Perform MADs\n            kernel_idx = 0;\n            interleaved_y = 0;\n            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,\n            {\n                kernel_y = interleaved_y * 2;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n            } )\n            if ( kernel_width_is_odd )\n            {\n                kernel_y = interleaved_y * 2;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n            }\n        }\n\n        //while( ++patch_row < 1 ); //debug\n        while( ++patch_row < KERNEL_HEIGHT );\n\n        src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch\n    }\n    //while ( ++patch_depth < 1 );  //debug\n    while ( ++patch_depth < INPUT_DEPTH );\n\n    // Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:\n    // (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.\n    __global float *out = dst\n     + global_z * OUT_PITCH_Z                                                   // batch offset\n     + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset\n     + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset\n     + ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset\n    float bias[4];\n    float4 *bias_vec;\n    bias_vec = (float4*)bias;\n    *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));\n    if ( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )\n    {\n        if ( ( OUT_DEPTH % TILE_N ) == 0 )\n        {\n            for ( int i = 0; i < 8; i++ )\n            {\n                out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n            }\n        }\n        else\n        {\n            if ( ( global_x + 1 ) < get_global_size(0) )\n            {\n                for ( int i = 0; i < 8; i++ )\n                {\n                    out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n                }\n            }\n            else\n            {\n                if ( ( OUT_DEPTH % TILE_N ) >= 24 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                        out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                        out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n\n                    // Remaining channels\n                    for (int i = 0; i < OUT_DEPTH % 24; i++)\n                    {\n                        out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                        out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 16; i++)\n                    {\n                        out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n                }\n                else\n                {\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n                }\n            }\n\n        }\n    }\n}\n#endif\n\n#ifdef GEMM_LIKE_CONV_32_2\n//////////////////////////////////////////////////////////////////////////////\n// Conv_Interleaved_32_2\n//\n// Convolution: each workitem computes 2 patches x 32 filters worth of output\n// data.  Kernel's inner loop works on a single tile consisting of one\n// row from each patch and the filter data corresponding to that row.  Filter\n// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked\n// by rows and then by slices.  Relies on sub_group extension for block\n// reads and SIMD broadcast.\n#define TILE_M          2\n#define TILE_K          KERNEL_WIDTH\n#define TILE_N          32\n\n#ifndef __BEIGNET__\n__attribute__((intel_reqd_sub_group_size(8)))\n#endif\n__kernel void Conv_Interleaved(\n    const __global float *src0,\n    const __global float *src1,\n    const __global float *biases,\n    __global float *dst)\n{\n    const int group_x = get_group_id(0);\n    const int group_y = get_group_id(1);\n    const int global_x = get_global_id(0);\n    const int global_y = get_global_id(1);\n    const int global_z = get_global_id(2);\n    int interleaved_y;\n    int kernel_y;\n    int kernel_idx;\n\n    // Result ctile (*dst) is M rows x N columns\n    // LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.\n    float8  blockC00 = 0.f;\n    float8  blockC10 = 0.f;\n    float8  blockC20 = 0.f;\n    float8  blockC30 = 0.f;\n    float8  blockC01 = 0.f;\n    float8  blockC11 = 0.f;\n    float8  blockC21 = 0.f;\n    float8  blockC31 = 0.f;\n\n    // Src0 (patch input) is directly used as atile.\n    // Each work item points to the start of a different patch.\n    // atile is M rows x K columns.\n    int curr_x0 = ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X;\n    int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;\n    int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;\n    int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;\n#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0\n    int saved_y0 = curr_y0;\n    int saved_y1 = curr_y1;\n#endif\n    const __global float *src0_read0 = src0\n     + ALIGNED_INPUT_SIZE * global_z                                            // batch offset\n     + (curr_y0 - INPUT_PAD_H) * ROW_PITCH   // y offset\n     + curr_x0 - INPUT_PAD_W;                // x offset\n    const __global float *src0_read1 = src0\n     + ALIGNED_INPUT_SIZE * global_z                                            // batch offset\n     + (curr_y1 - INPUT_PAD_H) * ROW_PITCH   // y offset\n     + curr_x1 - INPUT_PAD_W;                // x offset\n\n    // Src1 (filter) is directly used as btile.\n    // It starts at the top of src1 and walks down.\n    // btile is K rows x N columns.\n    const __global float *src1_read = src1 + ( global_x * TILE_N * 2);\n\n#define DOT_PRODUCT_8( _result, _rowA, colB )    \\\n    {   \\\n        _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );  \\\n        _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );  \\\n        _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );  \\\n        _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );  \\\n        _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );  \\\n        _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );  \\\n        _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );  \\\n        _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );  \\\n    }\n    typedef CAT( float, KERNEL_WIDTH ) float_t;\n\n    // Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.\n    // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch\n    // and KERNEL_WIDTH/2 rows of interleaved filter.\n    int patch_depth = 0;\n    do\n    {\n        int patch_row = 0;\n        do\n        {\n            // Load atile and btile.\n            // Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.\n            // The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non\n            // interleaved row is padded with zero to ensure same size as interleaved rows. This\n            // interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the\n            // kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.\n            // (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..\n            // (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...\n            // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...\n            // ...\n            const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;\n#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0\n            float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;\n            float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;\n            float*  pblockA00 = (float*)(&blockA00);\n            float*  pblockA01 = (float*)(&blockA01);\n#else\n            float_t blockA00;\n            float*  pblockA00 = (float*)(&blockA00);\n            int pos = 0;\n            LOOP(KERNEL_WIDTH, pos,\n            {\n              if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)\n                pblockA00[pos] = src0_read0[pos];\n              else\n                pblockA00[pos] = 0;\n            })\n            curr_y0++;\n            float_t blockA01;\n            float*  pblockA01 = (float*)(&blockA01);\n            pos = 0;\n            LOOP(KERNEL_WIDTH, pos,\n            {\n              if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)\n                pblockA01[pos] = src0_read1[pos];\n              else\n                pblockA01[pos] = 0;\n            })\n            curr_y1++;\n            src0_read0 += ROW_PITCH;\n            src0_read1 += ROW_PITCH;\n#endif\n            float blockB00[KERNEL_WIDTH*4];\n            float8* p8BlockB00 = (float8*)blockB00;\n            float4* p4BlockB00 = (float4*)blockB00;\n            float*  pBlockB00 =  (float* )blockB00;\n\n            interleaved_y = 0;\n            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,\n            {\n                p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );\n                src1_read += WIDTH1 * 2;\n            } )\n            if ( kernel_width_is_odd )\n            {\n                p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );\n                src1_read += WIDTH1 * 2;\n            }\n\n            // Perform MADs\n            kernel_idx = 0;\n            interleaved_y = 0;\n            LOOP(KERNEL_WIDTH_DIV2, interleaved_y,\n            {\n                kernel_y = interleaved_y * 2;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;\n            } )\n            if ( kernel_width_is_odd )\n            {\n                kernel_y = interleaved_y * 2;\n                DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC01, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC11, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC21, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n                DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] );\n                DOT_PRODUCT_8( blockC31, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;\n            }\n        }\n\n        //while( ++patch_row < 1 ); //debug\n        while( ++patch_row < KERNEL_HEIGHT );\n#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0\n        curr_y0 = saved_y0;\n        curr_y1 = saved_y1;\n#endif\n        src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch\n        src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch\n    }\n    //while ( ++patch_depth < 1 );  //debug\n    while ( ++patch_depth < INPUT_DEPTH );\n\n    // Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:\n    // (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.\n    __global float *out0 = dst\n     + global_z * OUT_PITCH_Z                                                       // batch offset\n     + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset\n     + ( ( global_y * TILE_M + 0 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset\n     + ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset\n    __global float *out1 = dst\n     + global_z * OUT_PITCH_Z                                                       // batch offset\n     + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset\n     + ( ( global_y * TILE_M + 1 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset\n     + ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset\n    float bias[4];\n    float4 *bias_vec;\n    bias_vec = (float4*)bias;\n    *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));\n\n\n    if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )\n    {\n        if ( ( OUT_DEPTH % TILE_N ) == 0 )\n        {\n            for( int i = 0; i < 8; i++ )\n            {\n                out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n            ","}\n        }\n        else\n        {\n            if ( ( global_x + 1 ) < get_global_size(0) )\n            {\n                for ( int i = 0; i < 8; i++ )\n                {\n                    out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n                }\n            }\n            else\n            {\n                if ( ( OUT_DEPTH % TILE_N ) >= 24 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                        out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                        out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n\n                    // remaining output channels\n                    for (int i = 0; i < OUT_DEPTH % 24; i++)\n                    {\n                        out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                        out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 16; i++)\n                    {\n                        out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out0[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n                }\n                else\n                {\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n                }\n            }\n        }\n    }\n\n    if( global_y * TILE_M + 1 < OUT_WIDTH * OUT_HEIGHT )\n    {\n        if ( ( OUT_DEPTH % TILE_N ) == 0 )\n        {\n            for( int i = 0; i < 8; i++ )\n            {\n                out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);\n                out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);\n                out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);\n            }\n        }\n        else\n        {\n            if ( ( global_x + 1 ) < get_global_size(0) )\n            {\n                for ( int i = 0; i < 8; i++ )\n                {\n                    out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                    out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);\n                    out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);\n                    out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);\n                }\n            }\n            else\n            {\n                if ( ( OUT_DEPTH % TILE_N ) >= 24 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                        out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);\n                        out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n\n                    // Remaining channels\n                    for (int i = 0; i < OUT_DEPTH % 24; i++)\n                    {\n                        out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 16 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                        out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 16; i++)\n                    {\n                        out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);\n                    }\n                }\n                else if ( ( OUT_DEPTH % TILE_N ) >= 8 )\n                {\n                    for (int i = 0; i < 8; i++)\n                    {\n                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out1[(8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);\n                    }\n                }\n                else\n                {\n                    for (int i = 0; i < OUT_DEPTH % 8; i++)\n                    {\n                        out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);\n                    }\n                }\n            }\n        }\n    }\n}\n#endif",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(copyImage, Dtype)\n    (__global Dtype* image_data,\n     int_tp image_offset,\n     const int_tp channels, const int_tp height, const int_tp width,\n     const int_tp adjustedHeight, const int_tp adjustedWidth,\n     const int_tp pad_h, const int_tp pad_w,\n     __global Dtype* output_image,\n     const int_tp output_offset,\n     const int_tp batch_size) {\n\n  uint_tp sX = get_global_id(0);\n  uint_tp sY = get_global_id(1);\n  uint_tp sZ = get_global_id(2);\n\n  int_tp in_y = sY - pad_h;\n  int_tp in_x = sX - pad_w;\n\n  int_tp batch_offset = 0;\n  int_tp adjusted_batch_offset = 0;\n  for(uint_tp batch_idx = 0; batch_idx < batch_size; batch_idx++) {\n    int_tp dst_offset = adjusted_batch_offset + output_offset + sZ*adjustedHeight*adjustedWidth + sY*adjustedWidth +sX;\n    int_tp src_offset = batch_offset + image_offset + sZ*height*width + in_y*width + in_x;\n    if((in_y >= 0 && in_y < height && in_x >= 0 && in_x < width))\n      output_image[dst_offset] = image_data[src_offset];\n    else\n      output_image[dst_offset] = 0;\n    batch_offset += height * width * channels;\n    adjusted_batch_offset += adjustedHeight * adjustedWidth * channels;\n  }\n}\n\n__kernel void TEMPLATE(copyWeightsSwizzled, Dtype)\n    (__global Dtype* weightIn,\n     __global Dtype* weightOut,\n     const int_tp kernel_w,\n     const int_tp kernel_h,\n     const int_tp channels,\n     const int_tp outputs,\n     const int_tp swizzleFactor) {\n\n  uint_tp sX = get_global_id(0);\n\n  //Original location\n\n  //Output location\n  int_tp outputSublayer = channels / swizzleFactor;\n  int_tp outputSublayerIndex = channels % swizzleFactor;\n\n  int_tp filter = sX / (kernel_w*kernel_h*channels);\n  int_tp kernel_X = sX % kernel_w;\n  int_tp kernel_Y = (sX / kernel_w) % kernel_h;\n  int_tp kernel_C = (sX / (kernel_w * kernel_h)) % channels;\n\n  int_tp FP = filter / swizzleFactor;\n  int_tp F1 = filter % swizzleFactor;\n\n  weightOut[FP*(kernel_w*kernel_h*channels*swizzleFactor) + kernel_C*(kernel_w*kernel_h*swizzleFactor) + kernel_Y*(kernel_w*swizzleFactor) + kernel_X*swizzleFactor + F1]\n  = weightIn[filter*(kernel_w*kernel_h*channels) + kernel_C*(kernel_w*kernel_h) + kernel_Y*kernel_w + kernel_X];\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(crop_copy, Dtype)(const int_tp n, const int_tp height,\n                                         const int_tp width,\n                                         const int_tp src_outer_stride,\n                                         const int_tp src_inner_stride,\n                                         const int_tp dest_outer_stride,\n                                         const int_tp dest_inner_stride,\n                                         __global const Dtype* src,\n                                         const int_tp src_off,\n                                         __global Dtype* dest,\n                                         const int_tp dest_off) {\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    int_tp src_start = index / height * src_outer_stride\n        + index % height * src_inner_stride;\n    int_tp dest_start = index / height * dest_outer_stride\n        + index % height * dest_inner_stride;\n    for (int_tp i = 0; i < width; ++i) {\n      dest[dest_off + dest_start + i] = src[src_off + src_start + i];\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(dropout_forward,Dtype)(const int_tp n,\n                                              __global const Dtype* in,\n                                              __global const uint_tp* mask,\n                                              const uint_tp threshold,\n                                              const Dtype scale,\n                                              __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = in[index] * ((mask[index] > threshold)?1.0:0.0) * scale;\n  }\n}\n\n__kernel void TEMPLATE(dropout_backward,Dtype)(\n    const int_tp n, __global const Dtype* in_diff,\n    __global const uint_tp* mask, const uint_tp threshold,\n    const Dtype scale,\n    __global Dtype* out_diff) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out_diff[index] = in_diff[index] * ((mask[index] > threshold)?1.0:0.0) * scale;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(eltwise_max_forward,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data_a,\n    __global const Dtype* bottom_data_b, const int_tp blob_idx,\n    __global Dtype* top_data,\n    __global int_tp* mask) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    Dtype maxval = -FLT_MAX;\n    int_tp maxidx = -1;\n    if (bottom_data_a[index] > bottom_data_b[index]) {\n      // only update for very first bottom_data blob (blob_idx == 0)\n      if (blob_idx == 0) {\n        maxval = bottom_data_a[index];\n        top_data[index] = maxval;\n        maxidx = blob_idx;\n        mask[index] = maxidx;\n      }\n    } else {\n      maxval = bottom_data_b[index];\n      top_data[index] = maxval;\n      maxidx = blob_idx + 1;\n      mask[index] = maxidx;\n    }\n  }\n}\n\n__kernel void TEMPLATE(eltwise_max_backward,Dtype)(const int_tp nthreads,\n                                                   __global const Dtype* top_diff,\n                                                   const int_tp blob_idx,\n                                                   __global const int_tp* mask,\n                                                   __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    Dtype gradient = 0;\n    if (mask[index] == blob_idx) {\n      gradient += top_diff[index];\n    }\n    bottom_diff[index] = gradient;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(elu_forward,Dtype)(const int n, __global const Dtype* in,\n                                          __global Dtype* out,\n                                          Dtype alpha) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - 1.0);\n  }\n}\n\n__kernel void TEMPLATE(elu_backward,Dtype)(const int n, __global const Dtype* in_diff,\n                                           __global const Dtype* out_data,\n                                           __global const Dtype* in_data,\n                                           __global Dtype* out_diff,\n                                           Dtype alpha) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    out_diff[index] =\n        in_data[index] > 0 ?\n            in_diff[index] : in_diff[index] * (out_data[index] + alpha);\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(embed_forward,Dtype)(const int_tp nthreads,\n                                            __global const Dtype* bottom_data,\n                                            __global const Dtype* weight,\n                                            const int_tp M, const int_tp N,\n                                            const int_tp K,\n                                            __global Dtype* top_data) {\n  for (int_tp top_index = get_global_id(0); top_index < nthreads;\n      top_index += get_global_size(0)) {\n      const int_tp n = top_index / N;\n      const int_tp d = top_index % N;\n      const int_tp index = (int_tp)(bottom_data[n]);\n      const int_tp weight_index = index * N + d;\n      top_data[top_index] = weight[weight_index];\n    }\n  }\n\n// atomic_add from: http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html\n#if (TYPE == TYPE_FLOAT)\n#ifdef ATOMICS_32_AVAILABLE\ninline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {\n    union {\n        uint_tp intVal;\n        Dtype floatVal;\n    } newVal;\n    union {\n        uint_tp intVal;\n        Dtype floatVal;\n    } prevVal;\n    do {\n        prevVal.floatVal = *source;\n        newVal.floatVal = prevVal.floatVal + operand;\n    } while (atomic_cmpxchg((volatile __global unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);\n}\n\n__kernel void TEMPLATE(embed_backward,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,\n    __global const Dtype* top_diff, const int_tp M, const int_tp N, const int_tp K,\n    __global Dtype* weight_diff) {\n  for (int_tp top_index = get_global_id(0); top_index < nthreads;\n      top_index += get_global_size(0)) {\n    const int_tp n = top_index / N;\n    const int_tp d = top_index % N;\n    const int_tp index = (int_tp)(bottom_data[n]);\n    const int_tp weight_index = index * N + d;\n\n    TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));\n  }\n}\n#endif\n#endif\n\n#if (TYPE == TYPE_DOUBLE)\n#ifdef ATOMICS_64_AVAILABLE\ninline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {\n    union {\n        unsigned long intVal;\n        Dtype floatVal;\n    } newVal;\n    union {\n        unsigned long intVal;\n        Dtype floatVal;\n    } prevVal;\n    do {\n        prevVal.floatVal = *source;\n        newVal.floatVal = prevVal.floatVal + operand;\n    } while (atom_cmpxchg((volatile __global unsigned long *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);\n}\n\n__kernel void TEMPLATE(embed_backward,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,\n    __global const Dtype* top_diff, const int_tp M, const int_tp N, const int_tp K,\n    __global Dtype* weight_diff) {\n  for (int_tp top_index = get_global_id(0); top_index < nthreads;\n      top_index += get_global_size(0)) {\n    const int_tp n = top_index / N;\n    const int_tp d = top_index % N;\n    const int_tp index = (int_tp)(bottom_data[n]);\n    const int_tp weight_index = index * N + d;\n\n    TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));\n  }\n}\n#endif\n#endif",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(fft_phony,Dtype)(Dtype arg) {\n  Dtype out = arg;\n}\n\n#ifdef FFT\n#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n#define DtypeComplex Dtype2\n\n__kernel void TEMPLATE(copy2buffer_cyclic_shift_in,Dtype)(\n    __global Dtype* fft_gpu_weights_real, const int_tp offset_fft_gpu_weights_real,\n    __global Dtype* weight, const int_tp offset_weight,\n    const int_tp ker_size, const int_tp ch_gr, const int_tp ker_size_ch_gr,\n    const int_tp ker_w, const int_tp ker_c_h, const int_tp ker_c_w, \n    const int_tp fft_height, const int_tp fft_width, const int_tp complex_w_len) {\n  fft_gpu_weights_real += offset_fft_gpu_weights_real;\n  weight += offset_weight;\n  int_tp gId = get_global_id(0);\n  int_tp out = gId / ker_size_ch_gr;\n  int_tp c = (gId - out * ker_size_ch_gr) / ker_size;\n  int_tp map_offset = out * ch_gr + c;\n  int_tp map_offset_ker_size = map_offset * ker_size;\n  int_tp pos_in_map = gId - map_offset_ker_size;\n  int_tp h = pos_in_map / ker_w;\n  int_tp h_ker_w = h * ker_w;\n  int_tp w = pos_in_map - h_ker_w;\n  int_tp src_idx = map_offset_ker_size + h_ker_w + w;\n  int_tp ky = h - ker_c_h;\n  if (ky < 0) ky += fft_height;\n  int_tp kx = w - ker_c_w;\n  if (kx < 0) kx += fft_width;\n  int_tp dst_idx = (map_offset * fft_height + ky) * complex_w_len + kx;\n  fft_gpu_weights_real[dst_idx] = weight[src_idx];\n}\n\n/* Use when width < 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_in_naive,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp size, \n    const int_tp height_out, const int_tp width_out, \n    const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,\n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp h = gId / width;\n  int_tp w = gId - (h * width);\n  int_tp dst_idx = (h*stride_h + pad_h)*width_out + (w*stride_w + pad_w);\n  map_out[dst_idx] = map_in[gId];\n}\n\n/* Use when width < 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_in_naive_2d,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp map_out_size, const int_tp size, const int_tp count,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,\n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId_x = get_global_id(0);\n  int_tp gId_y = get_global_id(1); \n  int_tp h = gId_x / width;\n  int_tp w = gId_x - (h * width);\n  int_tp src_idx = gId_y * size + gId_x;\n  int_tp dst_idx = gId_y * map_out_size + \n      (h * stride_h + pad_h) * width_out + (w * stride_w + pad_w);\n  map_out[dst_idx] = map_in[src_idx];\n}\n\n/* Use when width >= 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_in,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out,\n    const __global Dtype* map_in, const int_tp offset_map_in,\n    const int_tp size,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,\n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp count = size >> 2;\n  int_tp gId4 = gId << 2;\n  int_tp h = gId4 / width;\n  int_tp w = gId4 - (h * width);\n  int_tp dst_h = h*stride_h + pad_h;\n  int_tp dst_w = w*stride_w + pad_w;\n  int_tp dst_idx = dst_h*width_out + dst_w;\n  if (gId < count) {\n    Dtype4 map_in_cache4 = vload4(gId, map_in);\n    int_tp has_pad = width - dst_w; \n    if (has_pad >= 4) {\n      vstore4(map_in_cache4, dst_idx >> 2, map_out);\n    } else { \n      if (0 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w;\n      }\n      map_out[dst_idx] = map_in_cache4.x;\n      if (1 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 1;\n      }\n      map_out[dst_idx+1] = map_in_cache4.y;\n      if (2 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 2;\n      }\n      map_out[dst_idx+2] = map_in_cache4.z;\n      if (3 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 3;\n      }\n      map_out[dst_idx+3] = map_in_cache4.w;\n      dst_h += 1;\n      dst_w = pad_w;\n    }\n  } else if (gId == count) {\n    int_tp res = size - (count << 2); /* size % 4 */\n    if (res > 0) {\n      Dtype4 map_in_cache4 = 0.f;\n      if (res >= 1) \n        map_in_cache4.x = map_in[gId4];\n      if (res >= 2)\n        map_in_cache4.y = map_in[gId4+1];\n      if (res == 3)\n        map_in_cache4.z = map_in[gId4+2];\n      int_tp has_pad = width - dst_w; \n      if (has_pad >= 4) {\n        vstore4(map_in_cache4, dst_idx >> 2, map_out);\n      } else { \n        if (0 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w;\n        }\n        map_out[dst_idx] = map_in_cache4.x;\n        if (1 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 1;\n        }\n        map_out[dst_idx+1] = map_in_cache4.y;\n        if (2 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 2;\n        }\n        map_out[dst_idx+2] = map_in_cache4.z;\n        if (3 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 3;\n        }\n        map_out[dst_idx+3] = map_in_cache4.w;\n        dst_h += 1;\n        dst_w = pad_w;\n      }\n    }\n  }\n}\n\n/* Use when width >= 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_in_2d,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out,\n    const __global Dtype* map_in, const int_tp offset_map_in,\n    const int_tp map_out_size, const int_tp size, const int_tp count,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,\n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp gId_y = get_global_id(1);\n  int_tp gId4 = gId << 2;\n  int_tp h = gId4 / width;\n  int_tp w = gId4 - (h * width);\n  int_tp dst_h = h*stride_h + pad_h;\n  int_tp dst_w = w*stride_w + pad_w;\n  int_tp dst_idx = dst_h*width_out + dst_w;\n  const __global Dtype* map_in_2d = map_in + gId_y * size;\n  __global Dtype* map_out_2d = map_out + gId_y * map_out_size;\n  if (gId < count) {\n    Dtype4 map_in_cache4 = vload4(gId, map_in_2d);\n    int_tp has_pad = width - dst_w; \n    if (has_pad >= 4) {\n      vstore4(map_in_cache4, dst_idx >> 2, map_out_2d);\n    } else { \n      if (0 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w;\n      }\n      map_out_2d[dst_idx] = map_in_cache4.x;\n      if (1 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 1;\n      }\n      map_out_2d[dst_idx+1] = map_in_cache4.y;\n      if (2 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 2;\n      }\n      map_out_2d[dst_idx+2] = map_in_cache4.z;\n      if (3 == has_pad) {\n        dst_idx += width_out + pad_w - dst_w - 3;\n      }\n      map_out_2d[dst_idx+3] = map_in_cache4.w;\n      dst_h += 1;\n      dst_w = pad_w;\n    }\n  } else if (gId == count) {\n    int_tp res = size - (count << 2); /* size % 4 */\n    if (res > 0) {\n      Dtype4 map_in_cache4 = 0.f;\n      if (res >= 1) \n        map_in_cache4.x = map_in_2d[gId4];\n      if (res >= 2)\n        map_in_cache4.y = map_in_2d[gId4+1];\n      if (res == 3)\n        map_in_cache4.z = map_in_2d[gId4+2];\n      int_tp has_pad = width - dst_w; \n      if (has_pad >= 4) {\n        vstore4(map_in_cache4, dst_idx >> 2, map_out_2d);\n      } else { \n        if (0 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w;\n        }\n        map_out_2d[dst_idx] = map_in_cache4.x;\n        if (1 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 1;\n        }\n        map_out_2d[dst_idx+1] = map_in_cache4.y;\n        if (2 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 2;\n        }\n        map_out_2d[dst_idx+2] = map_in_cache4.z;\n        if (3 == has_pad) {\n          dst_idx += width_out + pad_w - dst_w - 3;\n        }\n        map_out_2d[dst_idx+3] = map_in_cache4.w;\n        dst_h += 1;\n        dst_w = pad_w;\n      }\n    }\n  }\n}\n\n/* Use when width_out < 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_out_naive,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp size,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_center_h, const int_tp ker_center_w,\n    const int_tp stride_h, const int_tp stride_w, \n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp h_out = gId / width_out;\n  int_tp w_out = gId - (h_out * width_out);\n  int_tp h = h_out * stride_h + ker_center_h;\n  int_tp w = w_out * stride_w + ker_center_w;\n  int_tp src_idx = h*fft_width + w;\n  map_out[gId] = map_in[src_idx];\n}\n\n/* Use when width_out < 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_out_naive_2d,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in,\n    const int_tp size, const int_tp count, const int_tp map_in_size,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_center_h, const int_tp ker_center_w,\n    const int_tp stride_h, const int_tp stride_w, \n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp h_out = gId / width_out;\n  int_tp w_out = gId - (h_out * width_out);\n  int_tp h = h_out * stride_h + ker_center_h;\n  int_tp w = w_out * stride_w + ker_center_w;\n  int_tp src_idx = out * map_in_size + h*fft_width + w;\n  int_tp dst_idx = out * size + gId;\n  map_out[dst_idx] = map_in[src_idx];\n}\n\n/* Use when width_out >= 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_out,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out,\n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp size,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_c_h, const int_tp ker_c_w,\n    const int_tp stride_h, const int_tp stride_w, const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp count = size >> 2;\n  int_tp gId4 = gId << 2;\n  int_tp h_out = gId4 / width_out;\n  int_tp w_out = gId4 - (h_out * width_out);\n  int_tp h = h_out * stride_h + ker_c_h;\n  int_tp w = w_out * stride_w + ker_c_w;\n  int_tp src_idx = h*fft_width + w;\n  if (gId < count) {\n    Dtype4 map_in_cache4;\n    int_tp has_pad = width_out - (w - pad_w); \n    if (has_pad >= 4) {\n      map_in_cache4 = vload4(src_idx >> 2, map_in);\n    } else {\n      int_tp right_elements = fft_width - width_out;\n      if (0 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.x = map_in[src_idx];\n      if (1 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.y = map_in[src_idx+1];\n      if (2 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.z = map_in[src_idx+2];\n      if (3 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.w = map_in[src_idx+3];\n    }\n    vstore4(map_in_cache4, gId, map_out);\n  } else if (gId == count) {\n    int_tp res = size - (count << 2); /* size % 4 */\n    if (res > 0) {\n      for (int_tp i = gId4; i < size; ++i) {\n        map_out[i] = map_in[src_idx];\n        src_idx++;\n      }\n    }\n  }\n}\n\n/* Use when width_out >= 4 */\n__kernel void TEMPLATE(copy2buffer_left_top_out_2d,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out,\n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp size, const int_tp count, const int_tp map_in_size,\n    const int_tp height_out, const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_c_h, const int_tp ker_c_w,\n    const int_tp stride_h, const int_tp stride_w, const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp gId4 = gId << 2;\n  int_tp h_out = gId4 / width_out;\n  int_tp w_out = gId4 - (h_out * width_out);\n  int_tp h = h_out * stride_h + ker_c_h;\n  int_tp w = w_out * stride_w + ker_c_w;\n  int_tp src_idx = h*fft_width + w;\n  const __global Dtype* map_in_2d = map_in + out * map_in_size;\n  __global Dtype* map_out_2d = map_out + out * size;\n  if (gId < count) {\n    Dtype4 map_in_cache4;\n    int_tp has_pad = width_out - (w - pad_w); \n    if (has_pad >= 4) {\n      map_in_cache4 = vload4(src_idx >> 2, map_in_2d);\n    } else {\n      int_tp right_elements = fft_width - width_out;\n      if (0 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.x = map_in_2d[src_idx];\n      if (1 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.y = map_in_2d[src_idx+1];\n      if (2 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.z = map_in_2d[src_idx+2];\n      if (3 == has_pad) {\n        src_idx += right_elements;\n      }\n      map_in_cache4.w = map_in_2d[src_idx+3];\n    }\n    vstore4(map_in_cache4, gId, map_out_2d);\n  } else if (gId == count) {\n    int_tp res = size - (count << 2); /* size % 4 */\n    if (res > 0) {\n      const __global Dtype4* map_in_2d_4 =\n            (const __global Dtype4*)(map_in_2d + src_idx);\n      __global Dtype4* map_out_2d_4 = (__global Dtype4*)(map_out_2d + gId4);\n      if (res == 3) {\n        map_out_2d_4[0].xyz = map_in_2d_4[0].xyz;\n      } else if (res == 2) {\n        map_out_2d_4[0].xy = map_in_2d_4[0].xy;\n      } else if (res == 1) {\n        map_out_2d_4[0].x = map_in_2d_4[0].x;\n      }\n    }\n  }\n}\n\n__kernel void TEMPLATE(copy2buffer_cyclic_shift_out,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in, \n    const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_center_h, const int_tp ker_center_w,\n    const int_tp stride_h, const int_tp stride_w, \n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp h_out = gId / width_out;\n  int_tp w_out = gId - (h_out * width_out);\n  int_tp h = h_out * stride_h + pad_h;\n  int_tp w = w_out * stride_w + pad_w;\n  int_tp ky = h - ker_center_h;\n  if (ky < 0) ky += fft_height;\n  int_tp kx = w - ker_center_w;\n  if (kx < 0) kx += fft_width;\n  int_tp src_idx = ky*fft_width + kx;\n  map_out[gId] = map_in[src_idx];\n}\n\n__kernel void TEMPLATE(copy2buffer_cyclic_shift_out_2d,Dtype)(__global Dtype* map_out,\n    const int_tp offset_map_out, \n    const __global Dtype* map_in, const int_tp offset_map_in,\n    const int_tp map_out_size, const int_tp map_in_size, \n    const int_tp width_out, \n    const int_tp fft_height, const int_tp fft_width, \n    const int_tp ker_center_h, const int_tp ker_center_w,\n    const int_tp stride_h, const int_tp stride_w, \n    const int_tp pad_h, const int_tp pad_w) {\n  map_out += offset_map_out;\n  map_in  += offset_map_in;\n  int_tp gId = get_global_id(0);\n  int_tp gId_y = get_global_id(1);\n  int_tp h_out = gId / width_out;\n  int_tp w_out = gId - (h_out * width_out);\n  int_tp h = h_out * stride_h + pad_h;\n  int_tp w = w_out * stride_w + pad_w;\n  int_tp ky = h - ker_center_h;\n  if (ky < 0) ky += fft_height;\n  int_tp kx = w - ker_center_w;\n  if (kx < 0) kx += fft_width;\n  int_tp src_idx = gId_y * map_in_size + ky*fft_width + kx;\n  int_tp dst_idx = gId_y * map_out_size + gId;\n  map_out[dst_idx] = map_in[src_idx];\n}\n\n__kernel void TEMPLATE(complex_conjugate_multiplication_1d,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, \n    const __global Dtype* src1, const int_tp offset_src1,\n    const __global Dtype* src2, const int_tp offset_src2, \n    const int_tp ch_gr) {\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp gId = get_global_id(0); \n  int_tp size = get_global_size(0);\n  Dtype4 dst_cache = 0.f;\n  int_tp src_idx;\n  Dtype4 s1_cache;\n  Dtype4 s2_cache;\n  for (int_tp c = 0; c < ch_gr; ++c) {\n    src_idx = size * c + gId;\n    s1_cache = vload4(src_idx, src1);\n    s2_cache = vload4(src_idx, src2);\n    dst_cache.x +=  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;\n    dst_cache.y += -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;\n    dst_cache.z +=  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;\n    dst_cache.w += -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;\n  }\n  ((__global Dtype4*)(&dst[gId<<2]))[0] += dst_cache; \n}\n\n__kernel void TEMPLATE(complex_conjugate_multiplication_2d,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, \n    const __global Dtype* src1, const int_tp offset_src1, \n    const __global Dtype* src2, const int_tp offset_src2,\n    const int_tp out_gr, const int_tp map_size, const int_tp ch_gr) {\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp src1_idx, src2_idx;\n  int_tp dst_map_offset = map_size * out;\n  int_tp dst_idx = dst_map_offset + gId;\n  Dtype4 s1_cache, s2_cache;\n  Dtype4 dst_cache = 0.f;\n  int_tp map_offset = dst_map_offset * ch_gr;\n  for (int_tp i = 0; i < ch_gr; ++i) {\n    src1_idx = map_size * i + gId;\n    src2_idx = map_offset + src1_idx;\n    s1_cache = vload4(src1_idx, src1);\n    s2_cache = vload4(src2_idx, src2);\n    dst_cache.xz += mad( s1_cache.xz, s2_cache.xz, s1_cache.yw * s2_cache.yw);\n    dst_cache.yw += mad(-s1_cache.xz, s2_cache.yw, s1_cache.yw * s2_cache.xz);\n  }\n  vstore4(dst_cache, dst_idx, dst);\n}\n\n__kernel void TEMPLATE(complex_conjugate_multiplication_2d_SLM,Dtype)(\n    __global Dtype* restrict dst, const int_tp offset_dst,\n    const __global Dtype* restrict src1, const int_tp offset_src1, \n    __local Dtype* local_src1, \n    const __global Dtype* restrict src2, const int_tp offset_src2, \n    const int_tp out_gr, const int_tp map_size, const int_tp ch_gr) {\n  int_tp gId = get_global_id(0);\n  if (gId >= map_size) return; /* Do not remove this */\n  int_tp out = get_global_id(1);\n  if (out >= out_gr) return;   /* Do not remove this */\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp tId = get_local_id(0);\n  int_tp local_out = get_local_id(1);\n  int_tp tile_size = get_local_size(0);\n  Dtype4 s1_cache;\n  if (local_out == 0) {\n    for (int_tp c = 0; c < ch_gr; ++c) {\n      s1_cache = vload4(map_size * c + gId, src1);\n      vstore4(s1_cache, tile_size * c + tId, local_src1); \n    }\n  }\n  barrier(CLK_LOCAL_MEM_FENCE);\n  int_tp dst_map_offset = map_size * out;\n  int_tp dst_idx = (dst_map_offset + gId) << 2;\n  Dtype4 dst_cache = 0.f;\n  Dtype4 s2_cache;\n  int_tp ch_offset = 0; \n  int_tp map_offset = dst_map_offset * ch_gr; \n  for (int_tp c = 0; c < ch_gr; ++c) {\n    ch_offset = map_size * c;\n    s1_cache = vload4(tile_size * c + tId, local_src1);\n    s2_cache = vload4(map_offset + ch_offset + gId, src2);\n    dst_cache.xz += mad( s1_cache.xz, s2_cache.xz, s1_cache.yw * s2_cache.yw);\n    dst_cache.yw += mad(-s1_cache.xz, s2_cache.yw, s1_cache.yw * s2_cache.xz);\n  }\n  ((__global Dtype4*)(&dst[dst_idx]))[0] += dst_cache; \n}\n\n__kernel void TEMPLATE(complex_conjugate_multiplication_3d,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, \n    const __global Dtype* src1, const int_tp offset_src1,\n    const __global Dtype* src2, const int_tp offset_src2, \n    const int_tp out_gr, const int_tp size, const int_tp ch_gr) {\n  dst  += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp ch  = get_global_id(2);\n  Dtype4 dst_cache = 0.f;\n  Dtype4 s1_cache  = ((__global Dtype4*)(&(src1[(size*ch+gId)<<2])))[0];\n  Dtype4 s2_cache  = ((__global Dtype4*)(&(src2[(size*(out*ch_gr+ch)+gId)<<2])))[0];\n  dst_cache.x =  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;\n  dst_cache.y = -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;\n  dst_cache.z =  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;\n  dst_cache.w = -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;\n  ((__global Dtype4*)(&dst[(size*out+gId)<<2]))[0] += dst_cache;\n}\n\n__kernel void TEMPLATE(complex_conjugate_multiplication_3d_SLM,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, __local Dtype* local_dst,  \n    const __global Dtype* src1, const int_tp offset_src1, \n    __local Dtype* local_src1, const __global Dtype* src2, \n    const int_tp offset_src2, const int_tp out_gr, const int_tp map_size, \n    const int_tp ch_gr) {\n  int_tp gId = get_global_id(0);\n  if (gId >= map_size) return; /* Do not remove this */\n  int_tp out = get_global_id(1);\n  if (out >= out_gr) return;   /* Do not remove this */\n  int_tp ch = get_global_id(2);\n  if (ch >= ch_gr) return;     /* Do not remove this */\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp tId = get_local_id(0);\n  int_tp local_out = get_local_id(1);\n  int_tp tile_size = get_local_size(0);\n  Dtype4 s1_cache;\n  if (local_out == 0) {\n    s1_cache = vload4(map_size * ch + gId, src1);\n    vstore4(s1_cache, tile_size * ch + tId, local_src1);\n  }\n  barrier(CLK_LOCAL_MEM_FENCE);\n  int_tp dst_map_offset = map_size * out;\n  int_tp dst_idx = (dst_map_offset + gId) << 2;\n  Dtype4 dst_cache = 0.f;\n  Dtype4 s2_cache;\n  s1_cache = vload4(tile_size * ch + tId, local_src1);\n  s2_cache = vload4((dst_map_offset * ch_gr) + (map_size * ch) + gId, src2);\n  dst_cache.x +=  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;\n  dst_cache.y += -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;\n  dst_cache.z +=  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;\n  dst_cache.w += -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;\n  ((__global Dtype4*)(&dst[dst_idx]))[0] += dst_cache;\n}\n\n__kernel void TEMPLATE(complex_multiplication_1d,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, \n    const __global Dtype* src1, const int_tp offset_src1, \n    const __global Dtype* src2, const int_tp offset_src2,\n    const int_tp size, const int_tp ch_gr) {\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp gId = get_global_id(0);\n  Dtype4 s2_cache;\n  Dtype4 dst_cache = 0.f;\n  int_tp idx_with_ch;\n  Dtype4 s1_cache = vload4(gId, src1);\n  for (int_tp ch = 0; ch < ch_gr; ++ch) {\n    idx_with_ch = size * ch + gId;\n    s2_cache = vload4(idx_with_ch, src2);\n    dst_cache.xz = s1_cache.xz * s2_cache.xz - s1_cache.yw * s2_cache.yw;\n    dst_cache.yw = s1_cache.xz * s2_cache.yw + s1_cache.yw * s2_cache.xz;\n    ((__global Dtype4*)(&dst[idx_with_ch<<2]))[0] += dst_cache;\n  }\n}\n\n__kernel void TEMPLATE(complex_multiplication_2d_SLM,Dtype)(__global Dtype* restrict dst,\n    const int_tp offset_dst, __local Dtype* local_dst,\n    const __global Dtype* restrict src1, const int_tp offset_src1, \n    const __global Dtype* restrict src2, const int_tp offset_src2,\n    const int_tp num_output, const int_tp size, const int_tp ch_gr) {\n  int_tp gId = get_global_id(0);\n  if (gId >= size) return;\n  int_tp out = get_global_id(1);\n  if (out >= num_output) return;\n  dst += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp tId = get_local_id(0);\n  int_tp tOut = get_local_id(1);\n  int_tp tile_size = get_local_size(0);\n  int_tp local_out_size = get_local_size(1);\n  int_tp out_offset = out * size;\n  int_tp out_ch_offset = out_offset * ch_gr;\n  int_tp tile_size_in_all_ch = tile_size * ch_gr;\n  int_tp local_out_ch_offset = tOut * tile_size_in_all_ch;\n  int_tp src2_idx, local_dst_idx;\n  Dtype4 s2_cache, dst_cache;\n  int_tp src1_idx = out_offset + gId;\n  Dtype4 s1_cache = vload4(src1_idx, src1);\n  for (int_tp ch = 0; ch < ch_gr; ++ch) {\n    src2_idx = out_ch_offset + ch * size + gId;\n    s2_cache = vload4(src2_idx, src2);\n    dst_cache.xz = s1_cache.xz * s2_cache.xz - s1_cache.yw * s2_cache.yw;\n    dst_cache.yw = s1_cache.xz * s2_cache.yw + s1_cache.yw * s2_cache.xz;\n    local_dst_idx = local_out_ch_offset + ch * tile_size + tId;\n    vstore4(dst_cache, local_dst_idx, local_dst);\n  }\n  barrier(CLK_LOCAL_MEM_FENCE);\n  int_tp start_idx, half_start_idx;\n  int_tp ch_offset;\n  int_tp this_idx, that_idx;\n  for (int_tp offset = local_out_size >>= 1; offset > 0; offset >>=1) {\n    if (tOut < offset) {\n      start_idx = tOut * tile_size_in_all_ch + tId;\n      half_start_idx = (tOut + offset) * tile_size_in_all_ch + tId;\n      for (int_tp ch = 0; ch < ch_gr; ++ch) {\n        ch_offset = ch * tile_size;\n        this_idx = (start_idx + ch_offset) << 2;\n        that_idx = (half_start_idx + ch_offset) << 2;\n        ((__local Dtype4*)(&local_dst[this_idx]))[0] += \n            ((__local Dtype4*)(&local_dst[that_idx]))[0];\n      }\n    }\n    barrier(CLK_LOCAL_MEM_FENCE);\n  }\n  if (tOut == 0) {\n    for (int_tp ch = 0; ch < ch_gr; ++ch) {\n      dst_cache = vload4(tile_size * ch + tId, local_dst);\n      ((__global Dtype4*)(&dst[(size * ch + gId)<<2]))[0] += dst_cache;\n    }\n  }\n}\n\n__kernel void TEMPLATE(complex_multiplication_3d,Dtype)(__global Dtype* dst,\n    const int_tp offset_dst, \n    const __global Dtype* src1, const int_tp offset_src1, \n    const __global Dtype* src2, const int_tp offset_src2,\n    const int_tp size, const int_tp ch_gr, const int_tp out_gr, const int_tp num_output) {\n  dst  += offset_dst;\n  src1 += offset_src1;\n  src2 += offset_src2;\n  int_tp gId = get_global_id(0);\n  int_tp ch  = get_global_id(1);\n  int_tp out = get_global_id(2);\n  int_tp g = out / out_gr;\n  ch += (g * ch_gr);\n  int_tp c_offset = ch - ((ch / ch_gr) * ch_gr); \n  __global Dtype2* dst_ch = ((__global Dtype2*)(dst)) + (size * ch);\n  __global Dtype2* src1_out = ((__global Dtype2*)(src1)) + (size * out);\n  __global Dtype2* src2_out_ch = ((__global Dtype2*)(src2)) + (size * (out * ch_gr + c_offset));\n  Dtype2 s1_cache  = src1_out[gId];\n  Dtype2 s2_cache  = src2_out_ch[gId];\n  Dtype2 dst_cache = 0.f;\n  dst_cache.x = s1_cache.x * s2_cache.x - s1_cache.y * s2_cache.y;\n  dst_cache.y = s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;\n  dst_ch[gId] += dst_cache;\n}\n\n/* Convert [RRRR...GGGG...BBBB...] to [RGBRGBRGBRGB...] */\n/* Reshape 2 */\n__kernel void TEMPLATE(convert_data_to_channel_major,Dtype)(__global Dtype2* dst, \n    const __global Dtype2* src, const int_tp size, const int_tp ch_gr) {\n  int_tp gId = get_global_id(0);\n  __global Dtype* dst_ptr = (__global Dtype*)(dst + (gId * ch_gr));\n  const __global Dtype* src_ptr = (const __global Dtype*)(src + gId);\n  Dtype2 s;\n  int_tp src_idx = 0;\n  for (int_tp i = 0; i < ch_gr; ++i) {\n    s = vload2(src_idx, src_ptr);\n    vstore2(s, i, dst_ptr);\n    src_idx += size;\n  }\n}\n/* Reshape 1 */\n/*__kernel void TEMPLATE(convert_data_to_channel_major(__global Dtype4* dst,\n    const __global Dtype4* src, const int_tp size, const int_tp ch_gr) {\n  int_tp gId = get_global_id(0);\n  const __global Dtype4* src_ptr4 = src + gId; \n  __global Dtype4* dst_ptr4 = dst + (gId * ch_gr);\n  for (int_tp i = 0; i < ch_gr; ++i) {\n      dst_ptr4[i] = src_ptr4[i*size];\n  }\n}\n*/\n\n/* Convert multiple [RRRR...GGGG...BBBB...] to multiple [RGBRGBRGBRGB...] */\n/* Reshape 2 */\n__kernel void TEMPLATE(convert_weight_to_channel_major,Dtype)(__global Dtype2* dst, \n    const __global Dtype2* src, const int_tp size, const int_tp ch_gr,\n    const int_tp num_output) {\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp out_offset = out * (size * ch_gr);\n  __global Dtype* dst_ptr = (__global Dtype*)(dst + out_offset + (gId * ch_gr));\n  const __global Dtype* src_ptr = \n      (const __global Dtype*)(src + out_offset + gId);\n  Dtype2 s;\n  int_tp src_idx = 0;\n  for (int_tp i = 0; i < ch_gr; ++i) {\n    s = vload2(src_idx, src_ptr);\n    vstore2(s, i, dst_ptr);\n    src_idx += size;\n  }\n}\n/* Reshape 1 */\n/*\n__kernel void TEMPLATE(convert_weight_to_channel_major(__global Dtype4* dst,\n    const __global Dtype4* src, const int_tp size, const int_tp ch_gr,\n    const int_tp out_gr) {\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp out_offset = out * (size * ch_gr);\n  __global Dtype4* dst_ptr4 = dst + out_offset + (gId * ch_gr);\n  const __global Dtype4* src_ptr4 = src + out_offset + gId;\n  for (int_tp i = 0; i < ch_gr; ++i) {\n    dst_ptr4[i] = src_ptr4[size * i];\n  }\n}\n*/\n\n/* Cdotc per element */\n/* Reshape 1 */\n/*\n__kernel void TEMPLATE(batchedCdotc(__global Dtype4* dst, \n    const __global Dtype4* src1, const __global Dtype4* src2,  \n    const int_tp size, const int_tp ch_gr, const int_tp out_gr) {  \n  int_tp gId = get_global_id(0); \n  int_tp out = get_global_id(1); \n  int_tp ch_offset = gId * ch_gr; \n  int_tp out_offset = out * size; \n  const __global Dtype* src1_ptr = (const __global Dtype*)(src1 + ch_offset);  \n  const __global Dtype* src2_ptr = (const __global Dtype*)(src2 + (out_offset * ch_gr) + ch_offset); \n  Dtype4 cdotc = 0.f; \n  Dtype4 s1, s2; \n  for (int_tp c = 0; c < ch_gr; ++c) { \n    s1 = vload4(c, src1_ptr); \n    s2 = vload4(c, src2_ptr); \n    cdotc.xz += mad( s1.xz, s2.xz, s1.yw * s2.yw); \n    cdotc.yw += mad(-s1.xz, s2.yw, s1.yw * s2.xz); \n  } \n  __global Dtype4* dst_ptr4 = dst + out_offset + gId; \n  dst_ptr4[0] += cdotc; \n}\n*/\n\n/* Cdotc per two elements */\n/* Reshape 2 */\n__kernel void TEMPLATE(batchedCdotc,Dtype)(__global Dtype2* dst,\n    const __global Dtype2* src1, const __global Dtype2* src2, \n    const int_tp size, const int_tp ch_gr, const int_tp out_gr) {\n  int_tp gId = get_global_id(0);\n  int_tp out = get_global_id(1);\n  int_tp ch_offset = gId * ch_gr;\n  const __global Dtype* src1_ptr = (const __global Dtype*)(src1 + ch_offset); \n  const __global Dtype* src2_ptr = \n      (const __global Dtype*)(src2 + (out * size * ch_gr) + ch_offset);\n  Dtype4 cdotc4 = 0.f;\n  Dtype2 cdotc = 0.f;\n  Dtype4 s1, s2;\n  int_tp n = ch_gr >> 1;\n  int_tp r = ch_gr - (n << 1);\n  for (int_tp i = 0; i < n; ++i) {\n    s1 = vload4(i, src1_ptr);\n    s2 = vload4(i, src2_ptr);\n    cdotc4.xz += mad( s1.xz, s2.xz, s1.yw * s2.yw);\n    cdotc4.yw += mad(-s1.xz, s2.yw, s1.yw * s2.xz);\n  }\n  cdotc.x += dot(cdotc4.xz, (float2)(1));\n  cdotc.y += dot(cdotc4.yw, (float2)(1));\n  if (r == 1) {\n    const __global Dtype* src1_ptr2 = \n        (const __global Dtype*)(((const __global Dtype4*)(src1_ptr)) + n);\n    const __global Dtype* src2_ptr2 = \n        (const __global Dtype*)(((const __global Dtype4*)(src2_ptr)) + n);\n    Dtype2 t1 = vload2(0, src1_ptr2); \n    Dtype2 t2 = vload2(0, src2_ptr2);\n    cdotc.x += mad( t1.x, t2.x, t1.y * t2.y);\n    cdotc.y += mad(-t1.x, t2.y, t1.y * t2.x);\n  }\n  __global Dtype* dst_ptr = (__global Dtype*)(dst + (out * size) + gId);\n  vstore2(cdotc, 0, dst_ptr);\n}\n#endif",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(fillbuffer,Dtype)(const int_tp n, const char alpha, __global char* x,\n                                   const int_tp offx) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    x[index + offx] = alpha;\n  }\n}\n\n__kernel void TEMPLATE(fill,Dtype)(const int_tp n, const Dtype alpha, __global Dtype* x,\n                                   const int_tp offx) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    x[index + offx] = alpha;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(im2col,Dtype)(const int_tp n,\n                                     __global const Dtype* data_im,\n                                     const int_tp data_im_off,\n                                     const int_tp height, const int_tp width,\n                                     const int_tp kernel_h,\n                                     const int_tp kernel_w, const int_tp pad_h,\n                                     const int_tp pad_w, const int_tp stride_h,\n                                     const int_tp stride_w,\n                                     const int_tp dilation_h,\n                                     const int_tp dilation_w,\n                                     const int_tp height_col,\n                                     const int_tp width_col,\n                                     __global Dtype* data_col,\n                                     const int_tp data_col_off) {\n\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    const int_tp h_index = index / width_col;\n    const int_tp h_col = h_index % height_col;\n    const int_tp w_col = index % width_col;\n    const int_tp c_im = h_index / height_col;\n    const int_tp c_col = c_im * kernel_h * kernel_w;\n    const int_tp h_offset = h_col * stride_h - pad_h;\n    const int_tp w_offset = w_col * stride_w - pad_w;\n    __global Dtype* data_col_ptr = data_col + data_col_off;\n    data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;\n    __global const Dtype* data_im_ptr = data_im + data_im_off;\n    data_im_ptr += (c_im * height + h_offset) * width + w_offset;\n    for (int_tp i = 0; i < kernel_h; ++i) {\n      for (int_tp j = 0; j < kernel_w; ++j) {\n        int_tp h_im = h_offset + i * dilation_h;\n        int_tp w_im = w_offset + j * dilation_w;\n        *data_col_ptr =\n            (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?\n                data_im_ptr[i * dilation_h * width + j * dilation_w] : 0;\n        data_col_ptr += height_col * width_col;\n      }\n    }\n  }\n}\n\n__kernel void TEMPLATE(col2im,Dtype)(const int_tp n,\n                                     __global const Dtype* data_col,\n                                     const int_tp data_col_off,\n                                     const int_tp height, const int_tp width,\n                                     const int_tp channels,\n                                     const int_tp kernel_h,\n                                     const int_tp kernel_w, const int_tp pad_h,\n                                     const int_tp pad_w, const int_tp stride_h,\n                                     const int_tp stride_w,\n                                     const int_tp dilation_h,\n                                     const int_tp dilation_w,\n                                     const int_tp height_col,\n                                     const int_tp width_col,\n                                     __global Dtype* data_im,\n                                     const int_tp data_im_off) {\n\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    Dtype val = 0;\n    const int_tp w_im = index % width + pad_w;\n    const int_tp h_im = (index / width) % height + pad_h;\n    const int_tp c_im = index / (width * height);\n    int_tp kernel_extent_w = (kernel_w - 1) * dilation_w + 1;\n    int_tp kernel_extent_h = (kernel_h - 1) * dilation_h + 1;\n    // compute the start and end of the output\n    const int_tp w_col_start =\n        (w_im < kernel_extent_w) ? 0 : (w_im - kernel_extent_w) / stride_w + 1;\n    const int_tp w_col_end = min(w_im / stride_w + 1, width_col);\n    const int_tp h_col_start =\n        (h_im < kernel_extent_h) ? 0 : (h_im - kernel_extent_h) / stride_h + 1;\n    const int_tp h_col_end = min(h_im / stride_h + 1, height_col);\n    // TODO: use LCM of stride and dilation to avoid unnecessary loops\n    for (int_tp h_col = h_col_start; h_col < h_col_end; h_col += 1) {\n      for (int_tp w_col = w_col_start; w_col < w_col_end; w_col += 1) {\n        int_tp h_k = (h_im - h_col * stride_h);\n        int_tp w_k = (w_im - w_col * stride_w);\n        if (h_k % dilation_h == 0 && w_k % dilation_w == 0) {\n          h_k /= dilation_h;\n          w_k /= dilation_w;\n          int_tp data_col_index = (((c_im * kernel_h + h_k) * kernel_w + w_k) *\n                                height_col + h_col) * width_col + w_col;\n          val += data_col[data_col_off + data_col_index];\n        }\n      }\n    }\n    data_im[data_im_off + index] = val;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(im2col_nd, Dtype)(const int_tp n, const int_tp num_axes,\n                                         const int_tp channel_axis,\n                                         __global const Dtype* data_im,\n                                         const int_tp data_im_off,\n                                         __global const int_tp* im_shape,\n                                         __global const int_tp* col_shape,\n                                         __global const int_tp* kernel_shape,\n                                         __global const int_tp* pad,\n                                         __global const int_tp* stride,\n                                         __global const int_tp* dilation,\n                                         __global Dtype* data_col,\n                                         const int_tp data_col_off) {\n  int_tp d_temp[6];\n  int_tp d_iter[6];\n  int_tp i;\n\n  __global const int_tp* im_shape_ptr = im_shape + channel_axis;\n  __global const int_tp* col_shape_ptr = col_shape + channel_axis;\n\n  __local int_tp shared_dilation[6];\n  __local int_tp shared_kernel_shape[6];\n  __local int_tp shared_pad[6];\n  __local int_tp shared_stride[6];\n  __local int_tp shared_col_shape[6 + 1];\n  __local int_tp shared_im_shape[6 + 1];\n\n  for (int li = get_local_id(0); li < num_axes; li += get_local_size(0)) {\n    shared_dilation[li] = dilation[li];\n    shared_kernel_shape[li] = kernel_shape[li];\n    shared_pad[li] = pad[li];\n    shared_stride[li] = stride[li];\n  }\n\n  for (int li = get_local_id(0); li < num_axes + 1; li += get_local_size(0)) {\n    shared_col_shape[li] = col_shape_ptr[li];\n    shared_im_shape[li] = im_shape_ptr[li];\n  }\n\n  barrier(CLK_LOCAL_MEM_FENCE);\n\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    // Initialize channel_in, computed in the loop below, with intermediate\n    // computations used to compute the spatial indices.\n    int_tp channel_in = index;\n    int_tp channel_out = 1;\n    for (i = num_axes - 1; i >= 0; --i) {\n      d_temp[i] = channel_in % shared_col_shape[i + 1];\n      channel_in /= shared_col_shape[i + 1];\n      channel_out *= shared_kernel_shape[i];\n    }\n    channel_out *= channel_in;\n    int_tp data_col_inc = 1;\n    for (i = 0; i < num_axes; ++i) {\n      channel_out *= shared_col_shape[i + 1];\n      channel_out += d_temp[i];\n      d_temp[i] = d_temp[i] * shared_stride[i] - shared_pad[i];\n      channel_in *= shared_im_shape[i + 1];\n      channel_in += d_temp[i];\n      data_col_inc *= shared_col_shape[i + 1];\n      d_iter[i] = 0;\n    }\n    __global Dtype* data_col_ptr = data_col + data_col_off + channel_out;\n    __global const Dtype* data_im_ptr = data_im + data_im_off + channel_in;\n    bool incremented;\n    do {\n      bool in_range = true;\n      for (i = 0; i < num_axes; ++i) {\n        const int_tp d_iter_im = d_iter[i] * shared_dilation[i] + d_temp[i];\n        in_range &= d_iter_im >= 0 && d_iter_im < shared_im_shape[i + 1];\n        if (!in_range) {\n          break;\n        }\n      }\n      if (in_range) {\n        int_tp data_im_offset = d_iter[0] * shared_dilation[0];\n        for (i = 1; i < num_axes; ++i) {\n          data_im_offset *= shared_im_shape[i + 1];\n          data_im_offset += d_iter[i] * shared_dilation[i];\n        }\n        *data_col_ptr = data_im_ptr[data_im_offset];\n      } else {\n        *data_col_ptr = 0;\n      }\n      data_col_ptr += data_col_inc;\n      incremented = false;\n      for (i = num_axes - 1; i >= 0; --i) {\n        const int_tp d_max = shared_kernel_shape[i];\n        if (d_iter[i] == d_max - 1) {\n          d_iter[i] = 0;\n        } else {  // d_iter[i] < d_max - 1\n          ++d_iter[i];\n          incremented = true;\n          break;\n        }\n      }  // for (int_tp i = num_axes - 1; i >= 0; --i)\n    } while (incremented);  // do\n  }\n}\n\n__kernel void TEMPLATE(col2im_nd, Dtype)(const int_tp n, const int_tp num_axes,\n                                         const int_tp channel_axis,\n                                         __global const Dtype* data_col,\n                                         const int_tp data_col_off,\n                                         __global const int_tp* im_shape,\n                                         __global const int_tp* col_shape,\n                                         __global const int_tp* kernel_shape,\n                                         __global const int_tp* pad,\n                                         __global const int_tp* stride,\n                                         __global const int_tp* dilation,\n                                         __global Dtype* data_im,\n                                         const int_tp data_im_off) {\n  int_tp d_im[6];\n  int_tp d_col_iter[6];\n  int_tp d_col_start[6];\n  int_tp d_col_end[6];\n\n  __global const int_tp* im_shape_ptr = im_shape + channel_axis;\n  __global const int_tp* col_shape_ptr = col_shape + channel_axis;\n\n  __local int_tp shared_dilation[6];\n  __local int_tp shared_kernel_shape[6];\n  __local int_tp shared_pad[6];\n  __local int_tp shared_stride[6];\n  __local int_tp shared_col_shape[6 + 1];\n  __local int_tp shared_im_shape[6 + 1];\n\n  for (int li = get_local_id(0); li < num_axes; li += get_local_size(0)) {\n    shared_dilation[li] = dilation[li];\n    shared_kernel_shape[li] = kernel_shape[li];\n    shared_pad[li] = pad[li];\n    shared_stride[li] = stride[li];\n  }\n  for (int li = get_local_id(0); li < num_axes + 1; li += get_local_size(0)) {\n    shared_col_shape[li] = col_shape_ptr[li];\n    shared_im_shape[li] = im_shape_ptr[li];\n  }\n\n  barrier(CLK_LOCAL_MEM_FENCE);\n\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    // Initialize channel_in, computed in the loop below, with intermediate\n    // computations used to compute the spatial indices.\n    int_tp c_im = index;\n    // Calculate d_im (image dimensions).\n    for (int_tp i = num_axes - 1; i >= 0; --i) {\n      d_im[i] = c_im % shared_im_shape[i + 1] + shared_pad[i];\n      c_im /= shared_im_shape[i + 1];\n    }\n    // Calculate col start/end indices.\n    bool done = false;\n    for (int_tp i = 0; i < num_axes; ++i) {\n      const int_tp kernel_extent = shared_dilation[i]\n          * (shared_kernel_shape[i] - 1) + 1;\n      d_col_start[i] = d_col_iter[i] =\n          (d_im[i] < kernel_extent) ?\n              0 : (d_im[i] - kernel_extent) / shared_stride[i] + 1;\n      d_col_end[i] = min(d_im[i] / shared_stride[i] + 1,\n                         shared_col_shape[i + 1]);\n      if (d_col_start[i] >= d_col_end[i]) {\n        // Skip computation if the dimension is 0 at any spatial axis --\n        // final val will be 0.\n        data_im[index] = 0;\n        done = true;\n        break;  // for (int_tp i = 0; i < num_axes; ++i)\n      }\n    }\n    if (!done) {\n      // Loop over the col to compute the output val.\n      Dtype val = 0;\n      bool incremented = true;\n      bool skip = false;\n      do {\n        // Compute the final offset.\n        int_tp final_offset = 0;\n        int_tp kernel_shape_prod = 1;\n        int_tp kernel_index;\n        for (int_tp i = num_axes - 1; i >= 0; --i) {\n          kernel_index = d_im[i] - d_col_iter[i] * shared_stride[i];\n          if (kernel_index % shared_dilation[i]) {\n            skip = true;\n            break;\n          } else {\n            kernel_index /= shared_dilation[i];\n            final_offset += kernel_index * kernel_shape_prod;\n            kernel_shape_prod *= shared_kernel_shape[i];\n          }\n        }\n        if (!skip) {\n          final_offset += kernel_shape_prod * c_im;\n          for (int_tp i = 0; i < num_axes; ++i) {\n            final_offset *= shared_col_shape[i + 1];\n            final_offset += d_col_iter[i];\n          }\n          val += data_col[data_col_off + final_offset];\n        }\n        skip = false;\n        incremented = false;\n        for (int_tp i = num_axes - 1; i >= 0; --i) {\n          const int_tp d_max = d_col_end[i];\n          if (d_col_iter[i] == d_max - 1) {\n            d_col_iter[i] = d_col_start[i];\n          } else {  // d_col_iter[i] < d_max - 1\n            ++d_col_iter[i];\n            incremented = true;\n            break;  // for (int_tp i = num_axes - 1; i >= 0; --i)\n          }\n        }  // for (int_tp i = num_axes - 1; i >= 0; --i)\n      } while (incremented);\n      data_im[data_im_off + index] = val;\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(lrn_compute_output,Dtype)(const int_tp nthreads,\n                                                 __global const Dtype* in,\n                                                 __global const Dtype* scale,\n                                                 const Dtype negative_beta,\n                                                 __global Dtype* out) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    out[index] = in[index] * pow(scale[index], negative_beta);\n  }\n}\n\n__kernel void TEMPLATE(lrn_fill_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,\n                             const int_tp num, const int_tp channels,\n                             const int_tp height, const int_tp width, const int_tp size,\n                             const Dtype alpha_over_size, const Dtype k,\n                             __global Dtype* const scale) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    // find out the local offset\n    const int_tp w = index % width;\n    const int_tp h = (index / width) % height;\n    const int_tp n = index / width / height;\n    const int_tp offset = (n * channels * height + h) * width + w;\n    const int_tp step = height * width;\n    __global const Dtype* in_off = in + offset;\n    __global Dtype* scale_off = scale + offset;\n    int_tp head = 0;\n    const int_tp pre_pad = (size - 1) / 2;\n    const int_tp post_pad = size - pre_pad - 1;\n    Dtype accum_scale = 0;\n    // fill the scale at [n, :, h, w]\n    // accumulate values\n    while (head < post_pad && head < channels) {\n      accum_scale += in_off[head * step] * in_off[head * step];\n      ++head;\n    }\n    // both add and subtract\n    while (head < channels) {\n      accum_scale += in_off[head * step] * in_off[head * step];\n      if (head - size >= 0) {\n        accum_scale -= in_off[(head - size) * step]\n            * in_off[(head - size) * step];\n      }\n      scale_off[(head - post_pad) * step] = k + accum_scale * alpha_over_size;\n      ++head;\n    }\n    // subtract only\n    while (head < channels + post_pad) {\n      if (head - size >= 0) {\n        accum_scale -= in_off[(head - size) * step]\n            * in_off[(head - size) * step];\n      }\n      scale_off[(head - post_pad) * step] = k + accum_scale * alpha_over_size;\n      ++head;\n    }\n  }\n}\n\n__kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,\n                               __global const Dtype* bottom_data,\n                               __global const Dtype* top_data,\n                               __global const Dtype* scale,\n                               __global const Dtype* top_diff, const int_tp num,\n                               const int_tp channels, const int_tp height,\n                               const int_tp width, const int_tp size,\n                               const Dtype negative_beta,\n                               const Dtype cache_ratio,\n                               __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    // find out the local offset\n    const int_tp w = index % width;\n    const int_tp h = (index / width) % height;\n    const int_tp n = index / width / height;\n    const int_tp offset = (n * channels * height + h) * width + w;\n    const int_tp step = height * width;\n    __global const Dtype* bottom_off = bottom_data + offset;\n    __global const Dtype* top_off = top_data + offset;\n    __global const Dtype* scale_off = scale + offset;\n    __global const Dtype* top_diff_off = top_diff + offset;\n    __global Dtype* bottom_diff_off = bottom_diff + offset;\n    int_tp head = 0;\n    const int_tp pre_pad = size - (size + 1) / 2;\n    const int_tp post_pad = size - pre_pad - 1;\n    Dtype accum_ratio = 0;\n    // accumulate values\n    while (head < post_pad && head < channels) {\n      accum_ratio += top_diff_off[head * step] * top_off[head * step]\n          / scale_off[head * step];\n      ++head;\n    }\n    // both add and subtract\n    while (head < channels) {\n      accum_ratio += top_diff_off[head * step] * top_off[head * step]\n          / scale_off[head * step];\n      if (head - size >= 0) {\n        accum_ratio -= top_diff_off[(head - size) * step]\n            * top_off[(head - size) * step] / scale_off[(head - size) * step];\n      }\n      bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)\n          * step] * pow(scale_off[(head - post_pad) * step], negative_beta)\n          - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;\n      ++head;\n    }\n    // subtract only\n    while (head < channels + post_pad) {\n      if (head - size >= 0) {\n        accum_ratio -= top_diff_off[(head - size) * step]\n            * top_off[(head - size) * step] / scale_off[(head - size) * step];\n      }\n      bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)\n          * step] * pow(scale_off[(head - post_pad) * step], negative_beta)\n          - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;\n      ++head;\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\ninline Dtype TEMPLATE(lstm_sigmoid,Dtype)(const Dtype x) {\n  return (Dtype)1 / ((Dtype)1 + exp(-x));\n}\n\ninline Dtype TEMPLATE(lstm_tanh,Dtype)(const Dtype x) {\n  return (Dtype)2 * TEMPLATE(lstm_sigmoid,Dtype)((Dtype)2 * x) - (Dtype)1;\n}\n\n__kernel void TEMPLATE(lstm_acts_forward,Dtype)(const int_tp nthreads, const int_tp dim,\n                                __global const Dtype* X, __global Dtype* X_acts) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp x_dim = 4 * dim;\n    const int_tp d = index % x_dim;\n    if (d < 3 * dim) {\n      X_acts[index] = TEMPLATE(lstm_sigmoid,Dtype)(X[index]);\n    } else {\n      X_acts[index] = TEMPLATE(lstm_tanh,Dtype)(X[index]);\n    }\n  }\n}\n\n__kernel void TEMPLATE(lstm_unit_forward,Dtype)(const int_tp nthreads, const int_tp dim,\n    __global const Dtype* C_prev, __global const Dtype* X, __global const Dtype* cont,\n    __global Dtype* C, __global Dtype* H) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp n = index / dim;\n    const int_tp d = index % dim;\n    __global const Dtype* X_offset = X + 4 * dim * n;\n    const Dtype i = X_offset[d];\n    const Dtype f = X_offset[1 * dim + d];\n    const Dtype o = X_offset[2 * dim + d];\n    const Dtype g = X_offset[3 * dim + d];\n    const Dtype c_prev = C_prev[index];\n    const Dtype c = cont[n] * f * c_prev + i * g;\n    C[index] = c;\n    const Dtype tanh_c = TEMPLATE(lstm_tanh,Dtype)(c);\n    H[index] = o * tanh_c;\n  }\n}\n\n__kernel void TEMPLATE(lstm_unit_backward,Dtype)(const int_tp nthreads, const int_tp dim,\n    __global const Dtype* C_prev, __global const Dtype* X, __global const Dtype* C, __global const Dtype* H,\n    __global const Dtype* cont, __global const Dtype* C_diff, __global const Dtype* H_diff,\n    __global Dtype* C_prev_diff, __global Dtype* X_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp n = index / dim;\n    const int_tp d = index % dim;\n    __global const Dtype* X_offset = X + 4 * dim * n;\n    const Dtype i = X_offset[d];\n    const Dtype f = X_offset[1 * dim + d];\n    const Dtype o = X_offset[2 * dim + d];\n    const Dtype g = X_offset[3 * dim + d];\n    const Dtype c_prev = C_prev[index];\n    const Dtype c = C[index];\n    const Dtype tanh_c = TEMPLATE(lstm_tanh,Dtype)(c);\n    __global Dtype* c_prev_diff = C_prev_diff + index;\n    __global Dtype* X_diff_offset = X_diff + 4 * dim * n;\n    __global Dtype* i_diff = X_diff_offset + d;\n    __global Dtype* f_diff = X_diff_offset + 1 * dim + d;\n    __global Dtype* o_diff = X_diff_offset + 2 * dim + d;\n    __global Dtype* g_diff = X_diff_offset + 3 * dim + d;\n    const Dtype c_term_diff =\n        C_diff[index] + H_diff[index] * o * (1 - tanh_c * tanh_c);\n    const Dtype cont_n = cont[n];\n    *c_prev_diff = cont_n * c_term_diff * f;\n    *i_diff = c_term_diff * g;\n    *f_diff = cont_n * c_term_diff * c_prev;\n    *o_diff = H_diff[index] * tanh_c;\n    *g_diff = c_term_diff * i;\n  }\n}\n\n__kernel void TEMPLATE(lstm_acts_backward,Dtype)(const int_tp nthreads, const int_tp dim,\n          __global const Dtype* X_acts, __global const Dtype* X_acts_diff, __global Dtype* X_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp x_dim = 4 * dim;\n    const int_tp d = index % x_dim;\n    const Dtype X_act = X_acts[index];\n    if (d < 3 * dim) {\n      X_diff[index] = X_acts_diff[index] * X_act * ((Dtype)1 - X_act);\n    } else {\n      X_diff[index] = X_acts_diff[index] * ((Dtype)1 - X_act * X_act);\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(mul,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa,\n                                  __global Dtype* b,\n                                  const int_tp offb, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[index + offy] = a[index + offa] * b[index + offb];\n  }\n}\n\n__kernel void TEMPLATE(div,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa,\n                                  __global Dtype* b,\n                                  const int_tp offb, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[index + offy] = a[index + offa] / b[index + offb];\n  }\n}\n\n__kernel void TEMPLATE(add_scalar,Dtype)(const int_tp N, const Dtype alpha,\n__global Dtype* Y,\n                                         const int_tp offY) {\n  for (int_tp index = get_global_id(0); index < N; index += get_global_size(0)) {\n    Y[offY + index] += alpha;\n  }\n}\n\n__kernel void TEMPLATE(add,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa, __global const Dtype* b,\n                                  const int_tp offb, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[offy + index] = a[offa + index] + b[offb + index];\n  }\n}\n\n__kernel void TEMPLATE(sub,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa, __global const Dtype* b,\n                                  const int_tp offb, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[offy + index] = a[offa + index] - b[offb + index];\n  }\n}\n\n__kernel void TEMPLATE(abs,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[offy + index] = fabs((Dtype)(a[offa + index]));\n  }\n}\n\n__kernel void TEMPLATE(exp,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[offy + index] = exp(a[offa + index]);\n  }\n}\n\n__kernel void TEMPLATE(log,Dtype)(const int_tp n, __global const Dtype* a,\n                                  const int_tp offa, __global Dtype* y,\n                                  const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[offy + index] = log((Dtype)(a[offa + index]));\n  }\n}\n\n__kernel void TEMPLATE(powx,Dtype)(const int_tp n, __global const Dtype* a,\n                                   const int_tp offa, Dtype alpha,\n                                   __global Dtype* y,\n                                   const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    if(alpha == 2.0) {\n      y[offy + index] = pow((Dtype)fabs(a[offa + index]), (Dtype)alpha);\n    } else {\n      y[offy + index] = pow((Dtype)a[offa + index], (Dtype)alpha);\n    }\n  }\n}\n\n__kernel void TEMPLATE(sign,Dtype)(const int_tp n, __global const Dtype* x,\n                                   const int_tp offx, __global Dtype* y,\n                                   const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[index + offy] = (0.0 < x[index + offx])\n        - (x[index + offx] < 0.0);\n  }\n}\n\n__kernel void TEMPLATE(sgnbit,Dtype)(const int_tp n, __global const Dtype* x,\n                                     const int_tp offx, __global Dtype* y,\n                                     const int_tp offy) {\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    y[index + offy] = signbit(x[index + offx]);\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(merge_copy_forward_stack, Dtype)(const int_tp nthreads,\n                                                  const int_tp dims,\n                                                  __global const Dtype* bottom_a,\n                                                  const int_tp forward_a,\n                                                  __global const Dtype* bottom_b,\n                                                  const int_tp forward_b,\n                                                  __global Dtype* top,\n                                                  const int_tp num,\n                                                  const int_tp channels_a,\n                                                  const int_tp channels_b,\n                                                  __global const int_tp* shape_a,\n                                                  __global const int_tp* shape_b) {\n  int_tp pad[6];\n  int_tp tmp_idx[6];\n  int_tp size_a = 1;\n  int_tp size_b = 1;\n\n  for (int_tp i = 0; i < dims; ++i) {\n    pad[i] = (shape_b[i] - shape_a[i]) / 2;\n    size_a *= shape_a[i];\n    size_b *= shape_b[i];\n  }\n\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    int_tp batch_id = index / ((channels_a + channels_b) * size_a);\n    int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)\n        / (channels_a * size_a)) % 2;\n    int_tp counter = index;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      tmp_idx[i] = counter % shape_a[i];\n      counter /= shape_a[i];\n    }\n\n    if (bottom_id == 0) {\n      int_tp channel_id = (index / size_a) % channels_a;\n      int_tp aidx = batch_id * channels_a + channel_id;\n      for (int_tp i = 0; i < dims; ++i) {\n        aidx *= shape_a[i];\n        aidx += tmp_idx[i];\n      }\n      top[index] = (forward_a == 1) ? bottom_a[aidx] : 0;\n    } else {\n      int_tp channel_id = (index / size_a) % channels_b;\n      int_tp bidx = (batch_id * channels_b + channel_id) * size_b;\n      int_tp btemp = 1;\n      for (int_tp i = dims - 1; i >= 0; --i) {\n        bidx += btemp * (tmp_idx[i] + pad[i]);\n        btemp *= shape_b[i];\n      }\n      top[index] = (forward_b == 1) ? bottom_b[bidx] : 0;\n    }\n  }\n}\n\n__kernel void TEMPLATE(merge_copy_backward_stack,Dtype)(const int_tp nthreads,\n                                                  const int_tp dims,\n                                                  __global Dtype* bottom_a,\n                                                  const int_tp backward_a,\n                                                  __global Dtype* bottom_b,\n                                                  const int_tp backward_b,\n                                                  __global const Dtype* top,\n                                                  const int_tp num,\n                                                  const int_tp channels_a,\n                                                  const int_tp channels_b,\n                                                  __global const int_tp* shape_a,\n                                                  __global const int_tp* shape_b) {\n  int_tp pad[6];\n  int_tp tmp_idx[6];\n  int_tp size_a = 1;\n  int_tp size_b = 1;\n\n  for (int_tp i = 0; i < dims; ++i) {\n    pad[i] = (shape_b[i] - shape_a[i]) / 2;\n    size_a *= shape_a[i];\n    size_b *= shape_b[i];\n  }\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp batch_id = index / ((channels_a + channels_b) * size_a);\n    int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)\n        / (channels_a * size_a)) % 2;\n    int_tp counter = index;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      tmp_idx[i] = counter % shape_a[i];\n      counter /= shape_a[i];\n    }\n\n    if (bottom_id == 0) {\n      int_tp channel_id = (index / size_a) % channels_a;\n      int_tp aidx = batch_id * channels_a + channel_id;\n      for (int_tp i = 0; i < dims; ++i) {\n        aidx *= shape_a[i];\n        aidx += tmp_idx[i];\n      }\n      bottom_a[aidx] = (backward_a == 1) ? top[index] : 0;\n    } else {\n      int_tp channel_id = (index / size_a) % channels_b;\n      int_tp bidx = (batch_id * channels_b + channel_id) * size_b;\n      int_tp btemp = 1;\n      for (int_tp i = dims - 1; i >= 0; --i) {\n        bidx += btemp * (tmp_idx[i] + pad[i]);\n        btemp *= shape_b[i];\n      }\n      bottom_b[bidx] = (backward_b == 1) ? top[index] : 0;\n    }\n  }\n}\n\n\n__kernel void TEMPLATE(merge_copy_forward_add, Dtype)(const int_tp nthreads,\n                                                  const int_tp dims,\n                                                  __global const Dtype* bottom_a,\n                                                  const int_tp forward_a,\n                                                  __global const Dtype* bottom_b,\n                                                  const int_tp forward_b,\n                                                  __global Dtype* top,\n                                                  const int_tp num,\n                                                  const int_tp channels,\n                                                  __global const int_tp* shape_a,\n                                                  __global const int_tp* shape_b) {\n  int_tp pad[6];\n  int_tp tmp_idx[6];\n  int_tp size_a = 1;\n  int_tp size_b = 1;\n\n  for (int_tp i = 0; i < dims; ++i) {\n    pad[i] = (shape_b[i] - shape_a[i]) / 2;\n    size_a *= shape_a[i];\n    size_b *= shape_b[i];\n  }\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp batch_id = index / (channels * size_a);\n    int_tp counter = index;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      tmp_idx[i] = counter % shape_a[i];\n      counter /= shape_a[i];\n    }\n\n    top[index] = 0;\n    int_tp channel_id = (index / size_a) % channels;\n    int_tp aidx = batch_id * channels + channel_id;\n    for (int_tp i = 0; i < dims; ++i) {\n      aidx *= shape_a[i];\n      aidx += tmp_idx[i];\n    }\n    top[index] = forward_a ? top[index] + bottom_a[aidx] : top[index];\n    int_tp bidx = (batch_id * channels + channel_id) * size_b;\n    int_tp btemp = 1;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      bidx += btemp * (tmp_idx[i] + pad[i]);\n      btemp *= shape_b[i];\n    }\n    top[index] = forward_b ? top[index] + bottom_b[bidx] : top[index];\n  }\n}\n\n__kernel void TEMPLATE(merge_copy_backward_add,Dtype)(const int_tp nthreads,\n                                                  const int_tp dims,\n                                                  __global Dtype* bottom_a,\n                                                  const int_tp backward_a,\n                                                  __global Dtype* bottom_b,\n                                                  const int_tp backward_b,\n                                                  __global const Dtype* top,\n                                                  const int_tp num,\n                                                  const int_tp channels,\n                                                  __global const int_tp* shape_a,\n                                                  __global const int_tp* shape_b) {\n  int_tp pad[6];\n  int_tp tmp_idx[6];\n  int_tp size_a = 1;\n  int_tp size_b = 1;\n\n  for (int_tp i = 0; i < dims; ++i) {\n    pad[i] = (shape_b[i] - shape_a[i]) / 2;\n    size_a *= shape_a[i];\n    size_b *= shape_b[i];\n  }\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp batch_id = index / (channels * size_a);\n    int_tp counter = index;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      tmp_idx[i] = counter % shape_a[i];\n      counter /= shape_a[i];\n    }\n\n    int_tp channel_id = (index / size_a) % channels;\n    int_tp aidx = batch_id * channels + channel_id;\n    for (int_tp i = 0; i < dims; ++i) {\n      aidx *= shape_a[i];\n      aidx += tmp_idx[i];\n    }\n    bottom_a[aidx] = backward_a ? top[index] : 0;\n    int_tp bidx = (batch_id * channels + channel_id) * size_b;\n    int_tp btemp = 1;\n    for (int_tp i = dims - 1; i >= 0; --i) {\n      bidx += btemp * (tmp_idx[i] + pad[i]);\n      btemp *= shape_b[i];\n    }\n    bottom_b[bidx] = backward_b ? top[index] : 0;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(max_pool_forward,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,\n    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,\n    const int_tp pad_w,\n    __global Dtype* top_data,\n    const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp pw = index % pooled_width;\n    const int_tp ph = (index / pooled_width) % pooled_height;\n    const int_tp c = (index / pooled_width / pooled_height) % channels;\n    const int_tp n = index / pooled_width / pooled_height / channels;\n    int_tp hstart = ph * stride_h - pad_h;\n    int_tp wstart = pw * stride_w - pad_w;\n    const int_tp hend = min(hstart + kernel_h, height);\n    const int_tp wend = min(wstart + kernel_w, width);\n    hstart = max(hstart, (int_tp)0);\n    wstart = max(wstart, (int_tp)0);\n    Dtype maxval = -FLT_MAX;\n    int_tp maxidx = -1;\n    __global const Dtype* bottom_slice = bottom_data\n        + (n * channels + c) * height * width;\n    for (int_tp h = hstart; h < hend; ++h) {\n      for (int_tp w = wstart; w < wend; ++w) {\n        if (bottom_slice[h * width + w] > maxval) {\n          maxidx = h * width + w;\n          maxval = bottom_slice[maxidx];\n        }\n      }\n    }\n    top_data[index] = maxval;\n    if (use_mask == 1) {\n      mask[index] = maxidx;\n    } else {\n      top_mask[index] = maxidx;\n    }\n  }\n}\n\n__kernel void TEMPLATE(ave_pool_forward,Dtype)(\n    const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,\n    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,\n    const int_tp pad_w, __global Dtype* top_data) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    {\n      const int_tp pw = index % pooled_width;\n      const int_tp ph = (index / pooled_width) % pooled_height;\n      const int_tp c = (index / pooled_width / pooled_height) % channels;\n      const int_tp n = index / pooled_width / pooled_height / channels;\n      int_tp hstart = ph * stride_h - pad_h;\n      int_tp wstart = pw * stride_w - pad_w;\n      int_tp hend = min(hstart + kernel_h, height + pad_h);\n      int_tp wend = min(wstart + kernel_w, width + pad_w);\n      const int_tp pool_size = (hend - hstart) * (wend - wstart);\n      hstart = max(hstart, (int_tp)0);\n      wstart = max(wstart, (int_tp)0);\n      hend = min(hend, height);\n      wend = min(wend, width);\n      Dtype aveval = 0;\n      __global const Dtype* bottom_slice = bottom_data\n          + (n * channels + c) * height * width;\n      for (int_tp h = hstart; h < hend; ++h) {\n        for (int_tp w = wstart; w < wend; ++w) {\n          aveval += bottom_slice[h * width + w];\n        }\n      }\n      top_data[index] = aveval / pool_size;\n    }\n  }\n}\n\n__kernel void TEMPLATE(sto_pool_forward_train,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,\n    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w,\n    __global Dtype* rand_idx,\n    __global Dtype* top_data) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp pw = index % pooled_width;\n    const int_tp ph = (index / pooled_width) % pooled_height;\n    const int_tp c = (index / pooled_width / pooled_height) % channels;\n    const int_tp n = index / pooled_width / pooled_height / channels;\n    const int_tp hstart = ph * stride_h;\n    const int_tp hend = min(hstart + kernel_h, height);\n    const int_tp wstart = pw * stride_w;\n    const int_tp wend = min(wstart + kernel_w, width);\n    Dtype cumsum = 0.;\n    __global const Dtype* bottom_slice = bottom_data\n        + (n * channels + c) * height * width;\n    // First pass: get sum\n    for (int_tp h = hstart; h < hend; ++h) {\n      for (int_tp w = wstart; w < wend; ++w) {\n        cumsum += bottom_slice[h * width + w];\n      }\n    }\n    const float thres = rand_idx[index] * cumsum;\n    // Second pass: get value, and set index.\n    cumsum = 0;\n    for (int_tp h = hstart; h < hend; ++h) {\n      for (int_tp w = wstart; w < wend; ++w) {\n        cumsum += bottom_slice[h * width + w];\n        if (cumsum >= thres) {\n          rand_idx[index] = ((n * channels + c) * height + h) * width + w;\n          top_data[index] = bottom_slice[h * width + w];\n          h = hend;\n          w = wend;\n        }\n      }\n    }\n  }\n}\n\n__kernel void TEMPLATE(sto_pool_forward_test,Dtype)(\n    const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,\n    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w,\n    __global Dtype* top_data) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp pw = index % pooled_width;\n    const int_tp ph = (index / pooled_width) % pooled_height;\n    const int_tp c = (index / pooled_width / pooled_height) % channels;\n    const int_tp n = index / pooled_width / pooled_height / channels;\n    const int_tp hstart = ph * stride_h;\n    const int_tp hend = min(hstart + kernel_h, height);\n    const int_tp wstart = pw * stride_w;\n    const int_tp wend = min(wstart + kernel_w, width);\n    // We set cumsum to be 0 to avoid divide-by-zero problems\n    Dtype cumsum = FLT_MIN;\n    Dtype cumvalues = 0.;\n    __global const Dtype* bottom_slice = bottom_data\n        + (n * channels + c) * height * width;\n    // First pass: get sum\n    for (int_tp h = hstart; h < hend; ++h) {\n      for (int_tp w = wstart; w < wend; ++w) {\n        cumsum += bottom_slice[h * width + w];\n        cumvalues += bottom_slice[h * width + w] * bottom_slice[h * width + w];\n      }\n    }\n    top_data[index] = cumvalues / cumsum;\n  }\n}\n\n__kernel void TEMPLATE(max_pool_backward,Dtype)(const int_tp nthreads,\n                                                __global const Dtype* top_diff,\n                                                const int use_mask,\n                                                __global const int_tp* mask,\n                                                __global const Dtype* top_mask,\n                                                const int_tp num,\n                                                const int_tp channels,\n                                                const int_tp height,\n                                                const int_tp width,\n                                                const int_tp pooled_height,\n                                                const int_tp pooled_width,\n                                                const int_tp kernel_h,\n                                                const int_tp kernel_w,\n                                                const int_tp stride_h,\n                                                const int_tp stride_w,\n                                                const int_tp pad_h,\n                                                const int_tp pad_w,\n                                                __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    // find out the local index\n    // find out the local offset\n    const int_tp w = index % width;\n    const int_tp h = (index / width) % height;\n    const int_tp c = (index / width / height) % channels;\n    const int_tp n = index / width / height / channels;\n    const int_tp phstart =\n        (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;\n    const int_tp phend = min((h + pad_h) / stride_h + 1, pooled_height);\n    const int_tp pwstart =\n        (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;\n    const int_tp pwend = min((w + pad_w) / stride_w + 1, pooled_width);\n    Dtype gradient = 0;\n    const int_tp offset = (n * channels + c) * pooled_height * pooled_width;\n    __global const Dtype* top_diff_slice = top_diff + offset;\n    if (use_mask == 1) {\n      __global const int_tp* mask_slice = mask + offset;\n      for (int_tp ph = phstart; ph < phend; ++ph) {\n        for (int_tp pw = pwstart; pw < pwend; ++pw) {\n          if (mask_slice[ph * pooled_width + pw] == h * width + w) {\n            gradient += top_diff_slice[ph * pooled_width + pw];\n          }\n        }\n      }\n    } else {\n      __global const Dtype* top_mask_slice = top_mask + offset;\n      for (int_tp ph = phstart; ph < phend; ++ph) {\n        for (int_tp pw = pwstart; pw < pwend; ++pw) {\n          if (top_mask_slice[ph * pooled_width + pw] == h * width + w) {\n            gradient += top_diff_slice[ph * pooled_width + pw];\n          }\n        }\n      }\n    }\n    bottom_diff[index] = gradient;\n  }\n}\n\n__kernel void TEMPLATE(ave_pool_backward,Dtype)(const int_tp nthreads,\n                                                __global const Dtype* top_diff,\n                                                const int_tp num,\n                                                const int_tp channels,\n                                                const int_tp height,\n                                                const int_tp width,\n                                                const int_tp pooled_height,\n                                                const int_tp pooled_width,\n                                                const int_tp kernel_h,\n                                                const int_tp kernel_w,\n                                                const int_tp stride_h,\n                                                const int_tp stride_w,\n                                                const int_tp pad_h,\n                                                const int_tp pad_w,\n                                                __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    // find out the local index\n    // find out the local offset\n    const int_tp w = index % width + pad_w;\n    const int_tp h = (index / width) % height + pad_h;\n    const int_tp c = (index / width / height) % channels;\n    const int_tp n = index / width / height / channels;\n    const int_tp phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;\n    const int_tp phend = min(h / stride_h + 1, pooled_height);\n    const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;\n    const int_tp pwend = min(w / stride_w + 1, pooled_width);\n    Dtype gradient = 0.0;\n    __global const Dtype* const top_diff_slice = top_diff\n        + (n * channels + c) * pooled_height * pooled_width;\n    for (int_tp ph = phstart; ph < phend; ++ph) {\n      for (int_tp pw = pwstart; pw < pwend; ++pw) {\n        // figure out the pooling size\n        int_tp hstart = ph * stride_h - pad_h;\n        int_tp wstart = pw * stride_w - pad_w;\n        int_tp hend = min(hstart + kernel_h, height + pad_h);\n        int_tp wend = min(wstart + kernel_w, width + pad_w);\n        int_tp pool_size = (hend - hstart) * (wend - wstart);\n        gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;\n      }\n    }\n    bottom_diff[index] = gradient;\n  }\n}\n\n__kernel void TEMPLATE(sto_pool_backward,Dtype)(\n    const int_tp nthreads, __global const Dtype* rand_idx,\n    __global const Dtype* const top_diff, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width,\n    const int_tp kernel_h, const int_tp kernel_w, const int_tp stride_h,\n    const int_tp stride_w, __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    // find out the local index\n    // find out the local offset\n    const int_tp w = index % width;\n    const int_tp h = (index / width) % height;\n    const int_tp c = (index / width / height) % channels;\n    const int_tp n = index / width / height / channels;\n    const int_tp phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;\n    const int_tp phend = min(h / stride_h + 1, pooled_height);\n    const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;\n    const int_tp pwend = min(w / stride_w + 1, pooled_width);\n    Dtype gradient = 0.0;\n    __global const Dtype* rand_idx_slice = rand_idx\n        + (n * channels + c) * pooled_height * pooled_width;\n    __global const Dtype* top_diff_slice = top_diff\n        + (n * channels + c) * pooled_height * pooled_width;\n    for (int_tp ph = phstart; ph < phend; ++ph) {\n      for (int_tp pw = pwstart; pw < pwend; ++pw) {\n        gradient += top_diff_slice[ph * pooled_width + pw]\n            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);\n      }\n    }\n    bottom_diff[index] = gradient;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,\n                                                   const int_tp num_axes,\n                                                   __global const Dtype* bottom_data,\n                                                   const int_tp channels,\n                                                   __global const int_tp* size,\n                                                   __global const int_tp* pooled_size,\n                                                   __global const int_tp* kernel_size,\n                                                   __global const int_tp* ext_kernel_size,\n                                                   __global const int_tp* stride,\n                                                   __global const int_tp* dilation,\n                                                   __global const int_tp* pad,\n                                                   __global Dtype* top_data,\n                                                   const int use_mask,\n                                                   __global int_tp* mask, __global Dtype* top_mask) {\n  int_tp d_idx[6];\n  int_tp d_start[6];\n  int_tp d_end[6];\n  int_tp d_iter[6];\n  int_tp i;\n\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    int_tp offset = 1;\n    int_tp num = index;\n\n    bool do_continue = false;\n\n    for (i = num_axes - 1; i >= 0; --i) {\n      d_idx[i] = num % pooled_size[i];\n      d_start[i] = d_idx[i] * stride[i] - pad[i];\n      d_end[i] = min(d_start[i] + ext_kernel_size[i], size[i]);\n      while (d_start[i] < 0) {\n        d_start[i] += dilation[i];\n      }\n\n      num /= pooled_size[i];\n      offset *= size[i];\n      d_iter[i] = d_start[i];\n\n      if (d_start[i] >= d_end[i]) {\n        top_data[index] = -FLT_MAX;\n        if (use_mask) {\n          mask[index] = -1;\n        } else {\n          top_mask[index] = -1;\n        }\n        do_continue = true;\n      }\n    }\n\n    if(do_continue) {\n      continue;\n    }\n\n    int_tp chan = num % channels;\n    num /= channels;\n    offset *= (num * channels + chan);\n\n    Dtype maxval = -FLT_MAX;\n    int_tp maxidx = -1;\n    int_tp final_offset = 0;\n\n    bool incremented;\n    do {\n      final_offset = 0;\n      int_tp size_prod = 1;\n      for (i = num_axes - 1; i >= 0; --i) {\n        final_offset += d_iter[i] * size_prod;\n        size_prod *= size[i];\n      }\n\n      if (bottom_data[offset + final_offset] > maxval) {\n        maxidx = final_offset;\n        maxval = bottom_data[offset + final_offset];\n      }\n\n      incremented = false;\n      for (i = num_axes - 1; i >= 0; --i) {\n        if (d_iter[i] >= d_end[i] - dilation[i]) {\n          d_iter[i] = d_start[i];\n        } else {\n          d_iter[i] += dilation[i];\n          incremented = true;\n          break;\n        }\n      }\n    } while (incremented);\n\n    top_data[index] = maxval;\n    if (use_mask == 1) {\n      mask[index] = maxidx;\n    } else {\n      top_mask[index] = maxidx;\n    }\n  }\n}\n\n\n__kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,\n                                                    const int_tp num_axes,\n                                                    __global const Dtype* top_diff,\n                                                    const int use_mask,\n                                                    __global const int_tp* mask,\n                                                    __global const Dtype* top_mask,\n                                                    const int_tp channels,\n                                                    __global const int_tp* size,\n                                                    __global const int_tp* pooled_size,\n                                                    __global const int_tp* kernel_size,\n                                                    __global const int_tp* ext_kernel_size,\n                                                    __global const int_tp* stride,\n                                                    __global const int_tp* dilation,\n                                                    __global const int_tp* pad,\n                                                    __global Dtype* bottom_diff) {\n  int_tp d_idx[6];\n  int_tp d_start[6];\n  int_tp d_end[6];\n  int_tp d_iter[6];\n  int_tp i;\n\n  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {\n    // find out the local index\n    // find out the local offset\n    int_tp offset = 1;\n    int_tp num = index;\n    for (i = num_axes - 1; i >= 0; --i) {\n      d_idx[i] = num % size[i];\n      d_start[i] =\n          (d_idx[i] + pad[i] < ext_kernel_size[i]) ?\n              0 : (d_idx[i] + pad[i] - ext_kernel_size[i]) / stride[i] + 1;\n      d_end[i] = min((int_tp) ((d_idx[i] + pad[i]) / stride[i]),\n                     (int_tp) (pooled_size[i] - 1));\n      num /= size[i];\n      offset *= pooled_size[i];\n      d_iter[i] = d_start[i];\n\n      if (d_start[i] > d_end[i]) {\n        bottom_diff[index] = 0;\n        return;\n      }\n    }\n    int_tp chan = num % channels;\n    num /= channels;\n    offset *= (num * channels + chan);\n\n    Dtype gradient = 0.0;\n    int_tp final_offset = 0;\n    int_tp im_offset = 0;\n\n    bool incremented;\n    do {\n      final_offset = offset;\n      im_offset = 0;\n      int_tp size_prod = 1;\n      int_tp pooled_size_prod = 1;\n      for (i = num_axes - 1; i >= 0; --i) {\n        final_offset += d_iter[i] * pooled_size_prod;\n        im_offset += d_idx[i] * size_prod;\n        size_prod *= size[i];\n        pooled_size_prod *= pooled_size[i];\n      }\n\n      if (use_mask) {\n        if (mask[final_offset] == im_offset) {\n          gradient += top_diff[final_offset];\n        }\n      } else {\n        if (top_mask[final_offset] == im_offset) {\n          gradient += top_diff[final_offset];\n        }\n      }\n\n      incremented = false;\n      for (i = num_axes - 1; i >= 0; --i) {\n        if (d_iter[i] >= d_end[i]) {\n          d_iter[i] = d_start[i];\n        } else {\n          ++d_iter[i];\n          incremented = true;\n          break;\n        }\n      }\n    } while (incremented);\n    bottom_diff[index] = gradient;\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(max_pool_forward_sk,Dtype)(const int_tp nthreads,\n__global Dtype* bottom_data,\n                                                  const int_tp num,\n                                                  const int_tp channels,\n                                                  const int_tp height,\n                                                  const int_tp width,\n                                                  const int_tp pooled_height,\n                                                  const int_tp pooled_width,\n                                                  const int_tp kernel_h,\n                                                  const int_tp kernel_w,\n                                                  const int_tp ext_kernel_h,\n                                                  const int_tp ext_kernel_w,\n                                                  const int_tp stride_h,\n                                                  const int_tp stride_w,\n                                                  const int_tp dilation_h,\n                                                  const int_tp dilation_w,\n                                                  const int_tp pad_h,\n                                                  const int_tp pad_w,\n                                                  __global Dtype* top_data,\n                                                  const int use_mask,\n                                                  __global int_tp* mask,\n                                                  __global Dtype* top_mask) {\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp pw = index % pooled_width;\n    int_tp ph = (index / pooled_width) % pooled_height;\n    int_tp c = (index / pooled_width / pooled_height) % channels;\n    int_tp n = index / pooled_width / pooled_height / channels;\n    int_tp hstart = ph * stride_h - pad_h;\n    int_tp wstart = pw * stride_w - pad_w;\n    int_tp hend = min(hstart + ext_kernel_h, height);\n    int_tp wend = min(wstart + ext_kernel_w, width);\n    while (hstart < 0) {\n      hstart += dilation_h;\n    }\n    while (wstart < 0) {\n      wstart += dilation_w;\n    }\n    Dtype maxval = -FLT_MAX;\n    int_tp maxidx = -1;\n    __global Dtype* bottom_data_ptr = bottom_data\n        + (n * channels + c) * height * width;\n    for (int_tp h = hstart; h < hend; h += dilation_h) {\n      for (int_tp w = wstart; w < wend; w += dilation_w) {\n        if (bottom_data_ptr[h * width + w] > maxval) {\n          maxidx = h * width + w;\n          maxval = bottom_data_ptr[maxidx];\n        }\n      }\n    }\n    top_data[index] = maxval;\n    if (use_mask == 1) {\n      mask[index] = maxidx;\n    } else {\n      top_mask[index] = maxidx;\n    }\n  }\n}\n\n__kernel void TEMPLATE(max_pool_backward_sk,Dtype)(\n    const int_tp nthreads, __global const Dtype* top_diff, const int use_mask,\n    __global const int_tp* mask, __global const Dtype* top_mask,\n    const int_tp num, const int_tp channels, const int_tp height,\n    const int_tp width, const int_tp pooled_height, const int_tp pooled_width,\n    const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,\n    const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,\n    const int_tp dilation_h, const int_tp dilation_w, const int_tp pad_h,\n    const int_tp pad_w,\n    __global Dtype* bottom_diff) {\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n\n    __global const int_tp* mask_ptr = mask;\n    __global const Dtype* top_diff_ptr = top_diff;\n\n// find out the local index\n// find out the local offset\n    int_tp w = index % width;\n    int_tp h = (index / width) % height;\n    int_tp c = (index / width / height) % channels;\n    int_tp n = index / width / height / channels;\n\n    int_tp phstart =\n        (h + pad_h < ext_kernel_h) ? 0 : (h + pad_h - ext_kernel_h) / stride_h + 1;\n    int_tp phend = min(((h + pad_h) / stride_h + 1),\n                       pooled_height);\n    int_tp pwstart =\n        (w + pad_w < ext_kernel_w) ? 0 : (w + pad_w - ext_kernel_w) / stride_w + 1;\n    int_tp pwend = min(((w + pad_w) / stride_w + 1),\n                       pooled_width);\n\n    Dtype gradient = 0.0;\n    int_tp offset = (n * channels + c) * pooled_height * pooled_width;\n    top_diff_ptr += offset;\n    if (use_mask == 1) {\n      mask_ptr += offset;\n      for (int_tp ph = phstart; ph < phend; ++ph) {\n        for (int_tp pw = pwstart; pw < pwend; ++pw) {\n          if (mask_ptr[ph * pooled_width + pw] == h * width + w) {\n            gradient += top_diff_ptr[ph * pooled_width + pw];\n          }\n        }\n      }\n    } else {\n      for (int_tp ph = phstart; ph < phend; ++ph) {\n        for (int_tp pw = pwstart; pw < pwend; ++pw) {\n          if (top_mask[ph * pooled_width + pw] == h * width + w) {\n            gradient += top_diff_ptr[ph * pooled_width + pw];\n          }\n        }\n      }\n    }\n    bottom_diff[index] = gradient;\n  }\n}\n\n__kernel void TEMPLATE(ave_pool_forward_sk,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width,\n    const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,\n    const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,\n    const int_tp dilation_h, const int_tp dilation_w, const int_tp pad_h,\n    const int_tp pad_w,\n    __global Dtype* top_data) {\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n\n    int_tp pool_size = 0;\n    int_tp pw = index % pooled_width;\n    int_tp ph = (index / pooled_width) % pooled_height;\n    int_tp c = (index / pooled_width / pooled_height) % channels;\n    int_tp n = index / pooled_width / pooled_height / channels;\n    int_tp hstart = ph * stride_h - pad_h;\n    int_tp wstart = pw * stride_w - pad_w;\n    int_tp hend = hstart + ext_kernel_h;\n    int_tp wend = wstart + ext_kernel_w;\n    // Overspill over the image + pad does\n    // not contribute to pool size\n    while (hend > height + pad_h) {\n      hend -= dilation_h;\n    }\n    while (wend > width + pad_w) {\n      wend -= dilation_w;\n    }\n    Dtype aveval = 0;\n    __global const Dtype* bottom_data_ptr = bottom_data;\n    bottom_data_ptr += (n * channels + c) * height * width;\n    for (int_tp h = hstart; h < hend; h += dilation_h) {\n      for (int_tp w = wstart; w < wend; w += dilation_w) {\n        if (h >= 0 && h < height && w >= 0 && w < width) {\n          aveval += bottom_data_ptr[h * width + w];\n        }\n        ++pool_size;\n      }\n    }\n    top_data[index] = aveval / pool_size;\n  }\n}\n\n__kernel void TEMPLATE(ave_pool_backward_sk,Dtype)(const int_tp nthreads,\n                                                __global const Dtype* top_diff,\n                                                const int_tp num,\n                                                const int_tp channels,\n                                                const int_tp height,\n                                                const int_tp width,\n                                                const int_tp pooled_height,\n                                                const int_tp pooled_width,\n                                                const int_tp kernel_h,\n                                                const int_tp kernel_w,\n                                                const int_tp ext_kernel_h,\n                                                const int_tp ext_kernel_w,\n                                                const int_tp stride_h,\n                                                const int_tp stride_w,\n                                                const int_tp dilation_h,\n                                                const int_tp dilation_w,\n                                                const int_tp pad_h,\n                                                const int_tp pad_w,\n                                                __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    // find out the local index\n    // find out the local offset\n    const int_tp w = index % width;\n    const int_tp h = (index / width) % height;\n    const int_tp c = (index / width / height) % channels;\n    const int_tp n = index / width / height / channels;\n    int_tp phstart =\n        (h + pad_h < ext_kernel_h) ? 0 : (h + pad_h - ext_kernel_h) / stride_h + 1;\n    int_tp phend = min(((h + pad_h) / stride_h + 1),\n                       pooled_height);\n    int_tp pwstart =\n        (w + pad_w < ext_kernel_w) ? 0 : (w + pad_w - ext_kernel_w) / stride_w + 1;\n    int_tp pwend = min(((w + pad_w) / stride_w + 1),\n                       pooled_width);\n    Dtype gradient = 0.0;\n    __global const Dtype* const top_diff_slice = top_diff\n        + (n * channels + c) * pooled_height * pooled_width;\n    for (int_tp ph = phstart; ph < phend; ++ph) {\n      for (int_tp pw = pwstart; pw < pwend; ++pw) {\n        // figure out the pooling size\n        int_tp hstart = ph * stride_h - pad_h;\n        int_tp wstart = pw * stride_w - pad_w;\n        int_tp hend = min(hstart + ext_kernel_h, height + pad_h);\n        int_tp wend = min(wstart + ext_kernel_w, width + pad_w);\n        int_tp pool_size =\n            ((hend - hstart - 1) / dilation_h + 1) *\n            ((wend - wstart - 1) / dilation_w + 1);\n        if (h >= hstart && h < hend &&\n            (h - hstart) % dilation_h == 0 &&\n            w >= wstart && w < wend &&\n            (w - wstart) % dilation_w == 0) {\n          gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;\n        }\n      }\n    }\n    bottom_diff[index] = gradient;\n  }\n}\n\n__kernel void TEMPLATE(sto_pool_forward_train_sk,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width,\n    const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,\n    const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,\n    const int_tp dilation_h, const int_tp dilation_w, __global Dtype* rand_idx,\n    __global Dtype* top_data) {\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp pw = index % pooled_width;\n    int_tp ph = (index / pooled_width) % pooled_height;\n    int_tp c = (index / pooled_width / pooled_height) % channels;\n    int_tp n = index / pooled_width / pooled_height / channels;\n    int_tp hstart = ph * stride_h;\n    int_tp hend = min(hstart + ext_kernel_h, height);\n    int_tp wstart = pw * stride_w;\n    int_tp wend = min(wstart + ext_kernel_w, width);\n    Dtype cumsum = 0.;\n    __global const Dtype* bottom_data_ptr = bottom_data;\n    bottom_data_ptr += (n * channels + c) * height * width;\n    // First pass: get sum\n    for (int_tp h = hstart; h < hend; h += dilation_h) {\n      for (int_tp w = wstart; w < wend; w += dilation_w) {\n        cumsum += bottom_data_ptr[h * width + w];\n      }\n    }\n    float thres = rand_idx[index] * cumsum;\n    // Second pass: get value, and set index.\n    cumsum = 0;\n    for (int_tp h = hstart; h < hend; h += dilation_h) {\n      for (int_tp w = wstart; w < wend; w += dilation_w) {\n        cumsum += bottom_data_ptr[h * width + w];\n        if (cumsum >= thres) {\n          rand_idx[index] = ((n * channels + c) * height + h) * width + w;\n          top_data[index] = bottom_data_ptr[h * width + w];\n          h = hend;\n          w = wend;\n        }\n      }\n    }\n  }\n}\n\n__kernel void TEMPLATE(sto_pool_forward_test_sk,Dtype)(\n    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,\n    const int_tp channels, const int_tp height, const int_tp width,\n    const int_tp pooled_height, const int_tp pooled_width,\n    const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,\n    const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,\n    const int_tp dilation_h, const int_tp dilation_w,\n    __global Dtype* top_data) {\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n    int_tp pw = index % pooled_width;\n    int_tp ph = (index / pooled_width) % pooled_height;\n    int_tp c = (index / pooled_width / pooled_height) % channels;\n    int_tp n = index / pooled_width / pooled_height / channels;\n    int_tp hstart = ph * stride_h;\n    int_tp hend = min(hstart + ext_kernel_h, height);\n    int_tp wstart = pw * stride_w;\n    int_tp wend = min(wstart + ext_kernel_w, width);\n    // We set cumsum to be 0 to avoid divide-by-zero problems\n    Dtype cumsum = FLT_MIN;\n    Dtype cumvalues = 0.;\n    __global const Dtype* bottom_data_ptr = bottom_data;\n    bottom_data_ptr += (n * channels + c) * height * width;\n    // First pass: get sum\n    for (int_tp h = hstart; h < hend; h += dilation_h) {\n      for (int_tp w = wstart; w < wend; w += dilation_w) {\n        cumsum += bottom_data_ptr[h * width + w];\n        cumvalues += bottom_data_ptr[h * width + w]\n            * bottom_data_ptr[h * width + w];\n      }\n    }\n    top_data[index] = cumvalues / cumsum;\n  }\n\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(slice,Dtype)(const int_tp nthreads,\n                                    __global const Dtype* in_data,\n                                    const int forward, const int_tp num_slices,\n                                    const int_tp slice_size,\n                                    const int_tp bottom_slice_axis,\n                                    const int_tp top_slice_axis,\n                                    const int_tp offset_slice_axis,\n                                    __global Dtype* out_data) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp total_slice_size = slice_size * top_slice_axis;\n    const int_tp slice_num = index / total_slice_size;\n    const int_tp slice_index = index % total_slice_size;\n    const int_tp bottom_index = slice_index\n        + (slice_num * bottom_slice_axis + offset_slice_axis) * slice_size;\n    if (forward == 1) {\n      out_data[index] = in_data[bottom_index];\n    } else {\n      out_data[bottom_index] = in_data[index];\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(softmax_loss_forward,Dtype)(\n    int_tp n, __global const Dtype* prob_data, __global const Dtype* label,\n    __global Dtype* loss,\n    const int_tp num, const int_tp dim, const int_tp spatial_dim,\n    const int has_ignore_label_, const int_tp ignore_label_,\n    __global Dtype* counts) {\n\n  for (int_tp index = get_global_id(0); index < n;\n      index += get_global_size(0)) {\n    const int_tp n = index / spatial_dim;\n    const int_tp s = index % spatial_dim;\n    const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);\n    if (has_ignore_label_ == 1 && label_value == ignore_label_) {\n      loss[index] = 0;\n      counts[index] = 0;\n    } else {\n      loss[index] = -log((Dtype)(\n          max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),\n              (Dtype) FLT_MIN)));\n      counts[index] = 1;\n    }\n  }\n}\n\n__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,\n                                                    __global const Dtype* top,\n                                                    __global const Dtype* label,\n                                                    __global Dtype* bottom_diff,\n                                                    const int_tp num,\n                                                    const int_tp dim,\n                                                    const int_tp spatial_dim,\n                                                    const int has_ignore_label_,\n                                                    const int_tp ignore_label_,\n                                                    __global Dtype* counts) {\n\n  const int_tp channels = dim / spatial_dim;\n\n  for (int_tp index = get_global_id(0); index < nthreads; index +=\n      get_global_size(0)) {\n\n    const int_tp n = index / spatial_dim;\n    const int_tp s = index % spatial_dim;\n    const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);\n\n    if (has_ignore_label_ == 1 && label_value == ignore_label_) {\n      for (int_tp c = 0; c < channels; ++c) {\n        bottom_diff[n * dim + c * spatial_dim + s] = 0;\n      }\n      counts[index] = 0;\n    } else {\n      bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;\n      counts[index] = 1;\n    }\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n__kernel void TEMPLATE(ada_delta_update,Dtype)(int_tp N, __global Dtype* g,\n                                               __global Dtype* h,\n                                               __global Dtype* h2,\n                                               Dtype momentum,\n                                               Dtype delta,\n                                               Dtype local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    Dtype gi = g[i];\n    Dtype hi = h[i] = momentum * h[i] + (1.0 - momentum) * gi * gi;\n    gi = gi * sqrt((h2[i] + delta) / (hi + delta));\n    h2[i] = momentum * h2[i] + (1.0 - momentum) * gi * gi;\n    g[i] = local_rate * gi;\n  }\n}\n\n__kernel void TEMPLATE(ada_grad_update,Dtype)(int_tp N, __global Dtype* g,\n                                              __global Dtype* h,\n                                              Dtype delta,\n                                              Dtype local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    Dtype gi = g[i];\n    Dtype hi = h[i] = h[i] + gi * gi;\n    g[i] = local_rate * gi / (sqrt(hi) + delta);\n  }\n}\n\n__kernel void TEMPLATE(adam_update,Dtype)(int_tp N, __global Dtype* g,\n                                          __global Dtype* m,\n                                          __global Dtype* v,\n                                          Dtype beta1,\n                                          Dtype beta2,\n                                          Dtype eps_hat,\n                                          Dtype corrected_local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    Dtype gi = g[i];\n    Dtype mi = m[i] = m[i] * beta1 + gi * (1 - beta1);\n    Dtype vi = v[i] = v[i] * beta2 + gi * gi * (1 - beta2);\n    g[i] = corrected_local_rate * mi / (sqrt(vi) + eps_hat);\n  }\n}\n\n\n__kernel void TEMPLATE(nesterov_update,Dtype)(int_tp N, __global Dtype* g,\n                                              __global Dtype* h,\n                                              Dtype momentum,\n                                              Dtype local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    Dtype hi = h[i];\n    Dtype hi_new = h[i] = momentum * hi + local_rate * g[i];\n    g[i] = (1 + momentum) * hi_new - momentum * hi;\n  }\n}\n\n__kernel void TEMPLATE(rms_prop_update,Dtype)(int_tp N, __global Dtype* g,\n                                              __global Dtype* h,\n                                              Dtype rms_decay,\n                                              Dtype delta,\n                                              Dtype local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    Dtype gi = g[i];\n    Dtype hi = h[i] = rms_decay * h[i] + (1 - rms_decay) * gi * gi;\n    g[i] = local_rate * g[i] / (sqrt(hi) + delta);\n  }\n}\n\n__kernel void TEMPLATE(sgd_update,Dtype)(int_tp N, __global Dtype* g,\n                                         __global Dtype* h,\n                                         Dtype momentum,\n                                         Dtype local_rate) {\n  for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {\n    g[i] = h[i] = momentum * h[i] + local_rate * g[i];\n  }\n}",""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__\n#include \"header.cl\"\n#endif\n\n\n__kernel void TEMPLATE(tile,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,\n                                   const int_tp tile_size, const int_tp num_tiles,\n                                   const int_tp bottom_tile_axis,\n                                   __global Dtype* top_data) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp d = index % tile_size;\n    const int_tp b = (index / tile_size / num_tiles) % bottom_tile_axis;\n    const int_tp n = index / tile_size / num_tiles / bottom_tile_axis;\n    const int_tp bottom_index = (n * bottom_tile_axis + b) * tile_size + d;\n    top_data[index] = bottom_data[bottom_index];\n  }\n}\n\n\n__kernel void TEMPLATE(tile_backward,Dtype)(const int_tp nthreads,\n                                            __global const Dtype* top_diff,\n                                            const int_tp tile_size,\n                                            const int_tp num_tiles,\n                                            const int_tp bottom_tile_axis,\n                                            __global Dtype* bottom_diff) {\n  for (int_tp index = get_global_id(0); index < nthreads;\n      index += get_global_size(0)) {\n    const int_tp d = index % tile_size;\n    const int_tp b = (index / tile_size) % bottom_tile_axis;\n    const int_tp n = index / tile_size / bottom_tile_axis;\n    bottom_diff[index] = 0;\n    int_tp top_index = (n * num_tiles * bottom_tile_axis + b) * tile_size + d;\n    for (int_tp t = 0; t < num_tiles; ++t) {\n      bottom_diff[index] += top_diff[top_index];\n      top_index += bottom_tile_axis * tile_size;\n    }\n  }\n}",""}   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(relu_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out,",    // NOLINT
+"Dtype negative_slope) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = in[index] > 0 ? in[index] : in[index] * negative_slope;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(relu_backward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"__global Dtype* out_diff,",    // NOLINT
+"Dtype negative_slope) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out_diff[index] = in_diff[index]",    // NOLINT
+"* ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * negative_slope);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(tanh_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = tanh(in[index]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(tanh_backward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* out_data,",    // NOLINT
+"__global Dtype* out_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"Dtype tanhx = out_data[index];",    // NOLINT
+"out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sigmoid_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = 1.0 / (1.0 + exp(-in[index]));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sigmoid_backward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* out_data,",    // NOLINT
+"__global Dtype* out_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"const Dtype sigmoid_x = out_data[index];",    // NOLINT
+"out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(threshold,Dtype)(const int_tp n, const Dtype threshold,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = in[index] > threshold ? 1.0 : 0.0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(prelu_forward,Dtype)(const int_tp n, const int_tp channels,",    // NOLINT
+"const int_tp dim,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out,",    // NOLINT
+"__global const Dtype* slope_data,",    // NOLINT
+"const int_tp div_factor) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"int_tp c = (index / dim) % channels / div_factor;",    // NOLINT
+"out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[c];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(prelu_backward,Dtype)(const int_tp n, const int_tp channels,",    // NOLINT
+"const int_tp dim,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"__global Dtype* out_diff,",    // NOLINT
+"__global const Dtype* slope_data,",    // NOLINT
+"const int_tp div_factor) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"int_tp c = (index / dim) % channels / div_factor;",    // NOLINT
+"out_diff[index] = in_diff[index]",    // NOLINT
+"* ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * slope_data[c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp rows,",    // NOLINT
+"const int_tp rowPitch,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"__global Dtype* out_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0?1.0:0.0);",    // NOLINT
+"for (int k = 1; k < rows; k++) {",    // NOLINT
+"out_diff[index] += in_diff[index + k * rowPitch]",    // NOLINT
+"* in_data[index + k * rowPitch]",    // NOLINT
+"* (in_data[index + k * rowPitch] <= 0?1.0:0.0);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sce_loss_forward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* input_data,",    // NOLINT
+"__global const Dtype* target,",    // NOLINT
+"__global Dtype* loss,",    // NOLINT
+"const int_tp has_ignore_label_,",    // NOLINT
+"const int_tp ignore_label_,",    // NOLINT
+"__global Dtype* counts) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < nthreads; i += get_global_size(0)) {",    // NOLINT
+"const int_tp target_value = (int_tp)(target[i]);",    // NOLINT
+"if (has_ignore_label_ == 1 && target_value == ignore_label_) {",    // NOLINT
+"loss[i] = 0.0;",    // NOLINT
+"counts[i] = 0.0;",    // NOLINT
+"} else {",    // NOLINT
+"loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0.0)) -",    // NOLINT
+"log(1.0 + exp(input_data[i] - 2.0 * input_data[i] *",    // NOLINT
+"(input_data[i] >= 0.0)));",    // NOLINT
+"counts[i] = 1.0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sce_loss_ignore_diff,Dtype)(const int_tp count,",    // NOLINT
+"const int_tp ignore_label,",    // NOLINT
+"__global const Dtype* target,",    // NOLINT
+"__global Dtype* diff) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < count; i += get_global_size(0)) {",    // NOLINT
+"const int_tp target_value = (int_tp)(target[i]);",    // NOLINT
+"if (target_value == ignore_label) {",    // NOLINT
+"diff[i] = 0.0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(gpu_set,Dtype)(const int_tp n, const Dtype alpha, __global Dtype* y) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[index] = alpha;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(br_forward,Dtype)(const int_tp count, const int_tp inner_dim,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* permut,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < count;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp n = index / (inner_dim);",    // NOLINT
+"int_tp in_n = (int_tp) (permut[n]);",    // NOLINT
+"out[index] = in[in_n * (inner_dim) + index % (inner_dim)];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(br_backward,Dtype)(const int_tp count, const int_tp inner_dim,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* top_indexes,",    // NOLINT
+"__global const Dtype* begins,",    // NOLINT
+"__global const Dtype* counts,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < count;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp n = index / (inner_dim);",    // NOLINT
+"out[index] = 0;",    // NOLINT
+"int_tp lower = (int_tp) (begins[n]);",    // NOLINT
+"int_tp upper = lower + (int_tp) (counts[n]);",    // NOLINT
+"for (int_tp i = lower; i < upper; ++i) {",    // NOLINT
+"int_tp in_n = (int_tp) (top_indexes[i]);",    // NOLINT
+"out[index] += in[in_n * (inner_dim) + index % (inner_dim)];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(null_kernel,Dtype)(Dtype arg) {",    // NOLINT
+"Dtype out = arg;",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bias_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* bias,",    // NOLINT
+"const int_tp bias_dim,",    // NOLINT
+"const int_tp inner_dim,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp bias_index = (index / inner_dim) % bias_dim;",    // NOLINT
+"out[index] = in[index] + bias[bias_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(scale_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* scale,",    // NOLINT
+"const int_tp scale_dim,",    // NOLINT
+"const int_tp inner_dim,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp scale_index = (index / inner_dim) % scale_dim;",    // NOLINT
+"out[index] = in[index] * scale[scale_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(scale_bias_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* scale,",    // NOLINT
+"__global const Dtype* bias,",    // NOLINT
+"const int_tp scale_dim,",    // NOLINT
+"const int_tp inner_dim,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp scale_index = (index / inner_dim) % scale_dim;",    // NOLINT
+"out[index] = in[index] * scale[scale_index] + bias[scale_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bnll_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"if (in[index] > 0.0f) {",    // NOLINT
+"out[index] = in[index] + log((Dtype) (1.0 + exp(-in[index])));",    // NOLINT
+"} else {",    // NOLINT
+"out[index] = log((Dtype) (1.0 + exp(in[index])));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bnll_backward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"__global Dtype* out_diff) {",    // NOLINT
+"Dtype kBNLL_THRESHOLD = 50.;",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"Dtype expval = exp(min(in_data[index], kBNLL_THRESHOLD));",    // NOLINT
+"out_diff[index] = in_diff[index] * expval / (expval + 1.);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_channel_max,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global const Dtype* data,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp n = index / spatial_dim;",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"float maxval = -FLT_MAX;",    // NOLINT
+"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
+"maxval = max((Dtype)(data[(n * channels + c) * spatial_dim + s]), (Dtype)maxval);",    // NOLINT
+"}",    // NOLINT
+"out[index] = maxval;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_channel_subtract,Dtype)(const int_tp count, const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global const Dtype* channel_max,",    // NOLINT
+"__global Dtype* data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < count;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp n = index / channels / spatial_dim;",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"data[index] -= channel_max[n * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_exp,Dtype)(const int_tp count, __global const Dtype* data,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < count;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"out[index] = exp(data[index]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_channel_sum,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global const Dtype* data,",    // NOLINT
+"__global Dtype* channel_sum) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp n = index / spatial_dim;",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"Dtype sum = 0;",    // NOLINT
+"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
+"sum += data[(n * channels + c) * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"channel_sum[index] = sum;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_channel_div,Dtype)(const int_tp count, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"__global const Dtype* channel_sum,",    // NOLINT
+"__global Dtype* data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < count;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp n = index / channels / spatial_dim;",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"data[index] /= channel_sum[n * spatial_dim + s];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(kernel_channel_dot,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"__global const Dtype* data_1,",    // NOLINT
+"__global const Dtype* data_2,",    // NOLINT
+"__global Dtype* channel_dot) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < num * spatial_dim; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp n = index / spatial_dim;",    // NOLINT
+"int_tp s = index % spatial_dim;",    // NOLINT
+"Dtype dot = 0;",    // NOLINT
+"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
+"dot += (data_1[(n * channels + c) * spatial_dim + s]",    // NOLINT
+"* data_2[(n * channels + c) * spatial_dim + s]);",    // NOLINT
+"}",    // NOLINT
+"channel_dot[index] = dot;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(concat,Dtype)(const int_tp nthreads, __global const Dtype* in_data,",    // NOLINT
+"const int forward, const int_tp num_concats,",    // NOLINT
+"const int_tp concat_size,",    // NOLINT
+"const int_tp top_concat_axis,",    // NOLINT
+"const int_tp bottom_concat_axis,",    // NOLINT
+"const int_tp offset_concat_axis,",    // NOLINT
+"__global Dtype* out_data) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp total_concat_size = concat_size * bottom_concat_axis;",    // NOLINT
+"const int_tp concat_num = index / total_concat_size;",    // NOLINT
+"const int_tp concat_index = index % total_concat_size;",    // NOLINT
+"const int_tp top_index = concat_index",    // NOLINT
+"+ (concat_num * top_concat_axis + offset_concat_axis) * concat_size;",    // NOLINT
+"if (forward == 1) {",    // NOLINT
+"out_data[top_index] = in_data[index];",    // NOLINT
+"} else {",    // NOLINT
+"out_data[index] = in_data[top_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp channels,",    // NOLINT
+"const Dtype margin, const Dtype alpha, __global const Dtype* y,",    // NOLINT
+"__global const Dtype* diff, __global const Dtype* dist_sq,",    // NOLINT
+"__global Dtype *bottom_diff) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < count;",    // NOLINT
+"i += get_global_size(0)) {",    // NOLINT
+"int_tp n = i / channels;  // the num index, to access y and dist_sq",    // NOLINT
+"if (trunc(y[n]) != 0.) {  // similar pairs",    // NOLINT
+"bottom_diff[i] = alpha * diff[i];",    // NOLINT
+"} else {  // dissimilar pairs",    // NOLINT
+"Dtype mdist = 0.;",    // NOLINT
+"Dtype beta = 0.;",    // NOLINT
+"Dtype dist = sqrt(dist_sq[n]);",    // NOLINT
+"mdist = (margin - dist);",    // NOLINT
+"beta = -alpha * mdist / (dist + 1e-4) * diff[i];",    // NOLINT
+"if (mdist > 0.) {",    // NOLINT
+"bottom_diff[i] = beta;",    // NOLINT
+"} else {",    // NOLINT
+"bottom_diff[i] = 0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(cll_backward_legacy,Dtype)(const int count, const int channels,",    // NOLINT
+"const Dtype margin, const Dtype alpha, __global Dtype* y,",    // NOLINT
+"__global Dtype* diff, __global Dtype* dist_sq,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < count;",    // NOLINT
+"i += get_global_size(0)) {",    // NOLINT
+"int n = i / channels;  // the num index, to access y and dist_sq",    // NOLINT
+"if (trunc(y[n]) != 0.) {  // similar pairs",    // NOLINT
+"bottom_diff[i] = alpha * diff[i];",    // NOLINT
+"} else {  // dissimilar pairs",    // NOLINT
+"Dtype mdist = 0.;",    // NOLINT
+"Dtype beta = 0.;",    // NOLINT
+"mdist = (margin - dist_sq[n]);",    // NOLINT
+"beta = -alpha;",    // NOLINT
+"if (mdist > 0.) {",    // NOLINT
+"bottom_diff[i] = beta;",    // NOLINT
+"} else {",    // NOLINT
+"bottom_diff[i] = 0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {",    // NOLINT
+"Dtype out = arg;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#define __CAT(x, y) x##y",    // NOLINT
+"#define CAT(x, y) __CAT(x, y)",    // NOLINT
+"#define LOOP0(VAR, STMT)",    // NOLINT
+"#define LOOP1(VAR, STMT) (STMT); (VAR)++;",    // NOLINT
+"#define LOOP2(VAR, STMT) LOOP1(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP3(VAR, STMT) LOOP2(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP4(VAR, STMT) LOOP3(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP5(VAR, STMT) LOOP4(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP6(VAR, STMT) LOOP5(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP7(VAR, STMT) LOOP6(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP8(VAR, STMT) LOOP7(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP9(VAR, STMT) LOOP8(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP10(VAR, STMT) LOOP9(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP11(VAR, STMT) LOOP10(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP12(VAR, STMT) LOOP11(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP13(VAR, STMT) LOOP12(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP14(VAR, STMT) LOOP13(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP15(VAR, STMT) LOOP14(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP16(VAR, STMT) LOOP15(VAR, STMT); (STMT); (VAR)++;",    // NOLINT
+"#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))",    // NOLINT
+"",    // NOLINT
+"#ifdef MULTI",    // NOLINT
+"__kernel void CFMulti(__global Dtype* image_data,",    // NOLINT
+"int_tp image_offset,",    // NOLINT
+"__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
+"__global Dtype* bias,const int_tp bias_offset,",    // NOLINT
+"__global Dtype* convolved_image,const int_tp convolved_image_offset,",    // NOLINT
+"const ushort input_width,",    // NOLINT
+"const ushort input_height,",    // NOLINT
+"const ushort output_width,",    // NOLINT
+"const ushort output_height) {",    // NOLINT
+"",    // NOLINT
+"const int_tp outputX = get_global_id(0);",    // NOLINT
+"const int_tp outputY = get_global_id(1);",    // NOLINT
+"const int_tp kernelNum = get_global_id(2)*ZPAR;",    // NOLINT
+"if(outputX < output_width && outputY < output_height)",    // NOLINT
+"{",    // NOLINT
+"Dtype sum[ZPAR];",    // NOLINT
+"Dtype4 vectorSum[ZPAR];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"sum[kern] = 0.0f;",    // NOLINT
+"vectorSum[kern] = (0.0f,0.0f,0.0f,0.0f);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;",    // NOLINT
+"const int_tp biasIndex=bias_offset + kernelNum;",    // NOLINT
+"const int_tp local_image_offset = outputY*STRIDE_H*input_width + outputX*STRIDE_W;",    // NOLINT
+"const int_tp imageSize = input_width*input_height;",    // NOLINT
+"const int_tp float4Reads = KERNEL_W / 4;",    // NOLINT
+"const int_tp floatReads = KERNEL_W % 4;",    // NOLINT
+"Dtype4 imageCache;",    // NOLINT
+"",    // NOLINT
+"__global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));",    // NOLINT
+"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
+"",    // NOLINT
+"for(int_tp c = 0; c < CHANNELS; c++)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
+"{",    // NOLINT
+"",    // NOLINT
+"for(int_tp x=0; x< float4Reads; x++)",    // NOLINT
+"{",    // NOLINT
+"imageCache = ((__global Dtype4*)image_dataPtrFloat)[x];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"vectorSum[kern] += imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[x];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(floatReads == 1)",    // NOLINT
+"{",    // NOLINT
+"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"vectorSum[kern].s0 += ( imageCache * ( (__global Dtype4*) &(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]) )[float4Reads] ).s0;",    // NOLINT
+"}",    // NOLINT
+"else if(floatReads == 2)",    // NOLINT
+"{",    // NOLINT
+"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"vectorSum[kern].s01 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s01;",    // NOLINT
+"}",    // NOLINT
+"else if(floatReads == 3)",    // NOLINT
+"{",    // NOLINT
+"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"image_dataPtrFloat += input_width;",    // NOLINT
+"kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
+"}",    // NOLINT
+"image_dataPtrFloat += imageSize - input_width*KERNEL_H;",    // NOLINT
+"}",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;",    // NOLINT
+"",    // NOLINT
+"if(APPLY_BIAS == 1)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
+"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
+"convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] =",    // NOLINT
+"sum[kern] + bias[biasIndex +kern];",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
+"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
+"convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] = sum[kern];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"//Begin IDLF kernels below here",    // NOLINT
+"#ifdef IDLF",    // NOLINT
+"",    // NOLINT
+"#define activation_function(x) (x)",    // NOLINT
+"#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
+"",    // NOLINT
+"// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.",    // NOLINT
+"// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same region of the imput image.",    // NOLINT
+"// NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH",    // NOLINT
+"",    // NOLINT
+"//#define SIMD_SIZE 16",    // NOLINT
+"#ifdef SIMD16",    // NOLINT
+"",    // NOLINT
+"// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
+"__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))",    // NOLINT
+"kernel void",    // NOLINT
+"convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs",    // NOLINT
+"__global float* inputs_base,",    // NOLINT
+"filter_qualifier float* weights_base,",    // NOLINT
+"__global float* biases_base,",    // NOLINT
+"__global float* outputs_base,",    // NOLINT
+"const ushort input_width,",    // NOLINT
+"const ushort input_height,",    // NOLINT
+"const ushort output_width,",    // NOLINT
+"const ushort output_height)",    // NOLINT
+"{",    // NOLINT
+"__global float* outputs = outputs_base;",    // NOLINT
+"__global float* inputs = inputs_base;",    // NOLINT
+"filter_qualifier float* weights = weights_base;",    // NOLINT
+"__global float* biases = biases_base;",    // NOLINT
+"",    // NOLINT
+"uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column",    // NOLINT
+"uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row",    // NOLINT
+"uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth",    // NOLINT
+"uint_tp fmg = get_group_id(2);",    // NOLINT
+"uint_tp lid = get_local_id(2);",    // NOLINT
+"",    // NOLINT
+"float out[OUT_BLOCK_SIZE];",    // NOLINT
+"",    // NOLINT
+"int_tp in_addr;",    // NOLINT
+"",    // NOLINT
+"// find weights adress of given neuron (lid is index)",    // NOLINT
+"uint_tp weight_addr = (fmg % (ALIGNED_NUM_FILTERS/SIMD_SIZE)) * INPUT_DEPTH * KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE + lid;",    // NOLINT
+"",    // NOLINT
+"for(int_tp i=0;i<OUT_BLOCK_SIZE;i++) {",    // NOLINT
+"out[i]=0.0f;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"uint_tp num_in_batch = ( fm ) / ALIGNED_NUM_FILTERS;",    // NOLINT
+"",    // NOLINT
+"uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;",    // NOLINT
+"",    // NOLINT
+"int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );",    // NOLINT
+"int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"int saved_y = curr_y;",    // NOLINT
+"#endif",    // NOLINT
+"in_addr = input_batch_offset + INPUT_START_Z * input_height * input_width",    // NOLINT
+"+  (curr_y - INPUT_PAD_H) * input_width             // y tile offset",    // NOLINT
+"+   curr_x - INPUT_PAD_W;                        // x tile offset",    // NOLINT
+"union {",    // NOLINT
+"float4 in_vec[INVEC_SIZE];",    // NOLINT
+"float in_array[INVEC_SIZE * 4];",    // NOLINT
+"} in_buf;",    // NOLINT
+"",    // NOLINT
+"for(int_tp kd = 0; kd < INPUT_DEPTH; kd++)",    // NOLINT
+"{",    // NOLINT
+"int_tp in_offset = in_addr;",    // NOLINT
+"int_tp reg = 0;",    // NOLINT
+"LOOP(INVEC_SIZE, reg,",    // NOLINT
+"{",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {",    // NOLINT
+"if (curr_x < INPUT_PAD_W) {",    // NOLINT
+"in_buf.in_vec[reg].s0 = 0;",    // NOLINT
+"if (curr_x + 1 >= INPUT_PAD_W)",    // NOLINT
+"in_buf.in_vec[reg].s1 = *(inputs + in_offset + 1);",    // NOLINT
+"else",    // NOLINT
+"in_buf.in_vec[reg].s1 = 0;",    // NOLINT
+"if (curr_x + 2 >= INPUT_PAD_W)",    // NOLINT
+"in_buf.in_vec[reg].s2 = *(inputs + in_offset + 2);",    // NOLINT
+"else",    // NOLINT
+"in_buf.in_vec[reg].s2 = 0;",    // NOLINT
+"in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);",    // NOLINT
+"} else {",    // NOLINT
+"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements",    // NOLINT
+"if (curr_x + 1 >= input_width + INPUT_PAD_W)",    // NOLINT
+"in_buf.in_vec[reg].s1 = 0;",    // NOLINT
+"if (curr_x + 2 >= input_width + INPUT_PAD_W)",    // NOLINT
+"in_buf.in_vec[reg].s2 = 0;",    // NOLINT
+"if (curr_x + 3 >= input_width + INPUT_PAD_W)",    // NOLINT
+"in_buf.in_vec[reg].s3 = 0;",    // NOLINT
+"}",    // NOLINT
+"} else {",    // NOLINT
+"in_buf.in_vec[reg] = 0;",    // NOLINT
+"}",    // NOLINT
+"curr_y += TILE_Y_STRIDE;",    // NOLINT
+"#else",    // NOLINT
+"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements",    // NOLINT
+"#endif",    // NOLINT
+"in_offset += input_width * TILE_Y_STRIDE;",    // NOLINT
+"});",    // NOLINT
+"in_addr += input_height * input_width;",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"curr_y = saved_y;",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"// PREF could be 4 or 8, could not be other values.",    // NOLINT
+"#define WEIGHT_PREF 8",    // NOLINT
+"union {",    // NOLINT
+"float w[WEIGHT_PREF];",    // NOLINT
+"uint8 ui8;",    // NOLINT
+"} weight_buf;",    // NOLINT
+"int_tp w_idx=0;",    // NOLINT
+"",    // NOLINT
+"weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
+"uint_tp orig_weight_addr = weight_addr;",    // NOLINT
+"weight_addr += SIMD_SIZE * WEIGHT_PREF;",    // NOLINT
+"",    // NOLINT
+"#define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))",    // NOLINT
+"",    // NOLINT
+"int_tp kr = 0;  // kr = Kernel Row",    // NOLINT
+"LOOP(KERNEL_HEIGHT, kr,// LOOP is a macro that unrolls the loop.",    // NOLINT
+"{",    // NOLINT
+"int_tp kc = 0;  // kc = Kernel Column",    // NOLINT
+"LOOP(KERNEL_WIDTH, kc,",    // NOLINT
+"{",    // NOLINT
+"for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {",    // NOLINT
+"for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {",    // NOLINT
+"float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);",    // NOLINT
+"out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"// We assume KERNEL_W is equal to KERNEL_H here.",    // NOLINT
+"if ((w_idx + 1) % WEIGHT_PREF == 0",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT % 8 != 0",    // NOLINT
+"&& ((w_idx + 1) <= (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF))",    // NOLINT
+"#endif",    // NOLINT
+") {",    // NOLINT
+"weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
+"weight_addr += SIMD_SIZE * WEIGHT_PREF;  // weights must be stored in just the right SIMD swizzled format for this to work, see host code for details.",    // NOLINT
+"}",    // NOLINT
+"#if KERNEL_WIDTH*KERNEL_HEIGHT % 8 == 0",    // NOLINT
+"// need to do nothing",    // NOLINT
+"#else",    // NOLINT
+"else if ((w_idx + 1) %  WEIGHT_PREF == 0 && ((w_idx + 1) > (KERNEL_WIDTH * KERNEL_HEIGHT - WEIGHT_PREF)))",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 1",    // NOLINT
+"weight_buf.w[0] = weights[weight_addr];",    // NOLINT
+"#elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 == 2",    // NOLINT
+"weight_buf.ui8.s01 = intel_sub_group_block_read2((__global uint *)&weights[weight_addr]);",    // NOLINT
+"#elif KERNEL_WIDTH * KERNEL_HEIGHT % 8 <= 4",    // NOLINT
+"weight_buf.ui8.s0123 = intel_sub_group_block_read4((__global uint *)&weights[weight_addr]);",    // NOLINT
+"#else",    // NOLINT
+"weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
+"#endif",    // NOLINT
+"#endif",    // NOLINT
+"++w_idx;",    // NOLINT
+"});",    // NOLINT
+"});",    // NOLINT
+"weight_addr = orig_weight_addr + KERNEL_WIDTH * KERNEL_HEIGHT * SIMD_SIZE;",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"// dead code to work around possible compiler bug.",    // NOLINT
+"if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {",    // NOLINT
+"printf(\"%f\", BLOCK_IN(fm % 16));",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// we need this address calculation for outputs because we support views and batching",    // NOLINT
+"uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_NUM_FILTERS) ) * output_width * output_height;",    // NOLINT
+"out_addr += or * output_width + oc;  // offset for the 4x3 block that this workitem is working on;",    // NOLINT
+"",    // NOLINT
+"if (ALIGNED_NUM_FILTERS == NUM_FILTERS || (fm % ALIGNED_NUM_FILTERS) < NUM_FILTERS) {",    // NOLINT
+"// we need this address calculation for biases because we support views and batching",    // NOLINT
+"float bias = biases[(fm) % NUM_FILTERS ];",    // NOLINT
+"#ifndef WRITE_PADDED_VALUES",    // NOLINT
+"if(get_global_id(0) != (get_global_size(0)-1) &&",    // NOLINT
+"get_global_id(1) != (get_global_size(1)-1) )",    // NOLINT
+"{",    // NOLINT
+"#endif",    // NOLINT
+"for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
+"// this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
+"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#ifndef WRITE_PADDED_VALUES",    // NOLINT
+"} else if ( get_global_id(1) != (get_global_size(1)-1) )",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {",    // NOLINT
+"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( get_global_id(0) != (get_global_size(0)-1) )",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
+"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {",    // NOLINT
+"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif //#ifndef WRITE_PADDED_VALUES",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif // Stride > 2",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"/*******************************************************************************",    // NOLINT
+"Copyright © 2016, Intel Corporation",    // NOLINT
+"",    // NOLINT
+"Permission is hereby granted, free of charge, to any person obtaining a",    // NOLINT
+"copy of this software and associated documentation files (the \"Software\"),",    // NOLINT
+"to deal in the Software without restriction, including without limitation",    // NOLINT
+"the rights to use, copy, modify, merge, publish, distribute, sublicense,",    // NOLINT
+"and/or sell copies of the Software, and to permit persons to whom the",    // NOLINT
+"Software is furnished to do so, subject to the following conditions:",    // NOLINT
+"",    // NOLINT
+"The above copyright notice and this permission notice shall be included in",    // NOLINT
+"all copies or substantial portions of the Software.",    // NOLINT
+"",    // NOLINT
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR",    // NOLINT
+"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,",    // NOLINT
+"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL",    // NOLINT
+"THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER",    // NOLINT
+"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING",    // NOLINT
+"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER",    // NOLINT
+"DEALINGS IN THE SOFTWARE.",    // NOLINT
+"******************************************************************************/",    // NOLINT
+"#ifdef Conv_Interleaved",    // NOLINT
+"typedef struct float1 { float s0; } float1;",    // NOLINT
+"typedef struct float5 { float s0; float s1; float s2; float s3; float s4; } float5;",    // NOLINT
+"typedef struct float6 { float s0; float s1; float s2; float s3; float s4; float s5; } float6;",    // NOLINT
+"typedef struct float7 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; } float7;",    // NOLINT
+"typedef struct float9 { float s0; float s1; float s2; float s3; float s4; float s5; float s6; float s7; float s8; } float9;",    // NOLINT
+"typedef struct float10 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9;} float10;",    // NOLINT
+"typedef struct float11 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9; float sa;} float11;",    // NOLINT
+"typedef struct float12 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9; float sa; float sb; } float12;",    // NOLINT
+"typedef struct float13 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9; float sa; float sb; float sc;} float13;",    // NOLINT
+"typedef struct float14 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; } float14;",    // NOLINT
+"typedef struct float15 { float s0; float s1; float s2; float s3; float s4; float s5;",    // NOLINT
+"float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; float se; } float15;",    // NOLINT
+"typedef struct float0 { float s0; } float0; //never used but makes compiler happy.",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"#ifdef GEMM_LIKE_CONV_32_1",    // NOLINT
+"//////////////////////////////////////////////////////////////////////////////",    // NOLINT
+"// Conv_Interleaved_32_1",    // NOLINT
+"//",    // NOLINT
+"// Convolution: each workitem computes 1 patch x 32 filters worth of output",    // NOLINT
+"// data.  Kernel's inner loop works on a single tile consisting of one",    // NOLINT
+"// row from each patch and the filter data corresponding to that row.  Filter",    // NOLINT
+"// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked",    // NOLINT
+"// by rows and then by slices.  Relies on sub_group extension for block",    // NOLINT
+"// reads and SIMD broadcast.",    // NOLINT
+"",    // NOLINT
+"#define TILE_M          1",    // NOLINT
+"#define TILE_K          KERNEL_WIDTH",    // NOLINT
+"#define TILE_N          32",    // NOLINT
+"",    // NOLINT
+"#ifndef __BEIGNET__",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
+"#endif",    // NOLINT
+"__kernel void Conv_Interleaved(",    // NOLINT
+"const __global float *src0,",    // NOLINT
+"const __global float *src1,",    // NOLINT
+"const __global float *biases,",    // NOLINT
+"__global float *dst)",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"const int global_z = get_global_id(2);",    // NOLINT
+"int interleaved_y;",    // NOLINT
+"int kernel_y;",    // NOLINT
+"int kernel_idx;",    // NOLINT
+"",    // NOLINT
+"// Result ctile (*dst) is M rows x N columns",    // NOLINT
+"// LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.",    // NOLINT
+"float8  blockC00 = 0.f;",    // NOLINT
+"float8  blockC10 = 0.f;",    // NOLINT
+"float8  blockC20 = 0.f;",    // NOLINT
+"float8  blockC30 = 0.f;",    // NOLINT
+"",    // NOLINT
+"// Src0 (patch input) is directly used as atile.",    // NOLINT
+"// Each work item points to the start of a different patch.",    // NOLINT
+"// atile is M rows x K columns.",    // NOLINT
+"",    // NOLINT
+"int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
+"int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"int saved_y = curr_y;",    // NOLINT
+"#endif",    // NOLINT
+"const __global float *src0_read = src0",    // NOLINT
+"+ ALIGNED_INPUT_SIZE * global_z                            // batch offset",    // NOLINT
+"+ (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset",    // NOLINT
+"+ (curr_x - INPUT_PAD_W);                 // x offset",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"// Src1 (filter) is directly used as btile.",    // NOLINT
+"// It starts at the top of src1 and walks down.",    // NOLINT
+"// btile is K rows x N columns.",    // NOLINT
+"const __global float *src1_read = src1 + ( global_x * TILE_N  * 2);",    // NOLINT
+"",    // NOLINT
+"#define DOT_PRODUCT_8( _result, _rowA, colB )        {           _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );          _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );          _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );          _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );          _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );          _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );          _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );          _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );      }",    // NOLINT
+"typedef CAT( float, KERNEL_WIDTH ) float_t;",    // NOLINT
+"",    // NOLINT
+"// Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.",    // NOLINT
+"// Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch",    // NOLINT
+"// and KERNEL_WIDTH/2 rows of interleaved filter.",    // NOLINT
+"int patch_depth = 0;",    // NOLINT
+"do",    // NOLINT
+"{",    // NOLINT
+"int patch_row = 0;",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"curr_y = saved_y;",    // NOLINT
+"#endif",    // NOLINT
+"do",    // NOLINT
+"{",    // NOLINT
+"// Load atile and btile.",    // NOLINT
+"// Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.",    // NOLINT
+"// The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non",    // NOLINT
+"// interleaved row is padded with zero to ensure same size as interleaved rows. This",    // NOLINT
+"// interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the",    // NOLINT
+"// kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.",    // NOLINT
+"// (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..",    // NOLINT
+"// (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...",    // NOLINT
+"// (0, 2) (8, 2) (16, 2) (24, 2) ...       ...",    // NOLINT
+"// ...",    // NOLINT
+"const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
+"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0",    // NOLINT
+"float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];",    // NOLINT
+"float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
+"#else",    // NOLINT
+"float_t blockA00;",    // NOLINT
+"float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
+"int pos = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH, pos,",    // NOLINT
+"{",    // NOLINT
+"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read[pos];",    // NOLINT
+"else",    // NOLINT
+"pblockA00[pos] = 0;",    // NOLINT
+"})",    // NOLINT
+"curr_y++;",    // NOLINT
+"#endif",    // NOLINT
+"src0_read += ROW_PITCH;",    // NOLINT
+"",    // NOLINT
+"float blockB00[KERNEL_WIDTH*4];",    // NOLINT
+"float8* p8BlockB00 = (float8*)blockB00;",    // NOLINT
+"float4* p4BlockB00 = (float4*)blockB00;",    // NOLINT
+"float*  pBlockB00 =  (float* )blockB00;",    // NOLINT
+"",    // NOLINT
+"interleaved_y = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH_DIV2, interleaved_y,",    // NOLINT
+"{",    // NOLINT
+"p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );",    // NOLINT
+"src1_read += WIDTH1 * 2;",    // NOLINT
+"} )",    // NOLINT
+"if ( kernel_width_is_odd )",    // NOLINT
+"{",    // NOLINT
+"p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
+"src1_read += WIDTH1 * 2;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// Perform MADs",    // NOLINT
+"kernel_idx = 0;",    // NOLINT
+"interleaved_y = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH_DIV2, interleaved_y,",    // NOLINT
+"{",    // NOLINT
+"kernel_y = interleaved_y * 2;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"} )",    // NOLINT
+"if ( kernel_width_is_odd )",    // NOLINT
+"{",    // NOLINT
+"kernel_y = interleaved_y * 2;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"//while( ++patch_row < 1 ); //debug",    // NOLINT
+"while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
+"",    // NOLINT
+"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"}",    // NOLINT
+"//while ( ++patch_depth < 1 );  //debug",    // NOLINT
+"while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
+"",    // NOLINT
+"// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
+"// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
+"__global float *out = dst",    // NOLINT
+"+ global_z * OUT_PITCH_Z                                                   // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset",    // NOLINT
+"+ ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
+"+ ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
+"float bias[4];",    // NOLINT
+"float4 *bias_vec;",    // NOLINT
+"bias_vec = (float4*)bias;",    // NOLINT
+"*bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));",    // NOLINT
+"if ( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) == 0 )",    // NOLINT
+"{",    // NOLINT
+"for ( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( global_x + 1 ) < get_global_size(0) )",    // NOLINT
+"{",    // NOLINT
+"for ( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) >= 24 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// Remaining channels",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 24; i++)",    // NOLINT
+"{",    // NOLINT
+"out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 16 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 16; i++)",    // NOLINT
+"{",    // NOLINT
+"out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 8 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#ifdef GEMM_LIKE_CONV_32_2",    // NOLINT
+"//////////////////////////////////////////////////////////////////////////////",    // NOLINT
+"// Conv_Interleaved_32_2",    // NOLINT
+"//",    // NOLINT
+"// Convolution: each workitem computes 2 patches x 32 filters worth of output",    // NOLINT
+"// data.  Kernel's inner loop works on a single tile consisting of one",    // NOLINT
+"// row from each patch and the filter data corresponding to that row.  Filter",    // NOLINT
+"// matrix is interleaved to reduce GRF bank conflicts.  Patches are walked",    // NOLINT
+"// by rows and then by slices.  Relies on sub_group extension for block",    // NOLINT
+"// reads and SIMD broadcast.",    // NOLINT
+"#define TILE_M          2",    // NOLINT
+"#define TILE_K          KERNEL_WIDTH",    // NOLINT
+"#define TILE_N          32",    // NOLINT
+"",    // NOLINT
+"#ifndef __BEIGNET__",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
+"#endif",    // NOLINT
+"__kernel void Conv_Interleaved(",    // NOLINT
+"const __global float *src0,",    // NOLINT
+"const __global float *src1,",    // NOLINT
+"const __global float *biases,",    // NOLINT
+"__global float *dst)",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"const int global_z = get_global_id(2);",    // NOLINT
+"int interleaved_y;",    // NOLINT
+"int kernel_y;",    // NOLINT
+"int kernel_idx;",    // NOLINT
+"",    // NOLINT
+"// Result ctile (*dst) is M rows x N columns",    // NOLINT
+"// LWG size is 1x8.  Thus each thread calculates 8*M rows x N cols of ctile.",    // NOLINT
+"float8  blockC00 = 0.f;",    // NOLINT
+"float8  blockC10 = 0.f;",    // NOLINT
+"float8  blockC20 = 0.f;",    // NOLINT
+"float8  blockC30 = 0.f;",    // NOLINT
+"float8  blockC01 = 0.f;",    // NOLINT
+"float8  blockC11 = 0.f;",    // NOLINT
+"float8  blockC21 = 0.f;",    // NOLINT
+"float8  blockC31 = 0.f;",    // NOLINT
+"",    // NOLINT
+"// Src0 (patch input) is directly used as atile.",    // NOLINT
+"// Each work item points to the start of a different patch.",    // NOLINT
+"// atile is M rows x K columns.",    // NOLINT
+"int curr_x0 = ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
+"int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
+"int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
+"int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"int saved_y0 = curr_y0;",    // NOLINT
+"int saved_y1 = curr_y1;",    // NOLINT
+"#endif",    // NOLINT
+"const __global float *src0_read0 = src0",    // NOLINT
+"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ (curr_y0 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
+"+ curr_x0 - INPUT_PAD_W;                // x offset",    // NOLINT
+"const __global float *src0_read1 = src0",    // NOLINT
+"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ (curr_y1 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
+"+ curr_x1 - INPUT_PAD_W;                // x offset",    // NOLINT
+"",    // NOLINT
+"// Src1 (filter) is directly used as btile.",    // NOLINT
+"// It starts at the top of src1 and walks down.",    // NOLINT
+"// btile is K rows x N columns.",    // NOLINT
+"const __global float *src1_read = src1 + ( global_x * TILE_N * 2);",    // NOLINT
+"",    // NOLINT
+"#define DOT_PRODUCT_8( _result, _rowA, colB )        {           _result.s0 = mad( _rowA, sub_group_broadcast( colB, 0 ), _result.s0 );          _result.s1 = mad( _rowA, sub_group_broadcast( colB, 1 ), _result.s1 );          _result.s2 = mad( _rowA, sub_group_broadcast( colB, 2 ), _result.s2 );          _result.s3 = mad( _rowA, sub_group_broadcast( colB, 3 ), _result.s3 );          _result.s4 = mad( _rowA, sub_group_broadcast( colB, 4 ), _result.s4 );          _result.s5 = mad( _rowA, sub_group_broadcast( colB, 5 ), _result.s5 );          _result.s6 = mad( _rowA, sub_group_broadcast( colB, 6 ), _result.s6 );          _result.s7 = mad( _rowA, sub_group_broadcast( colB, 7 ), _result.s7 );      }",    // NOLINT
+"typedef CAT( float, KERNEL_WIDTH ) float_t;",    // NOLINT
+"",    // NOLINT
+"// Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.",    // NOLINT
+"// Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch",    // NOLINT
+"// and KERNEL_WIDTH/2 rows of interleaved filter.",    // NOLINT
+"int patch_depth = 0;",    // NOLINT
+"do",    // NOLINT
+"{",    // NOLINT
+"int patch_row = 0;",    // NOLINT
+"do",    // NOLINT
+"{",    // NOLINT
+"// Load atile and btile.",    // NOLINT
+"// Kernel data is partially interleaved.  Every 2 rows are interleaved at float8 granularity.",    // NOLINT
+"// The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non",    // NOLINT
+"// interleaved row is padded with zero to ensure same size as interleaved rows. This",    // NOLINT
+"// interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the",    // NOLINT
+"// kernel data would be arranged before/after interleaving for KERNEL_WIDTH=3.",    // NOLINT
+"// (0, 0) (8, 0) (16, 0) (24, 0) ...       (0, 0) (0, 1) (8, 0) (0, 1) (16, 0) (0, 1) (24, 0) ..",    // NOLINT
+"// (0, 1) (8, 1) (16, 1) (24, 1) ... =>    (0, 2) (8, 2) (16, 2) (24, 2) ...",    // NOLINT
+"// (0, 2) (8, 2) (16, 2) (24, 2) ...       ...",    // NOLINT
+"// ...",    // NOLINT
+"const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
+"#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0",    // NOLINT
+"float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;",    // NOLINT
+"float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;",    // NOLINT
+"float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
+"float*  pblockA01 = (float*)(&blockA01);",    // NOLINT
+"#else",    // NOLINT
+"float_t blockA00;",    // NOLINT
+"float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
+"int pos = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH, pos,",    // NOLINT
+"{",    // NOLINT
+"if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read0[pos];",    // NOLINT
+"else",    // NOLINT
+"pblockA00[pos] = 0;",    // NOLINT
+"})",    // NOLINT
+"curr_y0++;",    // NOLINT
+"float_t blockA01;",    // NOLINT
+"float*  pblockA01 = (float*)(&blockA01);",    // NOLINT
+"pos = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH, pos,",    // NOLINT
+"{",    // NOLINT
+"if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA01[pos] = src0_read1[pos];",    // NOLINT
+"else",    // NOLINT
+"pblockA01[pos] = 0;",    // NOLINT
+"})",    // NOLINT
+"curr_y1++;",    // NOLINT
+"src0_read0 += ROW_PITCH;",    // NOLINT
+"src0_read1 += ROW_PITCH;",    // NOLINT
+"#endif",    // NOLINT
+"float blockB00[KERNEL_WIDTH*4];",    // NOLINT
+"float8* p8BlockB00 = (float8*)blockB00;",    // NOLINT
+"float4* p4BlockB00 = (float4*)blockB00;",    // NOLINT
+"float*  pBlockB00 =  (float* )blockB00;",    // NOLINT
+"",    // NOLINT
+"interleaved_y = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH_DIV2, interleaved_y,",    // NOLINT
+"{",    // NOLINT
+"p8BlockB00[interleaved_y] = as_float8( intel_sub_group_block_read8( (const __global uint*)src1_read ) );",    // NOLINT
+"src1_read += WIDTH1 * 2;",    // NOLINT
+"} )",    // NOLINT
+"if ( kernel_width_is_odd )",    // NOLINT
+"{",    // NOLINT
+"p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
+"src1_read += WIDTH1 * 2;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// Perform MADs",    // NOLINT
+"kernel_idx = 0;",    // NOLINT
+"interleaved_y = 0;",    // NOLINT
+"LOOP(KERNEL_WIDTH_DIV2, interleaved_y,",    // NOLINT
+"{",    // NOLINT
+"kernel_y = interleaved_y * 2;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC01, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC01, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC11, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC11, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC21, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC21, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y    ], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC31, pblockA01[kernel_y    ], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y + 1], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC31, pblockA01[kernel_y + 1], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"} )",    // NOLINT
+"if ( kernel_width_is_odd )",    // NOLINT
+"{",    // NOLINT
+"kernel_y = interleaved_y * 2;",    // NOLINT
+"DOT_PRODUCT_8( blockC00, pblockA00[kernel_y], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC01, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC10, pblockA00[kernel_y], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC11, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC20, pblockA00[kernel_y], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC21, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"DOT_PRODUCT_8( blockC30, pblockA00[kernel_y], pBlockB00[kernel_idx] );",    // NOLINT
+"DOT_PRODUCT_8( blockC31, pblockA01[kernel_y], pBlockB00[kernel_idx] ); kernel_idx++;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"//while( ++patch_row < 1 ); //debug",    // NOLINT
+"while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"curr_y0 = saved_y0;",    // NOLINT
+"curr_y1 = saved_y1;",    // NOLINT
+"#endif",    // NOLINT
+"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"}",    // NOLINT
+"//while ( ++patch_depth < 1 );  //debug",    // NOLINT
+"while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
+"",    // NOLINT
+"// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
+"// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
+"__global float *out0 = dst",    // NOLINT
+"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"+ ( ( global_y * TILE_M + 0 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
+"+ ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
+"__global float *out1 = dst",    // NOLINT
+"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"+ ( ( global_y * TILE_M + 1 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
+"+ ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
+"float bias[4];",    // NOLINT
+"float4 *bias_vec;",    // NOLINT
+"bias_vec = (float4*)bias;",    // NOLINT
+"*bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) == 0 )",    // NOLINT
+"{",    // NOLINT
+"for( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( global_x + 1 ) < get_global_size(0) )",    // NOLINT
+"{",    // NOLINT
+"for ( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) >= 24 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// remaining output channels",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 24; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 16 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 16; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 8 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[(8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if( global_y * TILE_M + 1 < OUT_WIDTH * OUT_HEIGHT )",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) == 0 )",    // NOLINT
+"{",    // NOLINT
+"for( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( global_x + 1 ) < get_global_size(0) )",    // NOLINT
+"{",    // NOLINT
+"for ( int i = 0; i < 8; i++ )",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"if ( ( OUT_DEPTH % TILE_N ) >= 24 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// Remaining channels",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 24; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 16 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 16; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( ( OUT_DEPTH % TILE_N ) >= 8 )",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[(8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for (int i = 0; i < OUT_DEPTH % 8; i++)",    // NOLINT
+"{",    // NOLINT
+"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(copyImage, Dtype)",    // NOLINT
+"(__global Dtype* image_data,",    // NOLINT
+"int_tp image_offset,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp adjustedHeight, const int_tp adjustedWidth,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w,",    // NOLINT
+"__global Dtype* output_image,",    // NOLINT
+"const int_tp output_offset,",    // NOLINT
+"const int_tp batch_size) {",    // NOLINT
+"",    // NOLINT
+"uint_tp sX = get_global_id(0);",    // NOLINT
+"uint_tp sY = get_global_id(1);",    // NOLINT
+"uint_tp sZ = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"int_tp in_y = sY - pad_h;",    // NOLINT
+"int_tp in_x = sX - pad_w;",    // NOLINT
+"",    // NOLINT
+"int_tp batch_offset = 0;",    // NOLINT
+"int_tp adjusted_batch_offset = 0;",    // NOLINT
+"for(uint_tp batch_idx = 0; batch_idx < batch_size; batch_idx++) {",    // NOLINT
+"int_tp dst_offset = adjusted_batch_offset + output_offset + sZ*adjustedHeight*adjustedWidth + sY*adjustedWidth +sX;",    // NOLINT
+"int_tp src_offset = batch_offset + image_offset + sZ*height*width + in_y*width + in_x;",    // NOLINT
+"if((in_y >= 0 && in_y < height && in_x >= 0 && in_x < width))",    // NOLINT
+"output_image[dst_offset] = image_data[src_offset];",    // NOLINT
+"else",    // NOLINT
+"output_image[dst_offset] = 0;",    // NOLINT
+"batch_offset += height * width * channels;",    // NOLINT
+"adjusted_batch_offset += adjustedHeight * adjustedWidth * channels;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(copyWeightsSwizzled, Dtype)",    // NOLINT
+"(__global Dtype* weightIn,",    // NOLINT
+"__global Dtype* weightOut,",    // NOLINT
+"const int_tp kernel_w,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp outputs,",    // NOLINT
+"const int_tp swizzleFactor) {",    // NOLINT
+"",    // NOLINT
+"uint_tp sX = get_global_id(0);",    // NOLINT
+"",    // NOLINT
+"//Original location",    // NOLINT
+"",    // NOLINT
+"//Output location",    // NOLINT
+"int_tp outputSublayer = channels / swizzleFactor;",    // NOLINT
+"int_tp outputSublayerIndex = channels % swizzleFactor;",    // NOLINT
+"",    // NOLINT
+"int_tp filter = sX / (kernel_w*kernel_h*channels);",    // NOLINT
+"int_tp kernel_X = sX % kernel_w;",    // NOLINT
+"int_tp kernel_Y = (sX / kernel_w) % kernel_h;",    // NOLINT
+"int_tp kernel_C = (sX / (kernel_w * kernel_h)) % channels;",    // NOLINT
+"",    // NOLINT
+"int_tp FP = filter / swizzleFactor;",    // NOLINT
+"int_tp F1 = filter % swizzleFactor;",    // NOLINT
+"",    // NOLINT
+"weightOut[FP*(kernel_w*kernel_h*channels*swizzleFactor) + kernel_C*(kernel_w*kernel_h*swizzleFactor) + kernel_Y*(kernel_w*swizzleFactor) + kernel_X*swizzleFactor + F1]",    // NOLINT
+"= weightIn[filter*(kernel_w*kernel_h*channels) + kernel_C*(kernel_w*kernel_h) + kernel_Y*kernel_w + kernel_X];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(crop_copy, Dtype)(const int_tp n, const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const int_tp src_outer_stride,",    // NOLINT
+"const int_tp src_inner_stride,",    // NOLINT
+"const int_tp dest_outer_stride,",    // NOLINT
+"const int_tp dest_inner_stride,",    // NOLINT
+"__global const Dtype* src,",    // NOLINT
+"const int_tp src_off,",    // NOLINT
+"__global Dtype* dest,",    // NOLINT
+"const int_tp dest_off) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp src_start = index / height * src_outer_stride",    // NOLINT
+"+ index % height * src_inner_stride;",    // NOLINT
+"int_tp dest_start = index / height * dest_outer_stride",    // NOLINT
+"+ index % height * dest_inner_stride;",    // NOLINT
+"for (int_tp i = 0; i < width; ++i) {",    // NOLINT
+"dest[dest_off + dest_start + i] = src[src_off + src_start + i];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(dropout_forward,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const uint_tp* mask,",    // NOLINT
+"const uint_tp threshold,",    // NOLINT
+"const Dtype scale,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = in[index] * ((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(dropout_backward,Dtype)(",    // NOLINT
+"const int_tp n, __global const Dtype* in_diff,",    // NOLINT
+"__global const uint_tp* mask, const uint_tp threshold,",    // NOLINT
+"const Dtype scale,",    // NOLINT
+"__global Dtype* out_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out_diff[index] = in_diff[index] * ((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(eltwise_max_forward,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data_a,",    // NOLINT
+"__global const Dtype* bottom_data_b, const int_tp blob_idx,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"__global int_tp* mask) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"Dtype maxval = -FLT_MAX;",    // NOLINT
+"int_tp maxidx = -1;",    // NOLINT
+"if (bottom_data_a[index] > bottom_data_b[index]) {",    // NOLINT
+"// only update for very first bottom_data blob (blob_idx == 0)",    // NOLINT
+"if (blob_idx == 0) {",    // NOLINT
+"maxval = bottom_data_a[index];",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"maxidx = blob_idx;",    // NOLINT
+"mask[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"} else {",    // NOLINT
+"maxval = bottom_data_b[index];",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"maxidx = blob_idx + 1;",    // NOLINT
+"mask[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(eltwise_max_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int_tp blob_idx,",    // NOLINT
+"__global const int_tp* mask,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"Dtype gradient = 0;",    // NOLINT
+"if (mask[index] == blob_idx) {",    // NOLINT
+"gradient += top_diff[index];",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(elu_forward,Dtype)(const int n, __global const Dtype* in,",    // NOLINT
+"__global Dtype* out,",    // NOLINT
+"Dtype alpha) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - 1.0);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(elu_backward,Dtype)(const int n, __global const Dtype* in_diff,",    // NOLINT
+"__global const Dtype* out_data,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"__global Dtype* out_diff,",    // NOLINT
+"Dtype alpha) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"out_diff[index] =",    // NOLINT
+"in_data[index] > 0 ?",    // NOLINT
+"in_diff[index] : in_diff[index] * (out_data[index] + alpha);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(embed_forward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* bottom_data,",    // NOLINT
+"__global const Dtype* weight,",    // NOLINT
+"const int_tp M, const int_tp N,",    // NOLINT
+"const int_tp K,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"for (int_tp top_index = get_global_id(0); top_index < nthreads;",    // NOLINT
+"top_index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = top_index / N;",    // NOLINT
+"const int_tp d = top_index % N;",    // NOLINT
+"const int_tp index = (int_tp)(bottom_data[n]);",    // NOLINT
+"const int_tp weight_index = index * N + d;",    // NOLINT
+"top_data[top_index] = weight[weight_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// atomic_add from: http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html",    // NOLINT
+"#if (TYPE == TYPE_FLOAT)",    // NOLINT
+"#ifdef ATOMICS_32_AVAILABLE",    // NOLINT
+"inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {",    // NOLINT
+"union {",    // NOLINT
+"uint_tp intVal;",    // NOLINT
+"Dtype floatVal;",    // NOLINT
+"} newVal;",    // NOLINT
+"union {",    // NOLINT
+"uint_tp intVal;",    // NOLINT
+"Dtype floatVal;",    // NOLINT
+"} prevVal;",    // NOLINT
+"do {",    // NOLINT
+"prevVal.floatVal = *source;",    // NOLINT
+"newVal.floatVal = prevVal.floatVal + operand;",    // NOLINT
+"} while (atomic_cmpxchg((volatile __global unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(embed_backward,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,",    // NOLINT
+"__global const Dtype* top_diff, const int_tp M, const int_tp N, const int_tp K,",    // NOLINT
+"__global Dtype* weight_diff) {",    // NOLINT
+"for (int_tp top_index = get_global_id(0); top_index < nthreads;",    // NOLINT
+"top_index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = top_index / N;",    // NOLINT
+"const int_tp d = top_index % N;",    // NOLINT
+"const int_tp index = (int_tp)(bottom_data[n]);",    // NOLINT
+"const int_tp weight_index = index * N + d;",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#if (TYPE == TYPE_DOUBLE)",    // NOLINT
+"#ifdef ATOMICS_64_AVAILABLE",    // NOLINT
+"inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {",    // NOLINT
+"union {",    // NOLINT
+"unsigned long intVal;",    // NOLINT
+"Dtype floatVal;",    // NOLINT
+"} newVal;",    // NOLINT
+"union {",    // NOLINT
+"unsigned long intVal;",    // NOLINT
+"Dtype floatVal;",    // NOLINT
+"} prevVal;",    // NOLINT
+"do {",    // NOLINT
+"prevVal.floatVal = *source;",    // NOLINT
+"newVal.floatVal = prevVal.floatVal + operand;",    // NOLINT
+"} while (atom_cmpxchg((volatile __global unsigned long *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(embed_backward,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,",    // NOLINT
+"__global const Dtype* top_diff, const int_tp M, const int_tp N, const int_tp K,",    // NOLINT
+"__global Dtype* weight_diff) {",    // NOLINT
+"for (int_tp top_index = get_global_id(0); top_index < nthreads;",    // NOLINT
+"top_index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = top_index / N;",    // NOLINT
+"const int_tp d = top_index % N;",    // NOLINT
+"const int_tp index = (int_tp)(bottom_data[n]);",    // NOLINT
+"const int_tp weight_index = index * N + d;",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+"#endif",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(fft_phony,Dtype)(Dtype arg) {",    // NOLINT
+"Dtype out = arg;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#ifdef FFT",    // NOLINT
+"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"#define DtypeComplex Dtype2",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_cyclic_shift_in,Dtype)(",    // NOLINT
+"__global Dtype* fft_gpu_weights_real, const int_tp offset_fft_gpu_weights_real,",    // NOLINT
+"__global Dtype* weight, const int_tp offset_weight,",    // NOLINT
+"const int_tp ker_size, const int_tp ch_gr, const int_tp ker_size_ch_gr,",    // NOLINT
+"const int_tp ker_w, const int_tp ker_c_h, const int_tp ker_c_w,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width, const int_tp complex_w_len) {",    // NOLINT
+"fft_gpu_weights_real += offset_fft_gpu_weights_real;",    // NOLINT
+"weight += offset_weight;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = gId / ker_size_ch_gr;",    // NOLINT
+"int_tp c = (gId - out * ker_size_ch_gr) / ker_size;",    // NOLINT
+"int_tp map_offset = out * ch_gr + c;",    // NOLINT
+"int_tp map_offset_ker_size = map_offset * ker_size;",    // NOLINT
+"int_tp pos_in_map = gId - map_offset_ker_size;",    // NOLINT
+"int_tp h = pos_in_map / ker_w;",    // NOLINT
+"int_tp h_ker_w = h * ker_w;",    // NOLINT
+"int_tp w = pos_in_map - h_ker_w;",    // NOLINT
+"int_tp src_idx = map_offset_ker_size + h_ker_w + w;",    // NOLINT
+"int_tp ky = h - ker_c_h;",    // NOLINT
+"if (ky < 0) ky += fft_height;",    // NOLINT
+"int_tp kx = w - ker_c_w;",    // NOLINT
+"if (kx < 0) kx += fft_width;",    // NOLINT
+"int_tp dst_idx = (map_offset * fft_height + ky) * complex_w_len + kx;",    // NOLINT
+"fft_gpu_weights_real[dst_idx] = weight[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width < 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_in_naive,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp h = gId / width;",    // NOLINT
+"int_tp w = gId - (h * width);",    // NOLINT
+"int_tp dst_idx = (h*stride_h + pad_h)*width_out + (w*stride_w + pad_w);",    // NOLINT
+"map_out[dst_idx] = map_in[gId];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width < 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_in_naive_2d,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp map_out_size, const int_tp size, const int_tp count,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId_x = get_global_id(0);",    // NOLINT
+"int_tp gId_y = get_global_id(1);",    // NOLINT
+"int_tp h = gId_x / width;",    // NOLINT
+"int_tp w = gId_x - (h * width);",    // NOLINT
+"int_tp src_idx = gId_y * size + gId_x;",    // NOLINT
+"int_tp dst_idx = gId_y * map_out_size +",    // NOLINT
+"(h * stride_h + pad_h) * width_out + (w * stride_w + pad_w);",    // NOLINT
+"map_out[dst_idx] = map_in[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width >= 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_in,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp count = size >> 2;",    // NOLINT
+"int_tp gId4 = gId << 2;",    // NOLINT
+"int_tp h = gId4 / width;",    // NOLINT
+"int_tp w = gId4 - (h * width);",    // NOLINT
+"int_tp dst_h = h*stride_h + pad_h;",    // NOLINT
+"int_tp dst_w = w*stride_w + pad_w;",    // NOLINT
+"int_tp dst_idx = dst_h*width_out + dst_w;",    // NOLINT
+"if (gId < count) {",    // NOLINT
+"Dtype4 map_in_cache4 = vload4(gId, map_in);",    // NOLINT
+"int_tp has_pad = width - dst_w;",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"vstore4(map_in_cache4, dst_idx >> 2, map_out);",    // NOLINT
+"} else {",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx] = map_in_cache4.x;",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 1;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+1] = map_in_cache4.y;",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 2;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+2] = map_in_cache4.z;",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 3;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+3] = map_in_cache4.w;",    // NOLINT
+"dst_h += 1;",    // NOLINT
+"dst_w = pad_w;",    // NOLINT
+"}",    // NOLINT
+"} else if (gId == count) {",    // NOLINT
+"int_tp res = size - (count << 2); /* size % 4 */",    // NOLINT
+"if (res > 0) {",    // NOLINT
+"Dtype4 map_in_cache4 = 0.f;",    // NOLINT
+"if (res >= 1)",    // NOLINT
+"map_in_cache4.x = map_in[gId4];",    // NOLINT
+"if (res >= 2)",    // NOLINT
+"map_in_cache4.y = map_in[gId4+1];",    // NOLINT
+"if (res == 3)",    // NOLINT
+"map_in_cache4.z = map_in[gId4+2];",    // NOLINT
+"int_tp has_pad = width - dst_w;",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"vstore4(map_in_cache4, dst_idx >> 2, map_out);",    // NOLINT
+"} else {",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx] = map_in_cache4.x;",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 1;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+1] = map_in_cache4.y;",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 2;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+2] = map_in_cache4.z;",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 3;",    // NOLINT
+"}",    // NOLINT
+"map_out[dst_idx+3] = map_in_cache4.w;",    // NOLINT
+"dst_h += 1;",    // NOLINT
+"dst_w = pad_w;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width >= 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_in_2d,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp map_out_size, const int_tp size, const int_tp count,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp gId_y = get_global_id(1);",    // NOLINT
+"int_tp gId4 = gId << 2;",    // NOLINT
+"int_tp h = gId4 / width;",    // NOLINT
+"int_tp w = gId4 - (h * width);",    // NOLINT
+"int_tp dst_h = h*stride_h + pad_h;",    // NOLINT
+"int_tp dst_w = w*stride_w + pad_w;",    // NOLINT
+"int_tp dst_idx = dst_h*width_out + dst_w;",    // NOLINT
+"const __global Dtype* map_in_2d = map_in + gId_y * size;",    // NOLINT
+"__global Dtype* map_out_2d = map_out + gId_y * map_out_size;",    // NOLINT
+"if (gId < count) {",    // NOLINT
+"Dtype4 map_in_cache4 = vload4(gId, map_in_2d);",    // NOLINT
+"int_tp has_pad = width - dst_w;",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"vstore4(map_in_cache4, dst_idx >> 2, map_out_2d);",    // NOLINT
+"} else {",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx] = map_in_cache4.x;",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 1;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+1] = map_in_cache4.y;",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 2;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+2] = map_in_cache4.z;",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 3;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+3] = map_in_cache4.w;",    // NOLINT
+"dst_h += 1;",    // NOLINT
+"dst_w = pad_w;",    // NOLINT
+"}",    // NOLINT
+"} else if (gId == count) {",    // NOLINT
+"int_tp res = size - (count << 2); /* size % 4 */",    // NOLINT
+"if (res > 0) {",    // NOLINT
+"Dtype4 map_in_cache4 = 0.f;",    // NOLINT
+"if (res >= 1)",    // NOLINT
+"map_in_cache4.x = map_in_2d[gId4];",    // NOLINT
+"if (res >= 2)",    // NOLINT
+"map_in_cache4.y = map_in_2d[gId4+1];",    // NOLINT
+"if (res == 3)",    // NOLINT
+"map_in_cache4.z = map_in_2d[gId4+2];",    // NOLINT
+"int_tp has_pad = width - dst_w;",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"vstore4(map_in_cache4, dst_idx >> 2, map_out_2d);",    // NOLINT
+"} else {",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx] = map_in_cache4.x;",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 1;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+1] = map_in_cache4.y;",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 2;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+2] = map_in_cache4.z;",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"dst_idx += width_out + pad_w - dst_w - 3;",    // NOLINT
+"}",    // NOLINT
+"map_out_2d[dst_idx+3] = map_in_cache4.w;",    // NOLINT
+"dst_h += 1;",    // NOLINT
+"dst_w = pad_w;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width_out < 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_out_naive,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_center_h, const int_tp ker_center_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp h_out = gId / width_out;",    // NOLINT
+"int_tp w_out = gId - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + ker_center_h;",    // NOLINT
+"int_tp w = w_out * stride_w + ker_center_w;",    // NOLINT
+"int_tp src_idx = h*fft_width + w;",    // NOLINT
+"map_out[gId] = map_in[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width_out < 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_out_naive_2d,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size, const int_tp count, const int_tp map_in_size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_center_h, const int_tp ker_center_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp h_out = gId / width_out;",    // NOLINT
+"int_tp w_out = gId - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + ker_center_h;",    // NOLINT
+"int_tp w = w_out * stride_w + ker_center_w;",    // NOLINT
+"int_tp src_idx = out * map_in_size + h*fft_width + w;",    // NOLINT
+"int_tp dst_idx = out * size + gId;",    // NOLINT
+"map_out[dst_idx] = map_in[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width_out >= 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_out,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_c_h, const int_tp ker_c_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w, const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp count = size >> 2;",    // NOLINT
+"int_tp gId4 = gId << 2;",    // NOLINT
+"int_tp h_out = gId4 / width_out;",    // NOLINT
+"int_tp w_out = gId4 - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + ker_c_h;",    // NOLINT
+"int_tp w = w_out * stride_w + ker_c_w;",    // NOLINT
+"int_tp src_idx = h*fft_width + w;",    // NOLINT
+"if (gId < count) {",    // NOLINT
+"Dtype4 map_in_cache4;",    // NOLINT
+"int_tp has_pad = width_out - (w - pad_w);",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"map_in_cache4 = vload4(src_idx >> 2, map_in);",    // NOLINT
+"} else {",    // NOLINT
+"int_tp right_elements = fft_width - width_out;",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.x = map_in[src_idx];",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.y = map_in[src_idx+1];",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.z = map_in[src_idx+2];",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.w = map_in[src_idx+3];",    // NOLINT
+"}",    // NOLINT
+"vstore4(map_in_cache4, gId, map_out);",    // NOLINT
+"} else if (gId == count) {",    // NOLINT
+"int_tp res = size - (count << 2); /* size % 4 */",    // NOLINT
+"if (res > 0) {",    // NOLINT
+"for (int_tp i = gId4; i < size; ++i) {",    // NOLINT
+"map_out[i] = map_in[src_idx];",    // NOLINT
+"src_idx++;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Use when width_out >= 4 */",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_left_top_out_2d,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp size, const int_tp count, const int_tp map_in_size,",    // NOLINT
+"const int_tp height_out, const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_c_h, const int_tp ker_c_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w, const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp gId4 = gId << 2;",    // NOLINT
+"int_tp h_out = gId4 / width_out;",    // NOLINT
+"int_tp w_out = gId4 - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + ker_c_h;",    // NOLINT
+"int_tp w = w_out * stride_w + ker_c_w;",    // NOLINT
+"int_tp src_idx = h*fft_width + w;",    // NOLINT
+"const __global Dtype* map_in_2d = map_in + out * map_in_size;",    // NOLINT
+"__global Dtype* map_out_2d = map_out + out * size;",    // NOLINT
+"if (gId < count) {",    // NOLINT
+"Dtype4 map_in_cache4;",    // NOLINT
+"int_tp has_pad = width_out - (w - pad_w);",    // NOLINT
+"if (has_pad >= 4) {",    // NOLINT
+"map_in_cache4 = vload4(src_idx >> 2, map_in_2d);",    // NOLINT
+"} else {",    // NOLINT
+"int_tp right_elements = fft_width - width_out;",    // NOLINT
+"if (0 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.x = map_in_2d[src_idx];",    // NOLINT
+"if (1 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.y = map_in_2d[src_idx+1];",    // NOLINT
+"if (2 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.z = map_in_2d[src_idx+2];",    // NOLINT
+"if (3 == has_pad) {",    // NOLINT
+"src_idx += right_elements;",    // NOLINT
+"}",    // NOLINT
+"map_in_cache4.w = map_in_2d[src_idx+3];",    // NOLINT
+"}",    // NOLINT
+"vstore4(map_in_cache4, gId, map_out_2d);",    // NOLINT
+"} else if (gId == count) {",    // NOLINT
+"int_tp res = size - (count << 2); /* size % 4 */",    // NOLINT
+"if (res > 0) {",    // NOLINT
+"const __global Dtype4* map_in_2d_4 =",    // NOLINT
+"(const __global Dtype4*)(map_in_2d + src_idx);",    // NOLINT
+"__global Dtype4* map_out_2d_4 = (__global Dtype4*)(map_out_2d + gId4);",    // NOLINT
+"if (res == 3) {",    // NOLINT
+"map_out_2d_4[0].xyz = map_in_2d_4[0].xyz;",    // NOLINT
+"} else if (res == 2) {",    // NOLINT
+"map_out_2d_4[0].xy = map_in_2d_4[0].xy;",    // NOLINT
+"} else if (res == 1) {",    // NOLINT
+"map_out_2d_4[0].x = map_in_2d_4[0].x;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_cyclic_shift_out,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_center_h, const int_tp ker_center_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp h_out = gId / width_out;",    // NOLINT
+"int_tp w_out = gId - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + pad_h;",    // NOLINT
+"int_tp w = w_out * stride_w + pad_w;",    // NOLINT
+"int_tp ky = h - ker_center_h;",    // NOLINT
+"if (ky < 0) ky += fft_height;",    // NOLINT
+"int_tp kx = w - ker_center_w;",    // NOLINT
+"if (kx < 0) kx += fft_width;",    // NOLINT
+"int_tp src_idx = ky*fft_width + kx;",    // NOLINT
+"map_out[gId] = map_in[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(copy2buffer_cyclic_shift_out_2d,Dtype)(__global Dtype* map_out,",    // NOLINT
+"const int_tp offset_map_out,",    // NOLINT
+"const __global Dtype* map_in, const int_tp offset_map_in,",    // NOLINT
+"const int_tp map_out_size, const int_tp map_in_size,",    // NOLINT
+"const int_tp width_out,",    // NOLINT
+"const int_tp fft_height, const int_tp fft_width,",    // NOLINT
+"const int_tp ker_center_h, const int_tp ker_center_w,",    // NOLINT
+"const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h, const int_tp pad_w) {",    // NOLINT
+"map_out += offset_map_out;",    // NOLINT
+"map_in  += offset_map_in;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp gId_y = get_global_id(1);",    // NOLINT
+"int_tp h_out = gId / width_out;",    // NOLINT
+"int_tp w_out = gId - (h_out * width_out);",    // NOLINT
+"int_tp h = h_out * stride_h + pad_h;",    // NOLINT
+"int_tp w = w_out * stride_w + pad_w;",    // NOLINT
+"int_tp ky = h - ker_center_h;",    // NOLINT
+"if (ky < 0) ky += fft_height;",    // NOLINT
+"int_tp kx = w - ker_center_w;",    // NOLINT
+"if (kx < 0) kx += fft_width;",    // NOLINT
+"int_tp src_idx = gId_y * map_in_size + ky*fft_width + kx;",    // NOLINT
+"int_tp dst_idx = gId_y * map_out_size + gId;",    // NOLINT
+"map_out[dst_idx] = map_in[src_idx];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_conjugate_multiplication_1d,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp ch_gr) {",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp size = get_global_size(0);",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"int_tp src_idx;",    // NOLINT
+"Dtype4 s1_cache;",    // NOLINT
+"Dtype4 s2_cache;",    // NOLINT
+"for (int_tp c = 0; c < ch_gr; ++c) {",    // NOLINT
+"src_idx = size * c + gId;",    // NOLINT
+"s1_cache = vload4(src_idx, src1);",    // NOLINT
+"s2_cache = vload4(src_idx, src2);",    // NOLINT
+"dst_cache.x +=  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;",    // NOLINT
+"dst_cache.y += -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;",    // NOLINT
+"dst_cache.z +=  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;",    // NOLINT
+"dst_cache.w += -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;",    // NOLINT
+"}",    // NOLINT
+"((__global Dtype4*)(&dst[gId<<2]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_conjugate_multiplication_2d,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp out_gr, const int_tp map_size, const int_tp ch_gr) {",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp src1_idx, src2_idx;",    // NOLINT
+"int_tp dst_map_offset = map_size * out;",    // NOLINT
+"int_tp dst_idx = dst_map_offset + gId;",    // NOLINT
+"Dtype4 s1_cache, s2_cache;",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"int_tp map_offset = dst_map_offset * ch_gr;",    // NOLINT
+"for (int_tp i = 0; i < ch_gr; ++i) {",    // NOLINT
+"src1_idx = map_size * i + gId;",    // NOLINT
+"src2_idx = map_offset + src1_idx;",    // NOLINT
+"s1_cache = vload4(src1_idx, src1);",    // NOLINT
+"s2_cache = vload4(src2_idx, src2);",    // NOLINT
+"dst_cache.xz += mad( s1_cache.xz, s2_cache.xz, s1_cache.yw * s2_cache.yw);",    // NOLINT
+"dst_cache.yw += mad(-s1_cache.xz, s2_cache.yw, s1_cache.yw * s2_cache.xz);",    // NOLINT
+"}",    // NOLINT
+"vstore4(dst_cache, dst_idx, dst);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_conjugate_multiplication_2d_SLM,Dtype)(",    // NOLINT
+"__global Dtype* restrict dst, const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* restrict src1, const int_tp offset_src1,",    // NOLINT
+"__local Dtype* local_src1,",    // NOLINT
+"const __global Dtype* restrict src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp out_gr, const int_tp map_size, const int_tp ch_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"if (gId >= map_size) return; /* Do not remove this */",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"if (out >= out_gr) return;   /* Do not remove this */",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp tId = get_local_id(0);",    // NOLINT
+"int_tp local_out = get_local_id(1);",    // NOLINT
+"int_tp tile_size = get_local_size(0);",    // NOLINT
+"Dtype4 s1_cache;",    // NOLINT
+"if (local_out == 0) {",    // NOLINT
+"for (int_tp c = 0; c < ch_gr; ++c) {",    // NOLINT
+"s1_cache = vload4(map_size * c + gId, src1);",    // NOLINT
+"vstore4(s1_cache, tile_size * c + tId, local_src1);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"int_tp dst_map_offset = map_size * out;",    // NOLINT
+"int_tp dst_idx = (dst_map_offset + gId) << 2;",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"Dtype4 s2_cache;",    // NOLINT
+"int_tp ch_offset = 0;",    // NOLINT
+"int_tp map_offset = dst_map_offset * ch_gr;",    // NOLINT
+"for (int_tp c = 0; c < ch_gr; ++c) {",    // NOLINT
+"ch_offset = map_size * c;",    // NOLINT
+"s1_cache = vload4(tile_size * c + tId, local_src1);",    // NOLINT
+"s2_cache = vload4(map_offset + ch_offset + gId, src2);",    // NOLINT
+"dst_cache.xz += mad( s1_cache.xz, s2_cache.xz, s1_cache.yw * s2_cache.yw);",    // NOLINT
+"dst_cache.yw += mad(-s1_cache.xz, s2_cache.yw, s1_cache.yw * s2_cache.xz);",    // NOLINT
+"}",    // NOLINT
+"((__global Dtype4*)(&dst[dst_idx]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_conjugate_multiplication_3d,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp out_gr, const int_tp size, const int_tp ch_gr) {",    // NOLINT
+"dst  += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp ch  = get_global_id(2);",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"Dtype4 s1_cache  = ((__global Dtype4*)(&(src1[(size*ch+gId)<<2])))[0];",    // NOLINT
+"Dtype4 s2_cache  = ((__global Dtype4*)(&(src2[(size*(out*ch_gr+ch)+gId)<<2])))[0];",    // NOLINT
+"dst_cache.x =  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;",    // NOLINT
+"dst_cache.y = -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;",    // NOLINT
+"dst_cache.z =  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;",    // NOLINT
+"dst_cache.w = -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;",    // NOLINT
+"((__global Dtype4*)(&dst[(size*out+gId)<<2]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_conjugate_multiplication_3d_SLM,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst, __local Dtype* local_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"__local Dtype* local_src1, const __global Dtype* src2,",    // NOLINT
+"const int_tp offset_src2, const int_tp out_gr, const int_tp map_size,",    // NOLINT
+"const int_tp ch_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"if (gId >= map_size) return; /* Do not remove this */",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"if (out >= out_gr) return;   /* Do not remove this */",    // NOLINT
+"int_tp ch = get_global_id(2);",    // NOLINT
+"if (ch >= ch_gr) return;     /* Do not remove this */",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp tId = get_local_id(0);",    // NOLINT
+"int_tp local_out = get_local_id(1);",    // NOLINT
+"int_tp tile_size = get_local_size(0);",    // NOLINT
+"Dtype4 s1_cache;",    // NOLINT
+"if (local_out == 0) {",    // NOLINT
+"s1_cache = vload4(map_size * ch + gId, src1);",    // NOLINT
+"vstore4(s1_cache, tile_size * ch + tId, local_src1);",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"int_tp dst_map_offset = map_size * out;",    // NOLINT
+"int_tp dst_idx = (dst_map_offset + gId) << 2;",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"Dtype4 s2_cache;",    // NOLINT
+"s1_cache = vload4(tile_size * ch + tId, local_src1);",    // NOLINT
+"s2_cache = vload4((dst_map_offset * ch_gr) + (map_size * ch) + gId, src2);",    // NOLINT
+"dst_cache.x +=  s1_cache.x * s2_cache.x + s1_cache.y * s2_cache.y;",    // NOLINT
+"dst_cache.y += -s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;",    // NOLINT
+"dst_cache.z +=  s1_cache.z * s2_cache.z + s1_cache.w * s2_cache.w;",    // NOLINT
+"dst_cache.w += -s1_cache.z * s2_cache.w + s1_cache.w * s2_cache.z;",    // NOLINT
+"((__global Dtype4*)(&dst[dst_idx]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_multiplication_1d,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp size, const int_tp ch_gr) {",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"Dtype4 s2_cache;",    // NOLINT
+"Dtype4 dst_cache = 0.f;",    // NOLINT
+"int_tp idx_with_ch;",    // NOLINT
+"Dtype4 s1_cache = vload4(gId, src1);",    // NOLINT
+"for (int_tp ch = 0; ch < ch_gr; ++ch) {",    // NOLINT
+"idx_with_ch = size * ch + gId;",    // NOLINT
+"s2_cache = vload4(idx_with_ch, src2);",    // NOLINT
+"dst_cache.xz = s1_cache.xz * s2_cache.xz - s1_cache.yw * s2_cache.yw;",    // NOLINT
+"dst_cache.yw = s1_cache.xz * s2_cache.yw + s1_cache.yw * s2_cache.xz;",    // NOLINT
+"((__global Dtype4*)(&dst[idx_with_ch<<2]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_multiplication_2d_SLM,Dtype)(__global Dtype* restrict dst,",    // NOLINT
+"const int_tp offset_dst, __local Dtype* local_dst,",    // NOLINT
+"const __global Dtype* restrict src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* restrict src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp num_output, const int_tp size, const int_tp ch_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"if (gId >= size) return;",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"if (out >= num_output) return;",    // NOLINT
+"dst += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp tId = get_local_id(0);",    // NOLINT
+"int_tp tOut = get_local_id(1);",    // NOLINT
+"int_tp tile_size = get_local_size(0);",    // NOLINT
+"int_tp local_out_size = get_local_size(1);",    // NOLINT
+"int_tp out_offset = out * size;",    // NOLINT
+"int_tp out_ch_offset = out_offset * ch_gr;",    // NOLINT
+"int_tp tile_size_in_all_ch = tile_size * ch_gr;",    // NOLINT
+"int_tp local_out_ch_offset = tOut * tile_size_in_all_ch;",    // NOLINT
+"int_tp src2_idx, local_dst_idx;",    // NOLINT
+"Dtype4 s2_cache, dst_cache;",    // NOLINT
+"int_tp src1_idx = out_offset + gId;",    // NOLINT
+"Dtype4 s1_cache = vload4(src1_idx, src1);",    // NOLINT
+"for (int_tp ch = 0; ch < ch_gr; ++ch) {",    // NOLINT
+"src2_idx = out_ch_offset + ch * size + gId;",    // NOLINT
+"s2_cache = vload4(src2_idx, src2);",    // NOLINT
+"dst_cache.xz = s1_cache.xz * s2_cache.xz - s1_cache.yw * s2_cache.yw;",    // NOLINT
+"dst_cache.yw = s1_cache.xz * s2_cache.yw + s1_cache.yw * s2_cache.xz;",    // NOLINT
+"local_dst_idx = local_out_ch_offset + ch * tile_size + tId;",    // NOLINT
+"vstore4(dst_cache, local_dst_idx, local_dst);",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"int_tp start_idx, half_start_idx;",    // NOLINT
+"int_tp ch_offset;",    // NOLINT
+"int_tp this_idx, that_idx;",    // NOLINT
+"for (int_tp offset = local_out_size >>= 1; offset > 0; offset >>=1) {",    // NOLINT
+"if (tOut < offset) {",    // NOLINT
+"start_idx = tOut * tile_size_in_all_ch + tId;",    // NOLINT
+"half_start_idx = (tOut + offset) * tile_size_in_all_ch + tId;",    // NOLINT
+"for (int_tp ch = 0; ch < ch_gr; ++ch) {",    // NOLINT
+"ch_offset = ch * tile_size;",    // NOLINT
+"this_idx = (start_idx + ch_offset) << 2;",    // NOLINT
+"that_idx = (half_start_idx + ch_offset) << 2;",    // NOLINT
+"((__local Dtype4*)(&local_dst[this_idx]))[0] +=",    // NOLINT
+"((__local Dtype4*)(&local_dst[that_idx]))[0];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"}",    // NOLINT
+"if (tOut == 0) {",    // NOLINT
+"for (int_tp ch = 0; ch < ch_gr; ++ch) {",    // NOLINT
+"dst_cache = vload4(tile_size * ch + tId, local_dst);",    // NOLINT
+"((__global Dtype4*)(&dst[(size * ch + gId)<<2]))[0] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(complex_multiplication_3d,Dtype)(__global Dtype* dst,",    // NOLINT
+"const int_tp offset_dst,",    // NOLINT
+"const __global Dtype* src1, const int_tp offset_src1,",    // NOLINT
+"const __global Dtype* src2, const int_tp offset_src2,",    // NOLINT
+"const int_tp size, const int_tp ch_gr, const int_tp out_gr, const int_tp num_output) {",    // NOLINT
+"dst  += offset_dst;",    // NOLINT
+"src1 += offset_src1;",    // NOLINT
+"src2 += offset_src2;",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp ch  = get_global_id(1);",    // NOLINT
+"int_tp out = get_global_id(2);",    // NOLINT
+"int_tp g = out / out_gr;",    // NOLINT
+"ch += (g * ch_gr);",    // NOLINT
+"int_tp c_offset = ch - ((ch / ch_gr) * ch_gr);",    // NOLINT
+"__global Dtype2* dst_ch = ((__global Dtype2*)(dst)) + (size * ch);",    // NOLINT
+"__global Dtype2* src1_out = ((__global Dtype2*)(src1)) + (size * out);",    // NOLINT
+"__global Dtype2* src2_out_ch = ((__global Dtype2*)(src2)) + (size * (out * ch_gr + c_offset));",    // NOLINT
+"Dtype2 s1_cache  = src1_out[gId];",    // NOLINT
+"Dtype2 s2_cache  = src2_out_ch[gId];",    // NOLINT
+"Dtype2 dst_cache = 0.f;",    // NOLINT
+"dst_cache.x = s1_cache.x * s2_cache.x - s1_cache.y * s2_cache.y;",    // NOLINT
+"dst_cache.y = s1_cache.x * s2_cache.y + s1_cache.y * s2_cache.x;",    // NOLINT
+"dst_ch[gId] += dst_cache;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* Convert [RRRR...GGGG...BBBB...] to [RGBRGBRGBRGB...] */",    // NOLINT
+"/* Reshape 2 */",    // NOLINT
+"__kernel void TEMPLATE(convert_data_to_channel_major,Dtype)(__global Dtype2* dst,",    // NOLINT
+"const __global Dtype2* src, const int_tp size, const int_tp ch_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"__global Dtype* dst_ptr = (__global Dtype*)(dst + (gId * ch_gr));",    // NOLINT
+"const __global Dtype* src_ptr = (const __global Dtype*)(src + gId);",    // NOLINT
+"Dtype2 s;",    // NOLINT
+"int_tp src_idx = 0;",    // NOLINT
+"for (int_tp i = 0; i < ch_gr; ++i) {",    // NOLINT
+"s = vload2(src_idx, src_ptr);",    // NOLINT
+"vstore2(s, i, dst_ptr);",    // NOLINT
+"src_idx += size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"/* Reshape 1 */",    // NOLINT
+"/*__kernel void TEMPLATE(convert_data_to_channel_major(__global Dtype4* dst,",    // NOLINT
+"const __global Dtype4* src, const int_tp size, const int_tp ch_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"const __global Dtype4* src_ptr4 = src + gId;",    // NOLINT
+"__global Dtype4* dst_ptr4 = dst + (gId * ch_gr);",    // NOLINT
+"for (int_tp i = 0; i < ch_gr; ++i) {",    // NOLINT
+"dst_ptr4[i] = src_ptr4[i*size];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"/* Convert multiple [RRRR...GGGG...BBBB...] to multiple [RGBRGBRGBRGB...] */",    // NOLINT
+"/* Reshape 2 */",    // NOLINT
+"__kernel void TEMPLATE(convert_weight_to_channel_major,Dtype)(__global Dtype2* dst,",    // NOLINT
+"const __global Dtype2* src, const int_tp size, const int_tp ch_gr,",    // NOLINT
+"const int_tp num_output) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp out_offset = out * (size * ch_gr);",    // NOLINT
+"__global Dtype* dst_ptr = (__global Dtype*)(dst + out_offset + (gId * ch_gr));",    // NOLINT
+"const __global Dtype* src_ptr =",    // NOLINT
+"(const __global Dtype*)(src + out_offset + gId);",    // NOLINT
+"Dtype2 s;",    // NOLINT
+"int_tp src_idx = 0;",    // NOLINT
+"for (int_tp i = 0; i < ch_gr; ++i) {",    // NOLINT
+"s = vload2(src_idx, src_ptr);",    // NOLINT
+"vstore2(s, i, dst_ptr);",    // NOLINT
+"src_idx += size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"/* Reshape 1 */",    // NOLINT
+"/*",    // NOLINT
+"__kernel void TEMPLATE(convert_weight_to_channel_major(__global Dtype4* dst,",    // NOLINT
+"const __global Dtype4* src, const int_tp size, const int_tp ch_gr,",    // NOLINT
+"const int_tp out_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp out_offset = out * (size * ch_gr);",    // NOLINT
+"__global Dtype4* dst_ptr4 = dst + out_offset + (gId * ch_gr);",    // NOLINT
+"const __global Dtype4* src_ptr4 = src + out_offset + gId;",    // NOLINT
+"for (int_tp i = 0; i < ch_gr; ++i) {",    // NOLINT
+"dst_ptr4[i] = src_ptr4[size * i];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"/* Cdotc per element */",    // NOLINT
+"/* Reshape 1 */",    // NOLINT
+"/*",    // NOLINT
+"__kernel void TEMPLATE(batchedCdotc(__global Dtype4* dst,",    // NOLINT
+"const __global Dtype4* src1, const __global Dtype4* src2,",    // NOLINT
+"const int_tp size, const int_tp ch_gr, const int_tp out_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp ch_offset = gId * ch_gr;",    // NOLINT
+"int_tp out_offset = out * size;",    // NOLINT
+"const __global Dtype* src1_ptr = (const __global Dtype*)(src1 + ch_offset);",    // NOLINT
+"const __global Dtype* src2_ptr = (const __global Dtype*)(src2 + (out_offset * ch_gr) + ch_offset);",    // NOLINT
+"Dtype4 cdotc = 0.f;",    // NOLINT
+"Dtype4 s1, s2;",    // NOLINT
+"for (int_tp c = 0; c < ch_gr; ++c) {",    // NOLINT
+"s1 = vload4(c, src1_ptr);",    // NOLINT
+"s2 = vload4(c, src2_ptr);",    // NOLINT
+"cdotc.xz += mad( s1.xz, s2.xz, s1.yw * s2.yw);",    // NOLINT
+"cdotc.yw += mad(-s1.xz, s2.yw, s1.yw * s2.xz);",    // NOLINT
+"}",    // NOLINT
+"__global Dtype4* dst_ptr4 = dst + out_offset + gId;",    // NOLINT
+"dst_ptr4[0] += cdotc;",    // NOLINT
+"}",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"/* Cdotc per two elements */",    // NOLINT
+"/* Reshape 2 */",    // NOLINT
+"__kernel void TEMPLATE(batchedCdotc,Dtype)(__global Dtype2* dst,",    // NOLINT
+"const __global Dtype2* src1, const __global Dtype2* src2,",    // NOLINT
+"const int_tp size, const int_tp ch_gr, const int_tp out_gr) {",    // NOLINT
+"int_tp gId = get_global_id(0);",    // NOLINT
+"int_tp out = get_global_id(1);",    // NOLINT
+"int_tp ch_offset = gId * ch_gr;",    // NOLINT
+"const __global Dtype* src1_ptr = (const __global Dtype*)(src1 + ch_offset);",    // NOLINT
+"const __global Dtype* src2_ptr =",    // NOLINT
+"(const __global Dtype*)(src2 + (out * size * ch_gr) + ch_offset);",    // NOLINT
+"Dtype4 cdotc4 = 0.f;",    // NOLINT
+"Dtype2 cdotc = 0.f;",    // NOLINT
+"Dtype4 s1, s2;",    // NOLINT
+"int_tp n = ch_gr >> 1;",    // NOLINT
+"int_tp r = ch_gr - (n << 1);",    // NOLINT
+"for (int_tp i = 0; i < n; ++i) {",    // NOLINT
+"s1 = vload4(i, src1_ptr);",    // NOLINT
+"s2 = vload4(i, src2_ptr);",    // NOLINT
+"cdotc4.xz += mad( s1.xz, s2.xz, s1.yw * s2.yw);",    // NOLINT
+"cdotc4.yw += mad(-s1.xz, s2.yw, s1.yw * s2.xz);",    // NOLINT
+"}",    // NOLINT
+"cdotc.x += dot(cdotc4.xz, (float2)(1));",    // NOLINT
+"cdotc.y += dot(cdotc4.yw, (float2)(1));",    // NOLINT
+"if (r == 1) {",    // NOLINT
+"const __global Dtype* src1_ptr2 =",    // NOLINT
+"(const __global Dtype*)(((const __global Dtype4*)(src1_ptr)) + n);",    // NOLINT
+"const __global Dtype* src2_ptr2 =",    // NOLINT
+"(const __global Dtype*)(((const __global Dtype4*)(src2_ptr)) + n);",    // NOLINT
+"Dtype2 t1 = vload2(0, src1_ptr2);",    // NOLINT
+"Dtype2 t2 = vload2(0, src2_ptr2);",    // NOLINT
+"cdotc.x += mad( t1.x, t2.x, t1.y * t2.y);",    // NOLINT
+"cdotc.y += mad(-t1.x, t2.y, t1.y * t2.x);",    // NOLINT
+"}",    // NOLINT
+"__global Dtype* dst_ptr = (__global Dtype*)(dst + (out * size) + gId);",    // NOLINT
+"vstore2(cdotc, 0, dst_ptr);",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(fillbuffer,Dtype)(const int_tp n, const char alpha, __global char* x,",    // NOLINT
+"const int_tp offx) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"x[index + offx] = alpha;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(fill,Dtype)(const int_tp n, const Dtype alpha, __global Dtype* x,",    // NOLINT
+"const int_tp offx) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"x[index + offx] = alpha;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(im2col,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* data_im,",    // NOLINT
+"const int_tp data_im_off,",    // NOLINT
+"const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w, const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h,",    // NOLINT
+"const int_tp dilation_w,",    // NOLINT
+"const int_tp height_col,",    // NOLINT
+"const int_tp width_col,",    // NOLINT
+"__global Dtype* data_col,",    // NOLINT
+"const int_tp data_col_off) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp h_index = index / width_col;",    // NOLINT
+"const int_tp h_col = h_index % height_col;",    // NOLINT
+"const int_tp w_col = index % width_col;",    // NOLINT
+"const int_tp c_im = h_index / height_col;",    // NOLINT
+"const int_tp c_col = c_im * kernel_h * kernel_w;",    // NOLINT
+"const int_tp h_offset = h_col * stride_h - pad_h;",    // NOLINT
+"const int_tp w_offset = w_col * stride_w - pad_w;",    // NOLINT
+"__global Dtype* data_col_ptr = data_col + data_col_off;",    // NOLINT
+"data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;",    // NOLINT
+"__global const Dtype* data_im_ptr = data_im + data_im_off;",    // NOLINT
+"data_im_ptr += (c_im * height + h_offset) * width + w_offset;",    // NOLINT
+"for (int_tp i = 0; i < kernel_h; ++i) {",    // NOLINT
+"for (int_tp j = 0; j < kernel_w; ++j) {",    // NOLINT
+"int_tp h_im = h_offset + i * dilation_h;",    // NOLINT
+"int_tp w_im = w_offset + j * dilation_w;",    // NOLINT
+"*data_col_ptr =",    // NOLINT
+"(h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?",    // NOLINT
+"data_im_ptr[i * dilation_h * width + j * dilation_w] : 0;",    // NOLINT
+"data_col_ptr += height_col * width_col;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(col2im,Dtype)(const int_tp n,",    // NOLINT
+"__global const Dtype* data_col,",    // NOLINT
+"const int_tp data_col_off,",    // NOLINT
+"const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w, const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h,",    // NOLINT
+"const int_tp dilation_w,",    // NOLINT
+"const int_tp height_col,",    // NOLINT
+"const int_tp width_col,",    // NOLINT
+"__global Dtype* data_im,",    // NOLINT
+"const int_tp data_im_off) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"Dtype val = 0;",    // NOLINT
+"const int_tp w_im = index % width + pad_w;",    // NOLINT
+"const int_tp h_im = (index / width) % height + pad_h;",    // NOLINT
+"const int_tp c_im = index / (width * height);",    // NOLINT
+"int_tp kernel_extent_w = (kernel_w - 1) * dilation_w + 1;",    // NOLINT
+"int_tp kernel_extent_h = (kernel_h - 1) * dilation_h + 1;",    // NOLINT
+"// compute the start and end of the output",    // NOLINT
+"const int_tp w_col_start =",    // NOLINT
+"(w_im < kernel_extent_w) ? 0 : (w_im - kernel_extent_w) / stride_w + 1;",    // NOLINT
+"const int_tp w_col_end = min(w_im / stride_w + 1, width_col);",    // NOLINT
+"const int_tp h_col_start =",    // NOLINT
+"(h_im < kernel_extent_h) ? 0 : (h_im - kernel_extent_h) / stride_h + 1;",    // NOLINT
+"const int_tp h_col_end = min(h_im / stride_h + 1, height_col);",    // NOLINT
+"// TODO: use LCM of stride and dilation to avoid unnecessary loops",    // NOLINT
+"for (int_tp h_col = h_col_start; h_col < h_col_end; h_col += 1) {",    // NOLINT
+"for (int_tp w_col = w_col_start; w_col < w_col_end; w_col += 1) {",    // NOLINT
+"int_tp h_k = (h_im - h_col * stride_h);",    // NOLINT
+"int_tp w_k = (w_im - w_col * stride_w);",    // NOLINT
+"if (h_k % dilation_h == 0 && w_k % dilation_w == 0) {",    // NOLINT
+"h_k /= dilation_h;",    // NOLINT
+"w_k /= dilation_w;",    // NOLINT
+"int_tp data_col_index = (((c_im * kernel_h + h_k) * kernel_w + w_k) *",    // NOLINT
+"height_col + h_col) * width_col + w_col;",    // NOLINT
+"val += data_col[data_col_off + data_col_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"data_im[data_im_off + index] = val;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(im2col_nd, Dtype)(const int_tp n, const int_tp num_axes,",    // NOLINT
+"const int_tp channel_axis,",    // NOLINT
+"__global const Dtype* data_im,",    // NOLINT
+"const int_tp data_im_off,",    // NOLINT
+"__global const int_tp* im_shape,",    // NOLINT
+"__global const int_tp* col_shape,",    // NOLINT
+"__global const int_tp* kernel_shape,",    // NOLINT
+"__global const int_tp* pad,",    // NOLINT
+"__global const int_tp* stride,",    // NOLINT
+"__global const int_tp* dilation,",    // NOLINT
+"__global Dtype* data_col,",    // NOLINT
+"const int_tp data_col_off) {",    // NOLINT
+"int_tp d_temp[6];",    // NOLINT
+"int_tp d_iter[6];",    // NOLINT
+"int_tp i;",    // NOLINT
+"",    // NOLINT
+"__global const int_tp* im_shape_ptr = im_shape + channel_axis;",    // NOLINT
+"__global const int_tp* col_shape_ptr = col_shape + channel_axis;",    // NOLINT
+"",    // NOLINT
+"__local int_tp shared_dilation[6];",    // NOLINT
+"__local int_tp shared_kernel_shape[6];",    // NOLINT
+"__local int_tp shared_pad[6];",    // NOLINT
+"__local int_tp shared_stride[6];",    // NOLINT
+"__local int_tp shared_col_shape[6 + 1];",    // NOLINT
+"__local int_tp shared_im_shape[6 + 1];",    // NOLINT
+"",    // NOLINT
+"for (int li = get_local_id(0); li < num_axes; li += get_local_size(0)) {",    // NOLINT
+"shared_dilation[li] = dilation[li];",    // NOLINT
+"shared_kernel_shape[li] = kernel_shape[li];",    // NOLINT
+"shared_pad[li] = pad[li];",    // NOLINT
+"shared_stride[li] = stride[li];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int li = get_local_id(0); li < num_axes + 1; li += get_local_size(0)) {",    // NOLINT
+"shared_col_shape[li] = col_shape_ptr[li];",    // NOLINT
+"shared_im_shape[li] = im_shape_ptr[li];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// Initialize channel_in, computed in the loop below, with intermediate",    // NOLINT
+"// computations used to compute the spatial indices.",    // NOLINT
+"int_tp channel_in = index;",    // NOLINT
+"int_tp channel_out = 1;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"d_temp[i] = channel_in % shared_col_shape[i + 1];",    // NOLINT
+"channel_in /= shared_col_shape[i + 1];",    // NOLINT
+"channel_out *= shared_kernel_shape[i];",    // NOLINT
+"}",    // NOLINT
+"channel_out *= channel_in;",    // NOLINT
+"int_tp data_col_inc = 1;",    // NOLINT
+"for (i = 0; i < num_axes; ++i) {",    // NOLINT
+"channel_out *= shared_col_shape[i + 1];",    // NOLINT
+"channel_out += d_temp[i];",    // NOLINT
+"d_temp[i] = d_temp[i] * shared_stride[i] - shared_pad[i];",    // NOLINT
+"channel_in *= shared_im_shape[i + 1];",    // NOLINT
+"channel_in += d_temp[i];",    // NOLINT
+"data_col_inc *= shared_col_shape[i + 1];",    // NOLINT
+"d_iter[i] = 0;",    // NOLINT
+"}",    // NOLINT
+"__global Dtype* data_col_ptr = data_col + data_col_off + channel_out;",    // NOLINT
+"__global const Dtype* data_im_ptr = data_im + data_im_off + channel_in;",    // NOLINT
+"bool incremented;",    // NOLINT
+"do {",    // NOLINT
+"bool in_range = true;",    // NOLINT
+"for (i = 0; i < num_axes; ++i) {",    // NOLINT
+"const int_tp d_iter_im = d_iter[i] * shared_dilation[i] + d_temp[i];",    // NOLINT
+"in_range &= d_iter_im >= 0 && d_iter_im < shared_im_shape[i + 1];",    // NOLINT
+"if (!in_range) {",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"if (in_range) {",    // NOLINT
+"int_tp data_im_offset = d_iter[0] * shared_dilation[0];",    // NOLINT
+"for (i = 1; i < num_axes; ++i) {",    // NOLINT
+"data_im_offset *= shared_im_shape[i + 1];",    // NOLINT
+"data_im_offset += d_iter[i] * shared_dilation[i];",    // NOLINT
+"}",    // NOLINT
+"*data_col_ptr = data_im_ptr[data_im_offset];",    // NOLINT
+"} else {",    // NOLINT
+"*data_col_ptr = 0;",    // NOLINT
+"}",    // NOLINT
+"data_col_ptr += data_col_inc;",    // NOLINT
+"incremented = false;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"const int_tp d_max = shared_kernel_shape[i];",    // NOLINT
+"if (d_iter[i] == d_max - 1) {",    // NOLINT
+"d_iter[i] = 0;",    // NOLINT
+"} else {  // d_iter[i] < d_max - 1",    // NOLINT
+"++d_iter[i];",    // NOLINT
+"incremented = true;",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"}  // for (int_tp i = num_axes - 1; i >= 0; --i)",    // NOLINT
+"} while (incremented);  // do",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(col2im_nd, Dtype)(const int_tp n, const int_tp num_axes,",    // NOLINT
+"const int_tp channel_axis,",    // NOLINT
+"__global const Dtype* data_col,",    // NOLINT
+"const int_tp data_col_off,",    // NOLINT
+"__global const int_tp* im_shape,",    // NOLINT
+"__global const int_tp* col_shape,",    // NOLINT
+"__global const int_tp* kernel_shape,",    // NOLINT
+"__global const int_tp* pad,",    // NOLINT
+"__global const int_tp* stride,",    // NOLINT
+"__global const int_tp* dilation,",    // NOLINT
+"__global Dtype* data_im,",    // NOLINT
+"const int_tp data_im_off) {",    // NOLINT
+"int_tp d_im[6];",    // NOLINT
+"int_tp d_col_iter[6];",    // NOLINT
+"int_tp d_col_start[6];",    // NOLINT
+"int_tp d_col_end[6];",    // NOLINT
+"",    // NOLINT
+"__global const int_tp* im_shape_ptr = im_shape + channel_axis;",    // NOLINT
+"__global const int_tp* col_shape_ptr = col_shape + channel_axis;",    // NOLINT
+"",    // NOLINT
+"__local int_tp shared_dilation[6];",    // NOLINT
+"__local int_tp shared_kernel_shape[6];",    // NOLINT
+"__local int_tp shared_pad[6];",    // NOLINT
+"__local int_tp shared_stride[6];",    // NOLINT
+"__local int_tp shared_col_shape[6 + 1];",    // NOLINT
+"__local int_tp shared_im_shape[6 + 1];",    // NOLINT
+"",    // NOLINT
+"for (int li = get_local_id(0); li < num_axes; li += get_local_size(0)) {",    // NOLINT
+"shared_dilation[li] = dilation[li];",    // NOLINT
+"shared_kernel_shape[li] = kernel_shape[li];",    // NOLINT
+"shared_pad[li] = pad[li];",    // NOLINT
+"shared_stride[li] = stride[li];",    // NOLINT
+"}",    // NOLINT
+"for (int li = get_local_id(0); li < num_axes + 1; li += get_local_size(0)) {",    // NOLINT
+"shared_col_shape[li] = col_shape_ptr[li];",    // NOLINT
+"shared_im_shape[li] = im_shape_ptr[li];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"// Initialize channel_in, computed in the loop below, with intermediate",    // NOLINT
+"// computations used to compute the spatial indices.",    // NOLINT
+"int_tp c_im = index;",    // NOLINT
+"// Calculate d_im (image dimensions).",    // NOLINT
+"for (int_tp i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"d_im[i] = c_im % shared_im_shape[i + 1] + shared_pad[i];",    // NOLINT
+"c_im /= shared_im_shape[i + 1];",    // NOLINT
+"}",    // NOLINT
+"// Calculate col start/end indices.",    // NOLINT
+"bool done = false;",    // NOLINT
+"for (int_tp i = 0; i < num_axes; ++i) {",    // NOLINT
+"const int_tp kernel_extent = shared_dilation[i]",    // NOLINT
+"* (shared_kernel_shape[i] - 1) + 1;",    // NOLINT
+"d_col_start[i] = d_col_iter[i] =",    // NOLINT
+"(d_im[i] < kernel_extent) ?",    // NOLINT
+"0 : (d_im[i] - kernel_extent) / shared_stride[i] + 1;",    // NOLINT
+"d_col_end[i] = min(d_im[i] / shared_stride[i] + 1,",    // NOLINT
+"shared_col_shape[i + 1]);",    // NOLINT
+"if (d_col_start[i] >= d_col_end[i]) {",    // NOLINT
+"// Skip computation if the dimension is 0 at any spatial axis --",    // NOLINT
+"// final val will be 0.",    // NOLINT
+"data_im[index] = 0;",    // NOLINT
+"done = true;",    // NOLINT
+"break;  // for (int_tp i = 0; i < num_axes; ++i)",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"if (!done) {",    // NOLINT
+"// Loop over the col to compute the output val.",    // NOLINT
+"Dtype val = 0;",    // NOLINT
+"bool incremented = true;",    // NOLINT
+"bool skip = false;",    // NOLINT
+"do {",    // NOLINT
+"// Compute the final offset.",    // NOLINT
+"int_tp final_offset = 0;",    // NOLINT
+"int_tp kernel_shape_prod = 1;",    // NOLINT
+"int_tp kernel_index;",    // NOLINT
+"for (int_tp i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"kernel_index = d_im[i] - d_col_iter[i] * shared_stride[i];",    // NOLINT
+"if (kernel_index % shared_dilation[i]) {",    // NOLINT
+"skip = true;",    // NOLINT
+"break;",    // NOLINT
+"} else {",    // NOLINT
+"kernel_index /= shared_dilation[i];",    // NOLINT
+"final_offset += kernel_index * kernel_shape_prod;",    // NOLINT
+"kernel_shape_prod *= shared_kernel_shape[i];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"if (!skip) {",    // NOLINT
+"final_offset += kernel_shape_prod * c_im;",    // NOLINT
+"for (int_tp i = 0; i < num_axes; ++i) {",    // NOLINT
+"final_offset *= shared_col_shape[i + 1];",    // NOLINT
+"final_offset += d_col_iter[i];",    // NOLINT
+"}",    // NOLINT
+"val += data_col[data_col_off + final_offset];",    // NOLINT
+"}",    // NOLINT
+"skip = false;",    // NOLINT
+"incremented = false;",    // NOLINT
+"for (int_tp i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"const int_tp d_max = d_col_end[i];",    // NOLINT
+"if (d_col_iter[i] == d_max - 1) {",    // NOLINT
+"d_col_iter[i] = d_col_start[i];",    // NOLINT
+"} else {  // d_col_iter[i] < d_max - 1",    // NOLINT
+"++d_col_iter[i];",    // NOLINT
+"incremented = true;",    // NOLINT
+"break;  // for (int_tp i = num_axes - 1; i >= 0; --i)",    // NOLINT
+"}",    // NOLINT
+"}  // for (int_tp i = num_axes - 1; i >= 0; --i)",    // NOLINT
+"} while (incremented);",    // NOLINT
+"data_im[data_im_off + index] = val;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lrn_compute_output,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"__global const Dtype* scale,",    // NOLINT
+"const Dtype negative_beta,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"out[index] = in[index] * pow(scale[index], negative_beta);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lrn_fill_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
+"const int_tp num, const int_tp channels,",    // NOLINT
+"const int_tp height, const int_tp width, const int_tp size,",    // NOLINT
+"const Dtype alpha_over_size, const Dtype k,",    // NOLINT
+"__global Dtype* const scale) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp n = index / width / height;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"__global const Dtype* in_off = in + offset;",    // NOLINT
+"__global Dtype* scale_off = scale + offset;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_scale = 0;",    // NOLINT
+"// fill the scale at [n, :, h, w]",    // NOLINT
+"// accumulate values",    // NOLINT
+"while (head < post_pad && head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// both add and subtract",    // NOLINT
+"while (head < channels) {",    // NOLINT
+"accum_scale += in_off[head * step] * in_off[head * step];",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_off[(head - post_pad) * step] = k + accum_scale * alpha_over_size;",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// subtract only",    // NOLINT
+"while (head < channels + post_pad) {",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_scale -= in_off[(head - size) * step]",    // NOLINT
+"* in_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"scale_off[(head - post_pad) * step] = k + accum_scale * alpha_over_size;",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* bottom_data,",    // NOLINT
+"__global const Dtype* top_data,",    // NOLINT
+"__global const Dtype* scale,",    // NOLINT
+"__global const Dtype* top_diff, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height,",    // NOLINT
+"const int_tp width, const int_tp size,",    // NOLINT
+"const Dtype negative_beta,",    // NOLINT
+"const Dtype cache_ratio,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp n = index / width / height;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"__global const Dtype* bottom_off = bottom_data + offset;",    // NOLINT
+"__global const Dtype* top_off = top_data + offset;",    // NOLINT
+"__global const Dtype* scale_off = scale + offset;",    // NOLINT
+"__global const Dtype* top_diff_off = top_diff + offset;",    // NOLINT
+"__global Dtype* bottom_diff_off = bottom_diff + offset;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = size - (size + 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_ratio = 0;",    // NOLINT
+"// accumulate values",    // NOLINT
+"while (head < post_pad && head < channels) {",    // NOLINT
+"accum_ratio += top_diff_off[head * step] * top_off[head * step]",    // NOLINT
+"/ scale_off[head * step];",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// both add and subtract",    // NOLINT
+"while (head < channels) {",    // NOLINT
+"accum_ratio += top_diff_off[head * step] * top_off[head * step]",    // NOLINT
+"/ scale_off[head * step];",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_ratio -= top_diff_off[(head - size) * step]",    // NOLINT
+"* top_off[(head - size) * step] / scale_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)",    // NOLINT
+"* step] * pow(scale_off[(head - post_pad) * step], negative_beta)",    // NOLINT
+"- cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"// subtract only",    // NOLINT
+"while (head < channels + post_pad) {",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"accum_ratio -= top_diff_off[(head - size) * step]",    // NOLINT
+"* top_off[(head - size) * step] / scale_off[(head - size) * step];",    // NOLINT
+"}",    // NOLINT
+"bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)",    // NOLINT
+"* step] * pow(scale_off[(head - post_pad) * step], negative_beta)",    // NOLINT
+"- cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;",    // NOLINT
+"++head;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"inline Dtype TEMPLATE(lstm_sigmoid,Dtype)(const Dtype x) {",    // NOLINT
+"return (Dtype)1 / ((Dtype)1 + exp(-x));",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"inline Dtype TEMPLATE(lstm_tanh,Dtype)(const Dtype x) {",    // NOLINT
+"return (Dtype)2 * TEMPLATE(lstm_sigmoid,Dtype)((Dtype)2 * x) - (Dtype)1;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lstm_acts_forward,Dtype)(const int_tp nthreads, const int_tp dim,",    // NOLINT
+"__global const Dtype* X, __global Dtype* X_acts) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp x_dim = 4 * dim;",    // NOLINT
+"const int_tp d = index % x_dim;",    // NOLINT
+"if (d < 3 * dim) {",    // NOLINT
+"X_acts[index] = TEMPLATE(lstm_sigmoid,Dtype)(X[index]);",    // NOLINT
+"} else {",    // NOLINT
+"X_acts[index] = TEMPLATE(lstm_tanh,Dtype)(X[index]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lstm_unit_forward,Dtype)(const int_tp nthreads, const int_tp dim,",    // NOLINT
+"__global const Dtype* C_prev, __global const Dtype* X, __global const Dtype* cont,",    // NOLINT
+"__global Dtype* C, __global Dtype* H) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = index / dim;",    // NOLINT
+"const int_tp d = index % dim;",    // NOLINT
+"__global const Dtype* X_offset = X + 4 * dim * n;",    // NOLINT
+"const Dtype i = X_offset[d];",    // NOLINT
+"const Dtype f = X_offset[1 * dim + d];",    // NOLINT
+"const Dtype o = X_offset[2 * dim + d];",    // NOLINT
+"const Dtype g = X_offset[3 * dim + d];",    // NOLINT
+"const Dtype c_prev = C_prev[index];",    // NOLINT
+"const Dtype c = cont[n] * f * c_prev + i * g;",    // NOLINT
+"C[index] = c;",    // NOLINT
+"const Dtype tanh_c = TEMPLATE(lstm_tanh,Dtype)(c);",    // NOLINT
+"H[index] = o * tanh_c;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lstm_unit_backward,Dtype)(const int_tp nthreads, const int_tp dim,",    // NOLINT
+"__global const Dtype* C_prev, __global const Dtype* X, __global const Dtype* C, __global const Dtype* H,",    // NOLINT
+"__global const Dtype* cont, __global const Dtype* C_diff, __global const Dtype* H_diff,",    // NOLINT
+"__global Dtype* C_prev_diff, __global Dtype* X_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = index / dim;",    // NOLINT
+"const int_tp d = index % dim;",    // NOLINT
+"__global const Dtype* X_offset = X + 4 * dim * n;",    // NOLINT
+"const Dtype i = X_offset[d];",    // NOLINT
+"const Dtype f = X_offset[1 * dim + d];",    // NOLINT
+"const Dtype o = X_offset[2 * dim + d];",    // NOLINT
+"const Dtype g = X_offset[3 * dim + d];",    // NOLINT
+"const Dtype c_prev = C_prev[index];",    // NOLINT
+"const Dtype c = C[index];",    // NOLINT
+"const Dtype tanh_c = TEMPLATE(lstm_tanh,Dtype)(c);",    // NOLINT
+"__global Dtype* c_prev_diff = C_prev_diff + index;",    // NOLINT
+"__global Dtype* X_diff_offset = X_diff + 4 * dim * n;",    // NOLINT
+"__global Dtype* i_diff = X_diff_offset + d;",    // NOLINT
+"__global Dtype* f_diff = X_diff_offset + 1 * dim + d;",    // NOLINT
+"__global Dtype* o_diff = X_diff_offset + 2 * dim + d;",    // NOLINT
+"__global Dtype* g_diff = X_diff_offset + 3 * dim + d;",    // NOLINT
+"const Dtype c_term_diff =",    // NOLINT
+"C_diff[index] + H_diff[index] * o * (1 - tanh_c * tanh_c);",    // NOLINT
+"const Dtype cont_n = cont[n];",    // NOLINT
+"*c_prev_diff = cont_n * c_term_diff * f;",    // NOLINT
+"*i_diff = c_term_diff * g;",    // NOLINT
+"*f_diff = cont_n * c_term_diff * c_prev;",    // NOLINT
+"*o_diff = H_diff[index] * tanh_c;",    // NOLINT
+"*g_diff = c_term_diff * i;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(lstm_acts_backward,Dtype)(const int_tp nthreads, const int_tp dim,",    // NOLINT
+"__global const Dtype* X_acts, __global const Dtype* X_acts_diff, __global Dtype* X_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp x_dim = 4 * dim;",    // NOLINT
+"const int_tp d = index % x_dim;",    // NOLINT
+"const Dtype X_act = X_acts[index];",    // NOLINT
+"if (d < 3 * dim) {",    // NOLINT
+"X_diff[index] = X_acts_diff[index] * X_act * ((Dtype)1 - X_act);",    // NOLINT
+"} else {",    // NOLINT
+"X_diff[index] = X_acts_diff[index] * ((Dtype)1 - X_act * X_act);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(mul,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa,",    // NOLINT
+"__global Dtype* b,",    // NOLINT
+"const int_tp offb, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[index + offy] = a[index + offa] * b[index + offb];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(div,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa,",    // NOLINT
+"__global Dtype* b,",    // NOLINT
+"const int_tp offb, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[index + offy] = a[index + offa] / b[index + offb];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(add_scalar,Dtype)(const int_tp N, const Dtype alpha,",    // NOLINT
+"__global Dtype* Y,",    // NOLINT
+"const int_tp offY) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < N; index += get_global_size(0)) {",    // NOLINT
+"Y[offY + index] += alpha;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(add,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, __global const Dtype* b,",    // NOLINT
+"const int_tp offb, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = a[offa + index] + b[offb + index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sub,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, __global const Dtype* b,",    // NOLINT
+"const int_tp offb, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = a[offa + index] - b[offb + index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(abs,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = fabs((Dtype)(a[offa + index]));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(exp,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = exp(a[offa + index]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(log,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = log((Dtype)(a[offa + index]));",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(powx,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa, Dtype alpha,",    // NOLINT
+"__global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"if(alpha == 2.0) {",    // NOLINT
+"y[offy + index] = pow((Dtype)fabs(a[offa + index]), (Dtype)alpha);",    // NOLINT
+"} else {",    // NOLINT
+"y[offy + index] = pow((Dtype)a[offa + index], (Dtype)alpha);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sign,Dtype)(const int_tp n, __global const Dtype* x,",    // NOLINT
+"const int_tp offx, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[index + offy] = (0.0 < x[index + offx])",    // NOLINT
+"- (x[index + offx] < 0.0);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sgnbit,Dtype)(const int_tp n, __global const Dtype* x,",    // NOLINT
+"const int_tp offx, __global Dtype* y,",    // NOLINT
+"const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[index + offy] = signbit(x[index + offx]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(merge_copy_forward_stack, Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp dims,",    // NOLINT
+"__global const Dtype* bottom_a,",    // NOLINT
+"const int_tp forward_a,",    // NOLINT
+"__global const Dtype* bottom_b,",    // NOLINT
+"const int_tp forward_b,",    // NOLINT
+"__global Dtype* top,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels_a,",    // NOLINT
+"const int_tp channels_b,",    // NOLINT
+"__global const int_tp* shape_a,",    // NOLINT
+"__global const int_tp* shape_b) {",    // NOLINT
+"int_tp pad[6];",    // NOLINT
+"int_tp tmp_idx[6];",    // NOLINT
+"int_tp size_a = 1;",    // NOLINT
+"int_tp size_b = 1;",    // NOLINT
+"",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"pad[i] = (shape_b[i] - shape_a[i]) / 2;",    // NOLINT
+"size_a *= shape_a[i];",    // NOLINT
+"size_b *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp batch_id = index / ((channels_a + channels_b) * size_a);",    // NOLINT
+"int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)",    // NOLINT
+"/ (channels_a * size_a)) % 2;",    // NOLINT
+"int_tp counter = index;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"tmp_idx[i] = counter % shape_a[i];",    // NOLINT
+"counter /= shape_a[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if (bottom_id == 0) {",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels_a;",    // NOLINT
+"int_tp aidx = batch_id * channels_a + channel_id;",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"aidx *= shape_a[i];",    // NOLINT
+"aidx += tmp_idx[i];",    // NOLINT
+"}",    // NOLINT
+"top[index] = (forward_a == 1) ? bottom_a[aidx] : 0;",    // NOLINT
+"} else {",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels_b;",    // NOLINT
+"int_tp bidx = (batch_id * channels_b + channel_id) * size_b;",    // NOLINT
+"int_tp btemp = 1;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"bidx += btemp * (tmp_idx[i] + pad[i]);",    // NOLINT
+"btemp *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"top[index] = (forward_b == 1) ? bottom_b[bidx] : 0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(merge_copy_backward_stack,Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp dims,",    // NOLINT
+"__global Dtype* bottom_a,",    // NOLINT
+"const int_tp backward_a,",    // NOLINT
+"__global Dtype* bottom_b,",    // NOLINT
+"const int_tp backward_b,",    // NOLINT
+"__global const Dtype* top,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels_a,",    // NOLINT
+"const int_tp channels_b,",    // NOLINT
+"__global const int_tp* shape_a,",    // NOLINT
+"__global const int_tp* shape_b) {",    // NOLINT
+"int_tp pad[6];",    // NOLINT
+"int_tp tmp_idx[6];",    // NOLINT
+"int_tp size_a = 1;",    // NOLINT
+"int_tp size_b = 1;",    // NOLINT
+"",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"pad[i] = (shape_b[i] - shape_a[i]) / 2;",    // NOLINT
+"size_a *= shape_a[i];",    // NOLINT
+"size_b *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp batch_id = index / ((channels_a + channels_b) * size_a);",    // NOLINT
+"int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)",    // NOLINT
+"/ (channels_a * size_a)) % 2;",    // NOLINT
+"int_tp counter = index;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"tmp_idx[i] = counter % shape_a[i];",    // NOLINT
+"counter /= shape_a[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if (bottom_id == 0) {",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels_a;",    // NOLINT
+"int_tp aidx = batch_id * channels_a + channel_id;",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"aidx *= shape_a[i];",    // NOLINT
+"aidx += tmp_idx[i];",    // NOLINT
+"}",    // NOLINT
+"bottom_a[aidx] = (backward_a == 1) ? top[index] : 0;",    // NOLINT
+"} else {",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels_b;",    // NOLINT
+"int_tp bidx = (batch_id * channels_b + channel_id) * size_b;",    // NOLINT
+"int_tp btemp = 1;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"bidx += btemp * (tmp_idx[i] + pad[i]);",    // NOLINT
+"btemp *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"bottom_b[bidx] = (backward_b == 1) ? top[index] : 0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(merge_copy_forward_add, Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp dims,",    // NOLINT
+"__global const Dtype* bottom_a,",    // NOLINT
+"const int_tp forward_a,",    // NOLINT
+"__global const Dtype* bottom_b,",    // NOLINT
+"const int_tp forward_b,",    // NOLINT
+"__global Dtype* top,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"__global const int_tp* shape_a,",    // NOLINT
+"__global const int_tp* shape_b) {",    // NOLINT
+"int_tp pad[6];",    // NOLINT
+"int_tp tmp_idx[6];",    // NOLINT
+"int_tp size_a = 1;",    // NOLINT
+"int_tp size_b = 1;",    // NOLINT
+"",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"pad[i] = (shape_b[i] - shape_a[i]) / 2;",    // NOLINT
+"size_a *= shape_a[i];",    // NOLINT
+"size_b *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp batch_id = index / (channels * size_a);",    // NOLINT
+"int_tp counter = index;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"tmp_idx[i] = counter % shape_a[i];",    // NOLINT
+"counter /= shape_a[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"top[index] = 0;",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels;",    // NOLINT
+"int_tp aidx = batch_id * channels + channel_id;",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"aidx *= shape_a[i];",    // NOLINT
+"aidx += tmp_idx[i];",    // NOLINT
+"}",    // NOLINT
+"top[index] = forward_a ? top[index] + bottom_a[aidx] : top[index];",    // NOLINT
+"int_tp bidx = (batch_id * channels + channel_id) * size_b;",    // NOLINT
+"int_tp btemp = 1;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"bidx += btemp * (tmp_idx[i] + pad[i]);",    // NOLINT
+"btemp *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"top[index] = forward_b ? top[index] + bottom_b[bidx] : top[index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(merge_copy_backward_add,Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp dims,",    // NOLINT
+"__global Dtype* bottom_a,",    // NOLINT
+"const int_tp backward_a,",    // NOLINT
+"__global Dtype* bottom_b,",    // NOLINT
+"const int_tp backward_b,",    // NOLINT
+"__global const Dtype* top,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"__global const int_tp* shape_a,",    // NOLINT
+"__global const int_tp* shape_b) {",    // NOLINT
+"int_tp pad[6];",    // NOLINT
+"int_tp tmp_idx[6];",    // NOLINT
+"int_tp size_a = 1;",    // NOLINT
+"int_tp size_b = 1;",    // NOLINT
+"",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"pad[i] = (shape_b[i] - shape_a[i]) / 2;",    // NOLINT
+"size_a *= shape_a[i];",    // NOLINT
+"size_b *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp batch_id = index / (channels * size_a);",    // NOLINT
+"int_tp counter = index;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"tmp_idx[i] = counter % shape_a[i];",    // NOLINT
+"counter /= shape_a[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int_tp channel_id = (index / size_a) % channels;",    // NOLINT
+"int_tp aidx = batch_id * channels + channel_id;",    // NOLINT
+"for (int_tp i = 0; i < dims; ++i) {",    // NOLINT
+"aidx *= shape_a[i];",    // NOLINT
+"aidx += tmp_idx[i];",    // NOLINT
+"}",    // NOLINT
+"bottom_a[aidx] = backward_a ? top[index] : 0;",    // NOLINT
+"int_tp bidx = (batch_id * channels + channel_id) * size_b;",    // NOLINT
+"int_tp btemp = 1;",    // NOLINT
+"for (int_tp i = dims - 1; i >= 0; --i) {",    // NOLINT
+"bidx += btemp * (tmp_idx[i] + pad[i]);",    // NOLINT
+"btemp *= shape_b[i];",    // NOLINT
+"}",    // NOLINT
+"bottom_b[bidx] = backward_b ? top[index] : 0;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp pw = index % pooled_width;",    // NOLINT
+"const int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"const int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"const int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"const int_tp hend = min(hstart + kernel_h, height);",    // NOLINT
+"const int_tp wend = min(wstart + kernel_w, width);",    // NOLINT
+"hstart = max(hstart, (int_tp)0);",    // NOLINT
+"wstart = max(wstart, (int_tp)0);",    // NOLINT
+"Dtype maxval = -FLT_MAX;",    // NOLINT
+"int_tp maxidx = -1;",    // NOLINT
+"__global const Dtype* bottom_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"if (bottom_slice[h * width + w] > maxval) {",    // NOLINT
+"maxidx = h * width + w;",    // NOLINT
+"maxval = bottom_slice[maxidx];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"if (use_mask == 1) {",    // NOLINT
+"mask[index] = maxidx;",    // NOLINT
+"} else {",    // NOLINT
+"top_mask[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_forward,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w, __global Dtype* top_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"{",    // NOLINT
+"const int_tp pw = index % pooled_width;",    // NOLINT
+"const int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"const int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"const int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + kernel_h, height + pad_h);",    // NOLINT
+"int_tp wend = min(wstart + kernel_w, width + pad_w);",    // NOLINT
+"const int_tp pool_size = (hend - hstart) * (wend - wstart);",    // NOLINT
+"hstart = max(hstart, (int_tp)0);",    // NOLINT
+"wstart = max(wstart, (int_tp)0);",    // NOLINT
+"hend = min(hend, height);",    // NOLINT
+"wend = min(wend, width);",    // NOLINT
+"Dtype aveval = 0;",    // NOLINT
+"__global const Dtype* bottom_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"aveval += bottom_slice[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = aveval / pool_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sto_pool_forward_train,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"__global Dtype* rand_idx,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp pw = index % pooled_width;",    // NOLINT
+"const int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"const int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"const int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"const int_tp hstart = ph * stride_h;",    // NOLINT
+"const int_tp hend = min(hstart + kernel_h, height);",    // NOLINT
+"const int_tp wstart = pw * stride_w;",    // NOLINT
+"const int_tp wend = min(wstart + kernel_w, width);",    // NOLINT
+"Dtype cumsum = 0.;",    // NOLINT
+"__global const Dtype* bottom_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"// First pass: get sum",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"cumsum += bottom_slice[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"const float thres = rand_idx[index] * cumsum;",    // NOLINT
+"// Second pass: get value, and set index.",    // NOLINT
+"cumsum = 0;",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"cumsum += bottom_slice[h * width + w];",    // NOLINT
+"if (cumsum >= thres) {",    // NOLINT
+"rand_idx[index] = ((n * channels + c) * height + h) * width + w;",    // NOLINT
+"top_data[index] = bottom_slice[h * width + w];",    // NOLINT
+"h = hend;",    // NOLINT
+"w = wend;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sto_pool_forward_test,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp pw = index % pooled_width;",    // NOLINT
+"const int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"const int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"const int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"const int_tp hstart = ph * stride_h;",    // NOLINT
+"const int_tp hend = min(hstart + kernel_h, height);",    // NOLINT
+"const int_tp wstart = pw * stride_w;",    // NOLINT
+"const int_tp wend = min(wstart + kernel_w, width);",    // NOLINT
+"// We set cumsum to be 0 to avoid divide-by-zero problems",    // NOLINT
+"Dtype cumsum = FLT_MIN;",    // NOLINT
+"Dtype cumvalues = 0.;",    // NOLINT
+"__global const Dtype* bottom_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"// First pass: get sum",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"cumsum += bottom_slice[h * width + w];",    // NOLINT
+"cumvalues += bottom_slice[h * width + w] * bottom_slice[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = cumvalues / cumsum;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int use_mask,",    // NOLINT
+"__global const int_tp* mask,",    // NOLINT
+"__global const Dtype* top_mask,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const int_tp pooled_height,",    // NOLINT
+"const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w,",    // NOLINT
+"const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp c = (index / width / height) % channels;",    // NOLINT
+"const int_tp n = index / width / height / channels;",    // NOLINT
+"const int_tp phstart =",    // NOLINT
+"(h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;",    // NOLINT
+"const int_tp phend = min((h + pad_h) / stride_h + 1, pooled_height);",    // NOLINT
+"const int_tp pwstart =",    // NOLINT
+"(w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;",    // NOLINT
+"const int_tp pwend = min((w + pad_w) / stride_w + 1, pooled_width);",    // NOLINT
+"Dtype gradient = 0;",    // NOLINT
+"const int_tp offset = (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"__global const Dtype* top_diff_slice = top_diff + offset;",    // NOLINT
+"if (use_mask == 1) {",    // NOLINT
+"__global const int_tp* mask_slice = mask + offset;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"if (mask_slice[ph * pooled_width + pw] == h * width + w) {",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"} else {",    // NOLINT
+"__global const Dtype* top_mask_slice = top_mask + offset;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"if (top_mask_slice[ph * pooled_width + pw] == h * width + w) {",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const int_tp pooled_height,",    // NOLINT
+"const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w,",    // NOLINT
+"const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width + pad_w;",    // NOLINT
+"const int_tp h = (index / width) % height + pad_h;",    // NOLINT
+"const int_tp c = (index / width / height) % channels;",    // NOLINT
+"const int_tp n = index / width / height / channels;",    // NOLINT
+"const int_tp phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;",    // NOLINT
+"const int_tp phend = min(h / stride_h + 1, pooled_height);",    // NOLINT
+"const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;",    // NOLINT
+"const int_tp pwend = min(w / stride_w + 1, pooled_width);",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"__global const Dtype* const top_diff_slice = top_diff",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"// figure out the pooling size",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + kernel_h, height + pad_h);",    // NOLINT
+"int_tp wend = min(wstart + kernel_w, width + pad_w);",    // NOLINT
+"int_tp pool_size = (hend - hstart) * (wend - wstart);",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sto_pool_backward,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* rand_idx,",    // NOLINT
+"__global const Dtype* const top_diff, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w, __global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp c = (index / width / height) % channels;",    // NOLINT
+"const int_tp n = index / width / height / channels;",    // NOLINT
+"const int_tp phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;",    // NOLINT
+"const int_tp phend = min(h / stride_h + 1, pooled_height);",    // NOLINT
+"const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;",    // NOLINT
+"const int_tp pwend = min(w / stride_w + 1, pooled_width);",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"__global const Dtype* rand_idx_slice = rand_idx",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"__global const Dtype* top_diff_slice = top_diff",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw]",    // NOLINT
+"* (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,",    // NOLINT
+"const int_tp num_axes,",    // NOLINT
+"__global const Dtype* bottom_data,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"__global const int_tp* size,",    // NOLINT
+"__global const int_tp* pooled_size,",    // NOLINT
+"__global const int_tp* kernel_size,",    // NOLINT
+"__global const int_tp* ext_kernel_size,",    // NOLINT
+"__global const int_tp* stride,",    // NOLINT
+"__global const int_tp* dilation,",    // NOLINT
+"__global const int_tp* pad,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"const int use_mask,",    // NOLINT
+"__global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"int_tp d_idx[6];",    // NOLINT
+"int_tp d_start[6];",    // NOLINT
+"int_tp d_end[6];",    // NOLINT
+"int_tp d_iter[6];",    // NOLINT
+"int_tp i;",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"int_tp offset = 1;",    // NOLINT
+"int_tp num = index;",    // NOLINT
+"",    // NOLINT
+"bool do_continue = false;",    // NOLINT
+"",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"d_idx[i] = num % pooled_size[i];",    // NOLINT
+"d_start[i] = d_idx[i] * stride[i] - pad[i];",    // NOLINT
+"d_end[i] = min(d_start[i] + ext_kernel_size[i], size[i]);",    // NOLINT
+"while (d_start[i] < 0) {",    // NOLINT
+"d_start[i] += dilation[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"num /= pooled_size[i];",    // NOLINT
+"offset *= size[i];",    // NOLINT
+"d_iter[i] = d_start[i];",    // NOLINT
+"",    // NOLINT
+"if (d_start[i] >= d_end[i]) {",    // NOLINT
+"top_data[index] = -FLT_MAX;",    // NOLINT
+"if (use_mask) {",    // NOLINT
+"mask[index] = -1;",    // NOLINT
+"} else {",    // NOLINT
+"top_mask[index] = -1;",    // NOLINT
+"}",    // NOLINT
+"do_continue = true;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(do_continue) {",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int_tp chan = num % channels;",    // NOLINT
+"num /= channels;",    // NOLINT
+"offset *= (num * channels + chan);",    // NOLINT
+"",    // NOLINT
+"Dtype maxval = -FLT_MAX;",    // NOLINT
+"int_tp maxidx = -1;",    // NOLINT
+"int_tp final_offset = 0;",    // NOLINT
+"",    // NOLINT
+"bool incremented;",    // NOLINT
+"do {",    // NOLINT
+"final_offset = 0;",    // NOLINT
+"int_tp size_prod = 1;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"final_offset += d_iter[i] * size_prod;",    // NOLINT
+"size_prod *= size[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if (bottom_data[offset + final_offset] > maxval) {",    // NOLINT
+"maxidx = final_offset;",    // NOLINT
+"maxval = bottom_data[offset + final_offset];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"incremented = false;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"if (d_iter[i] >= d_end[i] - dilation[i]) {",    // NOLINT
+"d_iter[i] = d_start[i];",    // NOLINT
+"} else {",    // NOLINT
+"d_iter[i] += dilation[i];",    // NOLINT
+"incremented = true;",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"} while (incremented);",    // NOLINT
+"",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"if (use_mask == 1) {",    // NOLINT
+"mask[index] = maxidx;",    // NOLINT
+"} else {",    // NOLINT
+"top_mask[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,",    // NOLINT
+"const int_tp num_axes,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int use_mask,",    // NOLINT
+"__global const int_tp* mask,",    // NOLINT
+"__global const Dtype* top_mask,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"__global const int_tp* size,",    // NOLINT
+"__global const int_tp* pooled_size,",    // NOLINT
+"__global const int_tp* kernel_size,",    // NOLINT
+"__global const int_tp* ext_kernel_size,",    // NOLINT
+"__global const int_tp* stride,",    // NOLINT
+"__global const int_tp* dilation,",    // NOLINT
+"__global const int_tp* pad,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"int_tp d_idx[6];",    // NOLINT
+"int_tp d_start[6];",    // NOLINT
+"int_tp d_end[6];",    // NOLINT
+"int_tp d_iter[6];",    // NOLINT
+"int_tp i;",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"int_tp offset = 1;",    // NOLINT
+"int_tp num = index;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"d_idx[i] = num % size[i];",    // NOLINT
+"d_start[i] =",    // NOLINT
+"(d_idx[i] + pad[i] < ext_kernel_size[i]) ?",    // NOLINT
+"0 : (d_idx[i] + pad[i] - ext_kernel_size[i]) / stride[i] + 1;",    // NOLINT
+"d_end[i] = min((int_tp) ((d_idx[i] + pad[i]) / stride[i]),",    // NOLINT
+"(int_tp) (pooled_size[i] - 1));",    // NOLINT
+"num /= size[i];",    // NOLINT
+"offset *= pooled_size[i];",    // NOLINT
+"d_iter[i] = d_start[i];",    // NOLINT
+"",    // NOLINT
+"if (d_start[i] > d_end[i]) {",    // NOLINT
+"bottom_diff[index] = 0;",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"int_tp chan = num % channels;",    // NOLINT
+"num /= channels;",    // NOLINT
+"offset *= (num * channels + chan);",    // NOLINT
+"",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"int_tp final_offset = 0;",    // NOLINT
+"int_tp im_offset = 0;",    // NOLINT
+"",    // NOLINT
+"bool incremented;",    // NOLINT
+"do {",    // NOLINT
+"final_offset = offset;",    // NOLINT
+"im_offset = 0;",    // NOLINT
+"int_tp size_prod = 1;",    // NOLINT
+"int_tp pooled_size_prod = 1;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"final_offset += d_iter[i] * pooled_size_prod;",    // NOLINT
+"im_offset += d_idx[i] * size_prod;",    // NOLINT
+"size_prod *= size[i];",    // NOLINT
+"pooled_size_prod *= pooled_size[i];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if (use_mask) {",    // NOLINT
+"if (mask[final_offset] == im_offset) {",    // NOLINT
+"gradient += top_diff[final_offset];",    // NOLINT
+"}",    // NOLINT
+"} else {",    // NOLINT
+"if (top_mask[final_offset] == im_offset) {",    // NOLINT
+"gradient += top_diff[final_offset];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"incremented = false;",    // NOLINT
+"for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
+"if (d_iter[i] >= d_end[i]) {",    // NOLINT
+"d_iter[i] = d_start[i];",    // NOLINT
+"} else {",    // NOLINT
+"++d_iter[i];",    // NOLINT
+"incremented = true;",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"} while (incremented);",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward_sk,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global Dtype* bottom_data,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const int_tp pooled_height,",    // NOLINT
+"const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w,",    // NOLINT
+"const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w,",    // NOLINT
+"const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h,",    // NOLINT
+"const int_tp dilation_w,",    // NOLINT
+"const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"const int use_mask,",    // NOLINT
+"__global int_tp* mask,",    // NOLINT
+"__global Dtype* top_mask) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp pw = index % pooled_width;",    // NOLINT
+"int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + ext_kernel_h, height);",    // NOLINT
+"int_tp wend = min(wstart + ext_kernel_w, width);",    // NOLINT
+"while (hstart < 0) {",    // NOLINT
+"hstart += dilation_h;",    // NOLINT
+"}",    // NOLINT
+"while (wstart < 0) {",    // NOLINT
+"wstart += dilation_w;",    // NOLINT
+"}",    // NOLINT
+"Dtype maxval = -FLT_MAX;",    // NOLINT
+"int_tp maxidx = -1;",    // NOLINT
+"__global Dtype* bottom_data_ptr = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"for (int_tp h = hstart; h < hend; h += dilation_h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; w += dilation_w) {",    // NOLINT
+"if (bottom_data_ptr[h * width + w] > maxval) {",    // NOLINT
+"maxidx = h * width + w;",    // NOLINT
+"maxval = bottom_data_ptr[maxidx];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"if (use_mask == 1) {",    // NOLINT
+"mask[index] = maxidx;",    // NOLINT
+"} else {",    // NOLINT
+"top_mask[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_backward_sk,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* top_diff, const int use_mask,",    // NOLINT
+"__global const int_tp* mask, __global const Dtype* top_mask,",    // NOLINT
+"const int_tp num, const int_tp channels, const int_tp height,",    // NOLINT
+"const int_tp width, const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h, const int_tp dilation_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"",    // NOLINT
+"__global const int_tp* mask_ptr = mask;",    // NOLINT
+"__global const Dtype* top_diff_ptr = top_diff;",    // NOLINT
+"",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"int_tp w = index % width;",    // NOLINT
+"int_tp h = (index / width) % height;",    // NOLINT
+"int_tp c = (index / width / height) % channels;",    // NOLINT
+"int_tp n = index / width / height / channels;",    // NOLINT
+"",    // NOLINT
+"int_tp phstart =",    // NOLINT
+"(h + pad_h < ext_kernel_h) ? 0 : (h + pad_h - ext_kernel_h) / stride_h + 1;",    // NOLINT
+"int_tp phend = min(((h + pad_h) / stride_h + 1),",    // NOLINT
+"pooled_height);",    // NOLINT
+"int_tp pwstart =",    // NOLINT
+"(w + pad_w < ext_kernel_w) ? 0 : (w + pad_w - ext_kernel_w) / stride_w + 1;",    // NOLINT
+"int_tp pwend = min(((w + pad_w) / stride_w + 1),",    // NOLINT
+"pooled_width);",    // NOLINT
+"",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"int_tp offset = (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"top_diff_ptr += offset;",    // NOLINT
+"if (use_mask == 1) {",    // NOLINT
+"mask_ptr += offset;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"if (mask_ptr[ph * pooled_width + pw] == h * width + w) {",    // NOLINT
+"gradient += top_diff_ptr[ph * pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"} else {",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"if (top_mask[ph * pooled_width + pw] == h * width + w) {",    // NOLINT
+"gradient += top_diff_ptr[ph * pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_forward_sk,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h, const int_tp dilation_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"",    // NOLINT
+"int_tp pool_size = 0;",    // NOLINT
+"int_tp pw = index % pooled_width;",    // NOLINT
+"int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = hstart + ext_kernel_h;",    // NOLINT
+"int_tp wend = wstart + ext_kernel_w;",    // NOLINT
+"// Overspill over the image + pad does",    // NOLINT
+"// not contribute to pool size",    // NOLINT
+"while (hend > height + pad_h) {",    // NOLINT
+"hend -= dilation_h;",    // NOLINT
+"}",    // NOLINT
+"while (wend > width + pad_w) {",    // NOLINT
+"wend -= dilation_w;",    // NOLINT
+"}",    // NOLINT
+"Dtype aveval = 0;",    // NOLINT
+"__global const Dtype* bottom_data_ptr = bottom_data;",    // NOLINT
+"bottom_data_ptr += (n * channels + c) * height * width;",    // NOLINT
+"for (int_tp h = hstart; h < hend; h += dilation_h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; w += dilation_w) {",    // NOLINT
+"if (h >= 0 && h < height && w >= 0 && w < width) {",    // NOLINT
+"aveval += bottom_data_ptr[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"++pool_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = aveval / pool_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_backward_sk,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const int_tp pooled_height,",    // NOLINT
+"const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w,",    // NOLINT
+"const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w,",    // NOLINT
+"const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h,",    // NOLINT
+"const int_tp dilation_w,",    // NOLINT
+"const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width;",    // NOLINT
+"const int_tp h = (index / width) % height;",    // NOLINT
+"const int_tp c = (index / width / height) % channels;",    // NOLINT
+"const int_tp n = index / width / height / channels;",    // NOLINT
+"int_tp phstart =",    // NOLINT
+"(h + pad_h < ext_kernel_h) ? 0 : (h + pad_h - ext_kernel_h) / stride_h + 1;",    // NOLINT
+"int_tp phend = min(((h + pad_h) / stride_h + 1),",    // NOLINT
+"pooled_height);",    // NOLINT
+"int_tp pwstart =",    // NOLINT
+"(w + pad_w < ext_kernel_w) ? 0 : (w + pad_w - ext_kernel_w) / stride_w + 1;",    // NOLINT
+"int_tp pwend = min(((w + pad_w) / stride_w + 1),",    // NOLINT
+"pooled_width);",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"__global const Dtype* const top_diff_slice = top_diff",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"// figure out the pooling size",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + ext_kernel_h, height + pad_h);",    // NOLINT
+"int_tp wend = min(wstart + ext_kernel_w, width + pad_w);",    // NOLINT
+"int_tp pool_size =",    // NOLINT
+"((hend - hstart - 1) / dilation_h + 1) *",    // NOLINT
+"((wend - wstart - 1) / dilation_w + 1);",    // NOLINT
+"if (h >= hstart && h < hend &&",    // NOLINT
+"(h - hstart) % dilation_h == 0 &&",    // NOLINT
+"w >= wstart && w < wend &&",    // NOLINT
+"(w - wstart) % dilation_w == 0) {",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sto_pool_forward_train_sk,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h, const int_tp dilation_w, __global Dtype* rand_idx,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp pw = index % pooled_width;",    // NOLINT
+"int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h;",    // NOLINT
+"int_tp hend = min(hstart + ext_kernel_h, height);",    // NOLINT
+"int_tp wstart = pw * stride_w;",    // NOLINT
+"int_tp wend = min(wstart + ext_kernel_w, width);",    // NOLINT
+"Dtype cumsum = 0.;",    // NOLINT
+"__global const Dtype* bottom_data_ptr = bottom_data;",    // NOLINT
+"bottom_data_ptr += (n * channels + c) * height * width;",    // NOLINT
+"// First pass: get sum",    // NOLINT
+"for (int_tp h = hstart; h < hend; h += dilation_h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; w += dilation_w) {",    // NOLINT
+"cumsum += bottom_data_ptr[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"float thres = rand_idx[index] * cumsum;",    // NOLINT
+"// Second pass: get value, and set index.",    // NOLINT
+"cumsum = 0;",    // NOLINT
+"for (int_tp h = hstart; h < hend; h += dilation_h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; w += dilation_w) {",    // NOLINT
+"cumsum += bottom_data_ptr[h * width + w];",    // NOLINT
+"if (cumsum >= thres) {",    // NOLINT
+"rand_idx[index] = ((n * channels + c) * height + h) * width + w;",    // NOLINT
+"top_data[index] = bottom_data_ptr[h * width + w];",    // NOLINT
+"h = hend;",    // NOLINT
+"w = wend;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sto_pool_forward_test_sk,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp ext_kernel_h,",    // NOLINT
+"const int_tp ext_kernel_w, const int_tp stride_h, const int_tp stride_w,",    // NOLINT
+"const int_tp dilation_h, const int_tp dilation_w,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"int_tp pw = index % pooled_width;",    // NOLINT
+"int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h;",    // NOLINT
+"int_tp hend = min(hstart + ext_kernel_h, height);",    // NOLINT
+"int_tp wstart = pw * stride_w;",    // NOLINT
+"int_tp wend = min(wstart + ext_kernel_w, width);",    // NOLINT
+"// We set cumsum to be 0 to avoid divide-by-zero problems",    // NOLINT
+"Dtype cumsum = FLT_MIN;",    // NOLINT
+"Dtype cumvalues = 0.;",    // NOLINT
+"__global const Dtype* bottom_data_ptr = bottom_data;",    // NOLINT
+"bottom_data_ptr += (n * channels + c) * height * width;",    // NOLINT
+"// First pass: get sum",    // NOLINT
+"for (int_tp h = hstart; h < hend; h += dilation_h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; w += dilation_w) {",    // NOLINT
+"cumsum += bottom_data_ptr[h * width + w];",    // NOLINT
+"cumvalues += bottom_data_ptr[h * width + w]",    // NOLINT
+"* bottom_data_ptr[h * width + w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = cumvalues / cumsum;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(slice,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* in_data,",    // NOLINT
+"const int forward, const int_tp num_slices,",    // NOLINT
+"const int_tp slice_size,",    // NOLINT
+"const int_tp bottom_slice_axis,",    // NOLINT
+"const int_tp top_slice_axis,",    // NOLINT
+"const int_tp offset_slice_axis,",    // NOLINT
+"__global Dtype* out_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp total_slice_size = slice_size * top_slice_axis;",    // NOLINT
+"const int_tp slice_num = index / total_slice_size;",    // NOLINT
+"const int_tp slice_index = index % total_slice_size;",    // NOLINT
+"const int_tp bottom_index = slice_index",    // NOLINT
+"+ (slice_num * bottom_slice_axis + offset_slice_axis) * slice_size;",    // NOLINT
+"if (forward == 1) {",    // NOLINT
+"out_data[index] = in_data[bottom_index];",    // NOLINT
+"} else {",    // NOLINT
+"out_data[bottom_index] = in_data[index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_loss_forward,Dtype)(",    // NOLINT
+"int_tp n, __global const Dtype* prob_data, __global const Dtype* label,",    // NOLINT
+"__global Dtype* loss,",    // NOLINT
+"const int_tp num, const int_tp dim, const int_tp spatial_dim,",    // NOLINT
+"const int has_ignore_label_, const int_tp ignore_label_,",    // NOLINT
+"__global Dtype* counts) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = index / spatial_dim;",    // NOLINT
+"const int_tp s = index % spatial_dim;",    // NOLINT
+"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
+"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
+"loss[index] = 0;",    // NOLINT
+"counts[index] = 0;",    // NOLINT
+"} else {",    // NOLINT
+"loss[index] = -log((Dtype)(",    // NOLINT
+"max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),",    // NOLINT
+"(Dtype) FLT_MIN)));",    // NOLINT
+"counts[index] = 1;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top,",    // NOLINT
+"__global const Dtype* label,",    // NOLINT
+"__global Dtype* bottom_diff,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp dim,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"const int has_ignore_label_,",    // NOLINT
+"const int_tp ignore_label_,",    // NOLINT
+"__global Dtype* counts) {",    // NOLINT
+"",    // NOLINT
+"const int_tp channels = dim / spatial_dim;",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"",    // NOLINT
+"const int_tp n = index / spatial_dim;",    // NOLINT
+"const int_tp s = index % spatial_dim;",    // NOLINT
+"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
+"",    // NOLINT
+"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
+"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
+"bottom_diff[n * dim + c * spatial_dim + s] = 0;",    // NOLINT
+"}",    // NOLINT
+"counts[index] = 0;",    // NOLINT
+"} else {",    // NOLINT
+"bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;",    // NOLINT
+"counts[index] = 1;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ada_delta_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* h,",    // NOLINT
+"__global Dtype* h2,",    // NOLINT
+"Dtype momentum,",    // NOLINT
+"Dtype delta,",    // NOLINT
+"Dtype local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"Dtype gi = g[i];",    // NOLINT
+"Dtype hi = h[i] = momentum * h[i] + (1.0 - momentum) * gi * gi;",    // NOLINT
+"gi = gi * sqrt((h2[i] + delta) / (hi + delta));",    // NOLINT
+"h2[i] = momentum * h2[i] + (1.0 - momentum) * gi * gi;",    // NOLINT
+"g[i] = local_rate * gi;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ada_grad_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* h,",    // NOLINT
+"Dtype delta,",    // NOLINT
+"Dtype local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"Dtype gi = g[i];",    // NOLINT
+"Dtype hi = h[i] = h[i] + gi * gi;",    // NOLINT
+"g[i] = local_rate * gi / (sqrt(hi) + delta);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(adam_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* m,",    // NOLINT
+"__global Dtype* v,",    // NOLINT
+"Dtype beta1,",    // NOLINT
+"Dtype beta2,",    // NOLINT
+"Dtype eps_hat,",    // NOLINT
+"Dtype corrected_local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"Dtype gi = g[i];",    // NOLINT
+"Dtype mi = m[i] = m[i] * beta1 + gi * (1 - beta1);",    // NOLINT
+"Dtype vi = v[i] = v[i] * beta2 + gi * gi * (1 - beta2);",    // NOLINT
+"g[i] = corrected_local_rate * mi / (sqrt(vi) + eps_hat);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(nesterov_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* h,",    // NOLINT
+"Dtype momentum,",    // NOLINT
+"Dtype local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"Dtype hi = h[i];",    // NOLINT
+"Dtype hi_new = h[i] = momentum * hi + local_rate * g[i];",    // NOLINT
+"g[i] = (1 + momentum) * hi_new - momentum * hi;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(rms_prop_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* h,",    // NOLINT
+"Dtype rms_decay,",    // NOLINT
+"Dtype delta,",    // NOLINT
+"Dtype local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"Dtype gi = g[i];",    // NOLINT
+"Dtype hi = h[i] = rms_decay * h[i] + (1 - rms_decay) * gi * gi;",    // NOLINT
+"g[i] = local_rate * g[i] / (sqrt(hi) + delta);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(sgd_update,Dtype)(int_tp N, __global Dtype* g,",    // NOLINT
+"__global Dtype* h,",    // NOLINT
+"Dtype momentum,",    // NOLINT
+"Dtype local_rate) {",    // NOLINT
+"for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
+"g[i] = h[i] = momentum * h[i] + local_rate * g[i];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(tile,Dtype)(const int_tp nthreads, __global const Dtype* bottom_data,",    // NOLINT
+"const int_tp tile_size, const int_tp num_tiles,",    // NOLINT
+"const int_tp bottom_tile_axis,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp d = index % tile_size;",    // NOLINT
+"const int_tp b = (index / tile_size / num_tiles) % bottom_tile_axis;",    // NOLINT
+"const int_tp n = index / tile_size / num_tiles / bottom_tile_axis;",    // NOLINT
+"const int_tp bottom_index = (n * bottom_tile_axis + b) * tile_size + d;",    // NOLINT
+"top_data[index] = bottom_data[bottom_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(tile_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_diff,",    // NOLINT
+"const int_tp tile_size,",    // NOLINT
+"const int_tp num_tiles,",    // NOLINT
+"const int_tp bottom_tile_axis,",    // NOLINT
+"__global Dtype* bottom_diff) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp d = index % tile_size;",    // NOLINT
+"const int_tp b = (index / tile_size) % bottom_tile_axis;",    // NOLINT
+"const int_tp n = index / tile_size / bottom_tile_axis;",    // NOLINT
+"bottom_diff[index] = 0;",    // NOLINT
+"int_tp top_index = (n * num_tiles * bottom_tile_axis + b) * tile_size + d;",    // NOLINT
+"for (int_tp t = 0; t < num_tiles; ++t) {",    // NOLINT
+"bottom_diff[index] += top_diff[top_index];",    // NOLINT
+"top_index += bottom_tile_axis * tile_size;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""}   // NOLINT
 };
 static std::string cl_kernel_names[] = {
     "activation",   // NOLINT

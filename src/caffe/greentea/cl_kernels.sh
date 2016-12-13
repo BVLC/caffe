@@ -82,17 +82,17 @@ shopt -s nullglob
 for CL_KERNEL in $CL_KERNELDIR
 do
     COUNTER=$((COUNTER + 1))
-	CL_KERNEL_STR=`cat $CL_KERNEL`
-    echo -n "    {\"" >> $SOURCE
-    for i in $(seq 0 40000 ${#CL_KERNEL_STR}); do
-	    echo -n "${CL_KERNEL_STR:$i:40000}" | sed -e 's/\\$/\\\\/g'| sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
-        echo -n "\",\"" >> $SOURCE
-    done
+    echo -n "    {" >> $SOURCE
+    while read i; do
+        echo -n "\"" >> $SOURCE
+	    echo -n "$i" | sed -e 's/\\$/\\\\/g'| sed -e 's/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+        echo -e "\",    // NOLINT" >> $SOURCE
+    done < ${CL_KERNEL}
 
     if (($COUNTER == $TOTALCOUNTER)) ; then
-        echo "\"}   // NOLINT" >> $SOURCE
+        echo "\"\"}   // NOLINT" >> $SOURCE
     else
-	    echo "\"},   // NOLINT" >> $SOURCE
+        echo "\"\"},   // NOLINT" >> $SOURCE
     fi
 done
 echo "};" >> $SOURCE

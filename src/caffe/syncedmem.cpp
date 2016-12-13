@@ -33,10 +33,16 @@ void CaffeMallocHost(void** ptr, int_tp size, device* device_context) {
 #endif  // USE_CUDA
     } else {
       // Make sure the memory is zero-copy usable in OpenCL
+#ifdef _MSC_VER
+      ptr = _aligned_malloc(
+          ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN),
+          OPENCL_PAGE_ALIGN);
+#else
       CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
               ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
                   << "Host memory allocation error of size: "
                   << size << " B";
+#endif  // _MSC_VER
       return;
     }
   }
