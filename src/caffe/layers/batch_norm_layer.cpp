@@ -27,11 +27,23 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     sz.push_back(channels_);
     this->blobs_[0].reset(new Blob<Dtype>(sz));
     this->blobs_[1].reset(new Blob<Dtype>(sz));
-    sz[0]=1;
+    sz[0] = 1;
     this->blobs_[2].reset(new Blob<Dtype>(sz));
     for (int i = 0; i < 3; ++i) {
       caffe_set(this->blobs_[i]->count(), Dtype(0),
                 this->blobs_[i]->mutable_cpu_data());
+    }
+  }
+  // Mask statistics from optimization by setting local learning rates
+  // for mean, variance, and the bias correction to zero.
+  for (int i = 0; i < this->blobs_.size(); ++i) {
+    if (this->layer_param_.param_size() == i) {
+      ParamSpec* fixed_param_spec = this->layer_param_.add_param();
+      fixed_param_spec->set_lr_mult(0.f);
+    } else {
+      CHECK_EQ(this->layer_param_.param(i).lr_mult(), 0.f)
+          << "Cannot configure batch normalization statistics as layer "
+          << "parameters.";
     }
   }
 }
@@ -49,7 +61,7 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   variance_.Reshape(sz);
   temp_.ReshapeLike(*bottom[0]);
   x_norm_.ReshapeLike(*bottom[0]);
-  sz[0]=bottom[0]->shape(0);
+  sz[0] = bottom[0]->shape(0);
   batch_sum_multiplier_.Reshape(sz);
 
   int spatial_dim = bottom[0]->count()/(channels_*bottom[0]->shape(0));

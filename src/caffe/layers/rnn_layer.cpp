@@ -215,7 +215,7 @@ void RNNLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
     }
 
     // Add layers to compute
-    //     o_t := \tanh( W_ho h_t + b_o)
+    //     o_t := \tanh( W_ho * h_t + b_o)
     //          = \tanh( W_ho_h_t )
     {
       LayerParameter* o_neuron_param = net_param->add_layer();
