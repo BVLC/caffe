@@ -31,6 +31,7 @@ echo "#include \"$INCHEADER\"" >> $SOURCE
 echo "#include <sstream>" >> $SOURCE
 echo "#include <string>" >> $SOURCE
 echo "#include <type_traits>" >> $SOURCE
+echo "#include <vector>" >> $SOURCE
 echo "namespace caffe {" >> $SOURCE
 
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
@@ -76,19 +77,22 @@ do
 done
 
 COUNTER=0
-echo "static std::string cl_kernels[] = {" >> $SOURCE
+echo "static std::vector<std::vector<std::string>> cl_kernels{" >> $SOURCE
 shopt -s nullglob
 for CL_KERNEL in $CL_KERNELDIR
 do
     COUNTER=$((COUNTER + 1))
 	CL_KERNEL_STR=`cat $CL_KERNEL`
-    echo -n "    \"" >> $SOURCE
-	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g'| sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+    echo -n "    {\"" >> $SOURCE
+    for i in $(seq 0 40000 ${#CL_KERNEL_STR}); do
+	    echo -n "${CL_KERNEL_STR:$i:40000}" | sed -e 's/\\$/\\\\/g'| sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+        echo -n "\",\"" >> $SOURCE
+    done
 
     if (($COUNTER == $TOTALCOUNTER)) ; then
-        echo "\"   // NOLINT" >> $SOURCE
+        echo "\"}   // NOLINT" >> $SOURCE
     else
-	    echo "\",   // NOLINT" >> $SOURCE
+	    echo "\"},   // NOLINT" >> $SOURCE
     fi
 done
 echo "};" >> $SOURCE
@@ -145,8 +149,10 @@ echo "  ss << \"#define Dtype8 float8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype16 float16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 echo "  ss << \"#define TYPE TYPE_FLOAT\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
-echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
+echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
+echo "    for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
+echo "      ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
+echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 
 echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -156,9 +162,11 @@ echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 shopt -s nullglob
-echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
+echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
 echo "    if (cl_kernel_names[i] != std::string(\"fft\")) {" >> $SOURCE
-echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
+echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
+echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
+echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -183,25 +191,28 @@ echo "  \"#define Dtype8 float8\n\"" >> $SOURCE
 echo "  \"#define Dtype16 float16\n\"" >> $SOURCE
 echo "  \"#define OCL_KERNEL_LOOP(i, n)\"" >> $SOURCE
 echo "  \" for (int i = get_global_id(0); i < (n); i += get_global_size(0))\n\";" >> $SOURCE
-echo "  string sources = core_defines;" >> $SOURCE
+echo "  std::stringstream ss;" >> $SOURCE
+echo "  ss << core_defines;" >> $SOURCE
 echo "#ifdef USE_INDEX_64" >> $SOURCE
-echo "    sources += header + \"\n\";" >> $SOURCE
-echo "    sources += definitions_64 + \"\n\";" >> $SOURCE
+echo "  ss << header + \"\n\";" >> $SOURCE
+echo "  ss << definitions_64 + \"\n\";" >> $SOURCE
 echo "#else" >> $SOURCE
-echo "    sources += header + \"\n\";" >> $SOURCE
-echo "    sources += definitions_32 + \"\n\";" >> $SOURCE
+echo "  ss << header + \"\n\";" >> $SOURCE
+echo "  ss << definitions_32 + \"\n\";" >> $SOURCE
 echo "#endif" >> $SOURCE
-echo "    for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
-echo "      if (cl_kernel_names[i] == \"conv_layer_spatial\") {" >> $SOURCE
-echo "         sources += cl_kernels[i];" >> $SOURCE
+echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
+echo "    if (cl_kernel_names[i] == \"conv_layer_spatial\") {" >> $SOURCE
+echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
+echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
 echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
-echo "  viennacl::ocl::program &program = ctx->add_program(sources, name);" >> $SOURCE
+echo "  viennacl::ocl::program &program = ctx->add_program(ss.str(), name);" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
 echo "int getKernelBundleCount() {" >> $SOURCE
-echo "  return std::extent<decltype(cl_kernels)>::value;" >> $SOURCE
+echo "  return cl_kernels.size();" >> $SOURCE
 echo "}" >> $SOURCE
 echo "template<typename Dtype>" >> $SOURCE
 echo "std::string getKernelBundleSource(int index) {" >> $SOURCE
@@ -221,7 +232,9 @@ echo "    ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\n\n\";  // NOLINT" >> 
 echo "    ss << \"#define Dtype double\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define TYPE TYPE_DOUBLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  }" >> $SOURCE
-echo "  ss << cl_kernels[index] << \"\n\n\";" >> $SOURCE
+echo "  for (int j = 0; j < cl_kernels[index].size(); ++j) {" >> $SOURCE
+echo "    ss << cl_kernels[index][j] << \"\n\n\";" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  if (std::is_same<Dtype, float>::value) {" >> $SOURCE
 echo "  } else {" >> $SOURCE
 echo "    ss << \"#endif\" << \"\n\n\";  // NOLINT" >> $SOURCE
