@@ -37,13 +37,13 @@ include(cmake/WindowsCreateLinkHeader.cmake)
 # ---[ Options
 caffe_option(CPU_ONLY "Build Caffe without CUDA and OpenCL support" OFF)
 caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
-caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
+caffe_option(USE_CUDA "Build Caffe with CUDA support" OFF)
 caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
-caffe_option(USE_LIBDNN "Build Caffe with OpenCL libdnn" OFF)
+caffe_option(USE_LIBDNN "Build Caffe with LibDNN library support" ON)
 caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)
 caffe_option(USE_CLBLAST "Build Caffe with CLBlast support (instead of using ViennaClBLAS)" OFF)
 caffe_option(USE_ISAAC "Build Caffe with ISAAC support (instead of using ViennaClBLAS)" OFF)
-caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" OFF)
+caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" OFF)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 if(MSVC)
   # default to static libs
@@ -61,13 +61,14 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
-caffe_option(USE_FFT "build with fftw3 or/and clFFT" OFF)
+caffe_option(USE_FFT "Build with fftw3 or/and clFFT" OFF)
 
 # ---[ Flag consistency check
 if(CPU_ONLY)
   set(USE_CUDA OFF)
   set(USE_GREENTEA OFF)
   set(USE_CUDNN OFF)
+  set(USE_LIBDNN OFF)
   set(USE_CLBLAS OFF)
   set(USE_CLBLAST OFF)
 endif()
@@ -118,24 +119,27 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
 set(Caffe_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR})
+include_directories(BEFORE src) # This is needed for gtest.
 
 # ---[ Includes & defines for CUDA
 
-# cuda_compile() does not have per-call dependencies or include pathes
+# cuda_compile() does not have per-call dependencies or include paths
 # (cuda_compile() has per-call flags, but we set them here too for clarity)
 #
-# list(REMOVE_ITEM ...) invocations remove PRIVATE and PUBLIC keywords from collected definitions and include pathes
-if(HAVE_CUDA)
-  # pass include pathes to cuda_include_directories()
-  set(Caffe_ALL_INCLUDE_DIRS ${Caffe_INCLUDE_DIRS})
-  list(REMOVE_ITEM Caffe_ALL_INCLUDE_DIRS PRIVATE PUBLIC)
-  cuda_include_directories(${Caffe_INCLUDE_DIR} ${Caffe_SRC_DIR} ${Caffe_ALL_INCLUDE_DIRS})
+# list(REMOVE_ITEM ...) invocations remove PRIVATE and PUBLIC keywords from collected definitions and include paths
 
+set(Caffe_ALL_INCLUDE_DIRS ${Caffe_INCLUDE_DIRS})
+list(REMOVE_ITEM Caffe_ALL_INCLUDE_DIRS PRIVATE PUBLIC)
+set(Caffe_ALL_DEFINITIONS ${Caffe_DEFINITIONS})
+list(REMOVE_ITEM Caffe_ALL_DEFINITIONS PRIVATE PUBLIC)
+
+if(HAVE_CUDA)
+  # pass include paths to cuda_include_directories()
+  cuda_include_directories(${Caffe_INCLUDE_DIR} ${Caffe_SRC_DIR} ${Caffe_ALL_INCLUDE_DIRS})
   # add definitions to nvcc flags directly
-  set(Caffe_ALL_DEFINITIONS ${Caffe_DEFINITIONS})
-  list(REMOVE_ITEM Caffe_ALL_DEFINITIONS PRIVATE PUBLIC)
   list(APPEND CUDA_NVCC_FLAGS ${Caffe_ALL_DEFINITIONS})
 endif()
 

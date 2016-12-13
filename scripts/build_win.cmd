@@ -114,24 +114,28 @@ echo INFO: ============================================================
 :: Build and exectute the tests
 :: Do not run the tests with shared library
 if !RUN_TESTS! EQU 1 (
-    if %CMAKE_BUILD_SHARED_LIBS% EQU 1 (
-        echo WARNING: Disabling tests with shared library build
-        set RUN_TESTS=0
-    )
+  if %CMAKE_BUILD_SHARED_LIBS% EQU 1 (
+      echo WARNING: Disabling tests with shared library build
+    set RUN_TESTS=0
+  )
 )
 
 :: Create build directory and configure cmake
-if EXIST build (
-    echo ERROR: build directory already exists in %cd%\build please remove it and start over.
-    exit /b 1
-)
+:: if EXIST build (
+::     echo ERROR: build directory already exists in %cd%\build please remove it and start over.
+::     exit /b 1
+:: )
 
-mkdir build
+if NOT EXIST build (
+  mkdir build
+)
 pushd build
 
 :: Download dependencies from VS x64
-echo INFO: Downloading dependencies
-"%PYTHON_EXE%" "%~dp0\download_prebuilt_dependencies.py" --msvc_version v%MSVC_VERSION%0
+if NOT EXIST "%cd%\libraries" (
+  echo INFO: Downloading dependencies
+  "%PYTHON_EXE%" "%~dp0\download_prebuilt_dependencies.py" --msvc_version v%MSVC_VERSION%0
+)
 
 if ERRORLEVEL 1 (
   echo ERROR: Downloading dependencies failed
