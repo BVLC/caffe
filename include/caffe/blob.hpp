@@ -255,6 +255,8 @@ class Blob {
 
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
+  void set_cpu_diff(Dtype* diff);
+
 #ifndef CPU_ONLY
   const int* gpu_shape() const;
 #endif
