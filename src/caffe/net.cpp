@@ -582,7 +582,7 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
         consumer_layer_params.begin();
         it != consumer_layer_params.end(); ++it) {
         // If consumer is computing inplace then modify top as well         
-        if ((*it)->bottom(0).compare((*it)->top(0)) == 0) {
+        if (((*it)->top_size() > 0 ) && ((*it)->bottom(0).compare((*it)->top(0)) == 0)) {
           // Modify consumer top
           const_cast<string&>((*it)->top(0)).append("_x");
         }

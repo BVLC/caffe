@@ -2861,6 +2861,87 @@ TEST_F(CompileNetTest, TestCompileNetBatchNorm) {
       "} ";
   this->RunCompilerNetTest(input_proto, output_proto);
 }
+
+// Combined BatchNormalization (inPlace) followed by scale Layer and InPlace Relu
+TEST_F(CompileNetTest, TestCompileNetBatchNormInPlace)
+{
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'data' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'data' "
+      " top: 'data' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      " bottom: 'data' "
+      " top: 'data' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      " relu_param { "
+      "  engine: MKL2017 "
+      " } "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'data' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'data_x' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKL2017 "
+      "   bias_term: true "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'data_x' "
+      " top: 'data_x' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      " relu_param { "
+      "  engine: MKL2017 "
+      " } "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'data_x' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
 #endif
 
 #if defined(MKL2017_SUPPORTED) && defined(MKLDNN_SUPPORTED)
