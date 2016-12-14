@@ -62,7 +62,11 @@ void CaffeFreeHost(void* ptr, device* device_context) {
     }
   }
 #endif
+#ifdef _MSC_VER
+  _aligned_free(ptr);
+#else
   free(ptr);
+#endif  // _MSC_VER
 }
 
 
