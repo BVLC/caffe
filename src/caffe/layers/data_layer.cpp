@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
@@ -95,8 +96,12 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   double read_time = 0;
   double trans_time = 0;
   CPUTimer timer;
+  CPUTimer trans_timer;
   CHECK(batch->data_.count());
+
+#ifndef _OPENMP
   CHECK(this->transformed_data_.count());
+#endif
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -104,7 +109,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Datum& datum = *(reader_.full().peek());
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+#ifndef _OPENMP
   this->transformed_data_.Reshape(top_shape);
+#endif
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
@@ -115,26 +122,49 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
+
+  trans_timer.Start();
+#ifdef _OPENMP
+  #pragma omp parallel if (batch_size > 1)
+  #pragma omp single nowait
+#endif
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a datum
     Datum& datum = *(reader_.full().pop("Waiting for data"));
     read_time += timer.MicroSeconds();
-    timer.Start();
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    // Copy label.
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
+
+#ifdef _OPENMP
+    PreclcRandomNumbers precalculated_rand_numbers;
+    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+    #pragma omp task firstprivate(offset, precalculated_rand_numbers, datum, item_id)
+#endif
+    {
+
+
+
+      // Copy label. We need to copy it before we release datum
+      if (this->output_labels_) {
+        top_label[item_id] = datum.label();
+      }
+#ifdef _OPENMP
+#else
+      this->transformed_data_.set_cpu_data(top_data + offset);
+      this->data_transformer_->Transform(datum, &(this->transformed_data_));
+#endif
     }
     trans_time += timer.MicroSeconds();
 
     reader_.free().push(const_cast<Datum*>(&datum));
   }
-  timer.Stop();
+  trans_timer.Stop();
   batch_timer.Stop();
+  // Due to multithreaded nature of transformation,
+  // time it takes to execute them we get from subtracting
+  // read batch of images time from total batch read&transform time
+  trans_time = trans_timer.MicroSeconds() - read_time;
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
