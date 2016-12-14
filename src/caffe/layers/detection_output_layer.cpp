@@ -45,8 +45,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     if (boost::filesystem::is_directory(output_directory_)) {
       boost::filesystem::remove_all(output_directory_);
     }
-    if (!boost::filesystem::create_directories(output_directory_)) {
-        LOG(WARNING) << "Failed to create directory: " << output_directory_;
+    // bug on ret val of create_dir https://svn.boost.org/trac/boost/ticket/7258
+    boost::filesystem::create_directories(output_directory_);
+    if(!boost::filesystem::is_directory(output_directory_)) {
+      LOG(FATAL) << "Failed to create directory: " << output_directory_;
     }
   }
   output_name_prefix_ = save_output_param.output_name_prefix();

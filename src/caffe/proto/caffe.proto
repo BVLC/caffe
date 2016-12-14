@@ -269,7 +269,7 @@ message SolverParameter {
   //    Integral: the natural integral of the precision-recall curve.
   optional string ap_version = 42 [default = "Integral"];
   // If true, display per class result.
-  optional bool show_per_class_result = 43 [default = false];
+  optional bool show_per_class_result = 44 [default = false];
 
   // The number of iterations for each test net.
   repeated int32 test_iter = 3;
@@ -320,7 +320,7 @@ message SolverParameter {
   // the stepsize for learning rate policy "multistep"
   repeated int32 stepvalue = 34;
   // the stepsize for learning rate policy "plateau"
-  repeated int32 plateau_winsize = 44;
+  repeated int32 plateau_winsize = 43;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -380,9 +380,9 @@ message SolverParameter {
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
 
-  optional MultinodeParameter multinode_param = 45;
-  optional bool disabled_update = 46 [default = false];
-  optional string engine = 47 [default = ""];
+  optional MultinodeParameter multinode_param = 44;
+  optional bool disabled_update = 45 [default = false];
+  optional string engine = 46 [default = ""];
 
 }
 
@@ -557,7 +557,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
-//  optional VideoDataParameter video_data_param = 207;
+  optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
 
   optional RemoteDataParameter remote_data_param = 148;
