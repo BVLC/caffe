@@ -9,7 +9,7 @@ dynamically masking a small random portion of the images during training will:
 * Augment training images at run-time, allowing training to proceed without saturation for more epochs
 * Force the network to isolate and learn the contribution of each feature to objective
 
-See [data layer tutorial](tutorial/data.md) for more details.
+See [data layer tutorial](docs/tutorial/data.md) for more details.
 
 ## Original README
 
