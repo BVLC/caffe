@@ -188,18 +188,15 @@ endif()
 # to flick the switch manually as needed.
 if(USE_OPENMP)
   find_package(OpenMP REQUIRED)
-else()
-  find_package(OpenMP QUIET)
-endif()
-
 # Moreover, OpenMP package does not provide an IMPORTED target as well, and the
 # suggested way of linking to OpenMP is to append to CMAKE_{C,CXX}_FLAGS.
 # However, this naïve method will force any user of Caffe to add the same kludge
 # into their buildsystem again, so we put these options into per-target PUBLIC
 # compile options and link flags, so that they will be exported properly.
-if(OpenMP_CXX_FLAGS)
-  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
-  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
+	if(OpenMP_CXX_FLAGS)
+	  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
+	  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
+	endif()
 endif()
 
 # ---[ BLAS

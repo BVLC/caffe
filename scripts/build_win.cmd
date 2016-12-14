@@ -60,7 +60,7 @@ if DEFINED APPVEYOR (
     :: If python is on your path leave this alone
     if NOT DEFINED PYTHON_EXE set PYTHON_EXE=python
     :: Run the tests
-    if NOT DEFINED RUN_TESTS set RUN_TESTS=0
+    if NOT DEFINED RUN_TESTS set RUN_TESTS=1
     :: Run lint
     if NOT DEFINED RUN_LINT set RUN_LINT=0
     :: Build the install target
@@ -69,6 +69,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED USE_CUDA set USE_CUDA=0
     if NOT DEFINED USE_GREENTEA set USE_GREENTEA=1
     if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
+	if NOT DEFINED USE_OPENMP set USE_OPENMP=0
 )
 
 :: Set the appropriate CMake generator
@@ -166,6 +167,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_CUDA:BOOL=%USE_CUDA% ^
 	  -DUSE_LIBDNN:BOOL=%USE_LIBDNN% ^
 	  -DUSE_GREENTEA:BOOL=%USE_GREENTEA% ^
+	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
       -C "%cd%\libraries\caffe-builder-config.cmake" ^
       "%~dp0\.."
 
