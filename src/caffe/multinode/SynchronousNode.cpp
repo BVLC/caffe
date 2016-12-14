@@ -265,7 +265,7 @@ class SynchronousSync : public InternalThread
   }
 
   virtual void InternalThreadEntry() {
-    if(is_root()) {
+    if (is_root()) {
       solver->CheckSnapshotWritePermissions();
     }
     CLOG(INFO) << "Comm thread started " << is_leaf() << " " << is_root();
@@ -606,7 +606,9 @@ class SynchronousNode<Dtype>::Impl : public MultiSolver<Dtype>::Callback {
     if (sync.is_root()) {
       sync.wait_till_updated();
       solver->root_solver()->Snapshot();
-      if (solver->root_solver()->param().test_interval() && solver->root_solver()->iter() % solver->root_solver()->param().test_interval() == 0)
+      if (solver->root_solver()->param().test_interval() &&
+          solver->root_solver()->iter() %
+          solver->root_solver()->param().test_interval() == 0)
         solver->root_solver()->TestAll();
     }
 

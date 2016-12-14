@@ -2862,9 +2862,8 @@ TEST_F(CompileNetTest, TestCompileNetBatchNorm) {
   this->RunCompilerNetTest(input_proto, output_proto);
 }
 
-// Combined BatchNormalization (inPlace) followed by scale Layer and InPlace Relu
-TEST_F(CompileNetTest, TestCompileNetBatchNormInPlace)
-{
+// Combined BatchNorm (inPlace) followed by scale Layer and InPlace Relu
+TEST_F(CompileNetTest, TestCompileNetBatchNormInPlace) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layer { "
@@ -3040,8 +3039,7 @@ TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution) {
 #ifdef MKLDNN_SUPPORTED
 // If Convolution of engine MKLDNN
 // is followed by ReLU of engine MKLDNN
-TEST_F(CompileNetTest, TestCompileNetConvolution){
-    
+TEST_F(CompileNetTest, TestCompileNetConvolution) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layer { "
