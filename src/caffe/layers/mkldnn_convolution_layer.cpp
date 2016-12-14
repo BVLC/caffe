@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
-#include "mkl_service.h"
+//#include "mkl_service.h"
 
 // TODO: Correct process case if there are no bias
 // TODO: Exception handling - mkl-dnn produces exceptions on errors
@@ -53,9 +53,9 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), ConvolutionLayer<Dtype>(param)
-            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , convFwd_pd(NULL), output_memory(NULL)
-            , input_primitive(NULL), weights_primitive(NULL), bias_primitive(NULL)
+            , fwd_bottom_data(), fwd_top_data(), fwd_weights_data(), fwd_bias_data()
+            , convFwd_pd(), output_memory()
+            , input_primitive(), weights_primitive(), bias_primitive()
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
             , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
 {
@@ -111,6 +111,14 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     if (std::is_same<Dtype, double>::value)   NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
 
+    bool relu = this->layer_param_.convolution_param().relu();
+    Dtype negative_slope;
+    if(relu)
+    {
+        propagation = prop_kind::forward_inference;
+        negative_slope = this->layer_param_.relu_param().negative_slope();
+    }
+
     int32_t g  = std::max(this->group_, 1);
     int32_t n  = this->num_;
     int32_t iw = this->width_;
@@ -153,16 +161,20 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
                                     , init_input_md, init_weights_md, init_output_md
                                     , convolutionStrides, padding, padding, padding_kind::zero));
     }
-
+    shared_ptr<convolution_relu_forward::desc> convReluFwd_desc;
+    if(relu) convReluFwd_desc.reset(new convolution_relu_forward::desc(*convFwd_desc, negative_slope));
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+        if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
@@ -204,15 +216,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
         shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
         bias_primitive = fwd_bias_data->create_input(false);
-        convFwd.reset(new convolution_forward(*convFwd_pd
+        if(relu) {
+            convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
                         , *input_primitive, *weights_primitive
                         , *bias_primitive, *output_memory));
+        } else {
+            convFwd.reset(new convolution_forward(*convFwd_pd
+                            , *input_primitive, *weights_primitive
+                            , *bias_primitive, *output_memory));
+        }
         fwd_bias_data->set_mkldnn_primitive(convFwd);
         fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
     } else {
-        convFwd.reset(new convolution_forward(*convFwd_pd
-                        , *input_primitive, *weights_primitive
-                        , *output_memory));
+        if(relu) {
+            convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
+                            , *input_primitive, *weights_primitive
+                            , *output_memory));
+        } else {
+            convFwd.reset(new convolution_forward(*convFwd_pd
+                            , *input_primitive, *weights_primitive
+                            , *output_memory));
+        }
     }
     fwd_bottom_data->set_mkldnn_primitive(convFwd);
     fwd_top_data->set_mkldnn_primitive(convFwd);

@@ -53,9 +53,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+
+PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
 
@@ -393,10 +396,16 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
-  param_compiled->CopyFrom(param);
-  param_compiled->clear_layer();    // Remove layers
+  NetParameter param_temp;//temporary compiled param
+  param_temp.CopyFrom(param);
+  param_temp.clear_layer();    // Remove layers
 
-  CompilationRuleOne(param, param_compiled);
+  CompilationRuleOne(param, &param_temp);
+  
+  param_compiled->CopyFrom(param_temp);
+  param_compiled->clear_layer();    // Remove layers
+  
+  CompilationRuleTwo(param_temp, param_compiled);
 }
 
 template <typename Dtype>
@@ -440,12 +449,80 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
         batchnorm_top_blob_name.replace(0,
                                         scale_top_blob_name.size(),
                                         scale_top_blob_name);
-        // Read the batch_term param of Scale Layer and set batch_term param
+        // Read the bias_term param of Scale Layer and set bias_term param
         // of MKLBatchNorm accordingly
         bool scale_bias_term = consumer_layer_param.
                                scale_param().bias_term();
         layer_param->mutable_batch_norm_param()->
         set_bias_term(scale_bias_term);
+      }
+    }
+
+    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+      LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+             << layer_param->name() << std::endl;
+      layer_included = false;
+      // Remove dropped layer from the list of layers to be dropped
+      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+    }
+
+    if (layer_included) {
+      param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
+}
+
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
+                                    NetParameter* param_compiled) {
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
+    bool layer_included = true;
+
+    // Optimization rule 2:
+    // - If we are having engine MKLDNN and ReLU layer within a model
+    // and input bottom comes from  Convolution of engine MKLDNN
+    // then we can remove ReLU layer
+    // and rename Convolution top blob after deleted ReLU's top
+
+    // If current layer is Convolution of MKLDNN engine..
+    if ((layer_param->type().compare("Convolution") == 0) &&
+       ((layer_param->convolution_param().engine() ==
+         ConvolutionParameter_Engine_MKLDNN)
+       || ((layer_param->convolution_param().engine() ==
+           ConvolutionParameter_Engine_DEFAULT) &&
+            param.engine().compare("MKLDNN") == 0)
+       )) {
+      const LayerParameter& consumer_layer_param =
+            GetBlobConsumer(layer_param->top(0), param, i+1);
+
+      // Consumer lauyer of blob produced by Conv
+      // has to be ReLU layer with one Input Blob
+      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
+        ((consumer_layer_param.relu_param().engine() ==
+          ReLUParameter_Engine_MKLDNN)
+        || ((consumer_layer_param.relu_param().engine() ==
+            ReLUParameter_Engine_DEFAULT) &&
+             param.engine().compare("MKLDNN") == 0)
+        )) {
+        string& convolution_top_blob_name =
+            const_cast<string&>(layer_param->top(0));
+        const string& scale_top_blob_name = consumer_layer_param.top(0);
+        // Mark Consumer layer (its name) as the one marked for dropping
+        layers_to_drop.insert(consumer_layer_param.name());
+
+        // Replace BatchNorm top name with Scale top name
+        convolution_top_blob_name.resize(scale_top_blob_name.size());
+        convolution_top_blob_name.replace(0,
+                                        scale_top_blob_name.size(),
+                                        scale_top_blob_name);
+        // set relu flag in convolution
+        layer_param->mutable_convolution_param()->set_relu(true);
+        float negative_slope1 = consumer_layer_param.relu_param().negative_slope();
+        layer_param->mutable_convolution_param()->set_negative_slope(negative_slope1);
       }
     }
 
@@ -715,14 +792,21 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
 }
 
+
+
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
+    PERFORMANCE_MEASUREMENT_BEGIN();
+
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+
+    PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());
+
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -767,8 +851,13 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+      PERFORMANCE_MEASUREMENT_BEGIN();
+
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+
+      PERFORMANCE_MEASUREMENT_END((std::string("BW_")+layer_names_[i]).c_str());
+
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }

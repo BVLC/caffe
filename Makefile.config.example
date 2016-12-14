@@ -155,6 +155,9 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
 
+# Uncomment to enable training performance monitoring
+# PERFORMANCE_MONITORING := 1
+
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
 

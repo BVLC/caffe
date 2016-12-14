@@ -275,11 +275,19 @@ class Net {
 
   /**
   * @brief This is rule that analyze layer if it is of type Scale and if that is the case
-  *        and previous layer which serves as inoput layer to Scale Layer is MKLBatchNorm
+  *        and previous layer which serves as input layer to Scale Layer is MKLBatchNorm
   *        then scale layer can be dropped
   */
   // TODO: Make it decent C++ anonymous function etc.
   static void CompilationRuleOne(const NetParameter& param,
+                                 NetParameter* param_compiled);
+  
+  /**
+  * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
+  *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNConvolution
+  *        then MKLDNNReLU layer can be dropped
+  */
+  static void CompilationRuleTwo(const NetParameter& param,
                                  NetParameter* param_compiled);
 
   static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find,

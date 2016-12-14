@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -217,7 +218,10 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
   }
 
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
+  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_split");
+
   CHECK_EQ(e, E_SUCCESS);
 }
 

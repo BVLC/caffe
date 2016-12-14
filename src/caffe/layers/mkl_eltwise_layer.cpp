@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -216,7 +217,11 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
         reinterpret_cast<void*>(const_cast<Dtype*>(top[0]->mutable_cpu_data()));
     }
 
-    e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
+    { // local scope needed since the macro below contains variable declaration
+      PERFORMANCE_MEASUREMENT_BEGIN();
+      e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
+      PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_eltwise");
+    }
     CHECK_EQ(e, E_SUCCESS);
 
     break;

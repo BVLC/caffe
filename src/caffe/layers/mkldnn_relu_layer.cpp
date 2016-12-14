@@ -86,7 +86,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md;
-    shared_ptr<memory::primitive_desc> usr_mpd(NULL), prv_mpd(NULL);
+    shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd;
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);

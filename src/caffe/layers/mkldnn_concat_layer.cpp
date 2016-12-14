@@ -64,10 +64,10 @@ void MKLDNNConcatLayer<Dtype>::InitConcat(const vector<Blob<Dtype>*>& bottom,
   std::vector<memory::primitive_desc> srcs_mpd;
   std::vector<primitive::at> srcs;
   for (auto i = 0; i < num_concats_; i++) {
-    fwd_bottom_data.push_back(NULL);
+    fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
     memory::dims input_tz = {num_, split_channels[i], height_, width_};
     memory::format src_mfmt = mfmt_nchw;
-    shared_ptr<memory::primitive_desc> prv_src_mpd(NULL);
+    shared_ptr<memory::primitive_desc> prv_src_mpd;
     shared_ptr<memory::primitive_desc> usr_src_mpd(
         new memory::primitive_desc({input_tz, data_type, mfmt_nchw}, cpu_engine));
 

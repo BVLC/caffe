@@ -170,6 +170,25 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       }
     }
   }
+  //relu
+  if (conv_param->relu()){
+    for (int n = 0; n < out->shape(0); n++) {
+      for (int o = 0; o < out->shape(1); o++) {
+        for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
+          for (int y = 0; y < out->shape(2 + has_depth); y++) {
+            for (int x = 0; x < out->shape(3 + has_depth); x++) {
+              out_offset[0] = n;
+              out_offset[1] = o;
+              if (has_depth) { out_offset[2] = z; }
+              out_offset[2 + has_depth] = y;
+              out_offset[3 + has_depth] = x;
+              if(out_data[out->offset(out_offset)] < 0) out_data[out->offset(out_offset)] = 0;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 template void caffe_conv(const Blob<float>* in,
@@ -189,7 +208,6 @@ class MKLDNNConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
 #define OC 16
 
  protected:
-
   MKLDNNConvolutionLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, IC, 7, 7)),
         blob_bottom_2_(new Blob<Dtype>(2, IC, 7, 7)),
@@ -252,7 +270,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNN) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
   EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), OC );
+  EXPECT_EQ(this->blob_top_2_->channels(), OC);
   EXPECT_EQ(this->blob_top_2_->height(), 3);
   EXPECT_EQ(this->blob_top_2_->width(), 3);
   // setting group should not change the shape
@@ -307,6 +325,36 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionMKLDNN) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 #endif
+}
+
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUMKLDNN) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(OC);
+  convolution_param->set_relu(true);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<Dtype> > layer(
+      new MKLDNNConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
 }
 
 #if 0
@@ -525,6 +573,33 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Convolution) {
   }
 }
 
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1ConvolutionReLU) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
+  convolution_param->set_num_output(OC);
+  convolution_param->set_relu(true);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<Dtype> > layer(
+      new MKLDNNConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
 
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionGroup) {
   typedef typename TypeParam::Dtype Dtype;
@@ -554,6 +629,34 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionGroup) {
   }
 }
 
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUGroup) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(OC);
+  convolution_param->set_relu(true);
+  convolution_param->set_group(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<Dtype> > layer(
+      new MKLDNNConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
 
 #if 0
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestSobelConvolution) {
