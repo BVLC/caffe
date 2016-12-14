@@ -12,14 +12,14 @@ macro(caffe_set_caffe_link)
     endforeach()
   endif()
   if(BUILD_SHARED_LIBS)
-    set(Caffe_LINK caffe)
+    set(Caffe_LINK caffe proto)
   else()
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-      set(Caffe_LINK -Wl,-force_load caffe)
+      set(Caffe_LINK -Wl,-force_load caffe -Wl,-force_load proto)
     elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-      set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+      set(Caffe_LINK -Wl,--whole-archive caffe proto -Wl,--no-whole-archive)
     elseif(MSVC)
-      set(Caffe_LINK caffe)
+      set(Caffe_LINK caffe proto)
     endif()
   endif()
 endmacro()
@@ -119,14 +119,18 @@ function(caffe_pickup_caffe_sources root)
   # OpenCL but not CUDA backend tweak
   if(USE_GREENTEA AND NOT USE_CUDA)
     SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES LANGUAGE CXX)
-    SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES COMPILE_FLAGS "-x c++")
     SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES LANGUAGE CXX)
-    SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES COMPILE_FLAGS "-x c++")
+	
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES COMPILE_FLAGS "-x c++")
+		SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES COMPILE_FLAGS "-x c++")
+	endif()
+	
     list(APPEND srcs ${cuda})
     list(APPEND test_srcs ${test_cuda})
   endif()
 
-  # convet to absolute paths
+  # convert to absolute paths
   caffe_convert_absolute_paths(srcs)
   caffe_convert_absolute_paths(cuda)
   caffe_convert_absolute_paths(test_srcs)
@@ -144,7 +148,7 @@ function(caffe_pickup_caffe_sources root)
 endfunction()
 
 ################################################################################################
-# Short command for setting defeault target properties
+# Short command for setting default target properties
 # Usage:
 #   caffe_default_properties(<target>)
 function(caffe_default_properties target)
