@@ -388,6 +388,8 @@ std::string LibDNNConv<Dtype>::generate_fw_defs() {
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
+
   return ss.str();
 }
 
@@ -540,6 +542,8 @@ std::string LibDNNConv<Dtype>::generate_bw_defs() {
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
+
   return ss.str();
 }
 
@@ -665,6 +669,8 @@ std::string LibDNNConv<Dtype>::generate_wg_defs() {
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
+
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
 
   return ss.str();
 }
@@ -835,10 +841,10 @@ std::string LibDNNConv<Dtype>::generate_fw_kernels(std::string name) {
 
   // Forward kernel
   ss << "__kernel" << std::endl;
-  /*ss << "__attribute__((work_group_size_hint("
+  ss << "__attribute__((reqd_work_group_size("
      << rtsn << ", " << rtsm << ", 1)))" << std::endl;
   ss << "__attribute__((vec_type_hint(Dtype"
-     << std::min(vwm, vwn) << ")))" << std::endl;*/
+     << std::min(vwm, vwn) << ")))" << std::endl;
   ss << "void " + name + "(";
   ss << "__global const Dtype* __restrict im_in, ";
   ss << "__global const Dtype* __restrict wg, ";
@@ -899,9 +905,8 @@ std::string LibDNNConv<Dtype>::generate_fw_kernels(std::string name) {
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
-  ss << "int_tp numTiles = ((K - 1)/TSK) + 1;" << std::endl;
   ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp t = 0; t < numTiles; ++t) {" << std::endl;
+  ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
   // Load one tile of A into local memory
   ss << "{" << std::endl;  // Scoping for loading A
@@ -1104,7 +1109,12 @@ std::string LibDNNConv<Dtype>::generate_wg_kernels(std::string name) {
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Weight kernel
-  ss << "__kernel void " + name + "(";
+  ss << "__kernel" << std::endl;
+  ss << "__attribute__((reqd_work_group_size("
+     << rtsn << ", " << rtsm << ", 1)))" << std::endl;
+  ss << "__attribute__((vec_type_hint(Dtype"
+     << std::min(vwm, vwn) << ")))" << std::endl;
+  ss << "void " + name + "(";
   ss << "__global const Dtype* __restrict im_in, ";
   ss << "__global const Dtype* __restrict im_out, ";
   if (bias_term_) {
@@ -1169,9 +1179,8 @@ std::string LibDNNConv<Dtype>::generate_wg_kernels(std::string name) {
   }
 
   // Loop over all tiles
-  ss << "int_tp numTiles = ((K - 1)/TSK) + 1;" << std::endl;
   ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp t = 0; t < numTiles; ++t) {" << std::endl;
+  ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
   // Load one tile of A into local memory
   ss << "{" << std::endl;  // Scoping for loading A
@@ -1337,7 +1346,12 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Backward kernel
-  ss << "__kernel void " + name + "(";
+  ss << "__kernel" << std::endl;
+  ss << "__attribute__((reqd_work_group_size("
+     << rtsn << ", " << rtsm << ", 1)))" << std::endl;
+  ss << "__attribute__((vec_type_hint(Dtype"
+     << std::min(vwm, vwn) << ")))" << std::endl;
+  ss << "void " + name + "(";
   ss << "__global const Dtype* __restrict im_out, ";
   ss << "__global const Dtype* __restrict wg, ";
   if (bias_term_) {
@@ -1391,9 +1405,8 @@ std::string LibDNNConv<Dtype>::generate_bw_kernels(std::string name) {
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
-  ss << "int_tp numTiles = ((K - 1)/TSK) + 1;" << std::endl;
   ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp t = 0; t < numTiles; ++t) {" << std::endl;
+  ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
   // Load one tile of A into local memory
   ss << "{" << std::endl;  // Scoping for loading A
