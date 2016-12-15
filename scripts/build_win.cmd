@@ -70,6 +70,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED USE_GREENTEA set USE_GREENTEA=1
     if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
 	if NOT DEFINED USE_OPENMP set USE_OPENMP=0
+    if NOT DEFINED USE_INDEX64 set USE_INDEX64=0
 )
 
 :: Set the appropriate CMake generator
@@ -168,6 +169,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_LIBDNN:BOOL=%USE_LIBDNN% ^
 	  -DUSE_GREENTEA:BOOL=%USE_GREENTEA% ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
+      -DUSE_OPENMP:BOOL=%USE_INDEX64% ^
       -C "%cd%\libraries\caffe-builder-config.cmake" ^
       "%~dp0\.."
 
