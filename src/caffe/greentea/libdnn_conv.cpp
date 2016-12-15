@@ -388,7 +388,9 @@ std::string LibDNNConv<Dtype>::generate_fw_defs() {
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
+  // Num tiles needs to be next higher even integer
+  // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
 
   return ss.str();
 }
@@ -542,7 +544,9 @@ std::string LibDNNConv<Dtype>::generate_bw_defs() {
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
+  // Num tiles needs to be next higher even integer
+  // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
 
   return ss.str();
 }
@@ -670,7 +674,9 @@ std::string LibDNNConv<Dtype>::generate_wg_defs() {
   // Loads-per-thread for B
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/TSK) + 1)");
+  // Num tiles needs to be next higher even integer
+  // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
 
   return ss.str();
 }
