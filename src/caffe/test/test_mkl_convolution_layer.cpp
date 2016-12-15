@@ -171,7 +171,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     }
   }
   //relu
-  if (conv_param->relu()){
+  if (conv_param->relu()) {
     for (int n = 0; n < out->shape(0); n++) {
       for (int o = 0; o < out->shape(1); o++) {
         for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {

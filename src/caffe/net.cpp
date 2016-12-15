@@ -396,16 +396,20 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
-  NetParameter param_temp;//temporary compiled param
+  NetParameter param_temp;  // temporary compiled param
   param_temp.CopyFrom(param);
   param_temp.clear_layer();    // Remove layers
-
   CompilationRuleOne(param, &param_temp);
-  
-  param_compiled->CopyFrom(param_temp);
+
+  NetParameter param_temp2;  // temporary compiled param
+  param_temp2.CopyFrom(param_temp);
+  param_temp2.clear_layer();   // Remove layers
+
+  CompilationRuleTwo(param_temp, &param_temp2);
+
+  param_compiled->CopyFrom(param_temp2);
   param_compiled->clear_layer();    // Remove layers
-  
-  CompilationRuleTwo(param_temp, param_compiled);
+  CompilationRuleThree(param_temp2, param_compiled);
 }
 
 template <typename Dtype>
@@ -429,12 +433,16 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
          BatchNormParameter_Engine_MKL2017)
        || ((layer_param->batch_norm_param().engine() ==
            BatchNormParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKL2017") == 0)
-       )) {
+            param.engine().compare("MKL2017") == 0))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params,
+                       layer_param->top(0),
+                       param,
+                       i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param =
-            GetBlobConsumer(layer_param->top(0), param, i+1);
-
-      // Consumer lauyer of blob produced by BN
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
+      // Consumer layer of blob produced by BN
       // has to be Scale layer with one Input Blob
       if ((consumer_layer_param.type().compare("Scale") == 0) &&
            (consumer_layer_param.bottom_size() == 1)) {
@@ -494,10 +502,13 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
          ConvolutionParameter_Engine_MKLDNN)
        || ((layer_param->convolution_param().engine() ==
            ConvolutionParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKLDNN") == 0)
-       )) {
+            param.engine().compare("MKLDNN") == 0))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params, layer_param->top(0),
+                       param, i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param =
-            GetBlobConsumer(layer_param->top(0), param, i+1);
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
 
       // Consumer lauyer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
@@ -506,8 +517,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
           ReLUParameter_Engine_MKLDNN)
         || ((consumer_layer_param.relu_param().engine() ==
             ReLUParameter_Engine_DEFAULT) &&
-             param.engine().compare("MKLDNN") == 0)
-        )) {
+             param.engine().compare("MKLDNN") == 0))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);
@@ -521,8 +531,10 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
                                         scale_top_blob_name);
         // set relu flag in convolution
         layer_param->mutable_convolution_param()->set_relu(true);
-        float negative_slope1 = consumer_layer_param.relu_param().negative_slope();
-        layer_param->mutable_convolution_param()->set_negative_slope(negative_slope1);
+        float negative_slope1 =
+                  consumer_layer_param.relu_param().negative_slope();
+        layer_param->mutable_convolution_param()->
+                    set_negative_slope(negative_slope1);
       }
     }
 
@@ -541,28 +553,80 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 }
 
 template <typename Dtype>
-const LayerParameter& Net<Dtype>::GetBlobConsumer(
-    const string& blob_name_to_find,
-    const NetParameter& param,
-    int layer_id_to_start_traversing_from) {
-  // Valida values of ids of layers are <1..num_layers-1>
-  CHECK_GE(layer_id_to_start_traversing_from, 1);
+void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
+                             NetParameter* param_compiled) {
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
 
-  if (layer_id_to_start_traversing_from >= param.layer_size()) {
-    return param.layer(layer_id_to_start_traversing_from - 1);
+    // Optimization rule 3:
+    // - If we are having engine MKL2017 and Batch Normalization
+    // doing inplace computation then
+    // to improve performance we create another top buffer
+    // and make other layers consuming BatchNorm top to use new buffer
+
+    // If current layer is BatchNorm of MKL2017 engine..
+    if (((layer_param->type().compare("BatchNorm") == 0) &&
+        ((layer_param->batch_norm_param().engine() ==
+         BatchNormParameter_Engine_MKL2017)
+        || ((layer_param->batch_norm_param().engine() ==
+           BatchNormParameter_Engine_DEFAULT) &&
+            param.engine().compare("MKL2017") == 0))) &&
+        (layer_param->top(0) == layer_param->bottom(0) )) {
+      std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params,
+                       batch_norm_top,
+                       param,
+                       i+1 < param.layer_size() ? i+1 : i);
+
+      for (std::vector<const LayerParameter*>::iterator it =
+        consumer_layer_params.begin();
+        it != consumer_layer_params.end(); ++it) {
+        // If consumer is computing inplace then modify top as well
+        if (((*it)->top_size() > 0 ) &&
+            ((*it)->bottom(0).compare((*it)->top(0)) == 0)) {
+          // Modify consumer top
+          const_cast<string&>((*it)->top(0)).append("_x");
+        }
+
+        // Modify consumer bottom. Sometimes searched
+        // buffer is under higher bottom index than 0 eg.
+        // In case of Eltwise
+        for (unsigned int i = 0; i < (*it)->bottom_size(); ++i) {
+          if ((*it)->bottom(i).compare(batch_norm_top) == 0) {
+            const_cast<string&>((*it)->bottom(i)).append("_x");
+          }
+        }
+      }
+      // Modify top so it is diffrent from bottom
+      batch_norm_top.append("_x");
+    }
+    param_compiled->add_layer()->CopyFrom(*layer_param);
   }
+  return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::GetBlobConsumers(
+                  std::vector<const LayerParameter*>& consumer_blobs,
+                  const string& blob_name_to_find,
+                  const NetParameter& param,
+                  int layer_id_to_start_traversing_from) {
+  consumer_blobs.clear();
+  // Validate values of ids of layers are <1..num_layers-1>
+  CHECK_GE(layer_id_to_start_traversing_from, 1);
+  CHECK_LT(layer_id_to_start_traversing_from, param.layer_size());
+
   // Traverse through layers to search the layer that consumes blob_name_to_find
   for (int i = layer_id_to_start_traversing_from; i < param.layer_size(); ++i) {
     // check bottom blobs if any of them is consuming given blob
     for (int j = 0; j < param.layer(i).bottom_size(); ++j) {
       if (param.layer(i).bottom(j).compare(blob_name_to_find) == 0) {
-        return param.layer(i);
+        consumer_blobs.push_back(&param.layer(i));
       }
     }
   }
-  // If no appropriate layer was found then return the one that should be layer
-  // producing blob we are searching consumer for
-  return param.layer(layer_id_to_start_traversing_from-1);
 }
 
 template <typename Dtype>

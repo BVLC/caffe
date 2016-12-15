@@ -41,7 +41,7 @@
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
-# CPU_ONLY := 1
+CPU_ONLY := 1
 
 # USE_MKL2017_AS_DEFAULT_ENGINE flag is OBSOLETE
 # Put this at the top your train_val.protoxt or solver.prototxt file:
