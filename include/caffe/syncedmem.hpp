@@ -88,6 +88,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 
 // Base class
 struct PrvMemDescr {
+  virtual ~PrvMemDescr() {}
   virtual void convert_from_prv(void* cpu_ptr) = 0;
   virtual void convert_to_prv(void* cpu_ptr) = 0;
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other) = 0;
