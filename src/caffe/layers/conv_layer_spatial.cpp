@@ -596,7 +596,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
       cleanTmpSubBuffers(bottom, top);
     }
   } else if (config->kernelType == 5) {
-    swizzleWeights(bottom, top, 8, true);
+    swizzleWeights(bottom, top, config->workItem_output[1], true);
     size_t total_bottom_size = bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
     size_t total_bias_size = M_ * group_;
@@ -805,7 +805,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
 
   int_tp output_width = output_w_;
   int_tp output_height = output_h_;
-  int_tp simd_size = 8;
+  int_tp simd_size = blockK;
   int_tp num_batches = num_;
   int_tp alignedFilterWidth = (M_ + blockN - 1) & ~(blockN - 1);
   int_tp alignedExpandHeight = (output_width * output_height + blockM - 1)
@@ -815,9 +815,14 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
 
   kernel_name_ = "U_GEMM_LIKE_CONV_";
   kernel_name_ += kernelUKey.c_str();
-  kernel_name_ += "_SIMD8";
+  if (blockK == 8)
+    kernel_name_ += "_SIMD8";
+  else
+    kernel_name_ += "_SIMD16";
   std::stringstream kernelDef;
   kernelDef << "GEMM_LIKE_CONV_" << blockN << "_" << blockM;
+  if (blockK == 16)
+    kernelDef << "_SIMD16";
 
   // Build list of options and defines
   optionsString.str("");
@@ -869,7 +874,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   size_t sgemm_n = alignedFilterWidth;
   size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );  // NOLINT
   size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );  // NOLINT
-  gy = (gy + 7) & ~7;
+  gy = (gy + blockK - 1) & ~(blockK - 1);
   size_t gz = num_batches;
   size_t global_size[3] = { gx, gy, gz };
 
@@ -1139,9 +1144,11 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     // Generates static key_
     generate_key(false);
     int kernelCnt = 0;
-    if (this->group_ == 1 && M_ % 32 == 0) {
+    if (this->group_ == 1 && M_ % 8 == 0) {
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
+      if (kernel_w_ < 4)
+        create_convolution_kernel(bottom, top, 5, 1, 16, 32);
     }
     if (this->group_ == 1 || M_ % 16 == 0) {
       for (uint32_t width = 14; width > 0; width--) {
