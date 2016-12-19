@@ -88,10 +88,10 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
  private:
 
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 
   /* Fwd step */
@@ -160,7 +160,7 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif
@@ -238,10 +238,10 @@ class MKLPoolingLayer : public Layer<Dtype> {
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -306,7 +306,7 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "ReLU"; }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 
@@ -314,7 +314,7 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual void out_layout(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void in_layout(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -356,7 +356,7 @@ class MKLConcatLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "Concat"; }
   ~MKLConcatLayer();
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
   virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif

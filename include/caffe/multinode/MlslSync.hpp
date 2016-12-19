@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 
 #ifndef CAFFE_MLSLSYNC_HPP_
@@ -134,9 +134,6 @@ public:
     }
 
     void run() {
-        
-        int rand_seed = caffe_rng_rand();
-
 #ifndef USE_MPI
         LOG(ERROR) << "can't run mpi based training without configured MPI";
         return;
@@ -373,9 +370,9 @@ public:
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_iter_finished: delwt:");
           
           if (CAN_USE_PRV(net_params[param_ids[i]]))
-              layer->layerOp->Weights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_prv_diff());
+              layer->layerOp->GetWeights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_prv_diff());
           else
-              layer->layerOp->Weights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_cpu_diff());
+              layer->layerOp->GetWeights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_cpu_diff());
 
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_iter_finished:  delwt before comms:");
       }
@@ -393,7 +390,7 @@ public:
       for (int i = 0; i < param_ids.size(); ++i) {
 
           LOG_LAYER(layer) << "bprop: on_delwt_wait: wait delwt for param_id " << param_ids[i];
-          Dtype* delwt_buf = (Dtype*)layer->layerOp->Weights(i)->CommsWaitDelWt();
+          Dtype* delwt_buf = (Dtype*)layer->layerOp->GetWeights(i)->CommsWaitDelWt();
           LOG_LAYER(layer) << "bprop: on_delwt_wait: got delwt for param_id " << param_ids[i];
 
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_delwt_wait: delwt after comms:");
@@ -471,5 +468,5 @@ public:
 
 #endif  // CAFFE_MLSLSYNC_HPP_
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 

@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #include <glog/logging.h>
 #include <stdlib.h>
@@ -37,15 +37,13 @@ void mlsl_init_distributions() {
 
     if (!isDistributionsInited) {
         isDistributionsInited = true;
-        const int num_groups = 2;
         data_parallelism = new MLSL::Distribution(MLSL::GetNumNodes(), 1);
         model_parallelism = new MLSL::Distribution(1, MLSL::GetNumNodes());
-        //hybrid_parallelism = new MLSL::Distribution(MLSL::GetNumNodes()/num_groups, num_groups);
     }
 }
 
 }  // namespace internode
 }  // namespace caffe
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 

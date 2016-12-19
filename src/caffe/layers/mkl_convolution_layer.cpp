@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/performance.hpp"
 #include "mkl_service.h"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
 #endif
 
@@ -323,7 +323,7 @@ void MKLConvolutionLayer<Dtype>::Init(
                                         1, bias_sizes, bias_strides);
   }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   if (!this->layerOp) {
     DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
@@ -345,13 +345,13 @@ void MKLConvolutionLayer<Dtype>::Init(
     for (int idx = 0; idx < this->blobs_.size(); idx++) {
       LOG_LAYER(this) << "LayerSetUp: this->blobs_[idx]->count() " << this->blobs_[idx]->count();
       LOG_LAYER(this) << "LayerSetUp: wt idx " << idx
-                      << ", local weight len " << this->layerOp->Weights(idx)->LocalLen() * this->layerOp->Weights(idx)->WTSize()
-                      << ", owned weight len " << this->layerOp->Weights(idx)->OwnedLen() * this->layerOp->Weights(idx)->WTSize()
-                      << ", wtsize " << this->layerOp->Weights(idx)->WTSize();
+                      << ", local weight len " << this->layerOp->GetWeights(idx)->LocalLen() * this->layerOp->GetWeights(idx)->WTSize()
+                      << ", owned weight len " << this->layerOp->GetWeights(idx)->OwnedLen() * this->layerOp->GetWeights(idx)->WTSize()
+                      << ", wtsize " << this->layerOp->GetWeights(idx)->WTSize();
     }
   }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 
@@ -379,21 +379,16 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumPackBlocks(); i++) {
           BlockInfo * bi = fm->GetPackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
-          //Dtype (* __restrict src)[lFMLen][bFMSize] = (Dtype (*)[*][*])(local_buf);
-          //Dtype (* __restrict dst)[bFMLen][bFMSize] = (Dtype (*)[*][*])(comms_buf + bi->BufOffset());
           Dtype *src = (Dtype*) from;
           Dtype *dst = (Dtype*) (to + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
@@ -408,15 +403,12 @@ void MKLConvolutionLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dt
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
           BlockInfo * bi = fm->GetUnpackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *dst = (Dtype*) to;
           Dtype *src = (Dtype*) (from + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
@@ -429,7 +421,7 @@ void MKLConvolutionLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from
       }
 }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Forward_cpu(
@@ -534,9 +526,9 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
     this->on_delinp_ready(propagate_down);
-#endif
+#endif /* USE_MLSL */
 
     PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_convolution");
 

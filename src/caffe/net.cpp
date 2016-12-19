@@ -62,10 +62,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/insert_bias_layer.hpp"
 #endif
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 #include "mlsl.h"
 using namespace MLSL;
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -231,7 +231,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
     if (!layer_param.type().compare("Data")       ||
         !layer_param.type().compare("DummyData")  ||
         !layer_param.type().compare("ImageData")  ||
@@ -262,7 +262,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         }
         caffe::internode::mlsl_init_distributions();
     }
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
     // After this layer is connected, set it up.
     if (share_from_root) {
@@ -413,7 +413,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   ShareWeights();
   debug_info_ = param.debug_info();
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   if (caffe::TRAIN == param.state().phase()) { // TODO: create ComputeOps only for train net
 
@@ -476,8 +476,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
               CHECK_NUM_WEIGHTS(layer, param_ids);
               for (int i = 0; i < param_ids.size(); i++) {
-                  int mlsl_weight_size = layer->layerOp->Weights(i)->LocalLen()
-                                        * layer->layerOp->Weights(i)->WTSize()
+                  int mlsl_weight_size = layer->layerOp->GetWeights(i)->LocalLen()
+                                        * layer->layerOp->GetWeights(i)->WTSize()
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
                   if (mlsl_weight_size < caffe_weight_size)
@@ -490,7 +490,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
   }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }

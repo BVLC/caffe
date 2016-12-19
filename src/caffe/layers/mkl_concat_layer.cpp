@@ -110,7 +110,7 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -136,7 +136,7 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 
@@ -166,18 +166,15 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   Init(bottom, top);
 }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const Dtype *local_buf) {
-    int lMBLen = this->layerOp->LocalMinibatchLen();
-    int lFMLen = fm->LocalLen();
     for (int i = 0; i < fm->NumPackBlocks(); i++) {
         BlockInfo * bi = fm->GetPackBlock(i);
         int bMBLen = bi->MBLen();
         int bMBStart = bi->MBStart();
         int bFMLen = bi->FMLen();
         int bFMStart = bi->FMStart();
-        int bFMSize = bi->FMSize();
         Dtype *src = (Dtype*) local_buf;
         Dtype *dst = (Dtype*) (comms_buf + bi->BufOffset());
         for (int mb = 0; mb < bMBLen; mb++) {
@@ -194,15 +191,12 @@ void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const 
 
   template <typename Dtype>
   void MKLConcatLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *comms_buf, Dtype *local_buf) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumPackBlocks(); i++) {
           BlockInfo * bi = fm->GetPackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *dst = (Dtype*) local_buf;
           Dtype *src = (Dtype*) (comms_buf + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
@@ -215,7 +209,7 @@ void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const 
       }
   }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,

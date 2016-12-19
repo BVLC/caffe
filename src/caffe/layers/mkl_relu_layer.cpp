@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/performance.hpp"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
 #endif
 
@@ -90,7 +90,7 @@ void MKLReLULayer<Dtype>::Init(
   dnnDelete<Dtype>(reluFwd_);
   dnnDelete<Dtype>(reluBwd_);
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
@@ -115,19 +115,16 @@ void MKLReLULayer<Dtype>::Init(
 
 }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
-    int lMBLen = this->layerOp->LocalMinibatchLen();
-    int lFMLen = fm->LocalLen();
     for (int i = 0; i < fm->NumPackBlocks(); i++) {
         BlockInfo * bi = fm->GetPackBlock(i);
         int bMBLen = bi->MBLen();
         int bMBStart = bi->MBStart();
         int bFMLen = bi->FMLen();
         int bFMStart = bi->FMStart();
-        int bFMSize = bi->FMSize();
         Dtype *src = (Dtype*) from;
         Dtype *dst = (Dtype*) (to + bi->BufOffset());
         for (int mb = 0; mb < bMBLen; mb++) {
@@ -143,15 +140,12 @@ void MKLReLULayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *fr
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
-    int lMBLen = this->layerOp->LocalMinibatchLen();
-    int lFMLen = fm->LocalLen();
     for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
         BlockInfo * bi = fm->GetUnpackBlock(i);
         int bMBLen = bi->MBLen();
         int bMBStart = bi->MBStart();
         int bFMLen = bi->FMLen();
         int bFMStart = bi->FMStart();
-        int bFMSize = bi->FMSize();
         Dtype *dst = (Dtype*) to;
         Dtype *src = (Dtype*) (from + bi->BufOffset());
         for (int mb = 0; mb < bMBLen; mb++) {
@@ -164,7 +158,7 @@ void MKLReLULayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype
     }
 }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,

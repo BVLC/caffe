@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #ifndef _CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
 #define _CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
@@ -15,4 +15,4 @@ void SeparateBias(const NetParameter& param, NetParameter* param_split);
 
 #endif  // CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */

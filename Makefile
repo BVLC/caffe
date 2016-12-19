@@ -62,13 +62,9 @@ endif
 
 #################### MLSL ####################
 
-ifeq ($(CAFFE_MLSL), 1)
-	COMMON_FLAGS += -DCAFFE_MLSL
-	CXX = mpiicpc
-	USE_MPI = 1
-	CPU_ONLY = 1
-	INCLUDE_DIRS += $(MLSL_INSTALL_PATH)/include
-	LIBRARY_DIRS += $(MLSL_INSTALL_PATH)/lib
+ifeq ($(USE_MLSL), 1)
+	COMMON_FLAGS += -DUSE_MLSL=1 -fpermissive
+	CPU_ONLY=1
 	LIBRARIES += mlsl
 
 ifeq ($(DISTR_WEIGHT_UPDATE), 1)
@@ -263,7 +259,7 @@ ifeq ($(USE_OPENCV), 1)
 	ifeq ($(OPENCV_VERSION), 3)
 		LIBRARIES += opencv_imgcodecs
 	endif
-		
+
 endif
 PYTHON_LIBRARIES ?= boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare

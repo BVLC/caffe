@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #include "caffe/multinode/MlslSync.hpp"
 
@@ -113,4 +113,4 @@ MlslSync<Dtype>::~MlslSync()
   INSTANTIATE_CLASS(MlslSync);
 } // namespace caffe
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */

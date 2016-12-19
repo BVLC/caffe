@@ -50,11 +50,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#ifdef CAFFE_MLSL
-#include "mlsl.h"
-// FIXME: MPI_Reduce() in Test
-#include "mpi.h"
-#endif
+#ifdef USE_MLSL
+#include <mlsl.h>
+#include <mpi.h>
+#endif /* USE_MLSL */
 
 namespace caffe {
 
@@ -603,30 +602,30 @@ void Solver<Dtype>::Test(const int test_net_id) {
     return;
   }
   if (param_.test_compute_loss()) {
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
     MPI_Allreduce(MPI_IN_PLACE, &loss, 1, sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     loss /= (param_.test_iter(test_net_id) * MLSL::GetNumNodes());
     if(MLSL::GetNodeId() == 0) LOG(INFO) << "Test loss: " << loss;
-#else
+#else /* !USE_MLSL */
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
-#endif
+#endif /* USE_MLSL */
   }
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   MPI_Allreduce(MPI_IN_PLACE, test_score.data(), test_score.size(), sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   if(MLSL::GetNodeId() == 0)
-#endif
+#endif /* USE_MLSL */
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
     const Dtype mean_score = test_score[i] / (param_.test_iter(test_net_id) * MLSL::GetNumNodes());
-#else
+#else /* !USE_MLSL */
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
-#endif
+#endif /* USE_MLSL */
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
@@ -640,9 +639,9 @@ template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   if(MLSL::GetNodeId() != 0) return;
-#endif
+#endif /* USE_MLSL */
 
   string model_filename;
   switch (param_.snapshot_format()) {

@@ -46,9 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/blocking_queue.hpp"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 namespace caffe {
 
@@ -73,7 +73,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   DataLayerSetUp(bottom, top);
 
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -86,29 +86,25 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 template <typename Dtype>
 void BaseDataLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumPackBlocks(); i++) {
           BlockInfo * bi = fm->GetPackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *src = (Dtype*) from;
           Dtype *dst = (Dtype*) (to + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
               for (int fm = 0; fm < bFMLen; fm++) {
                   for (int s = 0 ; s < bi->FMSize(); s++) {
-                      //dst[fm][mb][s] = src[bMBStart+mb][bFMStart+fm][s];
                       dst[(fm*bMBLen + mb)*bi->FMSize() + s] =
                           src[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s];
                   }
@@ -119,15 +115,12 @@ void BaseDataLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *f
 
   template <typename Dtype>
   void BaseDataLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
           BlockInfo * bi = fm->GetUnpackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *dst = (Dtype*) to;
           Dtype *src = (Dtype*) (from + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
@@ -140,7 +133,7 @@ void BaseDataLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *f
       }
   }
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(

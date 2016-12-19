@@ -60,10 +60,10 @@ class SplitLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }

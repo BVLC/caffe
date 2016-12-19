@@ -40,9 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layers/dummy_data_layer.hpp"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 namespace caffe {
 
@@ -137,7 +137,7 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     refill_[i] = !refill_[i];
   }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -151,7 +151,7 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 

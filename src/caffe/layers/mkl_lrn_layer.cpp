@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/performance.hpp"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
 #endif
 
@@ -101,7 +101,7 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnReleaseBuffer<Dtype>(lrn_buffer_);
   lrn_buffer_ = NULL;
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -114,7 +114,7 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 
@@ -158,19 +158,16 @@ void MKLLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 template <typename Dtype>
 void MKLLRNLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumPackBlocks(); i++) {
           BlockInfo * bi = fm->GetPackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *src = (Dtype*) from;
           Dtype *dst = (Dtype*) (to + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {
@@ -185,15 +182,12 @@ void MKLLRNLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *fro
 
 template <typename Dtype>
 void MKLLRNLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
-      int lMBLen = this->layerOp->LocalMinibatchLen();
-      int lFMLen = fm->LocalLen();
       for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
           BlockInfo * bi = fm->GetUnpackBlock(i);
           int bMBLen = bi->MBLen();
           int bMBStart = bi->MBStart();
           int bFMLen = bi->FMLen();
           int bFMStart = bi->FMStart();
-          int bFMSize = bi->FMSize();
           Dtype *dst = (Dtype*) to;
           Dtype *src = (Dtype*) (from + bi->BufOffset());
           for (int mb = 0; mb < bMBLen; mb++) {

@@ -41,9 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 using namespace MLSL;
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 namespace caffe {
 
@@ -97,7 +97,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
@@ -128,7 +128,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   delete myRegInfo;
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
 }
 
@@ -229,7 +229,7 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., bottom[0]->mutable_cpu_diff());
     }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
       this->on_delinp_ready(propagate_down);
 #endif
   }

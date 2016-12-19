@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
@@ -219,4 +219,4 @@ INSTANTIATE_CLASS(MlslSolver);
 
 }  // namespace caffe
 
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */

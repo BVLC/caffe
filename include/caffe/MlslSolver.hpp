@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #ifndef CAFFE_MLSLSOLVER_HPP_
 #define CAFFE_MLSLSOLVER_HPP_
@@ -84,4 +84,4 @@ class MlslSolver {
 
 #endif  // CAFFE_MLSLSOLVER_HPP_
 
-#endif // CAFFE_MLSL
+#endif // USE_MLSL

@@ -66,10 +66,10 @@ class ReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "ReLU"; }
 
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
-#endif /* CAFFE_MLSL */
+#endif /* USE_MLSL */
 
  protected:
   /**

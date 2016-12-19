@@ -1,4 +1,4 @@
-#ifdef CAFFE_MLSL
+#ifdef USE_MLSL
 
 #ifndef CAFFE_UTIL_MLSL_UTIL_H_
 #define CAFFE_UTIL_MLSL_UTIL_H_
@@ -21,4 +21,4 @@ void mlsl_init_distributions();
 
 #endif   // CAFFE_UTIL_MLSL_UTIL_H_
 
-#endif // CAFFE_MLSL
+#endif // USE_MLSL
