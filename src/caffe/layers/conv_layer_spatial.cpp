@@ -320,7 +320,8 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
     oclk_copy_weight.arg(argIdx++, this->num_output_);
     oclk_copy_weight.arg(argIdx++, swizzled_factor);
     const size_t global_work_size_Copy[3] = {
-        (size_t) (((this->num_output_ + 15) & ~15)
+        (size_t) (((this->num_output_ + (swizzled_factor - 1))
+                  & ~(swizzled_factor - 1))
         * channels * kernel_w_ * kernel_h_), 1, 1 };
 
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
@@ -535,7 +536,7 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
   cl_int err = 0;
 
   if (config->kernelType == 2) {
-    swizzleWeights(bottom, top, 16, false);
+    swizzleWeights(bottom, top, config->workItem_output[2], false);
     size_t total_bottom_size = bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * channels_ * M_;
     size_t total_bias_size = M_ * group_;
@@ -922,32 +923,33 @@ template<>
 bool ConvolutionLayerSpatial<float>::setup_IDLF(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp blockWidth,
-    int_tp blockHeight, int_tp blockDepth) {
+    int_tp blockHeight, int_tp simd_size) {
   std::stringstream multFunctionBuilder;
   std::string stringBuilder;
   std::stringstream optionsString;
+  const int_tp blockDepth = 1;
   std::string kernelUKey = generate_specific_key(2, blockWidth, blockHeight,
                                                  blockDepth);
-  int_tp workItemOutput[3] = { blockWidth, blockHeight, blockDepth };
-  std::string kernelDef = "MULTI";
-
+  int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
   const int_tp num_output_maps = M_;
   int_tp output_width = output_w_;
   int_tp output_height = output_h_;
   int_tp output_block_width = blockWidth;
   int_tp output_block_height = blockHeight;
-  int_tp simd_size = 16;
   int_tp num_batches = num_;
 
   kernel_name_ = "U";
   kernel_name_ += kernelUKey.c_str();
-  kernel_name_ += "_SIMD16";
-  kernelDef = "SIMD16";
+
+  if (simd_size == 16)
+    kernel_name_ += "_SIMD16";
+  else
+    kernel_name_ += "_SIMD8";
 
   // Build list of options and defines
   optionsString.str("");
-  optionsString << "-cl-fast-relaxed-math " << " -D IDLF" << " -D "
-                << kernelDef.c_str() << " -D convolve_simd="
+  optionsString << "-cl-fast-relaxed-math " << " -D IDLF"
+                << " -D convolve_simd="
                 << kernel_name_;
 
   const int_tp last_block_width =
@@ -960,12 +962,13 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
   size_t global_size[3] = { (size_t) (output_width + output_block_width - 1)
       / output_block_width, (size_t) (output_height + output_block_height - 1)
       / output_block_height,
-      (size_t) num_batches * ((num_output_maps + 15) & ~15) };
+      (size_t) num_batches *
+      ((num_output_maps + (simd_size - 1)) & ~(simd_size - 1)) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
   int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_) + 3) & ~3;
   int tile_y = (output_block_height -1) * stride_h_ + kernel_h_;
-  int tile_y_stride = 64 / tile_x;
+  int tile_y_stride = (4 * simd_size) / tile_x;
   int invec_size = (tile_y + tile_y_stride - 1) / tile_y_stride;
 
   optionsString << " -D SIMD_SIZE=" << simd_size
@@ -988,7 +991,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -DTILE_Y=" << tile_y
                 << " -DTILE_Y_STRIDE=" << tile_y_stride
                 << " -DINVEC_SIZE=" << invec_size
-                << " -DALIGNED_NUM_FILTERS=" << ((M_ + 15) & ~15);
+                << " -DALIGNED_NUM_FILTERS=" << ((M_ + (simd_size - 1)) & ~(simd_size - 1));
 
   if (need_padding_)
     optionsString << " -DINPUT_PAD_W=" << 0 << " -DINPUT_PAD_H=" << 0;
@@ -1150,20 +1153,41 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       if (kernel_w_ < 4)
         create_convolution_kernel(bottom, top, 5, 1, 16, 32);
     }
-    if (this->group_ == 1 || M_ % 16 == 0) {
-      for (uint32_t width = 14; width > 0; width--) {
+
+    for (int simd_size = 8; simd_size <= 16; simd_size += 8) {
+      if (simd_size == 8
+          && !((this->group_ == 1 || M_ % 8 == 0)))
+        continue;
+      if (simd_size == 16
+          && !(this->group_ == 1 || M_ % 16 == 0))
+        continue;
+      int width_max, height_max, block_size_max;
+      if (simd_size == 8) {
+        width_max = 20;
+        height_max = 20;
+        block_size_max = 64;
+      } else {
+        width_max = 14;
+        height_max = 14;
+        block_size_max = 32;
+      }
+      for (uint32_t width = width_max; width > 0; width--) {
         int candidate = 0;
         if (width > output_w_)
           continue;
-        for (uint32_t height = 14; height > 0; height--) {
-          if (width * height > 32 || height > output_h_)
+        for (uint32_t height = height_max; height > 0; height--) {
+          if (width * height > block_size_max || height > output_h_)
+            continue;
+          if (simd_size == 8
+              && M_ >= 16
+              && num_ * M_ * output_w_ * output_h_ >= 16 * width * height * 24 * 7)
             continue;
           int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
           int tile_y = kernel_h_ + (height - 1) * stride_h_;
-          int tile_y_stride = 64 / tile_x;
+          int tile_y_stride = (4 * simd_size) / tile_x;
 
           if ((tile_y + tile_y_stride - 1) / tile_y_stride < 4) {
-            create_convolution_kernel(bottom, top, 2, width, height, 1);
+            create_convolution_kernel(bottom, top, 2, width, height, 8);
             candidate++;
           }
           if (candidate >= 4 && height == 2)
