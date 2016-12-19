@@ -56,6 +56,11 @@ namespace bp = boost::python;
 #include "caffe/training_utils.hpp"
 #include "caffe/util/signal_handler.h"
 
+#ifdef CAFFE_MSL
+#include "caffe/multinode/MslSync.hpp"
+#include "caffe/internode/msl_util.hpp"
+#endif /* CAFFE_MSL */
+
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
@@ -303,13 +308,30 @@ int train() {
   if (FLAGS_param_server != "") {
     LOG(INFO) << "Configuring multinode setup";
 
+#ifdef CAFFE_MSL
+      if (FLAGS_param_server != "msl") {
+#else
       if (FLAGS_param_server != "mpi") {
+#endif /* CAFFE_MSL */
+
         LOG(ERROR) << "currently unsupported";
         return 1;
       }
-      caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
-      LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
-      sync.run();
+
+#ifdef CAFFE_MSL
+      if (FLAGS_param_server == "msl") {
+        caffe::MslSync<float> sync(solver);
+        LOG(INFO) << "Starting Multi-node Optimization in MSL environment";
+        sync.run();
+      }
+#else /* CAFFE_MSL */
+      if (FLAGS_param_server == "mpi") {
+        caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
+        LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
+        sync.run();
+      }
+#endif /* CAFFE_MSL */
+
   } else if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     sync.Run(gpus);
@@ -727,7 +749,13 @@ RegisterBrewFunction(compare);
 
 
 int main(int argc, char** argv) {
+
+#ifdef CAFFE_MSL
+  caffe::internode::msl_init(argc, argv);
+#else
   caffe::internode::mpi_init(argc, argv);
+#endif /* CAFFE_MSL */
+
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
@@ -750,18 +778,36 @@ int main(int argc, char** argv) {
     try {
 #endif
       int ret = GetBrewFunction(caffe::string(argv[1]))();
+
+#ifdef CAFFE_MSL
+      caffe::internode::msl_finalize();
+#else
       caffe::internode::mpi_finalize();
+#endif /* CAFFE_MSL */
+
       return ret;
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();
+
+#ifdef CAFFE_MSL
+      caffe::internode::msl_finalize();
+#else
       caffe::internode::mpi_finalize();
+#endif /* CAFFE_MSL */
+
       return 1;
     }
 #endif
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
-  caffe::internode::mpi_finalize();
+
+#ifdef CAFFE_MSL
+      caffe::internode::msl_finalize();
+#else
+      caffe::internode::mpi_finalize();
+#endif /* CAFFE_MSL */
+
   return 0;
 }

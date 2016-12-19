@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 
+#include "caffe/util/benchmark.hpp"
+
 namespace caffe {
 
 /**
@@ -147,6 +149,23 @@ class Solver {
   virtual void ApplyUpdate(int param_id) = 0;
 
   void TestAll();
+
+
+#ifdef CAFFE_PER_LAYER_TIMINGS
+  /* Timers for performance measurements */
+  Timer timer;
+  std::vector<double> forward_time_per_layer;
+  std::vector<double> backward_time_per_layer;
+  std::vector<double> update_time_per_layer;
+
+  std::vector<double> forward_time_per_layer_total;
+  std::vector<double> backward_time_per_layer_total;
+  std::vector<double> update_time_per_layer_total;
+
+  void InitTimers();
+  void ResetTimers();
+  void PrintTimers(bool printTotal);
+#endif /* CAFFE_PER_LAYER_TIMINGS */
 
  protected:
   string SnapshotFilename(const string extension);

@@ -42,6 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/performance.hpp"
 
+#ifdef CAFFE_MSL
+using namespace MSL;
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -85,7 +89,82 @@ void MKLReLULayer<Dtype>::Init(
   // what layout is used by neighbours.
   dnnDelete<Dtype>(reluFwd_);
   dnnDelete<Dtype>(reluBwd_);
+
+#ifdef CAFFE_MSL
+
+  int ic = bottom[0]->channels();
+  int iw = bottom[0]->width();
+  int ih = bottom[0]->height();
+
+  int oc = ic; //top[0]->channels();
+  int ow = iw; //top[0]->width();
+  int oh = ih; //top[0]->height();
+
+  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+  ComputeOpRegInfo *myRegInfo;
+  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_ACT);
+  myRegInfo->SetName(this->layer_param_.name().c_str());
+  myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+
+  myRegInfo->Validate();
+  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+  delete myRegInfo;
+
+#endif
+
 }
+
+#ifdef CAFFE_MSL
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
+    int lMBLen = this->layerOp->LocalMinibatchLen();
+    int lFMLen = fm->LocalLen();
+    for (int i = 0; i < fm->NumPackBlocks(); i++) {
+        BlockInfo * bi = fm->GetPackBlock(i);
+        int bMBLen = bi->MBLen();
+        int bMBStart = bi->MBStart();
+        int bFMLen = bi->FMLen();
+        int bFMStart = bi->FMStart();
+        int bFMSize = bi->FMSize();
+        Dtype *src = (Dtype*) from;
+        Dtype *dst = (Dtype*) (to + bi->BufOffset());
+        for (int mb = 0; mb < bMBLen; mb++) {
+            for (int fm = 0; fm < bFMLen; fm++) {
+                for (int s = 0 ; s < bi->FMSize(); s++) {
+                      dst[(fm*bMBLen + mb)*bi->FMSize() + s] =
+                          src[s*bFMLen*bMBLen + (bFMStart+fm)*bMBLen + (bMBStart+mb)];
+                }
+            }
+        }
+    }
+}
+
+template <typename Dtype>
+void MKLReLULayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
+    int lMBLen = this->layerOp->LocalMinibatchLen();
+    int lFMLen = fm->LocalLen();
+    for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
+        BlockInfo * bi = fm->GetUnpackBlock(i);
+        int bMBLen = bi->MBLen();
+        int bMBStart = bi->MBStart();
+        int bFMLen = bi->FMLen();
+        int bFMStart = bi->FMStart();
+        int bFMSize = bi->FMSize();
+        Dtype *dst = (Dtype*) to;
+        Dtype *src = (Dtype*) (from + bi->BufOffset());
+        for (int mb = 0; mb < bMBLen; mb++) {
+            for (int fm = 0; fm < bFMLen; fm++) {
+                for (int s = 0 ; s < bi->FMSize(); s++) {
+                  dst[s*bFMLen*bMBLen + (bFMStart+fm)*bMBLen + (bMBStart+mb)] = src[(fm*bMBLen + mb)*bi->FMSize() + s];
+                }
+            }
+        }
+    }
+}
+
+#endif /* CAFFE_MSL */
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,

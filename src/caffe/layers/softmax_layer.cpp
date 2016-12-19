@@ -88,6 +88,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
         top_data[j] -= scale_data*mult[j];
 
     // exponentiation
+    // FIXME_valgrind: caffe_exp<Dtype>(dim, top_data, top_data);
     caffe_exp<Dtype>(dim, top_data, top_data);
 
     // sum after exp
@@ -136,6 +137,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
         1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data);
     // exponentiation
+    // FIXME_valgrind: caffe_exp<Dtype>(dim, top_data, top_data);
     caffe_exp<Dtype>(dim, top_data, top_data);
     // sum after exp
     caffe_cpu_gemv<Dtype>(CblasTrans, channels, inner_num_, 1.,

@@ -48,6 +48,72 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef CAFFE_MSL
+
+#include "caffe/internode/msl_util.hpp"
+using namespace MSL;
+
+#ifdef DISTR_WEIGHT_UPDATE
+#define DISTRIBUTED_WEIGHT_UPDATE true
+#else
+#define DISTRIBUTED_WEIGHT_UPDATE false
+#endif
+
+#endif /* CAFFE_MSL */
+
+#define MAX_ELEMS_TO_LOG 16
+#define LOG_LAYER(layer) DLOG(INFO) << layer->type() << ": "
+#define LOG_BLOB(layer, blob, part, blob_id, description)              \
+  do                                                                   \
+  {                                                                    \
+      int elems_to_log = std::min(MAX_ELEMS_TO_LOG, blob->count());    \
+      for (int idx = 0; idx < elems_to_log; idx++)                     \
+      {                                                                \
+          LOG_LAYER(layer) << description                              \
+                           << ", blob_id " << blob_id                  \
+                           << ", idx "     << idx                      \
+                           << ", value "   << blob->cpu_##part()[idx]; \
+      }                                                                \
+  } while (0)
+
+#define LOG_PARAM_BLOB(blob, part, blob_id, description)               \
+  do                                                                   \
+  {                                                                    \
+      int elems_to_log = std::min(MAX_ELEMS_TO_LOG, blob->count());    \
+      for (int idx = 0; idx < elems_to_log; idx++)                     \
+      {                                                                \
+          DLOG(INFO) << description                                    \
+                     << ", blob_id " << blob_id                        \
+                     << ", idx "     << idx                            \
+                     << ", value "   << blob->cpu_##part()[idx];       \
+      }                                                                \
+  } while (0)
+
+#define LOG_BUFFER(layer, buffer, buffer_id, description)    \
+  do                                                         \
+  {                                                          \
+      if (!buffer) {                                         \
+          /*LOG(WARNING) << "skip NULL buffer";*/                \
+          break;                                             \
+      }                                                      \
+      for (int idx = 0; idx < MAX_ELEMS_TO_LOG; idx++)       \
+      {                                                      \
+          LOG_LAYER(layer) << description                    \
+                           << ", buffer_id " << buffer_id    \
+                           << ", idx "       << idx          \
+                           << ", value "     << buffer[idx]; \
+      }                                                      \
+  } while (0)
+
+#define CHECK_NUM_WEIGHTS(layer, params_ids)                    \
+  do                                                            \
+  {                                                             \
+      DCHECK_EQ(param_ids.size(), layer->layerOp->NumWeights()) \
+        << "check failed for layer " << layer->type()           \
+        << ", param_ids.size() " << param_ids.size()            \
+        << ", NumWeights " << layer->layerOp->NumWeights();     \
+  } while (0)
+
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
@@ -68,6 +134,128 @@ namespace caffe {
  */
 template <typename Dtype>
 class Layer {
+
+#ifdef CAFFE_MSL
+
+public:
+
+  /*************** MSL ***************/
+
+	MSL::ComputeOp *layerOp;
+	vector<MSL::ComputeOp*> prevLayerOps;
+	vector<Layer<Dtype>*> prevLayers;
+
+	vector<int> ifm2ofm_map;
+  std::vector<uint32_t> bottom_sizes;
+
+  vector<Blob<Dtype>* > bottom_vec;
+  vector<Blob<Dtype>* > top_vec;
+
+  void on_delinp_ready(const vector<bool>& propagate_down) {
+
+      LOG_LAYER(this) << "bprop: on_delinp_ready: enter";
+      if (!this->layerOp->NumInputFeatureMaps()) {
+          LOG_LAYER(this) << "bprop: on_delinp_ready: there is no any input FMs, exit";
+          return;
+      }
+
+      int bottom_size = this->layer_param().bottom_size();
+      LOG_LAYER(this) << "bprop: on_delinp_ready: bottom size " << bottom_size;
+
+      for (int bottom_id = 0; bottom_id < bottom_size; ++bottom_id) {
+
+          if (!propagate_down[bottom_id]/* || !fm->NumPackBlocks()*/) {
+              LOG_LAYER(this) << "bprop: on_delinp_ready: skip CommsStart for bottom_id " << bottom_id;
+              continue;
+          }
+
+          FeatureMap* fm = this->layerOp->InputFeatureMap(bottom_id);
+          Dtype* comms_buf = (Dtype *)fm->CBuf()->GetPtr();
+
+          if (comms_buf) {
+              this->pack_buffer(fm, comms_buf, this->bottom_vec[bottom_id]->cpu_diff());
+              LOG_BLOB(this, this->bottom_vec[bottom_id], diff, bottom_id, "bprop: on_delinp_ready: bottom_diff:");
+              LOG_BUFFER(this, comms_buf, bottom_id, "bprop: on_delinp_ready: comms_buf:");
+              LOG_LAYER(this) << "bprop: on_delinp_ready: send delinp for bottom # " << bottom_id;
+              fm->CommsStart(comms_buf);
+          }
+      }
+  }
+
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from) {
+    	int lMBLen = this->layerOp->LocalMinibatchLen();
+    	int lFMLen = fm->LocalLen();
+    	for (int i = 0; i < fm->NumPackBlocks(); i++) {
+      		BlockInfo * bi = fm->GetPackBlock(i);
+      		int bMBLen = bi->MBLen();
+      		int bMBStart = bi->MBStart();
+      		int bFMLen = bi->FMLen();
+      		int bFMStart = bi->FMStart();
+      		int bFMSize = bi->FMSize();
+      		Dtype *src = (Dtype*) from;
+      		Dtype *dst = (Dtype*) (to + bi->BufOffset());
+      		for (int mb = 0; mb < bMBLen; mb++) {
+        			for (int fm = 0; fm < bFMLen; fm++) {
+          				for (int s = 0 ; s < bi->FMSize(); s++) {
+                          dst[(mb*bFMLen + fm)*bi->FMSize() + s] = src[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s];
+          				}
+        			}
+      		}
+    	}
+  }
+
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to) {
+    int lMBLen = this->layerOp->LocalMinibatchLen();
+    int lFMLen = fm->LocalLen();
+    for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
+        BlockInfo * bi = fm->GetUnpackBlock(i);
+        int bMBLen = bi->MBLen();
+        int bMBStart = bi->MBStart();
+        int bFMLen = bi->FMLen();
+        int bFMStart = bi->FMStart();
+        int bFMSize = bi->FMSize();
+        Dtype *dst = (Dtype*) to;
+        Dtype *src = (Dtype*) (from + bi->BufOffset());
+        for (int mb = 0; mb < bMBLen; mb++) {
+            for (int fm = 0; fm < bFMLen; fm++) {
+                for (int s = 0 ; s < bi->FMSize(); s++) {
+                  dst[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s] = src[(mb*bFMLen + fm)*bi->FMSize() + s];
+                }
+            }
+        }
+    }
+  }
+
+  void SetPrevLayer(int index, Layer<Dtype> *prevLayer) {
+      this->prevLayers[index] = prevLayer;
+      this->prevLayerOps[index] = prevLayer->layerOp;
+  }
+
+  void ConfigureMSL() {
+
+      uint32_t in_size;
+      this->layerOp->Finalize();
+      this->layerOp->AllocCommsBufs();
+      this->bottom_sizes.resize(this->prevLayerOps.size());
+
+      for (int i = 0; i < this->prevLayerOps.size(); i++)
+      {
+          ComputeOp *prevLayerOp = this->prevLayerOps[i];
+          in_size = this->layerOp->InputFeatureMap(i)->LocalLen() * this->layerOp->LocalMinibatchLen() * this->layerOp->InputFeatureMap(i)->FMSize() * sizeof(Dtype);
+
+          this->bottom_sizes[i] = in_size;
+
+          LOG_LAYER(this) << "ConfigureMSL: bottom_id " << i << ", in_size " << in_size
+          << ", ifm ll " << this->layerOp->InputFeatureMap(i)->LocalLen() 
+          << ", local mblen " << this->layerOp->LocalMinibatchLen()
+          << ", ifm fmsize " << this->layerOp->InputFeatureMap(i)->FMSize()
+          << ", sizeof Dtype " << sizeof(Dtype);
+      }
+  }
+
+  /*************** MSL ***************/
+#endif /* CAFFE_MSL */
+
  public:
   /**
    * You should not implement your own constructor. Any set up code should go
@@ -85,8 +273,24 @@ class Layer {
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
+
+#ifdef CAFFE_MSL
+      this->layerOp = 0;
+#endif
     }
+
+#ifdef CAFFE_MSL
+  virtual ~Layer() {
+      if (this->layerOp) {
+          this->layerOp->FreeCommsBufs();
+          //DLOG(INFO) << "~Layer: delete layerOp " << this->layerOp;
+          delete this->layerOp;
+          this->layerOp = 0;
+      }
+  }
+#else
   virtual ~Layer() {}
+#endif
 
   /**
    * @brief Implements common layer setup functionality.
@@ -108,6 +312,12 @@ class Layer {
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+
+#ifdef CAFFE_MSL
+    this->prevLayers.resize(bottom.size());
+    this->prevLayerOps.resize(bottom.size());
+#endif /* CAFFE_MSL */
+
   }
 
   /**
@@ -128,6 +338,51 @@ class Layer {
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+
+#ifdef CAFFE_MSL
+
+  virtual MSL::OpType getLayerTypeId(std::string const& layerType) {
+	  if(layerType == "Convolution") return COMP_OP_TYPE_CC;
+	  if(layerType == "InnerProduct") return COMP_OP_TYPE_CC;
+	  if(layerType == "Data") return COMP_OP_TYPE_DATA;
+	  if(layerType == "ReLU") return COMP_OP_TYPE_ACT;
+	  if(layerType == "Dropout") return COMP_OP_TYPE_ACT;
+	  if(layerType == "Pooling") return COMP_OP_TYPE_POOL;
+	  if(layerType == "LRN") return COMP_OP_TYPE_POOL;
+	  if(layerType == "Accuracy") return COMP_OP_TYPE_EVAL;
+	  if(layerType == "SoftmaxWithLoss") return COMP_OP_TYPE_EVAL;
+	  if(layerType == "Split") return COMP_OP_TYPE_BCAST;
+	  if(layerType == "Concat") return COMP_OP_TYPE_CONCAT;
+	  return COMP_OP_TYPE_CC;
+  }
+
+  virtual void SetUpMSL(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+	  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+	  ComputeOpRegInfo *myRegInfo;
+	  myRegInfo = new ComputeOpRegInfo(getLayerTypeId(this->layer_param_.type()));
+	  //myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BCAST);
+	  myRegInfo->SetName(this->layer_param_.name().c_str());
+	  for(int i=0; i<bottom.size(); i++)
+	  {
+		int ic = bottom[i]->channels();
+		int iw = bottom[i]->width();
+		int ih = bottom[i]->height();
+		myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+	  }
+	  for(int i=0; i<top.size(); i++)
+	  {
+		int oc = bottom[0]->channels();
+		int ow = bottom[0]->width();
+		int oh = bottom[0]->height();
+		myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+	  }
+
+	  myRegInfo->Validate();
+	  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+	  delete myRegInfo;
+  }
+#endif
 
   /**
    * @brief Whether a layer should be shared by multiple nets during data

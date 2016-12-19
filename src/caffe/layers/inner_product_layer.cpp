@@ -41,6 +41,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef CAFFE_MSL
+using namespace MSL;
+#endif /* CAFFE_MSL */
+
 namespace caffe {
 
 template <typename Dtype>
@@ -67,6 +71,9 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // Initialize the weights
     vector<int> weight_shape(2);
+#ifdef MSL_MODEL_PARALLELISM
+  K_/=caffe::internode::model_parallelism->GetFMGroupSize();
+#endif    
     if (transpose_) {
       weight_shape[0] = K_;
       weight_shape[1] = N_;
@@ -89,6 +96,40 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+#ifdef CAFFE_MSL
+
+  int ic = bottom[0]->channels();
+  int iw = bottom[0]->width();
+  int ih = bottom[0]->height();
+  int oc = N_;
+  int ow = top[0]->width();
+  int oh = top[0]->height();
+
+  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+  ComputeOpRegInfo *myRegInfo;
+  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_CC);
+  myRegInfo->SetName(this->layer_param_.name().c_str());
+  myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  myRegInfo->AddWeights(bottom[0]->count(axis)*N_, 1, dt, DISTRIBUTED_WEIGHT_UPDATE);
+
+  if (bias_term_) {
+      myRegInfo->AddWeights(1 * N_, 1, dt, false /* no make sense to do distributed update for bias */);
+  }
+
+  myRegInfo->Validate();
+
+#ifdef MSL_MODEL_PARALLELISM  
+  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::model_parallelism);
+#else
+  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+#endif
+
+  delete myRegInfo;
+
+#endif /* CAFFE_MSL */
+
 }
 
 template <typename Dtype>
@@ -97,16 +138,29 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Figure out the dimensions
   const int axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
+#ifdef MSL_MODEL_PARALLELISM
+  const int new_K = bottom[0]->count(axis)/caffe::internode::model_parallelism->GetFMGroupSize();
+#else    
   const int new_K = bottom[0]->count(axis);
+#endif  
   CHECK_EQ(K_, new_K)
       << "Input size incompatible with inner product parameters.";
   // The first "axis" dimensions are independent inner products; the total
   // number of these is M_, the product over these dimensions.
+//  M_ = bottom[0]->count(0, axis);
+#ifdef MSL_MODEL_PARALLELISM
+  M_ = bottom[0]->count(0, axis)/caffe::internode::model_parallelism->GetFMGroupSize();
+#else
   M_ = bottom[0]->count(0, axis);
+#endif
+
   // The top shape will be the bottom shape with the flattened axes dropped,
   // and replaced by a single axis with dimension num_output (N_).
   vector<int> top_shape = bottom[0]->shape();
   top_shape.resize(axis + 1);
+#ifdef MSL_MODEL_PARALLELISM
+  top_shape[0]*=caffe::internode::model_parallelism->GetFMGroupSize();
+#endif
   top_shape[axis] = N_;
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
@@ -174,6 +228,10 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)1., top_diff, this->blobs_[0]->cpu_data(),
           (Dtype)0., bottom[0]->mutable_cpu_diff());
     }
+
+#ifdef CAFFE_MSL
+      this->on_delinp_ready(propagate_down);
+#endif
   }
 }
 

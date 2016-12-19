@@ -59,6 +59,36 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
+ARCH ?= avx2
+ifeq ($(ARCH), avx512)
+       ARCH_FLAGS = -xMIC-AVX512
+else
+       ARCH_FLAGS = -xCORE-AVX2
+endif
+
+ifeq ($(CAFFE_MSL), 1)
+	COMMON_FLAGS += -DCAFFE_MSL
+	CXX = mpiicpc
+	USE_MPI = 1
+	CPU_ONLY = 1
+	INCLUDE_DIRS += $(MSL_INSTALL_PATH)/include
+	LIBRARY_DIRS += $(MSL_INSTALL_PATH)/lib
+	LIBRARIES += mlsl
+
+ifeq ($(DISTR_WEIGHT_UPDATE), 1)
+	COMMON_FLAGS += -DDISTR_WEIGHT_UPDATE
+endif
+
+ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
+	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
+endif
+
+ifeq ($(CAFFE_MSL_SHUFFLE), 1)
+        COMMON_FLAGS += -DCAFFE_MSL_SHUFFLE
+endif
+
+endif
+
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)

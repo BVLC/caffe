@@ -58,6 +58,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifdef MSL_MODEL_PARALLELISM
+#include "caffe/util/insert_bias_layer.hpp"
+#endif
+
+#ifdef CAFFE_MSL
+#include "msl.h"
+using namespace MSL;
+#endif /* CAFFE_MSL */
+
 PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
@@ -126,7 +135,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
+
+#ifdef MSL_MODEL_PARALLELISM
+  NetParameter param_tmp;
+  InsertSplits(filtered_param, &param_tmp);
+  SeparateBias(param_tmp, &param_with_splits);
+  LOG_IF(INFO, Caffe::root_solver())
+      << "Net after transformation: " << std::endl
+      << param_with_splits.DebugString();
+#else
   InsertSplits(filtered_param, &param_with_splits);
+#endif /* MSL_MODEL_PARALLELISM */
 
   // Transform Net (merge layers etc.) improve computational performance
   NetParameter param;
@@ -211,6 +230,40 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         AppendTop(param, layer_id, num_top, NULL, NULL);
       }
     }
+
+#ifdef CAFFE_MSL
+    if (!layer_param.type().compare("Data")       ||
+        !layer_param.type().compare("DummyData")  ||
+        !layer_param.type().compare("ImageData")  ||
+        !layer_param.type().compare("HDF5Data")   ||
+        !layer_param.type().compare("MemoryData") ||
+        !layer_param.type().compare("WindowData")) {
+
+        // FIXME: retrieve batch_size from top[0]->shape[0] when MSL stuff will be moved from LayerSetUp
+        //int batch_size = top_vecs_[layer_id][0]->shape(0);
+
+        int batch_size = 0;
+        if (!layer_param.type().compare("Data"))
+            batch_size = layer_param.data_param().batch_size();
+        else if (!layer_param.type().compare("DummyData"))
+            batch_size = layer_param.dummy_data_param().shape(0).dim(0);
+        else if (!layer_param.type().compare("ImageData"))
+            batch_size = layer_param.image_data_param().batch_size();
+        else if (!layer_param.type().compare("HDF5Data"))
+            batch_size = layer_param.hdf5_data_param().batch_size();
+        else if (!layer_param.type().compare("MemoryData"))
+            batch_size = layer_param.memory_data_param().batch_size();
+        else if (!layer_param.type().compare("WindowData"))
+            batch_size = layer_param.window_data_param().batch_size();
+
+        if (caffe::TRAIN == param.state().phase()) {
+            LOG(WARNING) << "SetMinibatchSize " << batch_size;
+            SetMinibatchSize(batch_size * GetNumNodes());
+        }
+        caffe::internode::msl_init_distributions();
+    }
+#endif /* CAFFE_MSL */
+
     // After this layer is connected, set it up.
     if (share_from_root) {
       // Set up size of top blobs using root_net_
@@ -359,6 +412,85 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   ShareWeights();
   debug_info_ = param.debug_info();
+
+#ifdef CAFFE_MSL
+
+  if (caffe::TRAIN == param.state().phase()) { // TODO: create ComputeOps only for train net
+
+      /*
+       * MSL setup: linking the layer's Ops with each other
+       * TBD: Should be possible to avoid that many loops
+       * */
+      for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+          const LayerParameter& layer_param = param.layer(layer_id);
+          layers_[layer_id]->ifm2ofm_map.resize(layer_param.bottom_size(), -1);
+      }
+
+      for (int layer_id = 0; layer_id < param.layer_size(); layer_id++) {
+          if (!layers_[layer_id]->layerOp) {
+              LOG(FATAL) << "layerOp is NULL for layer_id " << layer_id
+                         << ", type " << layers_[layer_id]->type();
+          }
+
+          const LayerParameter& layer_param = param.layer(layer_id);
+          for (int top_id = 0; top_id < layer_param.top_size(); top_id++) {
+              const string& top_blob_name = layer_param.top(top_id);
+              bool pair_found = false;
+
+              for (int next_layer_id = layer_id + 1/*0*/; next_layer_id < param.layer_size(); next_layer_id++) {
+                  if (pair_found) break;
+                  const LayerParameter& next_layer_param = param.layer(next_layer_id);
+
+                  for (int bottom_id = 0; bottom_id < next_layer_param.bottom_size(); ++bottom_id) {
+                      const string& bottom_blob_name = next_layer_param.bottom(bottom_id);
+                      if (pair_found) break;
+
+                      if (top_blob_name.compare(bottom_blob_name) == 0) {
+                          layers_[next_layer_id]->ifm2ofm_map[bottom_id] = top_id;
+                          layers_[next_layer_id]->SetPrevLayer(bottom_id, layers_[layer_id].get());
+                          layers_[next_layer_id]->layerOp->SetPrev(layers_[layer_id]->layerOp, bottom_id, top_id);
+                          pair_found = true;
+                      }
+                  }
+              }
+          }
+      }
+
+      for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+          shared_ptr<Layer<Dtype> > layer = layers_[layer_id];
+          layer->ConfigureMSL();
+
+          /* All sanity check are below */
+          for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); bottom_id++) {
+              LOG(INFO) << "InitNet: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
+                        << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
+                        << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
+
+              if (layer->bottom_sizes[bottom_id] != bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype))
+                  LOG(FATAL) << "InitNet: ERROR: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
+                             << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
+                             << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
+          }
+
+          if (layer->layerOp->HasWeights()) {
+              vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
+              CHECK_NUM_WEIGHTS(layer, param_ids);
+              for (int i = 0; i < param_ids.size(); i++) {
+                  int msl_weight_size = layer->layerOp->Weights(i)->LocalLen()
+                                        * layer->layerOp->Weights(i)->WTSize()
+                                        * sizeof(Dtype);
+                  int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
+                  if (msl_weight_size < caffe_weight_size)
+                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id 
+                                 << ", param_id " << param_ids[i]
+                                 << ", MSL weight size in bytes " << msl_weight_size
+                                 << ", CAFFE weight size in bytes " << caffe_weight_size;
+              }
+          }
+      }
+  }
+
+#endif /* CAFFE_MSL */
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }

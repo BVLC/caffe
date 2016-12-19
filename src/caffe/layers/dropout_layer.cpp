@@ -42,6 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/dropout_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef CAFFE_MSL
+using namespace MSL;
+#endif /* CAFFE_MSL */
+
 namespace caffe {
 
 template <typename Dtype>
@@ -53,6 +57,27 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
+
+#ifdef CAFFE_MSL
+  int ic = bottom[0]->channels();
+  int iw = bottom[0]->width();
+  int ih = bottom[0]->height();
+  int oc = ic; //top[0]->channels();
+  int ow = iw; //top[0]->width();
+  int oh = ih; //top[0]->height();
+
+  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+	ComputeOpRegInfo *myRegInfo;
+	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_ACT);
+        myRegInfo->SetName(this->layer_param_.name().c_str());
+	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+	myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+
+  myRegInfo->Validate();
+	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+  delete myRegInfo;
+#endif
+  
 }
 
 template <typename Dtype>

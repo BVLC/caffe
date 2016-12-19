@@ -45,6 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   #include <mkl_service.h>
 #endif
 
+#ifdef CAFFE_MSL
+#include "msl.h"
+#endif
+
 #include "boost/thread/mutex.hpp"
 #include "caffe/common.hpp"
 
@@ -63,11 +67,19 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
+
+#ifdef CAFFE_MSL
+  *ptr = MSL::Alloc(size ? size : 1, 64);
+#else /* CAFF_MSL */
+
 #ifdef USE_MKL
   *ptr = mkl_malloc(size ? size : 1, 64);
 #else
   *ptr = malloc(size);
 #endif
+
+#endif /* CAFFE_MSL */
+
   *use_cuda = false;
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
@@ -79,11 +91,19 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
+
+#ifdef CAFFE_MSL
+  MSL::Free(ptr);
+#else /* CAFFE_MSL */
+
 #ifdef USE_MKL
   mkl_free(ptr);
 #else
   free(ptr);
 #endif
+
+#endif /* CAFFE_MSL */
+
 }
 
 // Base class

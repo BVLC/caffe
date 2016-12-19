@@ -57,7 +57,16 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   ~MKLMemoryDescriptorBase() {
     dnnLayoutDelete<Dtype>(layout_usr);
     dnnLayoutDelete<Dtype>(layout_int);
+
+#ifdef CAFFE_MSL
+    if (internal_ptr != NULL) {
+        MSL::Free((void*)internal_ptr);
+        internal_ptr = NULL;
+  }
+#else
     dnnReleaseBuffer<Dtype>(internal_ptr);
+#endif
+
     dnnDelete<Dtype>(convert_to_int);
     dnnDelete<Dtype>(convert_from_int);
     dnnDelete<Dtype>(convert_prv2prv);
@@ -77,11 +86,18 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   std::string name;  // for debugging purposes
   void allocate() {
     if (internal_ptr == NULL) {
+
+#ifdef CAFFE_MSL
+      internal_ptr = (Dtype*)MSL::Alloc(prv_size(), 64);
+      if (internal_ptr == NULL)
+          LOG(FATAL) << "internal_ptr is NULL after MSL::Alloc";
+#else
       int status = dnnAllocateBuffer<Dtype>(
         reinterpret_cast<void **>(&internal_ptr), layout_int);
       CHECK_EQ(status, E_SUCCESS)
         << "Failed internal_ptr memory allocation with status "
         << status << "\n";
+#endif /* CAFFE_MSL */
 
       caffe_set(prv_count(), Dtype(0), internal_ptr);
     }

@@ -141,6 +141,11 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
     }
   }
+
+#ifdef CAFFE_MSL
+  this->on_delinp_ready(propagate_down);
+#endif
+
 }
 
 #ifdef CPU_ONLY

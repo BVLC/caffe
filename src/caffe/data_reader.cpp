@@ -147,12 +147,28 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
   CHECK(dbw);
   CHECK(qp);
 
+#ifdef CAFFE_MSL_SHUFFLE
+  string* data = qp->free_.pop();
+  static int mb=0;
+  if(!mb) { /* move each node’s file position to its node ID – this part can be move to the initialization */
+    for(int i=0;i<MSL::GetNodeId();i++) {
+      dbw->Next();
+    }
+    mb = 1;
+  }
+  *data = dbw->value();
+  qp->full_.push(data);
+  for(int i=0;i<MSL::GetNumNodes();i++) {
+    dbw->Next();
+  }
+#else
   string* data = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
   *data = dbw->value();
   qp->full_.push(data);
 
   dbw->Next();
+#endif
 }
 
 

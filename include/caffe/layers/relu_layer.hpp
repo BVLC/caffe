@@ -66,6 +66,11 @@ class ReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "ReLU"; }
 
+#ifdef CAFFE_MSL
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+#endif /* CAFFE_MSL */
+
  protected:
   /**
    * @param bottom input Blob vector (length 1)

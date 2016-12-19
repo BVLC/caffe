@@ -61,6 +61,10 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
 
   virtual ~MKLConvolutionLayer();
 
+//#ifdef CAFFE_MSL
+  virtual inline const char* type() const { return "MklConvolution"; }
+//#endif /* CAFFE_MSL */
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
@@ -84,6 +88,14 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
           const vector<Blob<Dtype>*>& top);
 
  private:
+
+
+#ifdef CAFFE_MSL
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* CAFFE_MSL */
+
+
   /* Fwd step */
   shared_ptr<MKLData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
                                  fwd_bias_data;
@@ -119,6 +131,8 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
          stride_h_;
   int    pad_w_,
          pad_h_;
+
+  bool bprop_unpack_called;
 };
 
 
@@ -147,6 +161,11 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "LRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+
+#ifdef CAFFE_MSL
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -221,6 +240,11 @@ class MKLPoolingLayer : public Layer<Dtype> {
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
+#ifdef CAFFE_MSL
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* CAFFE_MSL */
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
@@ -284,6 +308,16 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "ReLU"; }
 
+#ifdef CAFFE_MSL
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+
+#ifdef CAFFE_MSL_OWN_BUFFERS
+  virtual void out_layout(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void in_layout(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif
+#endif /* CAFFE_MSL */
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
@@ -323,6 +357,11 @@ class MKLConcatLayer : public Layer<Dtype> {
                        const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "Concat"; }
   ~MKLConcatLayer();
+
+#ifdef CAFFE_MSL
+  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
