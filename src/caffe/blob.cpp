@@ -111,14 +111,23 @@ template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width)
   // capacity_ must be initialized before calling Reshape
+#ifdef DISTR_WEIGHT_UPDATE
+  : capacity_(0), owned_count_(0), owned_offset_(0) {
+#else
   : capacity_(0) {
+#endif
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
+#ifdef DISTR_WEIGHT_UPDATE
+  : capacity_(0), owned_count_(0), owned_offset_(0) {
+#else
   : capacity_(0) {
+#endif
+
   Reshape(shape);
 }
 
