@@ -127,16 +127,13 @@ __kernel void CFMulti(__global Dtype* image_data,
 #define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
 
 // Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.
-// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same region of the imput image.
+// Each work-group (which will be mapped to 1 SIMD16/SIMD8 EU thread) will compute 16/8 different feature maps, but each feature map is for the same region of the imput image.
 // NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH
 
-//#define SIMD_SIZE 16
-#ifdef SIMD16
-
-// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
+// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16/8 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
 __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 kernel void
-convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs
+convolve_simd(  // __global float *inputs, __global float* weights, __global float* outputs
     __global float* inputs_base,
     filter_qualifier float* weights_base,
     __global float* biases_base,
@@ -205,7 +202,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
               in_buf.in_vec[reg].s2 = 0;
             in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);
           } else {
-            in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
+            in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements
             if (curr_x + 1 >= input_width + INPUT_PAD_W)
               in_buf.in_vec[reg].s1 = 0;
             if (curr_x + 2 >= input_width + INPUT_PAD_W)
@@ -218,7 +215,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
         }
         curr_y += TILE_Y_STRIDE;
 #else
-        in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements
+        in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements
 #endif
         in_offset += input_width * TILE_Y_STRIDE;
       });
@@ -227,17 +224,27 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
     curr_y = saved_y;
 #endif
 
-// PREF could be 4 or 8, could not be other values.
+#if KERNEL_WIDTH * KERNEL_HEIGHT != 1
 #define WEIGHT_PREF 8
+#else
+#define WEIGHT_PREF 1
+#endif
     union {
       float w[WEIGHT_PREF];
+#if KERNEL_WIDTH * KERNEL_HEIGHT != 1
       uint8 ui8;
+#endif
     } weight_buf;
     int_tp w_idx=0;
 
-    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
     uint_tp orig_weight_addr = weight_addr;
+#if KERNEL_WIDTH * KERNEL_HEIGHT != 1
+    weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
     weight_addr += SIMD_SIZE * WEIGHT_PREF;
+#else
+    weight_buf.w[0] = as_float(intel_sub_group_block_read((__global uint *)&weights[weight_addr]));
+    weight_addr += SIMD_SIZE * 1;
+#endif
 
 #define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))
 
@@ -253,6 +260,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                     out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
                   }
                 }
+#if KERNEL_WIDTH * KERNEL_HEIGHT > WEIGHT_PREF
                 // We assume KERNEL_W is equal to KERNEL_H here.
                 if ((w_idx + 1) % WEIGHT_PREF == 0
                 #if KERNEL_WIDTH * KERNEL_HEIGHT % 8 != 0
@@ -276,6 +284,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
                   weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);
                 #endif
               #endif
+#endif
                 ++w_idx;
               });
         });
@@ -284,56 +293,56 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   }
   // dead code to work around possible compiler bug.
   if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {
-    outputs[0] = BLOCK_IN(fm % 16);
+    outputs[0] = BLOCK_IN(fm % SIMD_SIZE);
   }
-
-  // we need this address calculation for outputs because we support views and batching
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_NUM_FILTERS) ) * output_width * output_height;
-  out_addr += or * output_width + oc;  // offset for the 4x3 block that this workitem is working on;
-
-  if (ALIGNED_NUM_FILTERS == NUM_FILTERS || (fm % ALIGNED_NUM_FILTERS) < NUM_FILTERS) {
-  // we need this address calculation for biases because we support views and batching
-  float bias = biases[(fm) % NUM_FILTERS ];
-#ifndef WRITE_PADDED_VALUES
-  if(get_global_id(0) != (get_global_size(0)-1) &&
-      get_global_id(1) != (get_global_size(1)-1) )
-  {
-#endif
-    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        // this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+  
+  fm = fm % ALIGNED_NUM_FILTERS;
+  
+  if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {
+  
+    uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
+    out_addr += or * output_width + oc;
+    float bias = biases[(fm % ALIGNED_NUM_FILTERS)];
+  
+  #ifndef WRITE_PADDED_VALUES
+    if(get_global_id(0) != (get_global_size(0)-1) &&
+        get_global_id(1) != (get_global_size(1)-1) )
+    {
+  #endif
+      for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
+        for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
+          // this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
+          outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        }
+      }
+  #ifndef WRITE_PADDED_VALUES
+    } else if ( get_global_id(1) != (get_global_size(1)-1) )
+    {
+      for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
+        for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
+          outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        }
       }
     }
-#ifndef WRITE_PADDED_VALUES
-  } else if ( get_global_id(1) != (get_global_size(1)-1) )
-  {
-    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+    else if ( get_global_id(0) != (get_global_size(0)-1) )
+    {
+      for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
+        for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
+          outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        }
       }
     }
-  }
-  else if ( get_global_id(0) != (get_global_size(0)-1) )
-  {
-    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+    else
+    {
+      for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
+        for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
+          outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
+        }
       }
     }
-  }
-  else
-  {
-    for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {
-        outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-#endif //#ifndef WRITE_PADDED_VALUES
+  #endif //#ifndef WRITE_PADDED_VALUES
   }
 }
-#endif // Stride > 2
 #endif
 
 /*******************************************************************************

@@ -947,7 +947,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math " << " -D IDLF" << " -D "
-                << kernelDef.c_str() << " -D convolve_simd16="
+                << kernelDef.c_str() << " -D convolve_simd="
                 << kernel_name_;
 
   const int_tp last_block_width =

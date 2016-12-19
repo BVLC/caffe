@@ -619,16 +619,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
 "",    // NOLINT
 "// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.",    // NOLINT
-"// Each work-group (which will be mapped to 1 SIMD16 EU thread) will compute 16 different feature maps, but each feature map is for the same region of the imput image.",    // NOLINT
+"// Each work-group (which will be mapped to 1 SIMD16/SIMD8 EU thread) will compute 16/8 different feature maps, but each feature map is for the same region of the imput image.",    // NOLINT
 "// NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH",    // NOLINT
 "",    // NOLINT
-"//#define SIMD_SIZE 16",    // NOLINT
-"#ifdef SIMD16",    // NOLINT
-"",    // NOLINT
-"// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
+"// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16/8 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
 "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))",    // NOLINT
 "kernel void",    // NOLINT
-"convolve_simd16(  // __global float *inputs, __global float* weights, __global float* outputs",    // NOLINT
+"convolve_simd(  // __global float *inputs, __global float* weights, __global float* outputs",    // NOLINT
 "__global float* inputs_base,",    // NOLINT
 "filter_qualifier float* weights_base,",    // NOLINT
 "__global float* biases_base,",    // NOLINT
@@ -697,7 +694,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "in_buf.in_vec[reg].s2 = 0;",    // NOLINT
 "in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);",    // NOLINT
 "} else {",    // NOLINT
-"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements",    // NOLINT
+"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
 "if (curr_x + 1 >= input_width + INPUT_PAD_W)",    // NOLINT
 "in_buf.in_vec[reg].s1 = 0;",    // NOLINT
 "if (curr_x + 2 >= input_width + INPUT_PAD_W)",    // NOLINT
@@ -710,7 +707,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "curr_y += TILE_Y_STRIDE;",    // NOLINT
 "#else",    // NOLINT
-"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read 16 elements",    // NOLINT
+"in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
 "#endif",    // NOLINT
 "in_offset += input_width * TILE_Y_STRIDE;",    // NOLINT
 "});",    // NOLINT
@@ -719,17 +716,27 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "curr_y = saved_y;",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"// PREF could be 4 or 8, could not be other values.",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT != 1",    // NOLINT
 "#define WEIGHT_PREF 8",    // NOLINT
+"#else",    // NOLINT
+"#define WEIGHT_PREF 1",    // NOLINT
+"#endif",    // NOLINT
 "union {",    // NOLINT
 "float w[WEIGHT_PREF];",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT != 1",    // NOLINT
 "uint8 ui8;",    // NOLINT
+"#endif",    // NOLINT
 "} weight_buf;",    // NOLINT
 "int_tp w_idx=0;",    // NOLINT
 "",    // NOLINT
-"weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
 "uint_tp orig_weight_addr = weight_addr;",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT != 1",    // NOLINT
+"weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
 "weight_addr += SIMD_SIZE * WEIGHT_PREF;",    // NOLINT
+"#else",    // NOLINT
+"weight_buf.w[0] = as_float(intel_sub_group_block_read((__global uint *)&weights[weight_addr]));",    // NOLINT
+"weight_addr += SIMD_SIZE * 1;",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "#define BLOCK_IN(n) sub_group_broadcast( in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], (((n) % (TILE_Y_STRIDE * TILE_X))/4))",    // NOLINT
 "",    // NOLINT
@@ -745,6 +752,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"#if KERNEL_WIDTH * KERNEL_HEIGHT > WEIGHT_PREF",    // NOLINT
 "// We assume KERNEL_W is equal to KERNEL_H here.",    // NOLINT
 "if ((w_idx + 1) % WEIGHT_PREF == 0",    // NOLINT
 "#if KERNEL_WIDTH * KERNEL_HEIGHT % 8 != 0",    // NOLINT
@@ -768,6 +776,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "weight_buf.ui8 = intel_sub_group_block_read8((__global uint *)&weights[weight_addr]);",    // NOLINT
 "#endif",    // NOLINT
 "#endif",    // NOLINT
+"#endif",    // NOLINT
 "++w_idx;",    // NOLINT
 "});",    // NOLINT
 "});",    // NOLINT
@@ -776,16 +785,17 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "// dead code to work around possible compiler bug.",    // NOLINT
 "if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {",    // NOLINT
-"outputs[0] = BLOCK_IN(fm % 16);",    // NOLINT
+"outputs[0] = BLOCK_IN(fm % SIMD_SIZE);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"// we need this address calculation for outputs because we support views and batching",    // NOLINT
-"uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + (fm % ALIGNED_NUM_FILTERS) ) * output_width * output_height;",    // NOLINT
-"out_addr += or * output_width + oc;  // offset for the 4x3 block that this workitem is working on;",    // NOLINT
+"fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
 "",    // NOLINT
-"if (ALIGNED_NUM_FILTERS == NUM_FILTERS || (fm % ALIGNED_NUM_FILTERS) < NUM_FILTERS) {",    // NOLINT
-"// we need this address calculation for biases because we support views and batching",    // NOLINT
-"float bias = biases[(fm) % NUM_FILTERS ];",    // NOLINT
+"if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {",    // NOLINT
+"",    // NOLINT
+"uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
+"out_addr += or * output_width + oc;",    // NOLINT
+"float bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"",    // NOLINT
 "#ifndef WRITE_PADDED_VALUES",    // NOLINT
 "if(get_global_id(0) != (get_global_size(0)-1) &&",    // NOLINT
 "get_global_id(1) != (get_global_size(1)-1) )",    // NOLINT
@@ -793,7 +803,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
-"// this does a scattered write to 16 different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
+"// this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
 "outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -825,7 +835,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif //#ifndef WRITE_PADDED_VALUES",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"#endif // Stride > 2",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "/*******************************************************************************",    // NOLINT
