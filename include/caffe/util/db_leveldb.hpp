@@ -60,6 +60,7 @@ class LevelDBCursor : public Cursor {
   virtual string value() { return iter_->value().ToString(); }
   virtual std::pair<void*, size_t> valuePointer() {
     CHECK(false) << "Function valuePointer not implemented in LevelDBCursor";
+    return std::pair<void*, size_t>{};
   }
   virtual bool valid() { return iter_->Valid(); }
 

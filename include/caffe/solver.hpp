@@ -58,6 +58,7 @@ namespace caffe {
   */
   namespace SolverAction {
     enum Enum {
+      UNKNOWN = -1,
       NONE = 0,  // Take no special action.
       STOP = 1,  // Stop training. snapshot_after_train controls whether a
                  // snapshot is created.

@@ -157,6 +157,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
@@ -271,6 +272,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
@@ -337,6 +339,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
@@ -379,6 +382,7 @@ shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(BatchNorm, GetBatchNormLayer);
@@ -412,6 +416,7 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Split, GetSplitLayer);
@@ -464,6 +469,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
@@ -505,6 +511,7 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknow engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Concat, GetConcatLayer);
@@ -537,6 +544,7 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknow engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Eltwise, GetEltwiseLayer);
@@ -573,6 +581,7 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Sigmoid, GetSigmoidLayer);
@@ -608,6 +617,7 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer);
@@ -643,6 +653,7 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return nullptr;
 }
 
 REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
