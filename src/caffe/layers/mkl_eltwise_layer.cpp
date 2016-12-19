@@ -96,7 +96,7 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 
   dnnDelete<Dtype>(sumPrimitive);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -122,7 +122,7 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 

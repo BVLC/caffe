@@ -75,7 +75,7 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   if (!this->layerOp) {
 
@@ -104,7 +104,7 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     delete myRegInfo;
   }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 }
 
 template <typename Dtype>
@@ -216,7 +216,7 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         mean_.mutable_cpu_data());
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
     MPI_Allreduce(MPI_IN_PLACE, mean_.mutable_cpu_data(), mean_.count(),
     		sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
@@ -244,7 +244,7 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         variance_.mutable_cpu_data());  // E((X_EX)^2)
 
-#ifdef CAFFE_MSL    
+#ifdef CAFFE_MLSL
     MPI_Allreduce(MPI_IN_PLACE, variance_.mutable_cpu_data(), variance_.count(),
     		sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     caffe_cpu_scale((const int) variance_.count(), (const Dtype) 1.0/comm_size, (const Dtype*) variance_.mutable_cpu_data(), (Dtype*) variance_.mutable_cpu_data());
@@ -356,7 +356,7 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // pass.
   caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 //    this->on_delinp_ready(propagate_down);
 #endif
 }

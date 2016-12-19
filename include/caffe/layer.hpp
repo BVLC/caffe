@@ -48,10 +48,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
-#include "caffe/internode/msl_util.hpp"
-using namespace MSL;
+#include "caffe/internode/mlsl_util.hpp"
+using namespace MLSL;
 
 #ifdef DISTR_WEIGHT_UPDATE
 #define DISTRIBUTED_WEIGHT_UPDATE true
@@ -59,7 +59,7 @@ using namespace MSL;
 #define DISTRIBUTED_WEIGHT_UPDATE false
 #endif
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 #define MAX_ELEMS_TO_LOG 16
 #define LOG_LAYER(layer) DLOG(INFO) << layer->type() << ": "
@@ -135,14 +135,14 @@ namespace caffe {
 template <typename Dtype>
 class Layer {
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 public:
 
-  /*************** MSL ***************/
+  /*************** MLSL ***************/
 
-	MSL::ComputeOp *layerOp;
-	vector<MSL::ComputeOp*> prevLayerOps;
+	MLSL::ComputeOp *layerOp;
+	vector<MLSL::ComputeOp*> prevLayerOps;
 	vector<Layer<Dtype>*> prevLayers;
 
 	vector<int> ifm2ofm_map;
@@ -182,7 +182,7 @@ public:
       }
   }
 
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from) {
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from) {
     	int lMBLen = this->layerOp->LocalMinibatchLen();
     	int lFMLen = fm->LocalLen();
     	for (int i = 0; i < fm->NumPackBlocks(); i++) {
@@ -204,7 +204,7 @@ public:
     	}
   }
 
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to) {
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to) {
     int lMBLen = this->layerOp->LocalMinibatchLen();
     int lFMLen = fm->LocalLen();
     for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
@@ -231,7 +231,7 @@ public:
       this->prevLayerOps[index] = prevLayer->layerOp;
   }
 
-  void ConfigureMSL() {
+  void ConfigureMLSL() {
 
       uint32_t in_size;
       this->layerOp->Finalize();
@@ -245,7 +245,7 @@ public:
 
           this->bottom_sizes[i] = in_size;
 
-          LOG_LAYER(this) << "ConfigureMSL: bottom_id " << i << ", in_size " << in_size
+          LOG_LAYER(this) << "ConfigureMLSL: bottom_id " << i << ", in_size " << in_size
           << ", ifm ll " << this->layerOp->InputFeatureMap(i)->LocalLen() 
           << ", local mblen " << this->layerOp->LocalMinibatchLen()
           << ", ifm fmsize " << this->layerOp->InputFeatureMap(i)->FMSize()
@@ -253,8 +253,8 @@ public:
       }
   }
 
-  /*************** MSL ***************/
-#endif /* CAFFE_MSL */
+  /*************** MLSL ***************/
+#endif /* CAFFE_MLSL */
 
  public:
   /**
@@ -274,12 +274,12 @@ public:
         }
       }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
       this->layerOp = 0;
 #endif
     }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   virtual ~Layer() {
       if (this->layerOp) {
           this->layerOp->FreeCommsBufs();
@@ -313,10 +313,10 @@ public:
     Reshape(bottom, top);
     SetLossWeights(top);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
     this->prevLayers.resize(bottom.size());
     this->prevLayerOps.resize(bottom.size());
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   }
 
@@ -339,9 +339,9 @@ public:
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
-  virtual MSL::OpType getLayerTypeId(std::string const& layerType) {
+  virtual MLSL::OpType getLayerTypeId(std::string const& layerType) {
 	  if(layerType == "Convolution") return COMP_OP_TYPE_CC;
 	  if(layerType == "InnerProduct") return COMP_OP_TYPE_CC;
 	  if(layerType == "Data") return COMP_OP_TYPE_DATA;
@@ -356,7 +356,7 @@ public:
 	  return COMP_OP_TYPE_CC;
   }
 
-  virtual void SetUpMSL(const vector<Blob<Dtype>*>& bottom,
+  virtual void SetUpMLSL(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 	  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
 	  ComputeOpRegInfo *myRegInfo;

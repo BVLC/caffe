@@ -42,9 +42,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/softmax_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+using namespace MLSL;
+#endif /* CAFFE_MLSL */
 
 namespace caffe {
 
@@ -75,7 +75,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
     normalization_ = this->layer_param_.loss_param().normalization();
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
     int ic = bottom[0]->channels();
     int iw = bottom[0]->width();
@@ -92,7 +92,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
     delete myRegInfo;
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 

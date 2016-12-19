@@ -76,10 +76,10 @@ class BaseDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* CAFFE_MLSL */
 
  protected:
   TransformationParameter transform_param_;

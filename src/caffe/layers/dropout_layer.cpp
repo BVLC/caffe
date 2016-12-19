@@ -42,9 +42,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/dropout_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+using namespace MLSL;
+#endif /* CAFFE_MLSL */
 
 namespace caffe {
 
@@ -58,7 +58,7 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
   int ih = bottom[0]->height();

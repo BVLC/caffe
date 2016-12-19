@@ -151,7 +151,7 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   if (!this->layerOp) {
 
@@ -180,7 +180,7 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
     delete myRegInfo;
   }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 }
 
 template <typename Dtype>

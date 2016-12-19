@@ -1,19 +1,19 @@
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
-#include "caffe/multinode/MslSync.hpp"
+#include "caffe/multinode/MlslSync.hpp"
 
 namespace caffe {
 
 template<typename Dtype>
-MslSync<Dtype>::MslSync(shared_ptr<Solver<Dtype> > root_solver)
-        : solver(boost::make_shared<MslSolver<Dtype> >(root_solver))
+MlslSync<Dtype>::MlslSync(shared_ptr<Solver<Dtype> > root_solver)
+        : solver(boost::make_shared<MlslSolver<Dtype> >(root_solver))
         , initialized(false)
         , solver_thread_id(boost::this_thread::get_id())
         , snapshot_per_iters(root_solver->param().snapshot())
         , layers(root_solver->net()->layers())
         , net(root_solver->net())
         , net_params(root_solver->net()->learnable_params())
-        , is_root(MSL::GetNodeId() == 0)
+        , is_root(MLSL::GetNodeId() == 0)
     {
         root_solver->param().set_disabled_update(true);
         if (!is_root) root_solver->param().clear_snapshot();
@@ -83,7 +83,7 @@ MslSync<Dtype>::MslSync(shared_ptr<Solver<Dtype> > root_solver)
 
                     if (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() != net_params[param_ids[i]]->count()) {
                         LOG(FATAL) << "different local weigth count in CAFFE (" << net_params[param_ids[i]]->count() << ") "
-                                   << "and MSL (" << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() << ")";
+                                   << "and MLSL (" << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() << ")";
                     }
                     /*if (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() > net_params[param_ids[i]]->count()) {
                         owned_count -= (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() - net_params[param_ids[i]]->count());
@@ -94,10 +94,10 @@ MslSync<Dtype>::MslSync(shared_ptr<Solver<Dtype> > root_solver)
 
                     LOG(INFO) << "layer " << layer->type()
                                  << ", weigth_idx " << i
-                                 << ", MSL owned_cout " << layer->layerOp->Weights(i)->OwnedLen() * layer->layerOp->Weights(i)->WTSize()
+                                 << ", MLSL owned_cout " << layer->layerOp->Weights(i)->OwnedLen() * layer->layerOp->Weights(i)->WTSize()
                                  << ", CAFFE owned_count " << owned_count
                                  << ", CAFFE owned_offset " << owned_offset
-                                 << ", MSL local_count " << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize()
+                                 << ", MLSL local_count " << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize()
                                  << ", CAFFE local_count " << net_params[param_ids[i]]->count();
                 }
             }
@@ -106,11 +106,11 @@ MslSync<Dtype>::MslSync(shared_ptr<Solver<Dtype> > root_solver)
     }
 
 template<typename Dtype>
-MslSync<Dtype>::~MslSync()
+MlslSync<Dtype>::~MlslSync()
 {
 }
 
-  INSTANTIATE_CLASS(MslSync);
+  INSTANTIATE_CLASS(MlslSync);
 } // namespace caffe
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */

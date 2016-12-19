@@ -42,8 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/performance.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
+#ifdef CAFFE_MLSL
+using namespace MLSL;
 #endif
 
 namespace caffe {
@@ -90,7 +90,7 @@ void MKLReLULayer<Dtype>::Init(
   dnnDelete<Dtype>(reluFwd_);
   dnnDelete<Dtype>(reluBwd_);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
@@ -115,7 +115,7 @@ void MKLReLULayer<Dtype>::Init(
 
 }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
@@ -164,7 +164,7 @@ void MKLReLULayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype
     }
 }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,

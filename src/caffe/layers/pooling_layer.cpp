@@ -108,7 +108,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(pad_w_, kernel_w_);
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   pooled_height_ = static_cast<int>(ceil(static_cast<float>(
       bottom[0]->height() + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;

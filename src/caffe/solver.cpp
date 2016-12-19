@@ -49,8 +49,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#ifdef CAFFE_MSL
-#include "msl.h"
+
+#ifdef CAFFE_MLSL
+#include "mlsl.h"
 // FIXME: MPI_Reduce() in Test
 #include "mpi.h"
 #endif
@@ -338,7 +339,7 @@ void Solver<Dtype>::Step(int iters) {
 #ifdef CAFFE_PER_LAYER_TIMINGS
       PrintTimers(false);
       ResetTimers();
-//      MSL::print_msl_time();
+//      MLSL::print_mlsl_time();
 #endif
 
     }
@@ -602,18 +603,18 @@ void Solver<Dtype>::Test(const int test_net_id) {
     return;
   }
   if (param_.test_compute_loss()) {
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
     MPI_Allreduce(MPI_IN_PLACE, &loss, 1, sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    loss /= (param_.test_iter(test_net_id) * MSL::GetNumNodes());
-    if(MSL::GetNodeId() == 0) LOG(INFO) << "Test loss: " << loss;
+    loss /= (param_.test_iter(test_net_id) * MLSL::GetNumNodes());
+    if(MLSL::GetNodeId() == 0) LOG(INFO) << "Test loss: " << loss;
 #else
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
 #endif
   }
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   MPI_Allreduce(MPI_IN_PLACE, test_score.data(), test_score.size(), sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  if(MSL::GetNodeId() == 0)
+  if(MLSL::GetNodeId() == 0)
 #endif
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
@@ -621,8 +622,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
-#ifdef CAFFE_MSL
-    const Dtype mean_score = test_score[i] / (param_.test_iter(test_net_id) * MSL::GetNumNodes());
+#ifdef CAFFE_MLSL
+    const Dtype mean_score = test_score[i] / (param_.test_iter(test_net_id) * MLSL::GetNumNodes());
 #else
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
 #endif
@@ -638,9 +639,9 @@ void Solver<Dtype>::Test(const int test_net_id) {
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
-  
-#ifdef CAFFE_MSL
-  if(MSL::GetNodeId() != 0) return;
+
+#ifdef CAFFE_MLSL
+  if(MLSL::GetNodeId() != 0) return;
 #endif
 
   string model_filename;

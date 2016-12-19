@@ -72,7 +72,7 @@ void BiasLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
   int ih = bottom[0]->height();
@@ -153,7 +153,7 @@ void BiasLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     caffe_copy(bottom[0]->count(), top_diff, bottom_diff);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
       this->on_delinp_ready(propagate_down);
 #endif
 

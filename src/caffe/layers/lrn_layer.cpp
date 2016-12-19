@@ -103,7 +103,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
     product_layer_->SetUp(product_bottom_vec_, top);
   }
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
   int ih = bottom[0]->height();

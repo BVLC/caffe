@@ -46,8 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/performance.hpp"
 #include "mkl_service.h"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
+#ifdef CAFFE_MLSL
+using namespace MLSL;
 #endif
 
 static int getMKLBuildDate() {
@@ -323,7 +323,7 @@ void MKLConvolutionLayer<Dtype>::Init(
                                         1, bias_sizes, bias_strides);
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   if (!this->layerOp) {
     DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
@@ -351,7 +351,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     }
   }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 
@@ -379,7 +379,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
@@ -429,7 +429,7 @@ void MKLConvolutionLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from
       }
 }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Forward_cpu(
@@ -534,7 +534,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
     this->on_delinp_ready(propagate_down);
 #endif
 

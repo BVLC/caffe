@@ -1,4 +1,4 @@
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 #include <algorithm>
 #include <map>
@@ -58,4 +58,4 @@ void SeparateBias(const NetParameter& param, NetParameter* param_split) {
 }  
 }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */

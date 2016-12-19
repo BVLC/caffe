@@ -147,18 +147,18 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
   CHECK(dbw);
   CHECK(qp);
 
-#ifdef CAFFE_MSL_SHUFFLE
+#ifdef CAFFE_MLSL_SHUFFLE
   string* data = qp->free_.pop();
   static int mb=0;
   if(!mb) { /* move each node’s file position to its node ID – this part can be move to the initialization */
-    for(int i=0;i<MSL::GetNodeId();i++) {
+    for(int i=0;i<MLSL::GetNodeId();i++) {
       dbw->Next();
     }
     mb = 1;
   }
   *data = dbw->value();
   qp->full_.push(data);
-  for(int i=0;i<MSL::GetNumNodes();i++) {
+  for(int i=0;i<MLSL::GetNumNodes();i++) {
     dbw->Next();
   }
 #else

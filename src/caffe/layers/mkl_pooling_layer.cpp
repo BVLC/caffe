@@ -47,6 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/performance.hpp"
 
+#ifdef CAFFE_MSL
+using namespace MSL;
 namespace caffe {
 
 template <typename Dtype>
@@ -208,7 +210,7 @@ void MKLPoolingLayer<Dtype>::Init(
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -261,7 +263,7 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   Init(bottom, top);
 }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
@@ -311,7 +313,7 @@ void MKLPoolingLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dt
       }
 }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

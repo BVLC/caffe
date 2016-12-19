@@ -110,7 +110,7 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnDelete<Dtype>(concatFwd_);
   dnnDelete<Dtype>(concatBwd_);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -136,7 +136,7 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 
@@ -166,7 +166,7 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   Init(bottom, top);
 }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const Dtype *local_buf) {
     int lMBLen = this->layerOp->LocalMinibatchLen();
@@ -215,7 +215,7 @@ void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const 
       }
   }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,

@@ -1,17 +1,28 @@
 #pragma once
 
-/* Public External Interface to MSL
- * Author: Dhiraj Kalamkar
- * Date: 01-07-2016
- * vi: ts=4 sw=4 noet cino+=g0
- */
+/* Public External Interface to MLSL */
 
 #include <cstddef>
 #include <string>
 
-namespace MSL
+/* API version (which is not necessarily the same as the tarball/mlsl package version number) */
+#define MLSL_MAJOR_VERSION 0
+#define MLSL_MINOR_VERSION 8
+
+#define MLSL_VERSION(major, minor) ((major << 16) | (minor))
+#define MLSL_MAJOR(version)        (version >> 16)
+#define MLSL_MINOR(version)        (version & 0xFFFF)
+
+#define MLSL_VERSION_GE(v1, v2)    ((MLSL_MAJOR(v1) > MLSL_MAJOR(v2)) ||                                      \
+                                    (MLSL_MAJOR(v1) == MLSL_MAJOR(v2) && MLSL_MINOR(v1) == MLSL_MINOR(v2)) || \
+                                    (MLSL_MAJOR(v1) == MLSL_MAJOR(v2) && MLSL_MINOR(v1) > MLSL_MINOR(v2)))
+
+#define MLSL_VERSION_LT(v1, v2)    ((MLSL_MAJOR(v1) < MLSL_MAJOR(v2)) ||                                   \
+                                    (MLSL_MAJOR(v1) == MLSL_MAJOR(v2) && MLSL_MINOR(v1) < MLSL_MINOR(v2)))
+
+namespace MLSL
 {
-	/* Data Types supported by MSL */
+	/* Data Types supported by MLSL */
 	enum DataType {
 		DT_FLOAT   = 1,
 		DT_DOUBLE  = 2
@@ -60,11 +71,14 @@ namespace MSL
 
 	/* Global Barrier across all the nodes */
 	void Barrier();
+	
+	/* Returns MLSL API version */
+	int GetVersion();
 
 	/* Returns last error number */
 	int GetError();
 
-	/* MSL specific malloc and free to allocate communication buffers */
+	/* MLSL specific malloc and free to allocate communication buffers */
 	void *Alloc(size_t sz, int align);
 	void Free(void *);
 
@@ -72,6 +86,10 @@ namespace MSL
 	class BlockInfo
 	{
 		BlockInfoImpl *p;
+
+		BlockInfo(const BlockInfo& bi);
+		BlockInfo& operator=(const BlockInfo& bi);
+
 	public:
 		BlockInfo(BlockInfoImpl *p_) : p(p_) { }
 		~BlockInfo() { p = 0; }
@@ -90,6 +108,10 @@ namespace MSL
 		void *p;
 		size_t sz;
 		bool isOwned;
+
+		CommsBuf(const CommsBuf& cb);
+		CommsBuf& operator=(const CommsBuf& cb);
+
 	public:
 		CommsBuf(size_t sz_) : sz(sz_), isOwned(false), p(0) { }
 
@@ -101,7 +123,7 @@ namespace MSL
 
 		int Alloc() {
 			if(sz == 0) return 0;
-			p = MSL::Alloc(sz, 64);
+			p = MLSL::Alloc(sz, 64);
 			isOwned = true;
 			if(p != NULL) return sz;
 			return 0;
@@ -109,14 +131,14 @@ namespace MSL
 
 		void Free() {
 			if(isOwned && p != 0) {
-				MSL::Free(p);
+				MLSL::Free(p);
 				p = 0;
 			}
 		}
 
 		int SetPtr(void *ptr) {
 			if(p != 0 && isOwned) {
-				MSL::Free(p);
+				MLSL::Free(p);
 				isOwned = false;
 			}
 			p = ptr;
@@ -128,6 +150,10 @@ namespace MSL
 
 	class FeatureMap
 	{
+	private:
+		FeatureMap(const FeatureMap& fm);
+		FeatureMap& operator=(const FeatureMap& fm);
+
 	protected:
 		FeatureMapImpl *p;
 	public:
@@ -150,6 +176,10 @@ namespace MSL
 
 	class Weights
 	{
+	private:
+		Weights(const Weights& w);
+		Weights& operator=(const Weights& w);
+
 	protected:
 		WeightsImpl *p;
 	public:
@@ -186,8 +216,11 @@ namespace MSL
 	private:
 		DistributionImpl *p;
 
+		Distribution(const Distribution& dist);
+		Distribution& operator=(const Distribution& dist);
+
 	public:
-		Distribution(int nMBParts, int nFMParts, bool replicate=true);
+		Distribution(int nMBParts, int nFMParts);
 		~Distribution(void);
 		int GetMBGroupSize();
 		int GetFMGroupSize();
@@ -204,13 +237,17 @@ namespace MSL
 	{
 	private:
 		ComputeOpRegInfoImpl *p;
+
+		ComputeOpRegInfo(const ComputeOpRegInfo& regInfo);
+		ComputeOpRegInfo& operator=(const ComputeOpRegInfo& regInfo);
+
 	public:
 		ComputeOpRegInfo(OpType operationType, std::string name = "");
 		~ComputeOpRegInfo();
 		void SetName(const char *name); // For debugging purpose
 		int AddInputFeatureMap(int numFeatureMaps, int featureMapSize, DataType featureMapType);
-		int AddOutputFeatureMap(int numFeatureMaps, int featureMapSize, DataType featureMapType, bool fusedBias = false);
-		int AddWeights(int numWeights, int weightSize, DataType weightType, bool distributedWeightUpdate = true);
+		int AddOutputFeatureMap(int numFeatureMaps, int featureMapSize, DataType featureMapType);
+		int AddWeights(int numWeights, int weightSize, DataType weightType, bool distributedWeightUpdate = false);
 		int Validate(Distribution *dist = NULL);
 		ComputeOpRegInfoImpl *GetImpl() { return p; }
 	};
@@ -223,6 +260,9 @@ namespace MSL
 	{
 	private:
 		ComputeOpImpl *p;
+
+		ComputeOp(const ComputeOp& op);
+		ComputeOp& operator=(const ComputeOp& op);
 
 	public:
 		ComputeOp(ComputeOpRegInfo *info, Distribution *dist);
@@ -247,12 +287,12 @@ namespace MSL
 		int LocalMinibatchLen();        // Length of local minibatch portion
 		int GlobalMinibatchOffset();    // Start of local minibatch portion within global minibatch
 		int NumInputFeatureMaps();
-		FeatureMap *InputFeatureMap(int id = 0);
+		FeatureMap *InputFeatureMap(int id);
 		int NumOutputFeatureMaps();
-		FeatureMap *OutputFeatureMap(int id = 0);
+		FeatureMap *OutputFeatureMap(int id);
 		bool HasWeights();
 		int NumWeights();
-		MSL::Weights *Weights(int id = 0);
+		Weights *Weights(int id);
 		/* AllocCommsBufs() allocates needed memory for communication */
 		int AllocCommsBufs();                         // Internally allocate needed comms buffer
 		void FreeCommsBufs();                         // Free internally allocated comms buffers
@@ -260,6 +300,6 @@ namespace MSL
 		ComputeOpImpl *GetImpl() { return p; }
 	};
 
-	void print_msl_time(void);
+	void print_mlsl_time(void);
 };
 

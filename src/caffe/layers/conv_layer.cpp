@@ -142,7 +142,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   this->on_delinp_ready(propagate_down);
 #endif
 

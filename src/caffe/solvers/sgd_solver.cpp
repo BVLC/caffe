@@ -187,20 +187,20 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
 template <typename Dtype>
 void SGDSolver<Dtype>::Normalize(int param_id) {
 
-#ifdef CAFFE_MSL
-  if ((this->param_.iter_size() == 1) && (MSL::GetNumNodes() == 1)) { return; }
+#ifdef CAFFE_MLSL
+  if ((this->param_.iter_size() == 1) && (MLSL::GetNumNodes() == 1)) { return; }
 #else
   if (this->param_.iter_size() == 1) { return; }
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   // Scale gradient to counterbalance accumulation.
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
 
-#ifdef CAFFE_MSL
-  const Dtype accum_normalization = Dtype(1.) / (this->param_.iter_size() * MSL::GetNumNodes());
+#ifdef CAFFE_MLSL
+  const Dtype accum_normalization = Dtype(1.) / (this->param_.iter_size() * MLSL::GetNumNodes());
 #else
   const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   switch (Caffe::mode()) {
   case Caffe::CPU: {

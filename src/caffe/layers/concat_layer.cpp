@@ -53,7 +53,7 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
       << "Either axis or concat_dim should be specified; not both.";
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   int num_concats = bottom.size();
   int channels = 0;
@@ -94,7 +94,7 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 }
 
 template <typename Dtype>

@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void ReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,

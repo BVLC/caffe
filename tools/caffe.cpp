@@ -56,10 +56,10 @@ namespace bp = boost::python;
 #include "caffe/training_utils.hpp"
 #include "caffe/util/signal_handler.h"
 
-#ifdef CAFFE_MSL
-#include "caffe/multinode/MslSync.hpp"
-#include "caffe/internode/msl_util.hpp"
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+#include "caffe/multinode/MlslSync.hpp"
+#include "caffe/internode/mlsl_util.hpp"
+#endif /* CAFFE_MLSL */
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -309,29 +309,29 @@ int train() {
   if (FLAGS_param_server != "") {
     LOG(INFO) << "Configuring multinode setup";
 
-#ifdef CAFFE_MSL
-      if (FLAGS_param_server != "msl") {
+#ifdef CAFFE_MLSL
+      if (FLAGS_param_server != "mlsl") {
 #else
       if (FLAGS_param_server != "mpi") {
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
         LOG(ERROR) << "currently unsupported";
         return 1;
       }
 
-#ifdef CAFFE_MSL
-      if (FLAGS_param_server == "msl") {
-        caffe::MslSync<float> sync(solver);
-        LOG(INFO) << "Starting Multi-node Optimization in MSL environment";
+#ifdef CAFFE_MLSL
+      if (FLAGS_param_server == "mlsl") {
+        caffe::MlslSync<float> sync(solver);
+        LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
         sync.run();
       }
-#else /* CAFFE_MSL */
+#else /* CAFFE_MLSL */
       if (FLAGS_param_server == "mpi") {
         caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
         LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
         sync.run();
       }
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   } else if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
@@ -751,11 +751,11 @@ RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
 
-#ifdef CAFFE_MSL
-  caffe::internode::msl_init(argc, argv);
+#ifdef CAFFE_MLSL
+  caffe::internode::mlsl_init(argc, argv);
 #else
   caffe::internode::mpi_init(argc, argv);
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
@@ -780,22 +780,22 @@ int main(int argc, char** argv) {
 #endif
       int ret = GetBrewFunction(caffe::string(argv[1]))();
 
-#ifdef CAFFE_MSL
-      caffe::internode::msl_finalize();
+#ifdef CAFFE_MLSL
+      caffe::internode::mlsl_finalize();
 #else
       caffe::internode::mpi_finalize();
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
       return ret;
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();
 
-#ifdef CAFFE_MSL
-      caffe::internode::msl_finalize();
+#ifdef CAFFE_MLSL
+      caffe::internode::mlsl_finalize();
 #else
       caffe::internode::mpi_finalize();
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
       return 1;
     }
@@ -804,11 +804,11 @@ int main(int argc, char** argv) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
 
-#ifdef CAFFE_MSL
-      caffe::internode::msl_finalize();
+#ifdef CAFFE_MLSL
+      caffe::internode::mlsl_finalize();
 #else
       caffe::internode::mpi_finalize();
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   return 0;
 }

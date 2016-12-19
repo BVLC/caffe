@@ -1,8 +1,8 @@
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 
-#ifndef CAFFE_MSLSYNC_HPP_
-#define CAFFE_MSLSYNC_HPP_
+#ifndef CAFFE_MLSLSYNC_HPP_
+#define CAFFE_MLSLSYNC_HPP_
 
 #include <string>
 #include "caffe/solver.hpp"
@@ -22,24 +22,24 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
-#include "caffe/multinode/MslSync.hpp"
-#include "caffe/MslSolver.hpp"
+#include "caffe/multinode/MlslSync.hpp"
+#include "caffe/MlslSolver.hpp"
 
-#include "msl.h"
+#include "mlsl.h"
 
 // FIXME: for MPI_Bcast
 #include "mpi.h"
 
-using namespace MSL;
+using namespace MLSL;
 
 namespace caffe {
 
 #define CAN_USE_PRV(param) (0) //(param->prv_diff() && (param->prv_diff_count() == param->count()))
 
 template <typename Dtype>
-class MslSync : public MslSolver<Dtype>::Callback {
+class MlslSync : public MlslSolver<Dtype>::Callback {
 
-    shared_ptr<MslSolver<Dtype> > solver;
+    shared_ptr<MlslSolver<Dtype> > solver;
     bool initialized;
     boost::thread::id solver_thread_id;
     int snapshot_per_iters;
@@ -54,12 +54,12 @@ class MslSync : public MslSolver<Dtype>::Callback {
     vector<vector<int> > top_pack_block_nums;
     vector<vector<int> > top_unpack_block_nums;
 
-    bool is_root; // MSL::GetNodeId() == 0
+    bool is_root; // MLSL::GetNodeId() == 0
 
 public:
 
-    MslSync(shared_ptr<Solver<Dtype> >);
-    ~MslSync();
+    MlslSync(shared_ptr<Solver<Dtype> >);
+    ~MlslSync();
 
     void snapshot() {
         if (is_root) {
@@ -71,7 +71,7 @@ public:
     }
     
     void synchronize_params() {
-        // FIXME: use MSL API to bcast initial weights values
+        // FIXME: use MLSL API to bcast initial weights values
 
         if (solver->root_solver()->iter() < 2) {
             LOG(WARNING) << "synchronize_params: bcast";
@@ -89,9 +89,9 @@ public:
             LOG(WARNING) << "synchronize_params: gather and compare";
 
         for (int idx = 0; idx < net_params.size(); ++idx) {
-            size_t size_to_alloc = net_params[idx]->count() * sizeof(Dtype) * MSL::GetNumNodes();
+            size_t size_to_alloc = net_params[idx]->count() * sizeof(Dtype) * MLSL::GetNumNodes();
             //LOG(WARNING) << "size_to_alloc " << size_to_alloc;
-            Dtype* buf = (is_root) ? (Dtype*)(Dtype*)MSL::Alloc(size_to_alloc, 64) : NULL;
+            Dtype* buf = (is_root) ? (Dtype*)(Dtype*)MLSL::Alloc(size_to_alloc, 64) : NULL;
             MPI_Gather(net_params[idx]->cpu_data(),                   // sendbuf
                        net_params[idx]->count(),                      // sendcount from each process
                        (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE, // sendtype
@@ -104,7 +104,7 @@ public:
             if (is_root) {
                 bool has_diff = false;
                 Dtype max_diff = 0;
-                for (int node_idx = 0; node_idx < MSL::GetNumNodes(); node_idx++) {
+                for (int node_idx = 0; node_idx < MLSL::GetNumNodes(); node_idx++) {
                     // 1.e-4
                     for (int elem_idx = 0; elem_idx < net_params[idx]->count(); elem_idx++) {
                           Dtype root_value = net_params[idx]->cpu_data()[elem_idx];
@@ -124,7 +124,7 @@ public:
                     }
                 }
 
-                MSL::Free(buf);
+                MLSL::Free(buf);
 
                 if (has_diff)
                     LOG(FATAL) << "different weight values for param_id " << idx
@@ -155,7 +155,7 @@ public:
                      << " DISABLED"
 #endif
                      << ", SINGLE DB SPLITTING IS"
-#ifdef CAFFE_MSL_SHUFFLE
+#ifdef CAFFE_MLSL_SHUFFLE
                      << " ENABLED"
 #else
                      << " DISABLED"
@@ -214,7 +214,7 @@ public:
 
 
 
-  // main callback for MslSolver loop
+  // main callback for MlslSolver loop
 
 #ifdef DISTR_WEIGHT_UPDATE
   void on_iter_start(int layer_id) {
@@ -469,7 +469,7 @@ public:
 } // namespace caffe
 
 
-#endif  // CAFFE_MSLSYNC_HPP_
+#endif  // CAFFE_MLSLSYNC_HPP_
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 

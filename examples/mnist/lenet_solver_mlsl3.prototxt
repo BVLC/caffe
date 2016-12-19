@@ -1,11 +1,11 @@
 # The train/test net protocol buffer definition
-net: "examples/mnist/lenet_train_test_msl2.prototxt"
+net: "examples/mnist/lenet_train_test_mlsl3.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
 test_iter: 100
 # Carry out testing every 500 training iterations.
-test_interval: 500
+test_interval: 10000
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 0.01
 momentum: 0.9
@@ -15,11 +15,11 @@ lr_policy: "inv"
 gamma: 0.0001
 power: 0.75
 # Display every 100 iterations
-display: 10
+display: 2
 # The maximum number of iterations
-max_iter: 500
+max_iter: 10
 # snapshot intermediate results
-snapshot: 5000
-snapshot_prefix: "examples/mnist/lenet"
+snapshot: 10000
+snapshot_prefix: "examples/mnist/lenet_mlsl"
 # solver mode: CPU or GPU
 solver_mode: CPU

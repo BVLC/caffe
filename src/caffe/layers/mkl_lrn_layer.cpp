@@ -43,8 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/performance.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
+#ifdef CAFFE_MLSL
+using namespace MLSL;
 #endif
 
 namespace caffe {
@@ -101,7 +101,7 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnReleaseBuffer<Dtype>(lrn_buffer_);
   lrn_buffer_ = NULL;
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;
@@ -114,7 +114,7 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 
@@ -158,7 +158,7 @@ void MKLLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void MKLLRNLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {

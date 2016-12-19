@@ -58,14 +58,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/test/test_caffe_main.hpp"
 
-#ifdef MSL_MODEL_PARALLELISM
+#ifdef MLSL_MODEL_PARALLELISM
 #include "caffe/util/insert_bias_layer.hpp"
 #endif
 
-#ifdef CAFFE_MSL
-#include "msl.h"
-using namespace MSL;
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+#include "mlsl.h"
+using namespace MLSL;
+#endif /* CAFFE_MLSL */
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -136,7 +136,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
 
-#ifdef MSL_MODEL_PARALLELISM
+#ifdef MLSL_MODEL_PARALLELISM
   NetParameter param_tmp;
   InsertSplits(filtered_param, &param_tmp);
   SeparateBias(param_tmp, &param_with_splits);
@@ -145,7 +145,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       << param_with_splits.DebugString();
 #else
   InsertSplits(filtered_param, &param_with_splits);
-#endif /* MSL_MODEL_PARALLELISM */
+#endif /* MLSL_MODEL_PARALLELISM */
 
   // Transform Net (merge layers etc.) improve computational performance
   NetParameter param;
@@ -231,7 +231,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
     if (!layer_param.type().compare("Data")       ||
         !layer_param.type().compare("DummyData")  ||
         !layer_param.type().compare("ImageData")  ||
@@ -239,7 +239,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         !layer_param.type().compare("MemoryData") ||
         !layer_param.type().compare("WindowData")) {
 
-        // FIXME: retrieve batch_size from top[0]->shape[0] when MSL stuff will be moved from LayerSetUp
+        // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
         //int batch_size = top_vecs_[layer_id][0]->shape(0);
 
         int batch_size = 0;
@@ -260,9 +260,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
             SetMinibatchSize(batch_size * GetNumNodes());
         }
-        caffe::internode::msl_init_distributions();
+        caffe::internode::mlsl_init_distributions();
     }
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
     // After this layer is connected, set it up.
     if (share_from_root) {
@@ -413,12 +413,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   ShareWeights();
   debug_info_ = param.debug_info();
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   if (caffe::TRAIN == param.state().phase()) { // TODO: create ComputeOps only for train net
 
       /*
-       * MSL setup: linking the layer's Ops with each other
+       * MLSL setup: linking the layer's Ops with each other
        * TBD: Should be possible to avoid that many loops
        * */
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
@@ -458,7 +458,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
           shared_ptr<Layer<Dtype> > layer = layers_[layer_id];
-          layer->ConfigureMSL();
+          layer->ConfigureMLSL();
 
           /* All sanity check are below */
           for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); bottom_id++) {
@@ -476,21 +476,21 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
               CHECK_NUM_WEIGHTS(layer, param_ids);
               for (int i = 0; i < param_ids.size(); i++) {
-                  int msl_weight_size = layer->layerOp->Weights(i)->LocalLen()
+                  int mlsl_weight_size = layer->layerOp->Weights(i)->LocalLen()
                                         * layer->layerOp->Weights(i)->WTSize()
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
-                  if (msl_weight_size < caffe_weight_size)
+                  if (mlsl_weight_size < caffe_weight_size)
                       LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id 
                                  << ", param_id " << param_ids[i]
-                                 << ", MSL weight size in bytes " << msl_weight_size
+                                 << ", MLSL weight size in bytes " << mlsl_weight_size
                                  << ", CAFFE weight size in bytes " << caffe_weight_size;
               }
           }
       }
   }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }

@@ -82,7 +82,7 @@ void MKLSplitLayer<Dtype>::Init(
   // Primitive will be created at first time it is to be used
   dnnDelete<Dtype>(sumPrimitive);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
   DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   ComputeOpRegInfo *myRegInfo;

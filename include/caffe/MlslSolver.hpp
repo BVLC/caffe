@@ -1,7 +1,7 @@
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
-#ifndef CAFFE_MSLSOLVER_HPP_
-#define CAFFE_MSLSOLVER_HPP_
+#ifndef CAFFE_MLSLSOLVER_HPP_
+#define CAFFE_MLSLSOLVER_HPP_
 
 #include <boost/function.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -15,9 +15,9 @@
 namespace caffe {
 
 template <typename Dtype>
-class MslSolver {
+class MlslSolver {
  public:
-  explicit MslSolver(shared_ptr<Solver<Dtype> > root_solver);
+  explicit MlslSolver(shared_ptr<Solver<Dtype> > root_solver);
 
   // Invoked at specific points during an iteration
   class Callback : public Solver<Dtype>::Callback {
@@ -41,12 +41,12 @@ class MslSolver {
     virtual void on_wtinc_ready(int layer_id) = 0;
 #endif
 
-    virtual void on_gradients_ready() = 0;  // from Solver<Dtype>::Callback, empty function, weigths update will be in MslSolver loop
+    virtual void on_gradients_ready() = 0;  // from Solver<Dtype>::Callback, empty function, weigths update will be in MlslSolver loop
 
     virtual void synchronize_params() = 0;
 
     template <typename T>
-    friend class MslSolver;
+    friend class MlslSolver;
   };
 
   void add_callback(Callback* value) {
@@ -82,6 +82,6 @@ class MslSolver {
 
 }  // namespace caffe
 
-#endif  // CAFFE_MSLSOLVER_HPP_
+#endif  // CAFFE_MLSLSOLVER_HPP_
 
-#endif // CAFFE_MSL
+#endif // CAFFE_MLSL

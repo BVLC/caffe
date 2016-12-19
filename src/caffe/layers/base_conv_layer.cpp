@@ -47,8 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <omp.h>
 #endif
 
-#ifdef CAFFE_MSL
-using namespace MSL;
+#ifdef CAFFE_MLSL
+using namespace MLSL;
 #endif
 
 namespace caffe {
@@ -315,7 +315,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   col_buffer_mt_.resize(col_buffer_mt_size);
   weight_diff_mt_.resize(weight_diff_mt_size);
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   if (this->layerOp == NULL) {
     DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
   	ComputeOpRegInfo *myRegInfo;
@@ -340,7 +340,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
     delete myRegInfo;
   }
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 }
 
 template <typename Dtype>

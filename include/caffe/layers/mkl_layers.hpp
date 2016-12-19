@@ -61,9 +61,7 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
 
   virtual ~MKLConvolutionLayer();
 
-//#ifdef CAFFE_MSL
   virtual inline const char* type() const { return "MklConvolution"; }
-//#endif /* CAFFE_MSL */
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -90,10 +88,10 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
  private:
 
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* CAFFE_MLSL */
 
 
   /* Fwd step */
@@ -162,9 +160,9 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif
 
  protected:
@@ -240,10 +238,10 @@ class MKLPoolingLayer : public Layer<Dtype> {
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* CAFFE_MLSL */
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -308,15 +306,15 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "ReLU"; }
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 
-#ifdef CAFFE_MSL_OWN_BUFFERS
-  virtual void out_layout(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void in_layout(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#ifdef CAFFE_MLSL_OWN_BUFFERS
+  virtual void out_layout(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void in_layout(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -358,9 +356,9 @@ class MKLConcatLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "Concat"; }
   ~MKLConcatLayer();
 
-#ifdef CAFFE_MSL
-  virtual void pack_buffer(MSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#ifdef CAFFE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
 #endif
 
  protected:

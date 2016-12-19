@@ -40,13 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/split_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+using namespace MLSL;
+#endif /* CAFFE_MLSL */
 
 namespace caffe {
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
 
 template <typename Dtype>
 void SplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -76,7 +76,7 @@ void SplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   delete myRegInfo;
 }
 
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 template <typename Dtype>
 void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,

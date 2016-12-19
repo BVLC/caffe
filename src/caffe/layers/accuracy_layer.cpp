@@ -42,9 +42,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/accuracy_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
-#endif /* CAFFE_MSL */
+#ifdef CAFFE_MLSL
+using namespace MLSL;
+#endif /* CAFFE_MLSL */
 
 namespace caffe {
 
@@ -59,7 +59,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
     ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
   }
 
-#ifdef CAFFE_MSL
+#ifdef CAFFE_MLSL
   int ic = bottom[0]->channels();
   int iw = bottom[0]->width();
   int ih = bottom[0]->height();
@@ -74,7 +74,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   myRegInfo->Validate();
   this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
   delete myRegInfo;
-#endif /* CAFFE_MSL */
+#endif /* CAFFE_MLSL */
 
 }
 
