@@ -47,8 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/performance.hpp"
 
-#ifdef CAFFE_MSL
-using namespace MSL;
 namespace caffe {
 
 template <typename Dtype>
