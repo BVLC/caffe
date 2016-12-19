@@ -134,10 +134,6 @@ public:
     }
 
     void run() {
-#ifndef USE_MPI
-        LOG(ERROR) << "can't run mpi based training without configured MPI";
-        return;
-#endif
         LOG(WARNING) << "RUN: "
                      << "DITRIBUTED WEIGHT UPDATE IS"
 #ifdef DISTR_WEIGHT_UPDATE

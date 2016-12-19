@@ -72,8 +72,12 @@ CPU_ONLY := 1
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
 
-# Multi Node support (uncomment if needed):
-# USE_MPI has to be 1 and CXX has to point to MPI compiler (/usr/bin/mpicxx for Open MPI and MPICH )
+# Intel(r) Distribution Caffe Multi Node support (uncomment only one):
+#
+# Intel(r) Machine Learning Scaling Library (uncomment to build with MLSL)
+# USE_MLSL :=1
+
+# Message Passing Interface (uncomment to build with MPI - deprecated!)
 # USE_MPI := 1
 # CXX := /usr/bin/mpicxx
 

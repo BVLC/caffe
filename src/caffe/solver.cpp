@@ -354,11 +354,11 @@ void Solver<Dtype>::Step(int iters) {
 
     iter_time += iter_timer.MilliSeconds();
 
-#ifdef USE_MPI
+#ifdef CAFFE_PER_LAYER_TIMINGS
     if (caffe::internode::mpi_get_current_proc_rank() == 0)
+        LOG(DEBUG) << "iter " << iter_ << ", forward_backward_update_time: " << iter_time << " ms";
 #endif
-        LOG(WARNING) << "iter " << iter_ << ", forward_backward_update_time: " << iter_time << " ms";
-
+    
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
     ++iter_;
