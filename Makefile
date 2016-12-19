@@ -63,9 +63,10 @@ endif
 #################### MLSL ####################
 
 ifeq ($(USE_MLSL), 1)
-	COMMON_FLAGS += -DUSE_MLSL=1 -fpermissive
-	CPU_ONLY=1
-	LIBRARIES += mlsl
+	COMMON_FLAGS += -DUSE_MLSL=1 -fpermissive $(shell pkg-config --cflags mpich)
+	LIBRARIES += mlsl mpi
+	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
+	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
 
 ifeq ($(DISTR_WEIGHT_UPDATE), 1)
 	COMMON_FLAGS += -DDISTR_WEIGHT_UPDATE

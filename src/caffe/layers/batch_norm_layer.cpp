@@ -35,7 +35,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef USE_MLSL
 #include <mpi.h>
+#endif
 
 #include <algorithm>
 #include <functional>
@@ -192,8 +194,10 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int num = bottom[0]->shape(0);
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
 
+#ifdef USE_MLSL
   int comm_size;
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+#endif /* USE_MLSL */
 
   if (bottom[0] != top[0]) {
     caffe_copy(bottom[0]->count(), bottom_data, top_data);
