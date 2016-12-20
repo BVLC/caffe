@@ -47,6 +47,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <omp.h>
 #endif
 
+#ifdef USE_MLSL
+using namespace MLSL;
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -310,6 +314,33 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   col_buffer_mt_.resize(col_buffer_mt_size);
   weight_diff_mt_.resize(weight_diff_mt_size);
+
+#ifdef USE_MLSL
+  if (this->layerOp == NULL) {
+    DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+  	ComputeOpRegInfo *myRegInfo;
+  	int ic = bottom[0]->channels();
+  	int iw = bottom[0]->width();
+  	int ih = bottom[0]->height();
+
+  	int oc = top[0]->channels();
+  	int ofmSize = top[0]->width()*top[0]->height();
+
+  	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_CC);
+  	myRegInfo->SetName(this->layer_param_.name().c_str());
+  	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  	myRegInfo->AddOutputFeatureMap(oc, ofmSize, dt);
+  	myRegInfo->AddWeights(ic*oc/group_, this->kernel_shape_.cpu_data()[0]*this->kernel_shape_.cpu_data()[1], dt, DISTRIBUTED_WEIGHT_UPDATE);
+
+    if (bias_term_) {
+        myRegInfo->AddWeights(oc, 1, dt, false /* no make sense to do distributed update for bias */);
+    }
+
+    myRegInfo->Validate();
+  	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+    delete myRegInfo;
+  }
+#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

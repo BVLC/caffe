@@ -59,6 +59,36 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
+
+#################### MLSL ####################
+
+ifeq ($(USE_MLSL), 1)
+ifdef I_MPI_ROOT
+	COMMON_FLAGS += -DUSE_MLSL=1 -I$(I_MPI_ROOT)/intel64/include
+else
+	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
+endif
+	LIBRARIES += mlsl mpi
+	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
+	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
+
+ifeq ($(DISTR_WEIGHT_UPDATE), 1)
+	COMMON_FLAGS += -DDISTR_WEIGHT_UPDATE
+endif
+
+ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
+	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
+endif
+
+ifeq ($(CAFFE_MLSL_SHUFFLE), 1)
+        COMMON_FLAGS += -DCAFFE_MLSL_SHUFFLE
+endif
+
+endif
+
+#################### MLSL ####################
+
+
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
@@ -234,7 +264,7 @@ ifeq ($(USE_OPENCV), 1)
 	ifeq ($(OPENCV_VERSION), 3)
 		LIBRARIES += opencv_imgcodecs
 	endif
-		
+
 endif
 PYTHON_LIBRARIES ?= boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
