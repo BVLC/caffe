@@ -214,8 +214,17 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Change log
+21-12-2016
+* integration with MKL2017 update2 (providing better performance solution)
+* new engine selection functionality
+* new multiphase training functionality 
+* fixed problems with batch normalization
+* new BKM (Best Know Method) and examples for achieving best performance
+* new multinode implementation with better scaling on higher number of nodes (32+)
+* other minor performance and functional improvements
+
 03-11-2016
-* integration with MKL2017 update1 (providing better performance solution)
+* integration with MKL2017 update1
 * minor changes to provide optimal performance on default prototxt files describing topologies (for AlexNet, GoogleNet v2).
 * fixed Dockerfiles - for Ubuntu and Centos.
 
@@ -242,11 +251,8 @@ Workaround: We recommend to always use compressed LMDB Data Layer
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
 
-* We observe convergence problems with some publicly presented hyper parameters (recommended for GPUs) for Googlenet, ResNet50, VGG-19. For CPU tuning of hyper parameters might be needed.
-
-* MKL2017 doesn't allow access to mean & variance statistics in batch normalization layer which prohibits their accumulation (in global-stats mode). This is affecting batch 1 scoring accuracy with topologies using batch normalization layer (resnet50, googlenet v2).
-Workaround: use batch 32 or higher for accuracy measurements. 
-
+* AlexNet top accuracy on Xeon Phi machines is 1% lower than expected result. This is caused by low precision of current implementation - we plan to fix this with new release. 
+Workaround: use GEMM engine for Xeon Phi machines (lower performance, better accuracy) 
 
 # Recommendations to achieve best performance
 
@@ -257,7 +263,7 @@ At our wiki page we present out recommendations and tuning guide to achieve best
 
 For instructions and tutorials please visit: [https://github.com/intel/caffe/wiki](https://github.com/intel/caffe/wiki)
 
-##	How to measure performance
+##	Caffe Benchmark to measure performance
 1. Make sure that you implemented recommendations to achieve best performance
 2. Prepare `Makefile.config` configuration as described in Building for Intel Architecture section 
 3. Check in train_val.prototxt file what Data Layer type is used. For best results don't use data layer (or use LMDB)
