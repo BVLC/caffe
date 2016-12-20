@@ -1144,12 +1144,12 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
   // Initializes unique kernel ID
   kernel_uid_ = 0;
 
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  const viennacl::ocl::device &device = ctx.current_device();
-  if (device.vendor().find("Intel") != std::string::npos) {
+  if (this->device_->CheckCapability("cl_intel_subgroups")) {
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
     // Generates static key_
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+    int max_compute_units = ctx.current_device().max_compute_units();
     generate_key(false);
     int kernelCnt = 0;
     if (this->group_ == 1 && M_ % 8 == 0) {
@@ -1183,16 +1183,19 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         for (uint32_t height = height_max; height > 0; height--) {
           if (width * height > block_size_max || height > output_h_)
             continue;
+          // Only when the work items count is less than the device max work items
+          // or the M_ is less than 16, we will tune for simd 8.
           if (simd_size == 8
               && M_ >= 16
-              && num_ * M_ * output_w_ * output_h_ >= 16 * width * height * 24 * 7)
+              && ((num_ * M_ * output_w_ * output_h_ / (float)(width * height))
+                 >= max_compute_units * 7 * 16))
             continue;
           int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
           int tile_y = kernel_h_ + (height - 1) * stride_h_;
           int tile_y_stride = (4 * simd_size) / tile_x;
 
           if ((tile_y + tile_y_stride - 1) / tile_y_stride < 4) {
-            create_convolution_kernel(bottom, top, 2, width, height, 8);
+            create_convolution_kernel(bottom, top, 2, width, height, simd_size);
             candidate++;
           }
           if (candidate >= 4 && height == 2)

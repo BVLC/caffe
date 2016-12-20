@@ -100,8 +100,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
                                   ignore_label_, WrapHandle(counts, &ctx)),
         ctx.get_queue());
 
-    if (ctx.devices()[0].extensions().find("cl_intel_subgroups")
-                             != std::string::npos) {
+    if (this->device_->CheckCapability("cl_intel_subgroups")) {
       viennacl::ocl::kernel &oclk_softmax_loss_forward_asum = program.get_kernel(
         CL_KERNEL_SELECT("softmax_loss_forward_asum"));
       int need_compute_count_sum =

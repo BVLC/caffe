@@ -143,10 +143,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-    const viennacl::ocl::device &device = ctx.current_device();
-    if (device.vendor().find("Intel") != std::string::npos) {
-      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_->id());
+    if (this->device_->CheckCapability("cl_intel_subgroups")) {
       viennacl::ocl::program &program = this->device_->program();
       viennacl::ocl::kernel *oclk_softmax_forward_kernel;
       if (use_slm_)
