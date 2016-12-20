@@ -98,6 +98,11 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
+  if (need_padding_) {
+    spatial_col_buffer_.Reshape(this->num_, this->channels_,
+                                height_ + 2 * pad_h_,
+                                width_ + 2 * pad_w_);
+  }
 
   if (std::is_same<Dtype, float>::value) {
     this->num_ = bottom[0]->count(0, this->channel_axis_);
@@ -1434,6 +1439,11 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> y;
     cachedKernel >> z;
     cachedKernel >> type;
+    if (type == 2) {
+      if (z == 1)
+        z = 16;
+      CHECK_EQ(z == 16 || z == 8, true) << "invalid SIMD size" << std::endl;
+    }
     create_convolution_kernel(bottom, top, type, x, y, z);
     kernel_index_ = kernelQueue.size() - 1;
     if (kernel_index_ == -1) {
