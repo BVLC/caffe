@@ -63,7 +63,11 @@ endif
 #################### MLSL ####################
 
 ifeq ($(USE_MLSL), 1)
-	COMMON_FLAGS += -DUSE_MLSL=1 -fpermissive $(shell pkg-config --cflags mpich)
+ifdef I_MPI_ROOT
+	COMMON_FLAGS += -DUSE_MLSL=1 -I$(I_MPI_ROOT)/intel64/include
+else
+	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
+endif
 	LIBRARIES += mlsl mpi
 	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
 	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
