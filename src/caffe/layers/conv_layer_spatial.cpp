@@ -165,7 +165,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
 
-  #define dbg
+//  #define dbg
 #ifdef dbg
 #define dbgPrint(x) (x)
 #else
@@ -1152,10 +1152,10 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     int max_compute_units = ctx.current_device().max_compute_units();
     generate_key(false);
     int kernelCnt = 0;
-    if (this->group_ == 1 && M_ % 8 == 0) {
+    if (this->group_ == 1 && M_ % 32 == 0) {
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
-      if (kernel_w_ < 4)
+      if (kernel_w_ < 4 && M_ % 32 == 0)
         create_convolution_kernel(bottom, top, 5, 1, 16, 32);
     }
 
@@ -1168,8 +1168,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         continue;
       int width_max, height_max, block_size_max;
       if (simd_size == 8) {
-        width_max = 20;
-        height_max = 20;
+        width_max = 16;
+        height_max = 16;
         block_size_max = 64;
       } else {
         width_max = 14;
@@ -1192,6 +1192,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
             continue;
           int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
           int tile_y = kernel_h_ + (height - 1) * stride_h_;
+          if (tile_x > (4 * simd_size))
+            continue;
           int tile_y_stride = (4 * simd_size) / tile_x;
 
           if ((tile_y + tile_y_stride - 1) / tile_y_stride < 4) {
