@@ -64,7 +64,12 @@ endif
 
 ifeq ($(USE_MLSL), 1)
 ifdef I_MPI_ROOT
+	MPI_H_EXIST := $(shell test -f $(I_MPI_ROOT)/intel64/include/mpi.h; echo $$?)
+ifeq ($(MPI_H_EXIST),0)
 	COMMON_FLAGS += -DUSE_MLSL=1 -I$(I_MPI_ROOT)/intel64/include
+else
+	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
+endif
 else
 	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
 endif
