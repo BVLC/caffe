@@ -4,10 +4,13 @@ title: "Installation: Debian"
 
 # Debian Installation
 
-Caffe packages are available for `Debian/unstable`. Debian/stable users
-should take a look at Ubuntu installation instruction.  
+Caffe packages are available for `Debian/unstable`. Debian/stable
+(jessie) users should take a look at [Ubuntu installation instruction](
+install_apt.html). Debian/testing (stretch) users may be able to get Caffe
+to work using the packages in Debian/unstable, but it is beyond the scope of
+this guide.
 
-Only experienced linux users are recommended to try Debian/unstable (Sid).  
+Only experienced linux users are recommended to try Debian/unstable (Sid). 
 
 Last update: Dec.21 2016  
 
