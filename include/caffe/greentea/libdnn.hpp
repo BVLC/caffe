@@ -280,10 +280,6 @@ class LibDNNPool : public LibDNN<Dtype> {
   const LibDNNPoolConfig get_config();
 
  protected:
-  void Forward(const Dtype* bottom_data, Dtype* top_data,
-               int_tp channels, int_tp batch_size,
-               bool test_mode);
-
   void GenerateKernels();
   std::string string_identifier();
   std::string generate_fw_defs();
