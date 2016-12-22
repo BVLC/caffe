@@ -655,7 +655,8 @@ __kernel void Conv_Interleaved(
 #elif TILE_N_LAST_DIV8 == 3
                     //TODO: broken.  No block_read6
                     float6* p6BlockB = (float6* )blockB;
-                    p6BlockB[interleaved_y] = as_float6( intel_sub_group_block_read6( (const __global uint*)src1_read ) );
+                    (*((float8*)(&p6BlockB[interleaved_y]))).s0123 = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );
+                    (*((float8*)(&p6BlockB[interleaved_y]))).s45 = as_float2( intel_sub_group_block_read2( (const __global uint*)(src1_read + 4 * 8) ) );
 #endif
                     src1_read += WIDTH1 * 2;
                 } )
@@ -669,7 +670,8 @@ __kernel void Conv_Interleaved(
                     p2BlockB[KERNEL_WIDTH - 1] = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );
 #elif TILE_N_LAST_DIV8 == 3
                     float3* p3BlockB = (float3* )blockB;
-                    p3BlockB[KERNEL_WIDTH - 1] = as_float3( intel_sub_group_block_read3( (const __global uint*)src1_read ) );
+                    p3BlockB[KERNEL_WIDTH - 1].s01 = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );
+                    p3BlockB[KERNEL_WIDTH - 1].s2 = as_float( intel_sub_group_block_read( (const __global uint*) (src1_read + 2 * 8) ) );
 #endif
                     src1_read += WIDTH1 * 2;
                 }
@@ -823,7 +825,7 @@ __kernel void Conv_Interleaved(
         do
         {
             // Load atile and btile.
-            // Kernel data is partially interleaved.  Every 2 rows are interleaved at half16 granularity.
+            // Kernel data is partially interleaved.  Every 2 rows are interleaved at Dtype16 granularity.
             // The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non
             // interleaved row is padded with zero to ensure same size as interleaved rows. This
             // interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the
@@ -897,7 +899,7 @@ __kernel void Conv_Interleaved(
 
     // Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:
     // (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.
-    __global half *out = dst
+    __global Dtype *out = dst
      + global_z * OUT_PITCH_Z                                                   // batch offset
      + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset
      + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
@@ -1309,7 +1311,8 @@ __kernel void Conv_Interleaved(
 #elif TILE_N_LAST_DIV8 == 3
                     //TODO: broken.  No block_read6
                     float6* p6BlockB = (float6* )blockB;
-                    p6BlockB[interleaved_y] = as_float6( intel_sub_group_block_read6( (const __global uint*)src1_read ) );
+                    (*((float8*)(&p6BlockB[interleaved_y]))).s0123 = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );
+                    (*((float8*)(&p6BlockB[interleaved_y]))).s45 = as_float2( intel_sub_group_block_read2( (const __global uint*)(src1_read + 4 * 8) ) );
 #endif
                     src1_read += WIDTH1 * 2;
                 } )
@@ -1323,7 +1326,8 @@ __kernel void Conv_Interleaved(
                     p2BlockB[KERNEL_WIDTH - 1] = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );
 #elif TILE_N_LAST_DIV8 == 3
                     float3* p3BlockB = (float3* )blockB;
-                    p3BlockB[KERNEL_WIDTH - 1] = as_float3( intel_sub_group_block_read3( (const __global uint*)src1_read ) );
+                    p3BlockB[KERNEL_WIDTH - 1].s01 = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );
+                    p3BlockB[KERNEL_WIDTH - 1].s2 = as_float( intel_sub_group_block_read( (const __global uint*) (src1_read + 8) ) );
 #endif
                     src1_read += WIDTH1 * 2;
                 }
@@ -1397,7 +1401,6 @@ __kernel void Conv_Interleaved(
         float4 *bias_vec;
         bias_vec = (float4*)bias;
         *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
-
         if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
         {
             for( int i = 0; i < 8; i++ )
