@@ -99,7 +99,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     << std::endl << param.DebugString();
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
-#ifndef USE_MPI
+#if !defined(USE_MPI) && !defined(USE_MLSL)
   CheckSnapshotWritePermissions();
 #endif
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
@@ -529,7 +529,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 #endif
   }
 
-#ifndef USE_MPI  // in multinode last test must be done after weights update
+#if !defined(USE_MPI) && !defined(USE_MLSL) // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();
 #endif

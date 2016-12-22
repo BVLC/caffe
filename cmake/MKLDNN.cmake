@@ -5,10 +5,10 @@ function(Download_MKLDNN)
   set(MKLDNN_SOURCE_DIR ${MKLDNN_DIR}/src)
   set(MKLDNN_BUILD_DIR ${MKLDNN_DIR}/build)
   set(MKLDNN_INSTALL_DIR ${MKLDNN_DIR}/install CACHE PATH "Installation path of MKLDNN")
-
+  
   ExternalProject_add(MKLDNN_Build
                       SOURCE_DIR ${MKLDNN_SOURCE_DIR}
-                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
 #--Download step
                       GIT_REPOSITORY https://github.com/01org/mkl-dnn.git
                       GIT_TAG v0.3
