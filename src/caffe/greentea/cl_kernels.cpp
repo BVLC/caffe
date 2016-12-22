@@ -1137,7 +1137,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#elif TILE_N_LAST_DIV8 == 3",    // NOLINT
 "//TODO: broken.  No block_read6",    // NOLINT
 "float6* p6BlockB = (float6* )blockB;",    // NOLINT
-"p6BlockB[interleaved_y] = as_float6( intel_sub_group_block_read6( (const __global uint*)src1_read ) );",    // NOLINT
+"(*((float8*)(&p6BlockB[interleaved_y]))).s0123 = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
+"(*((float8*)(&p6BlockB[interleaved_y]))).s45 = as_float2( intel_sub_group_block_read2( (const __global uint*)(src1_read + 4 * 8) ) );",    // NOLINT
 "#endif",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "} )",    // NOLINT
@@ -1151,7 +1152,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "p2BlockB[KERNEL_WIDTH - 1] = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );",    // NOLINT
 "#elif TILE_N_LAST_DIV8 == 3",    // NOLINT
 "float3* p3BlockB = (float3* )blockB;",    // NOLINT
-"p3BlockB[KERNEL_WIDTH - 1] = as_float3( intel_sub_group_block_read3( (const __global uint*)src1_read ) );",    // NOLINT
+"p3BlockB[KERNEL_WIDTH - 1].s01 = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );",    // NOLINT
+"p3BlockB[KERNEL_WIDTH - 1].s2 = as_float( intel_sub_group_block_read( (const __global uint*) (src1_read + 2 * 8) ) );",    // NOLINT
 "#endif",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "}",    // NOLINT
@@ -1287,7 +1289,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "do",    // NOLINT
 "{",    // NOLINT
 "// Load atile and btile.",    // NOLINT
-"// Kernel data is partially interleaved.  Every 2 rows are interleaved at half16 granularity.",    // NOLINT
+"// Kernel data is partially interleaved.  Every 2 rows are interleaved at Dtype16 granularity.",    // NOLINT
 "// The exception is that if KERNEL_WIDTH is odd the last row is not interleaved.  The non",    // NOLINT
 "// interleaved row is padded with zero to ensure same size as interleaved rows. This",    // NOLINT
 "// interleaving is done to ensure 0% GDR bank conflicts.  For example, this is how the",    // NOLINT
@@ -1361,7 +1363,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global half *out = dst",    // NOLINT
+"__global Dtype *out = dst",    // NOLINT
 "+ global_z * OUT_PITCH_Z                                                   // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
@@ -1763,7 +1765,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#elif TILE_N_LAST_DIV8 == 3",    // NOLINT
 "//TODO: broken.  No block_read6",    // NOLINT
 "float6* p6BlockB = (float6* )blockB;",    // NOLINT
-"p6BlockB[interleaved_y] = as_float6( intel_sub_group_block_read6( (const __global uint*)src1_read ) );",    // NOLINT
+"(*((float8*)(&p6BlockB[interleaved_y]))).s0123 = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
+"(*((float8*)(&p6BlockB[interleaved_y]))).s45 = as_float2( intel_sub_group_block_read2( (const __global uint*)(src1_read + 4 * 8) ) );",    // NOLINT
 "#endif",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "} )",    // NOLINT
@@ -1777,7 +1780,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "p2BlockB[KERNEL_WIDTH - 1] = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );",    // NOLINT
 "#elif TILE_N_LAST_DIV8 == 3",    // NOLINT
 "float3* p3BlockB = (float3* )blockB;",    // NOLINT
-"p3BlockB[KERNEL_WIDTH - 1] = as_float3( intel_sub_group_block_read3( (const __global uint*)src1_read ) );",    // NOLINT
+"p3BlockB[KERNEL_WIDTH - 1].s01 = as_float2( intel_sub_group_block_read2( (const __global uint*)src1_read ) );",    // NOLINT
+"p3BlockB[KERNEL_WIDTH - 1].s2 = as_float( intel_sub_group_block_read( (const __global uint*) (src1_read + 8) ) );",    // NOLINT
 "#endif",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "}",    // NOLINT
@@ -1851,7 +1855,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float4 *bias_vec;",    // NOLINT
 "bias_vec = (float4*)bias;",    // NOLINT
 "*bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));",    // NOLINT
-"",    // NOLINT
 "if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT

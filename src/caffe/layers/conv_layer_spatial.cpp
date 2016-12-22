@@ -844,7 +844,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DINPUT_WIDTH=" << width_ <<
         " -DINPUT_HEIGHT=" << height_ <<
         " -DINPUT_DEPTH=" << channels_ <<
-        " -DWIDTH1=" << alignedFilterWidth <<
+        " -DWIDTH1=" << M_ <<
         " -DOUT_PADDING_LEFT=" << 0 <<
         " -DOUT_PADDING_HEIGHT=" << 0 <<
         " -DOUT_WIDTH=" << output_width <<
@@ -858,8 +858,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DDX=" << globalWorkSizeDX <<
         " -DKERNEL_WIDTH_DIV2=" << kernel_w_ / 2 <<
         " -DKERNEL_SLICE_DIV2=" << (kernel_w_ * kernel_h_) / 2 <<
-        " -DTILE_N_LAST=" << alignedFilterWidth % 32 <<
-        " -DTILE_N_LAST_DIV8=" << (alignedFilterWidth % 32) / 8 <<
+        " -DTILE_N_LAST=" << M_ % 32 <<
+        " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8 <<
         " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
 
   if (need_padding_)
@@ -1152,7 +1152,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     int max_compute_units = ctx.current_device().max_compute_units();
     generate_key(false);
     int kernelCnt = 0;
-    if (this->group_ == 1 && M_ % 32 == 0) {
+    if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
       if (kernel_w_ < 4 && M_ % 32 == 0)
