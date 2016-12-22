@@ -248,8 +248,8 @@ namespace performance {
     }
 
     static void WriteHeaders() {
-      printf("\n%52s %18s %18s %18s %18s %18s %18s\n\n",
-        "Avg(proc)", "Min(proc)", "Max(proc)",
+      printf("\n %30s %20s %18s %18s %18s %18s %18s %18s\n\n",
+        "Layer", "Avg(proc)", "Min(proc)", "Max(proc)",
         "Avg(total)", "Min(total)", "Max(total)", "Calls");
     }
 
