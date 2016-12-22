@@ -44,10 +44,10 @@ def time(solver, nccl):
         if solver.iter % display == 0:
             s = '\n'
             for i in range(len(solver.net.layers)):
-                s += 'forw %3d %8s ' % (i, solver.net.layers[i].layer_param.name)
+                s += 'forw %3d %8s ' % (i, solver.net._layer_names[i])
                 s += ': %.2f\n' % fprop[i].ms
             for i in range(len(solver.net.layers) - 1, -1, -1):
-                s += 'back %3d %8s ' % (i, solver.net.layers[i].layer_param.name)
+                s += 'back %3d %8s ' % (i, solver.net._layer_names[i])
                 s += ': %.2f\n' % bprop[i].ms
             s += 'solver total: %.2f\n' % total.ms
             s += 'allreduce: %.2f\n' % allrd.ms
@@ -67,6 +67,7 @@ def solve(proto, snapshot, gpus, timing, uid, rank):
     caffe.set_device(gpus[rank])
     caffe.set_solver_count(len(gpus))
     caffe.set_solver_rank(rank)
+    caffe.set_multiprocess(True)
 
     solver = caffe.SGDSolver(proto)
     if snapshot and len(snapshot) != 0:
