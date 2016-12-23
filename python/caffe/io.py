@@ -295,7 +295,7 @@ def load_image(filename, color=True):
         of size (H x W x 1) in grayscale.
     """
     # img = skimage.img_as_float(skimage.io.imread(filename, as_grey=not color)).astype(np.float32)
-    img = cv2.imread(filename).astype(np.float32) / 255.0
+    img = cv2.imread(filename)[:, :, (2, 1, 0)].astype(np.float32) / 255.0
     if img.ndim == 2:
         img = img[:, :, np.newaxis]
         if color:
