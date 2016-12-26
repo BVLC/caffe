@@ -410,7 +410,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     decolorize = hist_eq = inverse = gauss_blur = posterize = erode = saltpepper = clahe = convert_to_hsv = convert_to_lab = true;
   vector<float> binary_probs;
   if (param.prob() > 0.0)
-    binary_probs = {param.prob(),1.f-param.prob()};
+    binary_probs = {1.f-param.prob(),param.prob()};
   
   decolorize = param.prob() ? roll_weighted_die(binary_probs) == 1 : decolorize;
   if (decolorize) {
