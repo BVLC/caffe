@@ -59,6 +59,7 @@ Section: universe/python
 Depends: ${misc:Depends}, ${shlibs:Depends}, libcaffe-nv0 (= ${binary:Version}),
     cython,
     python,
+    python-h5py,
     python-numpy,
     python-opencv,
     python-pil,
