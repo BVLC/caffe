@@ -131,7 +131,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a datum
-    Datum& datum = *(reader_.full().pop("Waiting for data"));
+    Datum* datum = (reader_.full().pop("Waiting for data"));
     read_time += timer.MicroSeconds();
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
@@ -147,17 +147,17 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
       // Copy label. We need to copy it before we release datum
       if (this->output_labels_) {
-        top_label[item_id] = datum.label();
+        top_label[item_id] = datum->label();
       }
 #ifdef _OPENMP
 #else
       this->transformed_data_.set_cpu_data(top_data + offset);
-      this->data_transformer_->Transform(datum, &(this->transformed_data_));
+      this->data_transformer_->Transform(*datum, &(this->transformed_data_));
 #endif
     }
     trans_time += timer.MicroSeconds();
 
-    reader_.free().push(const_cast<Datum*>(&datum));
+    reader_.free().push(const_cast<Datum*>(datum));
   }
   trans_timer.Stop();
   batch_timer.Stop();
