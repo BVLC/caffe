@@ -742,20 +742,24 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int width = transformed_blob->width();
   const int num = transformed_blob->num();
 
-  CHECK_GT(img_channels, 0);
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   CHECK_EQ(channels, img_channels);
+  //CHECK_LE(height, img_height);
+  //CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
-  //const int crop_size = param_.crop_size();
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+
   const Dtype scale = param_.scale();
-  /*const bool do_mirror = param_.mirror() && rand_num(2);
-  const bool has_mean_file = param_.has_mean_file();
-  const bool has_mean_values = mean_values_.size() > 0;*/
+
+  CHECK_GT(img_channels, 0);
+  //CHECK_GE(img_height, crop_size);
+  //CHECK_GE(img_width, crop_size);
 
   Dtype* mean = NULL;
   if (has_mean_file) {
     CHECK_EQ(img_channels, data_mean_.channels());
+    //CHECK_EQ(img_height, data_mean_.height());
+    //CHECK_EQ(img_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
@@ -821,21 +825,14 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   for (int h = 0; h < height; ++h) {
     const uchar* ptr = cv_cropped_image.ptr<uchar>(h);
     int img_index = 0;
-    int h_idx = h;
     for (int w = 0; w < width; ++w) {
-      int w_idx = w;
-      if (do_mirror) {
-        w_idx = (width - 1 - w);
-      }
-      int h_idx_real = h_idx;
-      int w_idx_real = w_idx;
       for (int c = 0; c < img_channels; ++c) {
         if (do_mirror) {
           top_index = (c * height + h) * width + (width - 1 - w);
         } else {
           top_index = (c * height + h) * width + w;
         }
-        // int top_index = (c * height + h) * width + w;
+         // int top_index = (c * height + h) * width + w;
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
