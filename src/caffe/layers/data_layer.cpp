@@ -150,6 +150,11 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         top_label[item_id] = datum->label();
       }
 #ifdef _OPENMP
+      Blob<Dtype> tmp_data;
+      tmp_data.Reshape(top_shape);
+      tmp_data.set_cpu_data(top_data + offset);
+      this->data_transformer_->Transform(*datum, &tmp_data,
+                                              precalculated_rand_numbers);
 #else
       this->transformed_data_.set_cpu_data(top_data + offset);
       this->data_transformer_->Transform(*datum, &(this->transformed_data_));

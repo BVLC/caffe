@@ -123,12 +123,19 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Store transformed annotation.
   map<int, vector<AnnotationGroup> > all_anno;
   int num_bboxes = 0;
+  
+  //PreclcRandomNumbers precalculated_rand_numbers;
+  //this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
 
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a anno_datum
     AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
     read_time += timer.MicroSeconds();
+    
+//    PreclcRandomNumbers precalculated_rand_numbers;
+//    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+
     timer.Start();
     AnnotatedDatum sampled_datum;
     if (batch_samplers_.size() > 0) {
@@ -158,6 +165,7 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
             "Different AnnotationType.";
         // Transform datum and annotation_group at the same time
         transformed_anno_vec.clear();
+//        LOG(INFO) << "First transform";
         this->data_transformer_->Transform(sampled_datum,
                                            &(this->transformed_data_),
                                            &transformed_anno_vec);
@@ -171,6 +179,7 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         }
         all_anno[item_id] = transformed_anno_vec;
       } else {
+//        LOG(INFO) << "Second transform";
         this->data_transformer_->Transform(sampled_datum.datum(),
                                            &(this->transformed_data_));
         // Otherwise, store the label from datum.
