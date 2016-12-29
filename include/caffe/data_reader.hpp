@@ -34,11 +34,13 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef CAFFE_DATA_READER_HPP_
 #define CAFFE_DATA_READER_HPP_
 
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/common.hpp"
@@ -56,16 +58,15 @@ namespace caffe {
  * subset of the database. Data is distributed to solvers in a round-robin
  * way to keep parallel training deterministic.
  */
-template <typename T>
 class DataReader {
  public:
   explicit DataReader(const LayerParameter& param);
   ~DataReader();
 
-  inline BlockingQueue<T*>& free() const {
+  inline BlockingQueue<std::string*>& free() const {
     return queue_pair_->free_;
   }
-  inline BlockingQueue<T*>& full() const {
+  inline BlockingQueue<std::string*>& full() const {
     return queue_pair_->full_;
   }
 
@@ -76,10 +77,43 @@ class DataReader {
     explicit QueuePair(int size);
     ~QueuePair();
 
-    BlockingQueue<T*> free_;
-    BlockingQueue<T*> full_;
+    BlockingQueue<std::string*> free_;
+    BlockingQueue<std::string*> full_;
 
   DISABLE_COPY_AND_ASSIGN(QueuePair);
+  };
+
+  class DBWrapper  {
+   public:
+    explicit DBWrapper(const LayerParameter& param);
+    virtual string value() = 0;
+    virtual void Next() = 0;
+   protected:
+    shared_ptr<db::DB> db;
+    shared_ptr<db::Cursor> cursor;
+  };
+
+  class DBShuffle: public DBWrapper {
+   public:
+    explicit DBShuffle(const LayerParameter& param);
+    virtual string value() {
+      return string(static_cast<const char*>(current_image_->first),
+                                                      current_image_->second);
+    }
+    virtual void Next();
+   protected:
+    vector<std::pair<void*, int> > image_pointers_;
+    vector<std::pair<void*, int> >::iterator current_image_;
+    shared_ptr<Caffe::RNG> prefetch_rng_;
+
+    void ShuffleImages();
+  };
+
+  class DBSequential: public DBWrapper {
+   public:
+    explicit DBSequential(const LayerParameter& param): DBWrapper(param)  {}
+    virtual string value()  { return cursor->value(); }
+    virtual void Next();
   };
 
   // A single body is created per source
@@ -90,7 +124,8 @@ class DataReader {
 
    protected:
     void InternalThreadEntry();
-    void read_one(db::Cursor* cursor, QueuePair* qp);
+    void read_one(DBWrapper* img, QueuePair* qp);
+    void ShuffleImages();
 
     const LayerParameter param_;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
@@ -109,7 +144,7 @@ class DataReader {
   const shared_ptr<QueuePair> queue_pair_;
   shared_ptr<Body> body_;
 
-  static map<const string, boost::weak_ptr<Body> > bodies_;
+  static map<const string, boost::weak_ptr<DataReader::Body> > bodies_;
 
 DISABLE_COPY_AND_ASSIGN(DataReader);
 };

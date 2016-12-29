@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <boost/thread.hpp>
 #include <string>
 
@@ -124,13 +125,10 @@ size_t BlockingQueue<T>::size() const {
 
 template class BlockingQueue<Batch<float>*>;
 template class BlockingQueue<Batch<double>*>;
-template class BlockingQueue<Datum*>;
-template class BlockingQueue<Element*>;
-template class BlockingQueue<AnnotatedDatum*>;
-template class BlockingQueue<shared_ptr<DataReader<Datum>::QueuePair> >;
-template class BlockingQueue<
-  shared_ptr<DataReader<AnnotatedDatum>::QueuePair> >;
+template class BlockingQueue<std::string*>;
+template class BlockingQueue<shared_ptr<DataReader::QueuePair> >;
 template class BlockingQueue<P2PSync<float>*>;
 template class BlockingQueue<P2PSync<double>*>;
+template class BlockingQueue<Element*>;
 
 }  // namespace caffe

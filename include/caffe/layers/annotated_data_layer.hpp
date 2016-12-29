@@ -31,7 +31,7 @@ class AnnotatedDataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
 
-  DataReader<AnnotatedDatum> reader_;
+  DataReader reader_;
   bool has_anno_type_;
   AnnotatedDatum_AnnotationType anno_type_;
   vector<BatchSampler> batch_samplers_;
