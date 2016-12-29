@@ -82,6 +82,10 @@ function(caffe_generate_export_configs)
     endforeach()
   endif()
 
+  # This code is taken from https://github.com/sh1r0/caffe-android-lib
+  if(USE_HDF5)
+    list(APPEND Caffe_DEFINITIONS -DUSE_HDF5)
+  endif()
 
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)

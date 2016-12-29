@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
+//This code is taken from https://github.com/sh1r0/caffe-android-lib
+#include <cstring>  // for memset
 
 #include "glog/logging.h"
 
