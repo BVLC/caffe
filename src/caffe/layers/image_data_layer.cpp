@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 
@@ -136,7 +137,6 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 
-// This function is called on prefetch thread
 template <typename Dtype>
 void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -170,20 +170,49 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   // datum scales
   const int lines_size = lines_.size();
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
+
+#ifdef _OPENMP
+  #pragma omp parallel if (batch_size > 1)
+  #pragma omp single nowait
+#endif
+  for (int item_id = 0; item_id < batch_size; ++item_id)  {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
+#ifndef _OPENMP
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
-    // Apply transformations (mirror, crop...) to the image
+// Apply transformations (mirror, crop...) to the image
+
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
+#else
+    read_time = 0;
+    trans_time = 0;
+
+    int offset = batch->data_.offset(item_id);
+    std::string img_file_name = lines_[lines_id_].first;
+    PreclcRandomNumbers precalculated_rand_numbers;
+    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+    #pragma omp task firstprivate(offset, img_file_name, \
+                                                    precalculated_rand_numbers)
+    {
+        cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
+            new_height, new_width, is_color);
+        CHECK(cv_img.data) << "Could not load " << img_file_name;
+
+        Blob<Dtype> tmp_data;
+        tmp_data.Reshape(top_shape);
+        tmp_data.set_cpu_data(prefetch_data + offset);
+        this->data_transformer_->Transform(cv_img, &tmp_data, 
+                                                  precalculated_rand_numbers);
+    }
+#endif
 
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
@@ -197,11 +226,15 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
     }
   }
+
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
+
+
+
 
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
