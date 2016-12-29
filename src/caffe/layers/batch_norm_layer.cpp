@@ -194,11 +194,6 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int num = bottom[0]->shape(0);
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
 
-#ifdef USE_MLSL
-  int comm_size;
-  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-#endif /* USE_MLSL */
-
   if (bottom[0] != top[0]) {
     caffe_copy(bottom[0]->count(), bottom_data, top_data);
   }
@@ -220,12 +215,6 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         mean_.mutable_cpu_data());
-#ifdef USE_MLSL
-    MPI_Allreduce(MPI_IN_PLACE, mean_.mutable_cpu_data(), mean_.count(),
-    		sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-    caffe_cpu_scale((const int) mean_.count(), (const Dtype) 1.0/comm_size, (const Dtype*) mean_.mutable_cpu_data(), (Dtype*) mean_.mutable_cpu_data());
-#endif
   }
 
   // subtract mean
@@ -247,13 +236,6 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         variance_.mutable_cpu_data());  // E((X_EX)^2)
-
-#ifdef USE_MLSL
-    MPI_Allreduce(MPI_IN_PLACE, variance_.mutable_cpu_data(), variance_.count(),
-    		sizeof(Dtype) == 4 ? MPI_FLOAT : MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    caffe_cpu_scale((const int) variance_.count(), (const Dtype) 1.0/comm_size, (const Dtype*) variance_.mutable_cpu_data(), (Dtype*) variance_.mutable_cpu_data());
-#endif
-
 
     // compute and save moving average
     this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
