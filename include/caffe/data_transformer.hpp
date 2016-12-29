@@ -136,7 +136,15 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob)
+                               {Transform(datum, transformed_blob, rand_num_);}
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
+                                                       RandNumbers& rand_num);
+
+  void Transform(Blob<Dtype>* input_blob,
+                 Blob<Dtype>* transformed_blob,
+                 RandNumbers& rand_num);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -166,18 +174,24 @@ class DataTransformer {
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  RepeatedPtrField<AnnotationGroup>* transformed_anno_vec);
+  /*
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  RepeatedPtrField<AnnotationGroup>* transformed_anno_vec,
-                 bool* do_mirror);
-  void Transform(const AnnotatedDatum& anno_datum,
-                 Blob<Dtype>* transformed_blob,
-                 vector<AnnotationGroup>* transformed_anno_vec,
-                 bool* do_mirror);
+                 bool* do_mirror,
+                 RandNumbers& rand_num);
+  */
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  vector<AnnotationGroup>* transformed_anno_vec);
-
+  
+  /*
+  void Transform(const AnnotatedDatum& anno_datum,
+                 Blob<Dtype>* transformed_blob,
+                 vector<AnnotationGroup>* transformed_anno_vec) {
+    Transform(anno_datum, transformed_blob, transformed_anno_vec, rand_num_);
+  }
+  */
   /**
    * @brief Transform the annotation according to the transformation applied
    * to the datum.
@@ -251,9 +265,18 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
-                 NormalizedBBox* crop_bbox, bool* do_mirror);
-  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+  void Transform(const cv::Mat& cv_img, 
+                 Blob<Dtype>* transformed_blob,
+                 NormalizedBBox* crop_bbox,
+                 RandNumbers& rand_num);
+  void Transform(const cv::Mat& cv_img, 
+                 Blob<Dtype>* transformed_blob,
+                 RandNumbers& rand_num);
+  void Transform(const cv::Mat& cv_img,
+                 Blob<Dtype>* transformed_blob) {
+    Transform(cv_img, transformed_blob, rand_num_);
+  }
+
 
   /**
    * @brief Crops img according to bbox.
@@ -324,36 +347,42 @@ class DataTransformer {
 
  protected:
   GenRandNumbers rand_num_;
-   /**
-   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
-   *
-   * @param n
-   *    The upperbound (exclusive) value of the random number.
-   * @return
-   *    A uniformly random integer value from ({0, 1, ..., n-1}).
-   */
-  virtual int Rand(int n);
 
   // Transform and return the transformation information.
   void Transform(const Datum& datum, Dtype* transformed_data,
-                 NormalizedBBox* crop_bbox, bool* do_mirror);
-  void Transform(const Datum& datum, Dtype* transformed_data);
+                 NormalizedBBox* crop_bbox, RandNumbers& rand_num);
+  void Transform(const Datum& datum, Dtype* transformed_data,
+                RandNumbers& rand_num);
 
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data and return transform information.
    */
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
-                 NormalizedBBox* crop_bbox, bool* do_mirror);
+                 NormalizedBBox* crop_bbox, RandNumbers& rand_num);
 
   // Tranformation parameters
   TransformationParameter param_;
 
-
-  shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+
+  // Data reader used if any to get data
+  //DataReader* data_reader_used;
+
+
+ private:
+  template<bool do_mirror, bool has_mean_file, bool has_mean_values>
+  void Transform(const cv::Mat& cv_img, 
+                 Blob<Dtype>* transformed_blob, 
+                 NormalizedBBox* crop_bbox,
+                 RandNumbers& rand_num);
+
+  template<bool has_uint8,  bool do_mirror, bool has_mean_file,
+          bool has_mean_values>
+  void Transform(const Datum& datum, Dtype* transformed_data,
+                 NormalizedBBox* crop_bbox, RandNumbers& rand_num);
 };
 
 }  // namespace caffe
