@@ -38,17 +38,18 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // subtract mean
-  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, Dtype(1.),
-      batch_sum_multiplier_.gpu_data(), mean_.gpu_data(), Dtype(0.),
+  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 
+      Dtype(1.), batch_sum_multiplier_.gpu_data(), mean_.gpu_data(), Dtype(0.),
       num_by_chans_.mutable_gpu_data());
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, Dtype(-1.), num_by_chans_.gpu_data(),
-      spatial_sum_multiplier_.gpu_data(), Dtype(1.), top[0]->mutable_gpu_data());
+      spatial_sum_multiplier_.gpu_data(), Dtype(1.), 
+      top[0]->mutable_gpu_data());
 
   if (!use_global_stats_) {
     // compute variance using var(X) = E((X-EX)^2)
-    caffe_gpu_mul(top[0]->count(), top[0]->gpu_data(), top[0]->gpu_data(), 
-                  temp_.mutable_gpu_data()); // (X-EX)^2
+    caffe_gpu_mul(top[0]->count(), top[0]->gpu_data(), top[0]->gpu_data(),
+        temp_.mutable_gpu_data());  // (X-EX)^2
     caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         Dtype(1.) / (num * spatial_dim), temp_.gpu_data(),
         spatial_sum_multiplier_.gpu_data(), Dtype(0.),
@@ -85,7 +86,7 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, 1., num_by_chans_.gpu_data(),
       spatial_sum_multiplier_.gpu_data(), 0., temp_.mutable_gpu_data());
-  caffe_gpu_div(temp_.count(), top[0]->gpu_data(), temp_.gpu_data(), 
+  caffe_gpu_div(temp_.count(), top[0]->gpu_data(), temp_.gpu_data(),
       top[0]->mutable_gpu_data());
   // TODO(cdoersch): The caching is only needed because later in-place layers
   //                 might clobber the data.  Can we skip this if they won't?
