@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef CAFFE_DATA_LAYER_HPP_
 #define CAFFE_DATA_LAYER_HPP_
 
@@ -67,7 +68,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
 
-  DataReader<Datum> reader_;
+  DataReader reader_;
 };
 
 }  // namespace caffe

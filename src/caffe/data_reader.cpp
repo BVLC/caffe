@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <boost/thread.hpp>
 #include <map>
 #include <string>
@@ -41,7 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/common.hpp"
 #include "caffe/data_reader.hpp"
-#include "caffe/layers/annotated_data_layer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -49,21 +49,10 @@ namespace caffe {
 
 using boost::weak_ptr;
 
-// It has to explicitly initialize the map<> in order to work. It seems to be a
-// gcc bug.
-// http://www.cplusplus.com/forum/beginner/31576/
-template <>
-map<const string, weak_ptr<DataReader<Datum>::Body> >
-  DataReader<Datum>::bodies_
-  = map<const string, weak_ptr<DataReader<Datum>::Body> >();
-template <>
-map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >
-  DataReader<AnnotatedDatum>::bodies_
-  = map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >();
+map<const string, weak_ptr<DataReader::Body> > DataReader::bodies_;
 static boost::mutex bodies_mutex_;
 
-template <typename T>
-DataReader<T>::DataReader(const LayerParameter& param)
+DataReader::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
         param.data_param().prefetch() * param.data_param().batch_size())) {
   // Get or create a body
@@ -78,8 +67,7 @@ DataReader<T>::DataReader(const LayerParameter& param)
   body_->new_queue_pairs_.push(queue_pair_);
 }
 
-template <typename T>
-DataReader<T>::~DataReader() {
+DataReader::~DataReader() {
   string key = source_key(body_->param_);
   body_.reset();
   boost::mutex::scoped_lock lock(bodies_mutex_);
@@ -88,42 +76,45 @@ DataReader<T>::~DataReader() {
   }
 }
 
-template <typename T>
-DataReader<T>::QueuePair::QueuePair(int size) {
-  // Initialize the free queue with requested number of data
+//
+
+DataReader::QueuePair::QueuePair(int size) {
+  // Initialize the free queue with requested number of datums
   for (int i = 0; i < size; ++i) {
-    free_.push(new T());
+    free_.push(new string("empty buffer"));
   }
 }
 
-template <typename T>
-DataReader<T>::QueuePair::~QueuePair() {
-  T* t;
-  while (free_.try_pop(&t)) {
-    delete t;
+DataReader::QueuePair::~QueuePair() {
+  string* datum;
+  while (free_.try_pop(&datum)) {
+    delete datum;
   }
-  while (full_.try_pop(&t)) {
-    delete t;
+  while (full_.try_pop(&datum)) {
+    delete datum;
   }
 }
 
-template <typename T>
-DataReader<T>::Body::Body(const LayerParameter& param)
+//
+
+DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
       new_queue_pairs_() {
   StartInternalThread();
 }
 
-template <typename T>
-DataReader<T>::Body::~Body() {
+DataReader::Body::~Body() {
   StopInternalThread();
 }
 
-template <typename T>
-void DataReader<T>::Body::InternalThreadEntry() {
-  shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
-  db->Open(param_.data_param().source(), db::READ);
-  shared_ptr<db::Cursor> cursor(db->NewCursor());
+void DataReader::Body::InternalThreadEntry() {
+  const caffe::DataParameter *data_param = &param_.data_param();
+  CHECK(data_param) << "Failed to obtain data_param";
+
+  shared_ptr<DBWrapper> dbw(data_param->shuffle() ?
+                        static_cast<DBWrapper*>(new DBShuffle(param_)):
+                        static_cast<DBWrapper*>(new DBSequential(param_)));
+
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -133,13 +124,13 @@ void DataReader<T>::Body::InternalThreadEntry() {
     // so read one item, then wait for the next solver.
     for (int i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cursor.get(), qp.get());
+      read_one(dbw.get(), qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
       for (int i = 0; i < solver_count; ++i) {
-        read_one(cursor.get(), qps[i].get());
+        read_one(dbw.get(), qps[i].get());
       }
       // Check no additional readers have been created. This can happen if
       // more than one net is trained at a time per process, whether single
@@ -172,6 +163,10 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
   }
 #else
   string* data = qp->free_.pop();
+  // TODO deserialize in-place instead of copy?
+  *data = dbw->value();
+  qp->full_.push(data);
+
   dbw->Next();
 #endif
 }
@@ -216,7 +211,6 @@ void DataReader::DBShuffle::ShuffleImages() {
 }
 
 void DataReader::DBSequential::Next() {
-  // go to the next iter
   cursor->Next();
   if (!cursor->valid()) {
     DLOG(INFO) << "Restarting data prefetching from start.";
@@ -225,7 +219,7 @@ void DataReader::DBSequential::Next() {
 }
 
 // Instance class
-template class DataReader<Datum>;
-template class DataReader<AnnotatedDatum>;
+//template class DataReader<Datum>;
+//template class DataReader<AnnotatedDatum>;
 
 }  // namespace caffe

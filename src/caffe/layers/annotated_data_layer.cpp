@@ -37,7 +37,8 @@ void AnnotatedDataLayer<Dtype>::DataLayerSetUp(
   label_map_file_ = anno_data_param.label_map_file();
 
   // Read a data point, and use it to initialize the top blob.
-  AnnotatedDatum& anno_datum = *(reader_.full().peek());
+  AnnotatedDatum anno_datum;
+  anno_datum.ParseFromString(*(reader_.full().peek()));
 
   // Use data_transformer to infer the expected blob shape from anno_datum.
   vector<int> top_shape =
@@ -105,7 +106,8 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape according to the first anno_datum of each batch
   // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  AnnotatedDatum& anno_datum = *(reader_.full().peek());
+  AnnotatedDatum anno_datum;
+  anno_datum.ParseFromString(*(reader_.full().peek()));
   // Use data_transformer to infer the expected blob shape from anno_datum.
   vector<int> top_shape =
       this->data_transformer_->InferBlobShape(anno_datum.datum());
@@ -123,18 +125,16 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Store transformed annotation.
   map<int, vector<AnnotationGroup> > all_anno;
   int num_bboxes = 0;
-  
-  //PreclcRandomNumbers precalculated_rand_numbers;
-  //this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
 
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a anno_datum
-    AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
+    //AnnotatedDatum& anno_datum = *(reader_.full().pop("Waiting for data"));
+    string* data = reader_.full().pop("Waiting for data");
+    AnnotatedDatum anno_datum;
+    anno_datum.ParseFromString(*data);
+    reader_.free().push(data);
     read_time += timer.MicroSeconds();
-    
-//    PreclcRandomNumbers precalculated_rand_numbers;
-//    this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
 
     timer.Start();
     AnnotatedDatum sampled_datum;
@@ -192,7 +192,7 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     trans_time += timer.MicroSeconds();
 
-    reader_.free().push(const_cast<AnnotatedDatum*>(&anno_datum));
+    //reader_.free().push(const_cast<AnnotatedDatum*>(&anno_datum));
   }
 
   // Store "rich" annotation if needed.
