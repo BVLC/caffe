@@ -768,14 +768,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
-
-  int crop_h = param_.crop_h();
-  int crop_w = param_.crop_w();
-  if (crop_size) {
-    crop_h = crop_size;
-    crop_w = crop_size;
-  }
-
   cv::Mat cv_resized_image, cv_noised_image, cv_cropped_image;
   if (param_.has_resize_param()) {
     cv_resized_image = ApplyResize(cv_img, param_.resize_param());
@@ -789,24 +781,25 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   }
   int img_height = cv_noised_image.rows;
   int img_width = cv_noised_image.cols;
-  CHECK_GE(img_height, crop_h);
-  CHECK_GE(img_width, crop_w);
+  CHECK_GE(img_height, crop_size);
+  CHECK_GE(img_width, crop_size);
 
   int h_off = 0;
   int w_off = 0;
-  if ((crop_h > 0) && (crop_w > 0)) {
-    CHECK_EQ(crop_h, height);
-    CHECK_EQ(crop_w, width);
+  cv::Mat cv_cropped_img = cv_img;
+  if (crop_size) {
+    CHECK_EQ(crop_size, height);
+    CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = rand_num_(img_height - crop_h + 1);
-      w_off = rand_num_(img_width - crop_w + 1);
+      h_off = rand_num(img_height - crop_size + 1);
+      w_off = rand_num(img_width - crop_size + 1);
     } else {
-      h_off = (img_height - crop_h) / 2;
-      w_off = (img_width - crop_w) / 2;
+      h_off = (img_height - crop_size) / 2;
+      w_off = (img_width - crop_size) / 2;
     }
-    cv::Rect roi(w_off, h_off, crop_w, crop_h);
-    cv_cropped_image = cv_noised_image(roi);
+    cv::Rect roi(w_off, h_off, crop_size, crop_size);
+    cv_cropped_img = cv_img(roi);
   } else {
     cv_cropped_image = cv_noised_image;
   }
@@ -1167,31 +1160,26 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   }
 
   const int crop_size = param_.crop_size();
-  int crop_h = param_.crop_h();
-  int crop_w = param_.crop_w();
-  if (crop_size) {
-    crop_h = crop_size;
-    crop_w = crop_size;
-  }
   const int datum_channels = datum.channels();
   int datum_height = datum.height();
   int datum_width = datum.width();
 
   // Check dimensions.
   CHECK_GT(datum_channels, 0);
+  CHECK_GE(datum_height, crop_size);
+  CHECK_GE(datum_width, crop_size);
+
   if (param_.has_resize_param()) {
     InferNewSize(param_.resize_param(), datum_width, datum_height,
                  &datum_width, &datum_height);
   }
-  CHECK_GE(datum_height, crop_h);
-  CHECK_GE(datum_width, crop_w);
 
   // Build BlobShape.
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = datum_channels;
-  shape[2] = (crop_h)? crop_h: datum_height;
-  shape[3] = (crop_w)? crop_w: datum_width;
+  shape[2] = (crop_size)? crop_size: datum_height;
+  shape[3] = (crop_size)? crop_size: datum_width;
   return shape;
 }
 
@@ -1211,30 +1199,25 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int crop_size = param_.crop_size();
-  int crop_h = param_.crop_h();
-  int crop_w = param_.crop_w();
-  if (crop_size) {
-    crop_h = crop_size;
-    crop_w = crop_size;
-  }
   const int img_channels = cv_img.channels();
   int img_height = cv_img.rows;
   int img_width = cv_img.cols;
   // Check dimensions.
   CHECK_GT(img_channels, 0);
+  CHECK_GE(img_height, crop_size);
+  CHECK_GE(img_width, crop_size);
+
   if (param_.has_resize_param()) {
     InferNewSize(param_.resize_param(), img_width, img_height,
                  &img_width, &img_height);
   }
-  CHECK_GE(img_height, crop_h);
-  CHECK_GE(img_width, crop_w);
 
   // Build BlobShape.
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = img_channels;
-  shape[2] = (crop_h)? crop_h: img_height;
-  shape[3] = (crop_w)? crop_w: img_width;
+  shape[2] = (crop_size)? crop_size: img_height;
+  shape[3] = (crop_size)? crop_size: img_width;
   return shape;
 }
 
@@ -1253,7 +1236,6 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
-  LOG(INFO) << "InitRand";
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
   if (needs_rand) {
