@@ -8,14 +8,12 @@ namespace caffe {
 // strides in the last two dimensions.
 template <typename Dtype>
 __global__ void copy_kernel(const int n, const int height, const int width,
-    const int src_outer_stride, const int src_inner_stride,
-    const int dest_outer_stride, const int dest_inner_stride,
+    const int src_inner_stride,
+    const int dest_inner_stride,
     const Dtype* src, Dtype* dest) {
   CUDA_KERNEL_LOOP(index, n) {
-    int src_start = index / height * src_outer_stride
-                  + index % height * src_inner_stride;
-    int dest_start = index / height * dest_outer_stride
-                   + index % height * dest_inner_stride;
+    int src_start = index * src_inner_stride;
+    int dest_start = index * dest_inner_stride;
     for (int i = 0; i < width; ++i) {
       dest[dest_start + i] = src[src_start + i];
     }
@@ -53,11 +51,7 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
     ind_off[cur_dim] = offsets[cur_dim];
     ind_off[cur_dim+1] = offsets[cur_dim+1];
     // Compute copy strides
-    const int src_outer_stride =
-        bottom[0]->shape(cur_dim)*bottom[0]->shape(cur_dim+1);
     const int src_inner_stride = bottom[0]->shape(cur_dim+1);
-    const int dest_outer_stride =
-        top[0]->shape(cur_dim)*top[0]->shape(cur_dim+1);
     const int dest_inner_stride = top[0]->shape(cur_dim+1);
 
     if (is_forward) {
@@ -68,8 +62,8 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
       // NOLINT_NEXT_LINE(whitespace/operators)
       copy_kernel<<<CAFFE_GET_BLOCKS(lines), CAFFE_CUDA_NUM_THREADS>>>(
           lines, height, width,
-          src_outer_stride, src_inner_stride,
-          dest_outer_stride, dest_inner_stride,
+          src_inner_stride,
+          dest_inner_stride,
           bottom_data, top_data);
 
     } else {
@@ -80,8 +74,8 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
       // NOLINT_NEXT_LINE(whitespace/operators)
       copy_kernel<<<CAFFE_GET_BLOCKS(lines), CAFFE_CUDA_NUM_THREADS>>>(
           lines, height, width,
-          dest_outer_stride, dest_inner_stride,
-          src_outer_stride, src_inner_stride,
+          dest_inner_stride,
+          src_inner_stride,
           top_diff, bottom_diff);
     }
   }
