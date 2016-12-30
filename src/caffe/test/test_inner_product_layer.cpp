@@ -60,9 +60,9 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->channels(), 10);
 }
 
-/** @brief TestSetUp while toggling tranpose flag
+/** @brief TestSetUp while toggling transpose flag
  */
-TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeFalse) {
+TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeFalse) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
   LayerParameter layer_param;
@@ -82,9 +82,9 @@ TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeFalse) {
   EXPECT_EQ(60, layer->blobs()[0]->shape(1));
 }
 
-/** @brief TestSetUp while toggling tranpose flag
+/** @brief TestSetUp while toggling transpose flag
  */
-TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeTrue) {
+TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeTrue) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
   LayerParameter layer_param;
@@ -339,7 +339,7 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
     // copy bottom diffs
     Blob<Dtype>* const bottom_diff = new Blob<Dtype>();
     bottom_diff->CopyFrom(*this->blob_bottom_vec_[0], true, true);
-    // repeat original top with tranposed ip
+    // repeat original top with transposed ip
     this->blob_top_vec_.clear();
     this->blob_top_vec_.push_back(new Blob<Dtype>());
     inner_product_param->set_transpose(true);
