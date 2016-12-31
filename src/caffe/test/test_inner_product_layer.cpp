@@ -56,9 +56,9 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->channels(), 10);
 }
 
-/** @brief TestSetUp while toggling tranpose flag
+/** @brief TestSetUp while toggling transpose flag
  */
-TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeFalse) {
+TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeFalse) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
   LayerParameter layer_param;
@@ -78,9 +78,9 @@ TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeFalse) {
   EXPECT_EQ(60, layer->blobs()[0]->shape(1));
 }
 
-/** @brief TestSetUp while toggling tranpose flag
+/** @brief TestSetUp while toggling transpose flag
  */
-TYPED_TEST(InnerProductLayerTest, TestSetUpTranposeTrue) {
+TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeTrue) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
   LayerParameter layer_param;
@@ -145,7 +145,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const int count = this->blob_top_->count();
+  const int_tp count = this->blob_top_->count();
   Blob<Dtype>* const top = new Blob<Dtype>();
   top->ReshapeLike(*this->blob_top_);
   caffe_cpu_copy(count, this->blob_top_->cpu_data(), top->mutable_cpu_data());
@@ -155,16 +155,16 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
   shared_ptr<InnerProductLayer<Dtype> > ip_t(
       new InnerProductLayer<Dtype>(layer_param));
   ip_t->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  const int count_w = layer->blobs()[0]->count();
+  const int_tp count_w = layer->blobs()[0]->count();
   EXPECT_EQ(count_w, ip_t->blobs()[0]->count());
   // manually copy and transpose the weights from 1st IP layer into 2nd
   const Dtype* w = layer->blobs()[0]->cpu_data();
   Dtype* w_t = ip_t->blobs()[0]->mutable_cpu_data();
-  const int width = layer->blobs()[0]->shape(1);
-  const int width_t = ip_t->blobs()[0]->shape(1);
-  for (int i = 0; i < count_w; ++i) {
-    int r = i / width;
-    int c = i % width;
+  const int_tp width = layer->blobs()[0]->shape(1);
+  const int_tp width_t = ip_t->blobs()[0]->shape(1);
+  for (int_tp i = 0; i < count_w; ++i) {
+    int_tp r = i / width;
+    int_tp c = i % width;
     w_t[c*width_t+r] = w[r*width+c];  // copy while transposing
   }
   // copy bias from 1st IP layer to 2nd IP layer
@@ -181,7 +181,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
     top_t->mutable_cpu_data());
   const Dtype* data = top->cpu_data();
   const Dtype* data_t = top_t->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_FLOAT_EQ(data[i], data_t[i]);
   }
 }
@@ -284,7 +284,7 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
   // copy bottom diffs
   Blob<Dtype>* const bottom_diff = new Blob<Dtype>();
   bottom_diff->CopyFrom(*this->blob_bottom_vec_[0], true, true);
-  // repeat original top with tranposed ip
+  // repeat original top with transposed ip
   this->blob_top_vec_.clear();
   this->blob_top_vec_.push_back(new Blob<Dtype>());
   inner_product_param->set_transpose(true);
@@ -295,11 +295,11 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
   {
     const Dtype* w_src = w->cpu_data();
     Dtype* w_t = ip_t->blobs()[0]->mutable_cpu_data();
-    const int width = layer->blobs()[0]->shape(1);
-    const int width_t = ip_t->blobs()[0]->shape(1);
-    for (int i = 0; i < layer->blobs()[0]->count(); ++i) {
-      int r = i / width;
-      int c = i % width;
+    const int_tp width = layer->blobs()[0]->shape(1);
+    const int_tp width_t = ip_t->blobs()[0]->shape(1);
+    for (int_tp i = 0; i < layer->blobs()[0]->count(); ++i) {
+      int_tp r = i / width;
+      int_tp c = i % width;
       w_t[c*width_t+r] = w_src[r*width+c];  // copy while transposing
     }
     // copy bias from 1st IP layer to 2nd IP layer
@@ -314,17 +314,17 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
   ip_t->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
   const Dtype* data = w->cpu_diff();
   const Dtype* data_t = ip_t->blobs()[0]->cpu_diff();
-  const int WIDTH = layer->blobs()[0]->shape(1);
-  const int WIDTH_T = ip_t->blobs()[0]->shape(1);
-  for (int i = 0; i < layer->blobs()[0]->count(); ++i) {
-    int r = i / WIDTH;
-    int c = i % WIDTH;
+  const int_tp WIDTH = layer->blobs()[0]->shape(1);
+  const int_tp WIDTH_T = ip_t->blobs()[0]->shape(1);
+  for (int_tp i = 0; i < layer->blobs()[0]->count(); ++i) {
+    int_tp r = i / WIDTH;
+    int_tp c = i % WIDTH;
     EXPECT_NE(Dtype(0.), data[r*WIDTH+c]);
     EXPECT_FLOAT_EQ(data[r*WIDTH+c], data_t[c*WIDTH_T+r]);
   }
   data = bottom_diff->cpu_diff();
   data_t = this->blob_bottom_vec_[0]->cpu_diff();
-  for (int i = 0; i < this->blob_bottom_vec_[0]->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_vec_[0]->count(); ++i) {
     EXPECT_NE(Dtype(0.), data[i]);
     EXPECT_FLOAT_EQ(data[i], data_t[i]);
   }
