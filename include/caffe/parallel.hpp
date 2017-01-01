@@ -96,7 +96,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   void Run(const vector<int>& gpus);
   void Prepare(const vector<int>& gpus,
                vector<shared_ptr<P2PSync<Dtype> > >* syncs);
-  inline const int initial_iter() const { return initial_iter_; }
+  inline int initial_iter() const { return initial_iter_; }
 
  protected:
   void on_start();

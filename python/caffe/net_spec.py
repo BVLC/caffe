@@ -93,6 +93,9 @@ class Top(object):
 
         return to_proto(self)
 
+    def _update(self, params):
+        self.fn._update(params)
+
     def _to_proto(self, layers, names, autonames):
         return self.fn._to_proto(layers, names, autonames)
 
@@ -127,6 +130,9 @@ class Function(object):
             autonames[top.fn.type_name] += 1
             names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
         return names[top]
+
+    def _update(self, params):
+        self.params.update(params)
 
     def _to_proto(self, layers, names, autonames):
         if self in layers:
@@ -180,6 +186,20 @@ class NetSpec(object):
 
     def __getitem__(self, item):
         return self.__getattr__(item)
+
+    def __delitem__(self, name):
+        del self.tops[name]
+
+    def keys(self):
+        keys = [k for k, v in six.iteritems(self.tops)]
+        return keys
+
+    def vals(self):
+        vals = [v for k, v in six.iteritems(self.tops)]
+        return vals
+
+    def update(self, name, params):
+        self.tops[name]._update(params)
 
     def to_proto(self):
         names = {v: k for k, v in six.iteritems(self.tops)}

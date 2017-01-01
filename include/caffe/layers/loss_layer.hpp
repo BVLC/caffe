@@ -29,6 +29,16 @@ class LossLayer : public Layer<Dtype> {
   virtual void Reshape(
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
+  /**
+   * Read the normalization mode parameter and compute the normalizer based
+   * on the blob size. If normalization_mode is VALID, the count of valid
+   * outputs will be read from valid_count, unless it is -1 in which case
+   * all outputs are assumed to be valid.
+   */
+  Dtype GetNormalizer(
+      const LossParameter_NormalizationMode normalization_mode,
+      const int outer_num, const int inner_num, const int valid_count);
+
   virtual inline int ExactNumBottomBlobs() const { return 2; }
 
   /**
