@@ -170,7 +170,7 @@ class Blob {
     int offset = 0;
     for (int i = 0; i < num_axes(); ++i) {
       offset *= shape(i);
-      if (indices.size() > i) {
+      if (static_cast<int>(indices.size()) > i) {
         CHECK_GE(indices[i], 0);
         CHECK_LT(indices[i], shape(i));
         offset += indices[i];
