@@ -275,16 +275,37 @@ class Net {
 
   /**
   * @brief This is rule that analyze layer if it is of type Scale and if that is the case
-  *        and previous layer which serves as inoput layer to Scale Layer is MKLBatchNorm
+  *        and previous layer which serves as input layer to Scale Layer is MKLBatchNorm
   *        then scale layer can be dropped
   */
   // TODO: Make it decent C++ anonymous function etc.
   static void CompilationRuleOne(const NetParameter& param,
                                  NetParameter* param_compiled);
+  
+  /**
+  * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
+  *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNConvolution
+  *        then MKLDNNReLU layer can be dropped
+  */
 
-  static const LayerParameter& GetBlobConsumer(const string& blob_name_to_find,
-                                               const NetParameter& param,
-                                               int layer_id);
+
+  static void CompilationRuleTwo(const NetParameter& param,
+                                 NetParameter* param_compiled);
+
+  /**
+  * @brief This is rule analyze if layer is of type MKLBatchNorm
+  *        and is to perform in place computation 
+  *        if positive then make it doing out-ofplace computation
+  */
+ static void CompilationRuleThree(const NetParameter& param,
+                             NetParameter* param_compiled);
+
+
+
+  static void GetBlobConsumers(std::vector<const LayerParameter*> &consumer_blobs,
+                                                const string& blob_name_to_find,
+                                                const NetParameter& param,
+                                                int layer_id);
 
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,

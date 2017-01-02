@@ -81,6 +81,34 @@ void MKLSplitLayer<Dtype>::Init(
 
   // Primitive will be created at first time it is to be used
   dnnDelete<Dtype>(sumPrimitive);
+
+#ifdef USE_MLSL
+
+  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+  ComputeOpRegInfo *myRegInfo;
+  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BCAST);
+  myRegInfo->SetName(this->layer_param_.name().c_str());
+  for(int i=0; i<bottom.size(); i++)
+  {
+      int ic = bottom[i]->channels();
+      int iw = bottom[i]->width();
+      int ih = bottom[i]->height();
+      myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  }
+  for(int i=0; i<top.size(); i++)
+  {
+      int oc = bottom[0]->channels();
+      int ow = bottom[0]->width();
+      int oh = bottom[0]->height();
+      myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  }
+
+  myRegInfo->Validate();
+  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+  delete myRegInfo;
+
+#endif
+
 }
 
 template <typename Dtype>
@@ -220,7 +248,7 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_split");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
 
   CHECK_EQ(e, E_SUCCESS);
 }

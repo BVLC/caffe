@@ -61,7 +61,11 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
+#ifdef DISTR_WEIGHT_UPDATE
+       : data_(), diff_(), count_(0), capacity_(0), owned_count_(0), owned_offset_(0) {}
+#else
        : data_(), diff_(), count_(0), capacity_(0) {}
+#endif
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -110,6 +114,26 @@ class Blob {
   }
   inline int num_axes() const { return shape_.size(); }
   inline int count() const { return count_; }
+
+#ifdef DISTR_WEIGHT_UPDATE
+
+  inline void set_owned_count(int owned_count) {
+    owned_count_ = owned_count;
+  }
+
+  inline void set_owned_offset(int owned_offset) {
+    owned_offset_ = owned_offset;
+  }
+
+  inline int owned_count() const {
+    return owned_count_;
+  }
+
+  inline int owned_offset() const {
+    return owned_offset_;
+  }
+
+#endif /* DISTR_WEIGHT_UPDATE */
 
   /**
    * @brief Compute the volume of a slice; i.e., the product of dimensions
@@ -255,6 +279,8 @@ class Blob {
 
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
+  void set_cpu_diff(Dtype* diff);
+
 #ifndef CPU_ONLY
   const int* gpu_shape() const;
 #endif
@@ -332,6 +358,12 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
+
+#ifdef DISTR_WEIGHT_UPDATE
+  /* for distributed weight update */
+  int owned_count_;
+  int owned_offset_;
+#endif
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

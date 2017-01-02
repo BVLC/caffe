@@ -111,14 +111,23 @@ template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width)
   // capacity_ must be initialized before calling Reshape
+#ifdef DISTR_WEIGHT_UPDATE
+  : capacity_(0), owned_count_(0), owned_offset_(0) {
+#else
   : capacity_(0) {
+#endif
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
+#ifdef DISTR_WEIGHT_UPDATE
+  : capacity_(0), owned_count_(0), owned_offset_(0) {
+#else
   : capacity_(0) {
+#endif
+
   Reshape(shape);
 }
 
@@ -140,6 +149,12 @@ template <typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   data_->set_cpu_data(data);
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_cpu_diff(Dtype* diff) {
+  CHECK(diff);
+  diff_->set_cpu_data(diff);
 }
 
 template <typename Dtype>
@@ -304,6 +319,9 @@ template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) { return 0; }
   switch (data_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
+    return caffe_cpu_asum( prv_data_count(), prv_data());
   case SyncedMemory::HEAD_AT_CPU:
     return caffe_cpu_asum(count_, cpu_data());
   case SyncedMemory::HEAD_AT_GPU:

@@ -38,29 +38,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PerformanceH
 
 #ifdef PERFORMANCE_MONITORING
-#define PERFORMANCE_MEASUREMENT_BEGIN()              \
-    performance::Measurement m_MACRO;                \
-    m_MACRO.Start();
+#define PERFORMANCE_MEASUREMENT_BEGIN()            \
+  performance::Measurement m_MACRO;                \
+  m_MACRO.Start();
 
-#define PERFORMANCE_MEASUREMENT_END(name)                          \
-    m_MACRO.Stop();                                                \
-    const char* n_MACRO = name;                                    \
-    int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
-    performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
+#define PERFORMANCE_MEASUREMENT_END(name)                        \
+  m_MACRO.Stop();                                                \
+  const char* n_MACRO = name;                                    \
+  int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+  performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
-#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                          \
-    m_MACRO.Stop();                                                       \
-    static const char* n_MACRO = name;                                    \
-    static int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
-    performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                        \
+  m_MACRO.Stop();                                                       \
+  static const char* n_MACRO = name;                                    \
+  static int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+  performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
 #define PERFORMANCE_CREATE_MONITOR() \
-    namespace performance {          \
-    Monitor monitor; };              \
+  namespace performance {            \
+  Monitor monitor; };
 
-#define PERFORMANCE_INIT_MONITOR()              \
-    performance::monitor.EnableMeasurements();  \
-    performance::monitor.MarkAsInitialized();
+#define PERFORMANCE_INIT_MONITOR()           \
+  performance::monitor.EnableMeasurements(); \
+  performance::monitor.MarkAsInitialized();
+
+#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)             \
+  (std::string(prefix) + "_mkl_" + this->layer_param_.name() \
+    + std::string(suffix)).c_str();
+
+#define PERFORMANCE_MKL_NAME(prefix) \
+  (std::string(prefix) + "_mkl_" + this->layer_param_.name()).c_str();
 
 #else
 #define PERFORMANCE_MEASUREMENT_BEGIN()
@@ -68,6 +75,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_MEASUREMENT_END_STATIC(name)
 #define PERFORMANCE_CREATE_MONITOR()
 #define PERFORMANCE_INIT_MONITOR()
+#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)
+#define PERFORMANCE_MKL_NAME(prefix)
 #endif
 
 #ifdef PERFORMANCE_MONITORING
@@ -129,35 +138,73 @@ namespace performance {
     }
 
     static PreciseTime GetProcessTime() {
-      return GetTimeStamp(CLOCK_PROCESS_CPUTIME_ID);
+      return GetTimeStamp(CLOCK_THREAD_CPUTIME_ID);
     }
   };
 
   class Measurement {
+    PreciseTime process_accumulator_;
     PreciseTime process_time_stamp_;
+    PreciseTime monotonic_accumulator_;
     PreciseTime monotonic_time_stamp_;
+    Measurement* next_;
+
+    static Measurement*& GetStack() {
+      static Measurement* stack = NULL;
+      return stack;
+    }
+
+    void Suspend() {
+      process_accumulator_ = PreciseTime::GetProcessTime()
+        - process_time_stamp_;
+      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
+        - monotonic_time_stamp_;
+    }
+
+    void Resume() {
+      monotonic_time_stamp_ = PreciseTime::GetMonotonicTime();
+      process_time_stamp_ = PreciseTime::GetProcessTime();
+    }
 
    public:
     Measurement() {
     }
 
     void Start() {
+      static Measurement*& stack = GetStack();
+
+      if (stack)
+          stack->Suspend();
+
+      next_ = stack;
+      stack = this;
+
+      monotonic_accumulator_ = 0;
+      process_accumulator_ = 0;
       monotonic_time_stamp_ = PreciseTime::GetMonotonicTime();
       process_time_stamp_ = PreciseTime::GetProcessTime();
     }
 
     void Stop() {
-      process_time_stamp_ = PreciseTime::GetProcessTime() - process_time_stamp_;
-      monotonic_time_stamp_ = PreciseTime::GetMonotonicTime() -
-        monotonic_time_stamp_;
+      process_accumulator_ = PreciseTime::GetProcessTime()
+        - process_time_stamp_;
+      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
+        - monotonic_time_stamp_;
+
+      static Measurement*& stack = GetStack();
+
+      stack = next_;
+
+      if (stack)
+          stack->Resume();
     }
 
     const PreciseTime &GetProcessTimeStamp() const {
-      return process_time_stamp_;
+      return process_accumulator_;
     }
 
     const PreciseTime &GetMonotonicTimeStamp() const {
-      return monotonic_time_stamp_;
+      return monotonic_accumulator_;
     }
   };
 
@@ -248,24 +295,25 @@ namespace performance {
     }
 
     static void WriteHeaders() {
-      printf("\n%32s %13s %13s %18s %20s %21s %11s\n\n",
-        "Avg(proc)", "Min(proc)", "Max(proc)",
-        "Avg(total)", "Min(total)", "Max(total)", "Calls");
+      printf("\n %30s %20s %18s %18s %18s %18s %18s %18s\n\n",
+        "Layer", "Calls",
+        "Avg(total)", "Min(total)", "Max(total)",
+        "Avg(proc)", "Min(proc)", "Max(proc)");
     }
 
     static void Write(const char *string, const PreciseTime &time) {
-      printf("%16s : %lu [nsec]\n", string, (uint64_t)time);
+      printf("%31s : %lu [nsec]\n", string, (uint64_t)time);
     }
 
     static void Write(const char *string, const Event &event) {
-      printf("%16s : %12lu, %12lu, %12lu, %16lu, %20lu, %20lu, %12lu\n", string,
-          (uint64_t)event.GetAverageProcessTime(),
-          (uint64_t)event.GetMinimalProcessTime(),
-          (uint64_t)event.GetMaximalProcessTime(),
+      printf("%31s : %18lu %18lu %18lu %18lu %18lu %18lu %18lu\n", string,
+          (uint64_t)event.GetNumberOfCalls(),
           (uint64_t)event.GetAverageMonotonicTime(),
           (uint64_t)event.GetMinimalMonotonicTime(),
           (uint64_t)event.GetMaximalMonotonicTime(),
-          (uint64_t)event.GetNumberOfCalls());
+          (uint64_t)event.GetAverageProcessTime(),
+          (uint64_t)event.GetMinimalProcessTime(),
+          (uint64_t)event.GetMaximalProcessTime());
     }
   };
 

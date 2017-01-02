@@ -76,6 +76,11 @@ class BaseDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
+#ifdef USE_MLSL
+  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+#endif /* USE_MLSL */
+
  protected:
   TransformationParameter transform_param_;
   shared_ptr<DataTransformer<Dtype> > data_transformer_;

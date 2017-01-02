@@ -157,7 +157,7 @@ message MultiPhaseSolverParameter {
 }
 
 message SolverBatchSizePair {
-  required SolverParameter solver_params = 1;
+  optional SolverParameter solver_params = 1;
   optional uint32 batch_size = 2;
 }
 
@@ -706,6 +706,8 @@ message ConvolutionParameter {
   // implementation; for input blobs with num_axes != 2, this option is
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
+  optional bool relu = 19 [default = false];
+  optional float negative_slope = 20 [default = 0];
 }
 
 message CropParameter {

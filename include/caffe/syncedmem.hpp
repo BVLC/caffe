@@ -45,6 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   #include <mkl_service.h>
 #endif
 
+#ifdef USE_MLSL
+#include "mlsl.h"
+#endif /* USE_MLSL */
+
 #include "boost/thread/mutex.hpp"
 #include "caffe/common.hpp"
 
@@ -63,11 +67,19 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
+
+#ifdef USE_MLSL
+  *ptr = MLSL::Alloc(size ? size : 1, 64);
+#else /* !USE_MLSL */
+
 #ifdef USE_MKL
   *ptr = mkl_malloc(size ? size : 1, 64);
 #else
   *ptr = malloc(size);
 #endif
+
+#endif /* USE_MLSL */
+
   *use_cuda = false;
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
@@ -79,15 +91,24 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
+
+#ifdef USE_MLSL
+  MLSL::Free(ptr);
+#else /* !USE_MLSL */
+
 #ifdef USE_MKL
   mkl_free(ptr);
 #else
   free(ptr);
 #endif
+
+#endif /* USE_MLSL */
+
 }
 
 // Base class
 struct PrvMemDescr {
+  virtual ~PrvMemDescr() {}
   virtual void convert_from_prv(void* cpu_ptr) = 0;
   virtual void convert_to_prv(void* cpu_ptr) = 0;
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other) = 0;

@@ -21,7 +21,7 @@ class EngineParser {
     validateEngine();
   }
 
-  const bool isEngine(const char* name) const {
+  bool isEngine(const char* name) const {
     return (engineName == name);
   }
 
