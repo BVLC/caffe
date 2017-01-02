@@ -336,6 +336,7 @@ void DataTransformer<Dtype>::CropImage(const Datum& datum,
     } else {
       cv_img = DecodeDatumToCVMatNative(datum);
     }
+    
     // Crop the image.
     cv::Mat crop_img;
     CropImage(cv_img, bbox, &crop_img);
@@ -435,7 +436,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int img_channels = cv_img.channels();
   int img_height = cv_img.rows;
   int img_width = cv_img.cols;
-
+  
   // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
@@ -469,7 +470,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_GT(img_channels, 0);
 
   Dtype* mean = NULL;
-  if (has_mean_file) {
+  if (has_mean_file) { // XXX beniz: doesn't work with bbox since the image is already cropped according to bbox, use mean values instead
     CHECK_EQ(img_channels, data_mean_.channels());
     CHECK_EQ(img_height, data_mean_.height());
     CHECK_EQ(img_width, data_mean_.width());

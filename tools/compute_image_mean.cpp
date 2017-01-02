@@ -20,6 +20,7 @@ using boost::scoped_ptr;
 
 DEFINE_string(backend, "lmdb",
         "The backend {leveldb, lmdb} containing the images");
+DEFINE_bool(annotated, false, "whether parsing AnnotatedDatum");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -49,14 +50,22 @@ int main(int argc, char** argv) {
   int count = 0;
   // load first datum
   Datum datum;
-  datum.ParseFromString(cursor->value());
-
+  if (!FLAGS_annotated)
+    datum.ParseFromString(cursor->value());
+  else
+    {
+      AnnotatedDatum adatum;
+      adatum.ParseFromString(cursor->value());
+      datum = adatum.datum();
+    }
+  
   if (DecodeDatumNative(&datum)) {
     LOG(INFO) << "Decoding Datum";
   }
 
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());
+  std::cerr << "datum width=" << datum.width() << " / datum height=" << datum.height() << std::endl;
   sum_blob.set_height(datum.height());
   sum_blob.set_width(datum.width());
   const int data_size = datum.channels() * datum.height() * datum.width();
@@ -68,7 +77,14 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Starting Iteration";
   while (cursor->valid()) {
     Datum datum;
-    datum.ParseFromString(cursor->value());
+    if (!FLAGS_annotated)
+      datum.ParseFromString(cursor->value());
+    else
+      {
+	AnnotatedDatum adatum;
+	adatum.ParseFromString(cursor->value());
+	datum = adatum.datum();
+      }
     DecodeDatumNative(&datum);
 
     const std::string& data = datum.data();
