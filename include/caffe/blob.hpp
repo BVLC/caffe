@@ -55,7 +55,7 @@ class Blob {
   virtual void ReshapeLike(const Blob& other);
   inline string shape_string() const {
     ostringstream stream;
-    for (int i = 0; i < shape_.size(); ++i) {
+    for (size_t i = 0; i < shape_.size(); ++i) {
       stream << shape_[i] << " ";
     }
     stream << "(" << count_ << ")";
