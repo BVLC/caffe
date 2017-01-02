@@ -281,7 +281,7 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
 
   PERFORMANCE_MEASUREMENT_BEGIN()
   e = dnnExecute<Dtype>(concatFwd_, concat_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_concat")
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"))
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -314,7 +314,7 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_concat");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
 
   CHECK_EQ(e, E_SUCCESS);
 }

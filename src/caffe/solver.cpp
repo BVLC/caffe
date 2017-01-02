@@ -99,7 +99,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     << std::endl << param.DebugString();
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
-#ifndef USE_MPI
+#if !defined(USE_MPI) && !defined(USE_MLSL)
   CheckSnapshotWritePermissions();
 #endif
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
@@ -349,14 +349,16 @@ void Solver<Dtype>::Step(int iters) {
       callbacks_[i]->on_gradients_ready();
     }
     if (!param().disabled_update()) {
+      PERFORMANCE_MEASUREMENT_BEGIN();
       ApplyUpdate();
+      PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
     }
 
     iter_time += iter_timer.MilliSeconds();
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
-    if (caffe::internode::mpi_get_current_proc_rank() == 0)
-        LOG(DEBUG) << "iter " << iter_ << ", forward_backward_update_time: " << iter_time << " ms";
+    if (MLSL::GetNodeId() == 0)
+        LOG(INFO) << "iter " << iter_ << ", forward_backward_update_time: " << iter_time << " ms";
 #endif
     
     // Increment the internal iter_ counter -- its value should always indicate
@@ -434,6 +436,11 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
 #ifdef USE_MPI
     if (caffe::internode::mpi_get_current_proc_rank())
         return;
+#endif
+
+#ifdef USE_MLSL
+    if (MLSL::GetNodeId())
+       return;
 #endif
 
     LOG(WARNING) << std::endl;
@@ -529,7 +536,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 #endif
   }
 
-#ifndef USE_MPI  // in multinode last test must be done after weights update
+#if !defined(USE_MPI) && !defined(USE_MLSL) // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();
 #endif
