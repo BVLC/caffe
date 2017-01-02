@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     if (anno_type == "classification") {
       label = boost::get<int>(lines[line_id].second);
       status = ReadImageToDatum(filename, label, resize_height, resize_width,
-          min_dim, max_dim, is_color, enc, datum);
+          is_color, enc, datum);
     } else if (anno_type == "detection") {
       labelname = root_folder + boost::get<std::string>(lines[line_id].second);
       status = ReadRichImageToAnnotatedDatum(filename, labelname, resize_height,
