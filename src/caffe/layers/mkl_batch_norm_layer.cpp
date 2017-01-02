@@ -351,7 +351,7 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormFwd, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -391,7 +391,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwdData, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
 
   CHECK_EQ(e, E_SUCCESS);
 
@@ -405,7 +405,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
 
     PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(batchNormBwdScaleShift, BatchNormBwdScaleShift_res);
-    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME_SFX("BW", "_scale_shift"));
 
     CHECK_EQ(e, E_SUCCESS);
     // Store ScaleShift blobs

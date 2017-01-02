@@ -349,7 +349,9 @@ void Solver<Dtype>::Step(int iters) {
       callbacks_[i]->on_gradients_ready();
     }
     if (!param().disabled_update()) {
+      PERFORMANCE_MEASUREMENT_BEGIN();
       ApplyUpdate();
+      PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
     }
 
     iter_time += iter_timer.MilliSeconds();
