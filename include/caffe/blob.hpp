@@ -166,7 +166,7 @@ class Blob {
   }
 
   virtual inline int offset(const vector<int>& indices) const {
-    CHECK_LE(indices.size(), num_axes());
+    CHECK_LE(static_cast<int>(indices.size()), num_axes());
     int offset = 0;
     for (int i = 0; i < num_axes(); ++i) {
       offset *= shape(i);
