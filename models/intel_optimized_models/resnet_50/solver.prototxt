@@ -1,4 +1,4 @@
-net: "models/BKMs_models/resnet_50/train_val.prototxt"
+net: "models/intel_optimized_models/resnet_50/train_val.prototxt"
 test_iter: 100
 test_interval: 10000
 test_initialization: false
@@ -12,5 +12,5 @@ max_iter: 600000
 momentum: 0.9
 weight_decay: 0.0001
 snapshot: 40000
-snapshot_prefix: "models/BKMs_models/resnet_50/resnet_50"
+snapshot_prefix: "models/intel_optimized_models/resnet_50/resnet_50"
 solver_mode: CPU

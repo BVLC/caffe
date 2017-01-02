@@ -214,13 +214,13 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Change log
-21-12-2016
+05-01-2017
 * integration with MKL2017 update2 (providing better performance solution)
-* new engine selection functionality
+* new multinode solution with better scaling on higher number of nodes (32+): [wiki instructions](https://github.com/intel/caffe/wiki/Multinode-guide)
+* new engine selection functionality: [wiki instructions](https://github.com/intel/caffe/blob/master/docs/tutorial/interfaces.md) 
 * new multiphase training functionality 
 * fixed problems with batch normalization
 * new BKM (Best Know Method) and examples for achieving best performance
-* new multinode implementation with better scaling on higher number of nodes (32+)
 * other minor performance and functional improvements
 
 03-11-2016
@@ -250,9 +250,6 @@ Workaround: We recommend to always use compressed LMDB Data Layer
 
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
-
-* AlexNet top accuracy on Xeon Phi machines is 1% lower than expected result. This is caused by low precision of current implementation - we plan to fix this with new release. 
-Workaround: use GEMM engine for Xeon Phi machines (lower performance, better accuracy) 
 
 # Recommendations to achieve best performance
 
@@ -292,7 +289,7 @@ or edit commands and provide other optimized topologies.
 
 ##	How to train multinode
 
-Tutorials and training instructions are available at: [https://github.com/intel/caffe/wiki/Multinode---How-to-...%3F](https://github.com/intel/caffe/wiki/Multinode---How-to-...%3F)
+Tutorials and training instructions are available at: [https://github.com/intel/caffe/wiki/Multinode-guide](https://github.com/intel/caffe/wiki/Multinode-guide)
 
 ##	How to contribute 
 
