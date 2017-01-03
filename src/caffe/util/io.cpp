@@ -116,9 +116,8 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 }
 
 #ifdef USE_OPENCV
-cv::Mat ReadImageToCVMat(const string& filename, const int height,
-    const int width, const int min_dim, const int max_dim,
-    const bool is_color) {
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color) {
   cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
@@ -127,41 +126,12 @@ cv::Mat ReadImageToCVMat(const string& filename, const int height,
     LOG(ERROR) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
-  if (min_dim > 0 || max_dim > 0) {
-    int num_rows = cv_img_origin.rows;
-    int num_cols = cv_img_origin.cols;
-    int min_num = std::min(num_rows, num_cols);
-    int max_num = std::max(num_rows, num_cols);
-    float scale_factor = 1;
-    if (min_dim > 0 && min_num < min_dim) {
-      scale_factor = static_cast<float>(min_dim) / min_num;
-    }
-    if (max_dim > 0 && static_cast<int>(scale_factor * max_num) > max_dim) {
-      // Make sure the maximum dimension is less than max_dim.
-      scale_factor = static_cast<float>(max_dim) / max_num;
-    }
-    if (scale_factor == 1) {
-      cv_img = cv_img_origin;
-    } else {
-      cv::resize(cv_img_origin, cv_img, cv::Size(0, 0),
-                 scale_factor, scale_factor);
-    }
-  } else if (height > 0 && width > 0) {
+  if (height > 0 && width > 0) {
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
   } else {
     cv_img = cv_img_origin;
   }
   return cv_img;
-}
-
-cv::Mat ReadImageToCVMat(const string& filename, const int height,
-    const int width, const int min_dim, const int max_dim) {
-  return ReadImageToCVMat(filename, height, width, min_dim, max_dim, true);
-}
-
-cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width, const bool is_color) {
-  return ReadImageToCVMat(filename, height, width, 0, 0, is_color);
 }
 
 cv::Mat ReadImageToCVMat(const string& filename,
