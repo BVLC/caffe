@@ -218,8 +218,6 @@ void DataReader::DBSequential::Next() {
   }
 }
 
-// Instance class
-//template class DataReader<Datum>;
-//template class DataReader<AnnotatedDatum>;
+
 
 }  // namespace caffe

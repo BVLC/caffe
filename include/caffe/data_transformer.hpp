@@ -34,13 +34,12 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <queue>
 #include <vector>
-
-#include "google/protobuf/repeated_field.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -53,7 +52,7 @@ using google::protobuf::RepeatedPtrField;
 
 namespace caffe {
 
-//class DataReader;
+class DataReader;
 
 class RandNumbers {
  public:
@@ -174,24 +173,10 @@ class DataTransformer {
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  RepeatedPtrField<AnnotationGroup>* transformed_anno_vec);
-  /*
-  void Transform(const AnnotatedDatum& anno_datum,
-                 Blob<Dtype>* transformed_blob,
-                 RepeatedPtrField<AnnotationGroup>* transformed_anno_vec,
-                 bool* do_mirror,
-                 RandNumbers& rand_num);
-  */
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  vector<AnnotationGroup>* transformed_anno_vec);
   
-  /*
-  void Transform(const AnnotatedDatum& anno_datum,
-                 Blob<Dtype>* transformed_blob,
-                 vector<AnnotationGroup>* transformed_anno_vec) {
-    Transform(anno_datum, transformed_blob, transformed_anno_vec, rand_num_);
-  }
-  */
   /**
    * @brief Transform the annotation according to the transformation applied
    * to the datum.
@@ -369,7 +354,7 @@ class DataTransformer {
   vector<Dtype> mean_values_;
 
   // Data reader used if any to get data
-  //DataReader* data_reader_used;
+  DataReader* data_reader_used;
 
 
  private:

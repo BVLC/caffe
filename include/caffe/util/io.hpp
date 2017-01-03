@@ -34,13 +34,13 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
 #include <boost/filesystem.hpp>
 #include <iomanip>
 #include <iostream>  // NOLINT(readability/streams)
-#include <map>
 #include <string>
 
 #include "google/protobuf/message.h"

@@ -34,6 +34,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
@@ -41,19 +42,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+#include "caffe/data_reader.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/bbox_util.hpp"
 #include "caffe/util/im_transforms.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
+
 
 namespace caffe {
 
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
-    : param_(param), phase_(phase) {
+    : param_(param), phase_(phase), data_reader_used(NULL) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -83,8 +84,8 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
   }
 }
 
-template<typename Dtype>
 
+template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                          Dtype* transformed_data, 
                          NormalizedBBox* crop_bbox, RandNumbers& rand_num) {
@@ -138,8 +139,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
   }
 }
-
-
 
 template<typename Dtype>
 template<bool has_uint8, bool do_mirror, bool has_mean_file,
@@ -239,8 +238,6 @@ template<typename Dtype>
 void DataTransformer<Dtype>::GenerateRandNumbers(PreclcRandomNumbers& rn) {
   int count = (param_.mirror()? 1:0) +
                   ((phase_ == TRAIN && param_.crop_size())? 2 : 0);
-  LOG(INFO) << "Mirror " << param_.mirror();
-  LOG(INFO) << "count " << count;
   rn.FillRandomNumbers(count, rand_num_);
 }
 
@@ -733,8 +730,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         Blob<Dtype>* transformed_blob, NormalizedBBox* crop_bbox, RandNumbers& rand_num) {
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
-  //const int img_height = cv_img.rows;
-  //const int img_width = cv_img.cols;
 
   // Check dimensions.
   const int channels = transformed_blob->channels();
@@ -743,8 +738,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int num = transformed_blob->num();
 
   CHECK_EQ(channels, img_channels);
-  //CHECK_LE(height, img_height);
-  //CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
@@ -752,14 +745,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const Dtype scale = param_.scale();
 
   CHECK_GT(img_channels, 0);
-  //CHECK_GE(img_height, crop_size);
-  //CHECK_GE(img_width, crop_size);
 
   Dtype* mean = NULL;
   if (has_mean_file) {
     CHECK_EQ(img_channels, data_mean_.channels());
-    //CHECK_EQ(img_height, data_mean_.height());
-    //CHECK_EQ(img_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
