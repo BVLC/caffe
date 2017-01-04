@@ -565,16 +565,15 @@ RegisterBrewFunction(time);
 typedef float real_t;
 
 void getFileName(char *file_name, bool is_tar, const char *name, int id) {
-  const char *prefix = is_tar ? "TAR" : "REF";
-  snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
+  snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin",
+    is_tar ? "TAR" : "REF", name, id);
 }
 
 void getBinFilePath(char *file_path, const char *name) {
   snprintf(file_path, FILENAME_MAX, "%s/%s", FLAGS_collect_dir.c_str(), name);
 }
 
-bool saveToFile(const char *file_path, int id,
-    const real_t *data, unsigned count) {
+bool saveToFile(const char *file_path, const real_t *data, unsigned count) {
   FILE *file = fopen(file_path, "w+b");
   if (!file) {
     LOG(ERROR) << "Failed to create file '" << file_path << "'.";
@@ -593,8 +592,7 @@ bool saveToFile(const char *file_path, int id,
   return true;
 }
 
-bool loadFromFile(const char *file_path, int id,
-    real_t *data, unsigned count) {
+bool loadFromFile(const char *file_path, real_t *data, unsigned count) {
   FILE *file = fopen(file_path, "rb");
   if (!file) {
     LOG(ERROR) << "Failed to open file '" << file_path << "' for read.";
@@ -647,7 +645,9 @@ int collect() {
     }
   }
 
-  FILE *infoFile = fopen(use_gpu ? (FLAGS_collect_dir + "/"+ "GPUInfo.txt").c_str() : (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
+  FILE *infoFile = fopen(use_gpu ?
+   (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
+   (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Collect procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -661,7 +661,7 @@ int collect() {
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
     char file_name[FILENAME_MAX];
     getFileName(file_name, false, "Fwrd", i);
-    saveToFile((dir.string() + "/" + file_name).c_str(), i,
+    saveToFile((FLAGS_collect_dir + "/" + file_name).c_str(),
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
   }
 
@@ -669,24 +669,22 @@ int collect() {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-    //for (int j = 0; j < bottom_need_backward[i].size(); ++j) {
-      if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
-char file_name[FILENAME_MAX];
-    getFileName(file_name, false, "Bwrd", i);//("Bwrd_" + boost::lexical_cast<string>(j) + "_").c_str(), i);
-        saveToFile((dir.string() + "/" + file_name).c_str(), i,
-          bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
-      }
-    //}
+    if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+      char file_name[FILENAME_MAX];
+      getFileName(file_name, false, "Bwrd", i);
+      saveToFile((FLAGS_collect_dir + "/" + file_name).c_str(),
+      bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+    }
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-char file_name[FILENAME_MAX];
+    char file_name[FILENAME_MAX];
     getFileName(file_name, false, "Grad", i);
-    saveToFile((dir.string() + "/" + file_name).c_str(), i,
+    saveToFile((FLAGS_collect_dir + "/" + file_name).c_str(),
       params[i]->cpu_diff(), params[i]->count());
-getFileName(file_name, false, "Wght", i);
-    saveToFile((dir.string() + "/" + file_name).c_str(), i,
+    getFileName(file_name, false, "Wght", i);
+    saveToFile((FLAGS_collect_dir + "/" + file_name).c_str(),
       params[i]->cpu_data(), params[i]->count());
   }
 
@@ -709,10 +707,8 @@ RegisterBrewFunction(collect);
 
 #if defined(_WIN32) || defined (_WIN64)
   #include <windows.h>
-  #define dataDir ".\\Data"
 #elif defined(__linux__)
   #include <dirent.h>
-  #define dataDir "./data"
 #else
   #error Unsupported OS
 #endif
@@ -946,44 +942,15 @@ double compareFiles(const char *diffFileName, const char *cpuFileName, const cha
 
     return true;
 }
-class LayerDictionary
-{
-   std::unordered_map<string, string> layersInfo;
-public:
-	    
-LayerDictionary(string dictionaryFilePath) {
-std::ifstream infoFile;
-		infoFile.open(dictionaryFilePath);
-
-
-string key, name;
-		while (infoFile >> key >> name)
-  	 {
-   layersInfo[(key + ".bin").c_str()] = name;
-}
-    }
-
-    
-
-        const string& getLayerType(const string& fileName)
-        {
-            //#pragma omp critical
-            {
-              
-return layersInfo[fileName];
-                                                    }
-                                                            }
-               };
-
 
 void processFile(const char *fileName, const string& layerType, std::unordered_map<string, int> &errorsDictionary)
 {
     char cpuFileName[FILENAME_MAX];
     char gpuFileName[FILENAME_MAX];
     char diffFileName[FILENAME_MAX];
-    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s",&FLAGS_collect_dir[0], fileName);
-    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s",&FLAGS_compare_output_dir[0], fileName);
-    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",&FLAGS_compare_output_dir[0], fileName);
+    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s", FLAGS_collect_dir.c_str(), fileName);
+    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s", FLAGS_compare_output_dir.c_str(), fileName);
+    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s", FLAGS_compare_output_dir.c_str(), fileName);
     double maxDiff;
     unsigned diffCounter;
     bool success = compareFiles(diffFileName, cpuFileName, gpuFileName, maxDiff, diffCounter);
@@ -993,12 +960,9 @@ void processFile(const char *fileName, const string& layerType, std::unordered_m
       Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
     else {
       Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(), maxDiff, diffCounter);
-      errorsDictionary[layerType.c_str()]++;
+      errorsDictionary[layerType]++;
     }
 }
-
-
-
 
 int compare() {
   #ifndef DETERMINISTIC
@@ -1027,14 +991,16 @@ int compare() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
-boost::filesystem::path dir (FLAGS_compare_output_dir);
+  boost::filesystem::path dir (FLAGS_compare_output_dir);
   if (!boost::filesystem::exists(dir)) {
     if (!boost::filesystem::create_directory(dir)) {
       LOG(ERROR) << "Could not create directory for compare output files";
     }
   }  
 
-FILE *infoFile = fopen(use_gpu ? (FLAGS_compare_output_dir+"/" + "GPUInfo.txt").c_str() : (FLAGS_compare_output_dir+"/"+"CPUInfo.txt").c_str(), "w+t");
+  FILE *infoFile = fopen(use_gpu ?
+    (FLAGS_compare_output_dir + "/" + "GPUInfo.txt").c_str() :
+    (FLAGS_compare_output_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Compare procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -1046,70 +1012,78 @@ FILE *infoFile = fopen(use_gpu ? (FLAGS_compare_output_dir+"/" + "GPUInfo.txt").
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-char file_name[FILENAME_MAX];
+    char file_name[FILENAME_MAX];
     getFileName(file_name, true, "Fwrd", i);
-    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(),
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
-char file_path[FILENAME_MAX];
-getFileName(file_name, false, "Fwrd", i);
-getBinFilePath(file_path, file_name);    
-loadFromFile(file_path, i,
-      top_vecs[i][0]->mutable_cpu_data(), top_vecs[i][0]->count());
+    char file_path[FILENAME_MAX];
+    getFileName(file_name, false, "Fwrd", i);
+    getBinFilePath(file_path, file_name);    
+    loadFromFile(file_path, top_vecs[i][0]->mutable_cpu_data(),
+      top_vecs[i][0]->count());
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-//    for (int j = 0; j < bottom_need_backward[i].size(); ++j) {
-      if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
-char file_name[FILENAME_MAX];
-    getFileName(file_name, true, "Bwrd", i);// ("Bwrd_" + boost::lexical_cast<string>(j) + "_").c_str(), i);
-        saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
-          bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
-        char file_path[FILENAME_MAX];
-getFileName(file_name, false, "Bwrd", i);
-getBinFilePath(file_path, file_name);
-loadFromFile(file_path, i,
-          bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
-      }
-  //  }
+    if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+      char file_name[FILENAME_MAX];
+      getFileName(file_name, true, "Bwrd", i);
+      saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(),
+        bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+      char file_path[FILENAME_MAX];
+      getFileName(file_name, false, "Bwrd", i);
+      getBinFilePath(file_path, file_name);
+      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+    }
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-char file_name[FILENAME_MAX];
+    char file_name[FILENAME_MAX];
     getFileName(file_name, true, "Grad", i);
-    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(),
       params[i]->cpu_diff(), params[i]->count());
-getFileName(file_name, true, "Wght", i);
-    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
+    getFileName(file_name, true, "Wght", i);
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(),
       params[i]->cpu_data(), params[i]->count());
   }
 
-  LOG(INFO) << "*** Compare procedure ends ***";
   fclose(infoFile); FileList fileList;
-    fileList.findFiles();
-string infoPath = FLAGS_compare_output_dir+"/" + "CPUInfo.txt";
-	LayerDictionary layerDictionary(infoPath);
-    int numberOfFiles = fileList.getNumberOfFiles();
+  fileList.findFiles();
+  string infoPath = FLAGS_compare_output_dir + "/" + "CPUInfo.txt";
 
-
-std::unordered_map<string, int> errorsDictionary;
-
-    //#pragma omp parallel for
-        for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
-            const char* fileName = fileList.getFileName(fileIndex);
-            processFile(fileName, layerDictionary.getLayerType(fileName), errorsDictionary);
-        }
-if (errorsDictionary.size() > 0) {
-  LOG(INFO) << "Invalid layer behaviour detected on: ";
-  for (std::unordered_map<string, int>::iterator it = errorsDictionary.begin(); it != errorsDictionary.end(); ++it) {
-    LOG(WARNING) << "\t" << it->first;
+  std::unordered_map<string, string> layersInfo;
+  std::ifstream layersInfoFile;
+  layersInfoFile.open(infoPath);
+  string key, name;
+  while (layersInfoFile >> key >> name) {
+    layersInfo[key + ".bin"] = name;
   }
-} else {
-LOG(INFO) << "*** All layers are working correctly ***";
-}
+
+  layersInfoFile.close();
+
+  std::unordered_map<string, int> errorsDictionary;
+  int numberOfFiles = fileList.getNumberOfFiles();
+
+  LOG(INFO) << "Comparing layers data";
+  //#pragma omp parallel for
+  for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
+    const char* fileName = fileList.getFileName(fileIndex);
+    processFile(fileName, layersInfo[fileName], errorsDictionary);
+  }
+
+  if (errorsDictionary.size() > 0) {
+    LOG(INFO) << "Invalid layer behaviour detected on: ";
+    for (std::unordered_map<string, int>::iterator it =
+      errorsDictionary.begin(); it != errorsDictionary.end(); ++it) {
+      LOG(WARNING) << "\t" << it->first;
+    }
+  } else {
+    LOG(INFO) << "*** All layers are working correctly ***";
+  }
+
   return 0;
 }
 RegisterBrewFunction(compare);
