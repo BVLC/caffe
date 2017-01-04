@@ -111,6 +111,11 @@ DEFINE_bool(forward_only, false,
     "Optional; Execute only forward pass");
 DEFINE_string(engine, "",
     "Optional; Engine sequence in format: engine:subengine_1,subengine_2,...");
+DEFINE_string(collect_dir, "collect",
+    "Optional; Directory with reference binary files");
+DEFINE_string(compare_output_dir, "compareout",
+    "Optional; Directory with output files");
+DEFINE_double(epsilon, 1e-3, "Epsilon for comparison");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -559,19 +564,20 @@ RegisterBrewFunction(time);
 #include <stdio.h>
 typedef float real_t;
 
-void getFileName(char *file_name, bool use_gpu, const char *name, int id) {
-  const char *prefix = use_gpu ? "GPU" : "CPU";
+void getFileName(char *file_name, bool is_tar, const char *name, int id) {
+  const char *prefix = is_tar ? "TAR" : "REF";
   snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
 }
 
-bool saveToFile(bool use_gpu, const char *name, int id,
-    const real_t *data, unsigned count) {
-  char file_name[FILENAME_MAX];
-  getFileName(file_name, use_gpu, name, id);
+void getBinFilePath(char *file_path, const char *name) {
+  snprintf(file_path, FILENAME_MAX, "%s/%s", FLAGS_collect_dir.c_str(), name);
+}
 
-  FILE *file = fopen(file_name, "w+b");
+bool saveToFile(const char *file_path, int id,
+    const real_t *data, unsigned count) {
+  FILE *file = fopen(file_path, "w+b");
   if (!file) {
-    LOG(ERROR) << "Failed to create file '" << file_name << "'.";
+    LOG(ERROR) << "Failed to create file '" << file_path << "'.";
     return false;
   }
 
@@ -580,21 +586,18 @@ bool saveToFile(bool use_gpu, const char *name, int id,
   fclose(file);
 
   if (bytesWritten != bytesToWrite) {
-    LOG(ERROR) << "Failed to write data to '" << file_name << "' file.";
+    LOG(ERROR) << "Failed to write data to '" << file_path << "' file.";
     return false;
   }
 
   return true;
 }
 
-bool loadFromFile(bool use_gpu, const char *name, int id,
+bool loadFromFile(const char *file_path, int id,
     real_t *data, unsigned count) {
-  char file_name[FILENAME_MAX];
-  getFileName(file_name, use_gpu, name, id);
-
-  FILE *file = fopen(file_name, "rb");
+  FILE *file = fopen(file_path, "rb");
   if (!file) {
-    LOG(ERROR) << "Failed to open file '" << file_name << "' for read.";
+    LOG(ERROR) << "Failed to open file '" << file_path << "' for read.";
     return false;
   }
 
@@ -603,7 +606,7 @@ bool loadFromFile(bool use_gpu, const char *name, int id,
   fclose(file);
 
   if (bytesRead != bytesToRead) {
-    LOG(ERROR) << "Failed to read data from '" << file_name << "' file.";
+    LOG(ERROR) << "Failed to read data from '" << file_path << "' file.";
     return false;
   }
 
@@ -636,8 +639,15 @@ int collect() {
   const vector<vector<Blob<real_t>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
+  
+  boost::filesystem::path dir (FLAGS_collect_dir);
+  if (!boost::filesystem::exists(dir)) {
+    if (!boost::filesystem::create_directory(dir)) {
+      LOG(ERROR) << "Could not create directory for collection output files";
+    }
+  }
 
-  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
+  FILE *infoFile = fopen(use_gpu ? (FLAGS_collect_dir + "/"+ "GPUInfo.txt").c_str() : (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Collect procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -649,7 +659,9 @@ int collect() {
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    saveToFile(use_gpu, "Fwrd", i,
+    char file_name[FILENAME_MAX];
+    getFileName(file_name, false, "Fwrd", i);
+    saveToFile((dir.string() + "/" + file_name).c_str(), i,
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
   }
 
@@ -657,17 +669,24 @@ int collect() {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-    if (bottom_need_backward[i][0]) {
-      saveToFile(use_gpu, "Bwrd", i,
-        bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
-    }
+    //for (int j = 0; j < bottom_need_backward[i].size(); ++j) {
+      if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+char file_name[FILENAME_MAX];
+    getFileName(file_name, false, "Bwrd", i);//("Bwrd_" + boost::lexical_cast<string>(j) + "_").c_str(), i);
+        saveToFile((dir.string() + "/" + file_name).c_str(), i,
+          bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+      }
+    //}
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-    saveToFile(use_gpu, "Grad", i,
+char file_name[FILENAME_MAX];
+    getFileName(file_name, false, "Grad", i);
+    saveToFile((dir.string() + "/" + file_name).c_str(), i,
       params[i]->cpu_diff(), params[i]->count());
-    saveToFile(use_gpu, "Wght", i,
+getFileName(file_name, false, "Wght", i);
+    saveToFile((dir.string() + "/" + file_name).c_str(), i,
       params[i]->cpu_data(), params[i]->count());
   }
 
@@ -676,6 +695,308 @@ int collect() {
   return 0;
 }
 RegisterBrewFunction(collect);
+
+
+#include <cstdint>
+#include <cstdio>
+#include <cmath>
+#include <vector>
+#include <string>
+#include <cstring>
+#include <cstdarg>
+#include <algorithm>
+#include <unordered_map>
+
+#if defined(_WIN32) || defined (_WIN64)
+  #include <windows.h>
+  #define dataDir ".\\Data"
+#elif defined(__linux__)
+  #include <dirent.h>
+  #define dataDir "./data"
+#else
+  #error Unsupported OS
+#endif
+
+template <typename DataType>
+class Data
+{
+    int dataSize;
+    DataType *dataPointer;
+
+    Data(const Data<DataType> &data);
+    Data<DataType> &operator =(const Data<DataType> &data);
+
+    public:
+
+        Data() :
+            dataSize(0),
+            dataPointer(NULL)
+        {
+        }
+
+        ~Data()
+        {
+            clear();
+        }
+
+        int getDataSize() const
+        {
+            return dataSize;
+        }
+
+        const DataType *getDataPointer() const
+        {
+            return dataPointer;
+        }
+
+        void clear()
+        {
+            delete [] dataPointer;
+            dataPointer = NULL;
+            dataSize = 0;
+        }
+
+        bool loadFromFile(const char *fileName)
+        {
+            FILE *file = fopen(fileName, "rb");
+            if(!file)
+                return false;
+
+            if(fseek(file, 0, SEEK_END))
+                return false;
+
+            long fileSize = ftell(file);
+            if(fileSize == -1)
+                return false;
+
+            if(fseek(file, 0, SEEK_SET))
+                return false;
+
+            DataType *fileDataPointer = new DataType[fileSize];
+            size_t bytesRead = fread(fileDataPointer, 1, fileSize, file);
+            if(bytesRead != fileSize) {
+                delete [] fileDataPointer;
+                return false;
+            }
+
+            fclose(file);
+            clear();
+
+            dataPointer = fileDataPointer;
+            dataSize = fileSize / sizeof(DataType);
+            return true;
+        }
+};
+
+class FileList
+{
+    std::vector<std::string> fileList;
+
+    FileList(const FileList &fileList);
+    FileList &operator =(const FileList &fileList);
+
+    public:
+
+        FileList() {}
+
+        int getNumberOfFiles() const
+        {
+            return (int) fileList.size();
+        }
+
+        const char *getFileName(int fileIndex) const
+        {
+            return fileList[fileIndex].c_str();
+        }
+
+        void clear()
+        {
+            fileList.clear();
+        }
+
+        void findFiles()
+        {
+            fileList.clear();
+            fileList.reserve(1024 * 1024);
+
+#if defined(_WIN32) || defined (_WIN64)
+
+            WIN32_FIND_DATAA win32FindData;
+            HANDLE handle = FindFirstFileA(FLAGS_collect_dir.c_str() + "\\REF*", &win32FindData);
+            if(handle) {
+
+                do fileList.push_back(&win32FindData.cFileName[3]);
+                while(FindNextFileA(handle, &win32FindData));
+
+                CloseHandle(handle);
+            }
+
+#else
+
+            DIR *dir = opendir(FLAGS_collect_dir.c_str());
+            if(dir) {
+                struct dirent *dirEntry = readdir(dir);
+                while(dirEntry) {
+                    if(!strncmp(dirEntry->d_name, "REF", 3))
+                        fileList.push_back(&dirEntry->d_name[3]);
+                    dirEntry = readdir(dir);
+                }
+                closedir(dir);
+            }
+
+#endif
+
+            std::sort(fileList.begin(), fileList.end());
+            fileList.shrink_to_fit();
+        }
+};
+
+class Log
+{
+    FILE *logFile;
+
+    Log()
+    {
+        logFile = fopen("log.txt", "w+b");
+    }
+
+    public:
+
+        ~Log()
+        {
+            if(logFile)
+                fclose(logFile);
+        }
+
+        static void log(const char *format, ...)
+        {
+            //#pragma omp critical
+            {
+                va_list args;
+
+                static Log log;
+
+                va_start(args, format);
+                vfprintf(log.logFile, format, args);
+
+                va_start(args, format);
+                vprintf(format, args);
+
+                va_end(args);
+            }
+        }
+};
+
+double compareFiles(const char *diffFileName, const char *cpuFileName, const char *gpuFileName, double &maxDiff, unsigned &diffCounter)
+{
+    typedef float DataType;
+    typedef uint32_t CastType;
+    const char *format = "%i;%08X;%08X;%g;%g;%g\n";
+    const DataType epsilon = (DataType) FLAGS_epsilon;
+
+    Data<DataType> cpuData;
+    if(!cpuData.loadFromFile(cpuFileName)) {
+        Log::log("Failed to load CPU data file '%s'.\n", cpuFileName);
+        return false;
+    }
+
+    Data<DataType> gpuData;
+    if(!gpuData.loadFromFile(gpuFileName)) {
+        Log::log("Failed to load GPU data file '%s'.\n", gpuFileName);
+        return false;
+    }
+
+    if(gpuData.getDataSize() != cpuData.getDataSize()) {
+        Log::log("Data length is not equal.\n");
+        return false;
+    }
+
+    FILE *file = NULL;
+    if(diffFileName)
+        file = fopen(diffFileName, "w+t");
+
+    maxDiff = -1;
+    diffCounter = 0;
+
+    int dataSize = gpuData.getDataSize();
+    const DataType *cpuDataPointer = cpuData.getDataPointer();
+    const DataType *gpuDataPointer = gpuData.getDataPointer();
+    for(int i = 0; i < dataSize; i++) {
+        DataType a = cpuDataPointer[i];
+        DataType b = gpuDataPointer[i];
+
+        DataType aAbs = (DataType) fabs(a), bAbs = (DataType) fabs(b);
+        DataType diff =
+            ((a * b) < 0) ? 1 :
+            (aAbs && (aAbs < bAbs)) ? bAbs / aAbs - 1 :
+            (bAbs && (bAbs < aAbs)) ? aAbs / bAbs - 1 :
+            (aAbs == bAbs) ? 0 : 1;
+
+        if(file && (diff >= epsilon)) {
+            fprintf(file, format, i, *(CastType *) &a, *(CastType *) &b, diff, a, b);
+            diffCounter++;
+        }
+
+        if(maxDiff < diff)
+            maxDiff = diff;
+    }
+
+    if(file)
+        fclose(file);
+
+    return true;
+}
+class LayerDictionary
+{
+   std::unordered_map<string, string> layersInfo;
+public:
+	    
+LayerDictionary(string dictionaryFilePath) {
+std::ifstream infoFile;
+		infoFile.open(dictionaryFilePath);
+
+
+string key, name;
+		while (infoFile >> key >> name)
+  	 {
+   layersInfo[(key + ".bin").c_str()] = name;
+}
+    }
+
+    
+
+        const string& getLayerType(const string& fileName)
+        {
+            //#pragma omp critical
+            {
+              
+return layersInfo[fileName];
+                                                    }
+                                                            }
+               };
+
+
+void processFile(const char *fileName, const string& layerType)
+{
+    char cpuFileName[FILENAME_MAX];
+    char gpuFileName[FILENAME_MAX];
+    char diffFileName[FILENAME_MAX];
+    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s",&FLAGS_collect_dir[0], fileName);
+    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s",&FLAGS_compare_output_dir[0], fileName);
+    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",&FLAGS_compare_output_dir[0], fileName);
+    double maxDiff;
+    unsigned diffCounter;
+    bool success = compareFiles(diffFileName, cpuFileName, gpuFileName, maxDiff, diffCounter);
+    if(!success)
+      Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
+    else if(!diffCounter)
+      Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
+    else
+      Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(), maxDiff, diffCounter);
+}
+
+
+
 
 int compare() {
   #ifndef DETERMINISTIC
@@ -704,7 +1025,14 @@ int compare() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
-  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
+boost::filesystem::path dir (FLAGS_compare_output_dir);
+  if (!boost::filesystem::exists(dir)) {
+    if (!boost::filesystem::create_directory(dir)) {
+      LOG(ERROR) << "Could not create directory for compare output files";
+    }
+  }  
+
+FILE *infoFile = fopen(use_gpu ? (FLAGS_compare_output_dir+"/" + "GPUInfo.txt").c_str() : (FLAGS_compare_output_dir+"/"+"CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Compare procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -714,36 +1042,62 @@ int compare() {
 
   for (int i = 0; i < layers.size(); ++i) {
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    saveToFile(use_gpu, "Fwrd", i,
+char file_name[FILENAME_MAX];
+    getFileName(file_name, true, "Fwrd", i);
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
-    loadFromFile(!use_gpu, "Fwrd", i,
+char file_path[FILENAME_MAX];
+getFileName(file_name, false, "Fwrd", i);
+getBinFilePath(file_path, file_name);    
+loadFromFile(file_path, i,
       top_vecs[i][0]->mutable_cpu_data(), top_vecs[i][0]->count());
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-    if (bottom_need_backward[i][0]) {
-      saveToFile(use_gpu, "Bwrd", i,
-        bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
-      loadFromFile(!use_gpu, "Bwrd", i,
-        bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
-    }
+//    for (int j = 0; j < bottom_need_backward[i].size(); ++j) {
+      if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+char file_name[FILENAME_MAX];
+    getFileName(file_name, true, "Bwrd", i);// ("Bwrd_" + boost::lexical_cast<string>(j) + "_").c_str(), i);
+        saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
+          bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+        char file_path[FILENAME_MAX];
+getFileName(file_name, false, "Bwrd", i);
+getBinFilePath(file_path, file_name);
+loadFromFile(file_path, i,
+          bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+      }
+  //  }
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-    saveToFile(use_gpu, "Grad", i,
+char file_name[FILENAME_MAX];
+    getFileName(file_name, true, "Grad", i);
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
       params[i]->cpu_diff(), params[i]->count());
-    saveToFile(use_gpu, "Wght", i,
+getFileName(file_name, true, "Wght", i);
+    saveToFile((FLAGS_compare_output_dir + "/" + file_name).c_str(), i,
       params[i]->cpu_data(), params[i]->count());
   }
 
   LOG(INFO) << "*** Compare procedure ends ***";
-  fclose(infoFile);
+  fclose(infoFile); FileList fileList;
+    fileList.findFiles();
+string infoPath = FLAGS_compare_output_dir+"/" + "CPUInfo.txt";
+	LayerDictionary layerDictionary(infoPath);
+    int numberOfFiles = fileList.getNumberOfFiles();
+
+    //#pragma omp parallel for
+        for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
+            const char* fileName = fileList.getFileName(fileIndex);
+            processFile(fileName, layerDictionary.getLayerType(fileName));
+        }
+
   return 0;
 }
 RegisterBrewFunction(compare);
