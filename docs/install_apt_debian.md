@@ -10,9 +10,9 @@ install_apt.html). Debian/testing (stretch) users may be able to get Caffe
 to work using the packages in Debian/unstable, but it is beyond the scope of
 this guide.
 
-Only experienced linux users are recommended to try Debian/unstable (Sid). 
+Only experienced linux users are recommended to try Debian/unstable (Sid).
 
-Last update: Dec.21 2016  
+Last update: 2017-01-04
 
 ## Debian/unstable
 
@@ -52,12 +52,19 @@ $ sudo apt build-dep [ caffe-cpu | caffe-cuda ]            # the most elegant wa
 $ apt source [ caffe-cpu | caffe-cuda ]               # download the source tarball and extract
 $ cd caffe-XXXX
 [ ... optional, customize caffe code/build ... ]
+$ dch -llocal "Modified XXX in order to XXX"          # write your one-line changelog
 $ debuild -B -j4                                      # build caffe with 4 parallel jobs (similar to make -j4)
 [ ... building ...]
 $ debc                                                # optional, if you want to check the package contents
 $ sudo debi                                           # optional, install the generated packages
 ```
 The resulting deb packages can be found under the parent directory of the source tree.
+
+Note, the `dch ...` command line above is for bumping the package version number
+and adding an entry to the package changelog. If you would like to write
+more than one changelog entry, use subsequent `dch` command (see `man 1 dch`)
+instead of manually modifing `debian/changelog` unless you know how to keep its format correct.
+The changelog will be installed at e.g. `/usr/share/doc/caffe-cpu/changelog.Debian.gz`.
 
 ### Source installation
 
@@ -71,15 +78,13 @@ Note, this requires a `deb-src` entry in your `/etc/apt/sources.list`.
 ### Notes
 
 * Consider re-compiling OpenBLAS locally with optimization flags for sake of
-performance. This is highly recommended if you are writing a paper.
+performance. This is highly recommended for any kind of production use, including
+academic research.
 
 * If you are installing `caffe-cuda`, APT will automatically pull some of the
-CUDA packages and the nvidia driver packages. Please take care if you have
+CUDA packages and the nvidia driver packages. Please be careful if you have
 manually installed or hacked nvidia driver or CUDA toolkit or any other
-related stuff, because in this case it may fail.
-
-* If you encountered any problem when installing `caffe-*`, please report bug
-to Debian via Debian's bug tracking system. See https://www.debian.org/Bugs/ .
+related stuff, because in this case APT may fail.
 
 * Additionally, a manpage (`man caffe`) and a bash complementation script
 (`caffe <TAB><TAB>`, `caffe train <TAB><TAB>`) are provided.
@@ -87,6 +92,10 @@ Both of the two files are still not merged into caffe master.
 
 * The python interface is Python 3 version: `python3-caffe-{cpu,cuda}`.
 No plan to support python2.
+
+* If you encountered any problem related to the packaging system (e.g. failed to install `caffe-*`),
+please report bug to Debian via Debian's bug tracking system. See https://www.debian.org/Bugs/ .
+Patches and suggestions are also welcome.
 
 ## FAQ
 
@@ -96,11 +105,11 @@ CUDNN library seems not redistributable currently. If you really want the
 caffe-cudnn deb packages, the workaround is to install cudnn by yourself,
 and hack the packaging scripts, then build your customized package.
 
-* I installed the CPU version, How can I switch to the CUDA version?
+* I installed the CPU version. How can I switch to the CUDA version?
 
 `sudo apt install caffe-cuda`, apt's dependency resolver is smart enough to deal with this.
 
-* Where is the examples, the models and other documentation stuff?
+* Where are the examples, the models and other documentation stuff?
 
 ```
 sudo apt install caffe-doc
