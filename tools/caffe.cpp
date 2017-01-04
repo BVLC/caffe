@@ -976,7 +976,7 @@ return layersInfo[fileName];
                };
 
 
-void processFile(const char *fileName, const string& layerType)
+void processFile(const char *fileName, const string& layerType, std::unordered_map<string, int> &errorsDictionary)
 {
     char cpuFileName[FILENAME_MAX];
     char gpuFileName[FILENAME_MAX];
@@ -991,8 +991,10 @@ void processFile(const char *fileName, const string& layerType)
       Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
     else if(!diffCounter)
       Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
-    else
+    else {
       Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(), maxDiff, diffCounter);
+      errorsDictionary[layerType.c_str()]++;
+    }
 }
 
 
@@ -1092,25 +1094,28 @@ string infoPath = FLAGS_compare_output_dir+"/" + "CPUInfo.txt";
 	LayerDictionary layerDictionary(infoPath);
     int numberOfFiles = fileList.getNumberOfFiles();
 
+
+std::unordered_map<string, int> errorsDictionary;
+
     //#pragma omp parallel for
         for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
             const char* fileName = fileList.getFileName(fileIndex);
-            processFile(fileName, layerDictionary.getLayerType(fileName));
+            processFile(fileName, layerDictionary.getLayerType(fileName), errorsDictionary);
         }
-
+if (errorsDictionary.size() > 0) {
+  LOG(INFO) << "Invalid layer behaviour detected on: ";
+  for (std::unordered_map<string, int>::iterator it = errorsDictionary.begin(); it != errorsDictionary.end(); ++it) {
+    LOG(WARNING) << "\t" << it->first;
+  }
+} else {
+LOG(INFO) << "*** All layers are working correctly ***";
+}
   return 0;
 }
 RegisterBrewFunction(compare);
 
-
 int main(int argc, char** argv) {
-
-#ifdef USE_MLSL
-  caffe::internode::mlsl_init(argc, argv);
-#else /* !USE_MLSL */
   caffe::internode::mpi_init(argc, argv);
-#endif /* USE_MLSL */
-
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
