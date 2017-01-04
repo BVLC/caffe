@@ -111,11 +111,11 @@ DEFINE_bool(forward_only, false,
     "Optional; Execute only forward pass");
 DEFINE_string(engine, "",
     "Optional; Engine sequence in format: engine:subengine_1,subengine_2,...");
-DEFINE_string(collect_dir, "collect",
+DEFINE_string(collect_dir, "collect_out",
     "Optional; Directory with reference binary files");
-DEFINE_string(compare_output_dir, "compareout",
+DEFINE_string(compare_output_dir, "compare_out",
     "Optional; Directory with output files");
-DEFINE_double(epsilon, 1e-3, "Epsilon for comparison");
+DEFINE_double(epsilon, 1e-3, "Optional; Layer output comparison error");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -818,7 +818,8 @@ class FileList
 #if defined(_WIN32) || defined (_WIN64)
 
             WIN32_FIND_DATAA win32FindData;
-            HANDLE handle = FindFirstFileA(FLAGS_collect_dir.c_str() + "\\REF*", &win32FindData);
+            HANDLE handle = FindFirstFileA(
+              FLAGS_collect_dir.c_str() + "\\REF*", &win32FindData);
             if(handle) {
 
                 do fileList.push_back(&win32FindData.cFileName[3]);
@@ -883,7 +884,8 @@ class Log
         }
 };
 
-double compareFiles(const char *diffFileName, const char *cpuFileName, const char *gpuFileName, double &maxDiff, unsigned &diffCounter)
+double compareFiles(const char *diffFileName, const char *cpuFileName,
+  const char *gpuFileName, double &maxDiff, unsigned &diffCounter)
 {
     typedef float DataType;
     typedef uint32_t CastType;
@@ -943,23 +945,29 @@ double compareFiles(const char *diffFileName, const char *cpuFileName, const cha
     return true;
 }
 
-void processFile(const char *fileName, const string& layerType, std::unordered_map<string, int> &errorsDictionary)
+void processFile(const char *fileName, const string& layerType,
+  std::unordered_map<string, int> &errorsDictionary)
 {
     char cpuFileName[FILENAME_MAX];
     char gpuFileName[FILENAME_MAX];
     char diffFileName[FILENAME_MAX];
-    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s", FLAGS_collect_dir.c_str(), fileName);
-    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s", FLAGS_compare_output_dir.c_str(), fileName);
-    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s", FLAGS_compare_output_dir.c_str(), fileName);
+    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s",
+      FLAGS_collect_dir.c_str(), fileName);
+    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s",
+      FLAGS_compare_output_dir.c_str(), fileName);
+    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",
+      FLAGS_compare_output_dir.c_str(), fileName);
     double maxDiff;
     unsigned diffCounter;
-    bool success = compareFiles(diffFileName, cpuFileName, gpuFileName, maxDiff, diffCounter);
+    bool success = compareFiles(diffFileName, cpuFileName,
+      gpuFileName, maxDiff, diffCounter);
     if(!success)
       Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
     else if(!diffCounter)
       Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
     else {
-      Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(), maxDiff, diffCounter);
+      Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(),
+        maxDiff, diffCounter);
       errorsDictionary[layerType]++;
     }
 }
@@ -1035,7 +1043,8 @@ int compare() {
       char file_path[FILENAME_MAX];
       getFileName(file_name, false, "Bwrd", i);
       getBinFilePath(file_path, file_name);
-      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(),
+        bottom_vecs[i][0]->count());
     }
   }
 
