@@ -657,7 +657,7 @@ int collect() {
 
   for (int i = 0; i < layers.size(); ++i) {
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
     char file_name[FILENAME_MAX];
     getFileName(file_name, false, "Fwrd", i);
