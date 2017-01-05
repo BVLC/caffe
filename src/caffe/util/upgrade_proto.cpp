@@ -47,6 +47,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+#ifdef USE_MLSL
+#include "mlsl.h"
+#endif /* USE_MLSL */
+
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
@@ -115,6 +119,9 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
                                     NetParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse NetParameter file: " << param_file;
+#ifdef USE_MLSL
+  ReplaceMultinodeNetParams(param);
+#endif /* USE_MLSL */
   UpgradeNetAsNeeded(param_file, param);
 }
 
@@ -1101,5 +1108,62 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
 }
+
+#ifdef USE_MLSL
+void ReplaceProtoParam(std::string* const string_to_rep,
+        const std::string& param_name_to_rep,
+        const std::string& param_val_to_rep) {
+  int pos = string_to_rep->find(param_name_to_rep);
+  if (pos == std::string::npos) return;
+
+  string_to_rep->replace(
+    pos,
+    param_name_to_rep.size(),
+    param_val_to_rep);
+}
+
+void ReplaceMultinodeSolverParams(SolverParameter* param) {
+  std::string node_id = std::to_string(MLSL::GetNodeId());
+  std::string num_nodes = std::to_string(MLSL::GetNumNodes());
+
+  if (param->has_train_net()) {
+    std::string* train_net = param->mutable_train_net();
+    if (train_net) {
+      ReplaceProtoParam(train_net, "%#", node_id);
+      ReplaceProtoParam(train_net, "%*", num_nodes);
+    }
+  }
+
+  if (param->has_snapshot_prefix()) {
+    std::string* prefix = param->mutable_snapshot_prefix();
+    if (prefix) {
+      ReplaceProtoParam(prefix, "%#", node_id);
+      ReplaceProtoParam(prefix, "%*", num_nodes);
+    }
+  }
+}
+
+void ReplaceMultinodeNetParams(NetParameter* param) {
+  std::string node_id = std::to_string(MLSL::GetNodeId());
+  std::string num_nodes = std::to_string(MLSL::GetNumNodes());
+
+  for (int i = 0; i < param->layer_size(); ++i) {
+    std::string* source = nullptr;
+
+    if (param->layer(i).has_data_param()) {
+      source = param->mutable_layer(i)->mutable_data_param()->
+              mutable_source();
+    } else if (param->layer(i).has_image_data_param()) {
+      source = param->mutable_layer(i)->mutable_image_data_param()->
+              mutable_source();
+    }
+
+    if (source) {
+      ReplaceProtoParam(source, "%#", node_id);
+      ReplaceProtoParam(source, "%*", num_nodes);
+    }
+  }
+}
+#endif /* USE_MLSL */
 
 }  // namespace caffe
