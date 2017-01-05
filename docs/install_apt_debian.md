@@ -4,39 +4,51 @@ title: "Installation: Debian"
 
 # Debian Installation
 
-Caffe packages are available for `Debian/unstable`. Debian/stable
-(jessie) users should take a look at [Ubuntu installation instruction](
-install_apt.html). Debian/testing (stretch) users may be able to get Caffe
-to work using the packages in Debian/unstable, but it is beyond the scope of
-this guide.
+Caffe packages are available for several Debian versions, as shown in the
+following chart
 
-Only experienced linux users are recommended to try Debian/unstable (Sid).
+```
+Your Distro     |  CPU_ONLY  |  CUDA  |     Alias
+----------------+------------+--------+-------------------
+Debian/stable   |     ✘      |   ✘    | Debian Jessie
+Debian/testing  |     ✔      |   ☐    | Debian Stretch/Sid
+Debian/unstable |     ✔      |   ✔    | Debian Sid
+```
 
-Last update: 2017-01-04
+* `✘ ` You should take a look at [Ubuntu installation instruction](install_apt.html).
 
-## Debian/unstable
+* `✔ ` You can install caffe with a single command line following this guide.
+
+* `☐ ` The same with `✔ `. However it will not work any more when Debian/Stretch becomes the stable branch.
+
+Last update: 2017-01-05
+
+## Binary installation with APT
 
 Apart from the installation methods based on source, Debian/unstable
-users can install pre-compiled Caffe packages via the official archive.
-
-### Binary installation
+and Debian/testing users can install pre-compiled Caffe packages via the official archive.
 
 Make sure that there is something like the follows in your `/etc/apt/sources.list`:
 ```
-deb http://ftp2.cn.debian.org/debian sid main contrib non-free
+deb http://MIRROR/debian CODENAME main contrib non-free
 ```
+where `MIRROR` is your favorate Debian mirror, and `CODENAME ∈ {testing,stretch,sid}`.
+
 Then we update APT cache and directly install Caffe. Note, the cpu version and
 the cuda version cannot be installed at the same time.
 ```
 # apt update
 # apt install [ caffe-cpu | caffe-cuda ]
+# caffe                                              # command line interface working
+# python3 -c 'import caffe; print(caffe.__path__)'   # python3 interface working
 ```
 It should work out of box.
 
 #### Customizing caffe packages
 
-Some users may need to customize the Caffe package. Here is a brief
-guide of producing the customized `.deb` packages.
+Some users may need to customize the Caffe package. The way to customize
+the package is beyond this guide. Here is only a brief guide of producing
+the customized `.deb` packages. 
 
 Make sure that there is something like this in your `/etc/apt/sources.list`:
 ```
@@ -66,7 +78,7 @@ more than one changelog entry, use subsequent `dch` command (see `man 1 dch`)
 instead of manually modifing `debian/changelog` unless you know how to keep its format correct.
 The changelog will be installed at e.g. `/usr/share/doc/caffe-cpu/changelog.Debian.gz`.
 
-### Source installation
+## Source installation
 
 Source installation under Debian/unstable is similar to that of Ubuntu, but
 here is a more elegant way to pull caffe build dependencies:
@@ -75,7 +87,27 @@ $ sudo apt build-dep [ caffe-cpu | caffe-cuda ]
 ```
 Note, this requires a `deb-src` entry in your `/etc/apt/sources.list`.
 
-### Notes
+#### Compiler Combinations
+
+Some users may find their favorate compiler doesn't work well with CUDA.
+```
+CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
+-------------+------------+------------+-
+GCC-7        |     ?      |     ?      |
+GCC-6        |     ✘      |     ✘      |
+GCC-5        |     ✔ [1]  |     ✔      |
+CLANG-4.0    |     ?      |     ?      |
+CLANG-3.9    |     ✘      |     ✘      |
+CLANG-3.8    |     ?      |     ✔      |
+```
+
+`[1]` CUDA 7.5 's `host_config.h` must be patched before working with GCC-5.
+
+BTW, please forget the GCC-4.X series, since its `libstdc++` ABI is not compatible with GCC-5's.
+You may encounter failure linking GCC-4.X object files against GCC-5 libraries.
+(See https://wiki.debian.org/GCC5 )
+
+## Notes
 
 * Consider re-compiling OpenBLAS locally with optimization flags for sake of
 performance. This is highly recommended for any kind of production use, including
@@ -115,3 +147,9 @@ and hack the packaging scripts, then build your customized package.
 sudo apt install caffe-doc
 dpkg -L caffe-doc
 ```
+
+* Where can I find the Debian package status?
+
+https://tracker.debian.org/pkg/caffe  (for the CPU_ONLY version)
+
+https://tracker.debian.org/pkg/caffe-contrib  (for the CUDA version)
