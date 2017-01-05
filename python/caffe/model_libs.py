@@ -105,16 +105,16 @@ def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output,
     net.update(conv_name, {'dilation': dilation})
   if use_bn:
     bn_name = '{}{}{}'.format(bn_prefix, out_layer, bn_postfix)
-    net[bn_name] = L.BatchNorm(net[conv_name], in_place=True, engine=engine, **bn_kwargs)
+    net[bn_name] = L.BatchNorm(net[conv_name], in_place=True, **bn_kwargs)
     if use_scale:
       sb_name = '{}{}{}'.format(scale_prefix, out_layer, scale_postfix)
-      net[sb_name] = L.Scale(net[bn_name], in_place=True, engine=engine, **sb_kwargs)
+      net[sb_name] = L.Scale(net[bn_name], in_place=True, **sb_kwargs)
     else:
       bias_name = '{}{}{}'.format(bias_prefix, out_layer, bias_postfix)
-      net[bias_name] = L.Bias(net[bn_name], in_place=True, engine=engine, **bias_kwargs)
+      net[bias_name] = L.Bias(net[bn_name], in_place=True, **bias_kwargs)
   if use_relu:
     relu_name = '{}_relu'.format(conv_name)
-    net[relu_name] = L.ReLU(net[conv_name], in_place=True, engine=engine)
+    net[relu_name] = L.ReLU(net[conv_name], in_place=True)
 
 def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch1, dilation=1, **bn_param):
   # ResBody(net, 'pool1', '2a', 64, 64, 256, 1, True)
@@ -706,7 +706,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         use_scale=True, min_sizes=[], max_sizes=[], prior_variance = [0.1],
         aspect_ratios=[], steps=[], img_height=0, img_width=0, share_location=True,
         flip=True, clip=True, offset=0.5, inter_layer_depth=[], kernel_size=1, pad=0,
-        conf_postfix='', loc_postfix='', **bn_param):
+        conf_postfix='', loc_postfix='', engine=0, **bn_param):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
     if normalizations:
@@ -744,7 +744,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             if inter_layer_depth[i] > 0:
                 inter_name = "{}_inter".format(from_layer)
                 ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True, lr_mult=lr_mult,
-                      num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1, **bn_param)
+                      num_output=inter_layer_depth[i], kernel_size=3, pad=1, stride=1, engine=engine, **bn_param)
                 from_layer = inter_name
 
         # Estimate number of priors per location given provided parameters.
@@ -779,7 +779,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         if not share_location:
             num_loc_output *= num_classes
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
-            num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+            num_output=num_loc_output, kernel_size=kernel_size, pad=pad, stride=1, engine=engine, **bn_param)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
@@ -790,7 +790,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         name = "{}_mbox_conf{}".format(from_layer, conf_postfix)
         num_conf_output = num_priors_per_location * num_classes;
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
-            num_output=num_conf_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+            num_output=num_conf_output, kernel_size=kernel_size, pad=pad, stride=1, engine=engine, **bn_param)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
@@ -819,7 +819,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             name = "{}_mbox_objectness".format(from_layer)
             num_obj_output = num_priors_per_location * 2;
             ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False, lr_mult=lr_mult,
-                num_output=num_obj_output, kernel_size=kernel_size, pad=pad, stride=1, **bn_param)
+                num_output=num_obj_output, kernel_size=kernel_size, pad=pad, stride=1, engine=engine, **bn_param)
             permute_name = "{}_perm".format(name)
             net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
             flatten_name = "{}_flat".format(name)
@@ -829,17 +829,17 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
     # Concatenate priorbox, loc, and conf layers.
     mbox_layers = []
     name = "mbox_loc"
-    net[name] = L.Concat(*loc_layers, axis=1)
+    net[name] = L.Concat(*loc_layers, axis=1, engine=0)
     mbox_layers.append(net[name])
     name = "mbox_conf"
-    net[name] = L.Concat(*conf_layers, axis=1)
+    net[name] = L.Concat(*conf_layers, axis=1, engine=0)
     mbox_layers.append(net[name])
     name = "mbox_priorbox"
-    net[name] = L.Concat(*priorbox_layers, axis=2)
+    net[name] = L.Concat(*priorbox_layers, axis=2, engine=0)
     mbox_layers.append(net[name])
     if use_objectness:
         name = "mbox_objectness"
-        net[name] = L.Concat(*objectness_layers, axis=1)
+        net[name] = L.Concat(*objectness_layers, axis=1, engine=0)
         mbox_layers.append(net[name])
 
     return mbox_layers
