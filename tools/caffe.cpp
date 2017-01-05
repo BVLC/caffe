@@ -758,7 +758,8 @@ int compare() {
       saveToFile(FLAGS_compare_output_dir, true, "Bwrd", i,
         bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
       char file_name[FILENAME_MAX];
-      char file_path[FILENAME_MAX];      getFileName(file_name, false, "Bwrd", i);
+      char file_path[FILENAME_MAX];
+      getFileName(file_name, false, "Bwrd", i);
       getBinFilePath(file_path, file_name);
       loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
     }
@@ -766,6 +767,7 @@ int compare() {
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
+    char file_name[FILENAME_MAX];
     getFileName(file_name, true, "Grad", i);
     saveToFile(FLAGS_compare_output_dir, true, "Grad", i,
       params[i]->cpu_diff(), params[i]->count());

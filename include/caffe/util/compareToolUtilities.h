@@ -150,7 +150,7 @@ class FileList
             fileList.clear();
         }
 
-        void findFiles(const string& refPath)
+        void findFiles()
         {
             fileList.clear();
             fileList.reserve(1024 * 1024);
@@ -159,7 +159,7 @@ class FileList
 
             WIN32_FIND_DATAA win32FindData;
             HANDLE handle = FindFirstFileA(
-              refPath.c_str() + "\\REF*", &win32FindData);
+              FLAGS_collect_dir.c_str() + "\\REF*", &win32FindData);
             if(handle) {
 
                 do fileList.push_back(&win32FindData.cFileName[3]);
@@ -170,7 +170,7 @@ class FileList
 
 #else
 
-            DIR *dir = opendir(refPath.c_str());
+            DIR *dir = opendir(FLAGS_collect_dir.c_str());
             if(dir) {
                 struct dirent *dirEntry = readdir(dir);
                 while(dirEntry) {
@@ -225,12 +225,11 @@ class Log
 };
 
 double compareFiles(const char *diffFileName, const char *cpuFileName,
-  const char *gpuFileName, double &maxDiff, unsigned &diffCounter, const float epsilonFlag)
-{
+  const char *gpuFileName, double &maxDiff, unsigned &diffCounter) {
     typedef float DataType;
     typedef uint32_t CastType;
     const char *format = "%i;%08X;%08X;%g;%g;%g\n";
-    const DataType epsilon = (DataType) epsilonFlag;
+    const DataType epsilon = (DataType) FLAGS_epsilon;
 
     Data<DataType> cpuData;
     if(!cpuData.loadFromFile(cpuFileName)) {
@@ -286,22 +285,21 @@ double compareFiles(const char *diffFileName, const char *cpuFileName,
 }
 
 void processFile(const char *fileName, const string& layerType,
-  std::unordered_map<string, int> &errorsDictionary,
-  const string& refPath, const string& tarPath, const float epsilon)
+  std::unordered_map<string, int> &errorsDictionary)
 {
     char cpuFileName[FILENAME_MAX];
     char gpuFileName[FILENAME_MAX];
     char diffFileName[FILENAME_MAX];
     snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s",
-      refPath.c_str(), fileName);
+      FLAGS_collect_dir.c_str(), fileName);
     snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s",
-      tarPath.c_str(), fileName);
+      FLAGS_compare_output_dir.c_str(), fileName);
     snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",
-      tarPath.c_str(), fileName);
+      FLAGS_compare_output_dir.c_str(), fileName);
     double maxDiff;
     unsigned diffCounter;
     bool success = compareFiles(diffFileName, cpuFileName,
-      gpuFileName, maxDiff, diffCounter, epsilon);
+      gpuFileName, maxDiff, diffCounter);
     if(!success)
       Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
     else if(!diffCounter)
@@ -315,7 +313,7 @@ void processFile(const char *fileName, const string& layerType,
 
 void proceedWithCompare(const string& infoPath, std::unordered_map<string, int> &errorsDictionary) {
   FileList fileList;
-  fileList.findFiles(FLAGS_collect_dir);
+  fileList.findFiles();
 
   std::unordered_map<string, string> layersInfo;
   std::ifstream layersInfoFile;
@@ -333,6 +331,6 @@ void proceedWithCompare(const string& infoPath, std::unordered_map<string, int> 
   //#pragma omp parallel for
   for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
     const char* binFileName = fileList.getFileName(fileIndex);
-    processFile(binFileName, layersInfo[binFileName], errorsDictionary, FLAGS_collect_dir, FLAGS_compare_output_dir, FLAGS_epsilon);
+    processFile(binFileName, layersInfo[binFileName], errorsDictionary);
   }
 }
