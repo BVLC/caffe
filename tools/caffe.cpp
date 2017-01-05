@@ -798,7 +798,13 @@ int compare() {
 RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
+
+#ifdef USE_MLSL
+  caffe::internode::mlsl_init(argc, argv);
+#else /* !USE_MLSL */
   caffe::internode::mpi_init(argc, argv);
+#endif /* USE_MLSL */
+  
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version

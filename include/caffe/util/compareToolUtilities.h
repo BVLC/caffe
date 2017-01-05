@@ -285,8 +285,7 @@ double compareFiles(const char *diffFileName, const char *cpuFileName,
 }
 
 void processFile(const char *fileName, const string& layerType,
-  std::unordered_map<string, int> &errorsDictionary)
-{
+  std::unordered_map<string, int> &errorsDictionary) {
     char cpuFileName[FILENAME_MAX];
     char gpuFileName[FILENAME_MAX];
     char diffFileName[FILENAME_MAX];
