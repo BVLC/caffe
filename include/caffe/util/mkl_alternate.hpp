@@ -23,7 +23,8 @@ extern "C" {
 // be in the form e.g. y[i] = sqrt(a[i])
 #define DEFINE_VSL_UNARY_FUNC(name, operation) \
   template<typename Dtype> \
-  void v##name(const int n, const Dtype* a, Dtype* y) { \
+  void v##name(const int n, const Dtype* __restrict__ a, \
+             Dtype* __restrict__ y) { \
     CHECK_GT(n, 0); CHECK(a); CHECK(y); \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
@@ -45,7 +46,8 @@ DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));
 // The operation should be in the form e.g. y[i] = pow(a[i], b)
 #define DEFINE_VSL_UNARY_FUNC_WITH_PARAM(name, operation) \
   template<typename Dtype> \
-  void v##name(const int n, const Dtype* a, const Dtype b, Dtype* y) { \
+  void v##name(const int n, const Dtype* __restrict__ a, const Dtype b, \
+             Dtype* __restrict__ y) { \
     CHECK_GT(n, 0); CHECK(a); CHECK(y); \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
@@ -64,7 +66,8 @@ DEFINE_VSL_UNARY_FUNC_WITH_PARAM(Powx, y[i] = pow(a[i], b));
 // be in the form e.g. y[i] = a[i] + b[i]
 #define DEFINE_VSL_BINARY_FUNC(name, operation) \
   template<typename Dtype> \
-  void v##name(const int n, const Dtype* a, const Dtype* b, Dtype* y) { \
+  void v##name(const int n, const Dtype* __restrict__ a, \
+             const Dtype* __restrict__ b, Dtype* __restrict__ y) { \
     CHECK_GT(n, 0); CHECK(a); CHECK(b); CHECK(y); \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
