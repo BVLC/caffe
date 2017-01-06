@@ -142,7 +142,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
   } else {
 #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context
+                                    (this->device_->id());
     if (this->device_->CheckCapability("cl_intel_subgroups")) {
       viennacl::ocl::program &program = this->device_->program();
       viennacl::ocl::kernel *oclk_softmax_forward_kernel;
@@ -159,7 +160,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       oclk_softmax_forward_kernel->global_work_size(1, outer_num_);
       oclk_softmax_forward_kernel->global_work_size(2, 1);
       if (use_slm_) {
-        viennacl::ocl::local_mem data_tmp(channels * inner_num_ * sizeof(Dtype));
+        viennacl::ocl::local_mem data_tmp(channels * inner_num_ *
+                                          sizeof(Dtype));
         viennacl::ocl::local_mem scale_tmp(inner_num_ * sizeof(Dtype));
         viennacl::ocl::local_mem group_tmp(16 * inner_num_ * sizeof(Dtype));
         viennacl::ocl::enqueue(

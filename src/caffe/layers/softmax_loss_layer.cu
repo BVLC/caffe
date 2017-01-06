@@ -101,8 +101,9 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
         ctx.get_queue());
 
     if (this->device_->CheckCapability("cl_intel_subgroups")) {
-      viennacl::ocl::kernel &oclk_softmax_loss_forward_asum = program.get_kernel(
-        CL_KERNEL_SELECT("softmax_loss_forward_asum"));
+      viennacl::ocl::kernel &oclk_softmax_loss_forward_asum =
+        program.get_kernel(
+          CL_KERNEL_SELECT("softmax_loss_forward_asum"));
       int need_compute_count_sum =
             normalization_ == LossParameter_NormalizationMode_VALID
             && has_ignore_label_;
@@ -115,7 +116,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
       viennacl::ocl::enqueue(
           oclk_softmax_loss_forward_asum(nthreads, outer_num_, inner_num_,
                                          need_compute_count_sum,
-                                         (int)normalization_,
+                                         static_cast<int>(normalization_),
                                          WrapHandle(loss_data, &ctx),
                                          WrapHandle(counts, &ctx),
                                          WrapHandle(
