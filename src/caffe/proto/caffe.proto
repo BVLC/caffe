@@ -346,6 +346,15 @@ message LayerParameter {
   repeated NetStateRule include = 8;
   repeated NetStateRule exclude = 9;
 
+  // use CPU, GPU or the solver default for this layer,
+  // this will override solver_mode
+  enum LayerMode {
+    SOLVER = 0;
+    CPU = 1;
+    GPU = 2;
+  }
+  optional LayerMode layer_mode = 12 [default = SOLVER];
+
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
 

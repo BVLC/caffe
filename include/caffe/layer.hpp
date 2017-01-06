@@ -39,8 +39,9 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
     : layer_param_(param), is_shared_(false) {
-      // Set phase and copy blobs (if there are any).
+      // Set phase, mode and copy blobs (if there are any).
       phase_ = param.phase();
+      layer_mode_ = param.layer_mode();
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -175,6 +176,27 @@ class Layer {
   inline void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
+
+  /**
+   * @brief Returns this layer mode (CPU, GPU or the solver mode).
+   */
+  inline Caffe::Brew GetMode() const {
+    Caffe::Brew mode;
+    switch (layer_mode_) {
+    case LayerParameter_LayerMode_CPU:
+      mode = Caffe::CPU;
+      break;
+    case LayerParameter_LayerMode_GPU:
+      mode = Caffe::GPU;
+      break;
+    case LayerParameter_LayerMode_SOLVER:
+      mode = Caffe::mode();
+      break;
+    default:
+      LOG(FATAL) << "Unknown layer mode.";
+    }
+    return mode;
+  }
 
   /**
    * @brief Returns the vector of learnable parameter blobs.
@@ -322,6 +344,8 @@ class Layer {
   LayerParameter layer_param_;
   /** The phase: TRAIN or TEST */
   Phase phase_;
+  /** Layer mode: GPU, CPU or solver default */
+  LayerParameter_LayerMode layer_mode_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
@@ -454,7 +478,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   Lock();
   Dtype loss = 0;
   Reshape(bottom, top);
-  switch (Caffe::mode()) {
+  switch (GetMode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
     for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -490,7 +514,7 @@ template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  switch (Caffe::mode()) {
+  switch (GetMode()) {
   case Caffe::CPU:
     Backward_cpu(top, propagate_down, bottom);
     break;
