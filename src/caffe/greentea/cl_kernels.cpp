@@ -4774,6 +4774,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#if defined(cl_intel_subgroups)",    // NOLINT
+"#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(softmax_forward_slm,Dtype)(const int_tp num, const int_tp channels,",    // NOLINT
 "const int_tp spatial_dim,",    // NOLINT
 "__global Dtype* scale,",    // NOLINT
@@ -4906,10 +4909,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "out[n * channels * spatial_dim + index] /= scale[n * spatial_dim + s];",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"#endif",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
+"",    // NOLINT
+"#if defined(cl_intel_subgroups)",    // NOLINT
+"#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(softmax_loss_forward,Dtype)(",    // NOLINT
 "int_tp n, __global const Dtype* prob_data, __global const Dtype* label,",    // NOLINT
@@ -5006,8 +5013,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "return fmax((Dtype)(1.0), normalizer);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data) {",    // NOLINT
-"__local Dtype sum_tmp[16];",    // NOLINT
+"Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data, __local Dtype *sum_tmp) {",    // NOLINT
 "Dtype sum = 0;",    // NOLINT
 "for(int_tp i = get_global_id(0); i < n; i += get_global_size(0)) {",    // NOLINT
 "sum += data[i];",    // NOLINT
@@ -5025,15 +5031,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp compute_count_sum, int_tp normalization_type,",    // NOLINT
 "__global const Dtype *loss,",    // NOLINT
 "__global const Dtype *counts, __global Dtype *out) {",    // NOLINT
+"__local Dtype sum_tmp[16];",    // NOLINT
 "",    // NOLINT
-"Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss);",    // NOLINT
+"Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss, sum_tmp);",    // NOLINT
 "Dtype counts_sum = -1;",    // NOLINT
 "if (compute_count_sum)",    // NOLINT
-"counts_sum = TEMPLATE(asum, Dtype)(n, counts);",    // NOLINT
+"counts_sum = TEMPLATE(asum, Dtype)(n, counts, sum_tmp);",    // NOLINT
 "",    // NOLINT
 "if (get_global_id(0) == 0)",    // NOLINT
 "out[0] = loss_sum / TEMPLATE(get_normalizer, Dtype)(normalization_type, counts_sum, outer_num_, inner_num_);",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"#endif",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
