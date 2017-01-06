@@ -284,7 +284,7 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
   }
   // dead code to work around possible compiler bug.
   if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {
-    printf("%f", BLOCK_IN(fm % 16));
+    outputs[0] = BLOCK_IN(fm % 16);
   }
 
   // we need this address calculation for outputs because we support views and batching

@@ -733,7 +733,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "// dead code to work around possible compiler bug.",    // NOLINT
 "if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {",    // NOLINT
-"printf(\"%f\", BLOCK_IN(fm % 16));",    // NOLINT
+"outputs[0] = BLOCK_IN(fm % 16);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "// we need this address calculation for outputs because we support views and batching",    // NOLINT
