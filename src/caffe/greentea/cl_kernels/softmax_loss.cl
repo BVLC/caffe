@@ -2,6 +2,9 @@
 #include "header.cl"
 #endif
 
+#if defined(cl_intel_subgroups)
+#pragma OPENCL EXTENSION  cl_intel_subgroups : enable
+
 __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
     int_tp n, __global const Dtype* prob_data, __global const Dtype* label,
     __global Dtype* loss,
@@ -97,8 +100,7 @@ Dtype TEMPLATE(get_normalizer, Dtype)(
   return fmax((Dtype)(1.0), normalizer);
 }
 
-Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data) {
-  __local Dtype sum_tmp[16];
+Dtype TEMPLATE(asum, Dtype)(int_tp n, __global const Dtype *data, __local Dtype *sum_tmp) {
   Dtype sum = 0;
   for(int_tp i = get_global_id(0); i < n; i += get_global_size(0)) {
     sum += data[i];
@@ -116,12 +118,15 @@ __kernel void TEMPLATE(softmax_loss_forward_asum, Dtype)(
     int_tp compute_count_sum, int_tp normalization_type,
     __global const Dtype *loss,
     __global const Dtype *counts, __global Dtype *out) {
+    __local Dtype sum_tmp[16];
 
-    Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss);
+    Dtype loss_sum = TEMPLATE(asum, Dtype)(n, loss, sum_tmp);
     Dtype counts_sum = -1;
     if (compute_count_sum)
-      counts_sum = TEMPLATE(asum, Dtype)(n, counts);
+      counts_sum = TEMPLATE(asum, Dtype)(n, counts, sum_tmp);
 
     if (get_global_id(0) == 0)
       out[0] = loss_sum / TEMPLATE(get_normalizer, Dtype)(normalization_type, counts_sum, outer_num_, inner_num_);
 }
+
+#endif

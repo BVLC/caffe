@@ -2,6 +2,9 @@
 #include "header.cl"
 #endif
 
+#if defined(cl_intel_subgroups)
+#pragma OPENCL EXTENSION  cl_intel_subgroups : enable
+
 __kernel void TEMPLATE(softmax_forward_slm,Dtype)(const int_tp num, const int_tp channels,
                                    const int_tp spatial_dim,
                                    __global Dtype* scale,
@@ -134,3 +137,4 @@ __kernel void TEMPLATE(softmax_forward,Dtype)(const int_tp num, const int_tp cha
     out[n * channels * spatial_dim + index] /= scale[n * spatial_dim + s];
   }
 }
+#endif
