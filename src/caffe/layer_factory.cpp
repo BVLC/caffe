@@ -7,11 +7,28 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
+#include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/lrn_layer.hpp"
+#include "caffe/layers/pooling_layer.hpp"
+#include "caffe/layers/relu_layer.hpp"
+#include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layers/softmax_layer.hpp"
+#include "caffe/layers/tanh_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/vision_layers.hpp"
+
+#ifdef USE_CUDNN
+#include "caffe/layers/cudnn_conv_layer.hpp"
+#include "caffe/layers/cudnn_lcn_layer.hpp"
+#include "caffe/layers/cudnn_lrn_layer.hpp"
+#include "caffe/layers/cudnn_pooling_layer.hpp"
+#include "caffe/layers/cudnn_relu_layer.hpp"
+#include "caffe/layers/cudnn_sigmoid_layer.hpp"
+#include "caffe/layers/cudnn_softmax_layer.hpp"
+#include "caffe/layers/cudnn_tanh_layer.hpp"
+#endif
 
 #ifdef WITH_PYTHON_LAYER
-#include "caffe/python_layer.hpp"
+#include "caffe/layers/python_layer.hpp"
 #endif
 
 namespace caffe {
@@ -20,21 +37,37 @@ namespace caffe {
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     const LayerParameter& param) {
-  ConvolutionParameter_Engine engine = param.convolution_param().engine();
+  ConvolutionParameter conv_param = param.convolution_param();
+  ConvolutionParameter_Engine engine = conv_param.engine();
+#ifdef USE_CUDNN
+  bool use_dilation = false;
+  for (int i = 0; i < conv_param.dilation_size(); ++i) {
+    if (conv_param.dilation(i) > 1) {
+      use_dilation = true;
+    }
+  }
+#endif
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
-    engine = ConvolutionParameter_Engine_CUDNN;
+    if (!use_dilation) {
+      engine = ConvolutionParameter_Engine_CUDNN;
+    }
 #endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
+    if (use_dilation) {
+      LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
+                 << param.name();
+    }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 
@@ -54,21 +87,67 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
-    PoolingParameter p_param = param.pooling_param();
-    if (p_param.pad() || p_param.pad_h() || p_param.pad_w() ||
-        param.top_size() > 1) {
-      LOG(INFO) << "CUDNN does not support padding or multiple tops. "
+    if (param.top_size() > 1) {
+      LOG(INFO) << "cuDNN does not support multiple tops. "
                 << "Using Caffe's own pooling layer.";
       return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
+    // CuDNN assumes layers are not being modified in place, thus
+    // breaking our index tracking for updates in some cases in Caffe.
+    // Until there is a workaround in Caffe (index management) or
+    // cuDNN, use Caffe layer to max pooling, or don't use in place
+    // layers after max pooling layers
+    if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
+        return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+    } else {
+        return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
+    }
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
+
+// Get LRN layer according to engine
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
+  LRNParameter_Engine engine = param.lrn_param().engine();
+
+  if (engine == LRNParameter_Engine_DEFAULT) {
+#ifdef USE_CUDNN
+    engine = LRNParameter_Engine_CUDNN;
+#else
+    engine = LRNParameter_Engine_CAFFE;
+#endif
+  }
+
+  if (engine == LRNParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == LRNParameter_Engine_CUDNN) {
+    LRNParameter lrn_param = param.lrn_param();
+
+    if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
+      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
+    } else {
+      // local size is too big to be handled through cuDNN
+      if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
+        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+      } else {
+        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
+      }
+    }
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+
+REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
 // Get relu layer according to engine.
 template <typename Dtype>
@@ -88,6 +167,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 
@@ -111,6 +191,7 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 
@@ -134,6 +215,7 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 
@@ -157,6 +239,7 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
   }
 }
 

@@ -20,5 +20,5 @@ snapshot: 5000
 snapshot_prefix: "examples/mnist/lenet_adadelta"
 # solver mode: CPU or GPU
 solver_mode: GPU
-solver_type: ADADELTA
+type: "AdaDelta"
 delta: 1e-6

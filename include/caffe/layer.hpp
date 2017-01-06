@@ -9,7 +9,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/device_alternate.hpp"
+#include "caffe/util/math_functions.hpp"
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp

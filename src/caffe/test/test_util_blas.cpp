@@ -1,7 +1,5 @@
 #ifndef CPU_ONLY  // CPU-GPU test
 
-#include <cstring>
-
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"

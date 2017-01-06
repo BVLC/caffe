@@ -1,5 +1,5 @@
 ---
-title: Installation: RHEL / Fedora / CentOS
+title: "Installation: RHEL / Fedora / CentOS"
 ---
 
 # RHEL / Fedora / CentOS Installation
@@ -15,7 +15,7 @@ title: Installation: RHEL / Fedora / CentOS
 **Remaining dependencies, if not found**
 
     # glog
-    wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
+    wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/google-glog/glog-0.3.3.tar.gz
     tar zxvf glog-0.3.3.tar.gz
     cd glog-0.3.3
     ./configure

@@ -14,18 +14,18 @@ Let's fine-tune the BVLC-distributed CaffeNet model on a different dataset, [Fli
 ## Explanation
 
 The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the `bvlc_reference_caffenet` was trained.
-Since that model works well for object category classification, we'd like to use it architecture for our style classifier.
+Since that model works well for object category classification, we'd like to use this architecture for our style classifier.
 We also only have 80,000 images to train on, so we'd like to start with the parameters learned on the 1,000,000 ImageNet images, and fine-tune as needed.
-If we give provide the `weights` argument to the `caffe train` command, the pretrained weights will be loaded into our model, matching layers by name.
+If we provide the `weights` argument to the `caffe train` command, the pretrained weights will be loaded into our model, matching layers by name.
 
 Because we are predicting 20 classes instead of a 1,000, we do need to change the last layer in the model.
 Therefore, we change the name of the last layer from `fc8` to `fc8_flickr` in our prototxt.
 Since there is no layer named that in the `bvlc_reference_caffenet`, that layer will begin training with random weights.
 
-We will also decrease the overall learning rate `base_lr` in the solver prototxt, but boost the `blobs_lr` on the newly introduced layer.
+We will also decrease the overall learning rate `base_lr` in the solver prototxt, but boost the `lr_mult` on the newly introduced layer.
 The idea is to have the rest of the model change very slowly with new data, but let the new layer learn fast.
 Additionally, we set `stepsize` in the solver to a lower value than if we were training from scratch, since we're virtually far along in training and therefore want the learning rate to go down faster.
-Note that we could also entirely prevent fine-tuning of all layers other than `fc8_flickr` by setting their `blobs_lr` to 0.
+Note that we could also entirely prevent fine-tuning of all layers other than `fc8_flickr` by setting their `lr_mult` to 0.
 
 ## Procedure
 
@@ -57,7 +57,11 @@ The prototxts in this example assume this, and also assume the presence of the I
 
 We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
 
-Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
+Now we can train! The key to fine-tuning is the `-weights` argument in the
+command below, which tells Caffe that we want to load weights from a pre-trained
+Caffe model.
+
+(You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
 
     caffe % ./build/tools/caffe train -solver models/finetune_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
 

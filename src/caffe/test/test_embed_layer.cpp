@@ -1,4 +1,3 @@
-#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -6,16 +5,12 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/embed_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
-
-#ifndef CPU_ONLY
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-#endif
 
 template <typename TypeParam>
 class EmbedLayerTest : public MultiDeviceTest<TypeParam> {
@@ -129,7 +124,7 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
     top_offset[4] = 0;
     bias_offset[0] = 0;
     for (int j = 0; j < kNumOutput; ++j) {
-      EXPECT_EQ(layer->blobs()[0]->data_at(weight_offset) +
+      EXPECT_FLOAT_EQ(layer->blobs()[0]->data_at(weight_offset) +
                 layer->blobs()[1]->data_at(bias_offset),
                 this->blob_top_->data_at(top_offset));
       ++top_offset[4];

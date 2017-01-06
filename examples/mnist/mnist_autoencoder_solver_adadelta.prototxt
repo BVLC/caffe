@@ -16,4 +16,4 @@ snapshot: 10000
 snapshot_prefix: "examples/mnist/mnist_autoencoder_adadelta_train"
 # solver mode: CPU or GPU
 solver_mode: GPU
-solver_type: ADADELTA
+type: "AdaDelta"

@@ -8,12 +8,12 @@ The responsibilities of learning are divided between the Solver for overseeing t
 
 The Caffe solvers are:
 
-- Stochastic Gradient Descent (`SGD`), 
-- AdaDelta (`ADADELTA`),
-- Adaptive Gradient (`ADAGRAD`),
-- Adam (`ADAM`),
-- Nesterov's Accelerated Gradient (`NESTEROV`) and
-- RMSprop (`RMSPROP`)
+- Stochastic Gradient Descent (`type: "SGD"`),
+- AdaDelta (`type: "AdaDelta"`),
+- Adaptive Gradient (`type: "AdaGrad"`),
+- Adam (`type: "Adam"`),
+- Nesterov's Accelerated Gradient (`type: "Nesterov"`) and
+- RMSprop (`type: "RMSProp"`)
 
 The solver
 
@@ -51,7 +51,7 @@ The parameter update $$\Delta W$$ is formed by the solver from the error gradien
 
 ### SGD
 
-**Stochastic gradient descent** (`solver_type: SGD`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+**Stochastic gradient descent** (`type: "SGD"`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
 The **learning rate** $$ \alpha $$ is the weight of the negative gradient.
 The **momentum** $$ \mu $$ is the weight of the previous update.
 
@@ -113,7 +113,7 @@ If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss v
 
 ### AdaDelta
 
-The **AdaDelta** (`solver_type: ADADELTA`) method (M. Zeiler [1]) is a "robust learning rate method". It is a gradient-based optimization method (like SGD). The update formulas are
+The **AdaDelta** (`type: "AdaDelta"`) method (M. Zeiler [1]) is a "robust learning rate method". It is a gradient-based optimization method (like SGD). The update formulas are
 
 $$
 \begin{align}
@@ -125,7 +125,7 @@ E[g^2]_t &= \delta{E[g^2]_{t-1} } + (1-\delta)g_{t}^2
 \end{align}
 $$
 
-and 
+and
 
 $$
 (W_{t+1})_i =
@@ -139,7 +139,7 @@ $$
 
 ### AdaGrad
 
-The **adaptive gradient** (`solver_type: ADAGRAD`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
+The **adaptive gradient** (`type: "AdaGrad"`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
 Given the update information from all previous iterations $$ \left( \nabla L(W) \right)_{t'} $$ for $$ t' \in \{1, 2, ..., t\} $$,
 the update formulas proposed by [1] are as follows, specified for each component $$i$$ of the weights $$W$$:
 
@@ -159,7 +159,7 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
 
 ### Adam
 
-The **Adam** (`solver_type: ADAM`), proposed in Kingma et al. [1], is a gradient-based optimization method (like SGD). This includes an "adaptive moment estimation" ($$m_t, v_t$$) and can be regarded as a generalization of AdaGrad. The update formulas are
+The **Adam** (`type: "Adam"`), proposed in Kingma et al. [1], is a gradient-based optimization method (like SGD). This includes an "adaptive moment estimation" ($$m_t, v_t$$) and can be regarded as a generalization of AdaGrad. The update formulas are
 
 $$
 (m_t)_i = \beta_1 (m_{t-1})_i + (1-\beta_1)(\nabla L(W_t))_i,\\
@@ -181,7 +181,7 @@ Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon 
 
 ### NAG
 
-**Nesterov's accelerated gradient** (`solver_type: NESTEROV`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
+**Nesterov's accelerated gradient** (`type: "Nesterov"`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
 Though the required assumptions to achieve the $$ \mathcal{O}(1/t^2) $$ convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
 
 The weight update formulas look very similar to the SGD updates given above:
@@ -206,21 +206,14 @@ What distinguishes the method from SGD is the weight setting $$ W $$ on which we
 
 ### RMSprop
 
-The **RMSprop** (`solver_type: RMSPROP`), suggested by Tieleman in a Coursera course lecture, is a gradient-based optimization method (like SGD). The update formulas are
+The **RMSprop** (`type: "RMSProp"`), suggested by Tieleman in a Coursera course lecture, is a gradient-based optimization method (like SGD). The update formulas are
 
 $$
-(v_t)_i = 
-\begin{cases}
-(v_{t-1})_i + \delta, &(\nabla L(W_t))_i(\nabla L(W_{t-1}))_i > 0\\
-(v_{t-1})_i \cdot (1-\delta), & \text{else}
-\end{cases}
+\operatorname{MS}((W_t)_i)= \delta\operatorname{MS}((W_{t-1})_i)+ (1-\delta)(\nabla L(W_t))_i^2 \\
+(W_{t+1})_i= (W_{t})_i -\alpha\frac{(\nabla L(W_t))_i}{\sqrt{\operatorname{MS}((W_t)_i)}}
 $$
 
-$$
-(W_{t+1})_i =(W_t)_i - \alpha (v_t)_i,
-$$
-
-If the gradient updates results in oscillations the gradient is reduced by times $$1-\delta$$. Otherwise it will be increased by $$\delta$$. The default value of $$\delta$$ (`rms_decay`) is set to $$\delta = 0.02$$.
+The default value of $$\delta$$ (`rms_decay`) is set to $$\delta=0.99$$.
 
 [1] T. Tieleman, and G. Hinton.
     [RMSProp: Divide the gradient by a running average of its recent magnitude](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf).

@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 

@@ -17,4 +17,4 @@ snapshot_prefix: "examples/mnist/mnist_autoencoder_nesterov_train"
 momentum: 0.95
 # solver mode: CPU or GPU
 solver_mode: GPU
-solver_type: NESTEROV
+type: "Nesterov"

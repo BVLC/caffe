@@ -1,6 +1,4 @@
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -8,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/sigmoid_cross_entropy_loss_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -116,6 +114,34 @@ TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);
+}
+
+TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestIgnoreGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  FillerParameter data_filler_param;
+  data_filler_param.set_std(1);
+  GaussianFiller<Dtype> data_filler(data_filler_param);
+  data_filler.Fill(this->blob_bottom_data_);
+  LayerParameter layer_param;
+  LossParameter* loss_param = layer_param.mutable_loss_param();
+  loss_param->set_ignore_label(-1);
+  Dtype* target = this->blob_bottom_targets_->mutable_cpu_data();
+  const int count = this->blob_bottom_targets_->count();
+  // Ignore half of targets, then check that diff of this half is zero,
+  // while the other half is nonzero.
+  caffe_set(count / 2, Dtype(-1), target);
+  SigmoidCrossEntropyLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  vector<bool> propagate_down(2);
+  propagate_down[0] = true;
+  propagate_down[1] = false;
+  layer.Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const Dtype* diff = this->blob_bottom_data_->cpu_diff();
+  for (int i = 0; i < count / 2; ++i) {
+    EXPECT_FLOAT_EQ(diff[i], 0.);
+    EXPECT_NE(diff[i + count / 2], 0.);
+  }
 }
 
 

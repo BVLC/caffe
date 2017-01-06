@@ -1,16 +1,17 @@
 ################################################################################################
 # Defines global Caffe_LINK flag, This flag is required to prevent linker from excluding
 # some objects which are not addressed directly but are registered via static constructors
-if(BUILD_SHARED_LIBS)
-  set(Caffe_LINK caffe)
-else()
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(Caffe_LINK -Wl,-force_load caffe)
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+macro(caffe_set_caffe_link)
+  if(BUILD_SHARED_LIBS)
+    set(Caffe_LINK caffe)
+  else()
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      set(Caffe_LINK -Wl,-force_load caffe)
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+    endif()
   endif()
-endif()
-
+endmacro()
 ################################################################################################
 # Convenient command to setup source group for IDEs that support this feature (VS, XCode)
 # Usage:
@@ -93,7 +94,7 @@ function(caffe_pickup_caffe_sources root)
   caffe_convert_absolute_paths(test_srcs)
   caffe_convert_absolute_paths(test_cuda)
 
-  # propogate to parent scope
+  # propagate to parent scope
   set(srcs ${srcs} PARENT_SCOPE)
   set(cuda ${cuda} PARENT_SCOPE)
   set(test_srcs ${test_srcs} PARENT_SCOPE)

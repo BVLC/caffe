@@ -29,7 +29,7 @@ The backward pass begins with the loss and computes the gradient with respect to
 These computations follow immediately from defining the model: Caffe plans and carries out the forward and backward passes for you.
 
 - The `Net::Forward()` and `Net::Backward()` methods carry out the respective passes while `Layer::Forward()` and `Layer::Backward()` compute each step.
-- Every layer type has `forward_{cpu,gpu}()` and `backward_{cpu,gpu}` methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.
+- Every layer type has `forward_{cpu,gpu}()` and `backward_{cpu,gpu}()` methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.
 
 The [Solver](solver.html) optimizes a model by first calling forward to yield the output and loss, then calling backward to generate the gradient of the model, and then incorporating the gradient into a weight update that attempts to minimize the loss. Division of labor between the Solver, Net, and Layer keep Caffe modular and open to development.
 

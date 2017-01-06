@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/neuron_layer.hpp"
+#include "caffe/layers/prelu_layer.hpp"
 
 namespace caffe {
 
@@ -31,10 +31,15 @@ __global__ void PReLUBackward(const int n, const int channels, const int dim,
 
 // CUDA kernel for element-wise parameter backward
 template <typename Dtype>
-__global__ void PReLUParamBackward(const int n, const Dtype* in_diff,
+__global__ void PReLUParamBackward(const int n,
+    const int rows, const int rowPitch, const Dtype* in_diff,
     const Dtype* in_data, Dtype* out_diff) {
   CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
+    for ( int k = 1; k < rows; k++ ) {
+        out_diff[index] += in_diff[index + k*rowPitch]
+           * in_data[index + k*rowPitch] * (in_data[index + k*rowPitch] <= 0);
+    }
   }
 }
 
@@ -82,29 +87,24 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
     int cdim = channels * dim;
-    Dtype dsum = 0.;
-    for (int n = 0; n < bottom[0]->num(); ++n) {
-      // compute element-wise diff
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(cdim),
-          CAFFE_CUDA_NUM_THREADS>>>(
-          cdim, top_diff + top[0]->offset(n),
-          bottom_data + bottom[0]->offset(n),
-          backward_buff_.mutable_gpu_diff());
-      CUDA_POST_KERNEL_CHECK;
-      if (channel_shared_) {
-        Dtype d;
-        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
-            multiplier_.gpu_data(), &d);
-        dsum += d;
-      } else {
-        caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
-            backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
-            slope_diff);
-      }
-    }
+
+    // compute element-wise diff
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(cdim),
+      CAFFE_CUDA_NUM_THREADS>>>(
+      cdim, bottom[0]->num(), top[0]->offset(1), top_diff ,
+      bottom_data ,
+      backward_buff_.mutable_gpu_diff());
+    CUDA_POST_KERNEL_CHECK;
     if (channel_shared_) {
+      Dtype dsum;
+      caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
+       multiplier_.gpu_data(), &dsum);
       caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+    } else {
+      caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
+        backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
+        slope_diff);
     }
   }
   // Propagate to bottom

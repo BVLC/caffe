@@ -15,7 +15,9 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
-#include "caffe/python_layer.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
+#include "caffe/layers/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -23,6 +25,19 @@
 #define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
+
+/* Fix to avoid registration warnings in pycaffe (#3960) */
+#define BP_REGISTER_SHARED_PTR_TO_PYTHON(PTR) do { \
+  const boost::python::type_info info = \
+    boost::python::type_id<shared_ptr<PTR > >(); \
+  const boost::python::converter::registration* reg = \
+    boost::python::converter::registry::query(info); \
+  if (reg == NULL) { \
+    bp::register_ptr_to_python<shared_ptr<PTR > >(); \
+  } else if ((*reg).m_to_python == NULL) { \
+    bp::register_ptr_to_python<shared_ptr<PTR > >(); \
+  } \
+} while (0)
 
 namespace bp = boost::python;
 
@@ -35,6 +50,8 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+
+void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -71,19 +88,42 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   }
 }
 
-// Net constructor for passing phase as int
-shared_ptr<Net<Dtype> > Net_Init(
-    string param_file, int phase) {
-  CheckFile(param_file);
+// Net constructor
+shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
+    const int level, const bp::object& stages,
+    const bp::object& weights) {
+  CheckFile(network_file);
 
-  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+  // Convert stages from list to vector
+  vector<string> stages_vector;
+  if (!stages.is_none()) {
+    for (int i = 0; i < len(stages); i++) {
+      stages_vector.push_back(bp::extract<string>(stages[i]));
+    }
+  }
+
+  // Initialize net
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(network_file,
+        static_cast<Phase>(phase), level, &stages_vector));
+
+  // Load weights
+  if (!weights.is_none()) {
+    std::string weights_file_str = bp::extract<std::string>(weights);
+    CheckFile(weights_file_str);
+    net->CopyTrainedLayersFrom(weights_file_str);
+  }
+
   return net;
 }
 
-// Net construct-and-load convenience constructor
+// Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
+  LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
+  LOG(WARNING) << "Use this instead (with the named \"weights\""
+    << " parameter):";
+  LOG(WARNING) << "Net('" << param_file << "', " << phase
+    << ", weights='" << pretrained_param_file << "')";
   CheckFile(param_file);
   CheckFile(pretrained_param_file);
 
@@ -97,6 +137,14 @@ void Net_Save(const Net<Dtype>& net, string filename) {
   NetParameter net_param;
   net.ToProto(&net_param, false);
   WriteProtoToBinaryFile(net_param, filename.c_str());
+}
+
+void Net_SaveHDF5(const Net<Dtype>& net, string filename) {
+  net.ToHDF5(filename);
+}
+
+void Net_LoadHDF5(Net<Dtype>* net, string filename) {
+  net->CopyTrainedLayersFromHDF5(filename.c_str());
 }
 
 void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
@@ -133,8 +181,8 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
-  ReadProtoFromTextFileOrDie(filename, &param);
-  return GetSolver<Dtype>(param);
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
 }
 
 struct NdarrayConverterGenerator {
@@ -205,31 +253,66 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+template<typename Dtype>
+class PythonCallback: public Solver<Dtype>::Callback {
+ protected:
+  bp::object on_start_, on_gradients_ready_;
+
+ public:
+  PythonCallback(bp::object on_start, bp::object on_gradients_ready)
+    : on_start_(on_start), on_gradients_ready_(on_gradients_ready) { }
+  virtual void on_gradients_ready() {
+    on_gradients_ready_();
+  }
+  virtual void on_start() {
+    on_start_();
+  }
+};
+template<typename Dtype>
+void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
+  bp::object on_gradients_ready) {
+  solver->add_callback(new PythonCallback<Dtype>(on_start, on_gradients_ready));
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
+
+  bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("set_random_seed", &set_random_seed);
   bp::def("set_device", &Caffe::SetDevice);
 
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
-    .def("__init__", bp::make_constructor(&Net_Init))
+    // Constructor
+    .def("__init__", bp::make_constructor(&Net_Init,
+          bp::default_call_policies(), (bp::arg("network_file"), "phase",
+            bp::arg("level")=0, bp::arg("stages")=bp::object(),
+            bp::arg("weights")=bp::object())))
+    // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
+    .def("clear_param_diffs", &Net<Dtype>::ClearParamDiffs)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
     .add_property("_blob_loss_weights", bp::make_function(
         &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
+    .def("_bottom_ids", bp::make_function(&Net<Dtype>::bottom_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
+    .def("_top_ids", bp::make_function(&Net<Dtype>::top_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
     .add_property("layers", bp::make_function(&Net<Dtype>::layers,
@@ -245,7 +328,10 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
-    .def("save", &Net_Save);
+    .def("save", &Net_Save)
+    .def("save_hdf5", &Net_SaveHDF5)
+    .def("load_hdf5", &Net_LoadHDF5);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -265,6 +351,7 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
+  BP_REGISTER_SHARED_PTR_TO_PYTHON(Blob<Dtype>);
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
     boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
@@ -273,7 +360,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
-  bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
+  BP_REGISTER_SHARED_PTR_TO_PYTHON(Layer<Dtype>);
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init);
 
@@ -283,10 +370,13 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
+    .def("add_callback", &Solver_add_callback<Dtype>)
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore);
+    .def("restore", &Solver<Dtype>::Restore)
+    .def("snapshot", &Solver<Dtype>::Snapshot);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(

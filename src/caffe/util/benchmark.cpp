@@ -44,7 +44,6 @@ void Timer::Stop() {
     if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
       CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
-      CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
 #else
       NO_GPU;
 #endif
@@ -66,6 +65,7 @@ float Timer::MicroSeconds() {
   }
   if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
+    CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
     // Cuda only measure milliseconds
@@ -89,6 +89,7 @@ float Timer::MilliSeconds() {
   }
   if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
+    CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
 #else

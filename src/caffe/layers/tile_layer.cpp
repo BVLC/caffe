@@ -1,7 +1,6 @@
 #include <vector>
 
-#include "caffe/common_layers.hpp"
-#include "caffe/layer.hpp"
+#include "caffe/layers/tile_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

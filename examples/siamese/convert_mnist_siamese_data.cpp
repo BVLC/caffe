@@ -13,6 +13,7 @@
 #include "stdint.h"
 
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/format.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #ifdef USE_LEVELDB
@@ -75,8 +76,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label_i;
   char label_j;
   char* pixels = new char[2 * rows * cols];
-  const int kMaxKeyLength = 10;
-  char key[kMaxKeyLength];
   std::string value;
 
   caffe::Datum datum;
@@ -99,8 +98,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       datum.set_label(0);
     }
     datum.SerializeToString(&value);
-    snprintf(key, kMaxKeyLength, "%08d", itemid);
-    db->Put(leveldb::WriteOptions(), std::string(key), value);
+    std::string key_str = caffe::format_int(itemid, 8);
+    db->Put(leveldb::WriteOptions(), key_str, value);
   }
 
   delete db;

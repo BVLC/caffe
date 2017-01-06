@@ -1,5 +1,3 @@
-#include <cstring>
-
 #include "gtest/gtest.h"
 
 #include "caffe/filler.hpp"

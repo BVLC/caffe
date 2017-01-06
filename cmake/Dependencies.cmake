@@ -2,7 +2,7 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
@@ -26,7 +26,7 @@ include(cmake/ProtoBuf.cmake)
 # ---[ HDF5
 find_package(HDF5 COMPONENTS HL REQUIRED)
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
+list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 # ---[ LMDB
 if(USE_LMDB)
@@ -34,6 +34,9 @@ if(USE_LMDB)
   include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
   add_definitions(-DUSE_LMDB)
+  if(ALLOW_LMDB_NOLOCK)
+    add_definitions(-DALLOW_LMDB_NOLOCK)
+  endif()
 endif()
 
 # ---[ LevelDB
@@ -55,9 +58,9 @@ endif()
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
   if(CPU_ONLY)
-    message("-- CUDA is disabled. Building without it...")
+    message(STATUS "-- CUDA is disabled. Building without it...")
   else()
-    message("-- CUDA is not detected by cmake. Building without it...")
+    message(WARNING "-- CUDA is not detected by cmake. Building without it...")
   endif()
 
   # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
@@ -99,6 +102,12 @@ elseif(APPLE)
   find_package(vecLib REQUIRED)
   include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
+
+  if(VECLIB_FOUND)
+    if(NOT vecLib_INCLUDE_DIR MATCHES "^/System/Library/Frameworks/vecLib.framework.*")
+      add_definitions(-DUSE_ACCELERATE)
+    endif()
+  endif()
 endif()
 
 # ---[ Python
@@ -111,14 +120,14 @@ if(BUILD_python)
     # Find the matching boost python implementation
     set(version ${PYTHONLIBS_VERSION_STRING})
     
-    STRING( REPLACE "." "" boost_py_version ${version} )
+    STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
     find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
     set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
     
     while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
       STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
       
-      STRING( REPLACE "." "" boost_py_version ${version} )
+      STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
       find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
       set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
       

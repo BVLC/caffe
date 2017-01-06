@@ -5,7 +5,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/threshold_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
