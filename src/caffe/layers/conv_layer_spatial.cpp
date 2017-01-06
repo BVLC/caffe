@@ -25,6 +25,8 @@
 
 namespace caffe {
 
+#define ALIGN(val, N) (((val) + (N) - 1) & ~((N) - 1))
+
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::compute_output_shape() {
   const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
@@ -57,7 +59,8 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   stride_w_ = stride_data[1];
   M_ = this->num_output_ / this->group_;
   K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
-  swizzled_weights_blob_.Reshape((this->num_output_ + 15) & ~15, this->channels_,
+  swizzled_weights_blob_.Reshape((this->num_output_ + 15) & ~15,
+                            this->channels_,
                             kernel_h_, (kernel_w_ + 1) & ~1);
   swizzled_weights_ = NULL;
   bias_ = NULL;
@@ -318,15 +321,15 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
 
     int_tp channels = this->channels_ / this->group_;
     oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights_, &ctx));
+    oclk_copy_weight.arg(argIdx++, WrapHandle((cl_mem) swizzled_weights_,
+                         &ctx));
     oclk_copy_weight.arg(argIdx++, kernel_w_);
     oclk_copy_weight.arg(argIdx++, kernel_h_);
     oclk_copy_weight.arg(argIdx++, channels);
     oclk_copy_weight.arg(argIdx++, this->num_output_);
     oclk_copy_weight.arg(argIdx++, swizzled_factor);
     const size_t global_work_size_Copy[3] = {
-        (size_t) (((this->num_output_ + (swizzled_factor - 1))
-                  & ~(swizzled_factor - 1))
+        (size_t) (ALIGN(this->num_output_, swizzled_factor)
         * channels * kernel_w_ * kernel_h_), 1, 1 };
 
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
@@ -345,10 +348,10 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
                                   malloc(interleaved_filter_size));
     CHECK_EQ(tmpSwizzledWeight != NULL, true)
       << "Failed to allocate temporary swizzled weight";
-    for( int od = 0; od < M_; od++)
-      for( int id = 0; id < this->channels_; id++)
-        for( int r = 0; r < kernel_h_; r++)
-          for( int c = 0; c < kernel_w_; c++)
+    for ( int od = 0; od < M_; od++)
+      for ( int id = 0; id < this->channels_; id++)
+        for ( int r = 0; r < kernel_h_; r++)
+          for ( int c = 0; c < kernel_w_; c++)
             tmpSwizzledWeight[((id * kernel_h_ + r)
                 * kernel_w_ + c) * M_ + od]
                 = weight_cpu[((od * this->channels_ + id)
@@ -813,9 +816,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   int_tp output_height = output_h_;
   int_tp simd_size = blockK;
   int_tp num_batches = num_;
-  int_tp alignedFilterWidth = (M_ + blockN - 1) & ~(blockN - 1);
-  int_tp alignedExpandHeight = (output_width * output_height + blockM - 1)
-                               & ~(blockM - 1);
+  int_tp alignedFilterWidth = ALIGN(M_, blockN);
+  int_tp alignedExpandHeight = ALIGN(output_width * output_height, blockM);
   int_tp globalWorkSizeDX = blockN;
   int_tp globalWorkSizeDY = blockM;
 
@@ -880,7 +882,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   size_t sgemm_n = alignedFilterWidth;
   size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );  // NOLINT
   size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );  // NOLINT
-  gy = (gy + blockK - 1) & ~(blockK - 1);
+  gy = ALIGN(gy, blockK);
   size_t gz = num_batches;
   size_t global_size[3] = { gx, gy, gz };
 
@@ -968,7 +970,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
       / output_block_width, (size_t) (output_height + output_block_height - 1)
       / output_block_height,
       (size_t) num_batches *
-      ((num_output_maps + (simd_size - 1)) & ~(simd_size - 1)) };
+      ALIGN(num_output_maps, simd_size) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
   int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_) + 3) & ~3;
@@ -996,7 +998,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -DTILE_Y=" << tile_y
                 << " -DTILE_Y_STRIDE=" << tile_y_stride
                 << " -DINVEC_SIZE=" << invec_size
-                << " -DALIGNED_NUM_FILTERS=" << ((M_ + (simd_size - 1)) & ~(simd_size - 1));
+                << " -DALIGNED_NUM_FILTERS=" << ALIGN(M_, simd_size);
 
   if (need_padding_)
     optionsString << " -DINPUT_PAD_W=" << 0 << " -DINPUT_PAD_H=" << 0;
@@ -1148,7 +1150,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
     // Generates static key_
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context
+                                    (this->device_->id());
     int max_compute_units = ctx.current_device().max_compute_units();
     generate_key(false);
     int kernelCnt = 0;
@@ -1183,11 +1186,13 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         for (uint32_t height = height_max; height > 0; height--) {
           if (width * height > block_size_max || height > output_h_)
             continue;
-          // Only when the work items count is less than the device max work items
-          // or the M_ is less than 16, we will tune for simd 8.
+          // Only when the work items count is less than the device
+          // max work items or the M_ is less than 16, we will tune
+          // for simd 8.
           if (simd_size == 8
               && M_ >= 16
-              && ((num_ * M_ * output_w_ * output_h_ / (float)(width * height))
+              && ((num_ * M_ * output_w_ * output_h_ /
+                   static_cast<float>(width * height))
                  >= max_compute_units * 7 * 16))
             continue;
           int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
@@ -1322,9 +1327,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
 template<>
 void ConvolutionLayerSpatial<float>::Forward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
-  
   weight = this->blobs_[0]->gpu_data();
-  weight_cpu = (float*)this->blobs_[0]->cpu_data();
+  weight_cpu = static_cast<const float*>(this->blobs_[0]->cpu_data());
   if (bias_term_)
     bias_ = this->blobs_[1]->gpu_data();
 

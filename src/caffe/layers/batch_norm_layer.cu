@@ -108,7 +108,9 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       viennacl::ocl::program &program = this->device_->program();
 
       cl_uint argIdx = 0;
-      size_t global_work_size_[3] = {(size_t)num, (size_t)channels_, (size_t)spatial_dim};
+      size_t global_work_size_[3] = {(size_t)num,
+                                     (size_t)channels_,
+                                     (size_t)spatial_dim};
       if (bottom[0] == top[0]) {
          viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
             CL_KERNEL_SELECT("batch_norm_use_global_stats_in_place"));
@@ -117,36 +119,43 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
          oclk_bn_use_global_stats.arg(argIdx++, spatial_dim);
          oclk_bn_use_global_stats.arg(argIdx++, scale_factor);
          oclk_bn_use_global_stats.arg(argIdx++, eps_);
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+         oclk_bn_use_global_stats.arg(argIdx++,
+           WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));
+         oclk_bn_use_global_stats.arg(argIdx++,
+           WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
+         oclk_bn_use_global_stats.arg(argIdx++,
+           WrapHandle((cl_mem) top_data, &ctx));
          OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                   oclk_bn_use_global_stats.handle().get(), 3, NULL,
                   global_work_size_, NULL, 0, NULL,
                   NULL));
       } else {
-            viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
-            CL_KERNEL_SELECT("batch_norm_use_global_stats"));
+            viennacl::ocl::kernel &oclk_bn_use_global_stats =
+              program.get_kernel(
+                CL_KERNEL_SELECT("batch_norm_use_global_stats"));
             oclk_bn_use_global_stats.arg(argIdx++, num);
             oclk_bn_use_global_stats.arg(argIdx++, channels_);
             oclk_bn_use_global_stats.arg(argIdx++, spatial_dim);
             oclk_bn_use_global_stats.arg(argIdx++, scale_factor);
             oclk_bn_use_global_stats.arg(argIdx++, eps_);
-            oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));
-            oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
-            oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
-            oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) bottom_data, &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) top_data, &ctx));
             OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                      oclk_bn_use_global_stats.handle().get(), 3, NULL,
                      global_work_size_, NULL, 0, NULL,
                      NULL));
       }
     } else {
-
-     if (bottom[0] != top[0]) {
+      if (bottom[0] != top[0]) {
        greentea_copy<Dtype>(bottom[0]->count(), (cl_mem) bottom_data, 0,
                             (cl_mem) top_data, 0, &ctx);
-     }
+    }
 
      // compute mean
      greentea_gpu_gemv<Dtype>(this->device_->id(), CblasNoTrans,
@@ -208,7 +217,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                0);
 
      // normalize variance
-     greentea_gpu_add_scalar<Dtype>(this->device_->id(), variance_.count(), eps_,
+     greentea_gpu_add_scalar<Dtype>(this->device_->id(),
+                                    variance_.count(), eps_,
                                     (cl_mem) (variance_.mutable_gpu_data()), 0);
      greentea_gpu_powx<Dtype>(this->device_->id(), variance_.count(),
                               (cl_mem) (variance_.gpu_data()), 0, Dtype(0.5),
