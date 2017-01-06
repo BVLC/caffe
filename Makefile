@@ -328,6 +328,12 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
+# NCCL acceleration configuration
+ifeq ($(USE_NCCL), 1)
+	LIBRARIES += nccl
+	COMMON_FLAGS += -DUSE_NCCL
+endif
+
 # configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
