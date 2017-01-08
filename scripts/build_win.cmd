@@ -66,11 +66,20 @@ if DEFINED APPVEYOR (
     :: Build the install target
     if NOT DEFINED RUN_INSTALL set RUN_INSTALL=0
 
+    :: Enable CUDA backend
     if NOT DEFINED USE_CUDA set USE_CUDA=0
+    :: Use cuDNN acceleration with CUDA backend
+    if NOT DEFINED USE_CUDNN set USE_CUDNN=0
+    :: Use OpenCL backend
     if NOT DEFINED USE_GREENTEA set USE_GREENTEA=1
+    :: Use LibDNN acceleration with OpenCL and/or CUDA backend
     if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
+    :: Use OpenMP (disable this on systems with #NUMA > 1)
 	if NOT DEFINED USE_OPENMP set USE_OPENMP=0
+    :: Use 64 bit indexing for very large memory blob support (above 2G)
     if NOT DEFINED USE_INDEX64 set USE_INDEX64=0
+    :: Use Intel spatial kernels acceleration for forward convolution on Intel iGPUs
+    if NOT DEFINED USE_INTEL_SPATIAL set USE_INTEL_SPATIAL=0
 )
 
 :: Set the appropriate CMake generator
@@ -102,6 +111,9 @@ echo INFO: USE_CUDA                   = !USE_CUDA!
 echo INFO: USE_CUDNN                  = !USE_CUDNN!
 echo INFO: USE_GREENTEA               = !USE_GREENTEA!
 echo INFO: USE_LIBDNN                 = !USE_LIBDNN!
+echo INFO: USE_OPENMP                 = !USE_OPENMP!
+echo INFO: USE_INDEX64                = !USE_INDEX_64!
+echo INFO: USE_INTEL_SPATIAL          = !USE_INTEL_SPATIAL!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
 echo INFO: BUILD_PYTHON               = !BUILD_PYTHON!
@@ -166,10 +178,12 @@ cmake -G"!CMAKE_GENERATOR!" ^
       -DBUILD_matlab:BOOL=%BUILD_MATLAB% ^
       -DCPU_ONLY:BOOL=%CPU_ONLY% ^
 	  -DUSE_CUDA:BOOL=%USE_CUDA% ^
+      -DUSE_CUDNN:BOOL=%USE_CUDNN% ^
 	  -DUSE_LIBDNN:BOOL=%USE_LIBDNN% ^
 	  -DUSE_GREENTEA:BOOL=%USE_GREENTEA% ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
-      -DUSE_OPENMP:BOOL=%USE_INDEX64% ^
+      -DUSE_INDEX64:BOOL=%USE_INDEX64% ^
+      -DUSE_INTEL_SPATIAL:BOOL=%USE_INTEL_SPATIAL% ^
       -C "%cd%\libraries\caffe-builder-config.cmake" ^
       "%~dp0\.."
 
