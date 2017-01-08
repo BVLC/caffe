@@ -116,6 +116,14 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 }
 
 template <typename Dtype>
+void SGDSolver<Dtype>::UpdateClearDiff() {
+  ApplyUpdate();
+  this->net_->ClearParamDiffs();
+  this->iter_++;
+  GetLearningRate();
+}
+
+template <typename Dtype>
 void SGDSolver<Dtype>::Normalize(int param_id) {
   if (this->param_.iter_size() == 1) { return; }
   // Scale gradient to counterbalance accumulation.

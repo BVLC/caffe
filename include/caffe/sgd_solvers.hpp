@@ -22,6 +22,7 @@ class SGDSolver : public Solver<Dtype> {
   virtual inline const char* type() const { return "SGD"; }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+  void UpdateClearDiff();
 
  protected:
   void PreSolve();
