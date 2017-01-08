@@ -75,7 +75,7 @@ if DEFINED APPVEYOR (
     :: Use LibDNN acceleration with OpenCL and/or CUDA backend
     if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
     :: Use OpenMP (disable this on systems with #NUMA > 1)
-	if NOT DEFINED USE_OPENMP set USE_OPENMP=0
+    if NOT DEFINED USE_OPENMP set USE_OPENMP=0
     :: Use 64 bit indexing for very large memory blob support (above 2G)
     if NOT DEFINED USE_INDEX64 set USE_INDEX64=0
     :: Use Intel spatial kernels acceleration for forward convolution on Intel iGPUs
