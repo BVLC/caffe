@@ -49,6 +49,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+#ifdef USE_MPI
+#include <mpi.h>
+#include "caffe/internode/mpiutil.hpp"
+#endif /* USE_MPI */
+
 #ifdef USE_MLSL
 #include "mlsl.h"
 #endif /* USE_MLSL */
@@ -121,9 +126,9 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
                                     NetParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse NetParameter file: " << param_file;
-#ifdef USE_MLSL
+#if defined(USE_MPI) || defined(USE_MLSL)
   ReplaceMultinodeNetParams(param);
-#endif /* USE_MLSL */
+#endif
   UpgradeNetAsNeeded(param_file, param);
 }
 
@@ -1111,10 +1116,26 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   UpgradeSolverAsNeeded(param_file, param);
 }
 
-#ifdef USE_MLSL
+#if defined(USE_MPI) || defined(USE_MLSL)
+static std::string getNodeId() {
+#if defined(USE_MPI)
+  return std::to_string(caffe::internode::mpi_get_current_proc_rank());
+#elif defined(USE_MLSL)
+  return std::to_string(MLSL::GetNodeId());
+#endif
+}
+
+static std::string getNumNodes() {
+#if defined(USE_MPI)
+  return std::to_string(caffe::internode::mpi_get_comm_size());
+#elif defined(USE_MLSL)
+  return std::to_string(MLSL::GetNumNodes());
+#endif
+}
+
 void ReplaceMultinodeSolverParams(SolverParameter* param) {
-  std::string node_id = std::to_string(MLSL::GetNodeId());
-  std::string num_nodes = std::to_string(MLSL::GetNumNodes());
+  std::string node_id = getNodeId();
+  std::string num_nodes = getNumNodes();
 
   if (param->has_train_net()) {
     std::string* train_net = param->mutable_train_net();
@@ -1134,9 +1155,6 @@ void ReplaceMultinodeSolverParams(SolverParameter* param) {
 }
 
 void ReplaceMultinodeNetParams(NetParameter* param) {
-  std::string node_id = std::to_string(MLSL::GetNodeId());
-  std::string num_nodes = std::to_string(MLSL::GetNumNodes());
-
   for (int i = 0; i < param->layer_size(); ++i) {
     std::string* source = nullptr;
 
@@ -1149,11 +1167,11 @@ void ReplaceMultinodeNetParams(NetParameter* param) {
     }
 
     if (source) {
-        boost::replace_all(*source, "%#", node_id);
-        boost::replace_all(*source, "%*", num_nodes);
+        boost::replace_all(*source, "%#", getNodeId());
+        boost::replace_all(*source, "%*", getNumNodes());
     }
   }
 }
-#endif /* USE_MLSL */
+#endif
 
 }  // namespace caffe
