@@ -28,7 +28,7 @@ if DEFINED APPVEYOR (
     conda update conda -y
     :: Create an environment
     :: Todo create protobuf package for vc14
-    conda install --yes cmake ninja numpy scipy protobuf==3.1.0.vc12 six scikit-image
+    conda install --yes cmake ninja numpy scipy protobuf==3.1.0.vc12 six scikit-image pyyaml
 
     if ERRORLEVEL 1  (
       echo ERROR: Conda update or install failed
