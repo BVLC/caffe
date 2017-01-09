@@ -30,7 +30,7 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
     if (iter->first == "Python") { continue; }
     LayerParameter layer_param;
     // Data layers expect a DB
-    if (iter->first == "Data") {
+    if (iter->first == "Data" || iter->first == "AnnotatedData") {
 #ifdef USE_LEVELDB
       string tmp;
       MakeTempDir(&tmp);

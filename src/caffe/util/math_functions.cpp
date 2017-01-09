@@ -98,6 +98,7 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   }
 }
 
+template void caffe_copy<bool>(const int N, const bool* X, bool* Y);
 template void caffe_copy<int>(const int N, const int* X, int* Y);
 template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
