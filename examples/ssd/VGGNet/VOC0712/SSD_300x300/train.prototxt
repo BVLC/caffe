@@ -1,4 +1,4 @@
-name: "VGG_coco_SSD_300x300_train"
+name: "VGG_VOC0712_SSD_300x300_train"
 layer {
   name: "data"
   type: "AnnotatedData"
@@ -12,7 +12,6 @@ layer {
     mean_value: 104
     mean_value: 117
     mean_value: 123
-    force_color: true
     resize_param {
       prob: 1
       resize_mode: WARP
@@ -46,7 +45,7 @@ layer {
     }
   }
   data_param {
-    source: "examples/coco/coco_train_lmdb"
+    source: "examples/VOC0712/VOC0712_trainval_lmdb"
     batch_size: 32
     backend: LMDB
   }
@@ -133,7 +132,7 @@ layer {
       max_sample: 1
       max_trials: 50
     }
-    label_map_file: "data/coco/labelmap_coco.prototxt"
+    label_map_file: "data/VOC0712/labelmap_voc.prototxt"
   }
 }
 layer {
@@ -1088,7 +1087,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 324
+    num_output: 84
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1130,8 +1129,8 @@ layer {
   bottom: "data"
   top: "conv4_3_norm_mbox_priorbox"
   prior_box_param {
-    min_size: 21.0
-    max_size: 45.0
+    min_size: 30.0
+    max_size: 60.0
     aspect_ratio: 2
     flip: true
     clip: false
@@ -1206,7 +1205,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 486
+    num_output: 126
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1248,8 +1247,8 @@ layer {
   bottom: "data"
   top: "fc7_mbox_priorbox"
   prior_box_param {
-    min_size: 45.0
-    max_size: 99.0
+    min_size: 60.0
+    max_size: 111.0
     aspect_ratio: 2
     aspect_ratio: 3
     flip: true
@@ -1325,7 +1324,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 486
+    num_output: 126
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1367,8 +1366,8 @@ layer {
   bottom: "data"
   top: "conv6_2_mbox_priorbox"
   prior_box_param {
-    min_size: 99.0
-    max_size: 153.0
+    min_size: 111.0
+    max_size: 162.0
     aspect_ratio: 2
     aspect_ratio: 3
     flip: true
@@ -1444,7 +1443,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 486
+    num_output: 126
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1486,8 +1485,8 @@ layer {
   bottom: "data"
   top: "conv7_2_mbox_priorbox"
   prior_box_param {
-    min_size: 153.0
-    max_size: 207.0
+    min_size: 162.0
+    max_size: 213.0
     aspect_ratio: 2
     aspect_ratio: 3
     flip: true
@@ -1563,7 +1562,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 324
+    num_output: 84
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1605,8 +1604,8 @@ layer {
   bottom: "data"
   top: "conv8_2_mbox_priorbox"
   prior_box_param {
-    min_size: 207.0
-    max_size: 261.0
+    min_size: 213.0
+    max_size: 264.0
     aspect_ratio: 2
     flip: true
     clip: false
@@ -1681,7 +1680,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 324
+    num_output: 84
     pad: 1
     kernel_size: 3
     stride: 1
@@ -1723,7 +1722,7 @@ layer {
   bottom: "data"
   top: "conv9_2_mbox_priorbox"
   prior_box_param {
-    min_size: 261.0
+    min_size: 264.0
     max_size: 315.0
     aspect_ratio: 2
     flip: true
@@ -1803,13 +1802,13 @@ layer {
     loc_loss_type: SMOOTH_L1
     conf_loss_type: SOFTMAX
     loc_weight: 1.0
-    num_classes: 81
+    num_classes: 21
     share_location: true
     match_type: PER_PREDICTION
     overlap_threshold: 0.5
     use_prior_for_matching: true
     background_label_id: 0
-    use_difficult_gt: false
+    use_difficult_gt: true
     neg_pos_ratio: 3.0
     neg_overlap: 0.5
     code_type: CENTER_SIZE

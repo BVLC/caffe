@@ -55,6 +55,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -62,6 +63,9 @@ layer {
   type: "ReLU"
   bottom: "conv1_1"
   top: "conv1_1"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv1_2"
@@ -87,6 +91,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -94,6 +99,9 @@ layer {
   type: "ReLU"
   bottom: "conv1_2"
   top: "conv1_2"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "pool1"
@@ -104,6 +112,7 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+    engine: MKL2017
   }
 }
 layer {
@@ -130,6 +139,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -137,6 +147,9 @@ layer {
   type: "ReLU"
   bottom: "conv2_1"
   top: "conv2_1"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv2_2"
@@ -162,6 +175,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -169,6 +183,9 @@ layer {
   type: "ReLU"
   bottom: "conv2_2"
   top: "conv2_2"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "pool2"
@@ -179,6 +196,7 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+    engine: MKL2017
   }
 }
 layer {
@@ -205,6 +223,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -212,6 +231,9 @@ layer {
   type: "ReLU"
   bottom: "conv3_1"
   top: "conv3_1"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv3_2"
@@ -237,6 +259,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -244,6 +267,9 @@ layer {
   type: "ReLU"
   bottom: "conv3_2"
   top: "conv3_2"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv3_3"
@@ -269,6 +295,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -276,6 +303,9 @@ layer {
   type: "ReLU"
   bottom: "conv3_3"
   top: "conv3_3"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "pool3"
@@ -286,6 +316,7 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+    engine: MKL2017
   }
 }
 layer {
@@ -312,6 +343,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -319,6 +351,9 @@ layer {
   type: "ReLU"
   bottom: "conv4_1"
   top: "conv4_1"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv4_2"
@@ -344,6 +379,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -351,6 +387,9 @@ layer {
   type: "ReLU"
   bottom: "conv4_2"
   top: "conv4_2"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv4_3"
@@ -376,6 +415,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -383,6 +423,9 @@ layer {
   type: "ReLU"
   bottom: "conv4_3"
   top: "conv4_3"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "pool4"
@@ -393,6 +436,7 @@ layer {
     pool: MAX
     kernel_size: 2
     stride: 2
+    engine: MKL2017
   }
 }
 layer {
@@ -419,6 +463,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
     dilation: 1
   }
 }
@@ -427,6 +472,9 @@ layer {
   type: "ReLU"
   bottom: "conv5_1"
   top: "conv5_1"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv5_2"
@@ -452,6 +500,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
     dilation: 1
   }
 }
@@ -460,6 +509,9 @@ layer {
   type: "ReLU"
   bottom: "conv5_2"
   top: "conv5_2"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv5_3"
@@ -485,6 +537,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
     dilation: 1
   }
 }
@@ -493,6 +546,9 @@ layer {
   type: "ReLU"
   bottom: "conv5_3"
   top: "conv5_3"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "pool5"
@@ -504,6 +560,7 @@ layer {
     kernel_size: 3
     stride: 1
     pad: 1
+    engine: MKL2017
   }
 }
 layer {
@@ -538,6 +595,9 @@ layer {
   type: "ReLU"
   bottom: "fc6"
   top: "fc6"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "fc7"
@@ -562,6 +622,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -569,6 +630,9 @@ layer {
   type: "ReLU"
   bottom: "fc7"
   top: "fc7"
+  relu_param {
+    engine: MKL2017
+  }
 }
 layer {
   name: "conv6_1"
@@ -595,6 +659,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -628,6 +693,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -661,6 +727,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -694,6 +761,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -727,6 +795,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -760,6 +829,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -793,6 +863,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -826,6 +897,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -873,6 +945,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -921,6 +994,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -989,6 +1063,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1037,6 +1112,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1106,6 +1182,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1154,6 +1231,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1223,6 +1301,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1271,6 +1350,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1340,6 +1420,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1388,6 +1469,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1456,6 +1538,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1504,6 +1587,7 @@ layer {
       type: "constant"
       value: 0
     }
+    engine: MKL2017
   }
 }
 layer {
@@ -1559,6 +1643,7 @@ layer {
   top: "mbox_loc"
   concat_param {
     axis: 1
+    engine: DEFAULT
   }
 }
 layer {
@@ -1573,6 +1658,7 @@ layer {
   top: "mbox_conf"
   concat_param {
     axis: 1
+    engine: DEFAULT
   }
 }
 layer {
@@ -1587,6 +1673,7 @@ layer {
   top: "mbox_priorbox"
   concat_param {
     axis: 2
+    engine: DEFAULT
   }
 }
 layer {
