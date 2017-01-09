@@ -35,82 +35,70 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_
+#define INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_
+
+#include <dirent.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdarg>
 #include <cstdint>
 #include <cstdio>
-#include <cmath>
-#include <vector>
-#include <string>
 #include <cstring>
-#include <cstdarg>
-#include <algorithm>
+#include <string>
 #include <unordered_map>
-
-#if defined(_WIN32) || defined (_WIN64)
-  #include <windows.h>
-#elif defined(__linux__)
-  #include <dirent.h>
-#else
-  #error Unsupported OS
-#endif
+#include <vector>
 
 template <typename DataType>
-class Data
-{
+class Data {
     int dataSize;
     DataType *dataPointer;
 
     Data(const Data<DataType> &data);
     Data<DataType> &operator =(const Data<DataType> &data);
 
-    public:
-
+ public:
         Data() :
             dataSize(0),
-            dataPointer(NULL)
-        {
+            dataPointer(NULL) {
         }
 
-        ~Data()
-        {
+        ~Data() {
             clear();
         }
 
-        int getDataSize() const
-        {
+        int getDataSize() const {
             return dataSize;
         }
 
-        const DataType *getDataPointer() const
-        {
+        const DataType *getDataPointer() const {
             return dataPointer;
         }
 
-        void clear()
-        {
+        void clear() {
             delete [] dataPointer;
             dataPointer = NULL;
             dataSize = 0;
         }
 
-        bool loadFromFile(const char *fileName)
-        {
+        bool loadFromFile(const char *fileName) {
             FILE *file = fopen(fileName, "rb");
-            if(!file)
+            if (!file)
                 return false;
 
-            if(fseek(file, 0, SEEK_END))
+            if (fseek(file, 0, SEEK_END))
                 return false;
 
-            long fileSize = ftell(file);
-            if(fileSize == -1)
+            int64_t fileSize = ftell(file);
+            if (fileSize == -1)
                 return false;
 
-            if(fseek(file, 0, SEEK_SET))
+            if (fseek(file, 0, SEEK_SET))
                 return false;
 
             DataType *fileDataPointer = new DataType[fileSize];
             size_t bytesRead = fread(fileDataPointer, 1, fileSize, file);
-            if(bytesRead != fileSize) {
+            if (bytesRead != fileSize) {
                 delete [] fileDataPointer;
                 return false;
             }
@@ -124,90 +112,62 @@ class Data
         }
 };
 
-class FileList
-{
+class FileList {
     std::vector<std::string> fileList;
 
     FileList(const FileList &fileList);
     FileList &operator =(const FileList &fileList);
 
-    public:
-
+ public:
         FileList() {}
 
-        int getNumberOfFiles() const
-        {
-            return (int) fileList.size();
+        int getNumberOfFiles() const {
+            return static_cast<int>(fileList.size());
         }
 
-        const char *getFileName(int fileIndex) const
-        {
+        const char *getFileName(int fileIndex) const {
             return fileList[fileIndex].c_str();
         }
 
-        void clear()
-        {
+        void clear() {
             fileList.clear();
         }
 
-        void findFiles()
-        {
+        void findFiles() {
             fileList.clear();
-            fileList.reserve(1024 * 1024);
-
-#if defined(_WIN32) || defined (_WIN64)
-
-            WIN32_FIND_DATAA win32FindData;
-            HANDLE handle = FindFirstFileA(
-              FLAGS_collect_dir.c_str() + "\\REF*", &win32FindData);
-            if(handle) {
-
-                do fileList.push_back(&win32FindData.cFileName[3]);
-                while(FindNextFileA(handle, &win32FindData));
-
-                CloseHandle(handle);
-            }
-
-#else
+            fileList.reserve(1024);
 
             DIR *dir = opendir(FLAGS_collect_dir.c_str());
-            if(dir) {
+            if (dir) {
                 struct dirent *dirEntry = readdir(dir);
-                while(dirEntry) {
-                    if(!strncmp(dirEntry->d_name, "REF", 3))
+                while (dirEntry) {
+                    if (!strncmp(dirEntry->d_name, "REF", 3))
                         fileList.push_back(&dirEntry->d_name[3]);
                     dirEntry = readdir(dir);
                 }
                 closedir(dir);
             }
 
-#endif
-
             std::sort(fileList.begin(), fileList.end());
             fileList.shrink_to_fit();
         }
 };
 
-class Log
-{
+class Log {
     FILE *logFile;
 
-    Log()
-    {
+    Log() {
         logFile = fopen("log.txt", "w+b");
     }
 
-    public:
-
-        ~Log()
-        {
-            if(logFile)
+ public:
+        ~Log() {
+            if (logFile)
                 fclose(logFile);
         }
 
-        static void log(const char *format, ...)
-        {
-            //#pragma omp critical
+        static void log(const char *format, ...) {
+            // #pragma omp critical
             {
                 va_list args;
 
@@ -224,43 +184,44 @@ class Log
         }
 };
 
-double compareFiles(const char *diffFileName, const char *cpuFileName,
-  const char *gpuFileName, double &maxDiff, unsigned &diffCounter) {
+double compareFiles(const char *diffFileName, const char *referenceFileName,
+  const char *targetFileName, double *maxDiff, unsigned *diffCounter) {
     typedef float DataType;
     typedef uint32_t CastType;
     const char *format = "%i;%08X;%08X;%g;%g;%g\n";
     const DataType epsilon = (DataType) FLAGS_epsilon;
 
-    Data<DataType> cpuData;
-    if(!cpuData.loadFromFile(cpuFileName)) {
-        Log::log("Failed to load CPU data file '%s'.\n", cpuFileName);
+    Data<DataType> referenceData;
+    if (!referenceData.loadFromFile(referenceFileName)) {
+        Log::log("Failed to load reference data file '%s'.\n",
+          referenceFileName);
         return false;
     }
 
-    Data<DataType> gpuData;
-    if(!gpuData.loadFromFile(gpuFileName)) {
-        Log::log("Failed to load GPU data file '%s'.\n", gpuFileName);
+    Data<DataType> targetData;
+    if (!targetData.loadFromFile(targetFileName)) {
+        Log::log("Failed to load target data file '%s'.\n", targetFileName);
         return false;
     }
 
-    if(gpuData.getDataSize() != cpuData.getDataSize()) {
+    if (targetData.getDataSize() != referenceData.getDataSize()) {
         Log::log("Data length is not equal.\n");
         return false;
     }
 
     FILE *file = NULL;
-    if(diffFileName)
+    if (diffFileName)
         file = fopen(diffFileName, "w+t");
 
-    maxDiff = -1;
-    diffCounter = 0;
+    *maxDiff = -1;
+    *diffCounter = 0;
 
-    int dataSize = gpuData.getDataSize();
-    const DataType *cpuDataPointer = cpuData.getDataPointer();
-    const DataType *gpuDataPointer = gpuData.getDataPointer();
-    for(int i = 0; i < dataSize; i++) {
-        DataType a = cpuDataPointer[i];
-        DataType b = gpuDataPointer[i];
+    int dataSize = targetData.getDataSize();
+    const DataType *referenceDataPointer = referenceData.getDataPointer();
+    const DataType *targetDataPointer = targetData.getDataPointer();
+    for (int i = 0; i < dataSize; i++) {
+        DataType a = referenceDataPointer[i];
+        DataType b = targetDataPointer[i];
 
         DataType aAbs = (DataType) fabs(a), bAbs = (DataType) fabs(b);
         DataType diff =
@@ -269,48 +230,51 @@ double compareFiles(const char *diffFileName, const char *cpuFileName,
             (bAbs && (bAbs < aAbs)) ? aAbs / bAbs - 1 :
             (aAbs == bAbs) ? 0 : 1;
 
-        if(file && (diff >= epsilon)) {
-            fprintf(file, format, i, *(CastType *) &a, *(CastType *) &b, diff, a, b);
-            diffCounter++;
+        if (file && (diff >= epsilon)) {
+            fprintf(file, format, i,
+              *reinterpret_cast<CastType *> (&a),
+              *reinterpret_cast<CastType *> (&b), diff, a, b);
+            (*diffCounter)++;
         }
 
-        if(maxDiff < diff)
-            maxDiff = diff;
+        if (*maxDiff < diff)
+            *maxDiff = diff;
     }
 
-    if(file)
+    if (file)
         fclose(file);
 
     return true;
 }
 
 void processFile(const char *fileName, const string& layerType,
-  std::unordered_map<string, int> &errorsDictionary) {
-    char cpuFileName[FILENAME_MAX];
-    char gpuFileName[FILENAME_MAX];
+  std::unordered_map<string, int> *errorsDictionary) {
+    char referenceFileName[FILENAME_MAX];
+    char targetFileName[FILENAME_MAX];
     char diffFileName[FILENAME_MAX];
-    snprintf(cpuFileName, sizeof(cpuFileName), "./%s/REF%s",
+    snprintf(referenceFileName, sizeof(referenceFileName), "./%s/REF%s",
       FLAGS_collect_dir.c_str(), fileName);
-    snprintf(gpuFileName, sizeof(gpuFileName), "./%s/TAR%s",
+    snprintf(targetFileName, sizeof(targetFileName), "./%s/TAR%s",
       FLAGS_compare_output_dir.c_str(), fileName);
     snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",
       FLAGS_compare_output_dir.c_str(), fileName);
     double maxDiff;
     unsigned diffCounter;
-    bool success = compareFiles(diffFileName, cpuFileName,
-      gpuFileName, maxDiff, diffCounter);
-    if(!success)
+    bool success = compareFiles(diffFileName, referenceFileName,
+      targetFileName, &maxDiff, &diffCounter);
+    if (!success) {
       Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
-    else if(!diffCounter)
+    } else if (!diffCounter) {
       Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
-    else {
+    } else {
       Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(),
         maxDiff, diffCounter);
-      errorsDictionary[layerType]++;
+      (*errorsDictionary)[layerType]++;
     }
 }
 
-void proceedWithCompare(const string& infoPath, std::unordered_map<string, int> &errorsDictionary) {
+void proceedWithCompare(const string& infoPath,
+  std::unordered_map<string, int> *errorsDictionary) {
   FileList fileList;
   fileList.findFiles();
 
@@ -327,9 +291,11 @@ void proceedWithCompare(const string& infoPath, std::unordered_map<string, int> 
   int numberOfFiles = fileList.getNumberOfFiles();
 
   LOG(INFO) << "Comparing layers data";
-  //#pragma omp parallel for
-  for(int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
+  // #pragma omp parallel for
+  for (int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
     const char* binFileName = fileList.getFileName(fileIndex);
     processFile(binFileName, layersInfo[binFileName], errorsDictionary);
   }
 }
+
+#endif  // INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_

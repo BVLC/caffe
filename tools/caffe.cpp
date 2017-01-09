@@ -57,8 +57,8 @@ namespace bp = boost::python;
 #include "caffe/util/signal_handler.h"
 
 #ifdef USE_MLSL
-#include "caffe/multinode/MlslSync.hpp"
 #include "caffe/internode/mlsl_util.hpp"
+#include "caffe/multinode/MlslSync.hpp"
 #endif /* USE_MLSL */
 
 using caffe::Blob;
@@ -641,8 +641,8 @@ int collect() {
   const vector<vector<Blob<real_t>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
-  
-  boost::filesystem::path dir (FLAGS_collect_dir);
+
+  boost::filesystem::path dir(FLAGS_collect_dir);
   if (!boost::filesystem::exists(dir)) {
     if (!boost::filesystem::create_directory(dir)) {
       LOG(ERROR) << "Could not create directory for collection output files";
@@ -650,8 +650,8 @@ int collect() {
   }
 
   FILE *infoFile = fopen(use_gpu ?
-   (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
-   (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
+    (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
+    (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Collect procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -720,12 +720,12 @@ int compare() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
-  boost::filesystem::path dir (FLAGS_compare_output_dir);
+  boost::filesystem::path dir(FLAGS_compare_output_dir);
   if (!boost::filesystem::exists(dir)) {
     if (!boost::filesystem::create_directory(dir)) {
       LOG(ERROR) << "Could not create directory for compare output files";
     }
-  }  
+  }
 
   FILE *infoFile = fopen(use_gpu ?
     (FLAGS_compare_output_dir + "/" + "GPUInfo.txt").c_str() :
@@ -744,10 +744,14 @@ int compare() {
     saveToFile(FLAGS_compare_output_dir, true, "Fwrd", i,
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
     char file_name[FILENAME_MAX];
-    char file_path[FILENAME_MAX];    getFileName(file_name, false, "Fwrd", i);
-    getBinFilePath(file_path, file_name);    
+    char file_path[FILENAME_MAX];
+    getFileName(file_name, false, "Fwrd", i);
+    getBinFilePath(file_path, file_name);
     loadFromFile(file_path, top_vecs[i][0]->mutable_cpu_data(),
       top_vecs[i][0]->count());
+    if (top_vecs[i][0]->get_prv_data_descriptor().get()) {
+        top_vecs[i][0]->mutable_prv_data();
+    }
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
@@ -761,7 +765,11 @@ int compare() {
       char file_path[FILENAME_MAX];
       getFileName(file_name, false, "Bwrd", i);
       getBinFilePath(file_path, file_name);
-      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(),
+        bottom_vecs[i][0]->count());
+      if (bottom_vecs[i][0]->get_prv_diff_descriptor().get()) {
+          bottom_vecs[i][0]->mutable_prv_diff();
+      }
     }
   }
 
@@ -778,11 +786,10 @@ int compare() {
 
   fclose(infoFile);
 
-
   std::unordered_map<string, int> errorsDictionary;
   string infoPath = FLAGS_compare_output_dir + "/" + "CPUInfo.txt";
-  proceedWithCompare(infoPath, errorsDictionary);
-  
+  proceedWithCompare(infoPath, &errorsDictionary);
+
   if (errorsDictionary.size() > 0) {
     LOG(INFO) << "Invalid layer behaviour detected on: ";
     for (std::unordered_map<string, int>::iterator it =
@@ -798,13 +805,12 @@ int compare() {
 RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
-
 #ifdef USE_MLSL
   caffe::internode::mlsl_init(argc, argv);
 #else /* !USE_MLSL */
   caffe::internode::mpi_init(argc, argv);
 #endif /* USE_MLSL */
-  
+
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
