@@ -99,9 +99,9 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
       << "root_solver_ needs to be set for all non-root solvers";
   param_ = param;
 
-#ifdef USE_MLSL
+#if defined(USE_MPI) || defined(USE_MLSL)
   ReplaceMultinodeSolverParams(&param_);
-#endif /* USE_MLSL */
+#endif
 
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param_.DebugString();
