@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <map>
 #include <string>
 
@@ -1110,18 +1112,6 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 }
 
 #ifdef USE_MLSL
-void ReplaceProtoParam(std::string* const string_to_rep,
-        const std::string& param_name_to_rep,
-        const std::string& param_val_to_rep) {
-  int pos = string_to_rep->find(param_name_to_rep);
-  if (pos == std::string::npos) return;
-
-  string_to_rep->replace(
-    pos,
-    param_name_to_rep.size(),
-    param_val_to_rep);
-}
-
 void ReplaceMultinodeSolverParams(SolverParameter* param) {
   std::string node_id = std::to_string(MLSL::GetNodeId());
   std::string num_nodes = std::to_string(MLSL::GetNumNodes());
@@ -1129,16 +1119,16 @@ void ReplaceMultinodeSolverParams(SolverParameter* param) {
   if (param->has_train_net()) {
     std::string* train_net = param->mutable_train_net();
     if (train_net) {
-      ReplaceProtoParam(train_net, "%#", node_id);
-      ReplaceProtoParam(train_net, "%*", num_nodes);
+        boost::replace_all(*train_net, "%#", node_id);
+        boost::replace_all(*train_net, "%*", num_nodes);
     }
   }
 
   if (param->has_snapshot_prefix()) {
     std::string* prefix = param->mutable_snapshot_prefix();
     if (prefix) {
-      ReplaceProtoParam(prefix, "%#", node_id);
-      ReplaceProtoParam(prefix, "%*", num_nodes);
+        boost::replace_all(*prefix, "%#", node_id);
+        boost::replace_all(*prefix, "%*", num_nodes);
     }
   }
 }
@@ -1159,8 +1149,8 @@ void ReplaceMultinodeNetParams(NetParameter* param) {
     }
 
     if (source) {
-      ReplaceProtoParam(source, "%#", node_id);
-      ReplaceProtoParam(source, "%*", num_nodes);
+        boost::replace_all(*source, "%#", node_id);
+        boost::replace_all(*source, "%*", num_nodes);
     }
   }
 }
