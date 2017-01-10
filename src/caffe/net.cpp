@@ -58,6 +58,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifdef MLSL_MODEL_PARALLELISM
+#include "caffe/util/insert_bias_layer.hpp"
+#endif
+
+#ifdef USE_MLSL
+#include "mlsl.h"
+using namespace MLSL;
+#endif /* USE_MLSL */
+
 PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
@@ -126,7 +135,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
+
+#ifdef MLSL_MODEL_PARALLELISM
+  NetParameter param_tmp;
+  InsertSplits(filtered_param, &param_tmp);
+  SeparateBias(param_tmp, &param_with_splits);
+  LOG_IF(INFO, Caffe::root_solver())
+      << "Net after transformation: " << std::endl
+      << param_with_splits.DebugString();
+#else
   InsertSplits(filtered_param, &param_with_splits);
+#endif /* MLSL_MODEL_PARALLELISM */
 
   // Transform Net (merge layers etc.) improve computational performance
   NetParameter param;
@@ -211,6 +230,40 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         AppendTop(param, layer_id, num_top, NULL, NULL);
       }
     }
+
+#ifdef USE_MLSL
+    if (!layer_param.type().compare("Data")       ||
+        !layer_param.type().compare("DummyData")  ||
+        !layer_param.type().compare("ImageData")  ||
+        !layer_param.type().compare("HDF5Data")   ||
+        !layer_param.type().compare("MemoryData") ||
+        !layer_param.type().compare("WindowData")) {
+
+        // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
+        //int batch_size = top_vecs_[layer_id][0]->shape(0);
+
+        int batch_size = 0;
+        if (!layer_param.type().compare("Data"))
+            batch_size = layer_param.data_param().batch_size();
+        else if (!layer_param.type().compare("DummyData"))
+            batch_size = layer_param.dummy_data_param().shape(0).dim(0);
+        else if (!layer_param.type().compare("ImageData"))
+            batch_size = layer_param.image_data_param().batch_size();
+        else if (!layer_param.type().compare("HDF5Data"))
+            batch_size = layer_param.hdf5_data_param().batch_size();
+        else if (!layer_param.type().compare("MemoryData"))
+            batch_size = layer_param.memory_data_param().batch_size();
+        else if (!layer_param.type().compare("WindowData"))
+            batch_size = layer_param.window_data_param().batch_size();
+
+        if (caffe::TRAIN == param.state().phase()) {
+            LOG(WARNING) << "SetMinibatchSize " << batch_size;
+            SetMinibatchSize(batch_size * GetNumNodes());
+        }
+        caffe::internode::mlsl_init_distributions();
+    }
+#endif /* USE_MLSL */
+
     // After this layer is connected, set it up.
     if (share_from_root) {
       // Set up size of top blobs using root_net_
@@ -360,6 +413,85 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   ShareWeights();
   debug_info_ = param.debug_info();
 
+#ifdef USE_MLSL
+
+  if (caffe::TRAIN == param.state().phase()) { // TODO: create ComputeOps only for train net
+
+      /*
+       * MLSL setup: linking the layer's Ops with each other
+       * TBD: Should be possible to avoid that many loops
+       * */
+      for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+          const LayerParameter& layer_param = param.layer(layer_id);
+          layers_[layer_id]->ifm2ofm_map.resize(layer_param.bottom_size(), -1);
+      }
+
+      for (int layer_id = 0; layer_id < param.layer_size(); layer_id++) {
+          if (!layers_[layer_id]->layerOp) {
+              LOG(FATAL) << "layerOp is NULL for layer_id " << layer_id
+                         << ", type " << layers_[layer_id]->type();
+          }
+
+          const LayerParameter& layer_param = param.layer(layer_id);
+          for (int top_id = 0; top_id < layer_param.top_size(); top_id++) {
+              const string& top_blob_name = layer_param.top(top_id);
+              bool pair_found = false;
+
+              for (int next_layer_id = layer_id + 1/*0*/; next_layer_id < param.layer_size(); next_layer_id++) {
+                  if (pair_found) break;
+                  const LayerParameter& next_layer_param = param.layer(next_layer_id);
+
+                  for (int bottom_id = 0; bottom_id < next_layer_param.bottom_size(); ++bottom_id) {
+                      const string& bottom_blob_name = next_layer_param.bottom(bottom_id);
+                      if (pair_found) break;
+
+                      if (top_blob_name.compare(bottom_blob_name) == 0) {
+                          layers_[next_layer_id]->ifm2ofm_map[bottom_id] = top_id;
+                          layers_[next_layer_id]->SetPrevLayer(bottom_id, layers_[layer_id].get());
+                          layers_[next_layer_id]->layerOp->SetPrev(layers_[layer_id]->layerOp, bottom_id, top_id);
+                          pair_found = true;
+                      }
+                  }
+              }
+          }
+      }
+
+      for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+          shared_ptr<Layer<Dtype> > layer = layers_[layer_id];
+          layer->ConfigureMLSL();
+
+          /* All sanity check are below */
+          for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); bottom_id++) {
+              LOG(INFO) << "InitNet: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
+                        << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
+                        << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
+
+              if (layer->bottom_sizes[bottom_id] != bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype))
+                  LOG(FATAL) << "InitNet: ERROR: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
+                             << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
+                             << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
+          }
+
+          if (layer->layerOp->HasWeights()) {
+              vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
+              CHECK_NUM_WEIGHTS(layer, param_ids);
+              for (int i = 0; i < param_ids.size(); i++) {
+                  int mlsl_weight_size = layer->layerOp->GetWeights(i)->LocalLen()
+                                        * layer->layerOp->GetWeights(i)->WTSize()
+                                        * sizeof(Dtype);
+                  int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
+                  if (mlsl_weight_size < caffe_weight_size)
+                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id 
+                                 << ", param_id " << param_ids[i]
+                                 << ", MLSL weight size in bytes " << mlsl_weight_size
+                                 << ", CAFFE weight size in bytes " << caffe_weight_size;
+              }
+          }
+      }
+  }
+
+#endif /* USE_MLSL */
+
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 
@@ -396,16 +528,20 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
-  NetParameter param_temp;//temporary compiled param
+  NetParameter param_temp;  // temporary compiled param
   param_temp.CopyFrom(param);
   param_temp.clear_layer();    // Remove layers
-
   CompilationRuleOne(param, &param_temp);
-  
-  param_compiled->CopyFrom(param_temp);
+
+  NetParameter param_temp2;  // temporary compiled param
+  param_temp2.CopyFrom(param_temp);
+  param_temp2.clear_layer();   // Remove layers
+
+  CompilationRuleTwo(param_temp, &param_temp2);
+
+  param_compiled->CopyFrom(param_temp2);
   param_compiled->clear_layer();    // Remove layers
-  
-  CompilationRuleTwo(param_temp, param_compiled);
+  CompilationRuleThree(param_temp2, param_compiled);
 }
 
 template <typename Dtype>
@@ -429,12 +565,16 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
          BatchNormParameter_Engine_MKL2017)
        || ((layer_param->batch_norm_param().engine() ==
            BatchNormParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKL2017") == 0)
-       )) {
+            param.engine().compare("MKL2017") == 0))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params,
+                       layer_param->top(0),
+                       param,
+                       i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param =
-            GetBlobConsumer(layer_param->top(0), param, i+1);
-
-      // Consumer lauyer of blob produced by BN
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
+      // Consumer layer of blob produced by BN
       // has to be Scale layer with one Input Blob
       if ((consumer_layer_param.type().compare("Scale") == 0) &&
            (consumer_layer_param.bottom_size() == 1)) {
@@ -494,10 +634,13 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
          ConvolutionParameter_Engine_MKLDNN)
        || ((layer_param->convolution_param().engine() ==
            ConvolutionParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKLDNN") == 0)
-       )) {
+            param.engine().compare("MKLDNN") == 0))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params, layer_param->top(0),
+                       param, i+1 < param.layer_size() ? i+1 : i);
       const LayerParameter& consumer_layer_param =
-            GetBlobConsumer(layer_param->top(0), param, i+1);
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
 
       // Consumer lauyer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
@@ -506,8 +649,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
           ReLUParameter_Engine_MKLDNN)
         || ((consumer_layer_param.relu_param().engine() ==
             ReLUParameter_Engine_DEFAULT) &&
-             param.engine().compare("MKLDNN") == 0)
-        )) {
+             param.engine().compare("MKLDNN") == 0))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);
@@ -521,8 +663,10 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
                                         scale_top_blob_name);
         // set relu flag in convolution
         layer_param->mutable_convolution_param()->set_relu(true);
-        float negative_slope1 = consumer_layer_param.relu_param().negative_slope();
-        layer_param->mutable_convolution_param()->set_negative_slope(negative_slope1);
+        float negative_slope1 =
+                  consumer_layer_param.relu_param().negative_slope();
+        layer_param->mutable_convolution_param()->
+                    set_negative_slope(negative_slope1);
       }
     }
 
@@ -541,28 +685,80 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 }
 
 template <typename Dtype>
-const LayerParameter& Net<Dtype>::GetBlobConsumer(
-    const string& blob_name_to_find,
-    const NetParameter& param,
-    int layer_id_to_start_traversing_from) {
-  // Valida values of ids of layers are <1..num_layers-1>
-  CHECK_GE(layer_id_to_start_traversing_from, 1);
+void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
+                             NetParameter* param_compiled) {
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
 
-  if (layer_id_to_start_traversing_from >= param.layer_size()) {
-    return param.layer(layer_id_to_start_traversing_from - 1);
+    // Optimization rule 3:
+    // - If we are having engine MKL2017 and Batch Normalization
+    // doing inplace computation then
+    // to improve performance we create another top buffer
+    // and make other layers consuming BatchNorm top to use new buffer
+
+    // If current layer is BatchNorm of MKL2017 engine..
+    if (((layer_param->type().compare("BatchNorm") == 0) &&
+        ((layer_param->batch_norm_param().engine() ==
+         BatchNormParameter_Engine_MKL2017)
+        || ((layer_param->batch_norm_param().engine() ==
+           BatchNormParameter_Engine_DEFAULT) &&
+            param.engine().compare("MKL2017") == 0))) &&
+        (layer_param->top(0) == layer_param->bottom(0) )) {
+      std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params,
+                       batch_norm_top,
+                       param,
+                       i+1 < param.layer_size() ? i+1 : i);
+
+      for (std::vector<const LayerParameter*>::iterator it =
+        consumer_layer_params.begin();
+        it != consumer_layer_params.end(); ++it) {
+        // If consumer is computing inplace then modify top as well
+        if (((*it)->top_size() > 0 ) &&
+            ((*it)->bottom(0).compare((*it)->top(0)) == 0)) {
+          // Modify consumer top
+          const_cast<string&>((*it)->top(0)).append("_x");
+        }
+
+        // Modify consumer bottom. Sometimes searched
+        // buffer is under higher bottom index than 0 eg.
+        // In case of Eltwise
+        for (unsigned int i = 0; i < (*it)->bottom_size(); ++i) {
+          if ((*it)->bottom(i).compare(batch_norm_top) == 0) {
+            const_cast<string&>((*it)->bottom(i)).append("_x");
+          }
+        }
+      }
+      // Modify top so it is diffrent from bottom
+      batch_norm_top.append("_x");
+    }
+    param_compiled->add_layer()->CopyFrom(*layer_param);
   }
+  return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::GetBlobConsumers(
+                  std::vector<const LayerParameter*>& consumer_blobs,
+                  const string& blob_name_to_find,
+                  const NetParameter& param,
+                  int layer_id_to_start_traversing_from) {
+  consumer_blobs.clear();
+  // Validate values of ids of layers are <1..num_layers-1>
+  CHECK_GE(layer_id_to_start_traversing_from, 1);
+  CHECK_LT(layer_id_to_start_traversing_from, param.layer_size());
+
   // Traverse through layers to search the layer that consumes blob_name_to_find
   for (int i = layer_id_to_start_traversing_from; i < param.layer_size(); ++i) {
     // check bottom blobs if any of them is consuming given blob
     for (int j = 0; j < param.layer(i).bottom_size(); ++j) {
       if (param.layer(i).bottom(j).compare(blob_name_to_find) == 0) {
-        return param.layer(i);
+        consumer_blobs.push_back(&param.layer(i));
       }
     }
   }
-  // If no appropriate layer was found then return the one that should be layer
-  // producing blob we are searching consumer for
-  return param.layer(layer_id_to_start_traversing_from-1);
 }
 
 template <typename Dtype>

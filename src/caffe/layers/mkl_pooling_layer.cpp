@@ -207,6 +207,36 @@ void MKLPoolingLayer<Dtype>::Init(
   // Primitives will be allocated during the first fwd pass
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
+
+#ifdef USE_MLSL
+
+  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+  ComputeOpRegInfo *myRegInfo;
+  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_POOL);
+  myRegInfo->SetName(this->layer_param_.name().c_str());
+  int channels_ = bottom[0]->channels();
+  for(int i=0; i<bottom.size(); i++)
+  {
+      int ic = bottom[i]->channels();
+      int iw = bottom[i]->width();
+      int ih = bottom[i]->height();
+      myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  }
+
+  for(int i=0; i<top.size(); i++)
+  {
+      int oc = channels_;
+      int ow = pooled_width_;
+      int oh = pooled_height_;
+      myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  }
+
+  myRegInfo->Validate();
+  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+  delete myRegInfo;
+
+#endif
+
 }
 
 template <typename Dtype>
@@ -230,6 +260,52 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   Init(bottom, top);
 }
+
+#ifdef USE_MLSL
+
+template <typename Dtype>
+void MKLPoolingLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
+      for (int i = 0; i < fm->NumPackBlocks(); i++) {
+          BlockInfo * bi = fm->GetPackBlock(i);
+          int bMBLen = bi->MBLen();
+          int bMBStart = bi->MBStart();
+          int bFMLen = bi->FMLen();
+          int bFMStart = bi->FMStart();
+          Dtype *src = (Dtype*) from;
+          Dtype *dst = (Dtype*) (to + bi->BufOffset());
+          for (int mb = 0; mb < bMBLen; mb++) {
+              for (int fm = 0; fm < bFMLen; fm++) {
+                  for (int s = 0 ; s < bi->FMSize(); s++) {
+                      //dst[fm][mb][s] = src[s][bFMStart+fm][bMBStart+mb]; //[bMBStart+mb][bFMStart+fm][s];
+                      dst[(fm*bMBLen + mb)*bi->FMSize() + s] =
+                          src[s*bFMLen*bMBLen + (bFMStart+fm)*bMBLen + (bMBStart+mb)];
+                  }
+              }
+          }
+      }
+  }
+
+template <typename Dtype>
+void MKLPoolingLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
+      for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
+          BlockInfo * bi = fm->GetUnpackBlock(i);
+          int bMBLen = bi->MBLen();
+          int bMBStart = bi->MBStart();
+          int bFMLen = bi->FMLen();
+          int bFMStart = bi->FMStart();
+          Dtype *dst = (Dtype*) to;
+          Dtype *src = (Dtype*) (from + bi->BufOffset());
+          for (int mb = 0; mb < bMBLen; mb++) {
+              for (int fm = 0; fm < bFMLen; fm++) {
+                  for (int s = 0 ; s < bi->FMSize(); s++) {
+                    dst[s*bFMLen*bMBLen + (bFMStart+fm)*bMBLen + (bMBStart+mb)] = src[(fm*bMBLen + mb)*bi->FMSize() + s];
+                  }
+              }
+          }
+      }
+}
+
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -326,7 +402,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(poolingFwd, pooling_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("FW_mkl_pooling");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
 
   CHECK_EQ(status, E_SUCCESS);
 }
@@ -366,7 +442,7 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_pooling");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
 
   CHECK_EQ(e, E_SUCCESS);
 }

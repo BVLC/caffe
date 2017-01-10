@@ -150,6 +150,37 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
+
+#ifdef USE_MLSL
+
+  if (!this->layerOp) {
+
+	int ic = bottom[0]->channels();
+	int iw = bottom[0]->width();
+	int ih = bottom[0]->height();
+
+	int oc = ic; //top[0]->channels();
+	int ow = iw; //top[0]->width();
+	int oh = ih; //top[0]->height();
+
+    DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
+    ComputeOpRegInfo *myRegInfo;
+    myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_ACT);
+    myRegInfo->SetName(this->layer_param_.name().c_str());
+    myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+    myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+
+    /*for(int i = 0; i<this->blobs_.size(); i++)
+    {
+    	myRegInfo->AddWeights(1, this->blobs_[i].count(), dt, DISTRIBUTED_WEIGHT_UPDATE);
+    }*/
+
+    myRegInfo->Validate();
+    this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
+    delete myRegInfo;
+  }
+
+#endif /* USE_MLSL */
 }
 
 template <typename Dtype>
@@ -190,8 +221,10 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
   void* bottom_data =
     reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
   int is_first_pass = 0;
+  unsigned int amount_to_copy =0;
 
   if (NULL != bottom_data) {
+    amount_to_copy = bottom[0]->prv_data_count();
     // Is it the first pass? Create a primitive.
     if (batchNormFwd == NULL) {
       is_first_pass = 1;
@@ -251,6 +284,7 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     }
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
+    amount_to_copy = bottom[0]->count();
   }
   if (is_first_pass == 1) {
       dnnError_t e;
@@ -295,7 +329,8 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     // In-place computation; need to store bottom data before overwriting it.
     // Note that this is only necessary for Backward; we skip this if not
     // doing Backward
-    caffe_copy(bottom[0]->count(), static_cast<Dtype*>(bottom_data),
+    // TODO: make a caffe_coppy working on blobs
+    caffe_copy(amount_to_copy, static_cast<Dtype*>(bottom_data),
                                                       temp_.mutable_cpu_data());
   }
 
@@ -316,7 +351,7 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormFwd, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -356,7 +391,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwdData, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
 
   CHECK_EQ(e, E_SUCCESS);
 
@@ -370,7 +405,7 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
 
     PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(batchNormBwdScaleShift, BatchNormBwdScaleShift_res);
-    PERFORMANCE_MEASUREMENT_END_STATIC("BW_mkl_batch_norm");
+    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME_SFX("BW", "_scale_shift"));
 
     CHECK_EQ(e, E_SUCCESS);
     // Store ScaleShift blobs
