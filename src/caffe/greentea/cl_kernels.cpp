@@ -138,7 +138,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "counts[i] = 0.0;",    // NOLINT
 "} else {",    // NOLINT
 "loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0.0)) -",    // NOLINT
-"log(1.0 + exp(input_data[i] - 2.0 * input_data[i] *",    // NOLINT
+"log((Dtype)1.0 + exp(input_data[i] - (Dtype)2.0 * input_data[i] *",    // NOLINT
 "(input_data[i] >= 0.0)));",    // NOLINT
 "counts[i] = 1.0;",    // NOLINT
 "}",    // NOLINT
