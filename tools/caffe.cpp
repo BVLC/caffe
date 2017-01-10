@@ -57,8 +57,8 @@ namespace bp = boost::python;
 #include "caffe/util/signal_handler.h"
 
 #ifdef USE_MLSL
-#include "caffe/multinode/MlslSync.hpp"
 #include "caffe/internode/mlsl_util.hpp"
+#include "caffe/multinode/MlslSync.hpp"
 #endif /* USE_MLSL */
 
 using caffe::Blob;
@@ -111,6 +111,11 @@ DEFINE_bool(forward_only, false,
     "Optional; Execute only forward pass");
 DEFINE_string(engine, "",
     "Optional; Engine sequence in format: engine:subengine_1,subengine_2,...");
+DEFINE_string(collect_dir, "collect_out",
+    "Optional; Directory with reference binary files");
+DEFINE_string(compare_output_dir, "compare_out",
+    "Optional; Directory with output files");
+DEFINE_double(epsilon, 1e-3, "Optional; Layer output comparison error");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -559,19 +564,23 @@ RegisterBrewFunction(time);
 #include <stdio.h>
 typedef float real_t;
 
-void getFileName(char *file_name, bool use_gpu, const char *name, int id) {
-  const char *prefix = use_gpu ? "GPU" : "CPU";
-  snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin", prefix, name, id);
+void getFileName(char *file_name, bool is_target, const char *name, int id) {
+  snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin",
+    is_target ? "TAR" : "REF", name, id);
 }
 
-bool saveToFile(bool use_gpu, const char *name, int id,
-    const real_t *data, unsigned count) {
-  char file_name[FILENAME_MAX];
-  getFileName(file_name, use_gpu, name, id);
+void getBinFilePath(char *file_path, const char *name) {
+  snprintf(file_path, FILENAME_MAX, "%s/%s", FLAGS_collect_dir.c_str(), name);
+}
 
-  FILE *file = fopen(file_name, "w+b");
+bool saveToFile(const string &file_path, bool is_target, const char *prefix,
+    int id, const real_t *data, unsigned count) {
+  char file_name[FILENAME_MAX];
+  getFileName(file_name, is_target, prefix, id);
+
+  FILE *file = fopen((file_path + "/" + file_name).c_str(), "w+b");
   if (!file) {
-    LOG(ERROR) << "Failed to create file '" << file_name << "'.";
+    LOG(ERROR) << "Failed to create file '" << file_path << "'.";
     return false;
   }
 
@@ -580,21 +589,17 @@ bool saveToFile(bool use_gpu, const char *name, int id,
   fclose(file);
 
   if (bytesWritten != bytesToWrite) {
-    LOG(ERROR) << "Failed to write data to '" << file_name << "' file.";
+    LOG(ERROR) << "Failed to write data to '" << file_path << "' file.";
     return false;
   }
 
   return true;
 }
 
-bool loadFromFile(bool use_gpu, const char *name, int id,
-    real_t *data, unsigned count) {
-  char file_name[FILENAME_MAX];
-  getFileName(file_name, use_gpu, name, id);
-
-  FILE *file = fopen(file_name, "rb");
+bool loadFromFile(const char *file_path, real_t *data, unsigned count) {
+  FILE *file = fopen(file_path, "rb");
   if (!file) {
-    LOG(ERROR) << "Failed to open file '" << file_name << "' for read.";
+    LOG(ERROR) << "Failed to open file '" << file_path << "' for read.";
     return false;
   }
 
@@ -603,7 +608,7 @@ bool loadFromFile(bool use_gpu, const char *name, int id,
   fclose(file);
 
   if (bytesRead != bytesToRead) {
-    LOG(ERROR) << "Failed to read data from '" << file_name << "' file.";
+    LOG(ERROR) << "Failed to read data from '" << file_path << "' file.";
     return false;
   }
 
@@ -637,7 +642,16 @@ int collect() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
-  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
+  boost::filesystem::path dir(FLAGS_collect_dir);
+  if (!boost::filesystem::exists(dir)) {
+    if (!boost::filesystem::create_directory(dir)) {
+      LOG(ERROR) << "Could not create directory for collection output files";
+    }
+  }
+
+  FILE *infoFile = fopen(use_gpu ?
+    (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
+    (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Collect procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -647,27 +661,27 @@ int collect() {
 
   for (int i = 0; i < layers.size(); ++i) {
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    saveToFile(use_gpu, "Fwrd", i,
-      top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
+    saveToFile(FLAGS_collect_dir, false, "Fwrd", i, top_vecs[i][0]->cpu_data(),
+      top_vecs[i][0]->count());
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
     fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-    if (bottom_need_backward[i][0]) {
-      saveToFile(use_gpu, "Bwrd", i,
+    if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+      saveToFile(FLAGS_collect_dir, false, "Bwrd", i,
         bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
     }
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-    saveToFile(use_gpu, "Grad", i,
+    saveToFile(FLAGS_collect_dir, false, "Grad", i,
       params[i]->cpu_diff(), params[i]->count());
-    saveToFile(use_gpu, "Wght", i,
+    saveToFile(FLAGS_collect_dir, false, "Wght", i,
       params[i]->cpu_data(), params[i]->count());
   }
 
@@ -676,6 +690,8 @@ int collect() {
   return 0;
 }
 RegisterBrewFunction(collect);
+
+#include "caffe/util/compareToolUtilities.h"
 
 int compare() {
   #ifndef DETERMINISTIC
@@ -704,7 +720,16 @@ int compare() {
   const vector<vector<bool> >& bottom_need_backward =
     caffe_net.bottom_need_backward();
 
-  FILE *infoFile = fopen(use_gpu ? "GPUInfo.txt" : "CPUInfo.txt", "w+t");
+  boost::filesystem::path dir(FLAGS_compare_output_dir);
+  if (!boost::filesystem::exists(dir)) {
+    if (!boost::filesystem::create_directory(dir)) {
+      LOG(ERROR) << "Could not create directory for compare output files";
+    }
+  }
+
+  FILE *infoFile = fopen(use_gpu ?
+    (FLAGS_compare_output_dir + "/" + "GPUInfo.txt").c_str() :
+    (FLAGS_compare_output_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
   LOG(INFO) << "*** Compare procedure begins ***";
 
   for (int i = 0; i < params.size(); i++) {
@@ -714,43 +739,72 @@ int compare() {
 
   for (int i = 0; i < layers.size(); ++i) {
     LOG(INFO) << "Collecting FW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Fwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    saveToFile(use_gpu, "Fwrd", i,
+    saveToFile(FLAGS_compare_output_dir, true, "Fwrd", i,
       top_vecs[i][0]->cpu_data(), top_vecs[i][0]->count());
-    loadFromFile(!use_gpu, "Fwrd", i,
-      top_vecs[i][0]->mutable_cpu_data(), top_vecs[i][0]->count());
+    char file_name[FILENAME_MAX];
+    char file_path[FILENAME_MAX];
+    getFileName(file_name, false, "Fwrd", i);
+    getBinFilePath(file_path, file_name);
+    loadFromFile(file_path, top_vecs[i][0]->mutable_cpu_data(),
+      top_vecs[i][0]->count());
+    if (top_vecs[i][0]->get_prv_data_descriptor().get()) {
+        top_vecs[i][0]->mutable_prv_data();
+    }
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
-    if (bottom_need_backward[i][0]) {
-      saveToFile(use_gpu, "Bwrd", i,
+    if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+      saveToFile(FLAGS_compare_output_dir, true, "Bwrd", i,
         bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
-      loadFromFile(!use_gpu, "Bwrd", i,
-        bottom_vecs[i][0]->mutable_cpu_diff(), bottom_vecs[i][0]->count());
+      char file_name[FILENAME_MAX];
+      char file_path[FILENAME_MAX];
+      getFileName(file_name, false, "Bwrd", i);
+      getBinFilePath(file_path, file_name);
+      loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_diff(),
+        bottom_vecs[i][0]->count());
+      if (bottom_vecs[i][0]->get_prv_diff_descriptor().get()) {
+          bottom_vecs[i][0]->mutable_prv_diff();
+      }
     }
   }
 
   LOG(INFO) << "Collecting gradients and weights";
   for (int i = 0; i < params.size(); i++) {
-    saveToFile(use_gpu, "Grad", i,
+    char file_name[FILENAME_MAX];
+    getFileName(file_name, true, "Grad", i);
+    saveToFile(FLAGS_compare_output_dir, true, "Grad", i,
       params[i]->cpu_diff(), params[i]->count());
-    saveToFile(use_gpu, "Wght", i,
+    getFileName(file_name, true, "Wght", i);
+    saveToFile(FLAGS_compare_output_dir, true, "Wght", i,
       params[i]->cpu_data(), params[i]->count());
   }
 
-  LOG(INFO) << "*** Compare procedure ends ***";
   fclose(infoFile);
+
+  std::unordered_map<string, int> errorsDictionary;
+  string infoPath = FLAGS_compare_output_dir + "/" + "CPUInfo.txt";
+  proceedWithCompare(infoPath, &errorsDictionary);
+
+  if (errorsDictionary.size() > 0) {
+    LOG(INFO) << "Invalid layer behaviour detected on: ";
+    for (std::unordered_map<string, int>::iterator it =
+      errorsDictionary.begin(); it != errorsDictionary.end(); ++it) {
+      LOG(WARNING) << "\t" << it->first;
+    }
+  } else {
+    LOG(INFO) << "*** All layers are working correctly ***";
+  }
+
   return 0;
 }
 RegisterBrewFunction(compare);
 
-
 int main(int argc, char** argv) {
-
 #ifdef USE_MLSL
   caffe::internode::mlsl_init(argc, argv);
 #else /* !USE_MLSL */
