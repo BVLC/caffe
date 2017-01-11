@@ -120,7 +120,7 @@ DEFINE_string(compare_output_dir, "compare_out",
     "Optional; Directory with output files");
 DEFINE_double(epsilon, 1e-3, "Optional; Layer output comparison error");
 DEFINE_bool(detection, false,
-    "Optional; Type of evaluation when model is tested. Options are: classification (default), detection");
+    "Optional; Enables detection for testing. By default it is false and classification is on.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
