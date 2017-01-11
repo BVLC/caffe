@@ -56,6 +56,7 @@ namespace bp = boost::python;
 #include "caffe/multinode/multinode.hpp"
 #include "caffe/training_utils.hpp"
 #include "caffe/util/signal_handler.h"
+#include "caffe/util/performance.hpp"
 
 #include "caffe/util/bbox_util.hpp"
 
@@ -392,6 +393,8 @@ int test_detection(Net<float>& caffe_net)
   std::map<int, std::map<int, std::vector<std::pair<float, int> > > > all_true_pos;
   std::map<int, std::map<int, std::vector<std::pair<float, int> > > > all_false_pos;
   std::map<int, std::map<int, int> > all_num_pos;
+
+  PERFORMANCE_INIT_MONITOR();
 
   for (int i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
