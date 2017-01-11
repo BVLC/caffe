@@ -479,7 +479,8 @@ int test_detection(Net<float>& caffe_net)
 
 // Test: score a model.
 int test() {
-  
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
+  CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
   vector<string> stages = get_stages_from_flags(FLAGS_stage);
 
   // Set device id and mode
