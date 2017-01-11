@@ -43,6 +43,9 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> sum_multiplier_;
   /// scale is an int_tpermediate Blob to hold temporary results.
   Blob<Dtype> scale_;
+#ifdef USE_GREENTEA
+  bool use_slm_;
+#endif
 };
 
 }  // namespace caffe

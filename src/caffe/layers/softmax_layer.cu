@@ -142,53 +142,85 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
   } else {
 #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
-
-    greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
-                         &ctx);
-
-    viennacl::ocl::kernel &oclk_channel_max = program.get_kernel(
-        CL_KERNEL_SELECT("kernel_channel_max"));
-    viennacl::ocl::enqueue(
-        oclk_channel_max(outer_num_, channels, inner_num_,
-                         WrapHandle((cl_mem) top_data, &ctx),
-                         WrapHandle((cl_mem) scale_data, &ctx)),
-        ctx.get_queue());
-
-    viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
-        CL_KERNEL_SELECT("kernel_channel_subtract"));
-    viennacl::ocl::enqueue(
-        oclk_channel_subtract(count, outer_num_, channels, inner_num_,
-                              WrapHandle((cl_mem) scale_data, &ctx),
-                              WrapHandle((cl_mem) top_data, &ctx)),
-        ctx.get_queue());
-
-    viennacl::ocl::kernel &oclk_exp = program.get_kernel(
-        CL_KERNEL_SELECT("kernel_exp"));
-    viennacl::ocl::enqueue(
-        oclk_exp(count,
-                 WrapHandle((cl_mem) top_data, &ctx),
-                 WrapHandle((cl_mem) top_data, &ctx)),
-        ctx.get_queue());
-
-    viennacl::ocl::kernel &oclk_channel_sum = program.get_kernel(
-        CL_KERNEL_SELECT("kernel_channel_sum"));
-    viennacl::ocl::enqueue(
-        oclk_channel_sum(outer_num_, channels, inner_num_,
-                         WrapHandle((cl_mem) top_data, &ctx),
-                         WrapHandle((cl_mem) scale_data, &ctx)),
-        ctx.get_queue());
-
-    viennacl::ocl::kernel &oclk_channel_div = program.get_kernel(
-        CL_KERNEL_SELECT("kernel_channel_div"));
-    viennacl::ocl::enqueue(
-        oclk_channel_div(count, outer_num_, channels, inner_num_,
-                         WrapHandle((cl_mem) scale_data, &ctx),
-                         WrapHandle((cl_mem) top_data, &ctx)),
-        ctx.get_queue());
-
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context
+                                    (this->device_->id());
+    if (this->device_->CheckCapability("cl_intel_subgroups")) {
+      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::kernel *oclk_softmax_forward_kernel;
+      if (use_slm_)
+        oclk_softmax_forward_kernel = &program.get_kernel(
+                                    CL_KERNEL_SELECT("softmax_forward_slm"));
+      else
+        oclk_softmax_forward_kernel = &program.get_kernel(
+                                    CL_KERNEL_SELECT("softmax_forward"));
+      oclk_softmax_forward_kernel->local_work_size(0, 256);
+      oclk_softmax_forward_kernel->local_work_size(1, 1);
+      oclk_softmax_forward_kernel->local_work_size(2, 1);
+      oclk_softmax_forward_kernel->global_work_size(0, 256);
+      oclk_softmax_forward_kernel->global_work_size(1, outer_num_);
+      oclk_softmax_forward_kernel->global_work_size(2, 1);
+      if (use_slm_) {
+        viennacl::ocl::local_mem data_tmp(channels * inner_num_ *
+                                          sizeof(Dtype));
+        viennacl::ocl::local_mem scale_tmp(inner_num_ * sizeof(Dtype));
+        viennacl::ocl::local_mem group_tmp(16 * inner_num_ * sizeof(Dtype));
+        viennacl::ocl::enqueue(
+            (*oclk_softmax_forward_kernel)(outer_num_, channels, inner_num_,
+                                WrapHandle((cl_mem) scale_data, &ctx),
+                                WrapHandle((cl_mem) bottom_data, &ctx),
+                                WrapHandle((cl_mem) top_data, &ctx),
+                                data_tmp, scale_tmp, group_tmp),
+            ctx.get_queue());
+      } else {
+        viennacl::ocl::enqueue(
+            (*oclk_softmax_forward_kernel)(outer_num_, channels, inner_num_,
+                                WrapHandle((cl_mem) scale_data, &ctx),
+                                WrapHandle((cl_mem) bottom_data, &ctx),
+                                WrapHandle((cl_mem) top_data, &ctx)),
+            ctx.get_queue());
+      }
+    } else {
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_->id());
+      viennacl::ocl::program &program = this->device_->program();
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
+                           &ctx);
+      viennacl::ocl::kernel &oclk_channel_max = program.get_kernel(
+          CL_KERNEL_SELECT("kernel_channel_max"));
+      viennacl::ocl::enqueue(
+          oclk_channel_max(outer_num_, channels, inner_num_,
+                           WrapHandle((cl_mem) top_data, &ctx),
+                           WrapHandle((cl_mem) scale_data, &ctx)),
+          ctx.get_queue());
+      viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
+          CL_KERNEL_SELECT("kernel_channel_subtract"));
+      viennacl::ocl::enqueue(
+          oclk_channel_subtract(count, outer_num_, channels, inner_num_,
+                                WrapHandle((cl_mem) scale_data, &ctx),
+                                WrapHandle((cl_mem) top_data, &ctx)),
+          ctx.get_queue());
+      viennacl::ocl::kernel &oclk_exp = program.get_kernel(
+          CL_KERNEL_SELECT("kernel_exp"));
+      viennacl::ocl::enqueue(
+          oclk_exp(count,
+                   WrapHandle((cl_mem) top_data, &ctx),
+                   WrapHandle((cl_mem) top_data, &ctx)),
+          ctx.get_queue());
+      viennacl::ocl::kernel &oclk_channel_sum = program.get_kernel(
+          CL_KERNEL_SELECT("kernel_channel_sum"));
+      viennacl::ocl::enqueue(
+          oclk_channel_sum(outer_num_, channels, inner_num_,
+                           WrapHandle((cl_mem) top_data, &ctx),
+                           WrapHandle((cl_mem) scale_data, &ctx)),
+          ctx.get_queue());
+      viennacl::ocl::kernel &oclk_channel_div = program.get_kernel(
+          CL_KERNEL_SELECT("kernel_channel_div"));
+      viennacl::ocl::enqueue(
+          oclk_channel_div(count, outer_num_, channels, inner_num_,
+                           WrapHandle((cl_mem) scale_data, &ctx),
+                           WrapHandle((cl_mem) top_data, &ctx)),
+          ctx.get_queue());
+    }
 #endif
   }
 }
