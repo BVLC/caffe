@@ -4774,6 +4774,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "#if defined(cl_intel_subgroups)",    // NOLINT
 "#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
 "",    // NOLINT
@@ -4909,70 +4913,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "out[n * channels * spatial_dim + index] /= scale[n * spatial_dim + s];",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"#endif",    // NOLINT
-""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__",    // NOLINT
-"#include \"header.cl\"",    // NOLINT
-"#endif",    // NOLINT
-"",    // NOLINT
-"#if defined(cl_intel_subgroups)",    // NOLINT
-"#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
-"",    // NOLINT
-"__kernel void TEMPLATE(softmax_loss_forward,Dtype)(",    // NOLINT
-"int_tp n, __global const Dtype* prob_data, __global const Dtype* label,",    // NOLINT
-"__global Dtype* loss,",    // NOLINT
-"const int_tp num, const int_tp dim, const int_tp spatial_dim,",    // NOLINT
-"const int has_ignore_label_, const int_tp ignore_label_,",    // NOLINT
-"__global Dtype* counts) {",    // NOLINT
-"",    // NOLINT
-"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
-"index += get_global_size(0)) {",    // NOLINT
-"const int_tp n = index / spatial_dim;",    // NOLINT
-"const int_tp s = index % spatial_dim;",    // NOLINT
-"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
-"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
-"loss[index] = 0;",    // NOLINT
-"counts[index] = 0;",    // NOLINT
-"} else {",    // NOLINT
-"loss[index] = -log((Dtype)(",    // NOLINT
-"max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),",    // NOLINT
-"(Dtype) FLT_MIN)));",    // NOLINT
-"counts[index] = 1;",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
-"__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,",    // NOLINT
-"__global const Dtype* top,",    // NOLINT
-"__global const Dtype* label,",    // NOLINT
-"__global Dtype* bottom_diff,",    // NOLINT
-"const int_tp num,",    // NOLINT
-"const int_tp dim,",    // NOLINT
-"const int_tp spatial_dim,",    // NOLINT
-"const int has_ignore_label_,",    // NOLINT
-"const int_tp ignore_label_,",    // NOLINT
-"__global Dtype* counts) {",    // NOLINT
-"",    // NOLINT
-"const int_tp channels = dim / spatial_dim;",    // NOLINT
-"",    // NOLINT
-"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
-"get_global_size(0)) {",    // NOLINT
-"",    // NOLINT
-"const int_tp n = index / spatial_dim;",    // NOLINT
-"const int_tp s = index % spatial_dim;",    // NOLINT
-"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
-"",    // NOLINT
-"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
-"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
-"bottom_diff[n * dim + c * spatial_dim + s] = 0;",    // NOLINT
-"}",    // NOLINT
-"counts[index] = 0;",    // NOLINT
-"} else {",    // NOLINT
-"bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;",    // NOLINT
-"counts[index] = 1;",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
 "",    // NOLINT
 "// Copied from caffe.pb.h, must keep consistent with the original definition",    // NOLINT
 "#if TYPE==TYPE_FLOAT",    // NOLINT
@@ -4983,7 +4923,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "LossParameter_NormalizationMode_NONE = 3",    // NOLINT
 "};",    // NOLINT
 "#endif",    // NOLINT
-"// Copied from softmax_loss_layer.cpp, must keep consistent with the orignal implementation",    // NOLINT
+"// Copied from softmax_loss_layer.cpp, must keep consistent with the original implementation",    // NOLINT
 "Dtype TEMPLATE(get_normalizer, Dtype)(",    // NOLINT
 "enum LossParameter_NormalizationMode normalization_mode, int_tp valid_count,",    // NOLINT
 "int_tp outer_num_, int_tp inner_num_) {",    // NOLINT
@@ -5043,6 +4983,58 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_loss_forward,Dtype)(",    // NOLINT
+"int_tp n, __global const Dtype* prob_data, __global const Dtype* label,",    // NOLINT
+"__global Dtype* loss,",    // NOLINT
+"const int_tp num, const int_tp dim, const int_tp spatial_dim,",    // NOLINT
+"const int has_ignore_label_, const int_tp ignore_label_,",    // NOLINT
+"__global Dtype* counts) {",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"const int_tp n = index / spatial_dim;",    // NOLINT
+"const int_tp s = index % spatial_dim;",    // NOLINT
+"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
+"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
+"loss[index] = 0;",    // NOLINT
+"counts[index] = 0;",    // NOLINT
+"} else {",    // NOLINT
+"loss[index] = -log((Dtype)(",    // NOLINT
+"max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),",    // NOLINT
+"(Dtype) FLT_MIN)));",    // NOLINT
+"counts[index] = 1;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top,",    // NOLINT
+"__global const Dtype* label,",    // NOLINT
+"__global Dtype* bottom_diff,",    // NOLINT
+"const int_tp num,",    // NOLINT
+"const int_tp dim,",    // NOLINT
+"const int_tp spatial_dim,",    // NOLINT
+"const int has_ignore_label_,",    // NOLINT
+"const int_tp ignore_label_,",    // NOLINT
+"__global Dtype* counts) {",    // NOLINT
+"const int_tp channels = dim / spatial_dim;",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads; index +=",    // NOLINT
+"get_global_size(0)) {",    // NOLINT
+"const int_tp n = index / spatial_dim;",    // NOLINT
+"const int_tp s = index % spatial_dim;",    // NOLINT
+"const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);",    // NOLINT
+"if (has_ignore_label_ == 1 && label_value == ignore_label_) {",    // NOLINT
+"for (int_tp c = 0; c < channels; ++c) {",    // NOLINT
+"bottom_diff[n * dim + c * spatial_dim + s] = 0;",    // NOLINT
+"}",    // NOLINT
+"counts[index] = 0;",    // NOLINT
+"} else {",    // NOLINT
+"bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;",    // NOLINT
+"counts[index] = 1;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
@@ -5193,7 +5185,6 @@ static std::string cl_kernel_names[] = {
     "pooling_nd",   // NOLINT
     "pooling_sk",   // NOLINT
     "slice",   // NOLINT
-    "softmax",   // NOLINT
     "softmax_loss",   // NOLINT
     "solvers",   // NOLINT
     "tile"   // NOLINT
