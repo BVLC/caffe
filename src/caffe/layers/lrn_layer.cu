@@ -116,22 +116,52 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
     viennacl::ocl::program &program = this->device_->program();
 
     int_tp n_threads = num_ * height_ * width_;
-    viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
-        CL_KERNEL_SELECT("lrn_fill_scale"));
-    viennacl::ocl::enqueue(
-        oclk_lrn_fill(n_threads, WrapHandle((cl_mem) bottom_data, &ctx), num_,
-                      channels_, height_, width_, size_, alpha_ / size_, k_,
-                      WrapHandle((cl_mem) scale_data, &ctx)),
-        ctx.get_queue());
+    cl_uint argIdx = 0;
+    size_t global_work_size_[1] = {(size_t)n_threads};
 
-    n_threads = bottom[0]->count();
-    viennacl::ocl::kernel &oclk_lrn_compute = program.get_kernel(
-        CL_KERNEL_SELECT("lrn_compute_output"));
-    viennacl::ocl::enqueue(
-        oclk_lrn_compute(n_threads, WrapHandle((cl_mem) bottom_data, &ctx),
-                         WrapHandle((cl_mem) scale_data, &ctx), -beta_,
-                         WrapHandle((cl_mem) top_data, &ctx)),
-        ctx.get_queue());
+    if (this->phase_ == caffe::TRAIN) {
+      viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
+          CL_KERNEL_SELECT("lrn_full"));
+
+      oclk_lrn_fill.arg(argIdx++, n_threads);
+      oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+      oclk_lrn_fill.arg(argIdx++, num_);
+      oclk_lrn_fill.arg(argIdx++, channels_);
+      oclk_lrn_fill.arg(argIdx++, height_);
+      oclk_lrn_fill.arg(argIdx++, width_);
+      oclk_lrn_fill.arg(argIdx++, size_);
+      oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
+      oclk_lrn_fill.arg(argIdx++, k_);
+      oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) scale_data, &ctx));
+      oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+      oclk_lrn_fill.arg(argIdx++, -beta_);
+
+      OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                     oclk_lrn_fill.handle().get(), 1, NULL,
+                                     global_work_size_, NULL, 0, NULL,
+                                     NULL));
+    } else {
+      viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
+          CL_KERNEL_SELECT("lrn_full_no_scale"));
+
+      cl_uint argIdx = 0;
+      oclk_lrn_fill.arg(argIdx++, n_threads);
+      oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+      oclk_lrn_fill.arg(argIdx++, num_);
+      oclk_lrn_fill.arg(argIdx++, channels_);
+      oclk_lrn_fill.arg(argIdx++, height_);
+      oclk_lrn_fill.arg(argIdx++, width_);
+      oclk_lrn_fill.arg(argIdx++, size_);
+      oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
+      oclk_lrn_fill.arg(argIdx++, k_);
+      oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+      oclk_lrn_fill.arg(argIdx++, -beta_);
+
+      OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       oclk_lrn_fill.handle().get(), 1, NULL,
+                                       global_work_size_, NULL, 0, NULL,
+                                       NULL));
+    }
 #endif  // USE_GREENTEA
   }
 }

@@ -100,19 +100,44 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
                                   ignore_label_, WrapHandle(counts, &ctx)),
         ctx.get_queue());
 
-    Dtype loss;
-    greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, loss_data, 0,
-                             &loss);
-    Dtype valid_count = -1;
-    // Only launch another CUDA kernel if we actually need the count of valid
-    // outputs.
-    if (normalization_ == LossParameter_NormalizationMode_VALID
-        && has_ignore_label_) {
-      greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, counts, 0,
-                               &valid_count);
+    if (this->device_->CheckCapability("cl_intel_subgroups")) {
+      viennacl::ocl::kernel &oclk_softmax_loss_forward_asum =
+        program.get_kernel(
+          CL_KERNEL_SELECT("softmax_loss_forward_asum"));
+      int need_compute_count_sum =
+            normalization_ == LossParameter_NormalizationMode_VALID
+            && has_ignore_label_;
+      oclk_softmax_loss_forward_asum.local_work_size(0, 256);
+      oclk_softmax_loss_forward_asum.local_work_size(1, 1);
+      oclk_softmax_loss_forward_asum.local_work_size(2, 1);
+      oclk_softmax_loss_forward_asum.global_work_size(0, 256);
+      oclk_softmax_loss_forward_asum.global_work_size(1, 1);
+      oclk_softmax_loss_forward_asum.global_work_size(2, 1);
+      viennacl::ocl::enqueue(
+          oclk_softmax_loss_forward_asum(nthreads, outer_num_, inner_num_,
+                                         need_compute_count_sum,
+                                         static_cast<int>(normalization_),
+                                         WrapHandle(loss_data, &ctx),
+                                         WrapHandle(counts, &ctx),
+                                         WrapHandle(
+                                           (cl_mem)top[0]->mutable_gpu_data(),
+                                           &ctx)),
+          ctx.get_queue());
+    } else {
+      Dtype loss;
+      greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, loss_data, 0,
+                               &loss);
+      Dtype valid_count = -1;
+      // Only launch another CUDA kernel if we actually need the count of valid
+      // outputs.
+      if (normalization_ == LossParameter_NormalizationMode_VALID
+          && has_ignore_label_) {
+        greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, counts, 0,
+                                 &valid_count);
+      }
+      top[0]->mutable_cpu_data()[0] = loss
+          / get_normalizer(normalization_, valid_count);
     }
-    top[0]->mutable_cpu_data()[0] = loss
-        / get_normalizer(normalization_, valid_count);
     if (top.size() >= 2) {
       top[1]->ShareData(prob_);
     }
