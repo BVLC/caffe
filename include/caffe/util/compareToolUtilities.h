@@ -82,28 +82,28 @@ class Data {
         }
 
         bool loadFromFile(const char *fileName) {
+            boost::filesystem::path filePath(fileName);
+            if (!boost::filesystem::exists(filePath)) {
+                return false;
+            }
+
+            if (boost::filesystem::is_empty(filePath)) {
+                return false;
+            }
+
             FILE *file = fopen(fileName, "rb");
             if (!file)
                 return false;
 
-            if (fseek(file, 0, SEEK_END))
-                return false;
-
-            int64_t fileSize = ftell(file);
-            if (fileSize == -1)
-                return false;
-
-            if (fseek(file, 0, SEEK_SET))
-                return false;
-
+            int64_t fileSize = boost::filesystem::file_size(filePath);
             DataType *fileDataPointer = new DataType[fileSize];
             size_t bytesRead = fread(fileDataPointer, 1, fileSize, file);
+            fclose(file);
             if (bytesRead != fileSize) {
                 delete [] fileDataPointer;
                 return false;
             }
 
-            fclose(file);
             clear();
 
             dataPointer = fileDataPointer;
@@ -158,6 +158,7 @@ class Log {
 
     Log() {
         logFile = fopen("log.txt", "w+b");
+        CHECK(logFile != NULL) << "Could not open log.txt file";
     }
 
  public:
@@ -254,7 +255,7 @@ void processFile(const char *fileName, const string& layerType,
     char diffFileName[FILENAME_MAX];
     snprintf(referenceFileName, sizeof(referenceFileName), "./%s/REF%s",
       FLAGS_collect_dir.c_str(), fileName);
-    snprintf(targetFileName, sizeof(targetFileName), "./%s/TAR%s",
+    snprintf(targetFileName, sizeof(targetFileName), "./%s/TGT%s",
       FLAGS_compare_output_dir.c_str(), fileName);
     snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",
       FLAGS_compare_output_dir.c_str(), fileName);
