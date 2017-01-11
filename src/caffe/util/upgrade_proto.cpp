@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <map>
 #include <string>
 
@@ -46,6 +48,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+
+#ifdef USE_MPI
+#include <mpi.h>
+#include "caffe/internode/mpiutil.hpp"
+#endif /* USE_MPI */
+
+#ifdef USE_MLSL
+#include "mlsl.h"
+#endif /* USE_MLSL */
 
 namespace caffe {
 
@@ -115,6 +126,9 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
                                     NetParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse NetParameter file: " << param_file;
+#if defined(USE_MPI) || defined(USE_MLSL)
+  ReplaceMultinodeNetParams(param);
+#endif
   UpgradeNetAsNeeded(param_file, param);
 }
 
@@ -1101,5 +1115,63 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
 }
+
+#if defined(USE_MPI) || defined(USE_MLSL)
+static std::string getNodeId() {
+#if defined(USE_MPI)
+  return std::to_string(caffe::internode::mpi_get_current_proc_rank());
+#elif defined(USE_MLSL)
+  return std::to_string(MLSL::GetNodeId());
+#endif
+}
+
+static std::string getNumNodes() {
+#if defined(USE_MPI)
+  return std::to_string(caffe::internode::mpi_get_comm_size());
+#elif defined(USE_MLSL)
+  return std::to_string(MLSL::GetNumNodes());
+#endif
+}
+
+void ReplaceMultinodeSolverParams(SolverParameter* param) {
+  std::string node_id = getNodeId();
+  std::string num_nodes = getNumNodes();
+
+  if (param->has_train_net()) {
+    std::string* train_net = param->mutable_train_net();
+    if (train_net) {
+        boost::replace_all(*train_net, "%#", node_id);
+        boost::replace_all(*train_net, "%*", num_nodes);
+    }
+  }
+
+  if (param->has_snapshot_prefix()) {
+    std::string* prefix = param->mutable_snapshot_prefix();
+    if (prefix) {
+        boost::replace_all(*prefix, "%#", node_id);
+        boost::replace_all(*prefix, "%*", num_nodes);
+    }
+  }
+}
+
+void ReplaceMultinodeNetParams(NetParameter* param) {
+  for (int i = 0; i < param->layer_size(); ++i) {
+    std::string* source = nullptr;
+
+    if (param->layer(i).has_data_param()) {
+      source = param->mutable_layer(i)->mutable_data_param()->
+              mutable_source();
+    } else if (param->layer(i).has_image_data_param()) {
+      source = param->mutable_layer(i)->mutable_image_data_param()->
+              mutable_source();
+    }
+
+    if (source) {
+        boost::replace_all(*source, "%#", getNodeId());
+        boost::replace_all(*source, "%*", getNumNodes());
+    }
+  }
+}
+#endif
 
 }  // namespace caffe
