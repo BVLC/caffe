@@ -166,7 +166,9 @@ class ConvolutionLayerTest_Spatial : public MultiDeviceTest<TypeParam> {
 TYPED_TEST_CASE(ConvolutionLayerTest_Spatial, TestFloatAndDevices);
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
@@ -204,7 +206,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -242,7 +246,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -282,7 +288,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3xPad1) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -322,7 +330,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial11x11x1x2_caffenet_Conv1) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -364,7 +374,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial5x5x1x2_caffenet_Conv2) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -405,7 +417,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x1_caffenet_Conv3) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -446,7 +460,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x1_caffenet_Conv4) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -487,7 +503,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x2_caffenet_Conv5) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -527,7 +545,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -567,7 +587,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
@@ -596,7 +618,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
@@ -626,7 +650,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     // Test separable convolution by computing the Sobel operator
     // as a single filter then comparing the result
     // as the convolution of two rectangular filters.
@@ -722,7 +748,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradient_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
@@ -742,7 +770,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradient_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Gradient_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
@@ -762,7 +792,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Gradient_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradientGroup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+      Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
+      Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
