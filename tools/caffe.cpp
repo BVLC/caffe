@@ -115,7 +115,7 @@ DEFINE_bool(forward_only, false,
 DEFINE_string(engine, "",
     "Optional; Engine sequence in format: engine:subengine_1,subengine_2,...");
 DEFINE_bool(detection, false,
-    "Optional; Type of evaluation when model is tested. Options are: classification (default), detection");
+    "Optional; Enables detection for testing. By default it is false and classification is on.");
 
 
 // A simple registry for caffe commands.
