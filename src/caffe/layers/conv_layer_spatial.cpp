@@ -22,7 +22,6 @@
 
 #include <boost/filesystem.hpp>
 
-
 namespace caffe {
 
 #define ALIGN(val, N) (((val) + (N) - 1) & ~((N) - 1))
@@ -719,6 +718,8 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   // warm up.
+  bool saved_tuned = tuned_;
+  tuned_ = false;
   convolve(bottom, top, index, num_, config);
   Timer timer;
   timer.initted();
@@ -726,14 +727,24 @@ float ConvolutionLayerSpatial<float>::timed_convolve(
   cl_int err;
   dbgPrint(std::cout << "Bechmarking kernel: " << config->kernelName
            << std::endl);
-  err = convolve(bottom, top, index, num_, config);
+  tuned_ = true;
+  int loop_cnt = 4;
+  for (int i = 0; i < loop_cnt; i++) {
+    err = convolve(bottom, top, index, num_, config);
+    if (err != CL_SUCCESS)
+      break;
+  }
+  tuned_ = saved_tuned;
   timer.Stop();
   if (err != CL_SUCCESS) {
     config->tested = true;
     config->verified = false;
+    dbgPrint(std::cout << "convolution failed with error code "
+             << err << std::endl);
+    return 1e5;
   }
 
-  float elapsedTime = timer.MilliSeconds();
+  float elapsedTime = timer.MilliSeconds() / loop_cnt;
 #ifdef dbg
   double out_w = output_w_;
   double out_h = output_h_;
