@@ -233,12 +233,12 @@ class GaborFillerTest : public ::testing::Test {
       : blob_(new Blob<Dtype>(96, 3, 11, 11)),
         filler_param_() {
   }
-  virtual void test_corners() {
+  virtual void test_no_crash() {
     this->filler_.reset(new GaborFiller<Dtype>(this->filler_param_));
     this->filler_->Fill(blob_);
     EXPECT_TRUE(this->blob_);
-    //const int count = this->blob_->count();
-    //const Dtype* data = this->blob_->cpu_data();
+    // const int count = this->blob_->count();
+    // const Dtype* data = this->blob_->cpu_data();
   }
 
   virtual ~GaborFillerTest() { delete blob_; }
@@ -249,8 +249,8 @@ class GaborFillerTest : public ::testing::Test {
 
 TYPED_TEST_CASE(GaborFillerTest, TestDtypes);
 
-TYPED_TEST(GaborFillerTest, TestCornerValues) {
-  this->test_corners();
+TYPED_TEST(GaborFillerTest, TestNoCrash) {
+  this->test_no_crash();
 }
 
 template <typename Dtype>

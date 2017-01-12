@@ -114,7 +114,6 @@ message FillerParameter {
     AVERAGE = 2;
   }
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
-  optional float lambda = 9 [default = 1]; // Gabor fillter parameter optional
 }
 
 message NetParameter {
