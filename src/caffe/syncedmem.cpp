@@ -193,7 +193,6 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
-        ctx.get_queue().finish();
         cl_int err;
         if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
@@ -237,7 +236,6 @@ inline void SyncedMemory::to_gpu() {
           greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
-        ctx.get_queue().finish();
         own_gpu_data_ = true;
 #endif  // USE_GREENTEA
       }
@@ -258,7 +256,6 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
-        ctx.get_queue().finish();
         if (gpu_ptr_ == nullptr) {
           cl_int err;
           if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
@@ -290,11 +287,12 @@ inline void SyncedMemory::to_gpu() {
                           << size_ << " failed.";
           device_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
+          //ctx.get_queue().finish();
+        }
+        if (!own_zero_copy_data_) {
+          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
           ctx.get_queue().finish();
         }
-        if (!own_zero_copy_data_)
-          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
-        ctx.get_queue().finish();
         own_gpu_data_ = true;
 #endif  // USE_GREENTEA
       }
