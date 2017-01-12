@@ -227,6 +227,33 @@ TYPED_TEST(XavierFillerTest, TestFillAverage) {
 }
 
 template <typename Dtype>
+class GaborFillerTest : public ::testing::Test {
+ protected:
+  GaborFillerTest()
+      : blob_(new Blob<Dtype>(96, 3, 11, 11)),
+        filler_param_() {
+  }
+  virtual void test_corners() {
+    this->filler_.reset(new GaborFiller<Dtype>(this->filler_param_));
+    this->filler_->Fill(blob_);
+    EXPECT_TRUE(this->blob_);
+    //const int count = this->blob_->count();
+    //const Dtype* data = this->blob_->cpu_data();
+  }
+
+  virtual ~GaborFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<GaborFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(GaborFillerTest, TestDtypes);
+
+TYPED_TEST(GaborFillerTest, TestCornerValues) {
+  this->test_corners();
+}
+
+template <typename Dtype>
 class MSRAFillerTest : public ::testing::Test {
  protected:
   MSRAFillerTest()

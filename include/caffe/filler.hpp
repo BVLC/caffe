@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 #include "caffe/blob.hpp"
+#include "caffe/gabor.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -298,6 +299,80 @@ class BilinearFiller : public Filler<Dtype> {
   }
 };
 
+/*!
+@brief Fills a Blob with Gabor filters.
+
+A common use case is with the first convolutional layer for edge detection.
+You can specify coefficient lambda using the following proto.
+\code
+layer {
+  name: "conv1/7x7_s2"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1/7x7_s2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 3
+    kernel_size: 7
+    stride: 2
+    weight_filler {
+      type: "gabor"
+      lambda: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+\endcode
+ */
+template <typename Dtype>
+class GaborFiller : public Filler<Dtype> {
+
+ public:
+  explicit GaborFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+
+  virtual void Fill(Blob<Dtype>* blob) {
+    CHECK_LE(blob->num_axes(), 4)
+      << "Blob must be 4 dim or less to use Gabor filler.";
+    CHECK_EQ(blob->width(), blob->height())
+      << "Filter must be square in first two dimensions to use Gabor filler.";
+    CHECK_EQ(blob->channels(), 3)
+      << "Blob must have 3 channels to use Gabor filler";
+    Dtype* data = blob->mutable_cpu_data();
+    KernelGenerator<Dtype> kernelGenerator(blob->num(), blob->width());
+    kernelGenerator.generate(/*this->filler_param_.lambda()*/);
+    memcpy(data,
+           kernelGenerator.getKernelData(),
+           kernelGenerator.getSizeOfKernelData());
+
+    /*
+    static bool error =
+    logFilter(kernelGenerator.getSizeOfKernelData(),  data);
+    (void) error;
+    */
+    CHECK_EQ(this->filler_param_.sparse(), -1)
+         << "Sparsity not supported by this Filler.";
+  }
+/*
+  bool logFilter(int numberOfElements, void* kernelData) {
+    FILE *outputBinaryFile = fopen("gabor_filters_dump.txt", "w+b");
+    fwrite(kernelData, 1, numberOfElements, outputBinaryFile);
+    fclose(outputBinaryFile);
+    return false;
+  }
+*/
+};
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
@@ -321,6 +396,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+  } else if (type == "gabor") {
+    return new GaborFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
