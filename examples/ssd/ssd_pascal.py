@@ -13,7 +13,7 @@ import sys
 datapath = os.environ['DATAPATH']
 
 # Add extra layers on top of a "base" network (e.g. VGGNet or Inception).
-def AddExtraLayers(net, use_batchnorm=True, lr_mult=1, engine=0):
+def AddExtraLayers(net, use_batchnorm=True, lr_mult=1):
     use_relu = True
 
     # Add additional convolutional layers.
@@ -24,45 +24,45 @@ def AddExtraLayers(net, use_batchnorm=True, lr_mult=1, engine=0):
     # 10 x 10
     out_layer = "conv6_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1,
-        lr_mult=lr_mult, engine=engine)
+        lr_mult=lr_mult)
 
     from_layer = out_layer
     out_layer = "conv6_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2,
-        lr_mult=lr_mult, engine=engine)
+        lr_mult=lr_mult)
 
     # 5 x 5
     from_layer = out_layer
     out_layer = "conv7_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     from_layer = out_layer
     out_layer = "conv7_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     # 3 x 3
     from_layer = out_layer
     out_layer = "conv8_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     from_layer = out_layer
     out_layer = "conv8_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 0, 1,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     # 1 x 1
     from_layer = out_layer
     out_layer = "conv9_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     from_layer = out_layer
     out_layer = "conv9_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 0, 1,
-      lr_mult=lr_mult, engine=engine)
+      lr_mult=lr_mult)
 
     return net
 
@@ -434,15 +434,15 @@ net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size
         transform_param=train_transform_param, batch_sampler=batch_sampler)
 
 VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
-    dropout=False, engine=3)
+    dropout=False)
 
-AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult, engine=3)
+AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
         num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult, engine=3)
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult)
 
 # Create the MultiBoxLossLayer.
 name = "mbox_loss"
@@ -463,15 +463,15 @@ net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_
         transform_param=test_transform_param)
 
 VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
-    dropout=False, engine=3)
+    dropout=False)
 
-AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult, engine=3)
+AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
         num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult, engine=3)
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult)
 
 conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
