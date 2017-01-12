@@ -1,10 +1,35 @@
-name: "VGG_coco_SSD_300x300_deploy"
-input: "data"
-input_shape {
-  dim: 1
-  dim: 3
-  dim: 300
-  dim: 300
+name: "VGG_coco_SSD_300x300_test"
+layer {
+  name: "data"
+  type: "AnnotatedData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+    force_color: true
+    resize_param {
+      prob: 1
+      resize_mode: WARP
+      height: 300
+      width: 300
+      interp_mode: LINEAR
+    }
+  }
+  data_param {
+    source: "examples/coco/coco_minival_lmdb"
+    batch_size: 8
+    backend: LMDB
+  }
+  annotated_data_param {
+    batch_sampler {
+    }
+    label_map_file: "data/coco/labelmap_coco.prototxt"
+  }
 }
 layer {
   name: "conv1_1"
@@ -1617,7 +1642,7 @@ layer {
       top_k: 400
     }
     save_output_param {
-      output_directory: "/home/sfraczek/disk/sfraczek/ssd/data/mscoco/results/SSD_300x300"
+      output_directory: "/home/sfraczek/disk/sfraczek/ssd/data/mscoco/results/SSD_300x300_score/"
       output_name_prefix: "detections_minival_ssd300_results"
       output_format: "COCO"
       label_map_file: "data/coco/labelmap_coco.prototxt"
@@ -1627,6 +1652,23 @@ layer {
     code_type: CENTER_SIZE
     keep_top_k: 200
     confidence_threshold: 0.01
+  }
+}
+layer {
+  name: "detection_eval"
+  type: "DetectionEvaluate"
+  bottom: "detection_out"
+  bottom: "label"
+  top: "detection_eval"
+  include {
+    phase: TEST
+  }
+  detection_evaluate_param {
+    num_classes: 81
+    background_label_id: 0
+    overlap_threshold: 0.5
+    evaluate_difficult_gt: false
+    name_size_file: "data/coco/minival2014_name_size.txt"
   }
 }
 
