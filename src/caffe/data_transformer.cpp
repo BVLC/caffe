@@ -241,7 +241,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_32F || cv_img.depth() == CV_32S) <<
+    "Image data type must be unsigned byte, float or integer";
 
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
@@ -296,7 +297,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
-    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+    const uchar* ptrUchar = cv_cropped_img.ptr<uchar>(h);
+    const float* ptrFloat = cv_cropped_img.ptr<float>(h);
+    const int32_t* ptrInt = cv_cropped_img.ptr<int32_t>(h);
     int img_index = 0;
     for (int w = 0; w < width; ++w) {
       for (int c = 0; c < img_channels; ++c) {
@@ -306,7 +309,14 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           top_index = (c * height + h) * width + w;
         }
         // int top_index = (c * height + h) * width + w;
-        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        Dtype pixel = 0;
+
+        if (cv_img.depth() == CV_8U)
+          pixel = static_cast<Dtype>(ptrUchar[img_index++]);
+        if (cv_img.depth() == CV_32F)
+          pixel = static_cast<Dtype>(ptrFloat[img_index++]);
+        if (cv_img.depth() == CV_32S)
+          pixel = static_cast<Dtype>(ptrInt[img_index++]);
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
           transformed_data[top_index] =
