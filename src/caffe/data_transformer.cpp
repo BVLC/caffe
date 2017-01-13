@@ -761,19 +761,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
-  cv::Mat cv_resized_image, cv_noised_image, cv_cropped_image;
+  cv::Mat cv_resized_img, cv_noised_img;
   if (param_.has_resize_param()) {
-    cv_resized_image = ApplyResize(cv_img, param_.resize_param());
+    cv_resized_img = ApplyResize(cv_img, param_.resize_param());
   } else {
-    cv_resized_image = cv_img;
+    cv_resized_img = cv_img;
   }
   if (param_.has_noise_param()) {
-    cv_noised_image = ApplyNoise(cv_resized_image, param_.noise_param());
+    cv_noised_img = ApplyNoise(cv_resized_img, param_.noise_param());
   } else {
-    cv_noised_image = cv_resized_image;
+    cv_noised_img = cv_resized_img;
   }
-  int img_height = cv_noised_image.rows;
-  int img_width = cv_noised_image.cols;
+  int img_height = cv_noised_img.rows;
+  int img_width = cv_noised_img.cols;
   CHECK_GE(img_height, crop_size);
   CHECK_GE(img_width, crop_size);
 
@@ -794,7 +794,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     cv::Rect roi(w_off, h_off, crop_size, crop_size);
     cv_cropped_img = cv_img(roi);
   } else {
-    cv_cropped_image = cv_noised_image;
+    cv_cropped_img = cv_noised_img;
   }
 
   // Return the normalized crop bbox.
@@ -803,16 +803,12 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   crop_bbox->set_xmax(Dtype(w_off + width) / img_width);
   crop_bbox->set_ymax(Dtype(h_off + height) / img_height);
 
-  if (has_mean_file) {
-    CHECK_EQ(cv_cropped_image.rows, data_mean_.height());
-    CHECK_EQ(cv_cropped_image.cols, data_mean_.width());
-  }
-  CHECK(cv_cropped_image.data);
+  CHECK(cv_cropped_img.data);
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
-    const uchar* ptr = cv_cropped_image.ptr<uchar>(h);
+    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
     int img_index = 0;
     for (int w = 0; w < width; ++w) {
       for (int c = 0; c < img_channels; ++c) {
