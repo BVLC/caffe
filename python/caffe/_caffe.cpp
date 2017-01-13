@@ -17,6 +17,7 @@
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
+#include "caffe/lbfgs_solver.hpp"
 #include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -481,6 +482,9 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<AdamSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>(
         "AdamSolver", bp::init<string>());
+  bp::class_<LBFGSSolver<Dtype>, bp::bases<Solver<Dtype> >,
+    shared_ptr<LBFGSSolver<Dtype> >, boost::noncopyable>(
+        "LBFGSSolver", bp::init<string>());
 
   bp::def("get_solver", &GetSolverFromFile,
       bp::return_value_policy<bp::manage_new_object>());
