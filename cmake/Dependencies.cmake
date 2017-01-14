@@ -178,11 +178,17 @@ endif()
 
 # ---[ Matlab
 if(BUILD_matlab)
-  find_package(MatlabMex)
-  if(MATLABMEX_FOUND)
-    set(HAVE_MATLAB TRUE)
+  if(MSVC)
+    find_package(Matlab COMPONENTS MAIN_PROGRAM MX_LIBRARY)
+    if(MATLAB_FOUND)
+      set(HAVE_MATLAB TRUE)
+    endif()
+  else()
+    find_package(MatlabMex)
+    if(MATLABMEX_FOUND)
+      set(HAVE_MATLAB TRUE)
+    endif()
   endif()
-
   # sudo apt-get install liboctave-dev
   find_program(Octave_compiler NAMES mkoctfile DOC "Octave C++ compiler")
 
