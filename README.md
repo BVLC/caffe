@@ -99,7 +99,16 @@ This branch of Caffe ports the framework to Windows.
 
 [![Travis Build Status](https://api.travis-ci.org/BVLC/caffe.svg?branch=windows)](https://travis-ci.org/BVLC/caffe) Travis (Linux build)
 
-[![Windows Build status](https://ci.appveyor.com/api/projects/status/6xpwyq0y9ffdj9pb/branch/windows?svg=true)](https://ci.appveyor.com/project/willyd/caffe-4pvka/branch/windows) AppVeyor (Windows build)
+[![Build status](https://ci.appveyor.com/api/projects/status/ew7cl2k1qfsnyql4/branch/windows?svg=true)](https://ci.appveyor.com/project/BVLC/caffe/branch/windows) AppVeyor (Windows build)
+
+## Prebuilt binaries
+
+Prebuilt binaries can be downloaded from the latest CI build on appveyor for the following configurations:
+
+- Visual Studio 2015, CPU only, Python 2.7: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D14%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DRelease%2C+CMAKE_BUILD_SHARED_LIBS%3D0), [Caffe Debug](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D14%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DDebug%2C+CMAKE_BUILD_SHARED_LIBS%3D0) and [Caffe Dependencies](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/dependencies.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D14%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DRelease%2C+CMAKE_BUILD_SHARED_LIBS%3D0)
+
+- Visual Studio 2013, CPU only, Python 2.7: [Caffe Release](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D12%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DRelease%2C+CMAKE_BUILD_SHARED_LIBS%3D0), [Caffe Debug](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D12%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DDebug%2C+CMAKE_BUILD_SHARED_LIBS%3D0) and [Caffe Dependencies](https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/dependencies.zip?branch=windows&job=Environment%3A+MSVC_VERSION%3D12%2C+WITH_NINJA%3D0%2C+CMAKE_CONFIG%3DRelease%2C+CMAKE_BUILD_SHARED_LIBS%3D0)
+
 
 ## Windows Setup
 
@@ -184,7 +193,7 @@ If Python is installed the default is to build the python interface and python l
 
 ### Using the MATLAB interface
 
-TODO
+Follow the above procedure and use `-DBUILD_matlab=ON`. Then, you need to add the path to the generated `.mexw64` file to your `PATH` and the folder caffe/matlab to your Matlab search PATH to use matcaffe.
 
 
 ### Using the Ninja generator
