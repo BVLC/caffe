@@ -1623,7 +1623,8 @@ def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
        line.find('void DataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void ImageDataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void MemoryDataLayer<Dtype>::DataLayerSetUp') == -1 and
-       line.find('void WindowDataLayer<Dtype>::DataLayerSetUp') == -1):
+       line.find('void WindowDataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void ExternalLibDataLayer<Dtype>::DataLayerSetUp') == -1):
       error(filename, linenum, 'caffe/data_layer_setup', 2,
             'Except the base classes, Caffe DataLayer should define'
             + ' DataLayerSetUp instead of LayerSetUp. The base DataLayers'

@@ -367,6 +367,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
+  optional ExternalLibDataParameter external_lib_data_param = 10001;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -658,6 +659,19 @@ message DataParameter {
   // Prefetch queue (Number of batches to prefetch to host memory, increase if
   // data access bandwidth varies).
   optional uint32 prefetch = 10 [default = 4];
+}
+
+message ExternalLibDataParameter {
+  // Specify the external library path.
+  required string external_lib_path = 1;
+  // Specify the data source object factory method name.
+  required string factory_method_name = 2;
+  // Specify the parameter string to be passed to external library.
+  required string external_lib_param = 3;
+  // Specify the batch size.
+  required uint32 batch_size = 4;
+  // Indicates if blob with given name needs to be prefetched to GPU.
+  repeated string gpu_prefetch_top = 5;
 }
 
 message DropoutParameter {

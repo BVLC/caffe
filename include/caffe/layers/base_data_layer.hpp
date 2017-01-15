@@ -42,13 +42,18 @@ class BaseDataLayer : public Layer<Dtype> {
  protected:
   TransformationParameter transform_param_;
   shared_ptr<DataTransformer<Dtype> > data_transformer_;
-  bool output_labels_;
 };
 
 template <typename Dtype>
 class Batch {
  public:
-  Blob<Dtype> data_, label_;
+  // We will certainly have tops corresponding to data and label.
+  // If data layer supports more blobs it needs to add them.
+  Batch() {
+    data_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>()));
+    data_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>()));
+  }
+  std::vector<shared_ptr<Blob<Dtype> > > data_;
 };
 
 template <typename Dtype>
@@ -73,6 +78,14 @@ class BasePrefetchingDataLayer :
  protected:
   virtual void InternalThreadEntry();
   virtual void load_batch(Batch<Dtype>* batch) = 0;
+  virtual bool PrefetchToGpu(int index) {
+    // Maintain compatibility with most of the data layers which assume first
+    // top is data and second one is label.
+    if (index == 0)
+      return true;
+    else
+      return false;
+  }
 
   Batch<Dtype> prefetch_[PREFETCH_COUNT];
   BlockingQueue<Batch<Dtype>*> prefetch_free_;
