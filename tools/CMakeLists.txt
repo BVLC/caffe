@@ -1,3 +1,7 @@
+if(NOT BUILD_TOOLS)
+    return()
+endif()
+
 # Collect source files
 file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 

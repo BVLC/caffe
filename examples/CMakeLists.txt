@@ -1,3 +1,6 @@
+if(NOT BUILD_EXAMPLES)
+    return()
+endif()
 file(GLOB_RECURSE examples_srcs "${PROJECT_SOURCE_DIR}/examples/*.cpp")
 
 foreach(source_file ${examples_srcs})
