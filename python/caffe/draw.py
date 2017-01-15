@@ -9,7 +9,7 @@ Caffe network visualization: draw the NetParameter protobuffer.
     Caffe.
 """
 
-from caffe.proto import caffe_pb2
+from .proto import caffe_pb2
 
 """
 pydot is not supported under python 3 and pydot2 doesn't work properly.
