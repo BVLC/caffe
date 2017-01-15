@@ -43,6 +43,7 @@ Optional dependencies:
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
 * cuDNN for GPU acceleration (v5)
+* [IBM MASS library](http://www-01.ibm.com/software/awdtools/mass/linux/mass-linux.html)
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
@@ -73,6 +74,10 @@ There are several implementations of this library. The choice is yours:
     2. Set `BLAS := open` in `Makefile.config`
 
 ### Python and/or MATLAB Caffe (optional)
+
+### Caffe with MASS library support (optional):
+
+[IBM MASS](http://www-01.ibm.com/software/awdtools/mass/linux/mass-linux.html) library consists of a set of mathematical functions for C, C++, and Fortran-language applications that are tuned for optimum performance on POWER architectures. After installing the library, uncomment `USE_MASS := 1` flag and provide MASS library path in `Makefile.config`.
 
 #### Python
 

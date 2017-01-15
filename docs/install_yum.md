@@ -42,4 +42,12 @@ Install the library and latest driver separately; the driver bundled with the li
 
 **Python** (optional): if you use the default Python you will need to `sudo yum install` the `python-devel` package to have the Python headers for building the pycaffe wrapper.
 
+**MASS** (optional): Install MASS library as below -
+
+    wget http://public.dhe.ibm.com/software/server/POWER/Linux/xl-compiler/eval/ppc64le/rhel7/repodata/repomd.xml.key
+    sudo rpm --import repomd.xml.key
+    wget http://public.dhe.ibm.com/software/server/POWER/Linux/xl-compiler/eval/ppc64le/rhel7/ibm-xl-compiler-eval.repo
+    sudo cp ibm-xl-compiler-eval.repo /etc/yum.repos.d/
+    sudo yum install libxlmass-devel.8.1.3
+
 Continue with [compilation](installation.html#compilation).
