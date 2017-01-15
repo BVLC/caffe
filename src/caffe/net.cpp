@@ -47,8 +47,6 @@ Net<Dtype>::Net(const string& param_file, Phase phase,
 
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
-  CHECK(Caffe::root_solver() || root_net_)
-      << "root_net_ needs to be set for all non-root solvers";
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -76,6 +74,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // For non-root solvers, whether this layer is shared from root_net_.
     bool share_from_root = !Caffe::root_solver()
+        && root_net_ != NULL
         && root_net_->layers_[layer_id]->ShareInParallel();
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
