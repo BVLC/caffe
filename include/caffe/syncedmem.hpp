@@ -16,9 +16,11 @@ namespace caffe {
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
-inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
+inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda,
+                            int* alloc_device) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaGetDevice(alloc_device));
     CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
     return;
@@ -33,10 +35,15 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
-inline void CaffeFreeHost(void* ptr, bool use_cuda) {
+inline void CaffeFreeHost(void* ptr, bool use_cuda, int alloc_device) {
 #ifndef CPU_ONLY
   if (use_cuda) {
+    int initial_device;
+    cudaGetDevice(&initial_device);
+    if (alloc_device != -1)
+        CUDA_CHECK(cudaSetDevice(alloc_device));
     CUDA_CHECK(cudaFreeHost(ptr));
+    cudaSetDevice(initial_device);
     return;
   }
 #endif
@@ -59,11 +66,11 @@ class SyncedMemory {
   SyncedMemory()
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1), alloc_device_(-1) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1), alloc_device_(-1) {}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -90,6 +97,8 @@ class SyncedMemory {
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
+  // device used when cpu_ptr_ is allocated
+  int  alloc_device_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
