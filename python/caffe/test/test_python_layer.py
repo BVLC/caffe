@@ -5,7 +5,6 @@ import six
 
 import caffe
 
-
 class SimpleLayer(caffe.Layer):
     """A layer that just multiplies by ten"""
 
@@ -97,8 +96,8 @@ def phase_net_file():
         return f.name
 
 
-@unittest.skipIf('Python' not in caffe.layer_type_list(),
-    'Caffe built without Python layer support')
+#@unittest.skipIf('Python' not in caffe.layer_type_list(),
+#    'Caffe built without Python layer support')
 class TestPythonLayer(unittest.TestCase):
     def setUp(self):
         net_file = python_net_file()

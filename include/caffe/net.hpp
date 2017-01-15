@@ -12,6 +12,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "Python.h"
+
 namespace caffe {
 
 /**
@@ -53,6 +55,18 @@ class Net {
    * included.
    */
   Dtype ForwardFromTo(int start, int end);
+  /**
+   * Basically, a ForwardFromTo, that release Python GIL, so that pycaffe
+   * can make multithreaded predictions. This is exposed to python-boost interface
+   * instead of ForwardFromTo
+   */
+  Dtype PyForwardFromTo(int start, int end) {
+    // Release GIL
+    scoped_gil_release = make_shared<ScopedGILRelease>();
+    Dtype result = ForwardFromTo(start, end);
+    scoped_gil_release.reset();
+    return result;
+  }
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
   /// @brief DEPRECATED; set input blobs then use Forward() instead.
@@ -72,6 +86,17 @@ class Net {
    */
   void Backward();
   void BackwardFromTo(int start, int end);
+  /**
+   * Basically, a BackwardFromTo, that release Python GIL, so that pycaffe
+   * can make multithreaded predictions. This is exposed to python-boost interface
+   * instead of BackwardFromTo.
+   **/
+  void PyBackwardFromTo(int start, int end) {
+    // Release GIL
+    scoped_gil_release = make_shared<ScopedGILRelease>();
+    BackwardFromTo(start, end);
+    scoped_gil_release.reset();
+  }
   void BackwardFrom(int start);
   void BackwardTo(int end);
 
@@ -309,6 +334,9 @@ class Net {
   /// The root net that actually holds the shared layers in data parallelism
   const Net* const root_net_;
   DISABLE_COPY_AND_ASSIGN(Net);
+
+  // For releasing/reacquiring GIL with pycaffe
+  shared_ptr<ScopedGILRelease> scoped_gil_release;
 };
 
 
