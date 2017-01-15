@@ -64,6 +64,67 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 }
 
 template <typename Dtype>
+Solver<Dtype>::Solver(const SolverParameter& param,
+                      shared_ptr<Net<Dtype> > net,
+                      const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                      const bool &allow_any_phase,
+                      const Solver* root_solver)
+  : net_(), root_solver_(root_solver) {
+  InitForNet(param, net, test_nets, allow_any_phase);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file,
+                      shared_ptr<Net<Dtype> > net,
+                      const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                      const bool &allow_any_phase,
+                      const Solver* root_solver)
+    : net_(), root_solver_(root_solver) {
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(param_file, &param);
+  InitForNet(param, net, test_nets, allow_any_phase);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::InitForNet(const SolverParameter& param,
+                               shared_ptr<Net<Dtype> > net,
+                               const vector<shared_ptr<Net<Dtype> > >& test_nets,  // NOLINT
+                               const bool &allow_any_phase) {
+  CHECK(Caffe::root_solver() || root_solver_)
+    << "root_solver_ needs to be set for all non-root solvers";
+  if (!allow_any_phase) {
+    // Check for the phase.
+    LOG_IF(ERROR, net->phase() != TRAIN) << "Tried to instantiate solver "
+      "for a net in test phase and `allow_any_phase` is not set.";
+  }
+  CHECK(net->phase() == TRAIN);
+  LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
+                                     << std::endl << param.DebugString();
+  param_ = param;
+  CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
+  CheckSnapshotWritePermissions();
+  if (Caffe::root_solver() && param_.random_seed() >= 0) {
+    Caffe::set_random_seed(param_.random_seed());
+  }
+  // Scaffolding code
+  if (Caffe::root_solver()) {
+    test_nets_.resize(test_nets.size());
+    for (int net_idx = 0; net_idx < test_nets.size(); ++net_idx) {
+      if (!allow_any_phase) {
+        LOG_IF(ERROR, test_nets[net_idx]->phase() != TEST) << "Tried to use "
+          "a test net not in TEST phase and `allow_any_phase` is not set!";
+        CHECK(test_nets[net_idx]->phase() == TEST);
+      }
+      test_nets_[net_idx] = test_nets[net_idx];
+    }
+    LOG(INFO) << "Solver scaffolding done.";
+  }
+  iter_ = 0;
+  current_step_ = 0;
+  net_ = net;
+}
+
+template <typename Dtype>
 void Solver<Dtype>::InitTrainNet() {
   const int num_train_nets = param_.has_net() + param_.has_net_param() +
       param_.has_train_net() + param_.has_train_net_param();

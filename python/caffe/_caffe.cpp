@@ -380,22 +380,52 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
-        "SGDSolver", bp::init<string>());
+        "SGDSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+                  shared_ptr<Net<Dtype> >,
+                  vector<shared_ptr<Net<Dtype> > >,
+                  bool>());
   bp::class_<NesterovSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<NesterovSolver<Dtype> >, boost::noncopyable>(
-        "NesterovSolver", bp::init<string>());
+        "NesterovSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+         shared_ptr<Net<Dtype> >,
+         vector<shared_ptr<Net<Dtype> > >,
+         bool>());
   bp::class_<AdaGradSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdaGradSolver<Dtype> >, boost::noncopyable>(
-        "AdaGradSolver", bp::init<string>());
+        "AdaGradSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+         shared_ptr<Net<Dtype> >,
+         vector<shared_ptr<Net<Dtype> > >,
+         bool>());
   bp::class_<RMSPropSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<RMSPropSolver<Dtype> >, boost::noncopyable>(
-        "RMSPropSolver", bp::init<string>());
+        "RMSPropSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+         shared_ptr<Net<Dtype> >,
+         vector<shared_ptr<Net<Dtype> > >,
+         bool>());
   bp::class_<AdaDeltaSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdaDeltaSolver<Dtype> >, boost::noncopyable>(
-        "AdaDeltaSolver", bp::init<string>());
+        "AdaDeltaSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+         shared_ptr<Net<Dtype> >,
+         vector<shared_ptr<Net<Dtype> > >,
+         bool>());
   bp::class_<AdamSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>(
-        "AdamSolver", bp::init<string>());
+        "AdamSolver", bp::no_init)
+    .def(bp::init<string>())
+    .def(bp::init<string,
+         shared_ptr<Net<Dtype> >,
+         vector<shared_ptr<Net<Dtype> > >,
+         bool>());
 
   bp::def("get_solver", &GetSolverFromFile,
       bp::return_value_policy<bp::manage_new_object>());

@@ -19,6 +19,18 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param) { PreSolve(); }
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) { PreSolve(); }
+  SGDSolver(const SolverParameter& param,
+            shared_ptr<Net<Dtype> > net,
+            const vector<shared_ptr<Net<Dtype> > >& test_nets,
+            const bool &allow_any_phase)
+      : Solver<Dtype>(param, net, test_nets, allow_any_phase) { PreSolve(); }
+  SGDSolver(const string& param_file,
+            shared_ptr<Net<Dtype> > net,
+            const vector<shared_ptr<Net<Dtype> > >& test_nets,
+            const bool &allow_any_phase = false)
+      : Solver<Dtype>(param_file, net, test_nets, allow_any_phase)
+  { PreSolve(); }
+
   virtual inline const char* type() const { return "SGD"; }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
@@ -52,6 +64,16 @@ class NesterovSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) {}
   explicit NesterovSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) {}
+  NesterovSolver(const SolverParameter& param,
+                 shared_ptr<Net<Dtype> > net,
+                 const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                 const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param, net, test_nets, allow_any_phase) {}
+  NesterovSolver(const string &param_file,
+                 shared_ptr<Net<Dtype> > net,
+                 const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                 const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param_file, net, test_nets, allow_any_phase) {}
   virtual inline const char* type() const { return "Nesterov"; }
 
  protected:
@@ -67,6 +89,19 @@ class AdaGradSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit AdaGradSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+  AdaGradSolver(const SolverParameter& param,
+                shared_ptr<Net<Dtype> > net,
+                const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param, net, test_nets, allow_any_phase)
+  { constructor_sanity_check(); }
+  AdaGradSolver(const string &param_file,
+                shared_ptr<Net<Dtype> > net,
+                const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param_file, net, test_nets, allow_any_phase)
+  { constructor_sanity_check(); }
+
   virtual inline const char* type() const { return "AdaGrad"; }
 
  protected:
@@ -87,6 +122,19 @@ class RMSPropSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit RMSPropSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+  RMSPropSolver(const SolverParameter& param,
+                shared_ptr<Net<Dtype> > net,
+                const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param, net, test_nets, allow_any_phase)
+  { constructor_sanity_check(); }
+  RMSPropSolver(const string &param_file,
+                shared_ptr<Net<Dtype> > net,
+                const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param_file, net, test_nets, allow_any_phase)
+  { constructor_sanity_check(); }
+
   virtual inline const char* type() const { return "RMSProp"; }
 
  protected:
@@ -110,6 +158,18 @@ class AdaDeltaSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { AdaDeltaPreSolve(); }
   explicit AdaDeltaSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdaDeltaPreSolve(); }
+  AdaDeltaSolver(const SolverParameter& param,
+                 shared_ptr<Net<Dtype> > net,
+                 const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                 const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param, net, test_nets, allow_any_phase)
+  { AdaDeltaPreSolve(); }
+  AdaDeltaSolver(const string &param_file,
+                 shared_ptr<Net<Dtype> > net,
+                 const vector<shared_ptr<Net<Dtype> > >& test_nets,
+                 const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param_file, net, test_nets, allow_any_phase)
+  { AdaDeltaPreSolve(); }
   virtual inline const char* type() const { return "AdaDelta"; }
 
  protected:
@@ -134,6 +194,18 @@ class AdamSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { AdamPreSolve();}
   explicit AdamSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdamPreSolve(); }
+  AdamSolver(const SolverParameter& param,
+             shared_ptr<Net<Dtype> > net,
+             const vector<shared_ptr<Net<Dtype> > >& test_nets,
+             const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param, net, test_nets, allow_any_phase)
+  { AdamPreSolve(); }
+  AdamSolver(const string &param_file,
+             shared_ptr<Net<Dtype> > net,
+             const vector<shared_ptr<Net<Dtype> > >& test_nets,
+             const bool &allow_any_phase = false)
+    : SGDSolver<Dtype>(param_file, net, test_nets, allow_any_phase)
+  { AdamPreSolve(); }
   virtual inline const char* type() const { return "Adam"; }
 
  protected:
