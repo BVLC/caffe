@@ -492,6 +492,21 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
   }
 }
 
+template <typename Dtype>
+WorkerSolver<Dtype>::~WorkerSolver() {
+#ifndef CPU_ONLY
+  int device;
+  CUDA_CHECK(cudaGetDevice(&device));
+  CUDA_CHECK(cudaSetDevice(this->param_.device_id()));
+#endif
+  this->net_.reset();
+  this->test_nets_.resize(0);
+#ifndef CPU_ONLY
+  CUDA_CHECK(cudaSetDevice(device));
+#endif
+}
+
 INSTANTIATE_CLASS(Solver);
+INSTANTIATE_CLASS(WorkerSolver);
 
 }  // namespace caffe
