@@ -79,7 +79,12 @@ int main(int argc, char** argv) {
   while (std::getline(infile, line)) {
     pos = line.find_last_of(' ');
     label = atoi(line.substr(pos + 1).c_str());
-    lines.push_back(std::make_pair(line.substr(0, pos), label));
+
+    std::string file_path = line.substr(0, pos);
+    file_path.erase(std::find_if(file_path.rbegin(), file_path.rend(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))).base(), file_path.end());
+
+    lines.push_back(std::make_pair(file_path, label));
   }
   if (FLAGS_shuffle) {
     // randomly shuffle data
