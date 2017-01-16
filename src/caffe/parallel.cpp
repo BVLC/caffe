@@ -4,6 +4,7 @@
 #include <glog/logging.h>
 #include <stdio.h>
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -229,7 +230,19 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     int access;
     CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
     if (access) {
-      CUDA_CHECK(cudaDeviceEnablePeerAccess(peer, 0));
+      cudaDeviceProp a, b;
+      CUDA_CHECK(cudaGetDeviceProperties(&a, self));
+      CUDA_CHECK(cudaGetDeviceProperties(&b, peer));
+      const int pci_bus_id_offset = 0x80;
+      if (std::max(a.pciBusID, b.pciBusID) < pci_bus_id_offset ||
+          std::min(a.pciBusID, b.pciBusID) >= pci_bus_id_offset) {
+        CUDA_CHECK(cudaDeviceEnablePeerAccess(peer, 0));
+      } else {
+        LOG(INFO) << "This will result in poor memcpy performance over QPI, "
+                  << "if enables peer to peer access from GPU "
+                  << self << " (pciBusID " << a.pciBusID << ") to GPU "
+                  << peer << " (pciBusID " << b.pciBusID << ")";
+      }
     } else {
       LOG(INFO)<< "GPU " << self << " does not have p2p access to GPU " << peer;
     }
@@ -259,7 +272,14 @@ P2PSync<Dtype>::~P2PSync() {
     int access;
     CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
     if (access) {
-      CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
+      cudaDeviceProp a, b;
+      CUDA_CHECK(cudaGetDeviceProperties(&a, self));
+      CUDA_CHECK(cudaGetDeviceProperties(&b, peer));
+      const int pci_bus_id_offset = 0x80;
+      if (std::max(a.pciBusID, b.pciBusID) < pci_bus_id_offset ||
+          std::min(a.pciBusID, b.pciBusID) >= pci_bus_id_offset) {
+        CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
+      }
     }
   }
 
