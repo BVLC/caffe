@@ -181,8 +181,12 @@ bool ReadImageToDatum(const string& filename, const int label,
       return false;
     }
     if ( (cv_img.channels() == 3) == is_color && !height && !width &&
-                                                matchExt(filename, encoding) )
+                                                matchExt(filename, encoding) ) {
+      datum->set_channels(cv_img.channels());
+      datum->set_height(cv_img.rows);
+      datum->set_width(cv_img.cols);
       return ReadFileToDatum(filename, label, datum);
+    }
 
     if (height > 0 && width > 0)
       cv::resize(cv_img, cv_img, cv::Size(width, height));
