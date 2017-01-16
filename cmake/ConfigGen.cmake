@@ -113,10 +113,6 @@ function(caffe_generate_export_configs)
     list(APPEND DEFINITIONS -DUSE_CUDNN)
   endif()
 
-  if(PERFORMANCE_MONITORING)
-    list(APPEND Caffe_DEFINITIONS -DPERFORMANCE_MONITORING)
-  endif()
-
   if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
     list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
   endif()
