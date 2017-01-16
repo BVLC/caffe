@@ -20,6 +20,11 @@ if(USE_OPENMP)
   endif()
 endif()
 
+# ---[ PERFORMANCE_MONITORING
+if(PERFORMANCE_MONITORING)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPERFORMANCE_MONITORING")
+endif()
+
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
