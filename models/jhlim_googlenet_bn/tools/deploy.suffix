@@ -1,0 +1,6 @@
+layers {
+  bottom: "loss3/classifier"
+  top: "prob"
+  name: "prob"
+  type: "Softmax"
+}

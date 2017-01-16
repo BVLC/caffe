@@ -318,6 +318,12 @@ void P2PSync<Dtype>::on_start() {
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
     children_[i]->queue_.push(this);
   }
+
+  // Move syncedmem head to HEAD_AT_GPU
+  const vector<Blob<Dtype>*>& params = solver_->net()->learnable_params();
+  for (int i = 0; i < params.size(); ++i) {
+    params[i]->mutable_gpu_data();
+  }
 #endif
 }
 

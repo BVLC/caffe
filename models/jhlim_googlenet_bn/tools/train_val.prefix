@@ -1,0 +1,46 @@
+# Inception Network (GoogLeNet Batch Normalization Network)
+name: "InceptionNetwork"
+### Training Set
+layer {
+  top: "data"
+  top: "label"
+  name: "data"
+  type: "Data"
+  data_param {
+    source: "/media/data0/image/ilsvrc15/ilsvrc15_train_lmdb"
+    batch_size: 32
+    backend: LMDB
+    shuffle: true
+  }
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    mirror: true
+    crop_size: 224
+    mean_file: "/media/data0/image/ilsvrc15/imagenet_mean.binaryproto"
+    #mean_value: 104
+    #mean_value: 117
+    #mean_value: 123
+  }
+}
+### Validation Set
+layer {
+  top: "data"
+  top: "label"
+  name: "data"
+  type: "Data"
+  data_param {
+    source: "/media/data0/image/ilsvrc15/ilsvrc15_val_lmdb"
+    batch_size: 32
+    backend: LMDB
+  }
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mirror: false
+    crop_size: 224
+    mean_file: "/media/data0/image/ilsvrc15/imagenet_mean.binaryproto"
+  }
+}

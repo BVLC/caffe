@@ -50,6 +50,13 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+  void set_batch_mean_and_batch_variance(const Blob<Dtype>& source_batch_mean,
+                                         const Blob<Dtype>& source_batch_variance) {
+    set_batch_mean(source_batch_mean);
+    set_batch_variance(source_batch_variance);
+    use_global_stats_ = true;
+  };
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -59,6 +66,13 @@ class BatchNormLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  void set_batch_mean(const Blob<Dtype>& source) {
+    mean_.CopyFrom(source); // reshape false
+  };
+  void set_batch_variance(const Blob<Dtype>& source) {
+    variance_.CopyFrom(source); // reshape false
+  };
 
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
