@@ -10,10 +10,10 @@
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
+#include <functional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <functional>
 
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
