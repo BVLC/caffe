@@ -13,6 +13,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <functional>
 
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
@@ -82,7 +83,8 @@ int main(int argc, char** argv) {
 
     std::string file_path = line.substr(0, pos);
     file_path.erase(std::find_if(file_path.rbegin(), file_path.rend(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace))).base(), file_path.end());
+                    std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+                    file_path.end());
 
     lines.push_back(std::make_pair(file_path, label));
   }
