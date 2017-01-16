@@ -24,6 +24,10 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
+THIRDPARTY_DIR := ./3rdparty
+CUB_DIR := $(THIRDPARTY_DIR)/cub
+CUB_VERSION := 1.5.2
+
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
@@ -171,7 +175,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include $(THIRDPARTY_DIR)
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -584,7 +588,7 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 
-$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
+$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS) $(CUB_DIR)
 	@ echo NVCC $<
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
@@ -670,6 +674,7 @@ superclean: clean supercleanfiles
 		echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
 		$(RM) $(SUPERCLEAN_FILES); \
 	fi
+	@- $(RM) -rf $(CUB_DIR)
 
 $(DIST_ALIASES): $(DISTRIBUTE_DIR)
 
@@ -689,5 +694,8 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	cd $(DISTRIBUTE_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 	# add python - it's not the standard way, indeed...
 	cp -r python $(DISTRIBUTE_DIR)/python
+
+$(CUB_DIR):
+	@ $(THIRDPARTY_DIR)/getCUB.sh $(CUB_VERSION)
 
 -include $(DEPS)
