@@ -3,6 +3,10 @@
 
 #include <cstdlib>
 
+#ifdef USE_MKL
+  #include "mkl.h"
+#endif
+
 #include "caffe/common.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/math_functions.hpp"

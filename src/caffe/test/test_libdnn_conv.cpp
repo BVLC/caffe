@@ -611,7 +611,6 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
   }
 
   virtual void SetUp() {
-    // fill the values
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_bottom_vec_ref_.push_back(blob_bottom_ref_);
     blob_top_vec_.push_back(blob_top_);
