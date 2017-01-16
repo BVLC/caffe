@@ -1663,8 +1663,8 @@ layer {
   top: "mbox_loc"
   concat_param {
     axis: 1
-    engine: CAFFE
   }
+    engine: "CAFFE"
 }
 layer {
   name: "mbox_conf"
@@ -1678,8 +1678,8 @@ layer {
   top: "mbox_conf"
   concat_param {
     axis: 1
-    engine: CAFFE
   }
+    engine: "CAFFE"
 }
 layer {
   name: "mbox_priorbox"
@@ -1693,8 +1693,8 @@ layer {
   top: "mbox_priorbox"
   concat_param {
     axis: 2
-    engine: CAFFE
   }
+    engine: "CAFFE"
 }
 layer {
   name: "mbox_loss"
