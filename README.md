@@ -1,4 +1,17 @@
-# Caffe
+# Caffe with dynamic masking capability for real-time data augmentation
+
+## Motivation  for the fork
+This fork of [Caffe](https://github.com/BVLC/caffe) adds the capability to dynamically mask 
+at a random position within training images, a `mask_size` block, once in `mask_freq` iterations.
+It is motivated by the [discussion on Kaggle forum](https://www.kaggle.com/c/state-farm-distracted-driver-detection/forums/t/21994/heat-map-of-cnn-output/125891#post125891)
+for State-farm distracted driver detection competition, where in it has been observed that 
+dynamically masking a small random portion of the images during training will:
+* Augment training images at run-time, allowing training to proceed without saturation for more epochs
+* Force the network to isolate and learn the contribution of each feature to objective
+
+See [data layer tutorial](docs/tutorial/data.md) for more details.
+
+## Original README
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)

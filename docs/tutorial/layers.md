@@ -303,7 +303,7 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 
 Data enters Caffe through data layers: they lie at the bottom of nets. Data can come from efficient databases (LevelDB or LMDB), directly from memory, or, when efficiency is not critical, from files on disk in HDF5 or common image formats.
 
-Common input preprocessing (mean subtraction, scaling, random cropping, and mirroring) is available by specifying `TransformationParameter`s.
+Common input preprocessing (mean subtraction, scaling, random cropping, mirroring and random masking) is available by specifying `TransformationParameter`s.
 
 #### Database
 

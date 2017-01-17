@@ -429,6 +429,10 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // Specify if we would like to randomly mask an image
+  optional uint32 mask_size = 8 [default = 0];
+  // Frequency of masking will be 1 in N, where N is the number specified as mask_freq 
+  optional uint32 mask_freq = 9 [default = 3];
 }
 
 // Message that stores parameters shared by loss layers
