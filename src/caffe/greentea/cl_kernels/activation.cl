@@ -121,7 +121,7 @@ __kernel void TEMPLATE(sce_loss_forward,Dtype)(const int_tp nthreads,
       counts[i] = 0.0;
     } else {
       loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0.0)) -
-          log(1.0 + exp(input_data[i] - 2.0 * input_data[i] *
+          log((Dtype)1.0 + exp(input_data[i] - (Dtype)2.0 * input_data[i] *
           (input_data[i] >= 0.0)));
       counts[i] = 1.0;
     }
