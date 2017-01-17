@@ -51,7 +51,7 @@ Below is a more complete description of some of the steps involved in building c
 
 ### Install the caffe dependencies
 
-The easiest and recommended way of installing the required dependencies is by downloading the pre-built libraries using the [scripts\download_prebuilt_dependencies.py](scripts\download_prebuilt_dependencies.py) file. Depending on your compiler one of the following commands should download and extract the prebuilt dependencies to your current working directory:
+The easiest and recommended way of installing the required dependencies is by downloading the pre-built libraries using the [scripts\download_prebuilt_dependencies.py](scripts/download_prebuilt_dependencies.py) file. Depending on your compiler one of the following commands should download and extract the prebuilt dependencies to your current working directory:
 
 ```cmd
 :: Install Visual Studio 2013 dependencies
