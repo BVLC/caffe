@@ -94,6 +94,10 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 # INCLUDE_DIRS += $(shell brew --prefix)/include
 # LIBRARY_DIRS += $(shell brew --prefix)/lib
 
+# NCCL acceleration switch (uncomment to build with NCCL)
+# https://github.com/NVIDIA/nccl (last tested version: v1.2.3-1+cuda8.0)
+# USE_NCCL := 1
+
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
