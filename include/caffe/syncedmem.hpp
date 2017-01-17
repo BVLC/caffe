@@ -3,6 +3,10 @@
 
 #include <cstdlib>
 
+#ifdef USE_MKL
+  #include "mkl.h"
+#endif
+
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -20,7 +24,11 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
+#ifdef USE_MKL
+  *ptr = mkl_malloc(size ? size:1, 64);
+#else
   *ptr = malloc(size);
+#endif
   *use_cuda = false;
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
@@ -32,7 +40,11 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
+#ifdef USE_MKL
+  mkl_free(ptr);
+#else
   free(ptr);
+#endif
 }
 
 
