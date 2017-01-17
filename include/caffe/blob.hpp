@@ -31,6 +31,8 @@ class Blob {
       const int width);
   explicit Blob(const vector<int>& shape);
 
+  Blob(const vector<int>& shape, void * pre_allocated_gpu_ptr, int gpu_device);
+
   /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
   void Reshape(const int num, const int channels, const int height,
       const int width);

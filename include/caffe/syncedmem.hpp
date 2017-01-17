@@ -64,6 +64,14 @@ class SyncedMemory {
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
         gpu_device_(-1) {}
+  SyncedMemory(void * pre_allocated_gpu_ptr, size_t size, int gpu_device)
+      : cpu_ptr_(NULL), gpu_ptr_(pre_allocated_gpu_ptr), size_(size),
+        head_(HEAD_AT_GPU), own_cpu_data_(false), cpu_malloc_use_cuda_(false),
+        own_gpu_data_(false), gpu_device_(gpu_device) {
+#ifdef CPU_ONLY
+      NO_GPU;
+#endif
+  }
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
