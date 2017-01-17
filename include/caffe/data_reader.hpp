@@ -20,15 +20,16 @@ namespace caffe {
  * subset of the database. Data is distributed to solvers in a round-robin
  * way to keep parallel training deterministic.
  */
+template <typename T>
 class DataReader {
  public:
   explicit DataReader(const LayerParameter& param);
   ~DataReader();
 
-  inline BlockingQueue<Datum*>& free() const {
+  inline BlockingQueue<T*>& free() const {
     return queue_pair_->free_;
   }
-  inline BlockingQueue<Datum*>& full() const {
+  inline BlockingQueue<T*>& full() const {
     return queue_pair_->full_;
   }
 
@@ -39,8 +40,8 @@ class DataReader {
     explicit QueuePair(int size);
     ~QueuePair();
 
-    BlockingQueue<Datum*> free_;
-    BlockingQueue<Datum*> full_;
+    BlockingQueue<T*> free_;
+    BlockingQueue<T*> full_;
 
   DISABLE_COPY_AND_ASSIGN(QueuePair);
   };
@@ -72,7 +73,7 @@ class DataReader {
   const shared_ptr<QueuePair> queue_pair_;
   shared_ptr<Body> body_;
 
-  static map<const string, boost::weak_ptr<DataReader::Body> > bodies_;
+  static map<const string, boost::weak_ptr<Body> > bodies_;
 
 DISABLE_COPY_AND_ASSIGN(DataReader);
 };
