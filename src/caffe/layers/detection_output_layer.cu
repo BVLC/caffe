@@ -29,26 +29,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   const bool clip_bbox = false;
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
-<<<<<<< 8e40d3f2ae2e534d0be36464c2c6c4ed28c25e1b
-      num_loc_classes_, background_label_id_, true, bbox_data);
-  if (!share_location_) {
-    Blob<Dtype> bbox_permute;
-    bbox_permute.ReshapeLike(*(bottom[0]));
-    Dtype* bbox_permute_data = bbox_permute.mutable_gpu_data();
-    PermuteDataGPU<Dtype>(loc_count, bbox_data, num_loc_classes_, num_priors_,
-        4, bbox_permute_data);
-    caffe_copy(loc_count, bbox_permute_data, bbox_data);
-  }
-=======
-      num_loc_classes_, background_label_id_, bbox_data);
+      num_loc_classes_, background_label_id_, clip_bbox, bbox_data);
   // Retrieve all decoded location predictions.
-<<<<<<< 01f6aabcf3c7bac3b27b5fe6eba5fd523e635023
-  const Dtype* bbox_cpu_data = bbox_preds.cpu_data();
-  vector<LabelBBox> all_decode_bboxes;
-  GetLocPredictions(bbox_cpu_data, num, num_priors_, num_loc_classes_,
-      share_location_, &all_decode_bboxes);
->>>>>>> with cudnn v5 and slightly faster nms, SSD300 reaches 72 FPS on Titan X
-=======
   const Dtype* bbox_cpu_data;
   if (!share_location_) {
     Dtype* bbox_permute_data = bbox_permute_.mutable_gpu_data();
@@ -58,7 +40,6 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   } else {
     bbox_cpu_data = bbox_preds_.cpu_data();
   }
->>>>>>> futher speed up detection output gpu version
 
   // Retrieve all confidences.
   Dtype* conf_permute_data = conf_permute_.mutable_gpu_data();
@@ -88,21 +69,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
       if (!share_location_) {
         cur_bbox_data += c * num_priors_ * 4;
       }
-<<<<<<< 01f6aabcf3c7bac3b27b5fe6eba5fd523e635023
-      const vector<float>& scores = conf_scores.find(c)->second;
-      int label = share_location_ ? -1 : c;
-      if (decode_bboxes.find(label) == decode_bboxes.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
-        continue;
-      }
-      const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
-      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_,
-          top_k_, &(indices[c]));
-=======
       ApplyNMSFast(cur_bbox_data, cur_conf_data, num_priors_,
           confidence_threshold_, nms_threshold_, eta_, top_k_, &(indices[c]));
->>>>>>> futher speed up detection output gpu version
       num_det += indices[c].size();
     }
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
@@ -186,21 +154,25 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
         int idx = indices[j];
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
-        NormalizedBBox clip_bbox;
-        ClipBBox(bboxes[idx], &clip_bbox);
-        top_data[count * 7 + 3] = clip_bbox.xmin();
-        top_data[count * 7 + 4] = clip_bbox.ymin();
-        top_data[count * 7 + 5] = clip_bbox.xmax();
-        top_data[count * 7 + 6] = clip_bbox.ymax();
+        top_data[count * 7 + 2] = cur_conf_data[idx];
+        for (int k = 0; k < 4; ++k) {
+          top_data[count * 7 + 3 + k] = cur_bbox_data[idx * 4 + k];
+        }
         if (need_save_) {
-          NormalizedBBox scale_bbox;
-          ScaleBBox(clip_bbox, sizes_[name_count_].first,
-                    sizes_[name_count_].second, &scale_bbox);
+          // Generate output bbox.
+          NormalizedBBox bbox;
+          bbox.set_xmin(top_data[count * 7 + 3]);
+          bbox.set_ymin(top_data[count * 7 + 4]);
+          bbox.set_xmax(top_data[count * 7 + 5]);
+          bbox.set_ymax(top_data[count * 7 + 6]);
+          NormalizedBBox out_bbox;
+          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
+                     &out_bbox);
           float score = top_data[count * 7 + 2];
-          float xmin = scale_bbox.xmin();
-          float ymin = scale_bbox.ymin();
-          float xmax = scale_bbox.xmax();
-          float ymax = scale_bbox.ymax();
+          float xmin = out_bbox.xmin();
+          float ymin = out_bbox.ymin();
+          float xmax = out_bbox.xmax();
+          float ymax = out_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);
