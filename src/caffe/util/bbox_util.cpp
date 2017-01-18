@@ -145,6 +145,17 @@ void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
   clip_bbox->set_difficult(bbox.difficult());
 }
 
+void ClipBBox(const NormalizedBBox& bbox, const float height, const float width,
+              NormalizedBBox* clip_bbox) {
+  clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), width), 0.f));
+  clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), height), 0.f));
+  clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), width), 0.f));
+  clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), height), 0.f));
+  clip_bbox->clear_size();
+  clip_bbox->set_size(BBoxSize(*clip_bbox));
+  clip_bbox->set_difficult(bbox.difficult());
+}
+
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox) {
   scale_bbox->set_xmin(bbox.xmin() * width);
@@ -1444,6 +1455,65 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
     all_conf_loss->push_back(conf_loss);
   }
 }
+
+template <typename Dtype>
+void ComputeConfLoss(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const ConfLossType loss_type,
+      vector<vector<float> >* all_conf_loss) {
+  all_conf_loss->clear();
+  for (int i = 0; i < num; ++i) {
+    vector<float> conf_loss;
+    for (int p = 0; p < num_preds_per_class; ++p) {
+      int start_idx = p * num_classes;
+      int label = background_label_id;
+      Dtype loss = 0;
+      if (loss_type == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
+        CHECK_GE(label, 0);
+        CHECK_LT(label, num_classes);
+        // Compute softmax probability.
+        // We need to subtract the max to avoid numerical issues.
+        Dtype maxval = -FLT_MAX;
+        for (int c = 0; c < num_classes; ++c) {
+          maxval = std::max<Dtype>(conf_data[start_idx + c], maxval);
+        }
+        Dtype sum = 0.;
+        for (int c = 0; c < num_classes; ++c) {
+          sum += std::exp(conf_data[start_idx + c] - maxval);
+        }
+        Dtype prob = std::exp(conf_data[start_idx + label] - maxval) / sum;
+        loss = -log(std::max(prob, Dtype(FLT_MIN)));
+      } else if (loss_type == MultiBoxLossParameter_ConfLossType_LOGISTIC) {
+        int target = 0;
+        for (int c = 0; c < num_classes; ++c) {
+          if (c == label) {
+            target = 1;
+          } else {
+            target = 0;
+          }
+          Dtype input = conf_data[start_idx + c];
+          loss -= input * (target - (input >= 0)) -
+              log(1 + exp(input - 2 * input * (input >= 0)));
+        }
+      } else {
+        LOG(FATAL) << "Unknown conf loss type.";
+      }
+      conf_loss.push_back(loss);
+    }
+    conf_data += num_preds_per_class * num_classes;
+    all_conf_loss->push_back(conf_loss);
+  }
+}
+
+// Explicit initialization.
+template void ComputeConfLoss(const float* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const ConfLossType loss_type,
+      vector<vector<float> >* all_conf_loss);
+template void ComputeConfLoss(const double* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const ConfLossType loss_type,
+      vector<vector<float> >* all_conf_loss);
 
 template <typename Dtype>
 void ComputeConfLoss(const Dtype* conf_data, const int num,

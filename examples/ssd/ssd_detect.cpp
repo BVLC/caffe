@@ -64,7 +64,7 @@ Detector::Detector(const string& model_file,
 #endif
 
   /* Load the network. */
-  net_.reset(new Net<float>(model_file, TEST));
+  net_.reset(new Net<float>(model_file, TEST, Caffe::GetDefaultDevice()));
   net_->CopyTrainedLayersFrom(weights_file);
 
   CHECK_EQ(net_->num_inputs(), 1) << "Network should have exactly one input.";
