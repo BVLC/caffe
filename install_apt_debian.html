@@ -1,0 +1,235 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Installation: Debian
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="debian-installation">Debian Installation</h1>
+
+<p>Caffe packages are available for several Debian versions, as shown in the
+following chart</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Your Distro     |  CPU_ONLY  |  CUDA  |     Alias
+----------------+------------+--------+-------------------
+Debian/stable   |     ✘      |   ✘    | Debian Jessie
+Debian/testing  |     ✔      |   ☐    | Debian Stretch/Sid
+Debian/unstable |     ✔      |   ✔    | Debian Sid
+</code></pre>
+</div>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">✘ </code> You should take a look at <a href="install_apt.html">Ubuntu installation instruction</a>.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">✔ </code> You can install caffe with a single command line following this guide.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">☐ </code> The same with <code class="highlighter-rouge">✔ </code>. However it will not work any more when Debian/Stretch becomes the stable branch.</p>
+  </li>
+</ul>
+
+<p>Last update: 2017-01-05</p>
+
+<h2 id="binary-installation-with-apt">Binary installation with APT</h2>
+
+<p>Apart from the installation methods based on source, Debian/unstable
+and Debian/testing users can install pre-compiled Caffe packages via the official archive.</p>
+
+<p>Make sure that there is something like the follows in your <code class="highlighter-rouge">/etc/apt/sources.list</code>:
+<code class="highlighter-rouge">
+deb http://MIRROR/debian CODENAME main contrib non-free
+</code>
+where <code class="highlighter-rouge">MIRROR</code> is your favorate Debian mirror, and <code class="highlighter-rouge">CODENAME ∈ {testing,stretch,sid}</code>.</p>
+
+<p>Then we update APT cache and directly install Caffe. Note, the cpu version and
+the cuda version cannot be installed at the same time.
+<code class="highlighter-rouge">
+# apt update
+# apt install [ caffe-cpu | caffe-cuda ]
+# caffe                                              # command line interface working
+# python3 -c 'import caffe; print(caffe.__path__)'   # python3 interface working
+</code>
+It should work out of box.</p>
+
+<h4 id="customizing-caffe-packages">Customizing caffe packages</h4>
+
+<p>Some users may need to customize the Caffe package. The way to customize
+the package is beyond this guide. Here is only a brief guide of producing
+the customized <code class="highlighter-rouge">.deb</code> packages.</p>
+
+<p>Make sure that there is something like this in your <code class="highlighter-rouge">/etc/apt/sources.list</code>:
+<code class="highlighter-rouge">
+deb http://ftp2.cn.debian.org/debian sid main contrib non-free
+deb-src http://ftp2.cn.debian.org/debian sid main contrib non-free
+</code></p>
+
+<p>Then we build caffe deb files with the following commands:
+<code class="highlighter-rouge">
+$ sudo apt update
+$ sudo apt install build-essential debhelper devscripts    # standard package building tools
+$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]            # the most elegant way to pull caffe build dependencies
+$ apt source [ caffe-cpu | caffe-cuda ]               # download the source tarball and extract
+$ cd caffe-XXXX
+[ ... optional, customize caffe code/build ... ]
+$ dch -llocal "Modified XXX in order to XXX"          # write your one-line changelog
+$ debuild -B -j4                                      # build caffe with 4 parallel jobs (similar to make -j4)
+[ ... building ...]
+$ debc                                                # optional, if you want to check the package contents
+$ sudo debi                                           # optional, install the generated packages
+</code>
+The resulting deb packages can be found under the parent directory of the source tree.</p>
+
+<p>Note, the <code class="highlighter-rouge">dch ...</code> command line above is for bumping the package version number
+and adding an entry to the package changelog. If you would like to write
+more than one changelog entry, use subsequent <code class="highlighter-rouge">dch</code> command (see <code class="highlighter-rouge">man 1 dch</code>)
+instead of manually modifing <code class="highlighter-rouge">debian/changelog</code> unless you know how to keep its format correct.
+The changelog will be installed at e.g. <code class="highlighter-rouge">/usr/share/doc/caffe-cpu/changelog.Debian.gz</code>.</p>
+
+<h2 id="source-installation">Source installation</h2>
+
+<p>Source installation under Debian/unstable is similar to that of Ubuntu, but
+here is a more elegant way to pull caffe build dependencies:
+<code class="highlighter-rouge">
+$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]
+</code>
+Note, this requires a <code class="highlighter-rouge">deb-src</code> entry in your <code class="highlighter-rouge">/etc/apt/sources.list</code>.</p>
+
+<h4 id="compiler-combinations">Compiler Combinations</h4>
+
+<p>Some users may find their favorate compiler doesn’t work well with CUDA.
+<code class="highlighter-rouge">
+CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
+-------------+------------+------------+-
+GCC-7        |     ?      |     ?      |
+GCC-6        |     ✘      |     ✘      |
+GCC-5        |     ✔ [1]  |     ✔      |
+CLANG-4.0    |     ?      |     ?      |
+CLANG-3.9    |     ✘      |     ✘      |
+CLANG-3.8    |     ?      |     ✔      |
+</code></p>
+
+<p><code class="highlighter-rouge">[1]</code> CUDA 7.5 ‘s <code class="highlighter-rouge">host_config.h</code> must be patched before working with GCC-5.</p>
+
+<p>BTW, please forget the GCC-4.X series, since its <code class="highlighter-rouge">libstdc++</code> ABI is not compatible with GCC-5’s.
+You may encounter failure linking GCC-4.X object files against GCC-5 libraries.
+(See https://wiki.debian.org/GCC5 )</p>
+
+<h2 id="notes">Notes</h2>
+
+<ul>
+  <li>
+    <p>Consider re-compiling OpenBLAS locally with optimization flags for sake of
+performance. This is highly recommended for any kind of production use, including
+academic research.</p>
+  </li>
+  <li>
+    <p>If you are installing <code class="highlighter-rouge">caffe-cuda</code>, APT will automatically pull some of the
+CUDA packages and the nvidia driver packages. Please be careful if you have
+manually installed or hacked nvidia driver or CUDA toolkit or any other
+related stuff, because in this case APT may fail.</p>
+  </li>
+  <li>
+    <p>Additionally, a manpage (<code class="highlighter-rouge">man caffe</code>) and a bash complementation script
+(<code class="highlighter-rouge">caffe &lt;TAB&gt;&lt;TAB&gt;</code>, <code class="highlighter-rouge">caffe train &lt;TAB&gt;&lt;TAB&gt;</code>) are provided.
+Both of the two files are still not merged into caffe master.</p>
+  </li>
+  <li>
+    <p>The python interface is Python 3 version: <code class="highlighter-rouge">python3-caffe-{cpu,cuda}</code>.
+No plan to support python2.</p>
+  </li>
+  <li>
+    <p>If you encountered any problem related to the packaging system (e.g. failed to install <code class="highlighter-rouge">caffe-*</code>),
+please report bug to Debian via Debian’s bug tracking system. See https://www.debian.org/Bugs/ .
+Patches and suggestions are also welcome.</p>
+  </li>
+</ul>
+
+<h2 id="faq">FAQ</h2>
+
+<ul>
+  <li>where is caffe-cudnn?</li>
+</ul>
+
+<p>CUDNN library seems not redistributable currently. If you really want the
+caffe-cudnn deb packages, the workaround is to install cudnn by yourself,
+and hack the packaging scripts, then build your customized package.</p>
+
+<ul>
+  <li>I installed the CPU version. How can I switch to the CUDA version?</li>
+</ul>
+
+<p><code class="highlighter-rouge">sudo apt install caffe-cuda</code>, apt’s dependency resolver is smart enough to deal with this.</p>
+
+<ul>
+  <li>Where are the examples, the models and other documentation stuff?</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt install caffe-doc
+dpkg -L caffe-doc
+</code></pre>
+</div>
+
+<ul>
+  <li>Where can I find the Debian package status?</li>
+</ul>
+
+<p>https://tracker.debian.org/pkg/caffe  (for the CPU_ONLY version)</p>
+
+<p>https://tracker.debian.org/pkg/caffe-contrib  (for the CUDA version)</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>
