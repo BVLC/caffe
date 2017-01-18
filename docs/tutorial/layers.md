@@ -523,3 +523,15 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 #### Mean-Variance Normalization
 
 `MVN`
+
+#### Silence
+
+* LayerType: `SILENCE`
+* CPU implementation: `./src/caffe/layers/silence_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/silence_layer.cu`
+* Sample
+
+	layers { name: "silence" bottom: "input" type: SILENCE }
+
+The `Silence` layer prevents its input (an otherwise unassigned top) from being considered an output of the network.
+
