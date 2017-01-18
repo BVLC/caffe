@@ -86,27 +86,25 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
     }
   } else {
     // We are at the last dimensions, which is stored continuously in memory
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
-      // prepare index vector reduced(red) and with offsets(off)
-      std::vector<int> ind_red(cur_dim, 0);
-      std::vector<int> ind_off(cur_dim+1, 0);
-      for (int j = 0; j < cur_dim; ++j) {
-          ind_red[j] = indices[j];
-          ind_off[j] = indices[j] + offsets[j];
-      }
-      ind_off[cur_dim] = offsets[cur_dim];
-      // do the copy
-      if (is_forward) {
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + bottom[0]->offset(ind_off),
-            dest_data + top[0]->offset(ind_red));
-      } else {
-        // in the backwards pass the src_data is top_diff
-        // and the dest_data is bottom_diff
-        caffe_copy(top[0]->shape(cur_dim),
-            src_data + top[0]->offset(ind_red),
-            dest_data + bottom[0]->offset(ind_off));
-      }
+    // prepare index vector reduced(red) and with offsets(off)
+    std::vector<int> ind_red(cur_dim, 0);
+    std::vector<int> ind_off(cur_dim+1, 0);
+    for (int j = 0; j < cur_dim; ++j) {
+      ind_red[j] = indices[j];
+      ind_off[j] = indices[j] + offsets[j];
+    }
+    ind_off[cur_dim] = offsets[cur_dim];
+    // do the copy
+    if (is_forward) {
+      caffe_copy(top[0]->shape(cur_dim),
+          src_data + bottom[0]->offset(ind_off),
+          dest_data + top[0]->offset(ind_red));
+    } else {
+      // in the backwards pass the src_data is top_diff
+      // and the dest_data is bottom_diff
+      caffe_copy(top[0]->shape(cur_dim),
+          src_data + top[0]->offset(ind_red),
+          dest_data + bottom[0]->offset(ind_off));
     }
   }
 }
