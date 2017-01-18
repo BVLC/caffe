@@ -17,7 +17,7 @@
 // Comparative check difference limit
 #define kappa 0.05
 // Comparative check shape size limit
-#define element_limit 10000
+#define element_limit 1000000
 
 namespace caffe {
 

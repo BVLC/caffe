@@ -50,8 +50,8 @@ class InternalThread {
   device* thread_device_;
 
  private:
-  void entry(device* device_context, Caffe::Brew mode, int_tp rand_seed,
-             int_tp solver_count, bool root_solver);
+  void entry(device* dev, Caffe::Brew mode, int_tp rand_seed,
+      int_tp solver_count, int_tp solver_rank, bool multiprocess);
 
   shared_ptr<boost::thread> thread_;
 };

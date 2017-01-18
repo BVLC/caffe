@@ -170,6 +170,13 @@ if (USE_CLBLAST)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAST)
 endif()
 
+if(USE_NCCL)
+  find_package(NCCL REQUIRED)
+  include_directories(SYSTEM ${NCCL_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${NCCL_LIBRARIES})
+  add_definitions(-DUSE_NCCL)
+endif()
+
 # ---[ OpenCV
 if(USE_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)

@@ -188,11 +188,14 @@ class Caffe {
   // Search from start_id to the highest possible device ordinal,
   // return the ordinal of the first available device.
   static int FindDevice(const int start_id = 0);
-  // Parallel training info
+  // Parallel training
   inline static int solver_count() { return Get().solver_count_; }
   inline static void set_solver_count(int val) { Get().solver_count_ = val; }
-  inline static bool root_solver() { return Get().root_solver_; }
-  inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
+  inline static int solver_rank() { return Get().solver_rank_; }
+  inline static void set_solver_rank(int val) { Get().solver_rank_ = val; }
+  inline static bool multiprocess() { return Get().multiprocess_; }
+  inline static void set_multiprocess(bool val) { Get().multiprocess_ = val; }
+  inline static bool root_solver() { return Get().solver_rank_ == 0; }
 
   // Get the default device
   static device *GetDefaultDevice();
@@ -223,14 +226,16 @@ class Caffe {
 
   Brew mode_;
 
+  // Parallel training
+  int solver_count_;
+  int solver_rank_;
+  bool multiprocess_;
+
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
   static vector<shared_ptr< device> > devices_;
   shared_ptr<device> cpu_device_;
   device* default_device_;
-
-  int solver_count_;
-  bool root_solver_;
 };
 
 }  // namespace caffe

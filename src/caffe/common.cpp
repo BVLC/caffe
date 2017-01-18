@@ -126,12 +126,10 @@ Caffe::Caffe(const Caffe &obj)
       mode_(Caffe::CPU),
       cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
       default_device_(cpu_device_.get()),
-      solver_count_(1),
-      root_solver_(true) {
+      solver_count_(1) {
   mode_ = obj.mode_;
   default_device_ = obj.default_device_;
   cpu_device_ = obj.cpu_device_;
-  root_solver_ = obj.root_solver_;
   solver_count_ = obj.solver_count_;
 }
 
@@ -193,8 +191,7 @@ Caffe::Caffe() : random_generator_(),
                  mode_(Caffe::CPU),
                  cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
                  default_device_(cpu_device_.get()),
-                 solver_count_(1),
-                 root_solver_(true) {}
+                 solver_count_(1), solver_rank_(0), multiprocess_(false) { }
 
 Caffe::~Caffe() {}
 
@@ -266,7 +263,7 @@ Caffe::Caffe()
       mode_(Caffe::CPU),
       cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
       default_device_(cpu_device_.get()),
-      solver_count_(1), root_solver_(true) {
+    solver_count_(1), solver_rank_(0), multiprocess_(false) {
 }
 
 Caffe::~Caffe() {
