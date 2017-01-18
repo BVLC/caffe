@@ -88,7 +88,7 @@ function(caffe_pickup_caffe_sources root)
   file(GLOB_RECURSE proto_files ${root}/src/caffe/*.proto)
   list(APPEND srcs ${proto_files})
 
-  # convet to absolute paths
+  # convert to absolute paths
   caffe_convert_absolute_paths(srcs)
   caffe_convert_absolute_paths(cuda)
   caffe_convert_absolute_paths(test_srcs)
@@ -102,7 +102,7 @@ function(caffe_pickup_caffe_sources root)
 endfunction()
 
 ################################################################################################
-# Short command for setting defeault target properties
+# Short command for setting default target properties
 # Usage:
 #   caffe_default_properties(<target>)
 function(caffe_default_properties target)
@@ -111,7 +111,7 @@ function(caffe_default_properties target)
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
-  # make sure we build all external depepdencies first
+  # make sure we build all external dependencies first
   if (DEFINED external_project_dependencies)
     add_dependencies(${target} ${external_project_dependencies})
   endif()
