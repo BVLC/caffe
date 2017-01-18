@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Concat Layer
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="concat-layer">Concat Layer</h1>
+
+<ul>
+  <li>Layer type: <code class="highlighter-rouge">Concat</code></li>
+  <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1ConcatLayer.html">Doxygen Documentation</a></li>
+  <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/concat_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/concat_layer.hpp</code></a></li>
+  <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/concat_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/concat_layer.cpp</code></a></li>
+  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/concat_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/concat_layer.cu</code></a></li>
+  <li>Input
+    <ul>
+      <li><code class="highlighter-rouge">n_i * c_i * h * w</code> for each input blob i from 1 to K.</li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li>if <code class="highlighter-rouge">axis = 0</code>: <code class="highlighter-rouge">(n_1 + n_2 + ... + n_K) * c_1 * h * w</code>, and all input <code class="highlighter-rouge">c_i</code> should be the same.</li>
+      <li>if <code class="highlighter-rouge">axis = 1</code>: <code class="highlighter-rouge">n_1 * (c_1 + c_2 + ... + c_K) * h * w</code>, and all input <code class="highlighter-rouge">n_i</code> should be the same.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>layer {
+  name: "concat"
+  bottom: "in1"
+  bottom: "in2"
+  top: "out"
+  type: "Concat"
+  concat_param {
+    axis: 1
+  }
+}
+</code></pre>
+    </div>
+  </li>
+</ul>
+
+<p>The <code class="highlighter-rouge">Concat</code> layer is a utility layer that concatenates its multiple input blobs to one single output blob.</p>
+
+<h2 id="parameters">Parameters</h2>
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">ConcatParameter concat_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code class="highlighter-rouge">axis</code> [default 1]: 0 for concatenation along num and 1 for channels.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message ConcatParameter {
+  // The axis along which to concatenate -- may be negative to index from the
+  // end (e.g., -1 for the last axis).  Other axes must have the
+  // same dimension for all the bottom blobs.
+  // By default, ConcatLayer concatenates blobs along the "channels" axis (1).
+  optional int32 axis = 2 [default = 1];
+
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
+  optional uint32 concat_dim = 1 [default = 1];
+}</code></pre></figure>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 var searchData=
 [
   ['caffe',['Caffe',['../classcaffe_1_1Caffe.html',1,'caffe']]],
+  ['callback',['Callback',['../classcaffe_1_1Net_1_1Callback.html',1,'caffe::Net']]],
   ['callback',['Callback',['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver']]],
   ['concatlayer',['ConcatLayer',['../classcaffe_1_1ConcatLayer.html',1,'caffe']]],
   ['constantfiller',['ConstantFiller',['../classcaffe_1_1ConstantFiller.html',1,'caffe']]],

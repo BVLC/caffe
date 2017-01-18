@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Database Layer
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="database-layer">Database Layer</h1>
+
+<ul>
+  <li>Layer type: <code class="highlighter-rouge">Data</code></li>
+  <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1DataLayer.html">Doxygen Documentation</a></li>
+  <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/data_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/data_layer.hpp</code></a></li>
+  <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/data_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/data_layer.cpp</code></a></li>
+</ul>
+
+<h2 id="parameters">Parameters</h2>
+
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">DataParameter data_param</code>)</li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message DataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  // DEPRECATED. Each solver accesses a different subset of the database.
+  optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8 [default = LEVELDB];
+  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
+  // Force the encoded image to have 3 color channels
+  optional bool force_encoded_color = 9 [default = false];
+  // Prefetch queue (Increase if data feeding bandwidth varies, within the
+  // limit of device memory for GPU training)
+  optional uint32 prefetch = 10 [default = 4];
+}</code></pre></figure>
+
+<ul>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code class="highlighter-rouge">source</code>: the name of the directory containing the database</li>
+          <li><code class="highlighter-rouge">batch_size</code>: the number of inputs to process at one time</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code class="highlighter-rouge">rand_skip</code>: skip up to this number of inputs at the beginning; useful for asynchronous sgd</li>
+          <li><code class="highlighter-rouge">backend</code> [default <code class="highlighter-rouge">LEVELDB</code>]: choose whether to use a <code class="highlighter-rouge">LEVELDB</code> or <code class="highlighter-rouge">LMDB</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

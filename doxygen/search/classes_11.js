@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['uniformfiller',['UniformFiller',['../classcaffe_1_1UniformFiller.html',1,'caffe']]]
+  ['windowdatalayer',['WindowDataLayer',['../classcaffe_1_1WindowDataLayer.html',1,'caffe']]]
 ];

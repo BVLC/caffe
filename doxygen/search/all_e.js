@@ -1,11 +1,9 @@
 var searchData=
 [
-  ['p2psync',['P2PSync',['../classcaffe_1_1P2PSync.html',1,'caffe']]],
   ['pad_5f',['pad_',['../classcaffe_1_1BaseConvolutionLayer.html#a897ead2823e9031863e2151e71229e35',1,'caffe::BaseConvolutionLayer::pad_()'],['../classcaffe_1_1Im2colLayer.html#a55c335fac2a25ba438a8bf94497c53ec',1,'caffe::Im2colLayer::pad_()']]],
   ['param_5fpropagate_5fdown',['param_propagate_down',['../classcaffe_1_1Layer.html#a1a3708013b0231e71d725252e10ce6e3',1,'caffe::Layer']]],
   ['param_5fpropagate_5fdown_5f',['param_propagate_down_',['../classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7',1,'caffe::Layer']]],
   ['parameterlayer',['ParameterLayer',['../classcaffe_1_1ParameterLayer.html',1,'caffe']]],
-  ['params',['Params',['../classcaffe_1_1Params.html',1,'caffe']]],
   ['params',['params',['../classcaffe_1_1Net.html#a4df30bbef7db3a6069d4ab3d9238cb40',1,'caffe::Net']]],
   ['params_5f',['params_',['../classcaffe_1_1Net.html#accf52332675952dd27dfc8d3c27fa583',1,'caffe::Net']]],
   ['params_5flr',['params_lr',['../classcaffe_1_1Net.html#ae902a7a461c0a693ba1f0d4186ef8e42',1,'caffe::Net']]],

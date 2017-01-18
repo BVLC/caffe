@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Convolution Layer
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="convolution-layer">Convolution Layer</h1>
+
+<ul>
+  <li>Layer type: <code class="highlighter-rouge">Convolution</code></li>
+  <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1ConvolutionLayer.html">Doxygen Documentation</a></li>
+  <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/conv_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/conv_layer.hpp</code></a></li>
+  <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/conv_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/conv_layer.cpp</code></a></li>
+  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/conv_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/conv_layer.cu</code></a></li>
+  <li>Input
+    <ul>
+      <li><code class="highlighter-rouge">n * c_i * h_i * w_i</code></li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li><code class="highlighter-rouge">n * c_o * h_o * w_o</code>, where <code class="highlighter-rouge">h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1</code> and <code class="highlighter-rouge">w_o</code> likewise.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The <code class="highlighter-rouge">Convolution</code> layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.</p>
+
+<h2 id="sample">Sample</h2>
+
+<p>Sample (as seen in <a href="https://github.com/BVLC/caffe/blob/master/models/bvlc_reference_caffenet/train_val.prototxt"><code class="highlighter-rouge">./models/bvlc_reference_caffenet/train_val.prototxt</code></a>):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>  layer {
+    name: "conv1"
+    type: "Convolution"
+    bottom: "data"
+    top: "conv1"
+    # learning rate and decay multipliers for the filters
+    param { lr_mult: 1 decay_mult: 1 }
+    # learning rate and decay multipliers for the biases
+    param { lr_mult: 2 decay_mult: 0 }
+    convolution_param {
+      num_output: 96     # learn 96 filters
+      kernel_size: 11    # each filter is 11x11
+      stride: 4          # step 4 pixels between each filter application
+      weight_filler {
+        type: "gaussian" # initialize the filters from a Gaussian
+        std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+      }
+      bias_filler {
+        type: "constant" # initialize the biases to zero (0)
+        value: 0
+      }
+    }
+  }
+</code></pre>
+</div>
+
+<h2 id="parameters">Parameters</h2>
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">ConvolutionParameter convolution_param</code>)
+    <ul>
+      <li>Required
+        <ul>
+          <li><code class="highlighter-rouge">num_output</code> (<code class="highlighter-rouge">c_o</code>): the number of filters</li>
+          <li><code class="highlighter-rouge">kernel_size</code> (or <code class="highlighter-rouge">kernel_h</code> and <code class="highlighter-rouge">kernel_w</code>): specifies height and width of each filter</li>
+        </ul>
+      </li>
+      <li>Strongly Recommended
+        <ul>
+          <li><code class="highlighter-rouge">weight_filler</code> [default <code class="highlighter-rouge">type: 'constant' value: 0</code>]</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code class="highlighter-rouge">bias_term</code> [default <code class="highlighter-rouge">true</code>]: specifies whether to learn and apply a set of additive biases to the filter outputs</li>
+          <li><code class="highlighter-rouge">pad</code> (or <code class="highlighter-rouge">pad_h</code> and <code class="highlighter-rouge">pad_w</code>) [default 0]: specifies the number of pixels to (implicitly) add to each side of the input</li>
+          <li><code class="highlighter-rouge">stride</code> (or <code class="highlighter-rouge">stride_h</code> and <code class="highlighter-rouge">stride_w</code>) [default 1]: specifies the intervals at which to apply the filters to the input</li>
+          <li><code class="highlighter-rouge">group</code> (g) [default 1]: If g &gt; 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated into g groups, and the <script type="math/tex">i</script>th output group channels will be only connected to the <script type="math/tex">i</script>th input group channels.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message ConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in all spatial dimensions, or once per spatial dimension.
+  repeated uint32 pad = 3; // The padding size; defaults to 0
+  repeated uint32 kernel_size = 4; // The kernel size
+  repeated uint32 stride = 6; // The stride; defaults to 1
+  // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
+  // holes. (Kernel dilation is sometimes referred to by its use in the
+  // algorithme à trous from Holschneider et al. 1987.)
+  repeated uint32 dilation = 18; // The dilation; defaults to 1
+
+  // For 2D convolution only, the *_h and *_w versions may also be used to
+  // specify both spatial dimensions.
+  optional uint32 pad_h = 9 [default = 0]; // The padding height (2D only)
+  optional uint32 pad_w = 10 [default = 0]; // The padding width (2D only)
+  optional uint32 kernel_h = 11; // The kernel height (2D only)
+  optional uint32 kernel_w = 12; // The kernel width (2D only)
+  optional uint32 stride_h = 13; // The stride height (2D only)
+  optional uint32 stride_w = 14; // The stride width (2D only)
+
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+
+  optional FillerParameter weight_filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 15 [default = DEFAULT];
+
+  // The axis to interpret as "channels" when performing convolution.
+  // Preceding dimensions are treated as independent inputs;
+  // succeeding dimensions are treated as "spatial".
+  // With (N, C, H, W) inputs, and axis == 1 (the default), we perform
+  // N independent 2D convolutions, sliding C-channel (or (C/g)-channels, for
+  // groups g&gt;1) filters across the spatial axes (H, W) of the input.
+  // With (N, C, D, H, W) inputs, and axis == 1, we perform
+  // N independent 3D convolutions, sliding (C/g)-channels
+  // filters across the spatial axes (D, H, W) of the input.
+  optional int32 axis = 16 [default = 1];
+
+  // Whether to force use of the general ND convolution, even if a specific
+  // implementation for blobs of the appropriate number of spatial dimensions
+  // is available. (Currently, there is only a 2D-specific convolution
+  // implementation; for input blobs with num_axes != 2, this option is
+  // ignored and the ND implementation will be used.)
+  optional bool force_nd_im2col = 17 [default = false];
+}</code></pre></figure>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Softmax with Loss Layer
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="softmax-with-loss-layer">Softmax with Loss Layer</h1>
+
+<ul>
+  <li>Layer type: <code class="highlighter-rouge">SoftmaxWithLoss</code></li>
+  <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1SoftmaxWithLossLayer.html">Doxygen Documentation</a></li>
+  <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/softmax_loss_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/softmax_loss_layer.hpp</code></a></li>
+  <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/softmax_loss_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/softmax_loss_layer.cpp</code></a></li>
+  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/softmax_loss_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/softmax_loss_layer.cu</code></a></li>
+</ul>
+
+<p>The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It’s conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">SoftmaxParameter softmax_param</code>)</li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
+message SoftmaxParameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
+
+  // The axis along which to perform the softmax -- may be negative to index
+  // from the end (e.g., -1 for the last axis).
+  // Any other axes will be evaluated as independent softmaxes.
+  optional int32 axis = 2 [default = 1];
+}</code></pre></figure>
+
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">LossParameter loss_param</code>)</li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters shared by loss layers
+message LossParameter {
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 1;
+  // How to normalize the loss for loss layers that aggregate across batches,
+  // spatial dimensions, or other dimensions.  Currently only implemented in
+  // SoftmaxWithLoss and SigmoidCrossEntropyLoss layers.
+  enum NormalizationMode {
+    // Divide by the number of examples in the batch times spatial dimensions.
+    // Outputs that receive the ignore label will NOT be ignored in computing
+    // the normalization factor.
+    FULL = 0;
+    // Divide by the total number of output locations that do not take the
+    // ignore_label.  If ignore_label is not set, this behaves like FULL.
+    VALID = 1;
+    // Divide by the batch size.
+    BATCH_SIZE = 2;
+    // Do not normalize the loss.
+    NONE = 3;
+  }
+  // For historical reasons, the default normalization for
+  // SigmoidCrossEntropyLoss is BATCH_SIZE and *not* VALID.
+  optional NormalizationMode normalization = 3 [default = VALID];
+  // Deprecated.  Ignored if normalization is specified.  If normalization
+  // is not specified, then setting this to false will be equivalent to
+  // normalization = BATCH_SIZE to be consistent with previous behavior.
+  optional bool normalize = 2;
+}</code></pre></figure>
+
+<h2 id="see-also">See also</h2>
+
+<ul>
+  <li><a href="softmax.html">Softmax layer</a></li>
+</ul>
+
+
+      </section>
+  </div>
+  </body>
+</html>

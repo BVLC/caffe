@@ -84,7 +84,6 @@ Inheritance diagram for caffe::Solver&lt; Dtype &gt;:</div>
   <img src="classcaffe_1_1Solver.png" usemap="#caffe::Solver_3C_20Dtype_20_3E_map" alt=""/>
   <map id="caffe::Solver_3C_20Dtype_20_3E_map" name="caffe::Solver&lt; Dtype &gt;_map">
 <area href="classcaffe_1_1SGDSolver.html" title="Optimizes the parameters of a Net using stochastic gradient descent (SGD) with momentum. " alt="caffe::SGDSolver&lt; Dtype &gt;" shape="rect" coords="410,56,605,80"/>
-<area href="classcaffe_1_1WorkerSolver.html" title="Solver that only computes gradients, used as worker for multi-GPU training. " alt="caffe::WorkerSolver&lt; Dtype &gt;" shape="rect" coords="615,56,810,80"/>
 <area href="classcaffe_1_1AdaDeltaSolver.html" alt="caffe::AdaDeltaSolver&lt; Dtype &gt;" shape="rect" coords="0,112,195,136"/>
 <area href="classcaffe_1_1AdaGradSolver.html" alt="caffe::AdaGradSolver&lt; Dtype &gt;" shape="rect" coords="205,112,400,136"/>
 <area href="classcaffe_1_1AdamSolver.html" title="AdamSolver, an algorithm for first-order gradient-based optimization of stochastic objective function..." alt="caffe::AdamSolver&lt; Dtype &gt;" shape="rect" coords="410,112,605,136"/>
@@ -100,12 +99,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a40019d039bbaf70c9dbd1fbb80599d93"><td class="memItemLeft" align="right" valign="top"><a id="a40019d039bbaf70c9dbd1fbb80599d93"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Solver</b> (const SolverParameter &amp;param, const <a class="el" href="classcaffe_1_1Solver.html">Solver</a> *root_solver=NULL)</td></tr>
-<tr class="separator:a40019d039bbaf70c9dbd1fbb80599d93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a009f063cf67555688e7b66d952080814"><td class="memItemLeft" align="right" valign="top"><a id="a009f063cf67555688e7b66d952080814"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Solver</b> (const string &amp;param_file, const <a class="el" href="classcaffe_1_1Solver.html">Solver</a> *root_solver=NULL)</td></tr>
-<tr class="separator:a009f063cf67555688e7b66d952080814"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a153266a021a077d1e4b53819cf558780"><td class="memItemLeft" align="right" valign="top"><a id="a153266a021a077d1e4b53819cf558780"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Solver</b> (const SolverParameter &amp;param)</td></tr>
+<tr class="separator:a153266a021a077d1e4b53819cf558780"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8dea449cb5198e44b1ad975943ec0d64"><td class="memItemLeft" align="right" valign="top"><a id="a8dea449cb5198e44b1ad975943ec0d64"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Solver</b> (const string &amp;param_file)</td></tr>
+<tr class="separator:a8dea449cb5198e44b1ad975943ec0d64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf3071597032efde211e5b48cdcb99c5"><td class="memItemLeft" align="right" valign="top"><a id="abf3071597032efde211e5b48cdcb99c5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Init</b> (const SolverParameter &amp;param)</td></tr>
 <tr class="separator:abf3071597032efde211e5b48cdcb99c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,9 +144,9 @@ shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt; Dtype &gt
 <tr class="memitem:a81216da761d9c24b0b25224d1b77e905"><td class="memItemLeft" align="right" valign="top"><a id="a81216da761d9c24b0b25224d1b77e905"></a>
 const vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt; Dtype &gt; &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>test_nets</b> ()</td></tr>
 <tr class="separator:a81216da761d9c24b0b25224d1b77e905"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d27fcf3d254914f6596ce6cf80ff543"><td class="memItemLeft" align="right" valign="top"><a id="a4d27fcf3d254914f6596ce6cf80ff543"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>iter</b> ()</td></tr>
-<tr class="separator:a4d27fcf3d254914f6596ce6cf80ff543"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8ef547e6e2d8afd3910e75ac0283026"><td class="memItemLeft" align="right" valign="top"><a id="ae8ef547e6e2d8afd3910e75ac0283026"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>iter</b> () const</td></tr>
+<tr class="separator:ae8ef547e6e2d8afd3910e75ac0283026"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97be40eb471f0cf94b7d21c6942de4dc"><td class="memItemLeft" align="right" valign="top"><a id="a97be40eb471f0cf94b7d21c6942de4dc"></a>
 const vector&lt; <a class="el" href="classcaffe_1_1Solver_1_1Callback.html">Callback</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>callbacks</b> () const</td></tr>
 <tr class="separator:a97be40eb471f0cf94b7d21c6942de4dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -227,15 +226,18 @@ vector&lt; Dtype &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loss
 <tr class="memitem:aaf306d832ed4706ea3168ac759dccc2b"><td class="memItemLeft" align="right" valign="top"><a id="aaf306d832ed4706ea3168ac759dccc2b"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>smoothed_loss_</b></td></tr>
 <tr class="separator:aaf306d832ed4706ea3168ac759dccc2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a822931f49b65680f2d8bdc92bd6cae13"><td class="memItemLeft" align="right" valign="top"><a id="a822931f49b65680f2d8bdc92bd6cae13"></a>
-const <a class="el" href="classcaffe_1_1Solver.html">Solver</a> *const&#160;</td><td class="memItemRight" valign="bottom"><b>root_solver_</b></td></tr>
-<tr class="separator:a822931f49b65680f2d8bdc92bd6cae13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12a6f4f96ff0edf14d0fd4686b00fe33"><td class="memItemLeft" align="right" valign="top"><a id="a12a6f4f96ff0edf14d0fd4686b00fe33"></a>
 <a class="el" href="namespacecaffe.html#a79ce9ffbdd44b367252e0b8cf99bf430">ActionCallback</a>&#160;</td><td class="memItemRight" valign="bottom"><b>action_request_function_</b></td></tr>
 <tr class="separator:a12a6f4f96ff0edf14d0fd4686b00fe33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d9ea1f82685a4091290f45984cf9167"><td class="memItemLeft" align="right" valign="top"><a id="a5d9ea1f82685a4091290f45984cf9167"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>requested_early_exit_</b></td></tr>
 <tr class="separator:a5d9ea1f82685a4091290f45984cf9167"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed311f5862c2c36472e599bfbf8cb4dd"><td class="memItemLeft" align="right" valign="top"><a id="aed311f5862c2c36472e599bfbf8cb4dd"></a>
+<a class="el" href="classcaffe_1_1Timer.html">Timer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>iteration_timer_</b></td></tr>
+<tr class="separator:aed311f5862c2c36472e599bfbf8cb4dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d8886230702c45e94d2d427d0bb17fe"><td class="memItemLeft" align="right" valign="top"><a id="a5d8886230702c45e94d2d427d0bb17fe"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>iterations_last_</b></td></tr>
+<tr class="separator:a5d8886230702c45e94d2d427d0bb17fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
@@ -250,7 +252,7 @@ class caffe::Solver&lt; Dtype &gt;</h3>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 13 2017 13:56:50 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jan 18 2017 12:26:19 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.12
 </small></address>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Slice Layer
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="slice-layer">Slice Layer</h1>
+
+<ul>
+  <li>Layer type: <code class="highlighter-rouge">Slice</code></li>
+  <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1SliceLayer.html">Doxygen Documentation</a></li>
+  <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/slice_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/slice_layer.hpp</code></a></li>
+  <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/slice_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/slice_layer.cpp</code></a></li>
+  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/slice_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/slice_layer.cu</code></a></li>
+</ul>
+
+<p>The <code class="highlighter-rouge">Slice</code> layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.</p>
+
+<ul>
+  <li>
+    <p>Sample</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>layer {
+  name: "slicer_label"
+  type: "Slice"
+  bottom: "label"
+  ## Example of label with a shape N x 3 x 1 x 1
+  top: "label1"
+  top: "label2"
+  top: "label3"
+  slice_param {
+    axis: 1
+    slice_point: 1
+    slice_point: 2
+  }
+}
+</code></pre>
+    </div>
+  </li>
+</ul>
+
+<p><code class="highlighter-rouge">axis</code> indicates the target axis; <code class="highlighter-rouge">slice_point</code> indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one).</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<ul>
+  <li>Parameters (<code class="highlighter-rouge">SliceParameter slice_param</code>)</li>
+  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message SliceParameter {
+  // The axis along which to slice -- may be negative to index from the end
+  // (e.g., -1 for the last axis).
+  // By default, SliceLayer concatenates blobs along the "channels" axis (1).
+  optional int32 axis = 3 [default = 1];
+  repeated uint32 slice_point = 2;
+
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
+  optional uint32 slice_dim = 1 [default = 1];
+}</code></pre></figure>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

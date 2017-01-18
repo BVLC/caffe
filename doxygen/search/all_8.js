@@ -11,6 +11,5 @@ var searchData=
   ['innerproductlayer',['InnerProductLayer',['../classcaffe_1_1InnerProductLayer.html',1,'caffe']]],
   ['input_5fshape',['input_shape',['../classcaffe_1_1BaseConvolutionLayer.html#a6324d4ab918a7b09399aa85a8a03737d',1,'caffe::BaseConvolutionLayer']]],
   ['inputlayer',['InputLayer',['../classcaffe_1_1InputLayer.html',1,'caffe']]],
-  ['internalthread',['InternalThread',['../classcaffe_1_1InternalThread.html',1,'caffe']]],
-  ['isshared',['IsShared',['../classcaffe_1_1Layer.html#a3ca48aa0ad6c40888baa659d8c2cfbc5',1,'caffe::Layer']]]
+  ['internalthread',['InternalThread',['../classcaffe_1_1InternalThread.html',1,'caffe']]]
 ];

@@ -126,12 +126,21 @@ static int&#160;</td><td class="memItemRight" valign="bottom"><b>solver_count</b
 <tr class="memitem:ae66753e0dd783b50bbc61c40c89a43f3"><td class="memItemLeft" align="right" valign="top"><a id="ae66753e0dd783b50bbc61c40c89a43f3"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>set_solver_count</b> (int val)</td></tr>
 <tr class="separator:ae66753e0dd783b50bbc61c40c89a43f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdd6522457e7ac94463d26408620f4c9"><td class="memItemLeft" align="right" valign="top"><a id="abdd6522457e7ac94463d26408620f4c9"></a>
+static int&#160;</td><td class="memItemRight" valign="bottom"><b>solver_rank</b> ()</td></tr>
+<tr class="separator:abdd6522457e7ac94463d26408620f4c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ec5a171e837fc106e7d1987e3c9a45d"><td class="memItemLeft" align="right" valign="top"><a id="a2ec5a171e837fc106e7d1987e3c9a45d"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>set_solver_rank</b> (int val)</td></tr>
+<tr class="separator:a2ec5a171e837fc106e7d1987e3c9a45d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a181e979bf7f7f2fe4a6c5fbbc4d703ac"><td class="memItemLeft" align="right" valign="top"><a id="a181e979bf7f7f2fe4a6c5fbbc4d703ac"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>multiprocess</b> ()</td></tr>
+<tr class="separator:a181e979bf7f7f2fe4a6c5fbbc4d703ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea8888baaabfc41014eba175a2538b7b"><td class="memItemLeft" align="right" valign="top"><a id="aea8888baaabfc41014eba175a2538b7b"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>set_multiprocess</b> (bool val)</td></tr>
+<tr class="separator:aea8888baaabfc41014eba175a2538b7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87775a1589a6e1b6e53d9bdbb013b8d8"><td class="memItemLeft" align="right" valign="top"><a id="a87775a1589a6e1b6e53d9bdbb013b8d8"></a>
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>root_solver</b> ()</td></tr>
 <tr class="separator:a87775a1589a6e1b6e53d9bdbb013b8d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81dbf6204d8abbae1541be40a81e9d9f"><td class="memItemLeft" align="right" valign="top"><a id="a81dbf6204d8abbae1541be40a81e9d9f"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>set_root_solver</b> (bool val)</td></tr>
-<tr class="separator:a81dbf6204d8abbae1541be40a81e9d9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -150,9 +159,12 @@ Brew&#160;</td><td class="memItemRight" valign="bottom"><b>mode_</b></td></tr>
 <tr class="memitem:afc26b38d30812df267645c4a94135a74"><td class="memItemLeft" align="right" valign="top"><a id="afc26b38d30812df267645c4a94135a74"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>solver_count_</b></td></tr>
 <tr class="separator:afc26b38d30812df267645c4a94135a74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f3d7de47354975fb7b5f88519492db6"><td class="memItemLeft" align="right" valign="top"><a id="a6f3d7de47354975fb7b5f88519492db6"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>root_solver_</b></td></tr>
-<tr class="separator:a6f3d7de47354975fb7b5f88519492db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00152204105cd59b691d8bda828664b5"><td class="memItemLeft" align="right" valign="top"><a id="a00152204105cd59b691d8bda828664b5"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>solver_rank_</b></td></tr>
+<tr class="separator:a00152204105cd59b691d8bda828664b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25bdfb72baf0bfc5fca31579b08d2b6f"><td class="memItemLeft" align="right" valign="top"><a id="a25bdfb72baf0bfc5fca31579b08d2b6f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>multiprocess_</b></td></tr>
+<tr class="separator:a25bdfb72baf0bfc5fca31579b08d2b6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/caffe/<a class="el" href="common_8hpp_source.html">common.hpp</a></li>
@@ -161,7 +173,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>root_solver_</b></td>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 13 2017 13:56:37 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jan 18 2017 12:26:07 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.12
 </small></address>

@@ -93,8 +93,7 @@ Public Member Functions</h2></td></tr>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>DataLayerSetUp</b> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;bottom, const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;top)</td></tr>
 <tr class="separator:acac617f0f29b3b6eb3e3ae4a470c915e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa635a59a3a1dea346e5941e5f11849f8"><td class="memItemLeft" align="right" valign="top"><a id="aa635a59a3a1dea346e5941e5f11849f8"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataLayer.html#aa635a59a3a1dea346e5941e5f11849f8">ShareInParallel</a> () const</td></tr>
-<tr class="memdesc:aa635a59a3a1dea346e5941e5f11849f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether a layer should be shared by multiple nets during data parallelism. By default, all layers except for data layers should not be shared. data layers should be shared to ensure each worker solver access data sequentially during data parallelism. <br /></td></tr>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ShareInParallel</b> () const</td></tr>
 <tr class="separator:aa635a59a3a1dea346e5941e5f11849f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a5198f51cb51854be3d2d1e7891eeae"><td class="memItemLeft" align="right" valign="top"><a id="a6a5198f51cb51854be3d2d1e7891eeae"></a>
 virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataLayer.html#a6a5198f51cb51854be3d2d1e7891eeae">type</a> () const</td></tr>
@@ -145,14 +144,6 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr class="memitem:a18d6bfdb535ab8e96a971dec4ae39a84 inherit pub_methods_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a18d6bfdb535ab8e96a971dec4ae39a84">SetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;bottom, const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;top)</td></tr>
 <tr class="memdesc:a18d6bfdb535ab8e96a971dec4ae39a84 inherit pub_methods_classcaffe_1_1Layer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implements common layer setup functionality.  <a href="classcaffe_1_1Layer.html#a18d6bfdb535ab8e96a971dec4ae39a84">More...</a><br /></td></tr>
 <tr class="separator:a18d6bfdb535ab8e96a971dec4ae39a84 inherit pub_methods_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ca48aa0ad6c40888baa659d8c2cfbc5 inherit pub_methods_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top"><a id="a3ca48aa0ad6c40888baa659d8c2cfbc5"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a3ca48aa0ad6c40888baa659d8c2cfbc5">IsShared</a> () const</td></tr>
-<tr class="memdesc:a3ca48aa0ad6c40888baa659d8c2cfbc5 inherit pub_methods_classcaffe_1_1Layer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return whether this layer is actually shared by other nets. If <a class="el" href="classcaffe_1_1Layer.html#a03c5d6a726e141ff520d36e21f07ffb4" title="Whether a layer should be shared by multiple nets during data parallelism. By default, all layers except for data layers should not be shared. data layers should be shared to ensure each worker solver access data sequentially during data parallelism. ">ShareInParallel()</a> is true and using more than one GPU and the net has TRAIN phase, then this function is expected return true. <br /></td></tr>
-<tr class="separator:a3ca48aa0ad6c40888baa659d8c2cfbc5 inherit pub_methods_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d4caf38c9f0f31c9c92af1bbefc04e4 inherit pub_methods_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top"><a id="a6d4caf38c9f0f31c9c92af1bbefc04e4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a6d4caf38c9f0f31c9c92af1bbefc04e4">SetShared</a> (bool is_shared)</td></tr>
-<tr class="memdesc:a6d4caf38c9f0f31c9c92af1bbefc04e4 inherit pub_methods_classcaffe_1_1Layer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set whether this layer is actually shared by other nets If <a class="el" href="classcaffe_1_1Layer.html#a03c5d6a726e141ff520d36e21f07ffb4" title="Whether a layer should be shared by multiple nets during data parallelism. By default, all layers except for data layers should not be shared. data layers should be shared to ensure each worker solver access data sequentially during data parallelism. ">ShareInParallel()</a> is true and using more than one GPU and the net has TRAIN phase, then is_shared should be set true. <br /></td></tr>
-<tr class="separator:a6d4caf38c9f0f31c9c92af1bbefc04e4 inherit pub_methods_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab57d272dabe8c709d2a785eebe72ca57 inherit pub_methods_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Dtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#ab57d272dabe8c709d2a785eebe72ca57">Forward</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;bottom, const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *&gt; &amp;top)</td></tr>
 <tr class="memdesc:ab57d272dabe8c709d2a785eebe72ca57 inherit pub_methods_classcaffe_1_1Layer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Given the bottom blobs, compute the top blobs and the loss.  <a href="classcaffe_1_1Layer.html#ab57d272dabe8c709d2a785eebe72ca57">More...</a><br /></td></tr>
 <tr class="separator:ab57d272dabe8c709d2a785eebe72ca57 inherit pub_methods_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -215,6 +206,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_started</b> () con
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:a16238c3e219f4215faa4da08f670551f"><td class="memItemLeft" align="right" valign="top"><a id="a16238c3e219f4215faa4da08f670551f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Next</b> ()</td></tr>
+<tr class="separator:a16238c3e219f4215faa4da08f670551f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a230e84eafe73df8e7da3c41b2e3430e1"><td class="memItemLeft" align="right" valign="top"><a id="a230e84eafe73df8e7da3c41b2e3430e1"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>Skip</b> ()</td></tr>
+<tr class="separator:a230e84eafe73df8e7da3c41b2e3430e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f14e385399a658476642d225a2827f9"><td class="memItemLeft" align="right" valign="top"><a id="a5f14e385399a658476642d225a2827f9"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>load_batch</b> (<a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt; *batch)</td></tr>
 <tr class="separator:a5f14e385399a658476642d225a2827f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -234,19 +231,28 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>must_stop</b> ()</td>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a23e0aca83b59fc1cd6bc98cd4d140a81"><td class="memItemLeft" align="right" valign="top"><a id="a23e0aca83b59fc1cd6bc98cd4d140a81"></a>
-<a class="el" href="classcaffe_1_1DataReader.html">DataReader</a>&#160;</td><td class="memItemRight" valign="bottom"><b>reader_</b></td></tr>
-<tr class="separator:a23e0aca83b59fc1cd6bc98cd4d140a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6384a1dcc37d32c7f556080da3c006d"><td class="memItemLeft" align="right" valign="top"><a id="af6384a1dcc37d32c7f556080da3c006d"></a>
+shared_ptr&lt; <a class="el" href="classcaffe_1_1db_1_1DB.html">db::DB</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>db_</b></td></tr>
+<tr class="separator:af6384a1dcc37d32c7f556080da3c006d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad26510baf81f48d92569ea95a8643af0"><td class="memItemLeft" align="right" valign="top"><a id="ad26510baf81f48d92569ea95a8643af0"></a>
+shared_ptr&lt; <a class="el" href="classcaffe_1_1db_1_1Cursor.html">db::Cursor</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>cursor_</b></td></tr>
+<tr class="separator:ad26510baf81f48d92569ea95a8643af0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1af404785922d764270d7d5a195d90df"><td class="memItemLeft" align="right" valign="top"><a id="a1af404785922d764270d7d5a195d90df"></a>
+uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>offset_</b></td></tr>
+<tr class="separator:a1af404785922d764270d7d5a195d90df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1BasePrefetchingDataLayer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html">caffe::BasePrefetchingDataLayer&lt; Dtype &gt;</a></td></tr>
-<tr class="memitem:afd49580ce55ee5f17210a1d698f83367 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="afd49580ce55ee5f17210a1d698f83367"></a>
-<a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>prefetch_</b> [PREFETCH_COUNT]</td></tr>
-<tr class="separator:afd49580ce55ee5f17210a1d698f83367 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1beb4fe2338b694324e375624015a2c inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="ae1beb4fe2338b694324e375624015a2c"></a>
+vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>prefetch_</b></td></tr>
+<tr class="separator:ae1beb4fe2338b694324e375624015a2c inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ca3d78f628c0290ee7254a918f7e5db inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="a8ca3d78f628c0290ee7254a918f7e5db"></a>
 <a class="el" href="classcaffe_1_1BlockingQueue.html">BlockingQueue</a>&lt; <a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>prefetch_free_</b></td></tr>
 <tr class="separator:a8ca3d78f628c0290ee7254a918f7e5db inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93b1730c7e6b96c80488ad281bada2d4 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="a93b1730c7e6b96c80488ad281bada2d4"></a>
 <a class="el" href="classcaffe_1_1BlockingQueue.html">BlockingQueue</a>&lt; <a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>prefetch_full_</b></td></tr>
 <tr class="separator:a93b1730c7e6b96c80488ad281bada2d4 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b95c4ad255203d052657695bc681a5c inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="a4b95c4ad255203d052657695bc681a5c"></a>
+<a class="el" href="classcaffe_1_1Batch.html">Batch</a>&lt; Dtype &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>prefetch_current_</b></td></tr>
+<tr class="separator:a4b95c4ad255203d052657695bc681a5c inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbff8f9e7c0e0f4007d2cc742b4ad874 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="afbff8f9e7c0e0f4007d2cc742b4ad874"></a>
 <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>transformed_data_</b></td></tr>
 <tr class="separator:afbff8f9e7c0e0f4007d2cc742b4ad874 inherit pro_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -271,13 +277,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>output_labels_</b></t
 <tr class="separator:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6d347229a139500994e7a926c680486 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; Dtype &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#af6d347229a139500994e7a926c680486">loss_</a></td></tr>
 <tr class="separator:af6d347229a139500994e7a926c680486 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_static_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td colspan="2" onclick="javascript:toggleInherit('pub_static_attribs_classcaffe_1_1BasePrefetchingDataLayer')"><img src="closed.png" alt="-"/>&#160;Static Public Attributes inherited from <a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html">caffe::BasePrefetchingDataLayer&lt; Dtype &gt;</a></td></tr>
-<tr class="memitem:a680cb7ec27f52d5caaf36864803a408c inherit pub_static_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a id="a680cb7ec27f52d5caaf36864803a408c"></a>
-static const int&#160;</td><td class="memItemRight" valign="bottom"><b>PREFETCH_COUNT</b> = 3</td></tr>
-<tr class="separator:a680cb7ec27f52d5caaf36864803a408c inherit pub_static_attribs_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a2b6fa99ededf0863d8bab4a7a46addae"></a>
@@ -383,7 +382,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 13 2017 13:56:39 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jan 18 2017 12:26:08 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.12
 </small></address>

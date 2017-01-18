@@ -63,6 +63,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
@@ -78,14 +79,19 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="net_8hpp_source.html">net.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac2c49fbf44cc83215018a362ba262c91"><td class="memItemLeft" align="right" valign="top"><a id="ac2c49fbf44cc83215018a362ba262c91"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const NetParameter &amp;param, const <a class="el" href="classcaffe_1_1Net.html">Net</a> *root_net=NULL)</td></tr>
-<tr class="separator:ac2c49fbf44cc83215018a362ba262c91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4e3c1fdabcc8d90b89351d63c11f368"><td class="memItemLeft" align="right" valign="top"><a id="ab4e3c1fdabcc8d90b89351d63c11f368"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const string &amp;param_file, Phase <a class="el" href="classcaffe_1_1Net.html#a9418aee447ff6e847fd1a5e7be3d7a44">phase</a>, const int level=0, const vector&lt; string &gt; *stages=NULL, const <a class="el" href="classcaffe_1_1Net.html">Net</a> *root_net=NULL)</td></tr>
-<tr class="separator:ab4e3c1fdabcc8d90b89351d63c11f368"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a5655a49c702c6c4a2f5bd7bf7adf12"><td class="memItemLeft" align="right" valign="top"><a id="a5a5655a49c702c6c4a2f5bd7bf7adf12"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const NetParameter &amp;param)</td></tr>
+<tr class="separator:a5a5655a49c702c6c4a2f5bd7bf7adf12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac42c11d2fa9546421d6c5cd7f83330b3"><td class="memItemLeft" align="right" valign="top"><a id="ac42c11d2fa9546421d6c5cd7f83330b3"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const string &amp;param_file, Phase <a class="el" href="classcaffe_1_1Net.html#a9418aee447ff6e847fd1a5e7be3d7a44">phase</a>, const int level=0, const vector&lt; string &gt; *stages=NULL)</td></tr>
+<tr class="separator:ac42c11d2fa9546421d6c5cd7f83330b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="memItemLeft" align="right" valign="top"><a id="ae9fcfaabc89165d6c0cb4b14b4c6b584"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ae9fcfaabc89165d6c0cb4b14b4c6b584">Init</a> (const NetParameter &amp;param)</td></tr>
 <tr class="memdesc:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a network with a NetParameter. <br /></td></tr>
@@ -276,6 +282,30 @@ const shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt;
 <tr class="memitem:a5b43ec32a7940703ecc3d0fa80bb2f91"><td class="memItemLeft" align="right" valign="top"><a id="a5b43ec32a7940703ecc3d0fa80bb2f91"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_debug_info</b> (const bool value)</td></tr>
 <tr class="separator:a5b43ec32a7940703ecc3d0fa80bb2f91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29cac2b39bbfcf0891d34deecdb4f2a9"><td class="memItemLeft" align="right" valign="top"><a id="a29cac2b39bbfcf0891d34deecdb4f2a9"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>before_forward</b> () const</td></tr>
+<tr class="separator:a29cac2b39bbfcf0891d34deecdb4f2a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab38efc0662826a18034817b484ea0b88"><td class="memItemLeft" align="right" valign="top"><a id="ab38efc0662826a18034817b484ea0b88"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_before_forward</b> (<a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> *value)</td></tr>
+<tr class="separator:ab38efc0662826a18034817b484ea0b88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a262da4bf0282c2e8615d3bd0b3582991"><td class="memItemLeft" align="right" valign="top"><a id="a262da4bf0282c2e8615d3bd0b3582991"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>after_forward</b> () const</td></tr>
+<tr class="separator:a262da4bf0282c2e8615d3bd0b3582991"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27f0234629c0131b23c577713bb8209e"><td class="memItemLeft" align="right" valign="top"><a id="a27f0234629c0131b23c577713bb8209e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_after_forward</b> (<a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> *value)</td></tr>
+<tr class="separator:a27f0234629c0131b23c577713bb8209e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56eb610394b69214ff9e4d6672c307bb"><td class="memItemLeft" align="right" valign="top"><a id="a56eb610394b69214ff9e4d6672c307bb"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>before_backward</b> () const</td></tr>
+<tr class="separator:a56eb610394b69214ff9e4d6672c307bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed8cfa1dd96bef7fc39c232623995687"><td class="memItemLeft" align="right" valign="top"><a id="aed8cfa1dd96bef7fc39c232623995687"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_before_backward</b> (<a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> *value)</td></tr>
+<tr class="separator:aed8cfa1dd96bef7fc39c232623995687"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a331192ceb7cebfbe83177d00e98c67cc"><td class="memItemLeft" align="right" valign="top"><a id="a331192ceb7cebfbe83177d00e98c67cc"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>after_backward</b> () const</td></tr>
+<tr class="separator:a331192ceb7cebfbe83177d00e98c67cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29a94f00de415c11ee57b0985c255827"><td class="memItemLeft" align="right" valign="top"><a id="a29a94f00de415c11ee57b0985c255827"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>add_after_backward</b> (<a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> *value)</td></tr>
+<tr class="separator:a29a94f00de415c11ee57b0985c255827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -430,10 +460,18 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#addc4e5501070ede24155d4c1bf9928a2">debug_info_</a></td></tr>
 <tr class="memdesc:addc4e5501070ede24155d4c1bf9928a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether to compute and display debug info for the net. <br /></td></tr>
 <tr class="separator:addc4e5501070ede24155d4c1bf9928a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae416aa859aa21df6ee9db0cd5b988e15"><td class="memItemLeft" align="right" valign="top"><a id="ae416aa859aa21df6ee9db0cd5b988e15"></a>
-const <a class="el" href="classcaffe_1_1Net.html">Net</a> *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ae416aa859aa21df6ee9db0cd5b988e15">root_net_</a></td></tr>
-<tr class="memdesc:ae416aa859aa21df6ee9db0cd5b988e15"><td class="mdescLeft">&#160;</td><td class="mdescRight">The root net that actually holds the shared layers in data parallelism. <br /></td></tr>
-<tr class="separator:ae416aa859aa21df6ee9db0cd5b988e15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3acc83848533272277ec51dba0286189"><td class="memItemLeft" align="right" valign="top"><a id="a3acc83848533272277ec51dba0286189"></a>
+vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>before_forward_</b></td></tr>
+<tr class="separator:a3acc83848533272277ec51dba0286189"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30df46fee4469b52c52d5121cf8aa028"><td class="memItemLeft" align="right" valign="top"><a id="a30df46fee4469b52c52d5121cf8aa028"></a>
+vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>after_forward_</b></td></tr>
+<tr class="separator:a30df46fee4469b52c52d5121cf8aa028"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a0e374cc83794e4c6352bfc73471851"><td class="memItemLeft" align="right" valign="top"><a id="a5a0e374cc83794e4c6352bfc73471851"></a>
+vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>before_backward_</b></td></tr>
+<tr class="separator:a5a0e374cc83794e4c6352bfc73471851"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3ceeaa28b15c3bc72fa3677421f8e5a"><td class="memItemLeft" align="right" valign="top"><a id="aa3ceeaa28b15c3bc72fa3677421f8e5a"></a>
+vector&lt; <a class="el" href="classcaffe_1_1Net_1_1Callback.html">Callback</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>after_backward_</b></td></tr>
+<tr class="separator:aa3ceeaa28b15c3bc72fa3677421f8e5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
@@ -620,7 +658,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jan 13 2017 13:56:45 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Jan 18 2017 12:26:14 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.12
 </small></address>
