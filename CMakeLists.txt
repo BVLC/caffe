@@ -44,6 +44,7 @@ caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using Vienn
 caffe_option(USE_CLBLAST "Build Caffe with CLBlast support (instead of using ViennaClBLAS)" OFF)
 caffe_option(USE_ISAAC "Build Caffe with ISAAC support (instead of using ViennaClBLAS)" OFF)
 caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" OFF)
+caffe_option(USE_NCCL "Build Caffe with NCCL library support" OFF)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 if(MSVC)
   # default to static libs

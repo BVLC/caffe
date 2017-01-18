@@ -97,9 +97,29 @@ void caffe_gpu_scal<double>(const int_tp N, const double alpha, double *X) {
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
-template<>
-void caffe_gpu_axpby<float>(const int_tp N, const float alpha, const float* X,
-                            const float beta, float* Y) {
+template <>
+void caffe_gpu_scal<float>(const int_tp N, const float alpha, float* X,
+                           cudaStream_t str) {
+  cudaStream_t initial_stream;
+  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
+  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
+  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
+}
+
+template <>
+void caffe_gpu_scal<double>(const int_tp N, const double alpha, double* X,
+                            cudaStream_t str) {
+  cudaStream_t initial_stream;
+  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
+  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
+  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
+}
+
+template <>
+void caffe_gpu_axpby<float>(const int N, const float alpha, const float* X,
+    const float beta, float* Y) {
   caffe_gpu_scal<float>(N, beta, Y);
   caffe_gpu_axpy<float>(N, alpha, X, Y);
 }

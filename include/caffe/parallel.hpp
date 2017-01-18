@@ -7,6 +7,12 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#ifdef USE_CUDA
+#ifdef USE_NCCL
+
+#include <boost/thread.hpp>
+
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -17,6 +23,7 @@
 #include "caffe/solver.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/blocking_queue.hpp"
+#include "caffe/util/nccl.hpp"
 
 namespace caffe {
 
@@ -55,7 +62,7 @@ class GPUParams : public Params<Dtype> {
   GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device);
   virtual ~GPUParams();
 
-  void configure(Solver<Dtype>* solver) const;
+  void Configure(Solver<Dtype>* solver) const;
 
  protected:
   using Params<Dtype>::size_;
@@ -63,62 +70,56 @@ class GPUParams : public Params<Dtype> {
   using Params<Dtype>::diff_;
 };
 
-class DevicePair {
- public:
-  DevicePair(device* parent, device* dev)
-      : parent_(parent),
-        device_(dev) {
-  }
 
-  inline device* get_parent() {
-    return parent_;
-  }
-
-  inline device* get_device() {
-    return device_;
-  }
-
-  // Group GPUs in pairs, by proximity depending on machine's topology
-  static void compute(const vector<device*> devices,
-                      vector<DevicePair>* pairs);
-
- protected:
-  device* parent_;
-  device* device_;
-};
-
-// Synchronous data parallelism using map-reduce between local GPUs.
 template<typename Dtype>
-class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
-    public InternalThread {
+class NCCL : public GPUParams<Dtype>,
+             public Solver<Dtype>::Callback,
+             public Net<Dtype>::Callback {
  public:
-  explicit P2PSync(shared_ptr<Solver<Dtype> > root_solver,
-                   P2PSync<Dtype>* parent, const SolverParameter& param);
-  virtual ~P2PSync();
+  /**
+   * Single process version.
+   */
+  explicit NCCL(shared_ptr<Solver<Dtype> > solver);
+  /**
+   * In multi-process settings, first create a NCCL id (new_uid), then
+   * pass it to each process to create connected instances.
+   */
+  NCCL(shared_ptr<Solver<Dtype> > solver, const string& uid);
+  ~NCCL();
 
-  inline const shared_ptr<Solver<Dtype> >& solver() const {
-    return solver_;
-  }
+  boost::barrier* barrier();
+  void set_barrier(boost::barrier* value);
 
+  /**
+   * In single process settings, create instances without uids and
+   * call this to connect them.
+   */
+  static void InitSingleProcess(vector<NCCL<Dtype>*>* nccls);
 
-  void Run(const vector<device*>& gpus);
-  void Prepare(const vector<device*>& gpus,
-               vector<shared_ptr<P2PSync<Dtype> > >* syncs);
-  inline const int initial_iter() const { return initial_iter_; }
+  static string new_uid();
+
+  /**
+   * Broadcast weights from rank 0 other solvers.
+   */
+  void Broadcast();
+
+  /**
+   * Single process multi-GPU.
+   */
+  void Run(const vector<int>& gpus, const char* restore);
 
  protected:
-  void on_start();
+  void Init();
+  void on_start() {}
+  void run(int layer);  // Net callback
   void on_gradients_ready();
 
-  void InternalThreadEntry();
+  ncclComm_t comm_;
+  cudaStream_t stream_;
 
-  P2PSync<Dtype>* parent_;
-  vector<P2PSync<Dtype>*> children_;
-  BlockingQueue<P2PSync<Dtype>*> queue_;
-  const int initial_iter_;
-  Dtype* parent_grads_;
   shared_ptr<Solver<Dtype> > solver_;
-
+  // Should not be necessary, https://github.com/NVIDIA/nccl/issues/37
+  boost::barrier* barrier_;
   using Params<Dtype>::size_;
   using Params<Dtype>::data_;
   using Params<Dtype>::diff_;
@@ -126,4 +127,6 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 
 }  // namespace caffe
 
-#endif
+#endif  // USE_NCCL
+#endif  // USE_CUDA
+#endif  // header
