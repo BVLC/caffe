@@ -28,32 +28,44 @@ void hdf5_load_nd_dataset_helper(
       file_id, dataset_name_, dims.data(), &class_, NULL);
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
   switch (class_) {
-  case H5T_FLOAT:
+  case H5T_FLOAT: {
     LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT";
     break;
-  case H5T_INTEGER:
+  }
+  case H5T_INTEGER: {
     LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER";
     break;
-  case H5T_TIME:
+  }
+  case H5T_TIME: {
     LOG(FATAL) << "Unsupported datatype class: H5T_TIME";
-  case H5T_STRING:
+  }
+  case H5T_STRING: {
     LOG(FATAL) << "Unsupported datatype class: H5T_STRING";
-  case H5T_BITFIELD:
+  }
+  case H5T_BITFIELD: {
     LOG(FATAL) << "Unsupported datatype class: H5T_BITFIELD";
-  case H5T_OPAQUE:
+  }
+  case H5T_OPAQUE: {
     LOG(FATAL) << "Unsupported datatype class: H5T_OPAQUE";
-  case H5T_COMPOUND:
+  }
+  case H5T_COMPOUND: {
     LOG(FATAL) << "Unsupported datatype class: H5T_COMPOUND";
-  case H5T_REFERENCE:
+  }
+  case H5T_REFERENCE: {
     LOG(FATAL) << "Unsupported datatype class: H5T_REFERENCE";
-  case H5T_ENUM:
+  }
+  case H5T_ENUM: {
     LOG(FATAL) << "Unsupported datatype class: H5T_ENUM";
-  case H5T_VLEN:
+  }
+  case H5T_VLEN: {
     LOG(FATAL) << "Unsupported datatype class: H5T_VLEN";
-  case H5T_ARRAY:
+  }
+  case H5T_ARRAY: {
     LOG(FATAL) << "Unsupported datatype class: H5T_ARRAY";
-  default:
+  }
+  default: {
     LOG(FATAL) << "Datatype class unknown";
+  }
   }
 
   vector<int> blob_dims(dims.size());
