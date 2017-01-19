@@ -72,7 +72,7 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
         size_prod *= size[i];
       }
 
-      if (bottom_data[offset + final_offset] > maxval) {
+      if (bottom_data[final_offset + offset] > maxval) {
         maxidx = final_offset;
         maxval = bottom_data[offset + final_offset];
       }
@@ -125,6 +125,9 @@ __kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,
     // find out the local offset
     int_tp offset = 1;
     int_tp num = index;
+
+    bool do_continue = false;
+
     for (i = num_axes - 1; i >= 0; --i) {
       d_idx[i] = num % size[i];
       d_start[i] =
@@ -138,9 +141,15 @@ __kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,
 
       if (d_start[i] > d_end[i]) {
         bottom_diff[index] = 0;
-        return;
+        do_continue = true;
       }
     }
+
+    if (do_continue) {
+      continue;
+    }
+
+
     int_tp chan = num % channels;
     num /= channels;
     offset *= (num * channels + chan);

@@ -4317,7 +4317,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "size_prod *= size[i];",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"if (bottom_data[offset + final_offset] > maxval) {",    // NOLINT
+"if (bottom_data[final_offset + offset] > maxval) {",    // NOLINT
 "maxidx = final_offset;",    // NOLINT
 "maxval = bottom_data[offset + final_offset];",    // NOLINT
 "}",    // NOLINT
@@ -4370,6 +4370,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// find out the local offset",    // NOLINT
 "int_tp offset = 1;",    // NOLINT
 "int_tp num = index;",    // NOLINT
+"",    // NOLINT
+"bool do_continue = false;",    // NOLINT
+"",    // NOLINT
 "for (i = num_axes - 1; i >= 0; --i) {",    // NOLINT
 "d_idx[i] = num % size[i];",    // NOLINT
 "d_start[i] =",    // NOLINT
@@ -4383,9 +4386,15 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "if (d_start[i] > d_end[i]) {",    // NOLINT
 "bottom_diff[index] = 0;",    // NOLINT
-"return;",    // NOLINT
+"do_continue = true;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"if (do_continue) {",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
 "int_tp chan = num % channels;",    // NOLINT
 "num /= channels;",    // NOLINT
 "offset *= (num * channels + chan);",    // NOLINT
