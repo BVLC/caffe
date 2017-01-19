@@ -29,18 +29,11 @@ void hdf5_load_nd_dataset_helper(
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
   switch (class_) {
   case H5T_FLOAT:
-    // In VC++ declaring and initializing variables in case statement without
-    // curly braces (new scope), cause compiler error C2360
-    // https://msdn.microsoft.com/en-us/library/61af7cx3.aspx
-    {
-      LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT";
-      break;
-    }
+    { LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT"; }
+    break;
   case H5T_INTEGER:
-    {
-      LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER";
-      break;
-    }
+    { LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER"; }
+    break;
   case H5T_TIME:
     {
       LOG(FATAL) << "Unsupported datatype class: H5T_TIME";
