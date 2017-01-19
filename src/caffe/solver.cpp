@@ -55,7 +55,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
   if (param_.random_seed() >= 0) {
-    Caffe::set_random_seed(param_.random_seed() + Caffe::solver_rank(), Caffe::GetDefaultDevice());
+    Caffe::set_random_seed(param_.random_seed() + Caffe::solver_rank(),
+                           Caffe::GetDefaultDevice());
   }
   // Scaffolding code
   InitTrainNet();
