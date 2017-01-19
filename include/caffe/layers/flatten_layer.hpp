@@ -68,6 +68,11 @@ class FlattenLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+#ifdef USE_MLSL
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+#endif /* USE_MLSL */
+
  protected:
   /**
    * @param bottom input Blob vector (length 2+)
