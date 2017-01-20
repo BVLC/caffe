@@ -15,6 +15,10 @@ foreach(source ${srcs})
   target_link_libraries(${name} ${Caffe_LINK})
   caffe_default_properties(${name})
 
+  if(MSVC AND COPY_PREREQUISITES)
+    caffe_copy_prerequisites(${name} USE_HARD_LINKS)
+  endif()
+
   # set back RUNTIME_OUTPUT_DIRECTORY
   caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
   caffe_set_solution_folder(${name} tools)
@@ -31,4 +35,8 @@ foreach(source ${srcs})
 
   # Install
   install(TARGETS ${name} DESTINATION bin)
+
+  if(MSVC AND INSTALL_PREREQUISITES)
+    caffe_install_prerequisites(${name} DESTINATION bin)
+  endif()
 endforeach(source)
