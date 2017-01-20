@@ -44,7 +44,7 @@ if DEFINED APPVEYOR (
     )
 
     :: Install cuda and disable tests if needed
-    if %WITH_CUDA% == 1 (
+    if !WITH_CUDA! == 1 (
         call %~dp0\appveyor\appveyor_install_cuda.cmd
         set CPU_ONLY=0
         set RUN_TESTS=0
