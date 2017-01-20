@@ -46,10 +46,7 @@ if DEFINED APPVEYOR (
     :: Install cuda and disable tests if needed
     if !WITH_CUDA! == 1 (
         call %~dp0\appveyor\appveyor_install_cuda.cmd
-        set CPU_ONLY=0
         set RUN_TESTS=0
-    ) else (
-        set CPU_ONLY=1
     )
 
     :: Disable the tests in debug config
@@ -159,40 +156,9 @@ if !RUN_TESTS! EQU 1 (
   )
 )
 
-<<<<<<< HEAD
-:: Create build directory and configure cmake
-:: if EXIST build (
-::     echo ERROR: build directory already exists in %cd%\build please remove it and start over.
-::     exit /b 1
-:: )
-
-if NOT EXIST build (
-  mkdir build
-)
-pushd build
-
-:: Download dependencies from VS x64
-if NOT EXIST "%cd%\libraries" (
-  echo INFO: Downloading dependencies
-  "%PYTHON_EXE%" "%~dp0\download_prebuilt_dependencies.py" --msvc_version v%MSVC_VERSION%0
-)
-
-if ERRORLEVEL 1 (
-  echo ERROR: Downloading dependencies failed
-  exit /b 1
-)
-
-
-:: Add the dependencies to the PATH
-if EXIST "%cd%\libraries\prependpath.bat" (
-    call "%cd%\libraries\prependpath.bat"
-)
-
-=======
 if NOT EXIST build mkdir build
 pushd build
 
->>>>>>> 8a49d455c3589d4616a6f6191d6226353d13421e
 :: Setup the environement for VS x64
 set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\vcvarsall.bat
 call "%batch_file%" amd64
