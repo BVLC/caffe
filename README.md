@@ -10,7 +10,7 @@ This will train 10 networks using different combinations of training and validat
 
 
 ## Dataset used
-The network is trained and tested using LIVE database. Using all five distortion types in the database
+The network is trained and tested using LIVE database. The framework developed here can train the CNN for all five distortion types present in the dataset. Training can be done both for a single distortion type and for all distortion types combined.
 
 ## License and Citations
 
