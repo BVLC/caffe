@@ -9,6 +9,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED CPU_ONLY set CPU_ONLY=1
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
     if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
+    if NOT DEFINED PYTHON_VERSION set PYTHON_VERSION=2
     if NOT DEFINED BUILD_PYTHON set BUILD_PYTHON=1
     if NOT DEFINED BUILD_PYTHON_LAYER set BUILD_PYTHON_LAYER=1
     if NOT DEFINED BUILD_MATLAB set BUILD_MATLAB=0
@@ -18,7 +19,15 @@ if DEFINED APPVEYOR (
     if NOT DEFINED RUN_INSTALL set RUN_INSTALL=1
 
     :: Set python 2.7 with conda as the default python
-    set PATH=C:\Miniconda-x64;C:\Miniconda-x64\Scripts;C:\Miniconda-x64\Library\bin;!PATH!
+    if !PYTHON_VERSION! EQU 2 (
+        set CONDA_ROOT=C:\Miniconda-x64
+    )
+    :: Set python 3.5 with conda as the default python
+    if !PYTHON_VERSION! EQU 3 (
+        set CONDA_ROOT=C:\Miniconda35-x64
+    )
+    set PATH=!CONDA_ROOT!;!CONDA_ROOT!\Scripts;!CONDA_ROOT!\Library\bin;!PATH!
+
     :: Check that we have the right python version
     !PYTHON_EXE! --version
     :: Add the required channels
@@ -26,13 +35,21 @@ if DEFINED APPVEYOR (
     conda config --add channels willyd
     :: Update conda
     conda update conda -y
-    :: Create an environment
-    :: Todo create protobuf package for vc14
-    conda install --yes cmake ninja numpy scipy protobuf==3.1.0.vc12 six scikit-image pyyaml
+    :: Download other required packages
+    conda install --yes cmake ninja numpy scipy protobuf==3.1.0 six scikit-image pyyaml
 
     if ERRORLEVEL 1  (
       echo ERROR: Conda update or install failed
       exit /b 1
+    )
+
+    :: Install cuda and disable tests if needed
+    if !WITH_CUDA! == 1 (
+        call %~dp0\appveyor\appveyor_install_cuda.cmd
+        set CPU_ONLY=0
+        set RUN_TESTS=0
+    ) else (
+        set CPU_ONLY=1
     )
 
     :: Disable the tests in debug config
@@ -41,30 +58,37 @@ if DEFINED APPVEYOR (
         set RUN_TESTS=0
     )
 
+    :: Disable linting with python 3 until we find why the script fails
+    if !PYTHON_VERSION! EQU 3 (
+        set RUN_LINT=0
+    )
+
 ) else (
     :: Change the settings here to match your setup
     :: Change MSVC_VERSION to 12 to use VS 2013
-    if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
+    set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
-    if NOT DEFINED WITH_NINJA set WITH_NINJA=0
-    :: Change to 1 to build caffe without CUDA or OpenCL support
-    if NOT DEFINED CPU_ONLY set CPU_ONLY=0
+    set WITH_NINJA=1
+    :: Change to 1 to build caffe without CUDA support
+    set CPU_ONLY=0
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
-    if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
+    set CMAKE_CONFIG=Release
     :: Change to 1 to build a caffe.dll
-    if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
+    set CMAKE_BUILD_SHARED_LIBS=0
+    :: Change to 3 if using python 3.5 (only 2.7 and 3.5 are supported)
+    set PYTHON_VERSION=2
     :: Change these options for your needs.
-    if NOT DEFINED BUILD_PYTHON set BUILD_PYTHON=1
-    if NOT DEFINED BUILD_PYTHON_LAYER set BUILD_PYTHON_LAYER=1
-    if NOT DEFINED BUILD_MATLAB set BUILD_MATLAB=0
+    set BUILD_PYTHON=1
+    set BUILD_PYTHON_LAYER=1
+    set BUILD_MATLAB=0
     :: If python is on your path leave this alone
-    if NOT DEFINED PYTHON_EXE set PYTHON_EXE=python
+    set PYTHON_EXE=python
     :: Run the tests
-    if NOT DEFINED RUN_TESTS set RUN_TESTS=1
+    set RUN_TESTS=0
     :: Run lint
-    if NOT DEFINED RUN_LINT set RUN_LINT=0
+    set RUN_LINT=0
     :: Build the install target
-    if NOT DEFINED RUN_INSTALL set RUN_INSTALL=0
+    set RUN_INSTALL=0
 
     :: Enable CUDA backend
     if NOT DEFINED USE_CUDA set USE_CUDA=0
@@ -116,6 +140,7 @@ echo INFO: USE_INDEX64                = !USE_INDEX_64!
 echo INFO: USE_INTEL_SPATIAL          = !USE_INTEL_SPATIAL!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
+echo INFO: PYTHON_VERSION             = !PYTHON_VERSION!
 echo INFO: BUILD_PYTHON               = !BUILD_PYTHON!
 echo INFO: BUILD_PYTHON_LAYER         = !BUILD_PYTHON_LAYER!
 echo INFO: BUILD_MATLAB               = !BUILD_MATLAB!
@@ -134,6 +159,7 @@ if !RUN_TESTS! EQU 1 (
   )
 )
 
+<<<<<<< HEAD
 :: Create build directory and configure cmake
 :: if EXIST build (
 ::     echo ERROR: build directory already exists in %cd%\build please remove it and start over.
@@ -162,6 +188,11 @@ if EXIST "%cd%\libraries\prependpath.bat" (
     call "%cd%\libraries\prependpath.bat"
 )
 
+=======
+if NOT EXIST build mkdir build
+pushd build
+
+>>>>>>> 8a49d455c3589d4616a6f6191d6226353d13421e
 :: Setup the environement for VS x64
 set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\vcvarsall.bat
 call "%batch_file%" amd64
@@ -184,7 +215,8 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
       -DUSE_INDEX64:BOOL=%USE_INDEX64% ^
       -DUSE_INTEL_SPATIAL:BOOL=%USE_INTEL_SPATIAL% ^
-      -C "%cd%\libraries\caffe-builder-config.cmake" ^
+      -DCOPY_PREREQUISITES:BOOL=1 ^
+      -DINSTALL_PREREQUISITES:BOOL=1 ^
       "%~dp0\.."
 
 if ERRORLEVEL 1 (
