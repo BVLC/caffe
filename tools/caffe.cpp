@@ -388,7 +388,7 @@ int data_server() {
 }
 RegisterBrewFunction(data_server);
 
-int test_detection(const Net<float>& caffe_net) {
+int test_detection(Net<float>& caffe_net) {
   std::map<int, std::map<int,
     std::vector<std::pair<float, int> > > > all_true_pos;
   std::map<int, std::map<int,
