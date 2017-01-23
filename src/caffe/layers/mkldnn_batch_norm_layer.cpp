@@ -59,25 +59,40 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 
     eps_ = this->layer_param_.batch_norm_param().eps();
     use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
+    use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
     bias_term_ = this->layer_param_.batch_norm_param().bias_term();
+    moving_average_fraction_ = this->layer_param_.batch_norm_param().moving_average_fraction();
     // Workaround. Checking count of parameters in order to handle
     // topology for reference BatchNorm layer which don't have scaling
-    if (this->layer_param_.param_size() == 3) {
+    if (this->blobs_.size() == 0) {
         this->blobs_.resize(3);
+        vector<int> sz;
+        sz.push_back(channels_);
+        this->blobs_[0].reset(new Blob<Dtype>(sz));
+        this->blobs_[1].reset(new Blob<Dtype>(sz));
+        sz[0]=1;
+        this->blobs_[2].reset(new Blob<Dtype>(sz));
+        for (int i = 0; i < 3; ++i) {
+            caffe_set(this->blobs_[i]->count(), Dtype(0),
+                this->blobs_[i]->mutable_cpu_data());
+        }
         use_weight_bias_ = false;
     }
+
+    use_weight_bias_ = (this->layer_param_.param_size() == 3) ? false : true;
+
     if (use_weight_bias_) {
         if ( bias_term_ ) {
-            this->blobs_.resize(2);
+            this->blobs_.resize(5);
         } else {
-            this->blobs_.resize(1);
+            this->blobs_.resize(4);
         }
         // Initialize scale and shift
         vector<int> scaleshift_shape(1);
         scaleshift_shape[0] = channels_;
         VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: channels_  = " << channels_;
 
-        this->blobs_[0].reset(new Blob<Dtype>(scaleshift_shape));
+        this->blobs_[3].reset(new Blob<Dtype>(scaleshift_shape));
         FillerParameter filler_param(this->layer_param_.batch_norm_param().filler());
         if (!this->layer_param_.batch_norm_param().has_filler()) {
             filler_param.set_type("constant");
@@ -85,10 +100,10 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         }
         shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
         VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: scaleshift " << __LINE__ << ":" << this->layer_param_.name();
-        filler->Fill(this->blobs_[0].get());
+        filler->Fill(this->blobs_[3].get());
 
         if ( bias_term_ ) {
-            this->blobs_[1].reset(new Blob<Dtype>(scaleshift_shape));
+            this->blobs_[4].reset(new Blob<Dtype>(scaleshift_shape));
             FillerParameter bias_filler_param(this->layer_param_.batch_norm_param().bias_filler());
             if (!this->layer_param_.batch_norm_param().has_bias_filler()) {
                 bias_filler_param.set_type("constant");
@@ -96,7 +111,7 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
             }
             shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(bias_filler_param));
             VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: bias " << __LINE__ << ":" << this->layer_param_.name();
-            bias_filler->Fill(this->blobs_[1].get());
+            bias_filler->Fill(this->blobs_[4].get());
         }
     }
 }
@@ -120,6 +135,10 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
+
+    unsigned flags = 0;
+    if (use_weight_bias_) flags |= use_scale_shift;
+    if (use_global_stats_) flags |= use_global_stats;
 
     int32_t n  = this->num_;
     int32_t iw = this->width_;
@@ -146,7 +165,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     output_md = input_md;
 
     // ---- Initialize BatchNorm primitive descriptor -------------
-    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_);
+    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_, flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
@@ -167,14 +186,8 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     CHECK(BatchNormFwd_pd);
 
     // ---- Create memory  ---------------------
-    scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
-
-    if (!use_weight_bias_) {
-        Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
-        for (int i = 0; i < ic; i++) {
-            scaleShift_buffer_[i] = 1.0;
-            scaleShift_buffer_[channels_ + i] = 0;
-        }
+    if (use_weight_bias_) {
+        scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
     }
 
     // ---  init primitive and prv_memory descriptors ----------------------
@@ -185,12 +198,45 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     output_memory = fwd_top_data->create_output_memory();
 
     // ---- Create BatchNorm --------------------
-    if ( propagation == prop_kind::forward_training ) {
-        ws_memory.reset(new memory(BatchNormFwd_pd->workspace_primitive_desc()));
-        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *ws_memory, *output_memory));
+    if (this->phase_ == TEST && !use_global_stats_) {
+        if (use_weight_bias_) {
+            BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                    *input_primitive, *scaleshift_memory, *output_memory));
+        } else {
+            BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                    *input_primitive, *output_memory));
+        }
     } else {
-        BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd, *input_primitive, *scaleshift_memory, *output_memory));
+        mean_memory.reset(new memory(BatchNormFwd_pd->mean_primitive_desc()));
+        variance_memory.reset(new memory(BatchNormFwd_pd->variance_primitive_desc()));
+
+        if (use_global_stats_) {
+            caffe_cpu_copy(this->channels_, this->blobs_[0]->cpu_data(),
+                static_cast<Dtype *>(mean_memory->get_data_handle()));
+            caffe_cpu_copy(this->channels_, this->blobs_[1]->cpu_data(),
+               static_cast<Dtype *>(variance_memory->get_data_handle()));
+            if (use_weight_bias_) {
+                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_primitive, (const primitive::at)*mean_memory,
+                        (const primitive::at)*variance_memory, *scaleshift_memory,
+                        *output_memory));
+            } else {
+                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_primitive, (const primitive::at)*mean_memory,
+                        (const primitive::at)*variance_memory, *output_memory));
+            }
+        } else {
+            if (use_weight_bias_) {
+                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_primitive, *scaleshift_memory, *output_memory,
+                        *mean_memory, *variance_memory));
+            } else {
+                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_primitive, *output_memory, *mean_memory, *variance_memory));
+            }
+        }
     }
+
     fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);
     fwd_top_data->set_mkldnn_primitive(BatchNormFwd);
 }
@@ -209,19 +255,45 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    if (use_global_stats_) {
+        // use the stored mean/variance estimates.
+        const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
+            0 : 1 / this->blobs_[2]->cpu_data()[0];
+        Dtype *mean_buffer_ = (Dtype *)(mean_memory->get_data_handle());
+        Dtype *variance_buffer_ = (Dtype *)(variance_memory->get_data_handle());
+
+        caffe_scal(this->channels_, scale_factor, mean_buffer_);
+        caffe_scal(this->channels_, scale_factor, variance_buffer_);
+    }
     if (use_weight_bias_) {
         Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
         // Fill ScaleShift buffer
         for (int i = 0; i < this->channels_; i++) {
-            scaleShift_buffer_[i] = this->blobs_[0]->cpu_data()[i];
+            scaleShift_buffer_[i] = this->blobs_[3]->cpu_data()[i];
             scaleShift_buffer_[channels_ + i] = 0;
             if (bias_term_) {
-                scaleShift_buffer_[channels_ + i] = this->blobs_[1]->cpu_data()[i];
+                scaleShift_buffer_[channels_ + i] = this->blobs_[4]->cpu_data()[i];
             }
         }
     }
 
     BatchNormFwd.submit();
+
+    if (this->phase_ == TRAIN && !use_global_stats_) {
+        // compute and save moving average
+        Dtype *mean_buffer_ = (Dtype *)(mean_memory->get_data_handle());
+        Dtype *variance_buffer_ = (Dtype *)(variance_memory->get_data_handle());
+        this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
+        this->blobs_[2]->mutable_cpu_data()[0] += 1;
+        caffe_cpu_axpby(this->channels_, Dtype(1), mean_buffer_,
+            moving_average_fraction_, this->blobs_[0]->mutable_cpu_data());
+        int m = bottom[0]->count()/channels_;
+        Dtype bias_correction_factor = m > 1 ? Dtype(m)/(m-1) : 1;
+        caffe_cpu_axpby(this->channels_, bias_correction_factor,
+            variance_buffer_, moving_average_fraction_,
+            this->blobs_[1]->mutable_cpu_data());
+    }
+
 }
 
 template <typename Dtype>
