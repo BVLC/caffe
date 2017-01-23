@@ -565,7 +565,7 @@ typedef float real_t;
 
 void getFileName(char *file_name, bool is_target, const char *name, int id) {
   snprintf(file_name, FILENAME_MAX, "%s%s%04i.bin",
-    is_target ? "TAR" : "REF", name, id);
+    is_target ? "TGT" : "REF", name, id);
 }
 
 void getBinFilePath(char *file_path, const char *name) {
@@ -668,7 +668,7 @@ int collect() {
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     LOG(INFO) << "Collecting BW Layer[" << i << "]: " << layers[i]->type();
-    fprintf(infoFile, "Bwrd%04i: %s\n", i, layers[i]->type());
+    fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
     layers[i]->Backward(top_vecs[i], bottom_need_backward[i], bottom_vecs[i]);
     if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
       saveToFile(FLAGS_collect_dir, false, "Bwrd", i,
