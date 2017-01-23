@@ -237,6 +237,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         !layer_param.type().compare("ImageData")  ||
         !layer_param.type().compare("HDF5Data")   ||
         !layer_param.type().compare("MemoryData") ||
+        !layer_param.type().compare("Input") ||
         !layer_param.type().compare("WindowData")) {
 
         // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
