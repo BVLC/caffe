@@ -66,6 +66,7 @@ if DEFINED APPVEYOR (
 ) else (
     :: Change the settings here to match your setup
     :: Change MSVC_VERSION to 12 to use VS 2013
+    :: Change MSVC_VERSION to 15 to use VS 2017 or VS 2017 RC
     set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
     set WITH_NINJA=1
@@ -95,6 +96,9 @@ if DEFINED APPVEYOR (
 :: Use the exclamation mark ! below to delay the
 :: expansion of CMAKE_GENERATOR
 if %WITH_NINJA% EQU 0 (
+    if "%MSVC_VERSION%"=="15" (
+        set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
+    )
     if "%MSVC_VERSION%"=="14" (
         set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
     )
