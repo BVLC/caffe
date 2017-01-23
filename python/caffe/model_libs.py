@@ -5,7 +5,6 @@ from caffe import layers as L
 from caffe import params as P
 from caffe.proto import caffe_pb2
 
-import pdb
 def check_if_exist(path):
     return os.path.exists(path)
 
@@ -216,6 +215,178 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
         data_param=dict(batch_size=batch_size, backend=backend, source=source),
         ntop=ntop, **kwargs)
 
+
+def ZFNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
+        dilated=False, dropout=True, need_fc8=False, freeze_layers=[]):
+    kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+            'weight_filler': dict(type='xavier'),
+            'bias_filler': dict(type='constant', value=0)}
+
+    assert from_layer in net.keys()
+    net.conv1 = L.Convolution(net[from_layer], num_output=96, pad=3, kernel_size=7, stride=2, **kwargs)
+    net.relu1 = L.ReLU(net.conv1, in_place=True)
+
+    net.norm1 = L.LRN(net.relu1, local_size=3, alpha=0.00005, beta=0.75,
+            norm_region=P.LRN.WITHIN_CHANNEL, engine=P.LRN.CAFFE)
+
+    net.pool1 = L.Pooling(net.norm1, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=2)
+
+    net.conv2 = L.Convolution(net.pool1, num_output=256, pad=2, kernel_size=5, stride=2, **kwargs)
+    net.relu2 = L.ReLU(net.conv2, in_place=True)
+
+    net.norm2 = L.LRN(net.relu2, local_size=3, alpha=0.00005, beta=0.75,
+            norm_region=P.LRN.WITHIN_CHANNEL, engine=P.LRN.CAFFE)
+
+    net.pool2 = L.Pooling(net.norm2, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=2)
+
+    net.conv3 = L.Convolution(net.pool2, num_output=384, pad=1, kernel_size=3, **kwargs)
+    net.relu3 = L.ReLU(net.conv3, in_place=True)
+    net.conv4 = L.Convolution(net.relu3, num_output=384, pad=1, kernel_size=3, **kwargs)
+    net.relu4 = L.ReLU(net.conv4, in_place=True)
+    net.conv5 = L.Convolution(net.relu4, num_output=256, pad=1, kernel_size=3, **kwargs)
+    net.relu5 = L.ReLU(net.conv5, in_place=True)
+
+    if need_fc:
+        if dilated:
+            name = 'pool5'
+            net[name] = L.Pooling(net.relu5, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=1)
+        else:
+            name = 'pool5'
+            net[name] = L.Pooling(net.relu5, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=2)
+
+        if fully_conv:
+            if dilated:
+                if reduced:
+                    net.fc6 = L.Convolution(net[name], num_output=1024, pad=5, kernel_size=3, dilation=5, **kwargs)
+                else:
+                    net.fc6 = L.Convolution(net[name], num_output=4096, pad=5, kernel_size=6, dilation=2, **kwargs)
+            else:
+                if reduced:
+                    net.fc6 = L.Convolution(net[name], num_output=1024, pad=2, kernel_size=3, dilation=2,  **kwargs)
+                else:
+                    net.fc6 = L.Convolution(net[name], num_output=4096, pad=2, kernel_size=6, **kwargs)
+
+            net.relu6 = L.ReLU(net.fc6, in_place=True)
+            if dropout:
+                net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+
+            if reduced:
+                net.fc7 = L.Convolution(net.relu6, num_output=1024, kernel_size=1, **kwargs)
+            else:
+                net.fc7 = L.Convolution(net.relu6, num_output=4096, kernel_size=1, **kwargs)
+            net.relu7 = L.ReLU(net.fc7, in_place=True)
+            if dropout:
+                net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+        else:
+            net.fc6 = L.InnerProduct(net.pool5, num_output=4096)
+            net.relu6 = L.ReLU(net.fc6, in_place=True)
+            if dropout:
+                net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+            net.fc7 = L.InnerProduct(net.relu6, num_output=4096)
+            net.relu7 = L.ReLU(net.fc7, in_place=True)
+            if dropout:
+                net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+    if need_fc8:
+        from_layer = net.keys()[-1]
+        if fully_conv:
+            net.fc8 = L.Convolution(net[from_layer], num_output=1000, kernel_size=1, **kwargs)
+        else:
+            net.fc8 = L.InnerProduct(net[from_layer], num_output=1000)
+        net.prob = L.Softmax(net.fc8)
+
+    # Update freeze layers.
+    kwargs['param'] = [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]
+    layers = net.keys()
+    for freeze_layer in freeze_layers:
+        if freeze_layer in layers:
+            net.update(freeze_layer, kwargs)
+
+    return net
+
+def AlexNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
+        dilated=False, dropout=True, need_fc8=False, freeze_layers=[]):
+    kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+            'weight_filler': dict(type='xavier'),
+            'bias_filler': dict(type='constant', value=0)}
+
+    assert from_layer in net.keys()
+    net.conv1 = L.Convolution(net[from_layer], num_output=96, kernel_size=11, stride=4, **kwargs)
+    net.relu1 = L.ReLU(net.conv1, in_place=True)
+    net.pool1 = L.Pooling(net.relu1, pool=P.Pooling.MAX, kernel_size=3, stride=2)
+    net.norm1 = L.LRN(net.pool1, k=2, local_size=5, alpha=0.0001, beta=0.75)
+
+    net.conv2 = L.Convolution(net.norm1, num_output=256, pad=2, stride=1, kernel_size=5, group=2, **kwargs)
+    net.relu2 = L.ReLU(net.conv2, in_place=True)
+    net.pool2 = L.Pooling(net.relu2, pool=P.Pooling.MAX, kernel_size=3, stride=2)
+    net.norm2 = L.LRN(net.pool2, k=2, local_size=5, alpha=0.0001, beta=0.75)
+
+    net.conv3 = L.Convolution(net.norm2, num_output=384, pad=1, stride=1, kernel_size=3, **kwargs)
+    net.relu3 = L.ReLU(net.conv3, in_place=True)
+    net.conv4 = L.Convolution(net.relu3, num_output=384, pad=1, stride=1, kernel_size=3, group=2, **kwargs)
+    net.relu4 = L.ReLU(net.conv4, in_place=True)
+    net.conv5 = L.Convolution(net.relu4, num_output=256, pad=1, stride=1, kernel_size=3, group=2, **kwargs)
+    net.relu5 = L.ReLU(net.conv5, in_place=True)
+
+    if need_fc:
+        if dilated:
+            name = 'pool5'
+            net[name] = L.Pooling(net.relu5, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=1)
+        else:
+            name = 'pool5'
+            net[name] = L.Pooling(net.relu5, pool=P.Pooling.MAX, pad=1, kernel_size=3, stride=2)
+
+        if fully_conv:
+            if dilated:
+                if reduced:
+                    net.fc6_conv = L.Convolution(net[name], num_output=1024, pad=5, kernel_size=3, dilation=5, **kwargs)
+                else:
+                    net.fc6_conv = L.Convolution(net[name], num_output=4096, pad=5, kernel_size=6, dilation=2, **kwargs)
+            else:
+                if reduced:
+                    net.fc6_conv = L.Convolution(net[name], num_output=1024, pad=2, kernel_size=3, dilation=2,  **kwargs)
+                else:
+                    net.fc6_conv = L.Convolution(net[name], num_output=4096, pad=2, kernel_size=6, **kwargs)
+
+            net.relu6 = L.ReLU(net.fc6_conv, in_place=True)
+            if dropout:
+                net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+
+            if reduced:
+                net.fc7_conv = L.Convolution(net.relu6, num_output=1024, kernel_size=1, **kwargs)
+            else:
+                net.fc7_conv = L.Convolution(net.relu6, num_output=4096, kernel_size=1, **kwargs)
+            net.relu7 = L.ReLU(net.fc7_conv, in_place=True)
+            if dropout:
+                net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+        else:
+            net.fc6 = L.InnerProduct(net.pool5, num_output=4096)
+            net.relu6 = L.ReLU(net.fc6, in_place=True)
+            if dropout:
+                net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+            net.fc7 = L.InnerProduct(net.relu6, num_output=4096)
+            net.relu7 = L.ReLU(net.fc7, in_place=True)
+            if dropout:
+                net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+
+    if need_fc8:
+        from_layer = net.keys()[-1]
+        if fully_conv:
+            net.fc8_conv = L.Convolution(net[from_layer], num_output=1000, kernel_size=1, **kwargs)
+        else:
+            net.fc8 = L.InnerProduct(net[from_layer], num_output=1000)
+        net.prob = L.Softmax(net.fc8)
+
+
+    # Update freeze layers.
+    kwargs['param'] = [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]
+    layers = net.keys()
+    for freeze_layer in freeze_layers:
+        if freeze_layer in layers:
+            net.update(freeze_layer, kwargs)
+
+    return net
 
 def VGGNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False,
         dilated=False, nopool=False, dropout=True, freeze_layers=[], dilate_pool4=False):
@@ -829,17 +1000,17 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
     # Concatenate priorbox, loc, and conf layers.
     mbox_layers = []
     name = "mbox_loc"
-    net[name] = L.Concat(*loc_layers, axis=1, engine=1)
+    net[name] = L.Concat(*loc_layers, axis=1)
     mbox_layers.append(net[name])
     name = "mbox_conf"
-    net[name] = L.Concat(*conf_layers, axis=1, engine=1)
+    net[name] = L.Concat(*conf_layers, axis=1)
     mbox_layers.append(net[name])
     name = "mbox_priorbox"
-    net[name] = L.Concat(*priorbox_layers, axis=2, engine=1)
+    net[name] = L.Concat(*priorbox_layers, axis=2)
     mbox_layers.append(net[name])
     if use_objectness:
         name = "mbox_objectness"
-        net[name] = L.Concat(*objectness_layers, axis=1, engine=1)
+        net[name] = L.Concat(*objectness_layers, axis=1)
         mbox_layers.append(net[name])
 
     return mbox_layers
