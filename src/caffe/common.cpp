@@ -168,7 +168,7 @@ Caffe::Caffe()
 
 Caffe::~Caffe() {
 #ifdef _OPENMP
-  if (0 == omp_get_thread_num()) { 
+  if (0 == omp_get_thread_num()) {
 #endif
   if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
   if (curand_generator_) {
@@ -177,7 +177,6 @@ Caffe::~Caffe() {
 #ifdef _OPENMP
   }
 #endif
-
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {

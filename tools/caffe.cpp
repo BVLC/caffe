@@ -46,8 +46,8 @@ namespace bp = boost::python;
 #include <cstring>
 #include <map>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
@@ -55,8 +55,8 @@ namespace bp = boost::python;
 #include "caffe/internode/mpiutil.hpp"
 #include "caffe/multinode/multinode.hpp"
 #include "caffe/training_utils.hpp"
-#include "caffe/util/signal_handler.h"
 #include "caffe/util/performance.hpp"
+#include "caffe/util/signal_handler.h"
 
 #include "caffe/util/bbox_util.hpp"
 
@@ -121,7 +121,8 @@ DEFINE_string(compare_output_dir, "compare_out",
     "Optional; Directory with output files");
 DEFINE_double(epsilon, 1e-3, "Optional; Layer output comparison error");
 DEFINE_bool(detection, false,
-    "Optional; Enables detection for testing. By default it is false and classification is on.");
+    "Optional; Enables detection for testing. "
+    "By default it is false and classification is on.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -388,10 +389,11 @@ int data_server() {
 }
 RegisterBrewFunction(data_server);
 
-int test_detection(Net<float>& caffe_net)
-{
-  std::map<int, std::map<int, std::vector<std::pair<float, int> > > > all_true_pos;
-  std::map<int, std::map<int, std::vector<std::pair<float, int> > > > all_false_pos;
+int test_detection(const Net<float>& caffe_net) {
+  std::map<int, std::map<int,
+    std::vector<std::pair<float, int> > > > all_true_pos;
+  std::map<int, std::map<int,
+    std::vector<std::pair<float, int> > > > all_false_pos;
   std::map<int, std::map<int, int> > all_num_pos;
 
   PERFORMANCE_INIT_MONITOR();
@@ -402,7 +404,7 @@ int test_detection(Net<float>& caffe_net)
 
     for (int j = 0; j < result.size(); ++j) {
       const float* result_vec = result[j]->cpu_data();
-      
+
       int num_det = result[j]->height();
       for (int k = 0; k < num_det; ++k) {
         int item_id = static_cast<int>(result_vec[k * 5]);
@@ -430,7 +432,7 @@ int test_detection(Net<float>& caffe_net)
       }
     }
   }
-  
+
   for (int i = 0; i < all_true_pos.size(); ++i) {
     if (all_true_pos.find(i) == all_true_pos.end()) {
       LOG(FATAL) << "Missing output_blob true_pos: " << i;
@@ -476,7 +478,7 @@ int test_detection(Net<float>& caffe_net)
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mAP;
   }
-  
+
   return 0;
 }
 
@@ -507,7 +509,7 @@ int test() {
                        FLAGS_engine);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
-  
+
   if (FLAGS_detection) {
     test_detection(caffe_net);
     return 0;
