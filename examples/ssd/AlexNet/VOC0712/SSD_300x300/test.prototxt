@@ -31,6 +31,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv1"
   type: "Convolution"
   bottom: "data"
@@ -57,26 +58,17 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu1"
   type: "ReLU"
   bottom: "conv1"
   top: "conv1"
 }
 layer {
-  name: "pool1"
-  type: "Pooling"
-  bottom: "conv1"
-  top: "pool1"
-  pooling_param {
-    pool: MAX
-    kernel_size: 3
-    stride: 2
-  }
-}
-layer {
+  engine: "MKL2017"
   name: "norm1"
   type: "LRN"
-  bottom: "pool1"
+  bottom: "conv1"
   top: "norm1"
   lrn_param {
     local_size: 5
@@ -86,9 +78,22 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
+  name: "pool1"
+  type: "Pooling"
+  bottom: "norm1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  engine: "MKL2017"
   name: "conv2"
   type: "Convolution"
-  bottom: "norm1"
+  bottom: "pool1"
   top: "conv2"
   param {
     lr_mult: 1
@@ -114,26 +119,17 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu2"
   type: "ReLU"
   bottom: "conv2"
   top: "conv2"
 }
 layer {
-  name: "pool2"
-  type: "Pooling"
-  bottom: "conv2"
-  top: "pool2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 3
-    stride: 2
-  }
-}
-layer {
+  engine: "MKL2017"
   name: "norm2"
   type: "LRN"
-  bottom: "pool2"
+  bottom: "conv2"
   top: "norm2"
   lrn_param {
     local_size: 5
@@ -143,9 +139,22 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
+  name: "pool2"
+  type: "Pooling"
+  bottom: "norm2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  engine: "MKL2017"
   name: "conv3"
   type: "Convolution"
-  bottom: "norm2"
+  bottom: "pool2"
   top: "conv3"
   param {
     lr_mult: 1
@@ -170,12 +179,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu3"
   type: "ReLU"
   bottom: "conv3"
   top: "conv3"
 }
 layer {
+  engine: "MKL2017"
   name: "conv4"
   type: "Convolution"
   bottom: "conv3"
@@ -204,12 +215,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu4"
   type: "ReLU"
   bottom: "conv4"
   top: "conv4"
 }
 layer {
+  engine: "MKL2017"
   name: "conv5"
   type: "Convolution"
   bottom: "conv4"
@@ -238,12 +251,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu5"
   type: "ReLU"
   bottom: "conv5"
   top: "conv5"
 }
 layer {
+  engine: "MKL2017"
   name: "pool5"
   type: "Pooling"
   bottom: "conv5"
@@ -256,6 +271,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "fc6_conv"
   type: "Convolution"
   bottom: "pool5"
@@ -283,12 +299,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu6"
   type: "ReLU"
   bottom: "fc6_conv"
   top: "fc6_conv"
 }
 layer {
+  engine: "MKL2017"
   name: "fc7_conv"
   type: "Convolution"
   bottom: "fc6_conv"
@@ -314,12 +332,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "relu7"
   type: "ReLU"
   bottom: "fc7_conv"
   top: "fc7_conv"
 }
 layer {
+  engine: "MKL2017"
   name: "conv6_1"
   type: "Convolution"
   bottom: "fc7_conv"
@@ -347,12 +367,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv6_1_relu"
   type: "ReLU"
   bottom: "conv6_1"
   top: "conv6_1"
 }
 layer {
+  engine: "MKL2017"
   name: "conv6_2"
   type: "Convolution"
   bottom: "conv6_1"
@@ -380,12 +402,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv6_2_relu"
   type: "ReLU"
   bottom: "conv6_2"
   top: "conv6_2"
 }
 layer {
+  engine: "MKL2017"
   name: "conv7_1"
   type: "Convolution"
   bottom: "conv6_2"
@@ -413,12 +437,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv7_1_relu"
   type: "ReLU"
   bottom: "conv7_1"
   top: "conv7_1"
 }
 layer {
+  engine: "MKL2017"
   name: "conv7_2"
   type: "Convolution"
   bottom: "conv7_1"
@@ -446,12 +472,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv7_2_relu"
   type: "ReLU"
   bottom: "conv7_2"
   top: "conv7_2"
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_1"
   type: "Convolution"
   bottom: "conv7_2"
@@ -479,12 +507,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_1_relu"
   type: "ReLU"
   bottom: "conv8_1"
   top: "conv8_1"
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_2"
   type: "Convolution"
   bottom: "conv8_1"
@@ -512,12 +542,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_2_relu"
   type: "ReLU"
   bottom: "conv8_2"
   top: "conv8_2"
 }
 layer {
+  engine: "MKL2017"
   name: "conv9_1"
   type: "Convolution"
   bottom: "conv8_2"
@@ -545,12 +577,14 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv9_1_relu"
   type: "ReLU"
   bottom: "conv9_1"
   top: "conv9_1"
 }
 layer {
+  engine: "MKL2017"
   name: "conv9_2"
   type: "Convolution"
   bottom: "conv9_1"
@@ -578,6 +612,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv9_2_relu"
   type: "ReLU"
   bottom: "conv9_2"
@@ -714,6 +749,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "fc6_conv_mbox_loc"
   type: "Convolution"
   bottom: "fc6_conv"
@@ -831,6 +867,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv6_2_mbox_loc"
   type: "Convolution"
   bottom: "conv6_2"
@@ -996,6 +1033,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv7_2_mbox_conf"
   type: "Convolution"
   bottom: "conv7_2"
@@ -1065,6 +1103,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_2_mbox_loc"
   type: "Convolution"
   bottom: "conv8_2"
@@ -1113,6 +1152,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv8_2_mbox_conf"
   type: "Convolution"
   bottom: "conv8_2"
@@ -1229,6 +1269,7 @@ layer {
   }
 }
 layer {
+  engine: "MKL2017"
   name: "conv9_2_mbox_conf"
   type: "Convolution"
   bottom: "conv9_2"
@@ -1309,6 +1350,7 @@ layer {
   concat_param {
     axis: 1
   }
+    engine: "CAFFE"
 }
 layer {
   name: "mbox_conf"
@@ -1323,6 +1365,7 @@ layer {
   concat_param {
     axis: 1
   }
+    engine: "CAFFE"
 }
 layer {
   name: "mbox_priorbox"
@@ -1337,6 +1380,7 @@ layer {
   concat_param {
     axis: 2
   }
+  engine: "CAFFE"
 }
 layer {
   name: "mbox_conf_reshape"
