@@ -112,7 +112,7 @@ void MemorySparseDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
     {
       nnz = ptr_[pos_+batch_size_];
       sparseBlob->Reshape(batch_size_, channels_, height_, width_);
-      sparseBlob->set_cpu_data(data_,indices_,ptr_+ptr_pos_,nnz - nnz_pos_);
+      sparseBlob->set_cpu_data(data_,indices_,ptr_+ptr_pos_,nnz - nnz_pos_,nnz);
     } else {
     LOG(FATAL) << "The top blob in the memory sparse data layer is not sparse";
     }
