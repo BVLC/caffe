@@ -44,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 
 #include "boost/bind.hpp"
-#include "caffe/internode/mpiutil.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -99,7 +98,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
       << "root_solver_ needs to be set for all non-root solvers";
   param_ = param;
 
-#if defined(USE_MPI) || defined(USE_MLSL)
+#ifdef USE_MLSL
   ReplaceMultinodeSolverParams(&param_);
 #endif
 
@@ -107,7 +106,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     << std::endl << param_.DebugString();
 
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
-#if !defined(USE_MPI) && !defined(USE_MLSL)
+#ifndef USE_MLSL
   CheckSnapshotWritePermissions();
 #endif
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
@@ -311,14 +310,8 @@ void Solver<Dtype>::Step(int iters) {
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
-#ifdef USE_MPI
-      LOG_IF(INFO, Caffe::root_solver())
-             << caffe::internode::mpi_get_current_proc_rank_as_string()
-             << " Iteration " << iter_ << ", loss = " << smoothed_loss_;
-#else
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss_;
-#endif
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -436,11 +429,6 @@ void Solver<Dtype>::ResetTimers() {
 
 template <typename Dtype>
 void Solver<Dtype>::PrintTimers(bool printTotal) {
-#ifdef USE_MPI
-    if (caffe::internode::mpi_get_current_proc_rank())
-        return;
-#endif
-
 #ifdef USE_MLSL
     if (MLSL::GetNodeId())
        return;
@@ -540,16 +528,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     net_->Forward(&loss);
 
     UpdateSmoothedLoss(loss, start_iter, average_loss);
-
-#ifdef USE_MPI
-    LOG(INFO) << caffe::internode::mpi_get_current_proc_rank_as_string()
-              << " Iteration " << iter_ << ", loss = " << smoothed_loss_;
-#else
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
-#endif
   }
 
-#if !defined(USE_MPI) && !defined(USE_MLSL)
+#ifdef USE_MLSL
   // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();

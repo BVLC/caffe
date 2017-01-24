@@ -114,7 +114,7 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param);
 void ReadSolverParamsFromTextFileOrDie(const string& param_file,
                                        SolverParameter* param);
 
-#if defined(USE_MPI) || defined(USE_MLSL)
+#ifdef USE_MLSL
 void ReplaceMultinodeSolverParams(SolverParameter* param);
 
 void ReplaceMultinodeNetParams(NetParameter* sparam);
