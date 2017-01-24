@@ -627,15 +627,6 @@ ifeq ($(USE_OPENMP), 1)
   endif
 endif
 
-# MPI support
-ifeq ($(USE_MPI), 1)
-  COMMON_FLAGS += -DUSE_MPI
- #ifneq (,$(findstring mpi,$(CXX)))
- #  CXXFLAGS += -mt_mpi
- #  LINKFLAGS += -mt_mpi
- #endif
-endif
-
 # set_env should be at the end
 all: lib tools examples
 
