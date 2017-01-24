@@ -124,10 +124,10 @@ This Caffe version is seflcontained. This means that newest version of Intel MKL
 
 [Intel MKL 2017] introduces optimized Deep Neural Network (DNN) performance primitives that allow to accelerate the most popular image recognition topologies. Intel® Distribution of Caffe* can take advantage of these primitives and get significantly better performance results compared to the previous versions of Intel MKL. There are two ways to take advantage of the new primitives: 
 
-* As default and recommended configuration Intel® Distribution of Caffe* is build with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. All layers that will not have oher engine set in prototxt file (model) will use new Intel MKL primitives by default.
-* Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives. 
+* Set layer engine to `MKL2017` in prototxt file (model). Only this specific layer will be accelerated with new primitives.
+* Use -engine = MKL2017 in command line as an option during execution of caffe (training, scoring, benchmark)
 
-* `USE_MKLDNN_AS_DEFAULT_ENGINE := 1` in `Makefile.config` is new integration with new MKLDNN engine. This is experimental solution - not recommended for buissnes users.
+Comment: there is obsolete method to compale with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. This is obsolete solution - not recommended to use anymore.
 
 ## Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
@@ -214,14 +214,16 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 # Change log
-05-01-2017
+25-01-2017
 * integration with MKL2017 update2 (providing better performance solution)
 * new multinode solution with better scaling on higher number of nodes (32+): [wiki instructions](https://github.com/intel/caffe/wiki/Multinode-guide)
+* old MPI multinode solution was removed
 * new engine selection functionality: [wiki instructions](https://github.com/intel/caffe/blob/master/docs/tutorial/interfaces.md) 
 * new multiphase training functionality 
 * fixed problems with batch normalization
-* new BKM (Best Know Method) and examples for achieving best performance
+* new BKM (Best Know Method) and examples for achieving best performance [wiki instructions](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 * other minor performance and functional improvements
+* new prototxt solvers with example hyper-parameters optimized to achieve best Time To Train performance (both multi node and single node).
 
 03-11-2016
 * integration with MKL2017 update1
@@ -240,7 +242,7 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 # Known issues and limitations
 * Intel MKL 2017 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
-Workaround: For older processors use MKL2017 GEMM engine: set USE_MKL2017_AS_DEFAULT_ENGINE := 0 in Makefile.config and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
+Workaround: For older processors use MKL2017 GEMM engine: use `-engine = CAFFE` as parameter during execution and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
 
 * Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
@@ -249,7 +251,7 @@ Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine
 Workaround: We recommend to always use compressed LMDB Data Layer
 
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
-Workaround: better performance results might be achieved with GEMM engine: `set USE_MKL2017_AS_DEFAULT_ENGINE := 0` in `Makefile.config`.
+Workaround: better performance results might be achieved with GEMM engine: use `-engine = CAFFE` as parameter during execution.
 
 # Recommendations to achieve best performance
 
