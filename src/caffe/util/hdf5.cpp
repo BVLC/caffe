@@ -163,6 +163,42 @@ void hdf5_save_int(hid_t loc_id, const string& dataset_name, int i) {
     << "Failed to save int dataset with name " << dataset_name;
 }
 
+template <>
+float hdf5_load_float<float>(hid_t loc_id, const string& dataset_name) {
+  float val;
+  herr_t status = H5LTread_dataset_float(loc_id, dataset_name.c_str(), &val);
+  CHECK_GE(status, 0)
+    << "Failed to load int dataset with name " << dataset_name;
+  return val;
+}
+template <>
+double hdf5_load_float<double>(hid_t loc_id, const string& dataset_name) {
+  double val;
+  herr_t status = H5LTread_dataset_double(loc_id, dataset_name.c_str(), &val);
+  CHECK_GE(status, 0)
+    << "Failed to load int dataset with name " << dataset_name;
+  return val;
+}
+
+template <>
+void hdf5_save_float<float>(hid_t loc_id,
+                            const string& dataset_name, float f) {
+  hsize_t one = 1;
+  herr_t status = \
+    H5LTmake_dataset_float(loc_id, dataset_name.c_str(), 1, &one, &f);
+  CHECK_GE(status, 0)
+    << "Failed to save int dataset with name " << dataset_name;
+}
+template <>
+void hdf5_save_float<double>(hid_t loc_id,
+                            const string& dataset_name, double f) {
+  hsize_t one = 1;
+  herr_t status = \
+    H5LTmake_dataset_double(loc_id, dataset_name.c_str(), 1, &one, &f);
+  CHECK_GE(status, 0)
+    << "Failed to save int dataset with name " << dataset_name;
+}
+
 int hdf5_get_num_links(hid_t loc_id) {
   H5G_info_t info;
   herr_t status = H5Gget_info(loc_id, &info);

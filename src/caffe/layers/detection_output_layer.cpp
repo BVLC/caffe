@@ -31,6 +31,9 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Parameters used in nms.
   nms_threshold_ = detection_output_param.nms_param().nms_threshold();
   CHECK_GE(nms_threshold_, 0.) << "nms_threshold must be non negative.";
+  eta_ = detection_output_param.nms_param().eta();
+  CHECK_GT(eta_, 0.);
+  CHECK_LE(eta_, 1.);
   top_k_ = -1;
   if (detection_output_param.nms_param().has_top_k()) {
     top_k_ = detection_output_param.nms_param().top_k();
@@ -38,10 +41,12 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const SaveOutputParameter& save_output_param =
       detection_output_param.save_output_param();
   output_directory_ = save_output_param.output_directory();
-  if (!output_directory_.empty() &&
-      !boost::filesystem::is_directory(output_directory_)) {
+  if (!output_directory_.empty()) {
+    if (boost::filesystem::is_directory(output_directory_)) {
+      boost::filesystem::remove_all(output_directory_);
+    }
     if (!boost::filesystem::create_directories(output_directory_)) {
-        LOG(FATAL) << "Failed to create directory: " << output_directory_;
+        LOG(WARNING) << "Failed to create directory: " << output_directory_;
     }
   }
   output_name_prefix_ = save_output_param.output_name_prefix();
@@ -95,6 +100,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     need_save_ = false;
   }
+  has_resize_ = save_output_param.has_resize_param();
+  if (has_resize_) {
+    resize_param_ = save_output_param.resize_param();
+  }
   name_count_ = 0;
   visualize_ = detection_output_param.visualize();
   if (visualize_) {
@@ -106,7 +115,13 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         new DataTransformer<Dtype>(this->layer_param_.transform_param(),
                                    this->phase_));
     data_transformer_->InitRand();
+    save_file_ = detection_output_param.save_file();
   }
+  bbox_preds_.ReshapeLike(*(bottom[0]));
+  if (!share_location_) {
+    bbox_permute_.ReshapeLike(*(bottom[0]));
+  }
+  conf_permute_.ReshapeLike(*(bottom[1]));
 }
 
 template <typename Dtype>
@@ -133,6 +148,18 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
+  if (bbox_preds_.num() != bottom[0]->num() ||
+      bbox_preds_.count(1) != bottom[0]->count(1)) {
+    bbox_preds_.ReshapeLike(*(bottom[0]));
+  }
+  if (!share_location_ && (bbox_permute_.num() != bottom[0]->num() ||
+      bbox_permute_.count(1) != bottom[0]->count(1))) {
+    bbox_permute_.ReshapeLike(*(bottom[0]));
+  }
+  if (conf_permute_.num() != bottom[1]->num() ||
+      conf_permute_.count(1) != bottom[1]->count(1)) {
+    conf_permute_.ReshapeLike(*(bottom[1]));
+  }
   num_priors_ = bottom[2]->height() / 4;
   CHECK_EQ(num_priors_ * num_loc_classes_ * 4, bottom[0]->channels())
       << "Number of priors must match number of location predictions.";
@@ -175,9 +202,11 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 
   // Decode all loc predictions to bboxes.
   vector<LabelBBox> all_decode_bboxes;
+  const bool clip_bbox = false;
   DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
                   share_location_, num_loc_classes_, background_label_id_,
-                  code_type_, variance_encoded_in_target_, &all_decode_bboxes);
+                  code_type_, variance_encoded_in_target_, clip_bbox,
+                  &all_decode_bboxes);
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
@@ -203,7 +232,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         continue;
       }
       const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
-      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_,
+      ApplyNMSFast(bboxes, scores, confidence_threshold_, nms_threshold_, eta_,
           top_k_, &(indices[c]));
       num_det += indices[c].size();
     }
@@ -248,15 +277,22 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
+  Dtype* top_data;
   if (num_kept == 0) {
     LOG(INFO) << "Couldn't find any detections";
-    top_shape[2] = 1;
+    top_shape[2] = num;
     top[0]->Reshape(top_shape);
-    caffe_set<Dtype>(top[0]->count(), -1, top[0]->mutable_cpu_data());
-    return;
+    top_data = top[0]->mutable_cpu_data();
+    caffe_set<Dtype>(top[0]->count(), -1, top_data);
+    // Generate fake results per image.
+    for (int i = 0; i < num; ++i) {
+      top_data[0] = i;
+      top_data += 7;
+    }
+  } else {
+    top[0]->Reshape(top_shape);
+    top_data = top[0]->mutable_cpu_data();
   }
-  top[0]->Reshape(top_shape);
-  Dtype* top_data = top[0]->mutable_cpu_data();
 
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
@@ -291,21 +327,20 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
         top_data[count * 7 + 2] = scores[idx];
-        NormalizedBBox clip_bbox;
-        ClipBBox(bboxes[idx], &clip_bbox);
-        top_data[count * 7 + 3] = clip_bbox.xmin();
-        top_data[count * 7 + 4] = clip_bbox.ymin();
-        top_data[count * 7 + 5] = clip_bbox.xmax();
-        top_data[count * 7 + 6] = clip_bbox.ymax();
+        const NormalizedBBox& bbox = bboxes[idx];
+        top_data[count * 7 + 3] = bbox.xmin();
+        top_data[count * 7 + 4] = bbox.ymin();
+        top_data[count * 7 + 5] = bbox.xmax();
+        top_data[count * 7 + 6] = bbox.ymax();
         if (need_save_) {
-          NormalizedBBox scale_bbox;
-          ScaleBBox(clip_bbox, sizes_[name_count_].first,
-                    sizes_[name_count_].second, &scale_bbox);
+          NormalizedBBox out_bbox;
+          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
+                     &out_bbox);
           float score = top_data[count * 7 + 2];
-          float xmin = scale_bbox.xmin();
-          float ymin = scale_bbox.ymin();
-          float xmax = scale_bbox.xmax();
-          float ymax = scale_bbox.ymax();
+          float xmin = out_bbox.xmin();
+          float ymin = out_bbox.ymin();
+          float xmax = out_bbox.xmax();
+          float ymax = out_bbox.ymax();
           ptree pt_xmin, pt_ymin, pt_width, pt_height;
           pt_xmin.put<float>("", round(xmin * 100) / 100.);
           pt_ymin.put<float>("", round(ymin * 100) / 100.);
@@ -427,7 +462,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     this->data_transformer_->TransformInv(bottom[3], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_);
+        label_to_display_name_, save_file_);
 #endif  // USE_OPENCV
   }
 }

@@ -88,6 +88,8 @@ class DataTransformer {
    *
    * @param anno_datum
    *    AnnotatedDatum containing the data and annotation to be transformed.
+   * @param do_resize
+   *    If true, resize the annotation accordingly before crop.
    * @param crop_bbox
    *    The cropped region applied to anno_datum.datum()
    * @param do_mirror
@@ -96,7 +98,7 @@ class DataTransformer {
    *    Stores all transformed AnnotationGroup.
    */
   void TransformAnnotation(
-      const AnnotatedDatum& anno_datum,
+      const AnnotatedDatum& anno_datum, const bool do_resize,
       const NormalizedBBox& crop_bbox, const bool do_mirror,
       RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all);
 
@@ -111,6 +113,23 @@ class DataTransformer {
    */
   void CropImage(const AnnotatedDatum& anno_datum, const NormalizedBBox& bbox,
                  AnnotatedDatum* cropped_anno_datum);
+
+  /**
+   * @brief Expand the datum.
+   */
+  void ExpandImage(const Datum& datum, const float expand_ratio,
+                   NormalizedBBox* expand_bbox, Datum* expanded_datum);
+
+  /**
+   * @brief Expand the datum and adjust AnnotationGroup.
+   */
+  void ExpandImage(const AnnotatedDatum& anno_datum,
+                   AnnotatedDatum* expanded_anno_datum);
+
+  /**
+   * @brief Apply distortion to the datum.
+   */
+  void DistortImage(const Datum& datum, Datum* distort_datum);
 
 #ifdef USE_OPENCV
   /**
@@ -145,6 +164,12 @@ class DataTransformer {
    */
   void CropImage(const cv::Mat& img, const NormalizedBBox& bbox,
                  cv::Mat* crop_img);
+
+  /**
+   * @brief Expand img to include mean value as background.
+   */
+  void ExpandImage(const cv::Mat& img, const float expand_ratio,
+                   NormalizedBBox* expand_bbox, cv::Mat* expand_img);
 
   void TransformInv(const Blob<Dtype>* blob, vector<cv::Mat>* cv_imgs);
   void TransformInv(const Dtype* data, cv::Mat* cv_img, const int height,

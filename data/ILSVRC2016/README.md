@@ -9,6 +9,9 @@ If you choose to use ILSVRC2015 DET dataset, here are a few noticeable steps bef
 
 2. You should download the [val1/val2 split](http://www.cs.unc.edu/~wliu/projects/SSD/ILSVRC2015_DET_val1_val2.tar.gz), courtesy of [Ross Girshick](http://people.eecs.berkeley.edu/~rbg), and put it in `$ILSVRC_ROOT/ImageSets/DET`.
 
+### Remove an invalid file
+Find the invalid image file `Data/DET/val/ILSVRC2013_val_00004542.JPEG`, and remove it.
+
 ### Create the LMDB file.
 After you have downloaded the dataset, we can create the lmdb files.
 

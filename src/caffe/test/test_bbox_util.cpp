@@ -220,6 +220,66 @@ TEST_F(CPUBBoxUtilTest, TestClipBBox) {
   EXPECT_NEAR(clip_bbox.size(), 1., eps);
 }
 
+TEST_F(CPUBBoxUtilTest, TestOutputBBox) {
+  NormalizedBBox bbox;
+  bbox.set_xmin(-0.1);
+  bbox.set_ymin(0.3);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.5);
+  pair<int, int> img_size(300, 500);
+  bool has_resize = false;
+  ResizeParameter resize_param;
+  resize_param.set_height(300);
+  resize_param.set_width(300);
+  NormalizedBBox out_bbox;
+
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  has_resize = true;
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_WARP);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_FIT_SMALL_SIZE);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  resize_param.set_resize_mode(ResizeParameter_Resize_mode_FIT_SMALL_SIZE);
+  resize_param.set_height_scale(300);
+  resize_param.set_width_scale(300);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 90.);
+  CHECK_EQ(out_bbox.xmax(), 90.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  resize_param.set_resize_mode(
+      ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 50.);
+  CHECK_EQ(out_bbox.xmax(), 150.);
+  CHECK_EQ(out_bbox.ymax(), 150.);
+
+  img_size.first = 500;
+  img_size.second = 300;
+  OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
+  CHECK_EQ(out_bbox.xmin(), 0.);
+  CHECK_EQ(out_bbox.ymin(), 150.);
+  CHECK_EQ(out_bbox.xmax(), 50.);
+  CHECK_EQ(out_bbox.ymax(), 250.);
+}
+
 TEST_F(CPUBBoxUtilTest, TestJaccardOverlap) {
   NormalizedBBox bbox1;
   bbox1.set_xmin(0.2);
@@ -347,7 +407,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -355,7 +415,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
 
   variance_encoded_in_target = true;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), -0.9, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 1.1, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 1.3, eps);
@@ -385,7 +445,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -397,7 +457,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
   bbox.set_ymax(log(3./2) * 5);
   variance_encoded_in_target = false;
   DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
-             bbox, &decode_bbox);
+             false, bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -432,7 +492,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -0.1, eps);
@@ -443,7 +503,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   variance_encoded_in_target = true;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -1, eps);
@@ -485,7 +545,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   float eps = 1e-5;
   for (int i = 1; i < 5; ++i) {
@@ -504,7 +564,7 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
     bboxes[i].set_ymax(log(3./2) * 5);
   }
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               variance_encoded_in_target, bboxes, &decode_bboxes);
+               variance_encoded_in_target, false, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0 + (i - 1) * 0.1, eps);
@@ -527,7 +587,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOneBipartite) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -558,7 +618,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllBipartite) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -593,7 +653,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -624,7 +684,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -657,7 +717,7 @@ TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
   vector<int> match_indices;
   vector<float> match_overlaps;
 
-  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap,
+  MatchBBox(gt_bboxes, pred_bboxes, label, match_type, overlap, true,
             &match_indices, &match_overlaps);
 
   EXPECT_EQ(match_indices.size(), 6);
@@ -952,7 +1012,7 @@ TEST_F(CPUBBoxUtilTest, TestGetConfidenceScores) {
   }
 }
 
-TEST_F(CPUBBoxUtilTest, TestGetMaxConfidenceScores) {
+TEST_F(CPUBBoxUtilTest, TestComputeConfLoss) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_classes = 2;
@@ -969,54 +1029,142 @@ TEST_F(CPUBBoxUtilTest, TestGetMaxConfidenceScores) {
     }
   }
 
-  vector<vector<float> > max_conf_scores;
+  vector<vector<float> > all_conf_loss;
   ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  -1, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
-  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.)), eps);
-  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.2)), eps);
-  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(exp(-0.5)/(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
 
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
-  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.1)), eps);
-  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.3)), eps);
-  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(1./(1.+exp(-0.4))) + log(exp(-0.5)/(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
 
   loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, loss_type, &max_conf_scores);
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, &all_conf_loss);
 
-  EXPECT_EQ(max_conf_scores.size(), num);
+  EXPECT_EQ(all_conf_loss.size(), num);
   for (int i = 0; i < num; ++i) {
-    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
-    for (int j = 0; j < num_preds_per_class; ++j) {
-      EXPECT_NEAR(max_conf_scores[i][j], 1./(1+exp(-0.1)), eps);
-    }
-  }
-
-  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, loss_type, &max_conf_scores);
-
-  EXPECT_EQ(max_conf_scores.size(), num);
-  for (int i = 0; i < num; ++i) {
-    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
     int sign = i % 2 ? 1 : -1;
     for (int j = 0; j < num_preds_per_class; ++j) {
       if (sign == 1) {
-        EXPECT_NEAR(max_conf_scores[i][j], 1/(1+exp(-0.1)), eps);
+        EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
       } else {
-        EXPECT_NEAR(max_conf_scores[i][j], exp(-0.1)/(1+exp(-0.1)), eps);
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+      }
+    }
+  }
+}
+
+TEST_F(CPUBBoxUtilTest, TestComputeConfLossMatch) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<float> conf_blob(num, dim, 1, 1);
+  float* conf_data = conf_blob.mutable_cpu_data();
+  vector<map<int, vector<int> > > all_match_indices;
+  map<int, vector<NormalizedBBox> > all_gt_bboxes;
+  for (int i = 0; i < num; ++i) {
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = sign * idx * 0.1;
+      }
+    }
+    map<int, vector<int> > match_indices;
+    vector<int> indices(num_preds_per_class, -1);
+    match_indices[-1] = indices;
+    if (i == 1) {
+      NormalizedBBox gt_bbox;
+      gt_bbox.set_label(1);
+      all_gt_bboxes[i].push_back(gt_bbox);
+      // The first prior in second image is matched to a gt bbox of label 1.
+      match_indices[-1][0] = 0;
+    }
+    all_match_indices.push_back(match_indices);
+  }
+
+  vector<vector<float> > all_conf_loss;
+  ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  -1, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
+
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
+
+  loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
+  ComputeConfLoss(conf_data, num, num_preds_per_class, num_classes,
+                  0, loss_type, all_match_indices, all_gt_bboxes,
+                  &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      if (sign == 1) {
+        if (j == 0) {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+        } else {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
+        }
+      } else {
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
       }
     }
   }
@@ -1201,6 +1349,74 @@ TEST_F(CPUBBoxUtilTest, TestApplyNMS) {
   for (int i = 1; i <= 3; ++i) {
     EXPECT_NEAR(old_overlaps[0][i], overlaps[0][i], eps);
   }
+}
+
+TEST_F(CPUBBoxUtilTest, TestApplyNMSFast) {
+  vector<NormalizedBBox> bboxes;
+  vector<float> scores;
+  float score_threshold = 0.;
+  float nms_threshold = 0.3;
+  float eta = 1.;
+  int top_k = -1;
+  vector<int> indices;
+
+  // Fill in bboxes and confidences.
+  NormalizedBBox bbox;
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.8);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.7);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.0);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.2);
+  bboxes.push_back(bbox);
+  scores.push_back(0.4);
+
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.2);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.4);
+  bboxes.push_back(bbox);
+  scores.push_back(0.5);
+
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+
+  EXPECT_EQ(indices.size(), 3);
+  EXPECT_EQ(indices[0], 0);
+  EXPECT_EQ(indices[1], 3);
+  EXPECT_EQ(indices[2], 2);
+
+  top_k = 2;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
+
+  top_k = 3;
+  nms_threshold = 0.2;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
+
+  top_k = -1;
+  score_threshold = 0.5;
+  ApplyNMSFast(bboxes, scores, score_threshold, nms_threshold, eta, top_k,
+               &indices);
+  EXPECT_EQ(indices.size(), 1);
+  EXPECT_EQ(indices[0], 0);
 }
 
 TEST_F(CPUBBoxUtilTest, TestCumSum) {
@@ -1437,7 +1653,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -0.1, eps);
@@ -1450,7 +1667,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
   variance_encoded_in_target = true;
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -1, eps);
@@ -1491,7 +1709,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
-                  bbox_data);
+                  false, bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1510,7 +1728,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
-                  bbox_data);
+                  false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1557,7 +1775,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
   bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
-                  bbox_data);
+                  false, bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1582,7 +1800,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
-                  bbox_data);
+                  false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
@@ -1632,7 +1850,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   bool variance_encoded_in_target = true;
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
@@ -1650,7 +1869,8 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
   }
   bbox_data = bboxes.mutable_gpu_data();
   DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
-                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+                  variance_encoded_in_target, num, false, 1, -1, false,
+                  bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
@@ -1806,6 +2026,123 @@ TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlappedMultiClass) {
   // bbox2 with all other bboxes
   EXPECT_EQ(overlapped_cpu_data[14], 1);
   EXPECT_EQ(overlapped_cpu_data[15], 0);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestSoftMaxGPU) {
+  const int num = 2;
+  const int num_preds = 2;
+  const int num_classes = 2;
+  Blob<TypeParam> data_blob(num, num_preds * num_classes, 1, 1);
+  Blob<TypeParam> prob_blob(num, num_preds * num_classes, 1, 1);
+  TypeParam* cpu_data = data_blob.mutable_cpu_data();
+  cpu_data[0] = 0.1;
+  cpu_data[1] = 0.9;
+  cpu_data[2] = 0.9;
+  cpu_data[3] = 0.1;
+  cpu_data[4] = 0.3;
+  cpu_data[5] = 0.7;
+  cpu_data[6] = 0.7;
+  cpu_data[7] = 0.3;
+
+  const TypeParam* gpu_data = data_blob.gpu_data();
+  TypeParam* gpu_prob = prob_blob.mutable_gpu_data();
+  SoftMaxGPU(gpu_data, num * num_preds, num_classes, 1, gpu_prob);
+
+  const TypeParam* cpu_prob = prob_blob.cpu_data();
+  EXPECT_NEAR(cpu_prob[0], exp(-0.8) / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[1], 1 / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[2], 1 / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[3], exp(-0.8) / (exp(-0.8) + 1), eps);
+  EXPECT_NEAR(cpu_prob[4], exp(-0.4) / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[5], 1 / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[6], 1 / (exp(-0.4) + 1), eps);
+  EXPECT_NEAR(cpu_prob[7], exp(-0.4) / (exp(-0.4) + 1), eps);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestComputeConfLossMatchGPU) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<TypeParam> conf_blob(num, dim, 1, 1);
+  TypeParam* conf_data = conf_blob.mutable_cpu_data();
+  vector<map<int, vector<int> > > all_match_indices;
+  map<int, vector<NormalizedBBox> > all_gt_bboxes;
+  for (int i = 0; i < num; ++i) {
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = sign * idx * 0.1;
+      }
+    }
+    map<int, vector<int> > match_indices;
+    vector<int> indices(num_preds_per_class, -1);
+    match_indices[-1] = indices;
+    if (i == 1) {
+      NormalizedBBox gt_bbox;
+      gt_bbox.set_label(1);
+      all_gt_bboxes[i].push_back(gt_bbox);
+      // The first prior in second image is matched to a gt bbox of label 1.
+      match_indices[-1][0] = 0;
+    }
+    all_match_indices.push_back(match_indices);
+  }
+
+  vector<vector<float> > all_conf_loss;
+  ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      -1, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(exp(0.)/(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(exp(0.2)/(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))),
+              eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(exp(-0.6)/(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))),
+              eps);
+
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      0, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  EXPECT_EQ(all_conf_loss[0].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[0][0],
+              -(log(1./(1.+exp(0.))) + log(exp(0.1)/(1+exp(0.1)))), eps);
+  EXPECT_NEAR(all_conf_loss[0][1],
+              -(log(1./(1.+exp(0.2))) + log(exp(0.3)/(1+exp(0.3)))), eps);
+  EXPECT_EQ(all_conf_loss[1].size(), num_preds_per_class);
+  EXPECT_NEAR(all_conf_loss[1][0],
+              -(log(exp(-0.4)/(1.+exp(-0.4))) + log(1./(1+exp(-0.5)))), eps);
+  EXPECT_NEAR(all_conf_loss[1][1],
+              -(log(1./(1.+exp(-0.6))) + log(exp(-0.7)/(1+exp(-0.7)))), eps);
+
+  loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
+  ComputeConfLossGPU(conf_blob, num, num_preds_per_class, num_classes,
+      0, loss_type, all_match_indices, all_gt_bboxes, &all_conf_loss);
+
+  EXPECT_EQ(all_conf_loss.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_conf_loss[i].size(), num_preds_per_class);
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      if (sign == 1) {
+        if (j == 0) {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+        } else {
+          EXPECT_NEAR(all_conf_loss[i][j], -log(exp(-0.1)/(1+exp(-0.1))), eps);
+        }
+      } else {
+        EXPECT_NEAR(all_conf_loss[i][j], -log(1./(1+exp(-0.1))), eps);
+      }
+    }
+  }
 }
 
 #endif

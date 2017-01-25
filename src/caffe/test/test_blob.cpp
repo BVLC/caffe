@@ -36,9 +36,13 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestPointersCPUGPU) {
+#ifndef CPU_ONLY
   EXPECT_TRUE(this->blob_preshaped_->gpu_data());
+#endif
   EXPECT_TRUE(this->blob_preshaped_->cpu_data());
+#ifndef CPU_ONLY
   EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data());
+#endif
   EXPECT_TRUE(this->blob_preshaped_->mutable_cpu_data());
 }
 

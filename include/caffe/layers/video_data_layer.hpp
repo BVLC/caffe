@@ -7,7 +7,6 @@
 #else
 #include <opencv2/opencv.hpp>
 #endif  // OPENCV_VERSION == 3
-#endif  // USE_OPENCV
 
 #include <string>
 #include <vector>
@@ -45,11 +44,14 @@ class VideoDataLayer : public BasePrefetchingDataLayer<Dtype> {
   VideoDataParameter_VideoType video_type_;
   cv::VideoCapture cap_;
 
+  int skip_frames_;
+
   int total_frames_;
   int processed_frames_;
   vector<int> top_shape_;
 };
 
 }  // namespace caffe
+#endif  // USE_OPENCV
 
 #endif  // CAFFE_VIDEO_DATA_LAYER_HPP_

@@ -163,8 +163,12 @@ bool ReadImageToDatum(const string& filename, const int label,
   if (cv_img.data) {
     if (encoding.size()) {
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
-          !min_dim && !max_dim && matchExt(filename, encoding) )
+          !min_dim && !max_dim && matchExt(filename, encoding) ) {
+        datum->set_channels(cv_img.channels());
+        datum->set_height(cv_img.rows);
+        datum->set_width(cv_img.cols);
         return ReadFileToDatum(filename, label, datum);
+      }
       EncodeCVMatToDatum(cv_img, encoding, datum);
       datum->set_label(label);
       return true;
