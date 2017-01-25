@@ -166,7 +166,7 @@ namespace caffe {
     LayerParameter layer_param;
 
     MKLBatchNormLayer<Dtype> layer(layer_param);
-    GradientChecker<Dtype> checker(1e-2, 1e-4);
+    GradientChecker<Dtype> checker(1e-2, 2e-4);
     checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }
