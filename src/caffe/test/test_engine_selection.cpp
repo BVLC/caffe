@@ -141,6 +141,12 @@ class TestEngineSelection : public MultiDeviceTest<TypeParam> {
         "  bottom: 'norm1' "
         "  top: 'ip1' "
         "} "
+        "layer { "
+        "  name: 'relu2' "
+        "  type: 'ReLU' "
+        "  bottom: 'ip1' "
+        "  top: 'ip1' "
+        "} "
         " layer {"
         "   bottom: 'ip1'"
         "   top: 'bn1'"
@@ -259,6 +265,12 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetCAFFE) {
           dynamic_cast<ReLULayer<Dtype>* >(relu1_layer);
   EXPECT_NE(null_ptr, relu1_caffe);
 
+  // relu2 verification
+  Layer<Dtype>* relu2_layer = net->layer_by_name("relu2").get();
+  ReLULayer<Dtype>* relu2_caffe =
+          dynamic_cast<ReLULayer<Dtype>* >(relu2_layer);
+  EXPECT_NE(null_ptr, relu2_caffe);
+
   // pool1 verification
   Layer<Dtype>* pool1_layer = net->layer_by_name("pool1").get();
   PoolingLayer<Dtype>* pool1_caffe =
@@ -332,6 +344,12 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKL2017) {
   MKLReLULayer<Dtype>* relu1_mkl =
           dynamic_cast<MKLReLULayer<Dtype>* >(relu1_layer);
   EXPECT_NE(null_ptr, relu1_mkl);
+
+  // relu2 verification
+  Layer<Dtype>* relu2_layer = net->layer_by_name("relu2").get();
+  MKLReLULayer<Dtype>* relu2_mkl =
+          dynamic_cast<MKLReLULayer<Dtype>* >(relu2_layer);
+  EXPECT_NE(null_ptr, relu2_mkl);
 
   // pool1 verification
   Layer<Dtype>* pool1_layer = net->layer_by_name("pool1").get();
@@ -407,6 +425,12 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
   MKLDNNReLULayer<Dtype>* relu1_mkldnn =
           dynamic_cast<MKLDNNReLULayer<Dtype>* >(relu1_layer);
   EXPECT_EQ(null_ptr, relu1_mkldnn);
+
+  // relu2 verification
+  Layer<Dtype>* relu2_layer = net->layer_by_name("relu2").get();
+  MKLDNNReLULayer<Dtype>* relu2_mkldnn =
+          dynamic_cast<MKLDNNReLULayer<Dtype>* >(relu2_layer);
+  EXPECT_NE(null_ptr, relu2_mkldnn);
 
   // pool1 verification
   Layer<Dtype>* pool1_layer = net->layer_by_name("pool1").get();
