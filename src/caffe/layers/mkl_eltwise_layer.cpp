@@ -282,7 +282,8 @@ void MKLEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
           CHECK_EQ(true, bwd_bottom_diff[i]->layout_compare(
                   top[0]->get_prv_diff_descriptor()));
-          bottom[i]->set_prv_diff_descriptor(top[0]->get_prv_diff_descriptor(), true);
+          bottom[i]->set_prv_diff_descriptor(top[0]->get_prv_diff_descriptor(),
+                                             false);
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
