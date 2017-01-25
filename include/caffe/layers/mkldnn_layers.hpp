@@ -66,7 +66,9 @@ public:
             , fwd_top_data    ()
             , fwd_bottom_data ()
             , BatchNormFwd_pd()
-            , output_memory(), scaleshift_memory(), ws_memory()
+            , output_memory(), scaleshift_memory()
+            , mean_memory()
+            , variance_memory()
             , input_primitive()
         {}
 
@@ -87,12 +89,12 @@ private:
     shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
 
     MKLDNNPrimitive<Dtype> BatchNormFwd;
-    shared_ptr<memory> output_memory, scaleshift_memory, ws_memory;
+    shared_ptr<memory> output_memory, scaleshift_memory, mean_memory, variance_memory;
     shared_ptr<primitive> input_primitive;
 
     int32_t num_, width_, height_, channels_;
-    Dtype eps_;
-    bool use_weight_bias_, bias_term_;
+    Dtype eps_, moving_average_fraction_;
+    bool use_weight_bias_, bias_term_, use_global_stats_;
 };
 
 // =====  MKLDNNConvolutionLayer =======================================

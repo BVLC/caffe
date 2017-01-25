@@ -49,11 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#ifdef USE_MPI
-#include <mpi.h>
-#include "caffe/internode/mpiutil.hpp"
-#endif /* USE_MPI */
-
 #ifdef USE_MLSL
 #include "mlsl.h"
 #endif /* USE_MLSL */
@@ -126,7 +121,7 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
                                     NetParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse NetParameter file: " << param_file;
-#if defined(USE_MPI) || defined(USE_MLSL)
+#ifdef USE_MLSL
   ReplaceMultinodeNetParams(param);
 #endif
   UpgradeNetAsNeeded(param_file, param);
@@ -1116,21 +1111,13 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   UpgradeSolverAsNeeded(param_file, param);
 }
 
-#if defined(USE_MPI) || defined(USE_MLSL)
+#ifdef USE_MLSL
 static std::string getNodeId() {
-#if defined(USE_MPI)
-  return std::to_string(caffe::internode::mpi_get_current_proc_rank());
-#elif defined(USE_MLSL)
   return std::to_string(MLSL::GetNodeId());
-#endif
 }
 
 static std::string getNumNodes() {
-#if defined(USE_MPI)
-  return std::to_string(caffe::internode::mpi_get_comm_size());
-#elif defined(USE_MLSL)
   return std::to_string(MLSL::GetNumNodes());
-#endif
 }
 
 void ReplaceMultinodeSolverParams(SolverParameter* param) {

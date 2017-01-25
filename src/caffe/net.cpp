@@ -237,6 +237,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         !layer_param.type().compare("ImageData")  ||
         !layer_param.type().compare("HDF5Data")   ||
         !layer_param.type().compare("MemoryData") ||
+        !layer_param.type().compare("Input") ||
         !layer_param.type().compare("WindowData")) {
 
         // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
@@ -634,7 +635,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
          ConvolutionParameter_Engine_MKLDNN)
        || ((layer_param->convolution_param().engine() ==
            ConvolutionParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKLDNN") == 0))) {
+            param.engine().compare(0, 6, "MKLDNN") == 0))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -649,7 +650,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
           ReLUParameter_Engine_MKLDNN)
         || ((consumer_layer_param.relu_param().engine() ==
             ReLUParameter_Engine_DEFAULT) &&
-             param.engine().compare("MKLDNN") == 0))) {
+             param.engine().compare(0, 6, "MKLDNN") == 0))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);

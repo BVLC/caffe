@@ -13,6 +13,3 @@ weight_decay: 0.0002
 snapshot: 40000
 snapshot_prefix: "models/bvlc_googlenet/bvlc_googlenet_multinode"
 solver_mode: CPU
-multinode_param {
-  wait_for_clients: 2
-}
