@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <vector>
-#include "caffe/internode/tree_cluster.hpp"
 #include "caffe/MlslSolver.hpp"
 
 namespace caffe {

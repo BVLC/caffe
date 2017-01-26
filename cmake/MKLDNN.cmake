@@ -8,7 +8,7 @@ function(Download_MKLDNN)
   
   ExternalProject_add(MKLDNN_Build
                       SOURCE_DIR ${MKLDNN_SOURCE_DIR}
-                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
+                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
 #--Download step
                       GIT_REPOSITORY https://github.com/01org/mkl-dnn.git
                       GIT_TAG e38f9b6d745903e0ca0a5be9b9399a90c7ac269b

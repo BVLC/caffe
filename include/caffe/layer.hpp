@@ -346,6 +346,7 @@ public:
 	  if(layerType == "SoftmaxWithLoss") return COMP_OP_TYPE_EVAL;
 	  if(layerType == "Split") return COMP_OP_TYPE_BCAST;
 	  if(layerType == "Concat") return COMP_OP_TYPE_CONCAT;
+	  if(layerType == "Flatten") return COMP_OP_TYPE_ACT;
 	  return COMP_OP_TYPE_CC;
   }
 

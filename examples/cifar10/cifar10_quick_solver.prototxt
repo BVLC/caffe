@@ -23,4 +23,4 @@ snapshot: 4000
 snapshot_format: HDF5
 snapshot_prefix: "examples/cifar10/cifar10_quick"
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU
