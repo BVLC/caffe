@@ -36,8 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #ifdef USE_OPENCV
-#include <limits.h>
-#include <opencv2/core/core.hpp>
+//#include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
 #include <stdint.h>
 
