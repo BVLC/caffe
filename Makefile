@@ -497,7 +497,7 @@ endif
 BOOST_LDFLAGS=
 BOOST_INCLUDE ?= $(BOOST_ROOT)
 ifneq ("$(wildcard $(BOOST_INCLUDE)/boost/filesystem.hpp)","")
-	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/stage/lib -Wl,-rpath,$(BOOST_ROOT)/libs
+	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/stage/lib -Wl,-rpath,$(BOOST_ROOT)/stage/lib
 endif
 
 # BLAS configuration (default = MKL)

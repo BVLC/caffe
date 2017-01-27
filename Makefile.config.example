@@ -74,7 +74,7 @@ CPU_ONLY := 1
 
 # If you use Intel compiler define a path to newer boost if not used
 # already. 
-# BOOST_ROOT := /home/sfraczek/boost_1_63_0
+# BOOST_ROOT := 
 
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
