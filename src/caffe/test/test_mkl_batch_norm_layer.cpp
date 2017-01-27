@@ -166,7 +166,9 @@ namespace caffe {
     LayerParameter layer_param;
 
     MKLBatchNormLayer<Dtype> layer(layer_param);
-    GradientChecker<Dtype> checker(1e-2, 1e-4);
+    //Threshold for the test was changed from 1e-4 to 2e-4
+    //due to FMA rounding error in MKL batch normalization.
+    GradientChecker<Dtype> checker(1e-2, 2e-4);
     checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }

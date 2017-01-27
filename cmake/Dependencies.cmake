@@ -91,9 +91,6 @@ endif()
 
 # ---[ MLSL
 if(USE_MLSL)
-  if(USE_MPI)
-    message(FATAL_ERROR "You cannot have both MLSL and MPI configured at the same time!")
-  endif()
   set(MLSL_ROOT "$ENV{MLSL_ROOT}")
   if(NOT MLSL_ROOT)
     message(FATAL_ERROR "Unable to find MLSL package installation directory!")
@@ -107,34 +104,6 @@ if(USE_MLSL)
   include_directories(SYSTEM "${MLSL_ROOT}/intel64/include")
   link_directories(SYSTEM "${MLSL_ROOT}/intel64/lib")
   list(APPEND Caffe_LINKER_LIBS mlsl mpi)
-endif()
-
-# ---[ MPI
-if(USE_MPI)
-  if(USE_MLSL)
-    message(FATAL_ERROR "You cannot have both MPI and MLSL configured at the same time!")
-  endif()
-  find_package(MPI REQUIRED)
-  if (MPI_CXX_FOUND)
-    add_definitions("-DUSE_MPI=1")
-  endif()
-  if(MPI_CXX_COMPILER)
-    if (NOT ${MPI_CXX_COMPILER} STREQUAL ${CMAKE_CXX_COMPILER})
-      message(FATAL_ERROR "Currently cxx compiler is: \"${CMAKE_CXX_COMPILER}\""
-                          " The mpi compiler should be use (${MPI_CXX_COMPILER})"
-                          " Please set mpi compiler manually"
-                          " (CXX=${MPI_CXX_COMPILER})")
-    endif()
-  endif()
-  if(MPI_CXX_INCLUDE_PATH)
-    include_directories(${MPI_CXX_INCLUDE_PATH})
-  endif()
-  if(MPI_CXX_COMPILE_FLAGS)
-    add_definitions("${MPI_CXX_COMPILE_FLAGS}")
-  endif()
-  if(MPI_CXX_LINK_FLAGS)
-    list(APPEND Caffe_LINKER_LIBS ${MPI_CXX_LINK_FLAGS})
-  endif()
 endif()
 
 # ---[ BLAS

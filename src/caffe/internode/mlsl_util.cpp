@@ -15,6 +15,16 @@ MLSL::Distribution *model_parallelism;
 //MLSL::Distribution *hybrid_parallelism;
 bool isDistributionsInited = false;
 
+__attribute__((constructor))
+static void init_caffe_library(int argc, char **argv) {
+  mlsl_init(argc, argv);
+}
+
+__attribute__((destructor))
+static void deinit_caffe_library(void) {
+  mlsl_finalize();
+}
+
 void mlsl_init(int argc, char** argv) {
   LOG(INFO) << "MLSL init";
   MLSL::Init(&argc, &argv);

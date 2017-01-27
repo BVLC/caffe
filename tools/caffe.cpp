@@ -51,13 +51,10 @@ namespace bp = boost::python;
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/internode/mpiutil.hpp"
-#include "caffe/multinode/multinode.hpp"
 #include "caffe/training_utils.hpp"
 #include "caffe/util/signal_handler.h"
 
 #ifdef USE_MLSL
-#include "caffe/internode/mlsl_util.hpp"
 #include "caffe/multinode/MlslSync.hpp"
 #endif /* USE_MLSL */
 
@@ -100,13 +97,6 @@ DEFINE_string(sigint_effect, "stop",
 DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
-DEFINE_string(param_server, "",
-    "Optional; triggers multinode mode, usage: --param_server=mpi");
-DEFINE_string(listen_address, "",
-    "Optional; multinode mode, bind address for data server");
-DEFINE_int32(comm_threads, 1,
-    "Optional; multinode mode,"
-    " The number of threads used by communication code.");
 DEFINE_bool(forward_only, false,
     "Optional; Execute only forward pass");
 DEFINE_string(engine, "",
@@ -311,34 +301,16 @@ int train() {
     CopyLayers(solver.get(), FLAGS_weights);
   }
 
-  if (FLAGS_param_server != "") {
+#ifdef USE_MLSL
+  if (MLSL::GetNumNodes() > 1) {
     LOG(INFO) << "Configuring multinode setup";
-
-#ifdef USE_MLSL
-      if (FLAGS_param_server != "mlsl") {
-#else
-      if (FLAGS_param_server != "mpi") {
+    caffe::MlslSync<float> sync(solver);
+    LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
+    sync.run();
+  } else
 #endif /* USE_MLSL */
 
-        LOG(ERROR) << "currently unsupported";
-        return 1;
-      }
-
-#ifdef USE_MLSL
-      if (FLAGS_param_server == "mlsl") {
-        caffe::MlslSync<float> sync(solver);
-        LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
-        sync.run();
-      }
-#else /* !USE_MLSL */
-      if (FLAGS_param_server == "mpi") {
-        caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
-        LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
-        sync.run();
-      }
-#endif /* USE_MLSL */
-
-  } else if (gpus.size() > 1) {
+  if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     sync.Run(gpus);
   } else {
@@ -349,38 +321,6 @@ int train() {
   return 0;
 }
 RegisterBrewFunction(train);
-
-int data_server() {
-  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
-  CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
-      << "Give a snapshot to resume training or weights to finetune "
-      "but not both.";
-
-  caffe::SolverParameter solver_param;
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
-
-  caffe::SignalHandler signal_handler(
-        GetRequestedAction(FLAGS_sigint_effect),
-        GetRequestedAction(FLAGS_sighup_effect));
-
-  shared_ptr<caffe::Solver<float> >
-      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
-
-  solver->SetActionFunction(signal_handler.GetActionFunction());
-
-  if (FLAGS_snapshot.size()) {
-    LOG(INFO) << "Resuming from " << FLAGS_snapshot;
-    solver->Restore(FLAGS_snapshot.c_str());
-  } else if (FLAGS_weights.size()) {
-    CopyLayers(solver.get(), FLAGS_weights);
-  }
-  LOG(INFO) << "Starting Data Server";
-  caffe::DataServer<float> server(
-    solver, FLAGS_listen_address, FLAGS_param_server, FLAGS_comm_threads);
-  server.run();
-  return 0;
-}
-RegisterBrewFunction(data_server);
 
 // Test: score a model.
 int test() {
@@ -805,12 +745,6 @@ int compare() {
 RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
-#ifdef USE_MLSL
-  caffe::internode::mlsl_init(argc, argv);
-#else /* !USE_MLSL */
-  caffe::internode::mpi_init(argc, argv);
-#endif /* USE_MLSL */
-
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
@@ -821,7 +755,6 @@ int main(int argc, char** argv) {
       "commands:\n"
       "  train           train or finetune a model\n"
       "  test            score a model\n"
-      "  data_server     run data server - remote data source\n"
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time\n"
       "  collect         collects layer data on specified device\n"
@@ -833,36 +766,15 @@ int main(int argc, char** argv) {
     try {
 #endif
       int ret = GetBrewFunction(caffe::string(argv[1]))();
-
-#ifdef USE_MLSL
-      caffe::internode::mlsl_finalize();
-#else /* !USE_MLSL */
-      caffe::internode::mpi_finalize();
-#endif /* USE_MLSL */
-
       return ret;
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();
-
-#ifdef USE_MLSL
-      caffe::internode::mlsl_finalize();
-#else /* USE_MLSL */
-      caffe::internode::mpi_finalize();
-#endif /* USE_MLSL */
-
       return 1;
     }
 #endif
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
-
-#ifdef USE_MLSL
-      caffe::internode::mlsl_finalize();
-#else /* !USE_MLSL */
-      caffe::internode::mpi_finalize();
-#endif /* USE_MLSL */
-
   return 0;
 }
