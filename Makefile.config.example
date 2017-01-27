@@ -72,6 +72,10 @@ CPU_ONLY := 1
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
 
+# If you use Intel compiler define a path to newer boost if not used
+# already. 
+# BOOST_ROOT := /home/sfraczek/boost_1_63_0
+
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1

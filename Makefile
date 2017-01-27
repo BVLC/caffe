@@ -492,6 +492,14 @@ ifneq ("$(wildcard $(MKLDNN_INCLUDE)/mkldnn.hpp)","")
 	MKLDNN_LDFLAGS+=-L$(MKLDNNROOT)/lib -Wl,-rpath,$(MKLDNNROOT)/lib
 endif
 
+# BOOST configuration
+# detect support for custom boost version
+BOOST_LDFLAGS=
+BOOST_INCLUDE ?= $(BOOST_ROOT)
+ifneq ("$(wildcard $(BOOST_INCLUDE)/boost/filesystem.hpp)","")
+	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/stage/lib -Wl,-rpath,$(BOOST_ROOT)/libs
+endif
+
 # BLAS configuration (default = MKL)
 MKL_LDFLAGS=
 MKL_EXTERNAL := 0
@@ -550,6 +558,9 @@ LIBRARY_DIRS += $(MKLDNN_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
+INCLUDE_DIRS += $(BOOST_INCLUDE)
+
+
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
@@ -569,6 +580,8 @@ else
 endif
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) $(PKG_CONFIG) \
 		$(foreach library,$(LIBRARIES),-l$(library)) -Wl,--as-needed
+LDFLAGS += $(BOOST_LDFLAGS)
+
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 # 'superclean' target recursively* deletes all files ending with an extension
