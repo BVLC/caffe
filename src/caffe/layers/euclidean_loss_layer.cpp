@@ -33,8 +33,9 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* label_data = bottom[1]->cpu_data();
     Dtype* diff__data = diff_.mutable_cpu_data();
     for (int i = 0; i < count; ++i) {
-      const int label_value = static_cast<int>(label_data[i]);
-      if (label_value == ignore_label_) {
+      float ignore_label_low_range = ((float)this->layer_param_.loss_param().ignore_label()) - 0.0000001;
+      float ignore_label_high_range = ((float)this->layer_param_.loss_param().ignore_label()) + 0.0000001;
+      if (label_data[i] > ignore_label_low_range && label_data[i] < ignore_label_high_range) {
         diff__data[i] = 0;
       }
     }

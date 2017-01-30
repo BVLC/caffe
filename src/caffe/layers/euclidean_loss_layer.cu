@@ -10,8 +10,10 @@ __global__ void EuclideanLossForwardGPU(const int n,
           const Dtype* label_data_, Dtype* diff__data_,
           const int ignore_label_) {
   CUDA_KERNEL_LOOP(index, n) {
-    const int label_value = static_cast<int>(label_data_[index]);
-    if (label_value == ignore_label_) {
+    //const int label_value = static_cast<int>(label_data_[index]);
+    float ignore_label_low_range = ((float)ignore_label_) - 0.0000001;
+    float ignore_label_high_range = ((float)ignore_label_) + 0.0000001;
+    if (label_data_[index] > ignore_label_low_range && label_data_[index] < ignore_label_high_range) {
       diff__data_[index] = 0;
     }
   }
