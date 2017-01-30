@@ -171,15 +171,36 @@ bool ReadImageToDatum(const string& filename, const int label,
       LOG(ERROR) << "Could not open or find file " << filename;
       return false;
     }
-    if ( (cv_img.channels() == 3) == is_color && !height && !width &&
-                                                matchExt(filename, encoding) )
+    bool is_img_grayscale = cv_img.channels() == 1;
+    bool is_img_bgr = cv_img.channels() == 3;
+    bool is_img_bgra = cv_img.channels() == 4;
+
+    if ( !(is_img_grayscale || is_img_bgr || is_img_bgra) ) {
+      LOG(ERROR) << "Images with " << cv_img.channels() <<
+                    " channels unsupported: " << filename;
+      return false;
+    }
+
+    bool need_convert = is_img_bgra || (is_img_grayscale == is_color);
+    bool need_resize = height > 0 && width > 0;
+
+    if (!need_convert && !need_resize && matchExt(filename, encoding))
       return ReadFileToDatum(filename, label, datum);
 
-    if (height > 0 && width > 0)
+    if (need_resize)
       cv::resize(cv_img, cv_img, cv::Size(width, height));
-    if ((cv_img.channels() == 3) != is_color)
-      cv::cvtColor(cv_img, cv_img, is_color ?
-                                       cv::COLOR_GRAY2BGR : cv::COLOR_BGR2GRAY);
+
+    if (need_convert) {
+      int conv_code =
+          (is_img_grayscale && is_color) ? cv::COLOR_GRAY2BGR
+        : (is_img_bgr && !is_color)      ? cv::COLOR_BGR2GRAY
+        : (is_img_bgra && is_color)      ? cv::COLOR_BGRA2BGR
+        : (is_img_bgra && !is_color)     ? cv::COLOR_BGRA2GRAY
+        : -1;
+
+      cv::cvtColor(cv_img, cv_img, conv_code);
+    }
+
     std::vector<uchar> buf;
     cv::imencode("."+encoding, cv_img, buf);
     datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
