@@ -1617,7 +1617,7 @@ layer {
       top_k: 400
     }
     save_output_param {
-      output_directory: "/home/sfraczek/disk/sfraczek/ssd/data/mscoco/results/SSD_300x300"
+      output_directory: "data/ssd_out/mscoco/SSD_300x300"
       output_name_prefix: "detections_minival_ssd300_results"
       output_format: "COCO"
       label_map_file: "data/coco/labelmap_coco.prototxt"
