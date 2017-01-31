@@ -167,7 +167,7 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestSetupAcrossChannels) {
   EXPECT_EQ(this->blob_top_->height(), IH);
   EXPECT_EQ(this->blob_top_->width(), IW);
 }
-#if 0
+
 TYPED_TEST(MKLDNNLRNLayerTest, TestForwardAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -182,7 +182,7 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestForwardAcrossChannels) {
                 this->epsilon_);
   }
 }
-#endif
+
 TYPED_TEST(MKLDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -253,6 +253,7 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestSetupWithinChannel) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
+#endif
 
 TYPED_TEST(MKLDNNLRNLayerTest, TestForwardWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
@@ -271,7 +272,7 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestForwardWithinChannel) {
                 this->epsilon_);
   }
 }
-
+#if 0
 TYPED_TEST(MKLDNNLRNLayerTest, TestGradientWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
