@@ -576,10 +576,8 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
 }
 
 void RandomBrightness(const cv::Mat& in_img, cv::Mat* out_img,
-    const float brightness_prob, const float brightness_delta) {
-  float prob;
-  caffe_rng_uniform(1, 0.f, 1.f, &prob);
-  if (prob < brightness_prob) {
+    const bool brightness, const float brightness_delta) {
+  if (brightness) {
     CHECK_GE(brightness_delta, 0) << "brightness_delta must be non-negative.";
     float delta;
     caffe_rng_uniform(1, -brightness_delta, brightness_delta, &delta);
@@ -599,10 +597,8 @@ void AdjustBrightness(const cv::Mat& in_img, const float delta,
 }
 
 void RandomContrast(const cv::Mat& in_img, cv::Mat* out_img,
-    const float contrast_prob, const float lower, const float upper) {
-  float prob;
-  caffe_rng_uniform(1, 0.f, 1.f, &prob);
-  if (prob < contrast_prob) {
+    const bool contrast, const float lower, const float upper) {
+  if (contrast) {
     CHECK_GE(upper, lower) << "contrast upper must be >= lower.";
     CHECK_GE(lower, 0) << "contrast lower must be non-negative.";
     float delta;
@@ -623,10 +619,8 @@ void AdjustContrast(const cv::Mat& in_img, const float delta,
 }
 
 void RandomSaturation(const cv::Mat& in_img, cv::Mat* out_img,
-    const float saturation_prob, const float lower, const float upper) {
-  float prob;
-  caffe_rng_uniform(1, 0.f, 1.f, &prob);
-  if (prob < saturation_prob) {
+    const bool saturation, const float lower, const float upper) {
+  if (saturation) {
     CHECK_GE(upper, lower) << "saturation upper must be >= lower.";
     CHECK_GE(lower, 0) << "saturation lower must be non-negative.";
     float delta;
@@ -659,10 +653,8 @@ void AdjustSaturation(const cv::Mat& in_img, const float delta,
 }
 
 void RandomHue(const cv::Mat& in_img, cv::Mat* out_img,
-               const float hue_prob, const float hue_delta) {
-  float prob;
-  caffe_rng_uniform(1, 0.f, 1.f, &prob);
-  if (prob < hue_prob) {
+               const bool hue, const float hue_delta) {
+  if (hue) {
     CHECK_GE(hue_delta, 0) << "hue_delta must be non-negative.";
     float delta;
     caffe_rng_uniform(1, -hue_delta, hue_delta, &delta);
@@ -693,10 +685,8 @@ void AdjustHue(const cv::Mat& in_img, const float delta, cv::Mat* out_img) {
 }
 
 void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
-                         const float random_order_prob) {
-  float prob;
-  caffe_rng_uniform(1, 0.f, 1.f, &prob);
-  if (prob < random_order_prob) {
+                         const float random_order) {
+  if (random_order) {
     // Split the image to 3 channels.
     vector<cv::Mat> channels;
     cv::split(*out_img, channels);
@@ -715,42 +705,59 @@ cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param) {
   float prob;
   caffe_rng_uniform(1, 0.f, 1.f, &prob);
 
+  bool brightness = param.brightness();
+  bool contrast = param.contrast();
+  bool saturation = param.saturation();
+  bool hue = param.hue();
+  bool random_order = param.random_order();
+  if (param.all_effects())
+    brightness = contrast = saturation = hue = random_order = true;
+
+  vector<float> binary_probs;
+  if (param.prob() > 0.0)
+    binary_probs = {1.f-param.prob(),param.prob()};
+  brightness = param.prob() ? roll_weighted_die(binary_probs) == 1 : brightness;
+  contrast = param.prob() ? roll_weighted_die(binary_probs) == 1 : contrast;
+  saturation = param.prob() ? roll_weighted_die(binary_probs) == 1 : saturation;
+  hue = param.prob() ? roll_weighted_die(binary_probs) == 1 : hue;
+  random_order = param.prob() ? roll_weighted_die(binary_probs) == 1 : random_order;
+  
   if (prob > 0.5) {
-    // Do random brightness distortion.
-    RandomBrightness(out_img, &out_img, param.brightness_prob(),
+    // Do random brightness distortion
+    RandomBrightness(out_img, &out_img, brightness,
                      param.brightness_delta());
 
     // Do random contrast distortion.
-    RandomContrast(out_img, &out_img, param.contrast_prob(),
+    RandomContrast(out_img, &out_img, contrast,
                    param.contrast_lower(), param.contrast_upper());
 
     // Do random saturation distortion.
-    RandomSaturation(out_img, &out_img, param.saturation_prob(),
+    RandomSaturation(out_img, &out_img, saturation,
                      param.saturation_lower(), param.saturation_upper());
 
     // Do random hue distortion.
-    RandomHue(out_img, &out_img, param.hue_prob(), param.hue_delta());
+    RandomHue(out_img, &out_img, hue, param.hue_delta());
 
     // Do random reordering of the channels.
-    RandomOrderChannels(out_img, &out_img, param.random_order_prob());
+    RandomOrderChannels(out_img, &out_img, random_order);
   } else {
     // Do random brightness distortion.
-    RandomBrightness(out_img, &out_img, param.brightness_prob(),
+    RandomBrightness(out_img, &out_img, brightness,
                      param.brightness_delta());
 
     // Do random saturation distortion.
-    RandomSaturation(out_img, &out_img, param.saturation_prob(),
+    RandomSaturation(out_img, &out_img, saturation,
                      param.saturation_lower(), param.saturation_upper());
 
     // Do random hue distortion.
-    RandomHue(out_img, &out_img, param.hue_prob(), param.hue_delta());
+    RandomHue(out_img, &out_img, hue, param.hue_delta());
 
     // Do random contrast distortion.
-    RandomContrast(out_img, &out_img, param.contrast_prob(),
+    RandomContrast(out_img, &out_img, contrast,
                    param.contrast_lower(), param.contrast_upper());
 
     // Do random reordering of the channels.
-    RandomOrderChannels(out_img, &out_img, param.random_order_prob());
+    RandomOrderChannels(out_img, &out_img, random_order);
   }
 
   return out_img;
