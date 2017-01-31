@@ -223,13 +223,13 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                             static_cast<void*>(max_idx_.mutable_cpu_data());
   }
 
-  const int num_batches = bottom[0]->num();
+  const int batch_size = bottom[0]->num();
   const int num_channels = bottom[0]->channels();
 
 #ifdef _OPENMP
   #pragma omp parallel for collapse(2)
 #endif
-  for (int image = 0; image < num_batches; ++image)
+  for (int image = 0; image < batch_size; ++image)
     for (int channel = 0; channel < num_channels; ++channel)
       generator_func(bottom_data,
                      top_data,
@@ -267,13 +267,13 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                             static_cast<void*>(max_idx_.mutable_cpu_data());
   }
 
-  const int num_batches = bottom[0]->num();
+  const int batch_size = bottom[0]->num();
   const int num_channels = bottom[0]->channels();
 
 #ifdef _OPENMP
   #pragma omp parallel for collapse(2)
 #endif
-  for (int image = 0; image < num_batches; ++image)
+  for (int image = 0; image < batch_size; ++image)
     for (int channel = 0; channel < num_channels; ++channel)
       generator_func(top_diff,
                      bottom_diff,
