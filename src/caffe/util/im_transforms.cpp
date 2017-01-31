@@ -685,7 +685,7 @@ void AdjustHue(const cv::Mat& in_img, const float delta, cv::Mat* out_img) {
 }
 
 void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
-                         const float random_order) {
+                         const bool random_order) {
   if (random_order) {
     // Split the image to 3 channels.
     vector<cv::Mat> channels;
