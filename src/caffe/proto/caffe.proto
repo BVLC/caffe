@@ -380,10 +380,8 @@ message SolverParameter {
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
 
-  optional MultinodeParameter multinode_param = 45;
   optional bool disabled_update = 46 [default = false];
   optional string engine = 47 [default = ""];
-
 }
 
 // A message that stores the solver snapshots
@@ -560,7 +558,6 @@ message LayerParameter {
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
 
-  optional RemoteDataParameter remote_data_param = 148;
   optional string engine = 149 [default = ""];
 }
 
@@ -1992,74 +1989,4 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
-}
-message ModelReq {
-  optional string name = 1;
-}
-
-message DataMsg {
-  repeated BlobShape shape = 6;
-  repeated bytes data = 7;
-}
-
-message DataReq {
-  optional string layer_name = 1;
-  optional int32 iters = 2;
-}
-
-message MultinodeParameter {
-  optional CompressionParam outgoing_compression = 2;
-  optional uint32 update_per_iters = 4 [default = 1];
-  optional uint32 max_packet_size = 5 [default = 65000];
-  optional uint32 wait_for_clients = 6 [default = 0];
-}
-//******************************************************
-
-//multinode related messages
-//******************************************************
-message ThresholdCompressionConfig {
-  optional float threshold = 1;
-  optional int32 size = 2 [default = 2];
-  optional float multiplier = 3 [default = 1.0];
-}
-
-enum CompressionAlgo {
-  COMPRESSION_NONE = 0;
-  COMPRESSION_AVERAGING = 1;
-}
-
-message CompressionParam {
-  optional CompressionAlgo algo = 1 [default = COMPRESSION_NONE];
-  optional ThresholdCompressionConfig threshold_param = 3;
-};
-
-message BlobPartInfo {
-  optional uint32 version = 1;
-  optional int32 layer_id = 2;
-  optional int32 blob_id = 3;
-  optional int32 part = 4;
-}
-
-message BlobUpdate {
-  optional BlobPartInfo info = 1;
-  optional uint32 iters = 5;
-  repeated BlobPartInfo ack = 2;
-  optional CompressionParam compression_param = 7;
-  optional bytes data = 8;
-}
-
-message RemoteDataParameter {
-  optional string address = 1;
-
-  //cache_size equal 0 means it will cache everything,
-  //and will forward data from cache only
-  optional uint32 cache_size = 2;
-
-  enum CachePolicy {
-    PULL_CONTINOUSLY = 0; //will continously pull from data server
-    USE_CACHE_WHEN_FULL = 1; //when cache is full, than it will be repeated
-  }
-  optional CachePolicy policy = 3 [default = PULL_CONTINOUSLY];
-
-  repeated BlobShape shape = 5;
 }
