@@ -21,7 +21,6 @@
 #include <utility>  // pair
 #include <vector>
 
-#include "android_patch.h"    // std::string
 #include "caffe/definitions.hpp"
 #include "caffe/greentea/greentea.hpp"
 
