@@ -20,6 +20,13 @@ Framework development discussions and thorough bug reports are collected on [Iss
 
 Happy brewing!
 
+
+# SSD: Single Shot MultiBox Detector
+This repository contains merged code issued as pull request to BVLC caffe written by:
+[Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](https://www.linkedin.com/in/dragomiranguelov), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/), [Cheng-Yang Fu](http://www.cs.unc.edu/~cyfu/), [Alexander C. Berg](http://acberg.com).
+
+Original branch can be found at https://github.com/weiliu89/caffe/tree/ssd.
+
 # Intel® Distribution of Caffe*
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
 

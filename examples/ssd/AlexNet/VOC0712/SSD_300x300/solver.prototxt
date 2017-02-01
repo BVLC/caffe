@@ -1,0 +1,27 @@
+train_net: "examples/ssd/AlexNet/VOC0712/SSD_300x300/train.prototxt"
+test_net: "examples/ssd/AlexNet/VOC0712/SSD_300x300/test.prototxt"
+test_iter: 619
+test_interval: 10000
+base_lr: 0.00025
+display: 10
+max_iter: 120000
+lr_policy: "multistep"
+gamma: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 80000
+snapshot_prefix: "examples/ssd/AlexNet/VOC0712/SSD_300x300/AlexNet_VOC0712_SSD_300x300"
+solver_mode: CPU
+device_id: 0
+debug_info: false
+snapshot_after_train: true
+test_initialization: false
+average_loss: 10
+stepvalue: 80000
+stepvalue: 100000
+stepvalue: 120000
+iter_size: 1
+type: "SGD"
+eval_type: "detection"
+ap_version: "11point"
+

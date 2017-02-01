@@ -72,6 +72,10 @@ CPU_ONLY := 1
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
 
+# If you use Intel compiler define a path to newer boost if not used
+# already. 
+# BOOST_ROOT := 
+
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1
@@ -85,11 +89,11 @@ CUDA_DIR := /usr/local/cuda
 # CUDA architecture setting: going with all of them.
 # For CUDA < 6.0, comment the *_50 lines for compatibility.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
-		-gencode arch=compute_20,code=sm_21 \
-		-gencode arch=compute_30,code=sm_30 \
-		-gencode arch=compute_35,code=sm_35 \
-		-gencode arch=compute_50,code=sm_50 \
-		-gencode arch=compute_50,code=compute_50
+	     -gencode arch=compute_20,code=sm_21 \
+	     -gencode arch=compute_30,code=sm_30 \
+	     -gencode arch=compute_35,code=sm_35 \
+	     -gencode arch=compute_50,code=sm_50 \
+	     -gencode arch=compute_50,code=compute_50
 
 # BLAS choice:
 # atlas for ATLAS (default)

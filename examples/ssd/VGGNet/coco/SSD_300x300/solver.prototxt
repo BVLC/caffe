@@ -1,0 +1,27 @@
+train_net: "examples/ssd/VGGNet/coco/SSD_300x300/train.prototxt"
+test_net: "examples/ssd/VGGNet/coco/SSD_300x300/test.prototxt"
+test_iter: 625
+test_interval: 10000
+base_lr: 0.001
+display: 10
+max_iter: 400000
+lr_policy: "multistep"
+gamma: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 40000
+snapshot_prefix: "examples/ssd/VGGNet/coco/SSD_300x300/VGG_coco_SSD_300x300"
+solver_mode: CPU
+device_id: 0
+debug_info: false
+snapshot_after_train: true
+test_initialization: false
+average_loss: 10
+stepvalue: 280000
+stepvalue: 360000
+stepvalue: 400000
+iter_size: 1
+type: "SGD"
+eval_type: "detection"
+ap_version: "11point"
+
