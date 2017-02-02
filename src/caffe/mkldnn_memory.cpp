@@ -55,9 +55,6 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
     set_prv_memory_pd(prv_memory_pd);
     set_mkldnn_layer(mkldnn_layer);
     this->_blob = blob;
-    // !! TODO: check code below (there is error on second and other iterations without it) .
-    if (_blob->data()->cpu_ptr())
-        _blob->set_prv_data_descriptor(shared_ptr<caffe::PrvMemDescr>());
 }
 
 template <typename Dtype>
@@ -151,7 +148,6 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_p
     if(this->_reorder_prv2usr.aprimitive == NULL) {
         CHECK(this->aprimitive());
         this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->_reorder_prv2usr_pd, *this->aprimitive(), *this->_usr_memory));
-//        this->_reorder_prv2usr.aprimitive.reset(new reorder(*this->aprimitive(), *this->_usr_memory));
     }
 }
 
@@ -159,7 +155,6 @@ template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 {
     CHECK(cpu_ptr);
-//    CHECK(this->mkldnn_layer());
     if(this->_reorder_prv2usr_pd == NULL)
         return;
     create_reorder_from_prv(cpu_ptr);
@@ -186,7 +181,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<prim
         return;
     create_reorder_from_extprv(aprimitive);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
-    this->_reorder_extprv2prv.submit();;
+    this->_reorder_extprv2prv.submit();
 }
 
 
@@ -240,10 +235,17 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         else
             this->create_reorder_to_prv(const_cast<Dtype*>(is_diff ? blob->cpu_diff() : blob->cpu_data()));
         if (set_prv_ptr) {
-            if (is_diff)
-                blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
-            else
-                blob->set_prv_data_descriptor(this->get_shared_ptr(), true);
+            if (is_diff) {
+                blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
+                // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
+                // TODO: need to optimize
+                blob->set_prv_diff_descriptor(NULL);
+            } else {
+                blob->set_prv_data_descriptor(this->get_shared_ptr(), false);
+                // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
+                // TODO: need to optimize
+                blob->set_prv_data_descriptor(NULL);
+            }
         }
         return this->reorder_usr2prv();
     } else {
@@ -259,31 +261,65 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         } else if (blob_prv_mkldnn_mem_descr.get() != this) {
             VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;
         }
-// TODO:    CHECK(blob_prv_mkldnn_mem_descr->mkldnn_primitive());
         return blob_prv_mkldnn_mem_descr->aprimitive();
     }
     NOT_IMPLEMENTED;
     return shared_ptr<mkldnn::primitive>();
 }
 
+// TODO: explain what is happenning here!!!
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_blob_prv_data(Blob<Dtype>* blob, bool set_prv_ptr)
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
 {
-    get_blob_prv_primitive(blob, set_prv_ptr);
+    // TODO: need to optimize code
+   
+    if (!this->conversion_needed()) {
+        return;
+    }
+
+    // Conversion is needed
+    const Dtype* prv_ptr = is_diff ?  this->_blob->prv_diff() : this->_blob->prv_data();
+    if (prv_ptr == NULL) {
+        this->convert_to_prv(const_cast<Dtype*>(is_diff ? this->_blob->cpu_diff() : this->_blob->cpu_data()));
+        // if blob has not prv descriptor then set it to avoid conversions on next iterations
+        if (is_diff) {
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
+            // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
+            // TODO: need to optimize
+            this->_blob->set_prv_diff_descriptor(NULL);
+        } else {
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), false);
+            // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
+            // TODO: need to optimize
+            this->_blob->set_prv_data_descriptor(NULL);
+        }
+    } else {
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(this->_blob);
+
+        if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
+            // prv in blob and in this descrptor may have different layouts
+            this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
+        } else {
+            if (is_diff) {
+                this->_blob->mutable_prv_diff();
+            } else {
+                this->_blob->mutable_prv_data();
+            }
+        }
+    }
 }
 
 template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read(bool set_prv_ptr)
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_write(bool inplace)
 {
-    // TODO: need to iptimize code
-    get_blob_prv_primitive(this->_blob, set_prv_ptr);
-}
-
-template <typename Dtype, bool is_diff>
-void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_write()
-{
-    // TODO: need to iptimize code
-    this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+    // TODO: need to optimize code
+    if(!inplace) {
+        if(is_diff) {
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+        } else {
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+        }
+    }
 }
 
 template <typename Dtype, bool is_diff>
@@ -299,11 +335,14 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(Blob<
 }
 
 template <typename Dtype, bool is_diff>
-shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(Blob<Dtype> * blob)
+shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(Blob<Dtype> * blob, bool inplace)
 {
     shared_ptr<memory> omem;
     if (this->conversion_needed()) {
-        if(blob->get_prv_data_descriptor() != NULL) {
+        shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?
+            (blob->get_prv_diff_descriptor()) : (blob->get_prv_data_descriptor());
+
+        if(blob_prv_mem_descriptor != NULL) {
             shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > current_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
 
             omem = current_descr->get_prv_memory();
@@ -325,11 +364,17 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(bool 
 }
 
 template <typename Dtype, bool is_diff>
-shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory()
+shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(bool inplace)
 {
     // TODO: need to iptimize code
     shared_ptr<memory> omem = create_output_memory(this->_blob);
-    this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+    if(!inplace) {
+        if(is_diff) {
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+        } else {
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
+        }
+    }
     return omem;
 }
 

@@ -57,9 +57,16 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), InnerProductLayer<Dtype>(param)
-            , fwd_bottom_data(), fwd_top_data(), fwd_weights_data(), fwd_bias_data()
-            , ipFwd_pd(), output_memory()
-            , input_primitive(), weights_primitive(), bias_primitive()
+            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
+            , bwdd_weights_data(NULL), bwdw_bottom_data(NULL)
+            , bwdd_bottom_diff(NULL), bwdd_top_diff(NULL)
+            , bwdw_top_diff(NULL), bwdw_weights_diff(NULL), bwdw_bias_diff(NULL)
+            , ipFwd_pd(NULL), ipBwdData_pd(NULL), ipBwdWeights_pd(NULL)
+            , fwd_top_data_memory(NULL), bwdd_bottom_diff_memory(NULL)
+            , bwdw_weights_diff_memory(NULL), bwdw_bias_diff_memory(NULL)
+            , fwd_bottom_data_primitive(NULL), fwd_weights_data_primitive(NULL), fwd_bias_data_primitive(NULL)
+            , bwdd_top_diff_primitive(NULL), bwdd_weights_data_primitive(NULL)
+            , bwdw_top_diff_primitive(NULL), bwdw_bottom_data_primitive(NULL)
             , w_(0), h_(0)
 {
 }
@@ -89,7 +96,7 @@ void MKLDNNInnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 }
 
 template <typename Dtype>
-void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>& bottom
+void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype>*>& bottom
                                                     , const vector<Blob<Dtype>*>& top)
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
@@ -106,24 +113,25 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt = memory::format::any;
 
-    memory::dims input_tz = (has_spatial) ? memory::dims{n, ic, h, w} : memory::dims{n, ic};
-    memory::dims output_tz = {n, oc};
+    memory::dims bottom_tz = (has_spatial) ? memory::dims{n, ic, h, w} : memory::dims{n, ic};
+    memory::dims top_tz = {n, oc};
     memory::dims weights_tz = (has_spatial) ? memory::dims {oc, ic, h, w} : memory::dims{oc, ic};
     memory::dims bias_tz = {oc};
 
-    memory::desc init_input_md({input_tz}, mpcsn, mfmt);
-    memory::desc init_output_md({ output_tz}, mpcsn, mfmt);
+    memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt);
+    memory::desc init_top_md({top_tz}, mpcsn, mfmt);
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt);
     memory::desc init_bias_md({bias_tz}, mpcsn, mfmt);
 
     // Initialize inner_product primitive descriptor
     shared_ptr<inner_product_forward::desc> ipFwd_desc;
+ 
     if (this->bias_term_) {
-        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_input_md, init_weights_md
-                                                ,init_bias_md, init_output_md));
-    } else {
-        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_input_md, init_weights_md
-                                                , init_output_md));
+        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_bottom_md, init_weights_md
+                                                ,init_bias_md, init_top_md));
+     } else {
+        ipFwd_desc.reset(new inner_product_forward::desc(propagation, init_bottom_md, init_weights_md
+                                                , init_top_md));
     }
 
     // ---- Determining engine to use -----------------------
@@ -148,40 +156,44 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     // Create priv memory primitive descriptors stored as class members
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
 
-    shared_ptr<MemPD> prv_input_memory_pd(new MemPD(ipFwd_pd->src_primitive_desc()));
-    shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
-    shared_ptr<MemPD> prv_output_memory_pd(new MemPD(ipFwd_pd->dst_primitive_desc()));
-    shared_ptr<MemPD> prv_weights_memory_pd(new MemPD(ipFwd_pd->weights_primitive_desc()));
+    shared_ptr<MemPD> prv_fwd_bottom_data_memory_pd(new MemPD(ipFwd_pd->src_primitive_desc()));
+    shared_ptr<MemPD> prv_fwd_top_data_memory_pd(new MemPD(ipFwd_pd->dst_primitive_desc()));
+    shared_ptr<MemPD> prv_fwd_weights_data_memory_pd(new MemPD(ipFwd_pd->weights_primitive_desc()));
+    shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
 
     // Create usr memory primitive descriptors stored as class members
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
-    shared_ptr<MemPD> usr_input_memory_pd(new MemPD({{input_tz}, mpcsn, input_mfmt}, cpu_engine));
-    shared_ptr<MemPD> usr_bias_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_output_memory_pd(new MemPD({{output_tz}, mpcsn, memory::format::nc}, cpu_engine));
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, input_mfmt}, cpu_engine));
+    shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, memory::format::nc}, cpu_engine));
     memory::format weights_mfmt = has_spatial ? memory::format::oihw : memory::format::oi;
-    shared_ptr<MemPD> usr_weights_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+    shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_input_memory_pd, prv_input_memory_pd, bottom[0], this));
-    input_primitive = fwd_bottom_data->create_input(false);
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
+    fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+    fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_output_memory_pd, prv_output_memory_pd, top[0], this));
-    output_memory = fwd_top_data->create_output_memory();
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
+    fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
+    fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_memory_pd, prv_weights_memory_pd, this->blobs_[0].get(), this));
-    weights_primitive = fwd_weights_data->create_input(false);
+    fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+    fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
+    fwd_weights_data_primitive = fwd_weights_data->create_input(true);
 
     if (this->bias_term_) {
-        fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
-        bias_primitive = fwd_bias_data->create_input(false);
+        fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
+        fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+        fwd_bias_data_primitive = fwd_bias_data->create_input(true);
         ipFwd.reset(new inner_product_forward(*ipFwd_pd
-                            , *input_primitive, *weights_primitive
-                            , *bias_primitive, *output_memory));
+                            , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
+                            , *fwd_bias_data_primitive, *fwd_top_data_memory));
     } else {
         ipFwd.reset(new inner_product_forward(*ipFwd_pd
-                            , *input_primitive, *weights_primitive
-                            , *output_memory));
+                            , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
+                            , *fwd_top_data_memory));
     }
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);
     fwd_top_data->set_mkldnn_primitive(ipFwd);
@@ -189,10 +201,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProduct(const vector<Blob<Dtype>*>
     fwd_bias_data->set_mkldnn_primitive(ipFwd);
 
     // Names are for debugging purposes only.
-    fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-    fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
-    fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
-    fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
 }
 
 template <typename Dtype>
@@ -201,11 +209,11 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
     if( ipFwd_pd == NULL)
-        InitInnerProduct(bottom, top);
+        InitInnerProductFwd(bottom, top);
     // making reorders if needed.
-    fwd_bottom_data->sync_before_read(false);
-    fwd_weights_data->sync_before_read(true);
-    fwd_bias_data->sync_before_read(true);
+    fwd_bottom_data->sync_before_read();
+    fwd_weights_data->sync_before_read();
+    fwd_bias_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
@@ -213,11 +221,168 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
 }
 
 template <typename Dtype>
+void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype>*>& top
+                                                , const vector<bool>& propagate_down
+                                                , const vector<Blob<Dtype>*>& bottom)
+{
+    if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
+
+    int32_t n  = this->M_;
+    int32_t w = this->w_;
+    int32_t h = this->h_;
+    int32_t oc = this->N_;
+    int32_t ic = this->K_/h_/w_;
+    bool has_spatial = h > 1 || w > 1;
+
+    // Initialize memory descriptors (format = any) to create inner_product descriptor
+    memory::data_type mpcsn = memory::data_type::f32;
+    memory::format mfmt = memory::format::any;
+
+    memory::dims bottom_tz = (has_spatial) ? memory::dims{n, ic, h, w} : memory::dims{n, ic};
+    memory::dims top_tz = {n, oc};
+    memory::dims weights_tz = (has_spatial) ? memory::dims {oc, ic, h, w} : memory::dims{oc, ic};
+    memory::dims bias_tz = {oc};
+
+    memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt);
+    memory::desc init_top_md({top_tz}, mpcsn, mfmt);
+    memory::desc init_weights_md({weights_tz}, mpcsn, mfmt);
+    memory::desc init_bias_md({bias_tz}, mpcsn, mfmt);
+
+    // Initialize inner_product primitive descriptor
+    shared_ptr<inner_product_backward_data::desc> ipBwdData_desc;
+    shared_ptr<inner_product_backward_weights::desc> ipBwdWeights_desc;
+ 
+    ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
+                        , init_bias_md, init_top_md));
+    ipBwdData_desc.reset(new inner_product_backward_data::desc(init_bottom_md, init_weights_md, init_top_md));
+
+    // ---- Determining engine to use -----------------------
+    std::string subengines = this->layer_param_.engine();
+    if (subengines == "" || subengines == "MKLDNN")
+      subengines = "MKLDNN:CPU";
+    EngineParser ep(subengines);
+    unsigned subEngineIndex = 0;
+    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+      try {
+        ipBwdData_pd.reset(new inner_product_backward_data::primitive_desc(*ipBwdData_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex), *ipFwd_pd));
+
+        ipBwdWeights_pd.reset(new inner_product_backward_weights::primitive_desc(*ipBwdWeights_desc,
+                ep.getMKLDNNSubEngine(subEngineIndex), *ipFwd_pd));
+       }
+      catch(...) {
+        continue;
+      }
+      break;
+    }
+
+    CHECK(ipBwdData_pd);
+    CHECK(ipBwdWeights_pd);
+
+    // Create priv memory primitive descriptors stored as class members
+    typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
+
+    shared_ptr<MemPD> prv_bwdd_bottom_diff_memory_pd(new MemPD(ipBwdData_pd->diff_src_primitive_desc()));
+    shared_ptr<MemPD> prv_bwdd_top_diff_memory_pd(new MemPD(ipBwdData_pd->diff_dst_primitive_desc()));
+    shared_ptr<MemPD> prv_bwdd_weights_data_memory_pd(new MemPD(ipBwdData_pd->weights_primitive_desc()));
+
+    shared_ptr<MemPD> prv_bwdw_bottom_data_memory_pd(new MemPD(ipBwdWeights_pd->src_primitive_desc()));
+    shared_ptr<MemPD> prv_bwdw_top_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_dst_primitive_desc()));
+    shared_ptr<MemPD> prv_bwdw_weights_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_weights_primitive_desc()));
+    shared_ptr<MemPD> prv_bwdw_bias_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_bias_primitive_desc()));
+
+    // Create usr memory primitive descriptors stored as class members
+    engine cpu_engine = CpuEngine::Instance().get_engine();
+    memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, input_mfmt}, cpu_engine));
+    shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, memory::format::nc}, cpu_engine));
+    memory::format weights_mfmt = has_spatial ? memory::format::oihw : memory::format::oi;
+    shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+
+    // ---  init primitive and prv_memory descriptors ----------------------
+    bwdd_bottom_diff.reset(new MKLDNNDiff<Dtype>(usr_bottom_data_memory_pd, prv_bwdd_bottom_diff_memory_pd, bottom[0], this));
+    bwdd_bottom_diff ->name = "bwdd_bottom_diff   @ " + this->layer_param_.name();
+    bwdd_bottom_diff_memory = bwdd_bottom_diff->create_output_memory();
+    bwdw_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_bwdw_bottom_data_memory_pd, bottom[0], this));
+    bwdw_bottom_data ->name = "bwdw_bottom_data   @ " + this->layer_param_.name();
+    bwdw_bottom_data_primitive = bwdw_bottom_data->create_input(false);
+
+    bwdd_top_diff.reset(new MKLDNNDiff<Dtype>(usr_top_data_memory_pd, prv_bwdd_top_diff_memory_pd, top[0], this));
+    bwdd_top_diff    ->name = "bwdd_top_diff      @ " + this->layer_param_.name();
+    bwdd_top_diff_primitive = bwdd_top_diff->create_input(false);
+    bwdw_top_diff.reset(new MKLDNNDiff<Dtype>(usr_top_data_memory_pd, prv_bwdw_top_diff_memory_pd, top[0], this));
+    bwdw_top_diff    ->name = "bwdw_top_diff      @ " + this->layer_param_.name();
+    bwdw_top_diff_primitive = bwdw_top_diff->create_input(false);
+
+    bwdd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_bwdd_weights_data_memory_pd, this->blobs_[0].get(), this));
+    bwdd_weights_data->name = "bwdd_weights_data  @ " + this->layer_param_.name();
+    bwdd_weights_data_primitive = bwdd_weights_data->create_input(false);
+    bwdw_weights_diff.reset(new MKLDNNDiff<Dtype>(usr_weights_data_memory_pd, prv_bwdw_weights_diff_memory_pd, this->blobs_[0].get(), this));
+    bwdw_weights_diff->name = "bwdw_weights_diff  @ " + this->layer_param_.name();
+    bwdw_weights_diff_memory = bwdw_weights_diff->create_output_memory();
+
+
+    if (this->bias_term_) {
+        bwdw_bias_diff.reset(new MKLDNNDiff<Dtype>(usr_bias_data_memory_pd, prv_bwdw_bias_diff_memory_pd, this->blobs_[1].get(), this));
+        bwdw_bias_diff   ->name = "bwdw_bias_diff     @ " + this->layer_param_.name();
+        bwdw_bias_diff_memory = bwdw_bias_diff->create_output_memory();
+
+        ipBwdWeights.reset(new inner_product_backward_weights(*ipBwdWeights_pd
+                        , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
+                        , *bwdw_weights_diff_memory, *bwdw_bias_diff_memory));
+    } else {
+        ipBwdWeights.reset(new inner_product_backward_weights(*ipBwdWeights_pd
+                        , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
+                        , *bwdw_weights_diff_memory));
+    }
+
+    ipBwdData.reset(new inner_product_backward_data(*ipBwdData_pd
+                    , *bwdd_top_diff_primitive, *bwdd_weights_data_primitive
+                    , *bwdd_bottom_diff_memory));
+
+    bwdd_bottom_diff->set_mkldnn_primitive(ipBwdData);
+    bwdd_top_diff->set_mkldnn_primitive(ipBwdData);
+    bwdd_weights_data->set_mkldnn_primitive(ipBwdData);
+
+    bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);
+    bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);
+    bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);
+    bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
+
+    // Names are for debugging purposes only.
+}
+
+
+
+template <typename Dtype>
 void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                                 , const vector<bool>& propagate_down
                                                 , const vector<Blob<Dtype>*>& bottom)
 {
-    NOT_IMPLEMENTED;
+    VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+    if( ipBwdData_pd == NULL)
+        InitInnerProductBwd(top, propagate_down, bottom);
+    if (propagate_down[0]) {
+        // making reorders if needed.
+        bwdd_top_diff->sync_before_read();
+        bwdd_weights_data->sync_before_read();
+        bwdd_bottom_diff->sync_before_write();
+
+        ipBwdData.submit();
+    }
+    if (this->param_propagate_down(0)) {
+        // making reorders if needed.
+        bwdw_top_diff->sync_before_read();
+        bwdw_bottom_data->sync_before_read();
+        // update top that head at prv
+        bwdw_weights_diff->sync_before_write();
+        if (this->param_propagate_down(1)) {
+            CHECK(bwdw_bias_diff);
+            bwdw_bias_diff->sync_before_write();
+        }
+        ipBwdWeights.submit();
+    }
 }
 
 #ifdef CPU_ONLY
