@@ -63,30 +63,30 @@ if DEFINED APPVEYOR (
 ) else (
     :: Change the settings here to match your setup
     :: Change MSVC_VERSION to 12 to use VS 2013
-    set MSVC_VERSION=14
+    if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
-    set WITH_NINJA=1
+    if NOT DEFINED WITH_NINJA set WITH_NINJA=1
     :: Change to 1 to build caffe without CUDA support
-    set CPU_ONLY=0
+    if NOT DEFINED CPU_ONLY set CPU_ONLY=0
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
-    set CMAKE_CONFIG=Release
+    if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
     :: Change to 1 to build a caffe.dll
-    set CMAKE_BUILD_SHARED_LIBS=0
+    if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
     :: Change to 3 if using python 3.5 (only 2.7 and 3.5 are supported)
-    set PYTHON_VERSION=2
+    if NOT DEFINED PYTHON_VERSION set PYTHON_VERSION=2
     :: Change these options for your needs.
-    set BUILD_PYTHON=1
-    set BUILD_PYTHON_LAYER=1
-    set BUILD_MATLAB=0
+    if NOT DEFINED BUILD_PYTHON set BUILD_PYTHON=1
+    if NOT DEFINED BUILD_PYTHON_LAYER set BUILD_PYTHON_LAYER=1
+    if NOT DEFINED BUILD_MATLAB set BUILD_MATLAB=0
     :: If python is on your path leave this alone
-    set PYTHON_EXE=python
+    if NOT DEFINED PYTHON_EXE set PYTHON_EXE=python
     :: Run the tests
-    set RUN_TESTS=0
+    if NOT DEFINED RUN_TESTS set RUN_TESTS=0
     :: Run lint
-    set RUN_LINT=0
+    if NOT DEFINED RUN_LINT set RUN_LINT=0
     :: Build the install target
-    set RUN_INSTALL=0
-
+    if NOT DEFINED RUN_INSTALL set RUN_INSTALL=0
+    
     :: Enable CUDA backend
     if NOT DEFINED USE_CUDA set USE_CUDA=0
     :: Use cuDNN acceleration with CUDA backend
