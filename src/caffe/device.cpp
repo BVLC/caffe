@@ -50,12 +50,18 @@ void device::Init() {
     workgroup_sizes_[0] = temp[0];
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];
+
+#ifdef DISABLE_DEVICE_HOST_UNIFIED_MEMORY
+    host_unified_ = false;
+    LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: disabled";
+#else
     cl_bool host_unified;
     clGetDeviceInfo(ctx.devices()[0].id(),
                     CL_DEVICE_HOST_UNIFIED_MEMORY,
                     sizeof(cl_bool), &host_unified, NULL);
-
+    LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: " << host_unified;
     host_unified_ = host_unified;
+#endif  // DISABLE_DEVICE_HOST_UNIFIED_MEMORY
     SetProgram();
 
     for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
