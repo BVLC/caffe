@@ -203,7 +203,7 @@ def main():
     args = parse_args()
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
-                   test_dict_list, delimiter=args.delimiter)
+                   test_dict_list, delimiter=args.delimiter, verbose=args.verbose)
 
 
 if __name__ == '__main__':
