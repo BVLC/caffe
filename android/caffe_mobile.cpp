@@ -62,7 +62,7 @@ CaffeMobile::CaffeMobile(const string &model_path, const string &weights_path) {
   Caffe::set_mode(Caffe::CPU);
 
   clock_t t_start = clock();
-  net_.reset(new Net<float>(model_path, caffe::TEST));
+  net_.reset(new Net<float>(model_path, TEST, Caffe::GetDefaultDevice()));
   net_->CopyTrainedLayersFrom(weights_path);
   clock_t t_end = clock();
   LOG(INFO) << "Loading time: " << 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC
