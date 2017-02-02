@@ -63,13 +63,10 @@ static void deinit_caffe_library(void) {
 }
 
 void mlsl_init(int argc, char** argv) {
-  LOG(INFO) << "MLSL init";
   MLSL::Init(&argc, &argv);
 }
 
 void mlsl_finalize() {
-  LOG(INFO) << "MLSL finalize";
-
   if (isDistributionsInited) {
       isDistributionsInited = false;
       delete data_parallelism;
