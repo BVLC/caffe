@@ -118,7 +118,7 @@ void caffe_gpu_scal<double>(const int_tp N, const double alpha, double* X,
 }
 
 template <>
-void caffe_gpu_axpby<float>(const int N, const float alpha, const float* X,
+void caffe_gpu_axpby<float>(const int_tp N, const float alpha, const float* X,
     const float beta, float* Y) {
   caffe_gpu_scal<float>(N, beta, Y);
   caffe_gpu_axpy<float>(N, alpha, X, Y);
