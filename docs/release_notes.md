@@ -1,4 +1,5 @@
- All modification made by Intel Corporation: © 2016 Intel Corporation
+```
+All modification made by Intel Corporation: © 2016 Intel Corporation
  
  All contributions by the University of California:
  Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
@@ -31,12 +32,10 @@
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
----
+```
+# Release Notes
 
----
-title: Release Notes
----
-#Table Of Contents
+## Table Of Contents
 - [Introduction](#Introduction)
 - [Installation](#Installation)
  - [Prerequisites](#Prerequisites)
@@ -55,11 +54,11 @@ title: Release Notes
 - [License](#License)
 
 
-# Introduction
+## Introduction
 
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (Haswell, Broadwell, Xenon Phi)
 
-# Installation
+## Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
 We build and test Intel® Distribution of Caffe* on CentOS (7.0, 7.1, 7.2). 
@@ -67,7 +66,7 @@ The official Makefile and `Makefile.config` build are complemented by an automat
 
 When updating Intel® Distribution of Caffe*, it's best to `make clean` before re-compiling.
 
-## Prerequisites
+### Prerequisites
 
 Before building Caffe make sure that the following dependencies are available on target system:
 
@@ -90,9 +89,9 @@ For additional capabilities and acceleration the following dependencies might be
 * For Matcaffe 
   * MATLAB with the `mex` compiler.
 
-### Python and/or MATLAB Caffe (optional)
+#### Python and/or MATLAB Caffe (optional)
 
-#### Python
+##### Python
 
 The main requirements are `numpy` and `boost.python` (provided by boost). `pandas` is useful too and needed for some examples.
 
@@ -106,7 +105,7 @@ To import the `caffe` Python module after completing the installation, add the m
 
 *Caffe's Python interface works with Python 2.7. Python 3.3+ should work out of the box without protobuf support. For protobuf support please install protobuf 3.0 alpha (https://developers.google.com/protocol-buffers/). Earlier Pythons are your own adventure.*
 
-#### MATLAB
+##### MATLAB
 
 Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
@@ -114,7 +113,7 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 
 
-##Building for Intel® Architecture
+### Building for Intel® Architecture
 
 This version of Caffe is optimized for Intel® Xeon processors and Intel® Xeon Phi™ processors. To achieve the best performance results on Intel Architecture we recommend building Intel® Distribution of Caffe* with [Intel® MKL](http://software.intel.com/en-us/intel-mkl) and enabling OpenMP support. 
 This Caffe version is seflcontained. This means that newest version of Intel MKL will be downloaded and installed during compilation of Intel® Distribution of Caffe*.
@@ -129,7 +128,7 @@ This Caffe version is seflcontained. This means that newest version of Intel MKL
 
 Comment: there is obsolete method to compale with `USE_MKL2017_AS_DEFAULT_ENGINE := 1` in `Makefile.config`. This is obsolete solution - not recommended to use anymore.
 
-## Building for GPU
+### Building for GPU
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the [NVIDIA CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. **Warning!** The 331.* CUDA driver series has a critical performance issue: do not use it.
 
@@ -144,12 +143,12 @@ Caffe requires BLAS as the backend of its matrix and vector computations. There 
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
-	
-## Compilation
+
+### Compilation
 
 Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community. Build procedure is the same as on bvlc-caffe-master branch. When OpenMP is available will be used automatically.
 
-### Compilation with Make
+#### Compilation with Make
 
 Configure the build by copying and modifying the example `Makefile.config` for your setup. The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 
@@ -172,7 +171,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation with CMake
+#### Compilation with CMake
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:
@@ -186,21 +185,21 @@ The basic steps are as follows:
 
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
-# Configurations
+## Configurations
 
-## Hardware
+### Hardware
 
 Ask hardware questions on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users).
 
-### Intel Architecture
+#### Intel Architecture
 This software supports the following hardware:
 * Intel Xeon processor E5-xxxx v3 (codename: Haswell) and Intel Xeon processor E5-xxxx v4 (codename: Broadwell)
 * Next generation Intel Xeon Phi™ product family (codename: Knights Landing)
 
-### GPU
+#### GPU
 Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
-## Software
+### Software
 
 #### Linux
 
@@ -213,13 +212,13 @@ Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at Image
 
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
-# Change log
+## Change log
 25-01-2017
 * integration with MKL2017 update2 (providing better performance solution)
 * new multinode solution with better scaling on higher number of nodes (32+): [wiki instructions](https://github.com/intel/caffe/wiki/Multinode-guide)
 * old MPI multinode solution was removed
-* new engine selection functionality: [wiki instructions](https://github.com/intel/caffe/blob/master/docs/tutorial/interfaces.md) 
-* new multiphase training functionality 
+* new engine selection functionality: [wiki instructions](https://github.com/intel/caffe/blob/master/docs/tutorial/interfaces.md)
+* new multiphase training functionality
 * fixed problems with batch normalization
 * new BKM (Best Know Method) and examples for achieving best performance [wiki instructions](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 * other minor performance and functional improvements
@@ -232,46 +231,46 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 1-09-2016
 * added RNN support
-* moved form MKL2017 beta update 1 engine to MKL2017 
+* moved form MKL2017 beta update 1 engine to MKL2017
 * added official support for ResNet50, GoogleNet v2, VGG-19. (List of currenlty supported topologies: AlexNet, GoogleNet, GoogleNet v2, ResNet50, VGG-19)
 * added official support for multinode on GoogleNet with MKL2017 engine
 * added DataLayer optimizations
 * added support for compressed LMDB
-* initial integration with MKLDNN 
+* initial integration with MKLDNN
 
 
-# Known issues and limitations
-* Intel MKL 2017 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support. 
+## Known issues and limitations
+* Intel MKL 2017 DNN primitives used by MKL2017 compute engine are optimized for processors with Intel Advanced Version Extensions 2 (Intel AVX2) and Intel Advanced Vector Extensions 512 (Intel AVX512) support.
 Workaround: For older processors use MKL2017 GEMM engine: use `-engine = CAFFE` as parameter during execution and make sure that in prototxt file you do not have lines: `engine:=MKL2017`).
 
-* Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error. 
+* Local response normalization (LRN) within channel is not supported in MKL2017 engine and will result in runtime error.
 Workaround: Use GEMM engine in normalization layer (in prototxt file set `engine:=caffe` for that layer) for topologies that use LRN within channel like cifar.
 
-* Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files) 
+* Performance results may be lower when Data Layer is provided in txt files (uncompressed list of jpg files)
 Workaround: We recommend to always use compressed LMDB Data Layer
 
 * LeNet, Cifar, Squeeznet currently are not optimized in terms of performance in Intel MKL2017
 Workaround: better performance results might be achieved with GEMM engine: use `-engine = CAFFE` as parameter during execution.
 
-# Recommendations to achieve best performance
+## Recommendations to achieve best performance
 
-At our wiki page we present out recommendations and tuning guide to achieve best performance. 
+At our wiki page we present out recommendations and tuning guide to achieve best performance.
 [https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance)
 
-# Instructions:
+## Instructions:
 
 For instructions and tutorials please visit: [https://github.com/intel/caffe/wiki](https://github.com/intel/caffe/wiki)
 
-##	Caffe Benchmark to measure performance
+### Caffe Benchmark to measure performance
 1. Make sure that you implemented recommendations to achieve best performance
-2. Prepare `Makefile.config` configuration as described in Building for Intel Architecture section 
+2. Prepare `Makefile.config` configuration as described in Building for Intel Architecture section
 3. Check in train_val.prototxt file what Data Layer type is used. For best results don't use data layer (or use LMDB)
-3. execute commands: 
+3. execute commands:
 `source /opt/intel/mkl/bin/mklvars.sh intel64`
 `make all test -j 80`
 `./build/tools/caffe time --model=models/bvlc_alexnet/train_val.prototxt -iterations 100
 ./build/tools/caffe time --model=models/bvlc_googlenet/train_val.prototxt -iterations 100`
-or edit commands and provide other optimized topologies.  
+or edit commands and provide other optimized topologies.
 4. As a result you will get log like:
 
 	`Average Forward pass: 109.978 ms.
@@ -281,28 +280,28 @@ or edit commands and provide other optimized topologies.
 
 ` [Images/s] = batchsize * 1000 / Average Forward-Backward [ms]`
 
-##	How to train singlenode
+### How to train singlenode
 
 1. Prepare `Makefile.config` configuration as described in Building for Intel Architecture section.
 2. Compile code as described in Compilation with Cmake section.
 3. Copy data set that you wish to use for training and provide link to it in `/models/[chosen topology folder]/train_val.prototxt` file
-4. Execute command: 
+4. Execute command:
 `./build/tools/caffe train --solver=models/[chosen topology folder]/solver.prototxt`
 
-##	How to train multinode
+### How to train multinode
 
 Tutorials and training instructions are available at: [https://github.com/intel/caffe/wiki/Multinode-guide](https://github.com/intel/caffe/wiki/Multinode-guide)
 
-##	How to contribute 
+### How to contribute
 
 If you want to contribute code follow the instructions provided in: `/docs/development.md` file.
 
-##	How to create LMDB 
+### How to create LMDB
 
 In folder `/examples/imagenet/` we provide scripts and instructions `readme.md` how to create LMDB.
 
 
-#	License
+## License
 
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE). The BVLC reference models are released for unrestricted use.
 
