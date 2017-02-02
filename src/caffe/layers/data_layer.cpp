@@ -79,8 +79,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
   #if defined(_OPENMP)
-  #pragma omp parallel for reduction(+:read_time,trans_time)
-  #endif // use_openmp
+  #pragma omp parallel for reduction(+:read_time, trans_time)
+  #endif  // use_openmp
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     CPUTimer timer;
     timer.Start();
@@ -97,13 +97,12 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       top_label[item_id] = datum.label();
     }
     trans_time += timer.MicroSeconds();
-    
     reader_.free().push(const_cast<Datum*>(&datum));
     timer.Stop();
   }
   batch_timer.Stop();
   double prefetchBatchTime = batch_timer.MilliSeconds();
-  double	readTransSum = read_time + trans_time;
+  double readTransSum = read_time + trans_time;
   read_time = (read_time/readTransSum)*prefetchBatchTime;
   trans_time = (trans_time/readTransSum)*prefetchBatchTime;
   DLOG(INFO) << "Prefetch batch: " << prefetchBatchTime << " ms.";
