@@ -8,7 +8,6 @@
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
-#include <omp.h>
 
 namespace caffe {
 
