@@ -8,6 +8,7 @@
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
+#include <omp.h>
 
 namespace caffe {
 
@@ -58,7 +59,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   batch_timer.Start();
   double read_time = 0;
   double trans_time = 0;
-  CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
 
@@ -79,29 +79,36 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
-    timer.Start();
-    // get a datum
-    Datum& datum = *(reader_.full().pop("Waiting for data"));
-    read_time += timer.MicroSeconds();
-    timer.Start();
-    // Apply data transformations (mirror, scale, crop...)
-    int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    // Copy label.
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
-    }
-    trans_time += timer.MicroSeconds();
+#pragma omp parallel for reduction(+:read_time,trans_time)
+  for (int item_id = 0; item_id < batch_size; ++item_id)
+  {
+	  CPUTimer timer;
+	  timer.Start();
+	  // get a datum
+	  Datum& datum = *(reader_.full().pop("Waiting for data"));
+	  read_time += timer.MicroSeconds();
+	  timer.Start();
+	  // Apply data transformations (mirror, scale, crop...)
+	  int offset = batch->data_.offset(item_id);
+	  this->transformed_data_.set_cpu_data(top_data + offset);
+	  this->data_transformer_->Transform(datum, &(this->transformed_data_));
+	  // Copy label.
+	  if (this->output_labels_) {
+		  top_label[item_id] = datum.label();
+	  }
+	  trans_time += timer.MicroSeconds();
 
-    reader_.free().push(const_cast<Datum*>(&datum));
+	  reader_.free().push(const_cast<Datum*>(&datum));
+	  timer.Stop();
   }
-  timer.Stop();
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  double prefetchBatchTime = batch_timer.MilliSeconds();
+  double	 readTransSum = read_time + trans_time;
+  read_time = (read_time / readTransSum)*prefetchBatchTime;
+  trans_time = (trans_time / readTransSum)*prefetchBatchTime;
+  DLOG(INFO) << "Prefetch batch: " << prefetchBatchTime << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
