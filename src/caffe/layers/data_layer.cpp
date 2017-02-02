@@ -78,7 +78,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
+#if defined(_OPENMP)
 #pragma omp parallel for reduction(+:read_time,trans_time)
+#endif //use_openmp
   for (int item_id = 0; item_id < batch_size; ++item_id)
   {
 	  CPUTimer timer;
