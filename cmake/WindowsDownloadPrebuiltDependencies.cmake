@@ -26,7 +26,7 @@ if(USE_PREBUILT_DEPENDENCIES)
         set(_pyver 27)
     endif()
     if(NOT DEFINED DEPENDENCIES_URL_${MSVC_VERSION}_${_pyver})
-        message(FATAL_ERROR "Could not find url for MSVC version = ${MSVC_VERSION} and Python version = {PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}.")
+        message(FATAL_ERROR "Could not find url for MSVC version = ${MSVC_VERSION} and Python version = ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}.")
     endif()
     # set the dependencies URL and SHA1
     set(DEPENDENCIES_URL ${DEPENDENCIES_URL_${MSVC_VERSION}_${_pyver}})
@@ -54,7 +54,7 @@ if(USE_PREBUILT_DEPENDENCIES)
         file(DOWNLOAD "${DEPENDENCIES_URL}"
                       "${_download_path}"
                       EXPECTED_HASH SHA1=${DEPENDENCIES_SHA}
-                      SHOW_PROGRESS 1
+                      SHOW_PROGRESS
                       )
         if(EXISTS ${CAFFE_DEPENDENCIES_DIR}/libraries)
             file(REMOVE_RECURSE ${CAFFE_DEPENDENCIES_DIR}/libraries)
