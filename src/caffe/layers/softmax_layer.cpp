@@ -18,14 +18,13 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
-#ifdef USE_GREENTEA
-    use_slm_ = (bottom[0]->shape(softmax_axis_) * inner_num_
-              + inner_num_ * 17) <= 8192;
   vector<int_tp> scale_dims = bottom[0]->shape();
+#ifdef USE_GREENTEA
+  use_slm_ = (bottom[0]->shape(softmax_axis_) * inner_num_
+              + inner_num_ * 17) <= 8192;
   scale_dims[softmax_axis_] = use_slm_ ? 1 : 17;
 #else
-    vector<int> scale_dims = bottom[0]->shape();
-    scale_dims[softmax_axis_] = 1;
+  scale_dims[softmax_axis_] = 1;
 #endif
   scale_.Reshape(scale_dims);
 }
