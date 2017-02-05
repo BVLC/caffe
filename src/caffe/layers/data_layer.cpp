@@ -90,11 +90,18 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    // Copy label.
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
+    Blob<Dtype> transformed_data;
+    transformed_data.Reshape(one_batch_top_shape);
+    this->data_transformer_->Transform(datum, &(transformed_data));
+    #if defined(_OPENMP)
+    #pragma omp critical(transformed)
+    #endif  // use_openmp
+    {
+      this->transformed_data_.set_cpu_data(top_data + offset);
+      this->transformed_data_.CopyFrom(transformed_data);
+      if (this->output_labels_) {
+        top_label[item_id] = datum.label();
+      }
     }
     trans_time += timer.MicroSeconds();
     reader_.free().push(const_cast<Datum*>(&datum));
