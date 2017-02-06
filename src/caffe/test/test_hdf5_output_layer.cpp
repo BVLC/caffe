@@ -22,32 +22,39 @@ class HDF5OutputLayerTest : public MultiDeviceTest<TypeParam> {
   HDF5OutputLayerTest()
       : input_file_name_(
         CMAKE_SOURCE_DIR "caffe/test/test_data/sample_data.h5"),
-        blob_data_(new Blob<Dtype>()),
-        blob_label_(new Blob<Dtype>()),
         num_(5),
         channels_(8),
         height_(5),
-        width_(5) {
+        width_(5),
+        n_blobs_(3) {
     MakeTempFilename(&output_file_name_);
+    for (int i = 0; i < n_blobs_; i++) {
+      blobs_vec_.push_back(new Blob<Dtype>());
+    }
+    blob_names_.push_back("data");
+    blob_names_.push_back("label");
+    blob_names_.push_back("label2");
   }
 
   virtual ~HDF5OutputLayerTest() {
-    delete blob_data_;
-    delete blob_label_;
+    for (int i = 0; i < n_blobs_; i++) {
+      delete blobs_vec_[i];
+    }
   }
 
   void CheckBlobEqual(const Blob<Dtype>& b1, const Blob<Dtype>& b2);
 
   string output_file_name_;
   string input_file_name_;
-  Blob<Dtype>* const blob_data_;
-  Blob<Dtype>* const blob_label_;
+  vector<Blob<Dtype>*> blobs_vec_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
   int num_;
   int channels_;
   int height_;
   int width_;
+  int n_blobs_;
+  vector<string> blob_names_;
 };
 
 template<typename TypeParam>
@@ -77,15 +84,16 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
                           H5P_DEFAULT);
   ASSERT_GE(file_id, 0)<< "Failed to open HDF5 file" <<
       this->input_file_name_;
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       this->blob_data_);
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       this->blob_label_);
+  for (int i = 0; i < this->n_blobs_; i++) {
+    hdf5_load_nd_dataset(file_id, this->blob_names_[i].c_str(), 0, 4,
+                         this->blobs_vec_[i]);
+  }
   herr_t status = H5Fclose(file_id);
   EXPECT_GE(status, 0)<< "Failed to close HDF5 file " <<
       this->input_file_name_;
-  this->blob_bottom_vec_.push_back(this->blob_data_);
-  this->blob_bottom_vec_.push_back(this->blob_label_);
+  for (int i = 0; i < this->n_blobs_; i++) {
+    this->blob_bottom_vec_.push_back(this->blobs_vec_[i]);
+  }
 
   LayerParameter param;
   param.mutable_hdf5_output_param()->set_file_name(this->output_file_name_);
@@ -103,15 +111,14 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
     file_id, 0)<< "Failed to open HDF5 file" <<
           this->input_file_name_;
 
-  Blob<Dtype>* blob_data = new Blob<Dtype>();
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       blob_data);
-  this->CheckBlobEqual(*(this->blob_data_), *blob_data);
-
-  Blob<Dtype>* blob_label = new Blob<Dtype>();
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       blob_label);
-  this->CheckBlobEqual(*(this->blob_label_), *blob_label);
+  for (int i = 0; i < this->n_blobs_; i++) {
+    Blob<Dtype> *blob_data = new Blob<Dtype>();
+    stringstream ss;
+    ss << "blob" << i;
+    hdf5_load_nd_dataset(file_id, ss.str().c_str(), 0, 4,
+                         blob_data);
+    this->CheckBlobEqual(*(this->blobs_vec_[i]), *blob_data);
+  }
 
   status = H5Fclose(file_id);
   EXPECT_GE(status, 0) << "Failed to close HDF5 file " <<
