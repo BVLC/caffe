@@ -272,7 +272,6 @@ template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
 {
     // TODO: need to optimize code
-   
     if (!this->conversion_needed()) {
         return;
     }

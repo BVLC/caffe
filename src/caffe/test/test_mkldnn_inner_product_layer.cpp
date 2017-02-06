@@ -165,7 +165,8 @@ TYPED_TEST(MKLDNNInnerProductLayerTest, TestForward) {
   }
 }
 
-//TODO: add support for transposed weights in MKLDNNInnerProduct layer and then enable following test (check if it was ported properly)
+// TODO: add support for transposed weights in MKLDNNInnerProduct 
+// layer and then enable following test (check if it was ported properly)
 #if 0
 /**
  * @brief Init. an IP layer without transpose + random weights,

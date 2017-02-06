@@ -43,7 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
-//#include "mkl_service.h"
 
 #if 0
 #include "mkldnn_types.h"
@@ -55,19 +54,37 @@ using namespace mkldnn;
 
 namespace caffe {
 template <typename Dtype>
-MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(const LayerParameter& param)
-            : MKLDNNLayer<Dtype>(), InnerProductLayer<Dtype>(param)
-            , fwd_bottom_data(NULL), fwd_top_data(NULL), fwd_weights_data(NULL), fwd_bias_data(NULL)
-            , bwdd_weights_data(NULL), bwdw_bottom_data(NULL)
-            , bwdd_bottom_diff(NULL), bwdd_top_diff(NULL)
-            , bwdw_top_diff(NULL), bwdw_weights_diff(NULL), bwdw_bias_diff(NULL)
-            , ipFwd_pd(NULL), ipBwdData_pd(NULL), ipBwdWeights_pd(NULL)
-            , fwd_top_data_memory(NULL), bwdd_bottom_diff_memory(NULL)
-            , bwdw_weights_diff_memory(NULL), bwdw_bias_diff_memory(NULL)
-            , fwd_bottom_data_primitive(NULL), fwd_weights_data_primitive(NULL), fwd_bias_data_primitive(NULL)
-            , bwdd_top_diff_primitive(NULL), bwdd_weights_data_primitive(NULL)
-            , bwdw_top_diff_primitive(NULL), bwdw_bottom_data_primitive(NULL)
-            , w_(0), h_(0)
+MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(
+            const LayerParameter& param) :
+            MKLDNNLayer<Dtype>(),
+            InnerProductLayer<Dtype>(param),
+            fwd_bottom_data(NULL),
+            fwd_top_data(NULL),
+            fwd_weights_data(NULL),
+            fwd_bias_data(NULL),
+            bwdd_weights_data(NULL),
+            bwdw_bottom_data(NULL),
+            bwdd_bottom_diff(NULL),
+            bwdd_top_diff(NULL),
+            bwdw_top_diff(NULL),
+            bwdw_weights_diff(NULL),
+            bwdw_bias_diff(NULL),
+            ipFwd_pd(NULL),
+            ipBwdData_pd(NULL),
+            ipBwdWeights_pd(NULL),
+            fwd_top_data_memory(NULL),
+            bwdd_bottom_diff_memory(NULL),
+            bwdw_weights_diff_memory(NULL),
+            bwdw_bias_diff_memory(NULL),
+            fwd_bottom_data_primitive(NULL),
+            fwd_weights_data_primitive(NULL),
+            fwd_bias_data_primitive(NULL),
+            bwdd_top_diff_primitive(NULL),
+            bwdd_weights_data_primitive(NULL),
+            bwdw_top_diff_primitive(NULL),
+            bwdw_bottom_data_primitive(NULL),
+            w_(0),
+            h_(0)
 {
 }
 
@@ -199,8 +216,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     fwd_top_data->set_mkldnn_primitive(ipFwd);
     fwd_weights_data->set_mkldnn_primitive(ipFwd);
     fwd_bias_data->set_mkldnn_primitive(ipFwd);
-
-    // Names are for debugging purposes only.
 }
 
 template <typename Dtype>
@@ -349,8 +364,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);
     bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);
     bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
-
-    // Names are for debugging purposes only.
 }
 
 
