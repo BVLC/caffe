@@ -158,7 +158,7 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     InitConcat(bottom, top);
   for (auto i = 0; i < num_concats_; i++) {
     // making reorders if needed.
-    fwd_bottom_data[i]->sync_before_read(false);
+    fwd_bottom_data[i]->sync_before_read();
   }
   // update top that head at prv
   fwd_top_data->sync_before_write();

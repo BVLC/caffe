@@ -165,6 +165,8 @@ TYPED_TEST(MKLDNNInnerProductLayerTest, TestForward) {
   }
 }
 
+// TODO: add support for transposed weights in MKLDNNInnerProduct 
+// layer and then enable following test (check if it was ported properly)
 #if 0
 /**
  * @brief Init. an IP layer without transpose + random weights,
@@ -253,7 +255,42 @@ TYPED_TEST(MKLDNNInnerProductLayerTest, TestForwardNoBatch) {
   }
 }
 
-// TODO: add backward tests
+TYPED_TEST(MKLDNNInnerProductLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_);
+    LayerParameter layer_param;
+    InnerProductParameter* inner_product_param =
+        layer_param.mutable_inner_product_param();
+    inner_product_param->set_num_output(10);
+    inner_product_param->mutable_weight_filler()->set_type("gaussian");
+    inner_product_param->mutable_bias_filler()->set_type("gaussian");
+    inner_product_param->mutable_bias_filler()->set_min(1);
+    inner_product_param->mutable_bias_filler()->set_max(2);
+    shared_ptr<InnerProductLayer<Dtype> > layer(
+      new MKLDNNInnerProductLayer<Dtype>(layer_param));
+    GradientChecker<Dtype> checker(1e-2, 1e-3);
+    checker.CheckGradientExhaustive(layer.get(), this->blob_bottom_vec_,
+        this->blob_top_vec_);
+}
+
+TYPED_TEST(MKLDNNInnerProductLayerTest, TestGradientTranspose) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_);
+  LayerParameter layer_param;
+  InnerProductParameter* inner_product_param =
+      layer_param.mutable_inner_product_param();
+  inner_product_param->set_num_output(11);
+  inner_product_param->mutable_weight_filler()->set_type("gaussian");
+  inner_product_param->mutable_bias_filler()->set_type("gaussian");
+  inner_product_param->mutable_bias_filler()->set_min(1);
+  inner_product_param->mutable_bias_filler()->set_max(2);
+  inner_product_param->set_transpose(true);
+  shared_ptr<InnerProductLayer<Dtype> > layer(
+    new MKLDNNInnerProductLayer<Dtype>(layer_param));
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(layer.get(), this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 
 }  // namespace caffe
 #endif  // #ifdef MKLDNN_SUPPORTED

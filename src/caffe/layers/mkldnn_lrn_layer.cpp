@@ -181,7 +181,7 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     if( lrnFwd_pd == NULL)
         InitLRN(bottom, top);
     // making reorders if needed.
-    fwd_bottom_data->sync_before_read(false);
+    fwd_bottom_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
