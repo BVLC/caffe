@@ -45,7 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <regex>
 #include <string>
 #include <unordered_set>
 #include <vector>
