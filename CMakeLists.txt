@@ -124,6 +124,10 @@ endif()
 include(cmake/Dependencies.cmake)
 
 # ---[ Flags
+if(DISABLE_DEVICE_HOST_UNIFIED_MEMORY)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_DEVICE_HOST_UNIFIED_MEMORY")
+endif()
+
 if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11 -DCMAKE_BUILD")
 endif()
