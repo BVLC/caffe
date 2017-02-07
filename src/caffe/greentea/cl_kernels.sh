@@ -32,6 +32,13 @@ echo "#include <sstream>" >> $SOURCE
 echo "#include <string>" >> $SOURCE
 echo "#include <type_traits>" >> $SOURCE
 echo "#include <vector>" >> $SOURCE
+
+echo "#ifdef DISABLE_DOUBLE_SUPPORT" >> $SOURCE
+echo "  #define DOUBLE_SUPPORT \"#define DISABLE_DOUBLE_SUPPORT\n\"" >> $SOURCE
+echo "#else" >> $SOURCE
+echo "  #define DOUBLE_SUPPORT \"#define ENABLE_DOUBLE_SUPPORT\n\"" >> $SOURCE
+echo "#endif //DISABLE_DOUBLE_SUPPORT" >> $SOURCE
+
 echo "namespace caffe {" >> $SOURCE
 
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
@@ -52,7 +59,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
+    echo -n "static std::string $CL_KERNEL_NAME = DOUBLE_SUPPORT \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g' | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
@@ -64,7 +71,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
+	echo -n "static std::string $CL_KERNEL_NAME = DOUBLE_SUPPORT \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e 's/\\$/\\\\/g' | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
