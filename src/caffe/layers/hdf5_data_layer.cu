@@ -20,7 +20,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
   // GPU mode on data layers currently unsupported on OpenCL.
   if (this->device_->backend() == BACKEND_OpenCL) {
-    Forward_cpu(bottom, top);
+    this->Forward_cpu(bottom, top);
     return;
   }
 #endif  // USE_GREENTEA
