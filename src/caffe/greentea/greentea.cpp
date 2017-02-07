@@ -15,16 +15,14 @@ namespace caffe {
 
 viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
                                          viennacl::ocl::context *ctx) {
-  if (in != NULL) {
+  if (in != nullptr) {
+    // Valid cl_mem object, wrap to ViennaCL and return handle.
     viennacl::ocl::handle<cl_mem> memhandle(in, *ctx);
     memhandle.inc();
     return memhandle;
   } else {
-    cl_int err;
-    cl_mem dummy = clCreateBuffer(ctx->handle().get(), CL_MEM_READ_WRITE, 0,
-    NULL,
-                                  &err);
-    viennacl::ocl::handle<cl_mem> memhandle(dummy, *ctx);
+    // Trick to pass nullptr via ViennaCL into OpenCL kernels.
+    viennacl::ocl::handle<cl_mem> memhandle;
     return memhandle;
   }
 }

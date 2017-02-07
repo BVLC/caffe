@@ -81,9 +81,11 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
   cudaStream_t stream;
-  if (Caffe::mode() == Caffe::GPU) {
-    if (this->get_device()->backend() == BACKEND_CUDA) {
-      CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+  if (this->get_device()->backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU) {
+      if (this->get_device()->backend() == BACKEND_CUDA) {
+        CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+      }
     }
   }
 #endif  // USE_CUDA
@@ -96,11 +98,13 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       if (Caffe::mode() == Caffe::GPU) {
-        batch->data_.data().get()->async_gpu_push(stream);
-        if (this->output_labels_) {
-          batch->label_.data().get()->async_gpu_push(stream);
+        if (this->get_device()->backend() == BACKEND_CUDA) {
+          batch->data_.data().get()->async_gpu_push(stream);
+          if (this->output_labels_) {
+            batch->label_.data().get()->async_gpu_push(stream);
+          }
+          CUDA_CHECK(cudaStreamSynchronize(stream));
         }
-        CUDA_CHECK(cudaStreamSynchronize(stream));
       }
 #endif  // USE_CUDA
 #endif  // !CPU_ONLY

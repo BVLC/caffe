@@ -17,6 +17,14 @@ namespace caffe {
 template<typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+#ifdef USE_GREENTEA
+  // GPU mode on data layers currently unsupported on OpenCL.
+  if (this->device_->backend() == BACKEND_OpenCL) {
+    Forward_cpu(bottom, top);
+    return;
+  }
+#endif  // USE_GREENTEA
+
   const int_tp batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int_tp i = 0; i < batch_size; ++i) {
     while (Skip()) {
