@@ -91,6 +91,16 @@ class DataTransformer {
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
   /**
+  * @brief Copy to Target Blob Data from Source Blob Data
+  *
+  * @param source_blob
+  *    source data
+  * @param target_blob
+  *    target data
+  */
+  void CopyBlob(Blob<Dtype>* source_blob, Blob<Dtype>* target_blob);
+
+  /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
    *

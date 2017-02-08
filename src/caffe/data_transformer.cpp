@@ -439,6 +439,38 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 }
 
 template<typename Dtype>
+void DataTransformer<Dtype>::CopyBlob(Blob<Dtype>* source_blob, Blob<Dtype>* target_blob)
+{
+  const int input_num = source_blob->num();
+  const int input_channels = source_blob->channels();
+  const int input_height = source_blob->height();
+  const int input_width = source_blob->width();
+
+  const int num = target_blob->num();
+  const int channels = target_blob->channels();
+  const int height = target_blob->height();
+  const int width = target_blob->width();
+  const int size = target_blob->count();
+  Dtype* input_data = source_blob->mutable_cpu_data();
+  Dtype* target_data = target_blob->mutable_cpu_data();
+  for (int n = 0; n < input_num; ++n) {
+    int top_index_n = n * channels;
+    int data_index_n = n * channels;
+    for (int c = 0; c < channels; ++c) {
+      int top_index_c = (top_index_n + c) * height;
+      int data_index_c = (data_index_n + c) * input_height;
+      for (int h = 0; h < height; ++h) {
+        int top_index_h = (top_index_c + h) * width;
+        int data_index_h = (data_index_c + h) * input_width;
+        for (int w = 0; w < width; ++w) {
+          target_data[top_index_h + w] = input_data[data_index_h + w];
+        }
+      }
+    }
+  }
+}
+
+template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
 #ifdef USE_OPENCV
