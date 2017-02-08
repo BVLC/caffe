@@ -80,15 +80,14 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
 
-  //Blob<Dtype> vTransformed_data[1000];
-  vector<shared_ptr<Blob<Dtype>>> vTransformed_data;
+  vector<shared_ptr<Blob<Dtype> > > vTransformed_data;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     vTransformed_data.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(one_batch_top_shape)));
   }
 
 #if defined(_OPENMP)
 #pragma omp parallel for reduction(+:read_time,trans_time)
-#endif //use_openmp
+#endif // use_openmp
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     CPUTimer timer;
     timer.Start();
@@ -97,7 +96,6 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
-    //vTransformed_data[item_id].Reshape(one_batch_top_shape);
 
     this->data_transformer_->Transform(datum, vTransformed_data[item_id].get());
     if (this->output_labels_) {
