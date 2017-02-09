@@ -67,7 +67,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_conf_(new Blob<Dtype>(
                 num_, num_priors_ * num_classes_, 1, 1)),
         blob_bottom_prior_(new Blob<Dtype>(num_, 2, num_priors_ * 4, 1)),
-        blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 7)),
+        blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 8)),
         blob_top_loss_(new Blob<Dtype>()) {
     blob_bottom_vec_.push_back(blob_bottom_loc_);
     blob_bottom_vec_.push_back(blob_bottom_conf_);
