@@ -87,8 +87,10 @@ void SGDSolver<Dtype>::ClipGradients() {
     sumsq_diff += net_params[i]->sumsq_diff();
   }
   const Dtype l2norm_diff = std::sqrt(sumsq_diff);
-  if (l2norm_diff > clip_gradients) {
-    Dtype scale_factor = clip_gradients / l2norm_diff;
+  // If adjustable_clipping is true, divide threshold by current_lr
+  const Dtype lr_rate = this->param_.adjustable_clipping() ? GetLearningRate() : 1.0;
+  if (l2norm_diff > clip_gradients / lr_rate) {
+    Dtype scale_factor = (clip_gradients / lr_rate) / l2norm_diff;
     LOG(INFO) << "Gradient clipping: scaling down gradients (L2 norm "
         << l2norm_diff << " > " << clip_gradients << ") "
         << "by scale factor " << scale_factor;
