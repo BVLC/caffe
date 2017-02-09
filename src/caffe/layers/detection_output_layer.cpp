@@ -248,7 +248,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
                   &all_decode_bboxes);
 
   int num_kept = 0;
-  vector<map<int, vector<int> > > all_indices;
+  vector<map<int, vector<int> > > all_indices(num);
+  #pragma omp parallel for
   for (int i = 0; i < num; ++i) {
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
     const map<int, vector<float> >& conf_scores = all_conf_scores[i];
@@ -275,6 +276,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           top_k_, &(indices[c]));
       num_det += indices[c].size();
     }
+    // Temporary variable for critical section
+    int num_to_add = 0;
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
       vector<pair<float, pair<int, int> > > score_index_pairs;
       for (map<int, vector<int> >::iterator it = indices.begin();
@@ -305,12 +308,14 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         int idx = score_index_pairs[j].second.second;
         new_indices[label].push_back(idx);
       }
-      all_indices.push_back(new_indices);
-      num_kept += keep_top_k_;
+      all_indices[i] = new_indices;
+      num_to_add = keep_top_k_;
     } else {
-      all_indices.push_back(indices);
-      num_kept += num_det;
+      all_indices[i] = indices;
+      num_to_add = num_det;
     }
+    #pragma omp atomic
+    num_kept += num_to_add;
   }
 
   vector<int> top_shape(2, 1);
