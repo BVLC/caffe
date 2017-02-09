@@ -240,6 +240,8 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
+#endif
+#if 1
 TYPED_TEST(MKLDNNLRNLayerTest, TestSetupWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -248,10 +250,10 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestSetupWithinChannel) {
   layer_param.mutable_lrn_param()->set_local_size(3);
   MKLDNNLRNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 7);
-  EXPECT_EQ(this->blob_top_->height(), 3);
-  EXPECT_EQ(this->blob_top_->width(), 3);
+  EXPECT_EQ(this->blob_top_->num(), MB);
+  EXPECT_EQ(this->blob_top_->channels(), IC);
+  EXPECT_EQ(this->blob_top_->height(), IH);
+  EXPECT_EQ(this->blob_top_->width(), IW);
 }
 #endif
 
