@@ -241,7 +241,6 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
       this->blob_top_vec_);
 }
 #endif
-#if 1
 TYPED_TEST(MKLDNNLRNLayerTest, TestSetupWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -255,7 +254,6 @@ TYPED_TEST(MKLDNNLRNLayerTest, TestSetupWithinChannel) {
   EXPECT_EQ(this->blob_top_->height(), IH);
   EXPECT_EQ(this->blob_top_->width(), IW);
 }
-#endif
 
 TYPED_TEST(MKLDNNLRNLayerTest, TestForwardWithinChannel) {
   typedef typename TypeParam::Dtype Dtype;
