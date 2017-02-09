@@ -173,12 +173,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, blobs):
         net_blobs = [b for b in net.blobs.keys() if 'data' not in b]
@@ -238,12 +238,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, blobs):
         net_blobs = [b for b in net.blobs.keys() if 'data' not in b]
@@ -320,12 +320,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, outputs):
         self.assertEqual(list(net.blobs['data'].shape), [1,1,10,10])

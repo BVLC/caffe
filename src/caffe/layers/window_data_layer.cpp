@@ -173,8 +173,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i)
-    this->prefetch_[i].data_.Reshape(
+  for (int i = 0; i < this->prefetch_.size(); ++i)
+    this->prefetch_[i]->data_.Reshape(
         batch_size, channels, crop_size, crop_size);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -183,8 +183,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].label_.Reshape(label_shape);
+  for (int i = 0; i < this->prefetch_.size(); ++i) {
+    this->prefetch_[i]->label_.Reshape(label_shape);
   }
 
   // data mean
