@@ -1322,6 +1322,7 @@ void ComputeLocLoss(const Blob<Dtype>& loc_pred, const Blob<Dtype>& loc_gt,
               diff.mutable_cpu_data());
     diff_data = diff.cpu_data();
   }
+  CHECK_NOTNULL(diff_data);
   int count = 0;
   for (int i = 0; i < num; ++i) {
     vector<float> loc_loss(num_priors, 0.f);
