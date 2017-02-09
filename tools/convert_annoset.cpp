@@ -119,13 +119,13 @@ int main(int argc, char** argv) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_annoset");
     return 1;
   }
-
+  
   const bool is_color = !FLAGS_gray;
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
   const string encode_type = FLAGS_encode_type;
   const string anno_type = FLAGS_anno_type;
-  AnnotatedDatum_AnnotationType type;
+  AnnotatedDatum_AnnotationType type = AnnotatedDatum_AnnotationType_BBOX;
   const string label_type = FLAGS_label_type;
   const string label_map_file = FLAGS_label_map_file;
   const bool check_label = FLAGS_check_label;
