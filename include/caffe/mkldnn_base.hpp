@@ -122,8 +122,8 @@ public:
             // !! TODO: change below if stream will have method to reset its state
             VLOG(1) << typeid(*this).name()<< " : " << __FUNCTION__ << " : create new stream";
 //            _stream.reset(new stream(stream::kind::any));
-//            _stream.reset(new stream(stream::kind::eager));
-            _stream.reset(new stream(stream::kind::lazy));
+            _stream.reset(new stream(stream::kind::eager));
+//            _stream.reset(new stream(stream::kind::lazy));
         }
         _ready = true;
     }
