@@ -361,7 +361,7 @@ float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
   float intersect_size = BBoxSize(intersect_bbox);
   if (intersect_size > 0) {
     float bbox1_size = BBoxSize(bbox1);
-    CHECK_DOUBLE_EQ(bbox1_size, 0);
+    CHECK_NE(bbox1_size, 0);
     return intersect_size / bbox1_size;
   } else {
     return 0.;
