@@ -36,3 +36,4 @@
 #cmakedefine USE_LEVELDB
 #cmakedefine USE_LMDB
 #cmakedefine ALLOW_LMDB_NOLOCK
+#cmakedefine USE_HDF5
