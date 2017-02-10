@@ -27,6 +27,10 @@ viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
   }
 }
 
+bool IsBeignet(viennacl::ocl::context *ctx) {
+  return ctx->devices()[0].opencl_c_version().find("beignet") != std::string::npos;
+}
+
 #endif
 
 
