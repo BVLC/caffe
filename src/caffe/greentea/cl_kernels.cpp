@@ -1283,14 +1283,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch",    // NOLINT
 "// and KERNEL_WIDTH/2 rows of interleaved filter.",    // NOLINT
 "int patch_depth = 0;",    // NOLINT
+"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((opencl_unroll_hint(1)))",    // NOLINT
+"#endif",    // NOLINT
 "do",    // NOLINT
 "{",    // NOLINT
 "int patch_row = 0;",    // NOLINT
 "#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
 "curr_y = saved_y;",    // NOLINT
 "#endif",    // NOLINT
+"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((opencl_unroll_hint(1)))",    // NOLINT
+"#endif",    // NOLINT
 "do",    // NOLINT
 "{",    // NOLINT
 "// Load atile and btile.",    // NOLINT

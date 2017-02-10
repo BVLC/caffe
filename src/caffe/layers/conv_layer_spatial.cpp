@@ -463,8 +463,10 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
                 << kernel_name_;
 
   string options = optionsString.str();
-
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  if(IsBeignet(&ctx))
+    optionsString << " -D__BEIGNET__";
+  string options = optionsString.str();
   try {
     submit_conv_spatial_program(&ctx, kernel_name_, options);
   } catch (std::exception& e) {
@@ -923,20 +925,17 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
   size_t global_size[3] = { gx, gy, gz };
 
   size_t local_size[3] = { 1, static_cast<size_t>(simd_size), 1 };
-  string options = optionsString.str();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  if(IsBeignet(&ctx))
+    optionsString << " -D__BEIGNET__";
+  else
+    optionsString <<
+        " -cl-no-subgroup-ifp ";
+  string options = optionsString.str();
+
   viennacl::ocl::program & program = submit_conv_spatial_program(&ctx,
                                                                  kernel_name_,
                                                                  options);
-  bool is_beignet = ctx.devices()[0].opencl_c_version().find("beignet")
-                    != std::string::npos;
-  if (!is_beignet)
-  // chooses "Oldest First EU scheduling mode" instead of "Round Robin"
-    optionsString <<
-        " -cl-no-subgroup-ifp ";
-  else
-    optionsString <<
-        " -D__BEIGNET__";
   size_t workgroupSize_used;
   viennacl::ocl::kernel & kernel = program.get_kernel(kernel_name_);
   cl_int err = clGetKernelWorkGroupInfo(
@@ -1043,7 +1042,9 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
 
   string options = optionsString.str();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-
+  if(IsBeignet(&ctx))
+    optionsString << " -D__BEIGNET__";
+  string options = optionsString.str();
   viennacl::ocl::program & program = submit_conv_spatial_program(&ctx,
                                                                  kernel_name_,
                                                                  options);
