@@ -1452,6 +1452,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   // Generates static key_
   std::string previous_key = key_;
   generate_key(false);
+  int prev_kernel_type = 0;
   if (tuned_) {
     if (key_.compare(previous_key) == 0)
       return;
@@ -1459,6 +1460,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     if (key_.compare(previous_key) == 0)
       return;
     tuned_ = false;
+    prev_kernel_type = bestKernelConfig->kernelType;
     viennacl::ocl::current_context().
       delete_program(bestKernelConfig->kernelName);
     delete bestKernelConfig;
@@ -1523,6 +1525,12 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> foo;
     cachedKernel >> bestKernelConfig->use_null_local;
     tuned_ = true;
+    // If kernel type changed to type 2 or 4, we need to reset the swizzled weights
+    // pointer to invalidate the previous swizzled weights data.
+    if (prev_kernel_type != bestKernelConfig->kernelType &&
+        (bestKernelConfig->kernelType == 2 ||
+         bestKernelConfig->kernelType == 5))
+      swizzled_weights_ = NULL;
   }
   return;
 }
