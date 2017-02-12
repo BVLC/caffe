@@ -123,7 +123,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   batch_timer.Stop();
   double prefetchBatchTime = batch_timer.MilliSeconds();
-  double	 readTransSum = read_time + trans_time;
+  double readTransSum = read_time + trans_time;
   read_time = (read_time / readTransSum)*prefetchBatchTime;
   trans_time = (trans_time / readTransSum)*prefetchBatchTime;
   DLOG(INFO) << "Prefetch batch: " << prefetchBatchTime << " ms.";
