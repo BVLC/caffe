@@ -439,8 +439,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::CopyBlob(Blob<Dtype>* source_blob, Blob<Dtype>* target_blob)
-{
+void DataTransformer<Dtype>::CopyBlob(Blob<Dtype>* source_blob,
+  Blob<Dtype>* target_blob) {
   const int input_num = source_blob->num();
   const int input_height = source_blob->height();
   const int input_width = source_blob->width();

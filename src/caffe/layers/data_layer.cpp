@@ -66,7 +66,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   Datum& datum = *(reader_.full().peek());
   // Use data_transformer to infer the expected blob shape from datum.
-  vector<int> one_batch_top_shape = this->data_transformer_->InferBlobShape(datum);
+  vector<int> one_batch_top_shape
+    = this->data_transformer_->InferBlobShape(datum);
   vector<int> top_shape = one_batch_top_shape;
   this->transformed_data_.Reshape(one_batch_top_shape);
   // Reshape batch according to the batch_size.
@@ -82,12 +83,13 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   vector<shared_ptr<Blob<Dtype> > > vTransformed_data;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    vTransformed_data.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(one_batch_top_shape)));
+    vTransformed_data.push_back(shared_ptr<Blob<Dtype> >(
+      new Blob<Dtype>(one_batch_top_shape)));
   }
 
 #if defined(_OPENMP)
-#pragma omp parallel for reduction(+:read_time,trans_time)
-#endif // use_openmp
+#pragma omp parallel for reduction(+:read_time, trans_time)
+#endif  // use_openmp
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     CPUTimer timer;
     timer.Start();
@@ -97,7 +99,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
 
-    this->data_transformer_->Transform(datum, vTransformed_data[item_id].get());
+    this->data_transformer_->Transform(datum,
+      vTransformed_data[item_id].get());
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
@@ -112,7 +115,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     int offset = batch->data_.offset(item_id);
     cpytimer.Start();
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->CopyBlob(vTransformed_data[item_id].get(), &(this->transformed_data_));
+    this->data_transformer_->CopyBlob(vTransformed_data[item_id].get(),
+      &(this->transformed_data_));
     trans_time += cpytimer.MicroSeconds();
     cpytimer.Stop();
   }
