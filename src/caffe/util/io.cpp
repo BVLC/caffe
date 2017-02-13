@@ -389,6 +389,7 @@ bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
               " bounding box irregular.";
           // Store the normalized bounding box.
           NormalizedBBox* bbox = anno->mutable_bbox();
+          CHECK_NOTNULL(bbox);
           bbox->set_xmin(static_cast<float>(xmin) / width);
           bbox->set_ymin(static_cast<float>(ymin) / height);
           bbox->set_xmax(static_cast<float>(xmax) / width);
