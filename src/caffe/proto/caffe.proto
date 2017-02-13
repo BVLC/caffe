@@ -360,51 +360,52 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  optional AccuracyParameter accuracy_param = 102;
-  optional ArgMaxParameter argmax_param = 103;
-  optional BatchNormParameter batch_norm_param = 139;
-  optional BiasParameter bias_param = 141;
-  optional ConcatParameter concat_param = 104;
+  optional AccuracyParameter accuracy_param                = 102;
+  optional ArgMaxParameter argmax_param                    = 103;
+  optional BatchNormParameter batch_norm_param             = 139;
+  optional BiasParameter bias_param                        = 141;
+  optional ConcatParameter concat_param                    = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
-  optional ConvolutionParameter convolution_param = 106;
-  optional CropParameter crop_param = 144;
-  optional DataParameter data_param = 107;
-  optional DropoutParameter dropout_param = 108;
-  optional DummyDataParameter dummy_data_param = 109;
-  optional EltwiseParameter eltwise_param = 110;
-  optional ELUParameter elu_param = 140;
-  optional EmbedParameter embed_param = 137;
-  optional ExpParameter exp_param = 111;
-  optional FlattenParameter flatten_param = 135;
-  optional HDF5DataParameter hdf5_data_param = 112;
-  optional HDF5OutputParameter hdf5_output_param = 113;
-  optional HingeLossParameter hinge_loss_param = 114;
-  optional ImageDataParameter image_data_param = 115;
-  optional InfogainLossParameter infogain_loss_param = 116;
-  optional InnerProductParameter inner_product_param = 117;
-  optional InputParameter input_param = 143;
-  optional LogParameter log_param = 134;
-  optional LRNParameter lrn_param = 118;
-  optional MemoryDataParameter memory_data_param = 119;
-  optional MVNParameter mvn_param = 120;
-  optional ParameterParameter parameter_param = 145;
-  optional PoolingParameter pooling_param = 121;
-  optional PowerParameter power_param = 122;
-  optional PReLUParameter prelu_param = 131;
-  optional PythonParameter python_param = 130;
-  optional RecurrentParameter recurrent_param = 146;
-  optional ReductionParameter reduction_param = 136;
-  optional ReLUParameter relu_param = 123;
-  optional ReshapeParameter reshape_param = 133;
-  optional ScaleParameter scale_param = 142;
-  optional SigmoidParameter sigmoid_param = 124;
-  optional SoftmaxParameter softmax_param = 125;
-  optional SPPParameter spp_param = 132;
-  optional SliceParameter slice_param = 126;
-  optional TanHParameter tanh_param = 127;
-  optional ThresholdParameter threshold_param = 128;
-  optional TileParameter tile_param = 138;
-  optional WindowDataParameter window_data_param = 129;
+  optional ConvolutionParameter convolution_param          = 106;
+  optional CropParameter crop_param                        = 144;
+  optional DataParameter data_param                        = 107;
+  optional DropoutParameter dropout_param                  = 108;
+  optional DummyDataParameter dummy_data_param             = 109;
+  optional EltwiseParameter eltwise_param                  = 110;
+  optional ELUParameter elu_param                          = 140;
+  optional EmbedParameter embed_param                      = 137;
+  optional ExpParameter exp_param                          = 111;
+  optional FlattenParameter flatten_param                  = 135;
+  optional HDF5DataParameter hdf5_data_param               = 112;
+  optional HDF5OutputParameter hdf5_output_param           = 113;
+  optional HingeLossParameter hinge_loss_param             = 114;
+  optional ImageDataParameter image_data_param             = 115;
+  optional InfogainLossParameter infogain_loss_param       = 116;
+  optional InnerProductParameter inner_product_param       = 117;
+  optional InputParameter input_param                      = 143;
+  optional LogParameter log_param                          = 134;
+  optional LRNParameter lrn_param                          = 118;
+  optional MemoryDataParameter memory_data_param           = 119;
+  optional MVNParameter mvn_param                          = 120;
+  optional ParameterParameter parameter_param              = 145;
+  optional PluginParameter plugin_param                    = 147;
+  optional PoolingParameter pooling_param                  = 121;
+  optional PowerParameter power_param                      = 122;
+  optional PReLUParameter prelu_param                      = 131;
+  optional PythonParameter python_param                    = 130;
+  optional RecurrentParameter recurrent_param              = 146;
+  optional ReductionParameter reduction_param              = 136;
+  optional ReLUParameter relu_param                        = 123;
+  optional ReshapeParameter reshape_param                  = 133;
+  optional ScaleParameter scale_param                      = 142;
+  optional SigmoidParameter sigmoid_param                  = 124;
+  optional SoftmaxParameter softmax_param                  = 125;
+  optional SPPParameter spp_param                          = 132;
+  optional SliceParameter slice_param                      = 126;
+  optional TanHParameter tanh_param                        = 127;
+  optional ThresholdParameter threshold_param              = 128;
+  optional TileParameter tile_param                        = 138;
+  optional WindowDataParameter window_data_param           = 129;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1409,4 +1410,22 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+
+message PluginParameter {
+  // Filename of library with extension.
+  required string library = 1;
+
+  // Type of the layer in the plugin.
+  // Either type or creator_symbol needs to be defined.
+  optional string type = 2;
+
+  // Name of symbol in library used to create the layer.
+  optional string creator_symbol = 3;
+
+  // Name of symbol in library used to delete the layer.
+  optional string deleter_symbol = 4;
+
+  // String containing parameters passed to the layer.
+  optional string param_str = 5;
 }
