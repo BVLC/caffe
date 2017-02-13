@@ -249,7 +249,9 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices(num);
+#ifdef USE_OPENMP
   #pragma omp parallel for
+#endif
   for (int i = 0; i < num; ++i) {
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
     const map<int, vector<float> >& conf_scores = all_conf_scores[i];
@@ -314,7 +316,9 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       all_indices[i] = indices;
       num_to_add = num_det;
     }
+#ifdef USE_OPENMP
     #pragma omp atomic
+#endif
     num_kept += num_to_add;
   }
 
