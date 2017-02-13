@@ -123,6 +123,33 @@ class LayerRegisterer {
   }
 };
 
+#define EXPORT_LAYER_MODULE_DELETER(deleter)                                   \
+  extern "C" void deleter##_float(Layer<float> * layer) {                      \
+    return deleter<float>(layer);                                              \
+  }                                                                            \
+  extern "C" void deleter##_double(Layer<double> * layer) {                    \
+    return deleter<double>(layer);                                             \
+  }                                                                            \
+
+#define EXPORT_LAYER_MODULE_CREATOR(type, creator)                             \
+  extern "C" Layer<float> * creator##_float(                                   \
+    const LayerParameter& param                                                \
+  ) {                                                                          \
+    return creator<float>(param);                                              \
+  }                                                                            \
+  extern "C" Layer<double> * creator##_double(                                 \
+    const LayerParameter& param                                                \
+  ) {                                                                          \
+    return creator<double>(param);                                             \
+  }                                                                            \
+
+#define EXPORT_LAYER_MODULE_CLASS(type)                                        \
+  template <typename Dtype>                                                    \
+  Layer<Dtype> * CreateModule_##type##Layer(const LayerParameter& param)       \
+  {                                                                            \
+    return new type##Layer<Dtype>(param);                                      \
+  }                                                                            \
+  EXPORT_LAYER_MODULE_CREATOR(type, CreateModule_##type##Layer)                \
 
 #define REGISTER_LAYER_CREATOR(type, creator)                                  \
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
@@ -134,7 +161,7 @@ class LayerRegisterer {
   {                                                                            \
     return shared_ptr<Layer<Dtype> >(new type##Layer<Dtype>(param));           \
   }                                                                            \
-  REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)
+  REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)                          \
 
 }  // namespace caffe
 

@@ -3,9 +3,17 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#include <string>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
+#include "caffe/util/search_path.hpp"
+
+#ifdef CMAKE_BUILD
+  // CMake defines it in caffe_config.h, Makefile passes it to compiler
+  #include "caffe_config.h"
+#endif
 
 namespace caffe {
 
@@ -49,11 +57,21 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
+vector<string> GetFallbackSearchPath() {
+  char const * env_layer_path = std::getenv("CAFFE_LAYER_PATH");
+  if (env_layer_path) {
+    return ParseSearchPath(env_layer_path);
+  } else {
+    return ParseSearchPath(DEFAULT_LAYER_PATH);
+  }
+}
+
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
     : random_generator_(), mode_(Caffe::CPU),
-      solver_count_(1), solver_rank_(0), multiprocess_(false) { }
+      solver_count_(1), solver_rank_(0), multiprocess_(false),
+      layer_path_(GetFallbackSearchPath()) {}
 
 Caffe::~Caffe() { }
 
@@ -107,7 +125,8 @@ void* Caffe::RNG::generator() {
 Caffe::Caffe()
     : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
     mode_(Caffe::CPU),
-    solver_count_(1), solver_rank_(0), multiprocess_(false) {
+    solver_count_(1), solver_rank_(0), multiprocess_(false),
+    layer_path_(GetFallbackSearchPath()) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {

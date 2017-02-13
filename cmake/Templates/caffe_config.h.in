@@ -1,6 +1,10 @@
 /* Sources directory */
 #define SOURCE_FOLDER "${PROJECT_SOURCE_DIR}"
 
+/* Layer module options */
+#define DEFAULT_LAYER_PATH "${DEFAULT_LAYER_PATH}"
+#define LAYER_MODULE_PREFIX "${LAYER_MODULE_PREFIX}"
+#define LAYER_MODULE_SUFFIX "${LAYER_MODULE_SUFFIX}"
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 

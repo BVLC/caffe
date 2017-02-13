@@ -12,7 +12,7 @@ project(Caffe C CXX)
 # ---[ Caffe version
 set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")
 set(CAFFE_TARGET_SOVERSION "1.0.0" CACHE STRING "Caffe soname version")
-add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
+add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION} -DCMAKE_BUILD)
 
 # ---[ Enable C++11 support
 set(CMAKE_CXX_STANDARD 11)
@@ -45,6 +45,9 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
+set(DEFAULT_LAYER_PATH "${CMAKE_INSTALL_PREFIX}/lib/caffe/layers" CACHE STRING "Default layer module search path")
+set(LAYER_MODULE_PREFIX "${CMAKE_SHARED_MODULE_PREFIX}" CACHE STRING "Prefix used to form filenames from module names")
+set(LAYER_MODULE_SUFFIX "${CMAKE_SHARED_MODULE_SUFFIX}" CACHE STRING "Suffix used to form filenames from module names")
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)

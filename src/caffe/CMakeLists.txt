@@ -10,6 +10,9 @@ target_include_directories(caffeproto PUBLIC ${PROTOBUF_INCLUDE_DIR})
 
 list(INSERT Caffe_LINKER_LIBS 0 PUBLIC caffeproto) # note, crucial to prepend!
 
+# Add dependency on dl to load runtime modules
+list(APPEND Caffe_LINKER_LIBS ${CMAKE_DL_LIBS})
+
 # --[ Caffe library
 
 # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists

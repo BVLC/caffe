@@ -28,6 +28,8 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
        registry.begin(); iter != registry.end(); ++iter) {
     // Special case: PythonLayer is checked by pytest
     if (iter->first == "Python") { continue; }
+    // Special case: ModuleLayer is checked by separate unit tests
+    if (iter->first == "Module") { continue; }
     LayerParameter layer_param;
     // Data layers expect a DB
     if (iter->first == "Data") {

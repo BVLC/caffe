@@ -1,10 +1,15 @@
 // Make sure we include Python.h before any system header
 // to avoid _POSIX_C_SOURCE redefinition
+
+#include <boost/make_shared.hpp>
+
 #ifdef WITH_PYTHON_LAYER
 #include <boost/python.hpp>
 #endif
 #include <string>
+#include <vector>
 
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/layers/conv_layer.hpp"
@@ -29,6 +34,12 @@
 
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
+#endif
+
+#include "caffe/util/dynamic_library.hpp"
+
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
 #endif
 
 namespace caffe {
@@ -261,6 +272,110 @@ shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
 #endif
+
+namespace {
+  template<typename Dtype>
+  using LayerDeleter = void (*)(Layer<Dtype> *);
+
+  /**
+   * @brief This deleter ensures the module is kept open while
+   *        any layer that uses this module is alive. In addition
+   *        it calls the custom deleter of the layer if configured.
+   */
+  template <typename Dtype>
+  struct LayerModuleDeleter {
+    shared_ptr<DynamicLibrary> module;
+    LayerDeleter<Dtype> deleter;
+
+    explicit LayerModuleDeleter(
+      DynamicLibrary && module,
+      LayerDeleter<Dtype> deleter)
+      : module{boost::make_shared<DynamicLibrary>(std::move(module))},
+        deleter{deleter} {}
+
+    void operator()(Layer<Dtype> * layer) {
+      // first delete layer
+      if (deleter) {
+        deleter(layer);
+      } else {
+        delete layer;
+      }
+
+      // then delete the module
+      module.reset();
+    }
+  };
+
+  template<typename Dtype> std::string ModuleSymbolSuffix();
+  template<> std::string ModuleSymbolSuffix<double>() { return "_double"; }
+  template<> std::string ModuleSymbolSuffix<float>() { return "_float"; }
+
+  template<typename T>
+  T FindSymbolThrow(DynamicLibrary const & module, std::string const & name) {
+    void * symbol = module.FindSymbol(name);
+    if (!symbol) {
+      throw std::runtime_error("Failed to find symbol '" + name +
+        "' in module '" + module.path());
+    }
+    return reinterpret_cast<T>(symbol);
+  }
+
+
+}  // namespace
+
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetLayerModule(const LayerParameter& param) {
+  using LayerCreator = Layer<Dtype> * (*) (const LayerParameter &);
+
+  // find and open module
+  std::string filename = LAYER_MODULE_PREFIX + param.module_param().module()
+    + LAYER_MODULE_SUFFIX;
+  vector<string> search_path = Caffe::Get().LayerPath();
+  caffe::DynamicLibrary module{caffe::FindLibrary(filename, search_path)};
+
+  // check if successfully opened
+  if (!module.IsValid()) {
+    std::string search_path_error = "";
+    for (size_t i = 0; i < search_path.size(); ++i) {
+      search_path_error += "\t'" + search_path[i] + "'\n";
+    }
+    if (search_path.empty()) {
+      search_path_error = "\t<EMPTY>";
+    }
+
+    throw std::runtime_error("Failed to open module '" +
+      filename + "' in search path:\n" +
+      search_path_error);
+  }
+
+  // get correct creator symbol
+  std::string creator_symbol;
+  if (param.module_param().has_creator_symbol()) {
+    creator_symbol = param.module_param().creator_symbol();
+  } else if (param.module_param().has_type()) {
+    creator_symbol = "CreateModule_" + param.module_param().type() + "Layer";
+  } else {
+    throw std::runtime_error("A type or creator_symbol must be defined.");
+  }
+
+  creator_symbol += ModuleSymbolSuffix<Dtype>();
+  LayerCreator creator = FindSymbolThrow<LayerCreator>(module, creator_symbol);
+
+  // find layer deleter symbol
+  LayerDeleter<Dtype> deleter = nullptr;
+  if (param.module_param().has_deleter_symbol()) {
+    std::string deleter_symbol = param.module_param().deleter_symbol();
+    deleter_symbol += ModuleSymbolSuffix<Dtype>();
+    deleter = FindSymbolThrow<LayerDeleter<Dtype> >(module, deleter_symbol);
+  }
+
+  // return layer with custom deleter so
+  // that layer and module get closed properly
+  return shared_ptr<Layer<Dtype> >(creator(param),
+    LayerModuleDeleter<Dtype>{std::move(module), deleter});
+}
+
+REGISTER_LAYER_CREATOR(Module, GetLayerModule);
 
 // Layers that use their constructor as their default creator should be
 // registered in their corresponding cpp files. Do not register them here.

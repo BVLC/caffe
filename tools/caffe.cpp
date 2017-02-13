@@ -13,6 +13,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/util/search_path.hpp"
 #include "caffe/util/signal_handler.h"
 
 using caffe::Blob;
@@ -54,6 +55,9 @@ DEFINE_string(sigint_effect, "stop",
 DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
+DEFINE_string(layer_path, "",
+    "Optional; the search path (colon separated) where"
+    "to search for layer modules.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -441,6 +445,11 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+  // Set modules search path.
+  if (FLAGS_layer_path != "") {
+    caffe::Caffe::Get().SetLayerPath(
+      caffe::ParseSearchPath(FLAGS_layer_path));
+  }
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {

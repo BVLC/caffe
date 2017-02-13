@@ -386,9 +386,9 @@ message LayerParameter {
   optional LogParameter log_param                          = 134;
   optional LRNParameter lrn_param                          = 118;
   optional MemoryDataParameter memory_data_param           = 119;
+  optional ModuleParameter module_param                    = 147;
   optional MVNParameter mvn_param                          = 120;
   optional ParameterParameter parameter_param              = 145;
-  optional PluginParameter plugin_param                    = 147;
   optional PoolingParameter pooling_param                  = 121;
   optional PowerParameter power_param                      = 122;
   optional PReLUParameter prelu_param                      = 131;
@@ -1412,18 +1412,18 @@ message PReLUParameter {
   optional bool channel_shared = 2 [default = false];
 }
 
-message PluginParameter {
-  // Filename of library with extension.
-  required string library = 1;
+message ModuleParameter {
+  // Filename of module with extension.
+  required string module = 1;
 
-  // Type of the layer in the plugin.
+  // Type of the layer in the module.
   // Either type or creator_symbol needs to be defined.
   optional string type = 2;
 
-  // Name of symbol in library used to create the layer.
+  // Name of symbol in module used to create the layer.
   optional string creator_symbol = 3;
 
-  // Name of symbol in library used to delete the layer.
+  // Name of symbol in module used to delete the layer.
   optional string deleter_symbol = 4;
 
   // String containing parameters passed to the layer.

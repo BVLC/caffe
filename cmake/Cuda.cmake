@@ -234,6 +234,9 @@ endfunction()
 find_package(CUDA 5.5 QUIET)
 find_cuda_helper_libs(curand)  # cmake 2.8.7 compartibility which doesn't search for curand
 
+# disable propagation of CUDA host flags (CUDA cannot compil
+set(CUDA_PROPAGATE_HOST_FLAGS off)
+
 if(NOT CUDA_FOUND)
   return()
 endif()
