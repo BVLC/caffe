@@ -54,7 +54,8 @@ namespace caffe {
             }
             
             * diff = fabs(a - b);
-            return *diff <= epsilon || boost::math::float_distance(a, b) <= 1;
+            return *diff <= epsilon ||
+              fabs(boost::math::float_distance(a, b)) <= 1;
     }
 }
 
