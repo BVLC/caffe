@@ -198,17 +198,20 @@ TYPED_TEST(TestEngineSelection, TestEngineParser) {
 #endif
 
 #ifdef MKLDNN_SUPPORTED
-  EngineParser ep3("MKLDNN:CPU,FPGA");
+  EngineParser ep3("MKLDNN:CPU,FPGA,DLA");
   EXPECT_FALSE(ep3.isEngine("CAFFE"));
   EXPECT_TRUE(ep3.isEngine("MKLDNN"));
   EXPECT_FALSE(ep3.isEngine("MKL2017"));
   EXPECT_FALSE(ep3.isEngine("CUDNN"));
 
-  EXPECT_EQ(2, ep3.getNumberOfSubEngines());
+  EXPECT_EQ(3, ep3.getNumberOfSubEngines());
 
   EXPECT_EQ(&ep3.getMKLDNNSubEngine(0), &CpuEngine::Instance().get_engine());
 #ifdef FPGA_ENABLED
   EXPECT_EQ(&ep3.getMKLDNNSubEngine(1), &FPGAEngine::Instance().get_engine());
+#endif
+#ifdef DLA_ENABLED
+  EXPECT_EQ(&ep3.getMKLDNNSubEngine(2), &DLAEngine::Instance().get_engine());
 #endif
   EngineParser ep4("MKLDNN:FPGA,CPU,FPGA");
   EXPECT_FALSE(ep4.isEngine("CAFFE"));
