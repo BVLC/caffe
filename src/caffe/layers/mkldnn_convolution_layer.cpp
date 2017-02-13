@@ -210,12 +210,12 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolution(const vector<Blob<Dtype>*>& 
     output_memory = fwd_top_data->create_output_memory();
 
     fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_memory_pd, prv_weights_memory_pd, this->blobs_[0].get(), this));
-    weights_primitive = fwd_weights_data->create_input(false);
+    weights_primitive = fwd_weights_data->create_input(true);
 
     if (this->bias_term_) {
         shared_ptr<MemPD> prv_bias_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_memory_pd, prv_bias_memory_pd, this->blobs_[1].get(), this));
-        bias_primitive = fwd_bias_data->create_input(false);
+        bias_primitive = fwd_bias_data->create_input(true);
         if(relu) {
             convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
                         , *input_primitive, *weights_primitive
@@ -256,10 +256,10 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     if( convFwd_pd == NULL)
         InitConvolution(bottom, top);
     // making reorders if needed.
-    fwd_bottom_data->sync_before_read(false);
-    fwd_weights_data->sync_before_read(true);
+    fwd_bottom_data->sync_before_read();
+    fwd_weights_data->sync_before_read();
     if (this->bias_term_)
-        fwd_bias_data->sync_before_read(true);
+        fwd_bias_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
 

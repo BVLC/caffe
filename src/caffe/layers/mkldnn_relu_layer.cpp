@@ -81,6 +81,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
 
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+    bool inplace = (bottom[0] == top[0]);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
@@ -126,7 +127,7 @@ void MKLDNNReLULayer<Dtype>::InitReLU(const vector<Blob<Dtype>*>& bottom, const 
     input_primitive = fwd_bottom_data->create_input(false);
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
-    output_memory = fwd_top_data->create_output_memory();
+    output_memory = fwd_top_data->create_output_memory(inplace);
 
     reluFwd.reset(new relu_forward(*reluFwd_pd, *input_primitive, *output_memory));
     fwd_bottom_data->set_mkldnn_primitive(reluFwd);
@@ -139,12 +140,13 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+    bool inplace = (bottom[0] == top[0]);
     if( reluFwd_pd == NULL)
         InitReLU(bottom, top);
     // making reorders if needed.
-    fwd_bottom_data->sync_before_read(false);
+    fwd_bottom_data->sync_before_read();
     // update top that head at prv
-    fwd_top_data->sync_before_write();
+    fwd_top_data->sync_before_write(inplace);
 
     reluFwd.submit();
 }

@@ -178,15 +178,14 @@ public:
     // in backward a conversion done already in the forward direction.
     shared_ptr<primitive> get_blob_prv_primitive(Blob<Dtype> * blob, bool set_prv_ptr, bool convert = true,
             MKLDNNMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL);
-    void sync_blob_prv_data(Blob<Dtype> * blob, bool set_prv_ptr);
 
-    void sync_before_read(bool set_prv_ptr);
-    void sync_before_write();
+    void sync_before_read();
+    void sync_before_write(bool inplace = false);
 
     shared_ptr<primitive> create_input(Blob<Dtype> * blob, bool set_prv_ptr);
-    shared_ptr<memory> create_output_memory(Blob<Dtype> * blob);
+    shared_ptr<memory> create_output_memory(Blob<Dtype> * blob, bool inplace = false);
     shared_ptr<primitive> create_input(bool set_prv_ptr);
-    shared_ptr<memory> create_output_memory();
+    shared_ptr<memory> create_output_memory(bool inplace = false);
 
     void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.aprimitive); _mkldnn_primitive = mprimitive;  }
     MKLDNNPrimitive<Dtype>&  mkldnn_primitive() { return _mkldnn_primitive; }

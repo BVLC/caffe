@@ -144,13 +144,24 @@ protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 private:
-    void InitInnerProduct(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitInnerProductFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitInnerProductBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
 
-    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
+    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data
+                    , bwdd_weights_data, bwdw_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwdd_bottom_diff, bwdd_top_diff
+                    , bwdw_top_diff, bwdw_weights_diff, bwdw_bias_diff;
     shared_ptr<inner_product_forward::primitive_desc> ipFwd_pd;
-    MKLDNNPrimitive<Dtype> ipFwd;
-    shared_ptr<memory> output_memory;
-    shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
+    shared_ptr<inner_product_backward_data::primitive_desc> ipBwdData_pd;
+    shared_ptr<inner_product_backward_weights::primitive_desc> ipBwdWeights_pd;
+
+    MKLDNNPrimitive<Dtype> ipFwd, ipBwdData, ipBwdWeights;
+    shared_ptr<memory> fwd_top_data_memory, bwdd_bottom_diff_memory
+                    , bwdw_weights_diff_memory,  bwdw_bias_diff_memory;
+    shared_ptr<primitive> fwd_bottom_data_primitive, fwd_weights_data_primitive, fwd_bias_data_primitive
+                    , bwdd_top_diff_primitive, bwdd_weights_data_primitive
+                    , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t w_, h_;
 };
 
