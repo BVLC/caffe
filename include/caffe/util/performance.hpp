@@ -50,9 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PERFORMANCE_MEASUREMENT_END_STATIC(name)            \
   m_MACRO.Stop();                                           \
-  static std::string n_MACRO = std::string(name);           \
-  static int id_MACRO =                                     \
-    performance::monitor.GetEventIdByName(n_MACRO.c_str()); \
+  static int id_MACRO = performance::monitor.GetEventIdByName(name); \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
 #define PERFORMANCE_CREATE_MONITOR() \
