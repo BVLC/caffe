@@ -525,7 +525,88 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))",    // NOLINT
 "",    // NOLINT
 "#ifdef MULTI",    // NOLINT
-"__kernel void CFMulti(__global Dtype* image_data,",    // NOLINT
+"__kernel void CFMultiNoPadding(",    // NOLINT
+"__global Dtype* image_data,",    // NOLINT
+"int_tp image_offset,",    // NOLINT
+"__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
+"__global Dtype* bias,const int_tp bias_offset,",    // NOLINT
+"__global Dtype* convolved_image,const int_tp convolved_image_offset,",    // NOLINT
+"const ushort input_width,",    // NOLINT
+"const ushort input_height,",    // NOLINT
+"const ushort output_width,",    // NOLINT
+"const ushort output_height,",    // NOLINT
+"const ushort pad_w,",    // NOLINT
+"const ushort pad_h) {",    // NOLINT
+"",    // NOLINT
+"const int_tp outputX = get_global_id(0);",    // NOLINT
+"const int_tp outputY = get_global_id(1);",    // NOLINT
+"const int_tp kernelNum = get_global_id(2)*ZPAR;",    // NOLINT
+"if(outputX < output_width && outputY < output_height)",    // NOLINT
+"{",    // NOLINT
+"Dtype sum[ZPAR];",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"sum[kern] = 0.0f;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"const int_tp org_y = outputY * STRIDE_H - pad_h;",    // NOLINT
+"const int_tp org_x = outputX * STRIDE_W - pad_w;",    // NOLINT
+"const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;",    // NOLINT
+"const int_tp biasIndex=bias_offset + kernelNum;",    // NOLINT
+"const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
+"const int_tp imageSize = input_width*input_height;",    // NOLINT
+"",    // NOLINT
+"__global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));",    // NOLINT
+"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
+"",    // NOLINT
+"for(int_tp c = 0; c < CHANNELS; c++)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp x = 0; x < KERNEL_W; x++)",    // NOLINT
+"{",    // NOLINT
+"if(!(org_y + y >= 0 && org_y + y < input_height && org_x + x >= 0 && org_x + x < input_width))",    // NOLINT
+"{",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"sum[kern] += image_dataPtrFloat[x] * kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS + x];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"image_dataPtrFloat += input_width;",    // NOLINT
+"kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
+"}",    // NOLINT
+"image_dataPtrFloat += imageSize - input_width*KERNEL_H;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(APPLY_BIAS == 1)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
+"{",    // NOLINT
+"int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
+"{",    // NOLINT
+"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
+"{",    // NOLINT
+"int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void CFMulti(",    // NOLINT
+"__global Dtype* image_data,",    // NOLINT
 "int_tp image_offset,",    // NOLINT
 "__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
 "__global Dtype* bias,const int_tp bias_offset,",    // NOLINT
