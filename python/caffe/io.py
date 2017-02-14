@@ -147,7 +147,7 @@ class Transformer:
         mean = self.mean.get(in_)
         input_scale = self.input_scale.get(in_)
         in_dims = self.inputs[in_][2:]
-        if mean.shape[1:] > (1,1):
+        if mean is not None and mean.shape[1:] > (1,1):
             if caffe_in_dims != mean.shape[1:]:
                 caffe_in = resize_image(caffe_in, mean.shape[1:])
                 caffe_in_dims = mean.shape[1:]
