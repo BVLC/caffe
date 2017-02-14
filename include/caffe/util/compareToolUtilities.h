@@ -232,9 +232,7 @@ double compareFiles(const char *diffFileName, const char *referenceFileName,
             (aAbs == bAbs) ? 0 : 1;
 
         if (file && (diff >= epsilon)) {
-            fprintf(file, format, i,
-              *reinterpret_cast<CastType *> (&a),
-              *reinterpret_cast<CastType *> (&b), diff, a, b);
+            fprintf(file, format, i, (CastType)a, (CastType)b, diff, a, b);
             (*diffCounter)++;
         }
 
