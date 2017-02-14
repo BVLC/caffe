@@ -42,16 +42,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   performance::Measurement m_MACRO;                \
   m_MACRO.Start();
 
-#define PERFORMANCE_MEASUREMENT_END(name)                        \
-  m_MACRO.Stop();                                                \
-  const char* n_MACRO = name;                                    \
-  int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+#define PERFORMANCE_MEASUREMENT_END(name)                                \
+  m_MACRO.Stop();                                                        \
+  std::string n_MACRO = std::string(name);                               \
+  int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO.c_str()); \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
-#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                        \
-  m_MACRO.Stop();                                                       \
-  static const char* n_MACRO = name;                                    \
-  static int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)            \
+  m_MACRO.Stop();                                           \
+  static std::string n_MACRO = std::string(name);           \
+  static int id_MACRO =                                     \
+    performance::monitor.GetEventIdByName(n_MACRO.c_str()); \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
 #define PERFORMANCE_CREATE_MONITOR() \
@@ -64,10 +65,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)             \
   (std::string(prefix) + "_mkl_" + this->layer_param_.name() \
-    + std::string(suffix)).c_str();
+    + std::string(suffix))
 
 #define PERFORMANCE_MKL_NAME(prefix) \
-  (std::string(prefix) + "_mkl_" + this->layer_param_.name()).c_str();
+  (std::string(prefix) + "_mkl_" + this->layer_param_.name())
 
 #else
 #define PERFORMANCE_MEASUREMENT_BEGIN()
