@@ -270,14 +270,17 @@ public:
     *   - negative_slope (\b optional, default 0).
     *     the value @f$ \nu @f$ by which negative values are multiplied.
     */
-    explicit MKLDNNReLULayer(const LayerParameter& param)
-            : MKLDNNLayer<Dtype>(), NeuronLayer<Dtype>(param)
-            , fwd_top_data(), fwd_bottom_data ()
-            , reluFwd_pd(), output_memory()
-            , input_primitive()
-            , num_(0), width_(0), height_(0), channels_(0)
-            {}
-    ~MKLDNNReLULayer() {}
+  explicit MKLDNNReLULayer(const LayerParameter& param)
+    : MKLDNNLayer<Dtype>(), NeuronLayer<Dtype>(param)
+    , fwd_top_data(), fwd_bottom_data()
+    , bwd_top_diff(), bwd_bottom_diff()
+    , reluFwd_pd(), reluBwd_pd()
+    , fwd_top_data_memory(), bwd_bottom_diff_memory()
+    , fwd_bottom_data_primitive(), bwd_top_diff_primitive()
+    , num_(0), width_(0), height_(0), channels_(0)
+  {}
+  ~MKLDNNReLULayer() {}
+  
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -289,13 +292,17 @@ protected:
     virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 , const vector<Blob<Dtype>*>& bottom);
 private:
-    void InitReLU(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitReLUFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitReLUBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<relu_forward::primitive_desc> reluFwd_pd;
-    MKLDNNPrimitive<Dtype> reluFwd;
-    shared_ptr<memory> output_memory;
-    shared_ptr<primitive> input_primitive;
+    shared_ptr<relu_backward::primitive_desc> reluBwd_pd;
+    MKLDNNPrimitive<Dtype> reluFwd, reluBwd;
+    shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
+    shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     int32_t num_, width_, height_, channels_;
 };
 
