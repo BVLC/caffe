@@ -44,12 +44,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define PERFORMANCE_MEASUREMENT_END(name)                                \
   m_MACRO.Stop();                                                        \
-  std::string n_MACRO = std::string(name);                               \
-  int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO.c_str()); \
+  int id_MACRO = performance::monitor.GetEventIdByName(name);            \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
-#define PERFORMANCE_MEASUREMENT_END_STATIC(name)            \
-  m_MACRO.Stop();                                           \
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                     \
+  m_MACRO.Stop();                                                    \
   static int id_MACRO = performance::monitor.GetEventIdByName(name); \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
@@ -61,12 +60,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   performance::monitor.EnableMeasurements(); \
   performance::monitor.MarkAsInitialized();
 
-#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)             \
-  (std::string(prefix) + "_mkl_" + this->layer_param_.name() \
-    + std::string(suffix))
+#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)      \
+  do {                                               \
+    static char name[256];                           \
+    strcpy(name, prefix);                            \
+    strcat(name, "_mkl_");                           \
+    strcat(name, this->layer_param_.name().c_str()); \
+    PERFORMANCE_MEASUREMENT_END(name);               \
+  } while(0)
 
-#define PERFORMANCE_MKL_NAME(prefix) \
-  (std::string(prefix) + "_mkl_" + this->layer_param_.name())
+#define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix) \
+  do {                                                           \
+    static char name[256];                                       \
+    strcpy(name, prefix);                                        \
+    strcat(name, "_mkl_");                                       \
+    strcat(name, this->layer_param_.name().c_str());             \
+    strcat(name, suffix);                                        \
+    PERFORMANCE_MEASUREMENT_END(name);                           \
+  } while(0)
 
 #else
 #define PERFORMANCE_MEASUREMENT_BEGIN()
@@ -74,8 +85,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_MEASUREMENT_END_STATIC(name)
 #define PERFORMANCE_CREATE_MONITOR()
 #define PERFORMANCE_INIT_MONITOR()
-#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)
-#define PERFORMANCE_MKL_NAME(prefix)
+#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)
+#define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix)
 #endif
 
 #ifdef PERFORMANCE_MONITORING

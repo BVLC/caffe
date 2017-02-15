@@ -303,7 +303,7 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("FW");
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -345,7 +345,7 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("BW");
 
   CHECK_EQ(e, E_SUCCESS);
 }
