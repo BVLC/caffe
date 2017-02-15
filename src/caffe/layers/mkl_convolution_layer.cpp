@@ -525,12 +525,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     }
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
+    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_prop");
 
 #ifdef USE_MLSL
     this->on_delinp_ready(propagate_down);
 #endif /* USE_MLSL */
-
-    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_prop");
 
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
