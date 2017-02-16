@@ -17,13 +17,15 @@ namespace caffe {
 
 // Reference convolution for checking results:
 // accumulate through explicit loops over input, output, and filters.
-template <typename Dtype> static
+template <typename Dtype>
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const vector<shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
+  const bool has_depth = (out->num_axes() == 5);
+  if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
   // Kernel size, stride, and pad
   int_tp kernel_h, kernel_w;
-  if (conv_param->has_kernel_w() || conv_param->has_kernel_h()) {
+  if (conv_param->has_kernel_h() || conv_param->has_kernel_w()) {
     kernel_h = conv_param->kernel_h();
     kernel_w = conv_param->kernel_w();
   } else {
@@ -43,16 +45,28 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   } else {
     stride_h = stride_w = conv_param->stride_size() ? conv_param->stride(0) : 1;
   }
+  int_tp dilation_h, dilation_w;
+  dilation_h = dilation_w = conv_param->dilation_size() ?
+                            conv_param->dilation(0) : 1;
+  int_tp kernel_d, pad_d, stride_d, dilation_d;
+  if (has_depth) {
+    kernel_d = kernel_h;
+    stride_d = stride_h;
+    pad_d = pad_h;
+    dilation_d = dilation_h;
+  } else {
+    kernel_d = stride_d = dilation_d = 1;
+    pad_d = 0;
+  }
   // Groups
   int_tp groups = conv_param->group();
   int_tp o_g = out->shape(1) / groups;
   int_tp k_g = in->shape(1) / groups;
   int_tp o_head, k_head;
   // Convolution
-  vector<int_tp> weight_offset(4);
-  vector<int_tp> in_offset(4);
-  vector<int_tp> out_offset(4);
-
+  vector<int_tp> weight_offset(4 + has_depth);
+  vector<int_tp> in_offset(4 + has_depth);
+  vector<int_tp> out_offset(4 + has_depth);
   Dtype* out_data = out->mutable_cpu_data();
   for (int_tp n = 0; n < out->shape(0); n++) {
     for (int_tp g = 0; g < groups; g++) {
@@ -60,29 +74,38 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       k_head = k_g * g;
       for (int_tp o = 0; o < o_g; o++) {
         for (int_tp k = 0; k < k_g; k++) {
-          for (int_tp y = 0; y < out->shape(2); y++) {
-            for (int_tp x = 0; x < out->shape(3); x++) {
-              for (int_tp p = 0; p < kernel_h; p++) {
-                for (int_tp q = 0; q < kernel_w; q++) {
-                  int_tp in_y = y * stride_h - pad_h + p;
-                  int_tp in_x = x * stride_w - pad_w + q;
-                  if (in_y >= 0 && in_y < in->height()
-                    && in_x >= 0 && in_x < in->width()) {
-                    weight_offset[0] = o + o_head;
-                    weight_offset[1] = k;
-                    weight_offset[2] = p;
-                    weight_offset[3] = q;
-                    in_offset[0] = n;
-                    in_offset[1] = k + k_head;
-                    in_offset[2] = in_y;
-                    in_offset[3] = in_x;
-                    out_offset[0] = n;
-                    out_offset[1] = o + o_head;
-                    out_offset[2] = y;
-                    out_offset[3] = x;
-                    out_data[out->offset(out_offset)] +=
-                        in->data_at(in_offset)
-                        * weights[0]->data_at(weight_offset);
+          for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
+            for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
+              for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
+                for (int_tp r = 0; r < kernel_d; r++) {
+                  for (int_tp p = 0; p < kernel_h; p++) {
+                    for (int_tp q = 0; q < kernel_w; q++) {
+                      int_tp in_z = z * stride_d - pad_d + r * dilation_d;
+                      int_tp in_y = y * stride_h - pad_h + p * dilation_h;
+                      int_tp in_x = x * stride_w - pad_w + q * dilation_w;
+                      if (in_z >= 0 && in_z < (has_depth ? in->shape(2) : 1)
+                          && in_y >= 0 && in_y < in->shape(2 + has_depth)
+                          && in_x >= 0 && in_x < in->shape(3 + has_depth)) {
+                        weight_offset[0] = o + o_head;
+                        weight_offset[1] = k;
+                        if (has_depth) { weight_offset[2] = r; }
+                        weight_offset[2 + has_depth] = p;
+                        weight_offset[3 + has_depth] = q;
+                        in_offset[0] = n;
+                        in_offset[1] = k + k_head;
+                        if (has_depth) { in_offset[2] = in_z; }
+                        in_offset[2 + has_depth] = in_y;
+                        in_offset[3 + has_depth] = in_x;
+                        out_offset[0] = n;
+                        out_offset[1] = o + o_head;
+                        if (has_depth) { out_offset[2] = z; }
+                        out_offset[2 + has_depth] = y;
+                        out_offset[3 + has_depth] = x;
+                        out_data[out->offset(out_offset)] +=
+                            in->data_at(in_offset)
+                            * weights[0]->data_at(weight_offset);
+                      }
+                    }
                   }
                 }
               }
@@ -97,20 +120,22 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const Dtype* bias_data = weights[1]->cpu_data();
     for (int_tp n = 0; n < out->shape(0); n++) {
       for (int_tp o = 0; o < out->shape(1); o++) {
-        for (int_tp y = 0; y < out->shape(2); y++) {
-          for (int_tp x = 0; x < out->shape(3); x++) {
+        for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
+          for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
+            for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
               out_offset[0] = n;
               out_offset[1] = o;
-              out_offset[2] = y;
-              out_offset[3] = x;
+              if (has_depth) { out_offset[2] = z; }
+              out_offset[2 + has_depth] = y;
+              out_offset[3 + has_depth] = x;
               out_data[out->offset(out_offset)] += bias_data[o];
+            }
           }
         }
       }
     }
   }
 }
-
 template void caffe_conv(const Blob<float>* in,
     ConvolutionParameter* conv_param,
     const vector<shared_ptr<Blob<float> > >& weights,
@@ -328,6 +353,58 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   }
 }
 
+TYPED_TEST(ConvolutionLayerTest_Spatial, TestDilatedConvolution) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+    typedef typename TypeParam::Dtype Dtype;
+    vector<int_tp> bottom_shape;
+    bottom_shape.push_back(2);
+    bottom_shape.push_back(3);
+    bottom_shape.push_back(8);
+    bottom_shape.push_back(7);
+    this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+    this->blob_top_vec_.push_back(this->blob_top_2_);
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    GaussianFiller<Dtype> filler(filler_param);
+
+    for (int_tp i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+      this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+      filler.Fill(this->blob_bottom_vec_[i]);
+    }
+
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_group(1);
+    convolution_param->add_kernel_size(3);
+    convolution_param->add_dilation(2);
+    convolution_param->set_num_output(16);
+    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    convolution_param->mutable_bias_filler()->set_type("constant");
+    convolution_param->mutable_bias_filler()->set_value(0.1);
+    shared_ptr<Layer<Dtype> > layer(
+        new ConvolutionLayerSpatial<Dtype>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Check against reference convolution.
+    const Dtype* top_data;
+    const Dtype* ref_top_data;
+    caffe_conv(this->blob_bottom_vec_[0], convolution_param, layer->blobs(),
+               this->MakeReferenceTop(this->blob_top_));
+    top_data = this->blob_top_->cpu_data();
+    ref_top_data = this->ref_blob_top_->cpu_data();
+    for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
+    caffe_conv(this->blob_bottom_vec_[1], convolution_param, layer->blobs(),
+               this->MakeReferenceTop(this->blob_top_2_));
+    top_data = this->blob_top_2_->cpu_data();
+    ref_top_data = this->ref_blob_top_->cpu_data();
+    for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
+  }
+}
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial11x11x1x2_caffenet_Conv1) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
