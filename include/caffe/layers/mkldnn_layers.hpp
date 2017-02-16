@@ -116,13 +116,24 @@ protected:
 private:
     virtual void compute_output_shape();
     virtual void init_properties(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
-    void InitConvolution(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConvolutionFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConvolutionBwd(const vector<Blob<Dtype>*>& top
+                        , const vector<bool>& propagate_down
+                        , const vector<Blob<Dtype>*>& bottom);
 
-    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data;
+    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_weights_data, fwd_bias_data
+                    , bwdd_weights_data, bwdw_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwdd_bottom_diff, bwdd_top_diff
+                    , bwdw_top_diff, bwdw_weights_diff, bwdw_bias_diff;
     shared_ptr<convolution_forward::primitive_desc> convFwd_pd;
-    MKLDNNPrimitive<Dtype> convFwd;
-    shared_ptr<memory> output_memory;
-    shared_ptr<primitive> input_primitive, weights_primitive, bias_primitive;
+    shared_ptr<convolution_backward_data::primitive_desc> convBwdData_pd;
+    shared_ptr<convolution_backward_weights::primitive_desc> convBwdWeights_pd;
+    MKLDNNPrimitive<Dtype> convFwd, convBwdData, convBwdWeights;
+    shared_ptr<memory> fwd_top_data_memory, bwdd_bottom_diff_memory
+                    , bwdw_weights_diff_memory,  bwdw_bias_diff_memory;
+    shared_ptr<primitive> fwd_bottom_data_primitive, fwd_weights_data_primitive, fwd_bias_data_primitive
+                    , bwdd_top_diff_primitive, bwdd_weights_data_primitive
+                    , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
 };

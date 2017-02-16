@@ -628,10 +628,12 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // and input bottom comes from  Convolution of engine MKLDNN
     // then we can remove ReLU layer
     // and rename Convolution top blob after deleted ReLU's top
+    // Note: Currently merging of convolution and relu layers is feasible
+    // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
 
     // If current layer is Convolution of MKLDNN engine..
-    // but requested subengine should not have DLA subengine
-    if ((layer_param->type().compare("Convolution") == 0) &&
+    if ((param.state().phase() == TEST) && 
+        (layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() ==
          ConvolutionParameter_Engine_MKLDNN)
        || ((layer_param->convolution_param().engine() ==
