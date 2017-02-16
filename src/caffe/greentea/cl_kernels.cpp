@@ -565,19 +565,19 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for(int_tp x = 0; x < KERNEL_W; x++)",    // NOLINT
 "{",    // NOLINT
-"if(!(org_y + y >= 0 && org_y + y < input_height && org_x + x >= 0 && org_x + x < input_width))",    // NOLINT
+"if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))",    // NOLINT
 "{",    // NOLINT
 "continue;",    // NOLINT
 "}",    // NOLINT
 "for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
 "{",    // NOLINT
-"sum[kern] += image_dataPtrFloat[x] * kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS + x];",    // NOLINT
+"sum[kern] += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS + x];",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"image_dataPtrFloat += input_width;",    // NOLINT
+"image_dataPtrFloat += input_width * DILATION_Y;",    // NOLINT
 "kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
 "}",    // NOLINT
-"image_dataPtrFloat += imageSize - input_width*KERNEL_H;",    // NOLINT
+"image_dataPtrFloat += imageSize - input_width*KERNEL_H*DILATION_Y;",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(APPLY_BIAS == 1)",    // NOLINT
@@ -604,97 +604,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
-"__kernel void CFMulti(",    // NOLINT
-"__global Dtype* image_data,",    // NOLINT
-"int_tp image_offset,",    // NOLINT
-"__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
-"__global Dtype* bias,const int_tp bias_offset,",    // NOLINT
-"__global Dtype* convolved_image,const int_tp convolved_image_offset,",    // NOLINT
-"const ushort input_width,",    // NOLINT
-"const ushort input_height,",    // NOLINT
-"const ushort output_width,",    // NOLINT
-"const ushort output_height) {",    // NOLINT
-"",    // NOLINT
-"const int_tp outputX = get_global_id(0);",    // NOLINT
-"const int_tp outputY = get_global_id(1);",    // NOLINT
-"const int_tp kernelNum = get_global_id(2)*ZPAR;",    // NOLINT
-"if(outputX < output_width && outputY < output_height)",    // NOLINT
-"{",    // NOLINT
-"Dtype sum[ZPAR];",    // NOLINT
-"Dtype4 vectorSum[ZPAR];",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"{",    // NOLINT
-"sum[kern] = 0.0f;",    // NOLINT
-"vectorSum[kern] = (0.0f,0.0f,0.0f,0.0f);",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
-"const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;",    // NOLINT
-"const int_tp biasIndex=bias_offset + kernelNum;",    // NOLINT
-"const int_tp local_image_offset = outputY*STRIDE_H*input_width + outputX*STRIDE_W;",    // NOLINT
-"const int_tp imageSize = input_width*input_height;",    // NOLINT
-"const int_tp float4Reads = KERNEL_W / 4;",    // NOLINT
-"const int_tp floatReads = KERNEL_W % 4;",    // NOLINT
-"Dtype4 imageCache;",    // NOLINT
-"",    // NOLINT
-"__global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));",    // NOLINT
-"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
-"",    // NOLINT
-"for(int_tp c = 0; c < CHANNELS; c++)",    // NOLINT
-"{",    // NOLINT
-"for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
-"{",    // NOLINT
-"",    // NOLINT
-"for(int_tp x=0; x< float4Reads; x++)",    // NOLINT
-"{",    // NOLINT
-"imageCache = ((__global Dtype4*)image_dataPtrFloat)[x];",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"{",    // NOLINT
-"vectorSum[kern] += imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[x];",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
-"if(floatReads == 1)",    // NOLINT
-"{",    // NOLINT
-"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"vectorSum[kern].s0 += ( imageCache * ( (__global Dtype4*) &(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]) )[float4Reads] ).s0;",    // NOLINT
-"}",    // NOLINT
-"else if(floatReads == 2)",    // NOLINT
-"{",    // NOLINT
-"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"vectorSum[kern].s01 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s01;",    // NOLINT
-"}",    // NOLINT
-"else if(floatReads == 3)",    // NOLINT
-"{",    // NOLINT
-"imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
-"image_dataPtrFloat += input_width;",    // NOLINT
-"kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
-"}",    // NOLINT
-"image_dataPtrFloat += imageSize - input_width*KERNEL_H;",    // NOLINT
-"}",    // NOLINT
-"for(int_tp kern =0; kern < ZPAR; kern++)",    // NOLINT
-"sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;",    // NOLINT
-"",    // NOLINT
-"if(APPLY_BIAS == 1)",    // NOLINT
-"{",    // NOLINT
-"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
-"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
-"convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] =",    // NOLINT
-"sum[kern] + bias[biasIndex +kern];",    // NOLINT
-"}",    // NOLINT
-"else",    // NOLINT
-"for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
-"if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
-"convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] = sum[kern];",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "",    // NOLINT
@@ -834,7 +743,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {",    // NOLINT
 "for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {",    // NOLINT
-"float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);",    // NOLINT
+"float input = BLOCK_IN((br * STRIDEY + kr * DILATION_Y) * TILE_X + bc * STRIDEX + kc * DILATION_X);",    // NOLINT
 "out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1018,7 +927,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// atile is M rows x K columns.",    // NOLINT
 "int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
 "int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read = src0",    // NOLINT
@@ -1038,7 +947,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "do",    // NOLINT
 "{",    // NOLINT
 "int patch_row = 0;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "curr_y = saved_y;",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
@@ -1056,7 +965,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// ...",    // NOLINT
 "const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
 "",    // NOLINT
-"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0",    // NOLINT
+"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1",    // NOLINT
 "float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];",    // NOLINT
 "float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
 "#else",    // NOLINT
@@ -1065,14 +974,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA00[pos] = src0_read[pos];",    // NOLINT
+"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA00[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y++;",    // NOLINT
+"curr_y += DILATION_Y;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read += ROW_PITCH;",    // NOLINT
+"src0_read += (ROW_PITCH * DILATION_Y);",    // NOLINT
 "",    // NOLINT
 "float blockB00[KERNEL_WIDTH*4];",    // NOLINT
 "float8* p8BlockB00 = (float8*)blockB00;",    // NOLINT
@@ -1119,7 +1028,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 ); //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
@@ -1165,7 +1074,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// atile is M rows x K columns.",    // NOLINT
 "int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
 "int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read = src0",    // NOLINT
@@ -1185,14 +1094,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "do",    // NOLINT
 "{",    // NOLINT
 "int patch_row = 0;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "curr_y = saved_y;",    // NOLINT
 "#endif",    // NOLINT
 "do",    // NOLINT
 "{",    // NOLINT
 "// Load atile and interleaved btile.",    // NOLINT
 "const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
-"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0",    // NOLINT
+"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1",    // NOLINT
 "float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];",    // NOLINT
 "float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
 "#else",    // NOLINT
@@ -1201,14 +1110,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA00[pos] = src0_read[pos];",    // NOLINT
+"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA00[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y++;",    // NOLINT
+"curr_y += DILATION_Y;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read += ROW_PITCH;",    // NOLINT
+"src0_read += (ROW_PITCH * DILATION_Y);",    // NOLINT
 "float blockB[KERNEL_WIDTH * TILE_N_LAST_DIV8];",    // NOLINT
 "",    // NOLINT
 "interleaved_y = 0;",    // NOLINT
@@ -1278,7 +1187,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
@@ -1343,7 +1252,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// atile is M rows x K columns.",    // NOLINT
 "int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
 "int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
@@ -1390,7 +1299,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// ...",    // NOLINT
 "const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
 "",    // NOLINT
-"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0",    // NOLINT
+"#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1",    // NOLINT
 "Dtype_t blockA00 = ( (const __global Dtype_t*)src0_read )[  0  ];",    // NOLINT
 "Dtype*  pblockA00 = (Dtype*)(&blockA00);",    // NOLINT
 "#else",    // NOLINT
@@ -1399,14 +1308,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA00[pos] = src0_read[pos];",    // NOLINT
+"if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA00[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y++;",    // NOLINT
+"curr_y += DILATION_Y;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read += ROW_PITCH;",    // NOLINT
+"src0_read += ROW_PITCH * DILATION_X;",    // NOLINT
 "uint blockB00[KERNEL_WIDTH * 2];",    // NOLINT
 "uint4* p4BlockB00 = (uint4*)blockB00;",    // NOLINT
 "uint2* p2BlockB00 = (uint2*)blockB00;",    // NOLINT
@@ -1446,7 +1355,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
+"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
@@ -1585,7 +1494,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
 "int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
 "int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "int saved_y0 = curr_y0;",    // NOLINT
 "int saved_y1 = curr_y1;",    // NOLINT
 "#endif",    // NOLINT
@@ -1623,7 +1532,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// (0, 2) (8, 2) (16, 2) (24, 2) ...       ...",    // NOLINT
 "// ...",    // NOLINT
 "const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
-"#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0",    // NOLINT
+"#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0 && DILATION_X == 1 && DILATION_Y == 1",    // NOLINT
 "float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;",    // NOLINT
 "float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;",    // NOLINT
 "float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
@@ -1634,25 +1543,25 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA00[pos] = src0_read0[pos];",    // NOLINT
+"if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos * DILATION_X >= INPUT_PAD_W && curr_x0 + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read0[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA00[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y0++;",    // NOLINT
+"curr_y0 += DILATION_Y;",    // NOLINT
 "float_t blockA01;",    // NOLINT
 "float*  pblockA01 = (float*)(&blockA01);",    // NOLINT
 "pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA01[pos] = src0_read1[pos];",    // NOLINT
+"if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos * DILATION_X >= INPUT_PAD_W && curr_x1 + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA01[pos] = src0_read1[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA01[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y1++;",    // NOLINT
-"src0_read0 += ROW_PITCH;",    // NOLINT
-"src0_read1 += ROW_PITCH;",    // NOLINT
+"curr_y1 += DILATION_Y;",    // NOLINT
+"src0_read0 += ROW_PITCH * DILATION_Y;",    // NOLINT
+"src0_read1 += ROW_PITCH * DILATION_Y;",    // NOLINT
 "#endif",    // NOLINT
 "float blockB00[KERNEL_WIDTH*4];",    // NOLINT
 "float8* p8BlockB00 = (float8*)blockB00;",    // NOLINT
@@ -1710,12 +1619,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
-"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "curr_y0 = saved_y0;",    // NOLINT
 "curr_y1 = saved_y1;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
-"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH );",    // NOLINT
+"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
@@ -1781,7 +1690,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;",    // NOLINT
 "int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
 "int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;",    // NOLINT
-"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0",    // NOLINT
+"#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "int saved_y0 = curr_y0;",    // NOLINT
 "int saved_y1 = curr_y1;",    // NOLINT
 "#endif",    // NOLINT
@@ -1810,7 +1719,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "// Load atile and interleaved btile.",    // NOLINT
 "const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;",    // NOLINT
-"#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0",    // NOLINT
+"#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0 && DILATION_X == 1 && DILATION_Y == 1",    // NOLINT
 "float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;",    // NOLINT
 "float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;",    // NOLINT
 "float*  pblockA00 = (float*)(&blockA00);",    // NOLINT
@@ -1821,25 +1730,25 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA00[pos] = src0_read0[pos];",    // NOLINT
+"if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos * DILATION_X >= INPUT_PAD_W && curr_x0 + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA00[pos] = src0_read0[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA00[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y0++;",    // NOLINT
+"curr_y0 += DILATION_Y;",    // NOLINT
 "float_t blockA01;",    // NOLINT
 "float*  pblockA01 = (float*)(&blockA01);",    // NOLINT
 "pos = 0;",    // NOLINT
 "LOOP(KERNEL_WIDTH, pos,",    // NOLINT
 "{",    // NOLINT
-"if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
-"pblockA01[pos] = src0_read1[pos];",    // NOLINT
+"if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos * DILATION_X >= INPUT_PAD_W && curr_x1 + pos * DILATION_X < INPUT_WIDTH + INPUT_PAD_W)",    // NOLINT
+"pblockA01[pos] = src0_read1[pos * DILATION_X];",    // NOLINT
 "else",    // NOLINT
 "pblockA01[pos] = 0;",    // NOLINT
 "})",    // NOLINT
-"curr_y1++;",    // NOLINT
-"src0_read0 += ROW_PITCH;",    // NOLINT
-"src0_read1 += ROW_PITCH;",    // NOLINT
+"curr_y1 += DILATION_Y;",    // NOLINT
+"src0_read0 += (ROW_PITCH * DILATION_Y);",    // NOLINT
+"src0_read1 += (ROW_PITCH * DILATION_Y);",    // NOLINT
 "#endif",    // NOLINT
 "float blockB[KERNEL_WIDTH * TILE_N_LAST_DIV8];",    // NOLINT
 "",    // NOLINT
@@ -1918,12 +1827,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
-"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
+"#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "curr_y0 = saved_y0;",    // NOLINT
 "curr_y1 = saved_y1;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch",    // NOLINT
-"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH );",    // NOLINT
+"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT

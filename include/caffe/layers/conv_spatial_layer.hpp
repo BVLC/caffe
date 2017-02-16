@@ -212,6 +212,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp pad_w_;
   int_tp stride_h_;
   int_tp stride_w_;
+  int_tp dilation_h_;
+  int_tp dilation_w_;
 
   /// M_ is the channel dimension of the output for a single group, which is the
   /// leading dimension of the filter matrix.

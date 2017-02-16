@@ -1,7 +1,6 @@
 #ifdef CMAKE_BUILD
 #include "caffe_config.h"
 #endif
-
 #ifdef USE_INTEL_SPATIAL
 #include <sstream>
 #include <string>
@@ -22,6 +21,7 @@
 
 #include <boost/filesystem.hpp>
 
+// #define TEST_ALL_KERNELS
 namespace caffe {
 
 #define ALIGN(val, N) (((val) + (N) - 1) & ~((N) - 1))
@@ -31,12 +31,15 @@ void ConvolutionLayerSpatial<Dtype>::compute_output_shape() {
   const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int_tp* stride_data = this->stride_.cpu_data();
   const int_tp* pad_data = this->pad_.cpu_data();
+  const int_tp* dilation_data = this->dilation_.cpu_data();
   this->output_shape_.clear();
   for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
     const int_tp input_dim = this->input_shape(i + 1);
+    const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
+        + 1;
     const int_tp output_dim = (input_dim + 2 * pad_data[i]
-        - kernel_shape_data[i]) / stride_data[i] + 1;
+        - kernel_extent) / stride_data[i] + 1;
     this->output_shape_.push_back(output_dim);
   }
 }
@@ -56,6 +59,9 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   const int_tp* stride_data = this->stride_.cpu_data();
   stride_h_ = stride_data[0];
   stride_w_ = stride_data[1];
+  const int_tp* dilation_data = this->dilation_.cpu_data();
+  dilation_h_ = dilation_data[0];
+  dilation_w_ = dilation_data[1];
   M_ = this->num_output_ / this->group_;
   K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
   swizzled_weights_blob_.Reshape((this->num_output_ + 15) & ~15,
@@ -71,8 +77,10 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
   height_ = bottom[0]->shape(this->channel_axis_ + 1);
   width_ = bottom[0]->shape(this->channel_axis_ + 2);
-  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  const int_tp kernel_extent_h = dilation_h_ * (kernel_h_ - 1) + 1;
+  const int_tp kernel_extent_w = dilation_w_ * (kernel_w_ - 1) + 1;
+  output_h_ = (height_ + 2 * pad_h_ - kernel_extent_h) / stride_h_ + 1;
+  output_w_ = (width_ + 2 * pad_w_ - kernel_extent_w) / stride_w_ + 1;
 
   // Shape the tops.
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
@@ -185,6 +193,8 @@ void ConvolutionLayerSpatial<float>::generate_key() {
              << group_ << "_"
              << stride_h_ << "_"
              << stride_w_ << "_"
+             << dilation_h_ << "_"
+             << dilation_w_ << "_"
              << bias_term_ << "_"
              << width_ << "_"
              << height_ << "_"
@@ -391,6 +401,8 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
                 << kernel_w_ * kernel_h_ << " -D KERNEL_W=" << kernel_w_
                 << " -D KERNEL_H=" << kernel_h_ << " -D CHANNELS="
                 << channels_ / group_ << " -D STRIDE_H=" << stride_h_
+                << " -DDILATION_X=" << dilation_w_
+                << " -DDILATION_Y=" << dilation_h_
                 << " -D STRIDE_W=" << stride_w_ << " -D APPLY_BIAS="
                 << bias_term_ << " -D OUTPUT_Z=" << M_
                 << " -D XPAR=" << workItemOutput[0] << " -D YPAR="
@@ -709,7 +721,9 @@ bool ConvolutionLayerSpatial<float>::verify_result(
     return true;
   else if (config->tested)
     return false;
-
+  
+  greentea_memset(this->device_->id(), top[index]->count(), 0,
+                  (cl_mem)top[index]->mutable_gpu_data(), 0);
   config->executionTime = timed_convolve(bottom, top, index, numImages,
                                          config);
   const float *verify_data = verify_blob.cpu_data();
@@ -785,6 +799,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DKERNEL_HEIGHT=" << kernel_h_ <<
         " -DSTRIDE_X=" << stride_w_ <<
         " -DSTRIDE_Y=" << stride_h_ <<
+        " -DDILATION_X=" << dilation_w_ <<
+        " -DDILATION_Y=" << dilation_h_ <<
         " -DINPUT_WIDTH=" << width_ <<
         " -DINPUT_HEIGHT=" << height_ <<
         " -DINPUT_DEPTH=" << channels_ <<
@@ -903,8 +919,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
       ALIGN(num_output_maps, simd_size) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
-  int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_) + 3) & ~3;
-  int tile_y = (output_block_height -1) * stride_h_ + kernel_h_;
+  int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_ * dilation_w_) + 3) & ~3;
+  int tile_y = (output_block_height -1) * stride_h_ + kernel_h_ * dilation_h_;
   int tile_y_stride = (4 * simd_size) / tile_x;
   int invec_size = (tile_y + tile_y_stride - 1) / tile_y_stride;
 
@@ -922,7 +938,9 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -DKERNEL_WIDTH=" << kernel_w_
                 << " -DKERNEL_HEIGHT=" << kernel_h_
                 << " -DNUM_FILTERS=" << M_ << " -DSTRIDEX=" << stride_w_
-                << " -DSTRIDEY=" << stride_h_ << " -DOWPAD=" << 0 << " -DOHPAD="
+                << " -DSTRIDEY=" << stride_h_ << " -DDILATION_X=" << dilation_w_
+                << " -DDILATION_Y=" << dilation_h_
+                << " -DOWPAD=" << 0 << " -DOHPAD="
                 << 0 << " -DOUT_BUFF_OFFSET=" << 0
                 << " -DTILE_X=" << tile_x
                 << " -DTILE_Y=" << tile_y
@@ -1122,8 +1140,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                    static_cast<float>(width * height))
                  >= max_compute_units * 7 * 16))
             continue;
-          int tile_x = (kernel_w_ + (width - 1) * stride_w_ + 3) & ~3;
-          int tile_y = kernel_h_ + (height - 1) * stride_h_;
+          int tile_x = (kernel_w_ * dilation_w_ + (width - 1) * stride_w_ + 3) & ~3;
+          int tile_y = kernel_h_ * dilation_h_ + (height - 1) * stride_h_;
           if (tile_x > (4 * simd_size))
             continue;
           int tile_y_stride = (4 * simd_size) / tile_x;
@@ -1150,6 +1168,44 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       kernelQueue[x]->verified = false;
       kernelQueue[x]->tested = true;
     }
+#ifdef TEST_ALL_KERNELS
+    if (kernelQueue[x]->tested == false) {
+      bool verified = verify_result(bottom, top, bottom_index_, num_,
+                                      verify_blob, kernelQueue[x]);
+      if (verified == false) {
+        dbgPrint(std::cout << "Kernel "
+                             << kernelQueue[x]->kernelName
+                             << " failed verification" << std::endl);
+        dbgPrint(std::cout << "kernelQueue[x]->workItem_output[0]: "
+                       << kernelQueue[x]->workItem_output[0] << " "
+                       << "kernelQueue[x]->workItem_output[1]: "
+                       << kernelQueue[x]->workItem_output[1] << " "
+                       << "kernelQueue[x]->workItem_output[2]: "
+                       << kernelQueue[x]->workItem_output[2] << " "
+                       << "kernelQueue[x]->kernelType: "
+                       << kernelQueue[x]->kernelType << " "
+                       << "kernelQueue[x]->global_work_size[0]: "
+                       << kernelQueue[x]->global_work_size[0] << " "
+                       << "kernelQueue[x]->global_work_size[1]: "
+                       << kernelQueue[x]->global_work_size[1] << " "
+                       << "kernelQueue[x]->global_work_size[2]: "
+                       << kernelQueue[x]->global_work_size[2] << " "
+                       << "kernelQueue[x]->local_work_size[0]: "
+                       << kernelQueue[x]->local_work_size[0] << " "
+                       << "kernelQueue[x]->local_work_size[1]: "
+                       << kernelQueue[x]->local_work_size[1] << " "
+                       << "kernelQueue[x]->local_work_size[2]: "
+                       << kernelQueue[x]->local_work_size[2] << " "
+                       << kernelQueue[x]->swizzle_weights << " "
+                       << kernelQueue[x]->use_null_local << std::endl);
+      } else {
+        dbgPrint(std::cout << "Kernel "
+                           << kernelQueue[x]->kernelName
+                           << " pass verification" << std::endl);
+
+      }
+    }
+#endif
   }
   int_tp failures = 0;
   bool verification = false;
