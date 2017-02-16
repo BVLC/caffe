@@ -27,6 +27,8 @@ This repository contains merged code issued as pull request to BVLC caffe writte
 
 Original branch can be found at https://github.com/weiliu89/caffe/tree/ssd.
 
+Read our [wiki page](https://github.com/intel/caffe/wiki/SSD:-Single-Shot-MultiBox-Detector) for more details.
+
 # Intel® Distribution of Caffe*
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
 
