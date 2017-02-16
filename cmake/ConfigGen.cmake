@@ -23,6 +23,7 @@ function(caffe_get_current_includes includes_variable)
   endif()
 
   caffe_list_unique(current_includes)
+  list(APPEND current_includes ${PROJECT_BINARY_DIR})
   set(${includes_variable} ${current_includes} PARENT_SCOPE)
 endfunction()
 

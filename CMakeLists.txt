@@ -8,6 +8,48 @@ endif()
 
 # ---[ Caffe project
 project(Caffe C CXX)
+set(CAFFE_VERSION "" CACHE STRING "Version number")
+
+if(NOT CAFFE_VERSION)
+	FIND_PROGRAM(GIT_EXECUTABLE git)
+	if(GIT_EXECUTABLE)
+		execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+			              WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+			              RESULT_VARIABLE VCS_BRANCH_RESULT
+			              OUTPUT_VARIABLE VCS_BRANCH_VALUE
+		                OUTPUT_STRIP_TRAILING_WHITESPACE
+			              ERROR_VARIABLE VCS_BRANCH_ERROR
+			              ERROR_QUIET)
+		if ((${VCS_BRANCH_RESULT}) OR ("${VCS_BRANCH_ERROR}" NOT STREQUAL "") OR ("${VCS_BRANCH_VALUE}" STREQUAL ""))
+			message(STATUS "RES: ${VCS_BRANCH_RESULT}")
+			message(STATUS "VAL: ${VCS_BRANCH_VALUE}")
+			message(STATUS "ERR: ${VCS_BRANCH_ERROR}")
+			message(WARNING "could not get branch name from git. Command returned ${VCS_BRANCH_RESULT} with error msg ${VCS_BRANCH_ERROR}")
+		else()
+			set(CAFFE_VERSION "0.0.0~${VCS_BRANCH_VALUE}")
+		endif()
+
+		execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+			              WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+			              RESULT_VARIABLE VCS_HASH_RESULT
+			              OUTPUT_VARIABLE VCS_HASH_VALUE
+		                OUTPUT_STRIP_TRAILING_WHITESPACE
+			              ERROR_VARIABLE VCS_HASH_ERROR
+			              ERROR_QUIET)
+
+		if ((${VCS_HASH_RESULT}) OR ("${VCS_HASH_ERROR}" NOT STREQUAL "") OR ("${VCS_HASH_VALUE}" STREQUAL ""))
+			message(STATUS "RES: ${VCS_HASH_RESULT}")
+			message(STATUS "VAL: ${VCS_HASH_VALUE}")
+			message(STATUS "ERR: ${VCS_HASH_ERROR}")
+			message(WARNING "could not get hash value for current version. Command returned ${VCS_HASH_RESULT} with error msg ${VCS_HASH_ERROR}")
+		else()
+			string(SUBSTRING ${VCS_HASH_VALUE} 0 8 VCS_HASH_VALUE)
+			set(CAFFE_VERSION ${CAFFE_VERSION}~${VCS_HASH_VALUE})
+		endif()
+
+	endif(GIT_EXECUTABLE)
+endif(NOT CAFFE_VERSION)
+message(STATUS "Caffe version is ${CAFFE_VERSION}")
 
 # ---[ Caffe version
 set(CAFFE_TARGET_VERSION "1.0.0-rc4" CACHE STRING "Caffe logical version")
@@ -16,6 +58,11 @@ add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+#SET(CMAKE_INSTALL_RPATH "")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+set(CMAKE_EXE_LINKER_FLAGS "-s")
 
 include(ExternalProject)
 
@@ -91,3 +138,5 @@ caffe_print_configuration_summary()
 
 # ---[ Export configs generation
 caffe_generate_export_configs()
+
+include(${PROJECT_SOURCE_DIR}/cmake/cpack.cmake)

@@ -81,6 +81,8 @@ class AccuracyLayer : public Layer<Dtype> {
   int label_axis_, outer_num_, inner_num_;
 
   int top_k_;
+  float threshold_;
+  int loss_type_;
 
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;

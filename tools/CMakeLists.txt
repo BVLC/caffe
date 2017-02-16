@@ -8,6 +8,8 @@ foreach(source ${srcs})
   # caffe target already exits
   if(name MATCHES "caffe")
     set(name ${name}.bin)
+	else()
+		set(name caffe_${name})
   endif()
 
   # target
