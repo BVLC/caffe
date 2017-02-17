@@ -85,7 +85,7 @@ if(NOT HAVE_CUDA)
 endif()
 
 if(USE_NCCL)
-  find_package(NCCL REQUIRED)
+  include("cmake/External/nccl.cmake")
   include_directories(SYSTEM ${NCCL_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${NCCL_LIBRARIES})
   add_definitions(-DUSE_NCCL)

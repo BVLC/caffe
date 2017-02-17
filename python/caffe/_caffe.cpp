@@ -44,14 +44,19 @@
 #define BP_GET_POINTER(cls) \
 namespace boost { \
 template <> \
-caffe::cls const volatile * \
-get_pointer<class caffe::cls const volatile >( \
-  class caffe::cls const volatile *c) { \
+const volatile caffe::cls * \
+get_pointer(const volatile caffe::cls *c) { \
     return c; \
 } \
 }
 
 #define BP_GET_POINTER_T(cls, dtype) BP_GET_POINTER(cls<dtype>)
+
+// forward declare the NCCL class
+// in case we are not using NCCL
+namespace caffe {
+template <typename Dtype> class NCCL;
+}
 
 BP_GET_POINTER_T(Net, float);
 BP_GET_POINTER_T(Layer, float);
@@ -62,6 +67,7 @@ BP_GET_POINTER_T(AdaGradSolver, float);
 BP_GET_POINTER_T(RMSPropSolver, float);
 BP_GET_POINTER_T(AdaDeltaSolver, float);
 BP_GET_POINTER_T(AdamSolver, float);
+BP_GET_POINTER_T(NCCL, float);
 BP_GET_POINTER(Timer);
 
 #endif
