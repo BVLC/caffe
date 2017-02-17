@@ -90,9 +90,9 @@ def load_data(data_file, field_idx0, field_idx1):
 
 def random_marker():
     markers = mks.MarkerStyle.markers
-    num = len(markers.values())
+    num = len(markers.keys())
     idx = random.randint(0, num - 1)
-    return markers.values()[idx]
+    return markers.keys()[idx]
 
 def get_data_label(path_to_log):
     label = path_to_log[path_to_log.rfind('/')+1 : path_to_log.rfind(
@@ -126,16 +126,9 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
             plt.plot(data[0], data[1], label = label, color = color,
                      linewidth = linewidth)
         else:
-            ok = False
-            ## Some markers throw ValueError: Unrecognized marker style
-            while not ok:
-                try:
-                    marker = random_marker()
-                    plt.plot(data[0], data[1], label = label, color = color,
-                             marker = marker, linewidth = linewidth)
-                    ok = True
-                except:
-                    pass
+            marker = random_marker()
+            plt.plot(data[0], data[1], label = label, color = color,
+                     marker = marker, linewidth = linewidth)
     legend_loc = get_legend_loc(chart_type)
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
     plt.title(get_chart_type_description(chart_type))

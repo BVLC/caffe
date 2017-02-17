@@ -36,7 +36,6 @@ if(@USE_OPENCV@)
           include(${Caffe_OpenCV_CONFIG_PATH}/OpenCVModules.cmake)
         endif()
       endif()
-
     else()
       find_package(OpenCV REQUIRED)
     endif()
