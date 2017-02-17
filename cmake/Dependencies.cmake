@@ -8,6 +8,7 @@ set(Caffe_COMPILE_OPTIONS "")
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
 include_directories(SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 add_definitions(-DBOOST_ALL_NO_LIB)
+list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
 
 
@@ -20,6 +21,22 @@ endif()
 # ---[ Threads
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+# ---[ OpenMP
+if(USE_OPENMP)
+  # Ideally, this should be provided by the BLAS library IMPORTED target. However,
+  # nobody does this, so we need to link to OpenMP explicitly and have the maintainer
+  # to flick the switch manually as needed.
+  #
+  # Moreover, OpenMP package does not provide an IMPORTED target as well, and the
+  # suggested way of linking to OpenMP is to append to CMAKE_{C,CXX}_FLAGS.
+  # However, this naïve method will force any user of Caffe to add the same kludge
+  # into their buildsystem again, so we put these options into per-target PUBLIC
+  # compile options and link flags, so that they will be exported properly.
+  find_package(OpenMP REQUIRED)
+  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
+  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
+endif()
 
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
@@ -57,7 +74,8 @@ list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
 if(USE_HDF5)
   find_package(HDF5 COMPONENTS HL REQUIRED)
   include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
-  list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
   add_definitions(-DUSE_HDF5)
 endif()
 

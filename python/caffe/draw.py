@@ -106,13 +106,13 @@ def get_layer_label(layer, rankdir):
                       pooling_types_dict[layer.pooling_param.pool],
                       layer.type,
                       separator,
-                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size) > 0 else 1,
+                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size._values) else 1,
                       separator,
-                      layer.pooling_param.stride[0] if len(layer.pooling_param.stride) > 0 else 1,
+                      layer.pooling_param.stride[0] if len(layer.pooling_param.stride._values) > 0 else 1,
                       separator,
-                      layer.pooling_param.pad[0] if len(layer.pooling_param.pad) > 0 else 0,
+                      layer.pooling_param.pad[0] if len(layer.pooling_param.pad._values) > 0 else 0,
                       separator,
-                      layer.pooling_param.dilation[0] if len(layer.pooling_param.dilation) > 0 else 1)
+                      layer.pooling_param.dilation[0] if len(layer.pooling_param.dilation._values) > 0 else 1)
     else:
         node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
     return node_label

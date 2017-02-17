@@ -68,6 +68,9 @@ classdef Net < handle
       self.layer_names = self.attributes.layer_names;
       self.blob_names = self.attributes.blob_names;
     end
+    function delete (self)
+      caffe_('delete_net', self.hNet_self);
+    end
     function layer = layers(self, layer_name)
       CHECK(ischar(layer_name), 'layer_name must be a string');
       layer = self.layer_vec(self.name2layer_index(layer_name));
