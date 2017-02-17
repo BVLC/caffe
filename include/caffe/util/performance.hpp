@@ -63,21 +63,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_MEASUREMENT_END_MKL(prefix)       \
   do {                                                \
     static char name[256];                            \
-    strncpy(name, prefix, strlen(prefix) + 1);        \
-    strncat(name, "_mkl_", 5);                        \
-    strncat(name, this->layer_param_.name().c_str(),  \
-      this->layer_param_.name().length());            \
+    snprintf(name, sizeof(name), "%s_mkl_%s", prefix, \
+      this->layer_param_.name().c_str());             \
     PERFORMANCE_MEASUREMENT_END(name);                \
   } while(0)
 
 #define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix) \
   do {                                                           \
     static char name[256];                                       \
-    strncpy(name, prefix, strlen(prefix) + 1);                   \
-    strncat(name, "_mkl_", 5);                                   \
-    strncat(name, this->layer_param_.name().c_str(),             \
-      this->layer_param_.name().length());                       \
-    strncat(name, suffix, strlen(suffix));                       \
+    snprintf(name, sizeof(name), "%s_mkl_%s%s", prefix,          \
+      this->layer_param_.name().c_str(), suffix);                \
     PERFORMANCE_MEASUREMENT_END(name);                           \
   } while(0)
 
