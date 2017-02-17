@@ -12,6 +12,9 @@ cd $ROOT_DIR
 # Gather docs.
 scripts/gather_examples.sh
 
+# Split caffe.proto for inclusion by layer catalogue.
+scripts/split_caffe_proto.py
+
 # Generate developer docs.
 make docs
 

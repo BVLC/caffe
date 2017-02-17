@@ -33,8 +33,8 @@ Everything is packaged in 14.04.
 These dependencies need manual installation in 12.04.
 
     # glog
-    wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
-    tar zxvf glog-0.3.3.tar.gz
+    wget https://github.com/google/glog/archive/v0.3.3.tar.gz
+    tar zxvf v0.3.3.tar.gz
     cd glog-0.3.3
     ./configure
     make && make install
