@@ -39,6 +39,7 @@ caffe_option(USE_OPENCV "Build with OpenCV support" ON)
 caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
+caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
@@ -55,8 +56,6 @@ if(USE_libstdcpp)
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
-add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
-
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
 
@@ -65,8 +64,26 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
-include_directories(BEFORE src) # This is needed for gtest.
+set(Caffe_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_BINARY_DIR})
+
+# ---[ Includes & defines for CUDA
+
+# cuda_compile() does not have per-call dependencies or include pathes
+# (cuda_compile() has per-call flags, but we set them here too for clarity)
+#
+# list(REMOVE_ITEM ...) invocations remove PRIVATE and PUBLIC keywords from collected definitions and include pathes
+if(HAVE_CUDA)
+  # pass include pathes to cuda_include_directories()
+  set(Caffe_ALL_INCLUDE_DIRS ${Caffe_INCLUDE_DIRS})
+  list(REMOVE_ITEM Caffe_ALL_INCLUDE_DIRS PRIVATE PUBLIC)
+  cuda_include_directories(${Caffe_INCLUDE_DIR} ${Caffe_SRC_DIR} ${Caffe_ALL_INCLUDE_DIRS})
+
+  # add definitions to nvcc flags directly
+  set(Caffe_ALL_DEFINITIONS ${Caffe_DEFINITIONS})
+  list(REMOVE_ITEM Caffe_ALL_DEFINITIONS PRIVATE PUBLIC)
+  list(APPEND CUDA_NVCC_FLAGS ${Caffe_ALL_DEFINITIONS})
+endif()
 
 # ---[ Subdirectories
 add_subdirectory(src/gtest)
