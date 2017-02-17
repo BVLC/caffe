@@ -84,6 +84,7 @@ cmake_build
 
 # Generated documentation
 docs/_site
+docs/_includes
 docs/gathered
 _site
 doxygen

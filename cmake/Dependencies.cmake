@@ -84,6 +84,13 @@ if(NOT HAVE_CUDA)
   add_definitions(-DCPU_ONLY)
 endif()
 
+if(USE_NCCL)
+  find_package(NCCL REQUIRED)
+  include_directories(SYSTEM ${NCCL_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${NCCL_LIBRARIES})
+  add_definitions(-DUSE_NCCL)
+endif()
+
 # ---[ OpenCV
 if(USE_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
