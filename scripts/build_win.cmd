@@ -8,6 +8,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED WITH_NINJA set WITH_NINJA=1
     if NOT DEFINED CPU_ONLY set CPU_ONLY=1
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
+    if NOT DEFINED USE_NCCL set USE_NCCL=0
     if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
     if NOT DEFINED PYTHON_VERSION set PYTHON_VERSION=2
     if NOT DEFINED BUILD_PYTHON set BUILD_PYTHON=1
@@ -48,6 +49,7 @@ if DEFINED APPVEYOR (
         call %~dp0\appveyor\appveyor_install_cuda.cmd
         set CPU_ONLY=0
         set RUN_TESTS=0
+        set USE_NCCL=1
     ) else (
         set CPU_ONLY=1
     )
@@ -73,6 +75,8 @@ if DEFINED APPVEYOR (
     if NOT DEFINED CPU_ONLY set CPU_ONLY=0
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
+    :: Set to 1 to use NCCL
+    if NOT DEFINED USE_NCCL set USE_NCCL=0
     :: Change to 1 to build a caffe.dll
     if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
     :: Change to 3 if using python 3.5 (only 2.7 and 3.5 are supported)
@@ -117,6 +121,7 @@ echo INFO: WITH_NINJA                 = !WITH_NINJA!
 echo INFO: CMAKE_GENERATOR            = "!CMAKE_GENERATOR!"
 echo INFO: CPU_ONLY                   = !CPU_ONLY!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
+echo INFO: USE_NCCL                   = !USE_NCCL!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
 echo INFO: PYTHON_VERSION             = !PYTHON_VERSION!
 echo INFO: BUILD_PYTHON               = !BUILD_PYTHON!
@@ -157,6 +162,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
       -DCPU_ONLY:BOOL=%CPU_ONLY% ^
       -DCOPY_PREREQUISITES:BOOL=1 ^
       -DINSTALL_PREREQUISITES:BOOL=1 ^
+      -DUSE_NCCL:BOOL=!USE_NCCL! ^
       "%~dp0\.."
 
 if ERRORLEVEL 1 (
