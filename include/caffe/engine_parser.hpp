@@ -78,6 +78,12 @@ class EngineParser {
     if (!strcmp(engineName, "FPGA"))
       return FPGAEngine::Instance().get_engine();
 #endif
+
+#ifdef DLA_ENABLED
+    if (!strcmp(engineName, "DLA"))
+      return DLAEngine::Instance().get_engine();
+#endif
+
     LOG(FATAL) << "EngineParser: Unknown subengine: " << engineName;
   }
 #endif
