@@ -8,7 +8,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 %
 % ****************************************************************************
 % For detailed documentation and usage on Caffe's Matlab interface, please
-% refer to Caffe Interface Tutorial at
+% refer to the Caffe Interface Tutorial at
 % http://caffe.berkeleyvision.org/tutorial/interfaces.html#matlab
 % ****************************************************************************
 %
@@ -24,6 +24,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 %  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda-5.5/lib64
 %  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 % Or the equivalent based on where things are installed on your system
+% and what versions are installed.
 %
 % Usage:
 %  im = imread('../../examples/images/cat.jpg');
@@ -39,7 +40,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 % Data coming in from matlab needs to be in the order
 %   [width, height, channels, images]
 % where width is the fastest dimension.
-% Here is the rough matlab for putting image data into the correct
+% Here is the rough matlab code for putting image data into the correct
 % format in W x H x C with BGR channels:
 %   % permute channels from RGB to BGR
 %   im_data = im(:, :, [3, 2, 1]);
@@ -54,7 +55,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 
 % If you have multiple images, cat them with cat(4, ...)
 
-% Add caffe/matlab to you Matlab search PATH to use matcaffe
+% Add caffe/matlab to your Matlab search PATH in order to use matcaffe
 if exist('../+caffe', 'dir')
   addpath('..');
 else
