@@ -60,22 +60,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   performance::monitor.EnableMeasurements(); \
   performance::monitor.MarkAsInitialized();
 
-#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)      \
-  do {                                               \
-    static char name[256];                           \
-    strcpy(name, prefix);                            \
-    strcat(name, "_mkl_");                           \
-    strcat(name, this->layer_param_.name().c_str()); \
-    PERFORMANCE_MEASUREMENT_END(name);               \
+#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)       \
+  do {                                                \
+    static char name[256];                            \
+    strncpy(name, prefix, strlen(prefix) + 1);        \
+    strncat(name, "_mkl_", 5);                        \
+    strncat(name, this->layer_param_.name().c_str(),  \
+      this->layer_param_.name().length());            \
+    PERFORMANCE_MEASUREMENT_END(name);                \
   } while(0)
 
 #define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix) \
   do {                                                           \
     static char name[256];                                       \
-    strcpy(name, prefix);                                        \
-    strcat(name, "_mkl_");                                       \
-    strcat(name, this->layer_param_.name().c_str());             \
-    strcat(name, suffix);                                        \
+    strncpy(name, prefix, strlen(prefix) + 1);                   \
+    strncat(name, "_mkl_", 5);                                   \
+    strncat(name, this->layer_param_.name().c_str(),             \
+      this->layer_param_.name().length());                       \
+    strncat(name, suffix, strlen(suffix));                       \
     PERFORMANCE_MEASUREMENT_END(name);                           \
   } while(0)
 
