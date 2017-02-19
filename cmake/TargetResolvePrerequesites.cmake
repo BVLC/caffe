@@ -33,6 +33,14 @@ function(caffe_prerequisites_directories VAR)
     get_filename_component(_dir ${_dir} DIRECTORY)
     list(APPEND _directories ${_dir}/bin)
   endif()
+  if(USE_NCCL)
+    # add the nvml.dll path if we are using nccl
+    file(TO_CMAKE_PATH "$ENV{NVTOOLSEXT_PATH}" _nvtools_ext)
+    if(NOT "${_nvtools_ext}" STREQUAL "")
+      get_filename_component(_nvsmi_path ${_nvtools_ext}/../nvsmi ABSOLUTE)
+      list(APPEND _directories ${_nvsmi_path})
+    endif()
+  endif()
   list(REMOVE_DUPLICATES _directories)
   set(${VAR} ${_directories} PARENT_SCOPE)
 endfunction()
@@ -57,12 +65,19 @@ function(target_copy_prerequisites target)
     set(tcp_DESTINATION $<TARGET_FILE_DIR:${target}>)
   endif()
   string(REPLACE ";" "@@" tcp_DIRECTORIES "${tcp_DIRECTORIES}")
+  if(USE_NCCL)
+    # nccl loads the nvml.dll dynamically so we need
+    # to list it explicitely
+    list(APPEND _plugins nvml.dll)
+  endif()
+  string(REPLACE ";" "@@" _plugins "${_plugins}")
   add_custom_command(TARGET ${target} POST_BUILD
                      COMMAND ${CMAKE_COMMAND}
                              -DTARGET=$<TARGET_FILE:${target}>
                              -DDESTINATION=${tcp_DESTINATION}
                              -DUSE_HARD_LINKS=${tcp_USE_HARD_LINKS}
                              -DDIRECTORIES=${tcp_DIRECTORIES}
+                             -DPLUGINS=${_plugins}
                              -P ${THIS_FILE}
                      )
 endfunction()
@@ -80,6 +95,12 @@ function(target_install_prerequisites target)
     set(tcp_DESTINATION ${CMAKE_INSTALL_PREFIX}/${tcp_DESTINATION})
   endif()
   string(REPLACE ";" "@@" tcp_DIRECTORIES "${tcp_DIRECTORIES}")
+  if(USE_NCCL)
+    # nccl loads the nvml.dll dynamically so we need
+    # to list it explicitely
+    list(APPEND _plugins nvml.dll)
+  endif()
+  string(REPLACE ";" "@@" _plugins "${_plugins}")
   set(_command_output ${CMAKE_CURRENT_BINARY_DIR}/${target}-install-prerequisites.stamp)
   add_custom_command(OUTPUT ${_command_output}
                      COMMAND ${CMAKE_COMMAND}
@@ -87,6 +108,7 @@ function(target_install_prerequisites target)
                              -DDESTINATION=${tcp_DESTINATION}
                              -DUSE_HARD_LINKS=0
                              -DDIRECTORIES=${tcp_DIRECTORIES}
+                             -DPLUGINS=${_plugins}
                              -P ${THIS_FILE}
                      COMMAND ${CMAKE_COMMAND} -E touch ${_command_output}
                      )
@@ -152,12 +174,15 @@ if(CMAKE_SCRIPT_MODE_FILE)
   include(GetPrerequisites)
   # Recreate a list by replacing the @@ with ;
   string(REPLACE "@@" ";" DIRECTORIES "${DIRECTORIES}")
+  string(REPLACE "@@" ";" PLUGINS "${PLUGINS}")
   # Get a recursive list of dependencies required by target using dumpbin
   get_prerequisites(${TARGET} _prerequisites 1 1 "" "${DIRECTORIES}")
-  foreach(_prereq ${_prerequisites})
+  foreach(_prereq ${_prerequisites} ${PLUGINS})
     # Resolve the dependency using the list of directories
     gp_resolve_item("${TARGET}" "${_prereq}" "" "${DIRECTORIES}" resolved_file)
     # Copy or create hardlink (if possible)
-    copy_changed_file(${resolved_file} ${DESTINATION} ${USE_HARD_LINKS})
+    if(EXISTS ${resolved_file})
+      copy_changed_file(${resolved_file} ${DESTINATION} ${USE_HARD_LINKS})
+    endif()
   endforeach()
 endif()
