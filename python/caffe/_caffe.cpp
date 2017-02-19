@@ -43,39 +43,37 @@
 // Workaround for VS 2015 Update 3 which breaks boost python
 // See: http://stackoverflow.com/questions/38261530/unresolved-external-symbols-since-visual-studio-2015-update-3-boost-python-link
 // and https://msdn.microsoft.com/vs-knownissues/vs2015-update3
-#define BP_GET_POINTER_TEMPLATED(cls, dtype) \
+#define BP_GET_POINTER(cls) \
 namespace boost { \
 template <> \
-caffe::cls<dtype> const volatile * \
-get_pointer<class caffe::cls<dtype> const volatile >( \
-  class caffe::cls<dtype> const volatile *c) { \
+const volatile caffe::cls * \
+get_pointer(const volatile caffe::cls *c) { \
     return c; \
 } \
 }
 
-#define BP_GET_POINTER_BARE(cls) \
-namespace boost { \
-template <> \
-caffe::cls const volatile * \
-get_pointer<class caffe::cls const volatile >( \
-  class caffe::cls const volatile *c) { \
-    return c; \
-} \
+#define BP_GET_POINTER_T(cls, dtype) BP_GET_POINTER(cls<dtype>)
+
+// forward declare the NCCL class
+// in case we are not using NCCL
+namespace caffe {
+template <typename Dtype> class NCCL;
 }
 
-BP_GET_POINTER_TEMPLATED(Net, float);
-BP_GET_POINTER_TEMPLATED(Layer, float);
-BP_GET_POINTER_TEMPLATED(Solver, float);
-BP_GET_POINTER_TEMPLATED(SGDSolver, float);
-BP_GET_POINTER_TEMPLATED(NesterovSolver, float);
-BP_GET_POINTER_TEMPLATED(AdaGradSolver, float);
-BP_GET_POINTER_TEMPLATED(RMSPropSolver, float);
-BP_GET_POINTER_TEMPLATED(AdaDeltaSolver, float);
-BP_GET_POINTER_TEMPLATED(AdamSolver, float);
-
-BP_GET_POINTER_BARE(LayerParameter);
-BP_GET_POINTER_BARE(NetParameter);
-BP_GET_POINTER_BARE(NetState);
+BP_GET_POINTER_T(Net, float);
+BP_GET_POINTER_T(Layer, float);
+BP_GET_POINTER_T(Solver, float);
+BP_GET_POINTER_T(SGDSolver, float);
+BP_GET_POINTER_T(NesterovSolver, float);
+BP_GET_POINTER_T(AdaGradSolver, float);
+BP_GET_POINTER_T(RMSPropSolver, float);
+BP_GET_POINTER_T(AdaDeltaSolver, float);
+BP_GET_POINTER_T(AdamSolver, float);
+BP_GET_POINTER_T(NCCL, float);
+BP_GET_POINTER(Timer);
+BP_GET_POINTER(LayerParameter);
+BP_GET_POINTER(NetParameter);
+BP_GET_POINTER(NetState);
 
 #endif
 
@@ -104,10 +102,14 @@ void InitLog(int level) {
   FLAGS_logtostderr = 1;
   FLAGS_minloglevel = level;
   ::google::InitGoogleLogging("");
+#ifndef _MSC_VER
+  // this symbol is undefined on windows
   ::google::InstallFailureSignalHandler();
+#endif  // _MSC_VER
 }
 void InitLogInfo() {
-  InitLog(google::INFO);
+  // Windows disables abbreviated severities
+  InitLog(google::GLOG_INFO);
 }
 void Log(const string& s) {
   LOG(INFO) << s;
