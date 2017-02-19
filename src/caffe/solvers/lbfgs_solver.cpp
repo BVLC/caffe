@@ -41,10 +41,30 @@ void LBFGSSolver<Dtype>::PreSolve() {
 template <typename Dtype>
 void LBFGSSolver<Dtype>::ApplyUpdate() {
   if (n_ == 0) {
-    for (int i = 0; i < this->net_->learnable_params().size(); ++i) {
-      const int n = this->net_->learnable_params()[i]->count();
-      caffe_scal(n, (Dtype)0,
-          this->net_->learnable_params()[i]->mutable_cpu_diff());
+    switch (Caffe::mode()) {
+    case Caffe::CPU: {
+      for (int i = 0; i < this->net_->learnable_params().size(); ++i) {
+        const int n = this->net_->learnable_params()[i]->count();
+        caffe_scal(n, (Dtype)0,
+            this->net_->learnable_params()[i]->mutable_cpu_diff());
+      }
+      break;
+    }
+    case Caffe::GPU: {
+#ifndef CPU_ONLY
+      for (int i = 0; i < this->net_->learnable_params().size(); ++i) {
+        const int n = this->net_->learnable_params()[i]->count();
+        caffe_gpu_scal(n, (Dtype)0,
+            this->net_->learnable_params()[i]->mutable_gpu_diff());
+      }
+      break;
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+    default:
+      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
     }
     return;
   }
@@ -59,27 +79,70 @@ void LBFGSSolver<Dtype>::ApplyUpdate() {
 
 template <typename Dtype>
 void LBFGSSolver<Dtype>::CollectGradients() {
-  if (this->iter_ != 0) {
-    caffe_copy(n_, gradients_->cpu_data(), gradients_prev_->mutable_cpu_data());
-  }
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  Dtype* data = gradients_->mutable_cpu_data();
-  for (int i = 0, j = 0; i < net_params.size(); ++i) {
-    if (this->net_->params_lr()[i] != 0) {
-      caffe_copy(net_params[i]->count(), net_params[i]->cpu_diff(), &data[j]);
-      j += net_params[i]->count();
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    if (this->iter_ != 0) {
+        caffe_copy(n_, gradients_->cpu_data(), gradients_prev_->mutable_cpu_data());
     }
+    Dtype* data = gradients_->mutable_cpu_data();
+    for (int i = 0, j = 0; i < net_params.size(); ++i) {
+      if (this->net_->params_lr()[i] != 0) {
+        caffe_copy(net_params[i]->count(), net_params[i]->cpu_diff(), &data[j]);
+        j += net_params[i]->count();
+      }
+    }
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    if (this->iter_ != 0) {
+        caffe_copy(n_, gradients_->gpu_data(), gradients_prev_->mutable_gpu_data());
+    }
+    Dtype* data = gradients_->mutable_gpu_data();
+    for (int i = 0, j = 0; i < net_params.size(); ++i) {
+      if (this->net_->params_lr()[i] != 0) {
+        caffe_copy(net_params[i]->count(), net_params[i]->gpu_diff(), &data[j]);
+        j += net_params[i]->count();
+      }
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
 }
 
 template <typename Dtype>
 void LBFGSSolver<Dtype>::UpdateHistory() {
   if (this->iter_ == 0) { return; }
-  caffe_scal(n_, -(Dtype)1.0, direction_->mutable_cpu_data());  // s
-  caffe_cpu_axpby(n_, (Dtype)1.0, gradients_->cpu_data(),
-      -(Dtype)1.0, gradients_prev_->mutable_cpu_data());  // y
-  Dtype ys = caffe_cpu_dot(n_, direction_->cpu_data(),
-      gradients_prev_->cpu_data());
+  Dtype ys;
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_scal(n_, -(Dtype)1.0, direction_->mutable_cpu_data());  // s
+    caffe_cpu_axpby(n_, (Dtype)1.0, gradients_->cpu_data(),
+        -(Dtype)1.0, gradients_prev_->mutable_cpu_data());  // y
+    ys = caffe_cpu_dot(n_, direction_->cpu_data(),
+        gradients_prev_->cpu_data());
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_gpu_scal(n_, -(Dtype)1.0, direction_->mutable_gpu_data());  // s
+    caffe_gpu_axpby(n_, (Dtype)1.0, gradients_->gpu_data(),
+        -(Dtype)1.0, gradients_prev_->mutable_gpu_data());  // y
+    caffe_gpu_dot(n_, direction_->gpu_data(), gradients_prev_->gpu_data(), &ys);
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
   if (ys < 1e-10) {
     LOG(INFO) << "Skipped L-BFGS update";
     return;
@@ -96,17 +159,51 @@ void LBFGSSolver<Dtype>::UpdateHistory() {
     start_ = 1;
     end_ = 0;
   }
-  caffe_copy(n_, direction_->cpu_data(), s_history_[end_]->mutable_cpu_data());
-  caffe_copy(n_, gradients_prev_->cpu_data(),
-      y_history_[end_]->mutable_cpu_data());
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_copy(n_, direction_->cpu_data(), s_history_[end_]->mutable_cpu_data());
+    caffe_copy(n_, gradients_prev_->cpu_data(),
+        y_history_[end_]->mutable_cpu_data());
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_copy(n_, direction_->gpu_data(), s_history_[end_]->mutable_gpu_data());
+    caffe_copy(n_, gradients_prev_->gpu_data(),
+        y_history_[end_]->mutable_gpu_data());
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
   rho_history_[end_] = 1 / ys;
 }
 
 template <typename Dtype>
 void LBFGSSolver<Dtype>::ComputeInitialHessianApprox() {
   if (this->iter_ == 0) { return; }
-  h0_ = 1 / rho_history_[end_] / caffe_cpu_dot(n_,
-      y_history_[end_]->cpu_data(), y_history_[end_]->cpu_data());
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    h0_ = 1 / rho_history_[end_] / caffe_cpu_dot(n_,
+        y_history_[end_]->cpu_data(), y_history_[end_]->cpu_data());
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_gpu_dot(n_,
+        y_history_[end_]->gpu_data(), y_history_[end_]->gpu_data(), &h0_);
+    h0_ = 1 / rho_history_[end_] / h0_;
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
 }
 
 const vector<int> lbfgs_history_indices(int start, int end, int max) {
@@ -129,26 +226,63 @@ const vector<int> lbfgs_history_indices(int start, int end, int max) {
 
 template <typename Dtype>
 void LBFGSSolver<Dtype>::ComputeDirection() {
-  caffe_copy(n_, gradients_->cpu_data(), direction_->mutable_cpu_data());
-  if (this->iter_ == 0) { return; }
-  const vector<int> indices = lbfgs_history_indices(start_, end_,
-      this->param_.lbfgs_corrections());
-  vector <Dtype> alpha(indices.size());
-  Dtype beta;
-  for (int i = indices.size(); i-- > 0;) {
-    int idx = indices[i];
-    alpha[idx] = rho_history_[idx] * caffe_cpu_dot(n_,
-        s_history_[idx]->cpu_data(), direction_->cpu_data());
-    caffe_axpy(n_, -alpha[idx], y_history_[idx]->cpu_data(),
-        direction_->mutable_cpu_data());
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_copy(n_, gradients_->cpu_data(), direction_->mutable_cpu_data());
+    if (this->iter_ == 0) { return; }
+    const vector<int> indices = lbfgs_history_indices(start_, end_,
+        this->param_.lbfgs_corrections());
+    vector <Dtype> alpha(indices.size());
+    Dtype beta;
+    for (int i = indices.size(); i-- > 0;) {
+      int idx = indices[i];
+      alpha[idx] = rho_history_[idx] * caffe_cpu_dot(n_,
+          s_history_[idx]->cpu_data(), direction_->cpu_data());
+      caffe_axpy(n_, -alpha[idx], y_history_[idx]->cpu_data(),
+          direction_->mutable_cpu_data());
+    }
+    caffe_scal(n_, h0_, direction_->mutable_cpu_data());
+    for (int i = 0; i < indices.size(); ++i) {
+      int idx = indices[i];
+      beta = rho_history_[idx] * caffe_cpu_dot(n_,
+          y_history_[idx]->cpu_data(), direction_->cpu_data());
+      caffe_axpy(n_, alpha[idx] - beta, s_history_[idx]->cpu_data(),
+          direction_->mutable_cpu_data());
+    }
+    break;
   }
-  caffe_scal(n_, h0_, direction_->mutable_cpu_data());
-  for (int i = 0; i < indices.size(); ++i) {
-    int idx = indices[i];
-    beta = rho_history_[idx] * caffe_cpu_dot(n_,
-        y_history_[idx]->cpu_data(), direction_->cpu_data());
-    caffe_axpy(n_, alpha[idx] - beta, s_history_[idx]->cpu_data(),
-        direction_->mutable_cpu_data());
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_copy(n_, gradients_->gpu_data(), direction_->mutable_gpu_data());
+    if (this->iter_ == 0) { return; }
+    const vector<int> indices = lbfgs_history_indices(start_, end_,
+        this->param_.lbfgs_corrections());
+    vector <Dtype> alpha(indices.size());
+    Dtype beta;
+    for (int i = indices.size(); i-- > 0;) {
+      int idx = indices[i];
+      caffe_gpu_dot(n_,
+          s_history_[idx]->gpu_data(), direction_->gpu_data(), &alpha[idx]);
+      alpha[idx] *= rho_history_[idx];
+      caffe_gpu_axpy(n_, -alpha[idx], y_history_[idx]->gpu_data(),
+          direction_->mutable_gpu_data());
+    }
+    caffe_gpu_scal(n_, h0_, direction_->mutable_gpu_data());
+    for (int i = 0; i < indices.size(); ++i) {
+      int idx = indices[i];
+      caffe_gpu_dot(n_,
+          y_history_[idx]->gpu_data(), direction_->gpu_data(), &beta);
+      beta *= rho_history_[idx];
+      caffe_gpu_axpy(n_, alpha[idx] - beta, s_history_[idx]->gpu_data(),
+          direction_->mutable_gpu_data());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
 }
 
@@ -160,18 +294,45 @@ void LBFGSSolver<Dtype>::ComputeStep() {
 
 template <typename Dtype>
 void LBFGSSolver<Dtype>::UpdateNet() {
-  caffe_scal(n_, step_, direction_->mutable_cpu_data());
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  const Dtype* dir = direction_->cpu_data();
-  for (int i = 0, j = 0, n; i < net_params.size(); ++i) {
-    n = net_params[i]->count();
-    if (this->net_->params_lr()[i] != 0) {
-      caffe_cpu_scale(n, (Dtype)this->net_->params_lr()[i], &dir[j],
-          net_params[i]->mutable_cpu_diff());
-      j += n;
-    } else {
-      caffe_scal(n, (Dtype)0, net_params[i]->mutable_cpu_diff());
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_scal(n_, step_, direction_->mutable_cpu_data());
+    const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+    const Dtype* dir = direction_->cpu_data();
+    for (int i = 0, j = 0, n; i < net_params.size(); ++i) {
+      n = net_params[i]->count();
+      if (this->net_->params_lr()[i] != 0) {
+        caffe_cpu_scale(n, (Dtype)this->net_->params_lr()[i], &dir[j],
+            net_params[i]->mutable_cpu_diff());
+        j += n;
+      } else {
+        caffe_scal(n, (Dtype)0, net_params[i]->mutable_cpu_diff());
+      }
     }
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_gpu_scal(n_, step_, direction_->mutable_gpu_data());
+    const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+    const Dtype* dir = direction_->gpu_data();
+    for (int i = 0, j = 0, n; i < net_params.size(); ++i) {
+      n = net_params[i]->count();
+      if (this->net_->params_lr()[i] != 0) {
+        caffe_gpu_scale(n, (Dtype)this->net_->params_lr()[i], &dir[j],
+            net_params[i]->mutable_gpu_diff());
+        j += n;
+      } else {
+        caffe_gpu_scal(n, (Dtype)0, net_params[i]->mutable_gpu_diff());
+      }
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
   this->net_->Update();
 }
