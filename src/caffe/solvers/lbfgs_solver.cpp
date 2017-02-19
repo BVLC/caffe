@@ -83,7 +83,8 @@ void LBFGSSolver<Dtype>::CollectGradients() {
   switch (Caffe::mode()) {
   case Caffe::CPU: {
     if (this->iter_ != 0) {
-        caffe_copy(n_, gradients_->cpu_data(), gradients_prev_->mutable_cpu_data());
+        caffe_copy(n_, gradients_->cpu_data(),
+            gradients_prev_->mutable_cpu_data());
     }
     Dtype* data = gradients_->mutable_cpu_data();
     for (int i = 0, j = 0; i < net_params.size(); ++i) {
@@ -97,7 +98,8 @@ void LBFGSSolver<Dtype>::CollectGradients() {
   case Caffe::GPU: {
 #ifndef CPU_ONLY
     if (this->iter_ != 0) {
-        caffe_copy(n_, gradients_->gpu_data(), gradients_prev_->mutable_gpu_data());
+        caffe_copy(n_, gradients_->gpu_data(),
+            gradients_prev_->mutable_gpu_data());
     }
     Dtype* data = gradients_->mutable_gpu_data();
     for (int i = 0, j = 0; i < net_params.size(); ++i) {
@@ -161,14 +163,16 @@ void LBFGSSolver<Dtype>::UpdateHistory() {
   }
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    caffe_copy(n_, direction_->cpu_data(), s_history_[end_]->mutable_cpu_data());
+    caffe_copy(n_, direction_->cpu_data(),
+        s_history_[end_]->mutable_cpu_data());
     caffe_copy(n_, gradients_prev_->cpu_data(),
         y_history_[end_]->mutable_cpu_data());
     break;
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    caffe_copy(n_, direction_->gpu_data(), s_history_[end_]->mutable_gpu_data());
+    caffe_copy(n_, direction_->gpu_data(),
+        s_history_[end_]->mutable_gpu_data());
     caffe_copy(n_, gradients_prev_->gpu_data(),
         y_history_[end_]->mutable_gpu_data());
 #else
