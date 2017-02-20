@@ -81,8 +81,6 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     }
 
     // subtraction
-    //caffe_copy<Dtype>(dim, bottom_data, top_data);
-    //caffe_axpy<Dtype>(dim, -scale_data, mult, top_data);
     for (int j = 0; j < channels; j++) {
       top_data[j] = bottom_data[j] - scale_data*mult[j];
     }
