@@ -94,7 +94,7 @@ TYPED_TEST(MKLDNNNeuronLayerTest, TestReLU) {
   }
 }
 
-#if 0
+
 TYPED_TEST(MKLDNNNeuronLayerTest, TestReLUGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -103,7 +103,17 @@ TYPED_TEST(MKLDNNNeuronLayerTest, TestReLUGradient) {
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
-#endif
+  
+TYPED_TEST(MKLDNNNeuronLayerTest, TestReLUGradientWithNegativeSlope) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param { negative_slope: 0.01 }", &layer_param));
+  MKLDNNReLULayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 
 }  // namespace caffe
 #endif  // #ifdef MKLDNN_SUPPORTED
