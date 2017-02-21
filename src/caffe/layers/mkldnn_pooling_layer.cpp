@@ -306,8 +306,6 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
 {
     if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
 
-    auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
-
     algorithm pooling_algorithm;
     switch (this->layer_param_.pooling_param().pool()) {
     case PoolingParameter_PoolMethod_MAX:
