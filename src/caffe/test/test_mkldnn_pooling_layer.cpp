@@ -431,14 +431,14 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestSetupPadded) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
-  pooling_param->set_pad(1);
+  pooling_param->set_pad(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   MKLDNNPoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 4);
-  EXPECT_EQ(this->blob_top_->width(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 4);
 }
 
 TYPED_TEST(MKLDNNPoolingLayerTest, TestSetupGlobalPooling) {
@@ -497,8 +497,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestForwardMaxTopMask) {
   this->TestForwardRectWide();
 }
 #endif
-
-#if 0
+  
 TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientMax) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -517,7 +516,6 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientMax) {
     }
   }
 }
-#endif
 
 TYPED_TEST(MKLDNNPoolingLayerTest, TestForwardMaxPadded) {
   typedef typename TypeParam::Dtype Dtype;
@@ -585,7 +583,8 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientMaxTopMask) {
     }
   }
 }
-
+#endif
+  
 // Average Pooling
 TYPED_TEST(MKLDNNPoolingLayerTest, TestForwardAve) {
   typedef typename TypeParam::Dtype Dtype;
@@ -618,9 +617,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestForwardAve) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4.0 / 3, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 8.0 / 9, epsilon);
 }
-#endif
 
-#if 0
 TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAve) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -639,6 +636,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAve) {
   }
 }
 
+#if 0
 TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAvePadded) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {

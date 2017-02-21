@@ -226,12 +226,15 @@ public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
             , fwd_bottom_data(), fwd_top_data()
+            , bwd_top_diff(), bwd_bottom_diff()
             , poolingFwd_pd()
+            , poolingBwd_pd()
             , indices_pd()
-            , indices_memory(), output_memory(), input_primitive()
+            , indices_memory(), fwd_top_data_memory(), bwd_bottom_diff_memory()
+            , fwd_bottom_data_primitive(), bwd_top_diff_primitive()
             , num_(0), channels_(0), width_(0), height_(0), width_out_(0), height_out_(0)
             , kernel_w_(0), kernel_h_(0), stride_w_(0), stride_h_(0)
-            , pad_w_(0), pad_h_(0)
+            , pad_t_(0),pad_b_(0), pad_l_(0), pad_r_(0)
             , global_pooling_(false)
             {}
     ~MKLDNNPoolingLayer() {}
@@ -256,17 +259,22 @@ protected:
                                 ,const vector<Blob<Dtype>*>& bottom);
 
 private:
-    void InitPooling(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
-
-    shared_ptr<MKLDNNData<Dtype> > fwd_bottom_data, fwd_top_data;
+    void InitPoolingFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitPoolingBwd(const vector<Blob<Dtype>*>& bottom
+                        , const vector<bool>& propagate_down
+                        , const vector<Blob<Dtype>*>& top);
+  
+    shared_ptr<MKLDNNData<Dtype>> fwd_bottom_data, fwd_top_data;
+    shared_ptr<MKLDNNDiff<Dtype>> bwd_top_diff, bwd_bottom_diff;
     shared_ptr<pooling_forward::primitive_desc> poolingFwd_pd;
-    MKLDNNPrimitive<Dtype> poolingFwd;
+    shared_ptr<pooling_backward::primitive_desc> poolingBwd_pd;
+    MKLDNNPrimitive<Dtype> poolingFwd, poolingBwd;
     shared_ptr<memory::primitive_desc> indices_pd;
-    shared_ptr<memory> indices_memory, output_memory;
-    shared_ptr<primitive> input_primitive;
+    shared_ptr<memory> indices_memory, fwd_top_data_memory, bwd_bottom_diff_memory;
+    shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     int32_t num_, channels_, width_, height_, width_out_, height_out_;
     int32_t kernel_w_, kernel_h_, stride_w_, stride_h_;
-    int32_t  pad_w_, pad_h_;
+    int32_t  pad_t_, pad_b_, pad_l_, pad_r_;
     Blob<uint32_t> max_idx_;
     bool global_pooling_;
 };
