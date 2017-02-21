@@ -50,12 +50,12 @@
 #endif
 
 #if defined(cl_khr_int32_base_atomics)
-#pragma OPENCL_EXTENSION cl_khr_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_int32_base_atomics : enable
 #define ATOMICS_32_AVAILABLE
 #endif
 
 #if defined(cl_khr_global_int32_base_atomics)
-#pragma OPENCL_EXTENSION cl_khr_global_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #define ATOMICS_32_AVAILABLE
 #endif
 
