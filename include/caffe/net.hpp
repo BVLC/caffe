@@ -281,7 +281,6 @@ class Net {
   // TODO: Make it decent C++ anonymous function etc.
   static void CompilationRuleOne(const NetParameter& param,
                                  NetParameter* param_compiled);
-  
   /**
   * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
   *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNConvolution
@@ -297,12 +296,12 @@ class Net {
   *        and is to perform in place computation 
   *        if positive then make it doing out-ofplace computation
   */
- static void CompilationRuleThree(const NetParameter& param,
+  static void CompilationRuleThree(const NetParameter& param,
                              NetParameter* param_compiled);
 
 
 
-  static void GetBlobConsumers(std::vector<const LayerParameter*> &consumer_blobs,
+  static void GetBlobConsumers(std::vector<const LayerParameter*> &cnsmer_blobs,
                                                 const string& blob_name_to_find,
                                                 const NetParameter& param,
                                                 int layer_id);

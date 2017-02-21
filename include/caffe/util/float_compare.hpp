@@ -42,20 +42,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 
 namespace caffe {
-    bool floatsEqual(const float &a, const float &b, float *diff,
-            const float &epsilon) {
-            if (!diff) {
-                    return false;
-            }
+    float floatDiff(const float &a, const float &b, const float &epsilon) {
+        float diff = fabs(a - b);
+        if (!std::isfinite(diff)) {
+            return 1.f;
+        }
 
-            if (!std::isfinite(a) || !std::isfinite(b) || a * b < 0) {
-                    * diff = 1.f;
-                    return false;
-            }
-            
-            * diff = fabs(a - b);
-            return *diff <= epsilon ||
-              fabs(boost::math::float_distance(a, b)) <= 1;
+        if (diff <= epsilon ||
+          fabs(boost::math::float_distance(a, b)) <= 1.f) {
+            return FP_ZERO;
+        }
+
+        return diff;
     }
 }
 

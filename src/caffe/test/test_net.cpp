@@ -3100,6 +3100,109 @@ TEST_F(CompileNetTest, TestCompileNetConvolution) {
       "} ";
   this->RunCompilerNetTest(input_proto, output_proto);
 }
+
+TEST_F(CompileNetTest, TestCompileNetLayerParamEngineConvolution) {
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  engine: 'MKLDNN:CPU' "
+      "  convolution_param { "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'relu' "
+      " top: 'relu' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      " engine: 'MKLDNN:CPU' "
+      " relu_param { "
+      " } "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  engine: 'MKLDNN:CPU' "
+      "  convolution_param { "
+      "   relu: true "
+      "negative_slope: 0"
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+// If Convolution of engine MKLDNN
+// is followed by ReLU of engine MKLDNN
+// , but major subengine is MKLDNN::DLA then there 
+// no merging ov Convolution and Relu
+TEST_F(CompileNetTest, TestNoCompileNetLayerParamEngineConvolution) {
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  engine: 'MKLDNN:DLA,CPU' "
+      "  convolution_param { "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'relu' "
+      " top: 'relu' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      "  engine: 'MKLDNN:DLA,CPU' "
+      " relu_param { "
+      " } "
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+
+  this->RunCompilerNetTest(input_proto, input_proto);
+}
+
 #endif
 
 // If There is BatchNorm followed by Scale layer, but BatchNorm

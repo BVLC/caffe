@@ -628,14 +628,21 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // and input bottom comes from  Convolution of engine MKLDNN
     // then we can remove ReLU layer
     // and rename Convolution top blob after deleted ReLU's top
+    // Note: Currently merging of convolution and relu layers is feasible
+    // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
 
     // If current layer is Convolution of MKLDNN engine..
-    if ((layer_param->type().compare("Convolution") == 0) &&
+    if ((param.state().phase() == TEST) && 
+        (layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() ==
          ConvolutionParameter_Engine_MKLDNN)
        || ((layer_param->convolution_param().engine() ==
            ConvolutionParameter_Engine_DEFAULT) &&
-            param.engine().compare(0, 6, "MKLDNN") == 0))) {
+            ((param.engine().compare(0, 6, "MKLDNN") == 0
+            && param.engine().find(":DLA", 6) == string::npos)) ||
+            ((param.engine() == "" &&
+              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
+              layer_param->engine().find(":DLA", 6) == string::npos))))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -650,7 +657,11 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
           ReLUParameter_Engine_MKLDNN)
         || ((consumer_layer_param.relu_param().engine() ==
             ReLUParameter_Engine_DEFAULT) &&
-             param.engine().compare(0, 6, "MKLDNN") == 0))) {
+            ((param.engine().compare(0, 6, "MKLDNN") == 0
+            && param.engine().find(":DLA", 6) == string::npos)) ||
+            ((param.engine() == "" &&
+              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
+              layer_param->engine().find(":DLA", 6) == string::npos))))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);

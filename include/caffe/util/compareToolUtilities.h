@@ -128,20 +128,17 @@ class Log {
         }
 
         static void log(const char *format, ...) {
-            // #pragma omp critical
-            {
-                va_list args;
+            va_list args;
 
-                static Log log;
+            static Log log;
 
-                va_start(args, format);
-                vfprintf(log.logFile, format, args);
+            va_start(args, format);
+            vfprintf(log.logFile, format, args);
 
-                va_start(args, format);
-                vprintf(format, args);
+            va_start(args, format);
+            vprintf(format, args);
 
-                va_end(args);
-            }
+            va_end(args);
         }
 };
 
@@ -197,7 +194,7 @@ bool loadFromFile(const char *file_path, float *data, unsigned count) {
     return true;
 }
 
-double compareDataWithFileData(const char *referenceFileName,
+bool compareDataWithFileData(const char *referenceFileName,
   const float *targetDataPointer, double *maxDiff,
   unsigned *diffCounter, const char *outputDir) {
     typedef uint32_t CastType;
@@ -217,6 +214,9 @@ double compareDataWithFileData(const char *referenceFileName,
     snprintf(diffFileName, FILENAME_MAX, "./%s/OUT%s", outputDir,
         referenceFileName);
     FILE *file = fopen(diffFileName, "w+t");
+    if (!file) {
+        return false;
+    }
 
     *maxDiff = -1;
     *diffCounter = 0;
@@ -226,9 +226,9 @@ double compareDataWithFileData(const char *referenceFileName,
     for (int i = 0; i < dataSize; i++) {
         float a = referenceDataPointer[i];
         float b = targetDataPointer[i];
-        float diff;
+        float diff = caffe::floatDiff(a, b, epsilon);
 
-        if (file && !caffe::floatsEqual(a, b, &diff, epsilon)) {
+        if (diff != FP_ZERO) {
             fprintf(file, format, i,
                 *reinterpret_cast<CastType *> (&a),
                 *reinterpret_cast<CastType *> (&b), diff, a, b);
@@ -297,8 +297,9 @@ int collectAndCheckLayerData(bool collect_step,
         (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
     char file_name[FILENAME_MAX];
     char file_path[FILENAME_MAX];
+    string message_prefix = collect_step ? "Collecting" : "Comparing";
 
-    LOG(INFO) << (collect_step ? "Collecting" : "Comparing") << " weights";
+    LOG(INFO) << message_prefix << " weights";
     for (int i = 0; i < params.size(); i++) {
         if (collect_step) {
             saveToFile("Wght", i,
@@ -314,7 +315,7 @@ int collectAndCheckLayerData(bool collect_step,
             params[i]->mutable_cpu_diff());
     }
 
-    LOG(INFO) << (collect_step ? "Collecting" : "Comparing") << " FW Layers";
+    LOG(INFO) << message_prefix << " FW Layers";
     for (int i = 0; i < layers.size(); ++i) {
         fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
 
@@ -367,7 +368,7 @@ int collectAndCheckLayerData(bool collect_step,
             layers[i]->type(), &erronous_layers);
     }
 
-    LOG(INFO) << (collect_step ? "Collecting" : "Comparing")
+    LOG(INFO) << message_prefix
         << " weights again";
     for (int i = 0; i < params.size(); i++) {
         getFileName(file_name, false, "Wght", i);
@@ -378,7 +379,7 @@ int collectAndCheckLayerData(bool collect_step,
             layers[i]->type(), &erronous_layers);
     }
 
-    LOG(INFO) << (collect_step ? "Collecting" : "Comparing") << " BW Layers";
+    LOG(INFO) << message_prefix << " BW Layers";
     for (int i = layers.size() - 1; i >= 0; --i) {
         fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
 
@@ -410,7 +411,7 @@ int collectAndCheckLayerData(bool collect_step,
         }
     }
 
-    LOG(INFO) << (collect_step ? "Collecting" : "Comparing")
+    LOG(INFO) << message_prefix
         << " weights and gradients";
     for (int i = 0; i < params.size(); i++) {
         getFileName(file_name, false, "Wght", i);

@@ -47,63 +47,60 @@ namespace caffe {
     class FloatCompareTest : public ::testing::Test {};
 
     TEST_F(FloatCompareTest, TestCompareFloatsNans) {
-        float a = std::nanf(""), b = std::nanf(""), diff;
+        float a = std::nanf(""), b = std::nanf("");
         float epsilon = 1.0e-3f;
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
+        float diff = caffe::floatDiff(a, b, epsilon);
         EXPECT_EQ(diff, 1.f);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsFiniteAndNan) {
-        float a = std::nanf(""), b = 1.12345f, diff;
+        float a = std::nanf(""), b = 1.12345f;
         float epsilon = 1.0e-3f;
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
+        float diff = caffe::floatDiff(a, b, epsilon);
         EXPECT_EQ(diff, 1.f);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsInfinity) {
         float a = std::numeric_limits<float>::infinity(),
-            b = std::numeric_limits<float>::infinity(), diff;
+            b = std::numeric_limits<float>::infinity();
         float epsilon = 1.0e-3f;
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
+        float diff = caffe::floatDiff(a, b, epsilon);
         EXPECT_EQ(diff, 1.f);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsBigNegative) {
-        float a = 10000.f, epsilon = 1.0e-3f, diff;
+        float a = 10000.f, epsilon = 1.0e-3f;
         float b = boost::math::float_next(boost::math::float_next(a));
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
+        float diff = caffe::floatDiff(a, b, epsilon);
         EXPECT_NEAR(diff, 0.00195313f, 0.00000001f);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsBigPositive) {
-        float a = 10000.f, epsilon = 1.0e-3f, diff;
+        float a = 10000.f, epsilon = 1.0e-3f;
         float b = boost::math::float_next(a);
-
-        EXPECT_TRUE(caffe::floatsEqual(a, b, &diff, epsilon));
+        EXPECT_EQ(caffe::floatDiff(a, b, epsilon), FP_ZERO);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsSmallPositive) {
-        float a = 0.2304f, b = 0.2306f, diff, epsilon = 1.0e-3f;
-
-        EXPECT_TRUE(caffe::floatsEqual(a, b, &diff, epsilon));
-        EXPECT_NEAR(diff, 0.0002f, 0.00001f);
+        float a = 0.2304f, b = 0.2306f, epsilon = 1.0e-3f;
+        EXPECT_EQ(caffe::floatDiff(a, b, epsilon), FP_ZERO);
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsSmallNegative) {
-        float a = 0.12f, b = 0.121f, diff, epsilon = 1.0e-3f;
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
+        float a = 0.12f, b = 0.121f, epsilon = 1.0e-3f;
+        float diff = caffe::floatDiff(a, b, epsilon);
         EXPECT_NEAR(diff, 0.001f, 0.0001f);
     }
 
+    TEST_F(FloatCompareTest, TestCompareFloatsNearZeroDifferentSigns) {
+        float a = -0.2304f, b = 0.2314f, epsilon = 1.0e-3f;
+        float diff = caffe::floatDiff(a, b, epsilon);
+        EXPECT_EQ(diff, 0.4618);
+    }
+    
     TEST_F(FloatCompareTest, TestCompareFloatsDifferentSigns) {
-        float a = -0.2304f, b = 0.2314f, diff, epsilon = 1.0e-3f;
-
-        EXPECT_FALSE(caffe::floatsEqual(a, b, &diff, epsilon));
-        EXPECT_EQ(diff, 1.f);
+        float a = -1.f, b = 1.f, epsilon = 1.0e-3f;
+        float diff = caffe::floatDiff(a, b, epsilon);
+        EXPECT_NEAR(diff, 2.f, epsilon);
     }
 }  // namespace caffe
