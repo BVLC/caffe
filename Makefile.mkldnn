@@ -1,0 +1,29 @@
+CAFFE_ROOTDIR := $(shell pwd)
+MKLDNN_ROOTDIR := external/mkldnn
+MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
+MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
+MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
+MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
+MKLDNN_COMMIT := 10acb154eba2b05e862c91d7bebfc32dee3bd236
+
+MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
+MKLDNN_CMAKE_FLAGS := $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC}
+
+mkldnn_download:
+	git clone --no-checkout $(MKLDNN_GITHUB) $(MKLDNN_TMPDIR)
+	rsync -a $(MKLDNN_TMPDIR)/ $(MKLDNN_SRCDIR) && rm -rf $(MKLDNN_TMPDIR)
+	cd $(MKLDNN_SRCDIR) && git reset --hard $(MKLDNN_COMMIT)
+
+mkldnn_build: mkldnn_download
+	cmake $(MKLDNN_CMAKE_FLAGS)
+	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR)
+	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) install
+
+mkldnn_clean:
+	@rm -rf $(MKLDNN_SRCDIR) $(MKLDNN_BUILDDIR) $(MKLDNN_INSTALLDIR) $(MKLDNN_TMPDIR)
+
+ifeq ($(MKLDNN_BUILD),1)
+mkldnn: mkldnn_build
+else
+mkldnn:
+endif

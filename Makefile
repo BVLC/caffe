@@ -34,6 +34,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+
 PROJECT := caffe
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
@@ -480,17 +481,31 @@ ifeq ($(PERFORMANCE_MONITORING), 1)
 	CXXFLAGS += -DPERFORMANCE_MONITORING
 endif
 
-# MKLDNN configuration
-# detect support for mkl-dnn primitives
-MKLDNN_LDFLAGS=
-MKLDNN_INCLUDE ?= $(MKLDNNROOT)/include
-ifneq ("$(wildcard $(MKLDNN_INCLUDE)/mkldnn.hpp)","")
-	CXXFLAGS += -DMKLDNN_SUPPORTED
-	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
-	CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
+ifneq ($(origin MKLDNNROOT), undefined)
+	include Makefile.mkldnn
+	MKLDNNROOT_DIR := $(MKLDNNROOT)
+	ifneq ($(MKLDNNROOT_DIR),"")
+		MKLDNNROOT_INCLUDE_DIR := $(MKLDNNROOT_DIR)/include
+		ifneq ("$(wildcard $(MKLDNNROOT_INCLUDE_DIR)/mkldnn.hpp)","")
+			CXXFLAGS += -DMKLDNN_SUPPORTED 
+			ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
+				CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
+			endif
+			MKLDNN_LDFLAGS += -lmkldnn
+			MKLDNN_LDFLAGS += -L$(MKLDNNROOT)/lib -Wl,-rpath,$(MKLDNNROOT)/lib
+			MKLDNN_INCLUDE += $(MKLDNNROOT)/include
+		endif
 	endif
+else
+	MKLDNN_BUILD = 1
+	include Makefile.mkldnn
+	CXXFLAGS += -DMKLDNN_SUPPORTED 
+	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
+		CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
+	endif
+	MKLDNN_INCLUDE ?= $(MKLDNN_INSTALLDIR)/include
 	MKLDNN_LDFLAGS+=-lmkldnn
-	MKLDNN_LDFLAGS+=-L$(MKLDNNROOT)/lib -Wl,-rpath,$(MKLDNNROOT)/lib
+	MKLDNN_LDFLAGS+=-L$(MKLDNN_INSTALLDIR)/lib -Wl,-rpath,$(MKLDNN_INSTALLDIR)/lib
 endif
 
 # BOOST configuration
@@ -640,7 +655,7 @@ endif
 # set_env should be at the end
 all: lib tools examples
 
-lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+lib: mkldnn $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -764,7 +779,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
+$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS) mkldnn
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXX_HARDENING_FLAGS) $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
@@ -833,7 +848,7 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
 
-clean:
+clean: mkldnn_clean
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(OTHER_BUILD_DIR)
 	@- $(RM) -rf $(BUILD_DIR_LINK)
