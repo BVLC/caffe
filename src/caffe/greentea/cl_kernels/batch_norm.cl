@@ -15,7 +15,7 @@ __kernel void TEMPLATE(batch_norm_use_global_stats_in_place,Dtype)(const int_tp 
    Dtype v = variance[idx_chans];
 
    m = -scale * m;
-   v = native_powr((Dtype)mad(scale, v, eps), (Dtype)-0.5);
+   v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);
 
    const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;
    top[out_off] = v * (top[out_off] + m);
@@ -35,7 +35,7 @@ __kernel void TEMPLATE(batch_norm_use_global_stats,Dtype)(const int_tp num, cons
    Dtype v = variance[idx_chans];
 
    m = -scale * m;
-   v = native_powr((Dtype)mad(scale, v, eps), (Dtype)-0.5);
+   v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);
 
    const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;
    top[out_off] = v * (bottom[out_off] + m);
