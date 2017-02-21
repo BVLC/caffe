@@ -59,34 +59,24 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
 
     eps_ = this->layer_param_.batch_norm_param().eps();
     use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
-    use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
     bias_term_ = this->layer_param_.batch_norm_param().bias_term();
     moving_average_fraction_ = this->layer_param_.batch_norm_param().moving_average_fraction();
-    // Workaround. Checking count of parameters in order to handle
-    // topology for reference BatchNorm layer which don't have scaling
-    if (this->blobs_.size() == 0) {
-        this->blobs_.resize(3);
-        vector<int> sz;
-        sz.push_back(channels_);
-        this->blobs_[0].reset(new Blob<Dtype>(sz));
-        this->blobs_[1].reset(new Blob<Dtype>(sz));
-        sz[0]=1;
-        this->blobs_[2].reset(new Blob<Dtype>(sz));
-        for (int i = 0; i < 3; ++i) {
-            caffe_set(this->blobs_[i]->count(), Dtype(0),
-                this->blobs_[i]->mutable_cpu_data());
-        }
-        use_weight_bias_ = false;
+    use_global_stats_ = this->phase_ == TEST;
+
+    this->blobs_.resize(3 + (use_weight_bias_ ? 1:0) + (use_weight_bias_ && bias_term_ ? 1:0));
+
+    vector<int> sz;
+    sz.push_back(channels_);
+    this->blobs_[0].reset(new Blob<Dtype>(sz));
+    this->blobs_[1].reset(new Blob<Dtype>(sz));
+    sz[0]=1;
+    this->blobs_[2].reset(new Blob<Dtype>(sz));
+    for (int i = 0; i < 3; ++i) {
+        caffe_set(this->blobs_[i]->count(), Dtype(0),
+            this->blobs_[i]->mutable_cpu_data());
     }
 
-    use_weight_bias_ = (this->layer_param_.param_size() == 3) ? false : true;
-
     if (use_weight_bias_) {
-        if ( bias_term_ ) {
-            this->blobs_.resize(5);
-        } else {
-            this->blobs_.resize(4);
-        }
         // Initialize scale and shift
         vector<int> scaleshift_shape(1);
         scaleshift_shape[0] = channels_;
@@ -113,6 +103,19 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
             VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: bias " << __LINE__ << ":" << this->layer_param_.name();
             bias_filler->Fill(this->blobs_[4].get());
         }
+    }
+
+    // Mask statistics from optimization by setting local learning rates
+    // for mean, variance, and the bias correction to zero.
+    for (int i = 0; i < 3; ++i) {
+      if (this->layer_param_.param_size() == i) {
+        ParamSpec* fixed_param_spec = this->layer_param_.add_param();
+        fixed_param_spec->set_lr_mult(0.f);
+      } else {
+        CHECK_EQ(this->layer_param_.param(i).lr_mult(), 0.f)
+            << "Cannot configure batch normalization statistics as layer "
+            << "parameters.";
+      }
     }
 }
 
