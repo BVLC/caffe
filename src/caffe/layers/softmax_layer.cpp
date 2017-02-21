@@ -75,30 +75,25 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     const Dtype* bottom_data = bottom[0]->cpu_data() + i*dim;
     Dtype *top_data = top[0]->mutable_cpu_data() + channels*i;
 
-    caffe_copy(dim, bottom_data, top_data);
-
     Dtype scale_data = bottom_data[0];
     for (int j = 1; j < channels; j++) {
         scale_data = std::max(scale_data, bottom_data[j]);
     }
 
     // subtraction
-    for (int j = 0; j < channels; ++j)
-        top_data[j] -= scale_data*mult[j];
+    for (int j = 0; j < channels; j++) {
+      top_data[j] = bottom_data[j] - scale_data*mult[j];
+    }
 
     // exponentiation
     // FIXME_valgrind: caffe_exp<Dtype>(dim, top_data, top_data);
     caffe_exp<Dtype>(dim, top_data, top_data);
 
     // sum after exp
-    scale_data = 0;
-    for (int j = 0; j < channels; ++j)
-        scale_data += top_data[j]*mult[j];
+    scale_data = caffe_cpu_dot(dim, top_data, mult);
 
     // division
-    for (int j = 0; j < channels; j++) {
-      caffe_div(inner_num_, top_data + j, &scale_data, top_data + j);
-    }
+    caffe_scal(dim, Dtype(1)/scale_data, top_data);
   }
 }
 
