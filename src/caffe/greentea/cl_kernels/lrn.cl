@@ -209,7 +209,7 @@ __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dty
       }
       scale_val = k + accum_scale * alpha_over_size;
       scale_off[(head - post_pad) * step] = scale_val;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
       ++head;
     }
     // subtract only
@@ -220,7 +220,7 @@ __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dty
       }
       scale_val = k + accum_scale * alpha_over_size;
       scale_off[(head - post_pad) * step] = scale_val;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * native_powr(scale_val, negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
       ++head;
     }
   }
