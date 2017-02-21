@@ -95,7 +95,7 @@ namespace caffe {
     TEST_F(FloatCompareTest, TestCompareFloatsNearZeroDifferentSigns) {
         float a = -0.2304f, b = 0.2314f, epsilon = 1.0e-3f;
         float diff = caffe::floatDiff(a, b, epsilon);
-        EXPECT_EQ(diff, 0.4618);
+        EXPECT_NEAR(diff, 0.4618, 0.0001f);
     }
     
     TEST_F(FloatCompareTest, TestCompareFloatsDifferentSigns) {
