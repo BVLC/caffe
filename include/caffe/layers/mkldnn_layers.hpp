@@ -185,14 +185,7 @@ private:
 template <typename Dtype>
 class MKLDNNLRNLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype>  {
 public:
-    explicit MKLDNNLRNLayer(const LayerParameter& param)
-        : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
-        , fwd_top_data(), fwd_bottom_data ()
-        , lrnFwd_pd()
-        , output_memory(), scratch_(), input_primitive()
-        , alpha_(0.), beta_(0.), k_(0.)
-        , size_(0), num_(0), width_(0), height_(0), channels_(0)
-        {}
+    explicit MKLDNNLRNLayer(const LayerParameter& param);
     virtual ~MKLDNNLRNLayer() {}
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -208,13 +201,18 @@ protected:
     virtual inline int ExactNumBottomBlobs() const { return 1; }
     virtual inline int ExactNumTopBlobs() const { return 1; }
 private:
-    void InitLRN(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitLRNFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitLRNBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<lrn_forward::primitive_desc> lrnFwd_pd;
+    shared_ptr<lrn_backward::primitive_desc> lrnBwd_pd;
     MKLDNNPrimitive<Dtype> lrnFwd;
-    shared_ptr<memory> output_memory, scratch_;
-    shared_ptr<primitive> input_primitive;
+    MKLDNNPrimitive<Dtype> lrnBwd;
+    shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory, scratch_memory;
+    shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     Dtype alpha_, beta_, k_;
     int size_, num_, width_, height_, channels_;
 };
