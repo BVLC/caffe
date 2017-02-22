@@ -5,9 +5,20 @@ MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
 MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
 MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
 MKLDNN_COMMIT := 10acb154eba2b05e862c91d7bebfc32dee3bd236
+MKLDNN_CXX := $(CXX)
+MKLDNN_CC := $(CC)
+
+# We do this because earlier versions of CMake have problems with ccache
+ifneq (,$(findstring ccache,$(CXX)))
+		MKLDNN_CXX = $(lastword $(CXX))
+endif
+
+ifned (,$(findstring ccache,$(CC)))
+	MKLDNN_CC = $(lastword $(CC))
+endif
 
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
-MKLDNN_CMAKE_FLAGS := $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC}
+MKLDNN_CMAKE_FLAGS := $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(CC)"
 
 mkldnn_download:
 	git clone --no-checkout $(MKLDNN_GITHUB) $(MKLDNN_TMPDIR)
