@@ -13,7 +13,7 @@ ifneq (,$(findstring ccache,$(CXX)))
 		MKLDNN_CXX = $(lastword $(CXX))
 endif
 
-ifned (,$(findstring ccache,$(CC)))
+ifneq (,$(findstring ccache,$(CC)))
 	MKLDNN_CC = $(lastword $(CC))
 endif
 
