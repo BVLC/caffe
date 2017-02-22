@@ -329,7 +329,8 @@ class MKLDNNConcatLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
 public:
     explicit MKLDNNConcatLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
-            concatFwd_pd(), output_memory(),
+            concatFwd_pd(), fwd_output_memory(),
+            bwd_reorder_input_memory(), bwd_reorder_output_memory(),
             fwd_top_data(), fwd_bottom_data(), split_channels() {
     }
 protected:
@@ -343,18 +344,27 @@ protected:
     virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 , const vector<Blob<Dtype>*>& bottom);
 private:
-    void InitConcat(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConcatFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConcatBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
 
     shared_ptr<concat::primitive_desc> concatFwd_pd;
-    shared_ptr<memory> output_memory;
-    vector<shared_ptr<primitive>> input_primitives_;
-    vector<primitive::at> input_primitives_at_;
+    shared_ptr<memory> fwd_output_memory;
+    shared_ptr<primitive> bwd_reorder_input_memory;
+    vector<shared_ptr<memory>> bwd_reorder_output_memory;
+    vector<shared_ptr<memory>> bwd_bottom_memory_;
+    vector<shared_ptr<primitive>> fwd_input_primitives_;
+    vector<primitive::at> fwd_input_primitives_at_;
     MKLDNNPrimitive<Dtype> concatFwd;
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data;
     vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff;
+    vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_bottom_diff;
+    vector<MKLDNNPrimitive<Dtype> > reorders;
     vector<int> split_channels;
 
     int32_t num_, width_, height_, channels_, num_concats_;
+    int concat_dimension;
 };
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
