@@ -534,7 +534,6 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
     }
 
     if (group_ > 1) {
-      viennacl::backend::finish();
       cleanTmpSubBuffers(bottom, top);
     }
     if (err != CL_SUCCESS)
@@ -589,7 +588,6 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
     }
 
     if (group_ > 1) {
-      viennacl::backend::finish();
       cleanTmpSubBuffers(bottom, top);
     }
     if (err != CL_SUCCESS)
