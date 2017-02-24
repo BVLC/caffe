@@ -248,7 +248,7 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("BW");
 
   CHECK_EQ(e, E_SUCCESS);
 }

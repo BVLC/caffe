@@ -275,7 +275,7 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("FW");
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -314,7 +314,7 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
-    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_END_MKL("BW");
 
     CHECK_EQ(e, E_SUCCESS);
   }

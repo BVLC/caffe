@@ -402,7 +402,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(poolingFwd, pooling_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("FW");
 
   CHECK_EQ(status, E_SUCCESS);
 }
@@ -442,7 +442,7 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(poolingBwd, pooling_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("BW");
 
   CHECK_EQ(e, E_SUCCESS);
 }
