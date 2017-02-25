@@ -59,20 +59,19 @@ namespace caffe {
 
 // =====  MKLDNNBatchNormLayer =======================================
 template <typename Dtype>
-class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype> {
 public:
     explicit MKLDNNBatchNormLayer(const LayerParameter& param)
-            : Layer<Dtype>(param)
-            , fwd_top_data    ()
-            , fwd_bottom_data ()
-            , BatchNormFwd_pd()
-            , output_memory(), scaleshift_memory()
-            , mean_memory()
-            , variance_memory()
-            , input_primitive()
-        {}
-
+        : Layer<Dtype>(param)
+        , fwd_top_data(), fwd_bottom_data()
+        , bwd_top_diff(), bwd_bottom_diff()
+        , BatchNormFwd_pd(), BatchNormBwd_pd()
+        , mean_memory(), variance_memory()
+        , scaleshift_memory(), bwd_scaleshift_diff_memory()
+        , output_memory(), bwd_bottom_diff_memory()
+        , input_primitive(), bwd_top_diff_primitive() {}
     ~MKLDNNBatchNormLayer() {}
+
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -85,12 +84,21 @@ protected:
                                 , const vector<Blob<Dtype>*>& bottom);
 private:
     void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,
+            const vector<bool>& propagate_down,
+            const vector<Blob<Dtype>*>& bottom);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
+    shared_ptr<batch_normalization_backward::primitive_desc> BatchNormBwd_pd;
 
-    MKLDNNPrimitive<Dtype> BatchNormFwd;
-    shared_ptr<memory> output_memory, scaleshift_memory, mean_memory, variance_memory;
-    shared_ptr<primitive> input_primitive;
+    MKLDNNPrimitive<Dtype> BatchNormFwd, BatchNormBwd;
+    shared_ptr<memory> mean_memory, variance_memory;
+
+    shared_ptr<memory> scaleshift_memory, bwd_scaleshift_diff_memory;
+    shared_ptr<memory> output_memory, bwd_bottom_diff_memory;
+
+    shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 
     int32_t num_, width_, height_, channels_;
     Dtype eps_, moving_average_fraction_;
