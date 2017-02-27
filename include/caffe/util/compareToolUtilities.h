@@ -46,8 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+#include "float_compare.hpp"
 
 template <typename DataType>
 class Data {
@@ -112,47 +113,6 @@ class Data {
         }
 };
 
-class FileList {
-    std::vector<std::string> fileList;
-
-    FileList(const FileList &fileList);
-    FileList &operator =(const FileList &fileList);
-
- public:
-        FileList() {}
-
-        int getNumberOfFiles() const {
-            return static_cast<int>(fileList.size());
-        }
-
-        const char *getFileName(int fileIndex) const {
-            return fileList[fileIndex].c_str();
-        }
-
-        void clear() {
-            fileList.clear();
-        }
-
-        void findFiles() {
-            fileList.clear();
-            fileList.reserve(1024);
-
-            DIR *dir = opendir(FLAGS_collect_dir.c_str());
-            if (dir) {
-                struct dirent *dirEntry = readdir(dir);
-                while (dirEntry) {
-                    if (!strncmp(dirEntry->d_name, "REF", 3))
-                        fileList.push_back(&dirEntry->d_name[3]);
-                    dirEntry = readdir(dir);
-                }
-                closedir(dir);
-            }
-
-            std::sort(fileList.begin(), fileList.end());
-            fileList.shrink_to_fit();
-        }
-};
-
 class Log {
     FILE *logFile;
 
@@ -168,76 +128,120 @@ class Log {
         }
 
         static void log(const char *format, ...) {
-            // #pragma omp critical
-            {
-                va_list args;
+            va_list args;
 
-                static Log log;
+            static Log log;
 
-                va_start(args, format);
-                vfprintf(log.logFile, format, args);
+            va_start(args, format);
+            vfprintf(log.logFile, format, args);
 
-                va_start(args, format);
-                vprintf(format, args);
+            va_start(args, format);
+            vprintf(format, args);
 
-                va_end(args);
-            }
+            va_end(args);
         }
 };
 
-double compareFiles(const char *diffFileName, const char *referenceFileName,
-  const char *targetFileName, double *maxDiff, unsigned *diffCounter) {
-    typedef float DataType;
+void getFileName(char *file_name, bool is_target, const char *name, int id) {
+    snprintf(file_name, FILENAME_MAX, "%s%04i.bin", name, id);
+}
+
+void getBinFilePath(char *file_path, const char *name) {
+    snprintf(file_path, FILENAME_MAX, "%s/%s",
+        FLAGS_collect_dir.c_str(), name);
+}
+
+bool saveToFile(const char *prefix,
+    int id, const float *data, unsigned count) {
+    char file_name[FILENAME_MAX];
+    getFileName(file_name, false, prefix, id);
+
+    FILE *file = fopen((FLAGS_collect_dir + "/" + file_name).c_str(), "w+b");
+    if (!file) {
+        LOG(ERROR) << "Failed to create file '" << FLAGS_collect_dir << "'.";
+        return false;
+    }
+
+    size_t bytesToWrite = count * sizeof(data[0]);
+    size_t bytesWritten = fwrite(data, 1, bytesToWrite, file);
+    fclose(file);
+
+    if (bytesWritten != bytesToWrite) {
+        LOG(ERROR) << "Failed to write data to '" << FLAGS_collect_dir
+            << "' file.";
+        return false;
+    }
+
+    return true;
+}
+
+bool loadFromFile(const char *file_path, float *data, unsigned count) {
+    FILE *file = fopen(file_path, "rb");
+    if (!file) {
+        LOG(ERROR) << "Failed to open file '" << file_path << "' for read.";
+        return false;
+    }
+
+    size_t bytesToRead = count * sizeof(data[0]);
+    size_t bytesRead = fread(data, 1, bytesToRead, file);
+    fclose(file);
+
+    if (bytesRead != bytesToRead) {
+        LOG(ERROR) << "Failed to read data from '" << file_path << "' file.";
+        return false;
+    }
+
+    return true;
+}
+
+bool compareDataWithFileData(const char *referenceFileName,
+  const float *targetDataPointer, double *maxDiff,
+  unsigned *diffCounter, const char *outputDir) {
     typedef uint32_t CastType;
     const char *format = "%i;%08X;%08X;%g;%g;%g\n";
-    const DataType epsilon = (DataType) FLAGS_epsilon;
+    const float epsilon = static_cast<float>(FLAGS_epsilon);
 
-    Data<DataType> referenceData;
-    if (!referenceData.loadFromFile(referenceFileName)) {
+    Data<float> referenceData;
+    char file_path[FILENAME_MAX];
+    getBinFilePath(file_path, referenceFileName);
+    if (!referenceData.loadFromFile(file_path)) {
         Log::log("Failed to load reference data file '%s'.\n",
-          referenceFileName);
+            referenceFileName);
         return false;
     }
 
-    Data<DataType> targetData;
-    if (!targetData.loadFromFile(targetFileName)) {
-        Log::log("Failed to load target data file '%s'.\n", targetFileName);
+    char diffFileName[FILENAME_MAX];
+    snprintf(diffFileName, FILENAME_MAX, "./%s/OUT%s", outputDir,
+        referenceFileName);
+    FILE *file = fopen(diffFileName, "w+t");
+    if (!file) {
         return false;
     }
-
-    if (targetData.getDataSize() != referenceData.getDataSize()) {
-        Log::log("Data length is not equal.\n");
-        return false;
-    }
-
-    FILE *file = NULL;
-    if (diffFileName)
-        file = fopen(diffFileName, "w+t");
 
     *maxDiff = -1;
     *diffCounter = 0;
 
-    int dataSize = targetData.getDataSize();
-    const DataType *referenceDataPointer = referenceData.getDataPointer();
-    const DataType *targetDataPointer = targetData.getDataPointer();
+    int dataSize = referenceData.getDataSize();
+    const float *referenceDataPointer = referenceData.getDataPointer();
     for (int i = 0; i < dataSize; i++) {
-        DataType a = referenceDataPointer[i];
-        DataType b = targetDataPointer[i];
+        float a = referenceDataPointer[i];
+        float b = targetDataPointer[i];
+        float diff = caffe::floatDiff(a, b, epsilon);
 
-        DataType aAbs = (DataType) fabs(a), bAbs = (DataType) fabs(b);
-        DataType diff =
-            ((a * b) < 0) ? 1 :
-            (aAbs && (aAbs < bAbs)) ? bAbs / aAbs - 1 :
-            (bAbs && (bAbs < aAbs)) ? aAbs / bAbs - 1 :
-            (aAbs == bAbs) ? 0 : 1;
-
-        if (file && (diff >= epsilon)) {
-            fprintf(file, format, i, (CastType)a, (CastType)b, diff, a, b);
+        if (diff != FP_ZERO) {
+            fprintf(file, format, i,
+                *reinterpret_cast<CastType *> (&a),
+                *reinterpret_cast<CastType *> (&b), diff, a, b);
             (*diffCounter)++;
         }
 
-        if (*maxDiff < diff)
+        if (*maxDiff < diff) {
             *maxDiff = diff;
+        }
+
+        if (FLAGS_fast_compare && (*diffCounter) >= FLAGS_fast_compare_max) {
+            break;
+        }
     }
 
     if (file)
@@ -246,55 +250,196 @@ double compareFiles(const char *diffFileName, const char *referenceFileName,
     return true;
 }
 
-void processFile(const char *fileName, const string& layerType,
-  std::unordered_map<string, int> *errorsDictionary) {
-    char referenceFileName[FILENAME_MAX];
-    char targetFileName[FILENAME_MAX];
-    char diffFileName[FILENAME_MAX];
-    snprintf(referenceFileName, sizeof(referenceFileName), "./%s/REF%s",
-      FLAGS_collect_dir.c_str(), fileName);
-    snprintf(targetFileName, sizeof(targetFileName), "./%s/TGT%s",
-      FLAGS_compare_output_dir.c_str(), fileName);
-    snprintf(diffFileName, sizeof(diffFileName), "./%s/OUT%s",
-      FLAGS_compare_output_dir.c_str(), fileName);
+void checkData(const char *referenceFileName, const float *targetDataPointer,
+  const char *layerName, const char *outputDir,
+  std::unordered_set<string> *erronousLayers) {
     double maxDiff;
     unsigned diffCounter;
-    bool success = compareFiles(diffFileName, referenceFileName,
-      targetFileName, &maxDiff, &diffCounter);
+    bool success = compareDataWithFileData(referenceFileName,
+        targetDataPointer, &maxDiff, &diffCounter, outputDir);
+
     if (!success) {
-      Log::log("%-16s %-20s : failed\n", fileName, layerType.c_str());
+        Log::log("%-18s %-20s  : failed\n", referenceFileName, layerName);
     } else if (!diffCounter) {
-      Log::log("%-16s %-20s : success\n", fileName, layerType.c_str());
+        Log::log("%-18s %-20s  : success\n", referenceFileName, layerName);
     } else {
-      Log::log("%-16s %-20s : %g %u\n", fileName, layerType.c_str(),
-        maxDiff, diffCounter);
-      (*errorsDictionary)[layerType]++;
+        Log::log("%-18s %-20s  : %g %u\n", referenceFileName, layerName,
+            maxDiff, diffCounter);
+        (*erronousLayers).insert(layerName);
     }
 }
 
-void proceedWithCompare(const string& infoPath,
-  std::unordered_map<string, int> *errorsDictionary) {
-  FileList fileList;
-  fileList.findFiles();
+void checkAllNans(const float *targetDataPointer, unsigned count,
+  const char *bufferName, const char *layerName,
+  std::unordered_set<string> *erronousLayers) {
+    for (int i = 0; i < count; i++) {
+        if (!std::isnan(targetDataPointer[i])) {
+            Log::log("Not all elements in %s are NaNs\n", bufferName);
+            (*erronousLayers).insert(layerName);
+            return;
+        }
+    }
+}
 
-  std::unordered_map<string, string> layersInfo;
-  std::ifstream layersInfoFile;
-  layersInfoFile.open(infoPath);
-  string key, name;
-  while (layersInfoFile >> key >> name) {
-    layersInfo[key + ".bin"] = name;
-  }
+int collectAndCheckLayerData(bool collect_step,
+  bool use_gpu, const char *output_dir) {
+    Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
+    const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
+    const vector<shared_ptr<Blob<float> > >& params = caffe_net.params();
+    const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
+    const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
+    const vector<vector<bool> >& bottom_need_backward =
+        caffe_net.bottom_need_backward();
 
-  layersInfoFile.close();
+    std::unordered_set<string> erronous_layers;
+    FILE *infoFile = fopen(use_gpu ?
+        (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
+        (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
+    char file_name[FILENAME_MAX];
+    char file_path[FILENAME_MAX];
+    string message_prefix = collect_step ? "Collecting" : "Comparing";
 
-  int numberOfFiles = fileList.getNumberOfFiles();
+    LOG(INFO) << message_prefix << " weights";
+    for (int i = 0; i < params.size(); i++) {
+        if (collect_step) {
+            saveToFile("Wght", i,
+                params[i]->cpu_data(), params[i]->count());
+        } else {
+            getFileName(file_name, false, "Wght", i);
+            checkData(file_name, params[i]->cpu_data(),
+                layers[i]->type(), output_dir,
+                &erronous_layers);
+        }
 
-  LOG(INFO) << "Comparing layers data";
-  // #pragma omp parallel for
-  for (int fileIndex = 0; fileIndex < numberOfFiles; fileIndex++) {
-    const char* binFileName = fileList.getFileName(fileIndex);
-    processFile(binFileName, layersInfo[binFileName], errorsDictionary);
-  }
+        caffe::caffe_set(params[i]->count(), std::nanf(""),
+            params[i]->mutable_cpu_diff());
+    }
+
+    LOG(INFO) << message_prefix << " FW Layers";
+    for (int i = 0; i < layers.size(); ++i) {
+        fprintf(infoFile, "Fwrd%04i %s\n", i, layers[i]->type());
+
+        if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+            if (collect_step) {
+                saveToFile("FwrdBtmDat", i, bottom_vecs[i][0]->cpu_data(),
+                    bottom_vecs[i][0]->count());
+            } else {
+                getFileName(file_name, false, "FwrdBtmDat", i);
+                getBinFilePath(file_path, file_name);
+                loadFromFile(file_path, bottom_vecs[i][0]->mutable_cpu_data(),
+                    bottom_vecs[i][0]->count());
+            }
+        }
+
+        for (int j = 0; j < bottom_vecs[i].size(); j++) {
+            caffe::caffe_set(bottom_vecs[i][j]->count(), std::nanf(""),
+                bottom_vecs[i][j]->mutable_cpu_diff());
+        }
+
+        for (int j = 0; j < top_vecs[i].size(); j++) {
+            caffe::caffe_set(top_vecs[i][j]->count(), std::nanf(""),
+                top_vecs[i][j]->mutable_cpu_diff());
+        }
+
+        layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+
+        if (collect_step) {
+            saveToFile("FwrdTopDat", i, top_vecs[i][0]->cpu_data(),
+                top_vecs[i][0]->count());
+        } else {
+            getFileName(file_name, false, "FwrdTopDat", i);
+            checkData(file_name, top_vecs[i][0]->cpu_data(),
+                layers[i]->type(), output_dir,
+                &erronous_layers);
+        }
+
+        if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
+            getFileName(file_name, false, "FwrdBtmDat", i);
+            checkData(file_name, bottom_vecs[i][0]->cpu_data(),
+                layers[i]->type(), output_dir,
+                &erronous_layers);
+            checkAllNans(bottom_vecs[i][0]->cpu_diff(),
+                bottom_vecs[i][0]->count(), "bottom.diff",
+                layers[i]->type(), &erronous_layers);
+        }
+
+        checkAllNans(top_vecs[i][0]->cpu_diff(),
+            top_vecs[i][0]->count(), "top.diff",
+            layers[i]->type(), &erronous_layers);
+    }
+
+    LOG(INFO) << message_prefix
+        << " weights again";
+    for (int i = 0; i < params.size(); i++) {
+        getFileName(file_name, false, "Wght", i);
+        checkData(file_name, params[i]->cpu_data(),
+            layers[i]->type(), output_dir,
+            &erronous_layers);
+        checkAllNans(params[i]->cpu_diff(), params[i]->count(), "param.diff",
+            layers[i]->type(), &erronous_layers);
+    }
+
+    LOG(INFO) << message_prefix << " BW Layers";
+    for (int i = layers.size() - 1; i >= 0; --i) {
+        fprintf(infoFile, "Bwrd%04i %s\n", i, layers[i]->type());
+
+        layers[i]->Backward(top_vecs[i],
+            bottom_need_backward[i], bottom_vecs[i]);
+
+        if (collect_step) {
+            saveToFile("BwrdTopDif", i,
+                top_vecs[i][0]->cpu_diff(), top_vecs[i][0]->count());
+
+            if (bottom_need_backward[i].size() > 0 &&
+                bottom_need_backward[i][0]) {
+                saveToFile("BwrdBtmDif", i,
+                    bottom_vecs[i][0]->cpu_diff(), bottom_vecs[i][0]->count());
+            }
+        } else {
+            getFileName(file_name, false, "BwrdTopDif", i);
+            checkData(file_name, top_vecs[i][0]->cpu_diff(),
+                layers[i]->type(), output_dir,
+                &erronous_layers);
+
+            if (bottom_need_backward[i].size() > 0 &&
+                bottom_need_backward[i][0]) {
+                getFileName(file_name, false, "BwrdBtmDif", i);
+                checkData(file_name, bottom_vecs[i][0]->cpu_diff(),
+                    layers[i]->type(), output_dir,
+                    &erronous_layers);
+            }
+        }
+    }
+
+    LOG(INFO) << message_prefix
+        << " weights and gradients";
+    for (int i = 0; i < params.size(); i++) {
+        getFileName(file_name, false, "Wght", i);
+        checkData(file_name, params[i]->cpu_data(),
+            layers[i]->type(), output_dir,
+            &erronous_layers);
+
+        if (collect_step) {
+            saveToFile("Grad", i,
+                params[i]->cpu_diff(), params[i]->count());
+        } else {
+            getFileName(file_name, false, "Grad", i);
+            checkData(file_name, params[i]->cpu_diff(),
+                layers[i]->type(), output_dir,
+                &erronous_layers);
+        }
+    }
+
+    fclose(infoFile);
+
+    if (erronous_layers.size() > 0) {
+        LOG(INFO) << "Invalid layer behaviour detected on: ";
+        for (const std::string& layer_name : erronous_layers) {
+            LOG(WARNING) << "\t" << layer_name;
+        }
+    }
+
+    return 0;
 }
 
 #endif  // INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_
