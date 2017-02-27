@@ -16,6 +16,9 @@ void HDF5OutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                        H5P_DEFAULT);
   CHECK_GE(file_id_, 0) << "Failed to open HDF5 file" << file_name_;
   file_opened_ = true;
+
+  for (int i = 0; i < bottom.size(); i++)
+    data_blobs_.push_back(new Blob<Dtype>());
 }
 
 template <typename Dtype>
@@ -24,36 +27,34 @@ HDF5OutputLayer<Dtype>::~HDF5OutputLayer<Dtype>() {
     herr_t status = H5Fclose(file_id_);
     CHECK_GE(status, 0) << "Failed to close HDF5 file " << file_name_;
   }
+  for (int i = 0; i < data_blobs_.size(); i++) {
+    delete data_blobs_[i];
+  }
 }
 
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::SaveBlobs() {
   // TODO: no limit on the number of blobs
   LOG(INFO) << "Saving HDF5 file " << file_name_;
-  CHECK_EQ(data_blob_.num(), label_blob_.num()) <<
-      "data blob and label blob must have the same batch size";
-  hdf5_save_nd_dataset(file_id_, HDF5_DATA_DATASET_NAME, data_blob_);
-  hdf5_save_nd_dataset(file_id_, HDF5_DATA_LABEL_NAME, label_blob_);
-  LOG(INFO) << "Successfully saved " << data_blob_.num() << " rows";
+  for (int i = 0; i < data_blobs_.size(); i++) {
+    stringstream ss;
+    ss << "blob" << i;
+    hdf5_save_nd_dataset(file_id_, ss.str(), *(data_blobs_[i]));
+  }
+  LOG(INFO) << "Successfully saved " << data_blobs_[0]->num() << " rows";
 }
 
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_GE(bottom.size(), 2);
-  CHECK_EQ(bottom[0]->num(), bottom[1]->num());
-  data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-                     bottom[0]->height(), bottom[0]->width());
-  label_blob_.Reshape(bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->height(), bottom[1]->width());
-  const int data_datum_dim = bottom[0]->count() / bottom[0]->num();
-  const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
+  CHECK_GE(bottom.size(), 1);
 
-  for (int i = 0; i < bottom[0]->num(); ++i) {
-    caffe_copy(data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
-        &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
-    caffe_copy(label_datum_dim, &bottom[1]->cpu_data()[i * label_datum_dim],
-        &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
+  for (int i = 0; i < bottom.size(); ++i) {
+    CHECK_EQ(bottom[0]->num(), bottom[i]->num());
+    data_blobs_[i]->Reshape(bottom[i]->num(), bottom[i]->channels(),
+                       bottom[i]->height(), bottom[i]->width());
+    caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(),
+               data_blobs_[i]->mutable_cpu_data());
   }
   SaveBlobs();
 }

@@ -10,20 +10,14 @@ namespace caffe {
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_GE(bottom.size(), 2);
-  CHECK_EQ(bottom[0]->num(), bottom[1]->num());
-  data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-                     bottom[0]->height(), bottom[0]->width());
-  label_blob_.Reshape(bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->height(), bottom[1]->width());
-  const int data_datum_dim = bottom[0]->count() / bottom[0]->num();
-  const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
+  CHECK_GE(bottom.size(), 1);
 
-  for (int i = 0; i < bottom[0]->num(); ++i) {
-    caffe_copy(data_datum_dim, &bottom[0]->gpu_data()[i * data_datum_dim],
-        &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
-    caffe_copy(label_datum_dim, &bottom[1]->gpu_data()[i * label_datum_dim],
-        &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
+  for (int i = 0; i < bottom.size(); ++i) {
+    CHECK_EQ(bottom[0]->num(), bottom[i]->num());
+    data_blobs_[i]->Reshape(bottom[i]->num(), bottom[i]->channels(),
+        bottom[i]->height(), bottom[i]->width());
+    caffe_copy(bottom[i]->count(), bottom[i]->gpu_data(),
+        data_blobs_[i]->mutable_cpu_data());
   }
   SaveBlobs();
 }
