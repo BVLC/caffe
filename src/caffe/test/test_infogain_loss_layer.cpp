@@ -22,12 +22,12 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
         blob_bottom_infogain_(new Blob<Dtype>(1, 1, 5, 5)),
         blob_top_loss_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     PositiveUnitballFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);

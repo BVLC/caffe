@@ -22,5 +22,5 @@ max_iter: 10000
 snapshot: 5000
 snapshot_prefix: "examples/mnist/lenet"
 # solver mode: CPU or GPU
-type: "Adam"
+solver_type: ADAM
 solver_mode: GPU

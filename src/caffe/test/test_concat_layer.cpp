@@ -105,7 +105,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardTrivial) {
   this->blob_bottom_vec_0_.resize(1);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_0_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_0_->count(); ++i) {
     EXPECT_EQ(this->blob_bottom_0_->cpu_data()[i],
               this->blob_top_->cpu_data()[i]);
   }
@@ -118,20 +118,20 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_top_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c, h, w),
               this->blob_bottom_vec_1_[0]->data_at(n, c, h, w));
         }
       }
     }
   }
-  for (int n = 0; n < this->blob_bottom_vec_1_[1]->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_bottom_vec_1_[1]->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_top_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n + 2, c, h, w),
               this->blob_bottom_vec_1_[1]->data_at(n, c, h, w));
         }
@@ -146,18 +146,18 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_bottom_0_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_top_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c, h, w),
               this->blob_bottom_vec_0_[0]->data_at(n, c, h, w));
         }
       }
     }
-    for (int c = 0; c < this->blob_bottom_1_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
+    for (int_tp c = 0; c < this->blob_bottom_1_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_top_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c + 3, h, w),
               this->blob_bottom_vec_0_[1]->data_at(n, c, h, w));
         }

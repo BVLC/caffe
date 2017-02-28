@@ -31,7 +31,7 @@ class SoftmaxWithLossLayerTest : public MultiDeviceTest<TypeParam> {
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);
@@ -73,7 +73,7 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestForwardIgnoreLabel) {
   Dtype full_loss = this->blob_top_loss_->cpu_data()[0];
   // Now, accumulate the loss, ignoring each label in {0, ..., 4} in turn.
   Dtype accum_loss = 0;
-  for (int label = 0; label < 5; ++label) {
+  for (int_tp label = 0; label < 5; ++label) {
     layer_param.mutable_loss_param()->set_ignore_label(label);
     layer.reset(new SoftmaxWithLossLayer<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);

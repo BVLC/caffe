@@ -43,13 +43,13 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 3; }
   virtual inline const char* type() const { return "ContrastiveLoss"; }
   /**
    * Unlike most loss layers, in the ContrastiveLossLayer we can backpropagate
    * to the first two inputs.
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
+  virtual inline bool AllowForceBackward(const int_tp bottom_index) const {
     return bottom_index != 2;
   }
 

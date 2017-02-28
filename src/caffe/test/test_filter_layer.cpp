@@ -25,7 +25,7 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_labels_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
-    Caffe::set_random_seed(1890);
+    Caffe::set_random_seed(1890, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     // fill the selector blob
@@ -36,7 +36,7 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
     bottom_data_selector_[3] = 0;
     // fill the other bottom blobs
     filler.Fill(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_labels_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_labels_->count(); ++i) {
       blob_bottom_labels_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_data_);
@@ -78,7 +78,7 @@ TYPED_TEST(FilterLayerTest, TestReshape) {
       this->blob_top_data_->shape(0));
   EXPECT_GT(this->blob_bottom_labels_->shape(0),
       this->blob_top_labels_->shape(0));
-  for (int i = 1; i < this->blob_bottom_labels_->num_axes(); i++) {
+  for (int_tp i = 1; i < this->blob_bottom_labels_->num_axes(); i++) {
     EXPECT_EQ(this->blob_bottom_labels_->shape(i),
         this->blob_top_labels_->shape(i));
   }
@@ -96,19 +96,19 @@ TYPED_TEST(FilterLayerTest, TestForward) {
   EXPECT_EQ(this->blob_top_labels_->data_at(1, 0, 0, 0),
       this->blob_bottom_labels_->data_at(2, 0, 0, 0));
 
-  int dim = this->blob_top_data_->count() /
+  int_tp dim = this->blob_top_data_->count() /
       this->blob_top_data_->shape(0);
   const Dtype* top_data = this->blob_top_data_->cpu_data();
   const Dtype* bottom_data = this->blob_bottom_data_->cpu_data();
   // selector is 0 1 1 0, so we need to compare bottom(1,c,h,w)
   // with top(0,c,h,w) and bottom(2,c,h,w) with top(1,c,h,w)
   bottom_data += dim;  // bottom(1,c,h,w)
-  for (size_t n = 0; n < dim; n++)
+  for (uint_tp n = 0; n < dim; n++)
     EXPECT_EQ(top_data[n], bottom_data[n]);
 
   bottom_data += dim;  // bottom(2,c,h,w)
   top_data += dim;  // top(1,c,h,w)
-  for (size_t n = 0; n < dim; n++)
+  for (uint_tp n = 0; n < dim; n++)
     EXPECT_EQ(top_data[n], bottom_data[n]);
 }
 

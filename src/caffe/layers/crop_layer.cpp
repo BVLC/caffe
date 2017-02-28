@@ -20,8 +20,8 @@ void CropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // bottom[1] supplies the size
   const CropParameter& param = this->layer_param_.crop_param();
   CHECK_EQ(bottom.size(), 2) << "Wrong number of bottom blobs.";
-  int input_dim = bottom[0]->num_axes();
-  const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
+  int_tp input_dim = bottom[0]->num_axes();
+  const int_tp start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
   CHECK_LT(start_axis, input_dim) << "crop axis bigger than input dim";
   if (param.offset_size() > 1) {
     // the number of crop values specified must be equal to the number
@@ -36,15 +36,15 @@ template <typename Dtype>
 void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const CropParameter& param = this->layer_param_.crop_param();
-  int input_dim = bottom[0]->num_axes();
-  const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
+  int_tp input_dim = bottom[0]->num_axes();
+  const int_tp start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
 
   // Initialize offsets to 0 and the new shape to the current shape of the data.
-  offsets = vector<int>(input_dim, 0);
-  vector<int> new_shape(bottom[0]->shape());
+  offsets = vector<int_tp>(input_dim, 0);
+  vector<int_tp> new_shape(bottom[0]->shape());
 
   // Determine crop offsets and the new shape post-crop.
-  for (int i = 0; i < input_dim; ++i) {
+  for (int_tp i = 0; i < input_dim; ++i) {
     int crop_offset = 0;
     int new_size = bottom[0]->shape(i);
     if (i >= start_axis) {
@@ -71,15 +71,15 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top,
-             const vector<int>& offsets,
-             vector<int> indices,
-             int cur_dim,
+             const vector<int_tp>& offsets,
+             vector<int_tp> indices,
+             int_tp cur_dim,
              const Dtype* src_data,
              Dtype* dest_data,
              bool is_forward) {
   if (cur_dim + 1 < top[0]->num_axes()) {
     // We are not yet at the final dimension, call copy recursively
-    for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
+    for (int_tp i = 0; i < top[0]->shape(cur_dim); ++i) {
       indices[cur_dim] = i;
       crop_copy(bottom, top, offsets, indices, cur_dim+1,
                 src_data, dest_data, is_forward);
@@ -87,9 +87,9 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
   } else {
     // We are at the last dimensions, which is stored continuously in memory
     // prepare index vector reduced(red) and with offsets(off)
-    std::vector<int> ind_red(cur_dim, 0);
-    std::vector<int> ind_off(cur_dim+1, 0);
-    for (int j = 0; j < cur_dim; ++j) {
+    std::vector<int_tp> ind_red(cur_dim, 0);
+    std::vector<int_tp> ind_off(cur_dim+1, 0);
+    for (int_tp j = 0; j < cur_dim; ++j) {
       ind_red[j] = indices[j];
       ind_off[j] = indices[j] + offsets[j];
     }
@@ -112,7 +112,7 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CropLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  std::vector<int> indices(top[0]->num_axes(), 0);
+  std::vector<int_tp> indices(top[0]->num_axes(), 0);
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   crop_copy(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
@@ -126,7 +126,7 @@ void CropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   if (propagate_down[0]) {
     caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
-    std::vector<int> indices(top[0]->num_axes(), 0);
+    std::vector<int_tp> indices(top[0]->num_axes(), 0);
     crop_copy(bottom, top, offsets, indices, 0, top_diff, bottom_diff, false);
   }
 }

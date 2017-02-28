@@ -23,9 +23,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   // DataLayer uses DataReader instead for sharing for parallelism
   virtual inline bool ShareInParallel() const { return false; }
   virtual inline const char* type() const { return "Data"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   void Next();

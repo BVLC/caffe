@@ -1,6 +1,11 @@
 #ifdef USE_LMDB
 #include "caffe/util/db_lmdb.hpp"
 
+#if defined(_MSC_VER)
+#include <direct.h>
+#define mkdir(X, Y) _mkdir(X)
+#endif
+
 #include <sys/stat.h>
 
 #include <string>
@@ -12,7 +17,7 @@ void LMDB::Open(const string& source, Mode mode) {
   if (mode == NEW) {
     CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << " failed";
   }
-  int flags = 0;
+  int_tp flags = 0;
   if (mode == READ) {
     flags = MDB_RDONLY | MDB_NOTLS;
   }

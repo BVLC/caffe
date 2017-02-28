@@ -29,9 +29,9 @@ class BiasLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Bias"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MaxBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp MaxBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -44,7 +44,7 @@ class BiasLayer : public Layer<Dtype> {
 
  private:
   Blob<Dtype> bias_multiplier_;
-  int outer_dim_, bias_dim_, inner_dim_, dim_;
+  int_tp outer_dim_, bias_dim_, inner_dim_, dim_;
 };
 
 

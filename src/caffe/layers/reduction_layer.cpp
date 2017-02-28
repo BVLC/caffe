@@ -20,7 +20,7 @@ void ReductionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // throw away any after that.
   // Note: currently reducing along non-tail axes is not supported; otherwise,
   // we'd need to also copy any axes following an "end_axis".
-  vector<int> top_shape(bottom[0]->shape().begin(),
+  vector<int_tp> top_shape(bottom[0]->shape().begin(),
                         bottom[0]->shape().begin() + axis_);
   top[0]->Reshape(top_shape);
   num_ = bottom[0]->count(0, axis_);
@@ -28,7 +28,7 @@ void ReductionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(num_, top[0]->count());
   if (op_ == ReductionParameter_ReductionOp_SUM ||
       op_ == ReductionParameter_ReductionOp_MEAN) {
-    vector<int> sum_mult_shape(1, dim_);
+    vector<int_tp> sum_mult_shape(1, dim_);
     sum_multiplier_.Reshape(sum_mult_shape);
     caffe_set(dim_, Dtype(1), sum_multiplier_.mutable_cpu_data());
   }
@@ -47,7 +47,7 @@ void ReductionLayer<Dtype>::Forward_cpu(
     mult_data = sum_multiplier_.cpu_data();
   }
   Dtype* top_data = top[0]->mutable_cpu_data();
-  for (int i = 0; i < num_; ++i) {
+  for (int_tp i = 0; i < num_; ++i) {
     switch (op_) {
     case ReductionParameter_ReductionOp_SUM:
     case ReductionParameter_ReductionOp_MEAN:
@@ -95,7 +95,7 @@ void ReductionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  for (int i = 0; i < num_; ++i) {
+  for (int_tp i = 0; i < num_; ++i) {
     const Dtype bottom_coeff = (*top_diff) * coeff_;
     switch (op_) {
     case ReductionParameter_ReductionOp_SUM:

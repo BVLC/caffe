@@ -74,8 +74,8 @@ class LSTMUnitLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "LSTMUnit"; }
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 3; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     // Can't propagate to sequence continuation indicators.

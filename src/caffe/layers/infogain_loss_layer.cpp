@@ -34,8 +34,8 @@ void InfogainLossLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  const int num = bottom[0]->num();
-  const int dim = bottom[0]->count() / num;
+  const int_tp num = bottom[0]->num();
+  const int_tp dim = bottom[0]->count() / num;
   CHECK_EQ(infogain->num(), 1);
   CHECK_EQ(infogain->channels(), 1);
   CHECK_EQ(infogain->height(), dim);
@@ -54,12 +54,12 @@ void InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     infogain_mat = bottom[2]->cpu_data();
   }
-  int num = bottom[0]->num();
-  int dim = bottom[0]->count() / bottom[0]->num();
+  int_tp num = bottom[0]->num();
+  int_tp dim = bottom[0]->count() / bottom[0]->num();
   Dtype loss = 0;
-  for (int i = 0; i < num; ++i) {
-    int label = static_cast<int>(bottom_label[i]);
-    for (int j = 0; j < dim; ++j) {
+  for (int_tp i = 0; i < num; ++i) {
+    int_tp label = static_cast<int_tp>(bottom_label[i]);
+    for (int_tp j = 0; j < dim; ++j) {
       Dtype prob = std::max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
       loss -= infogain_mat[label * dim + j] * log(prob);
     }
@@ -89,12 +89,12 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       infogain_mat = bottom[2]->cpu_data();
     }
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    int num = bottom[0]->num();
-    int dim = bottom[0]->count() / bottom[0]->num();
+    int_tp num = bottom[0]->num();
+    int_tp dim = bottom[0]->count() / bottom[0]->num();
     const Dtype scale = - top[0]->cpu_diff()[0] / num;
-    for (int i = 0; i < num; ++i) {
-      const int label = static_cast<int>(bottom_label[i]);
-      for (int j = 0; j < dim; ++j) {
+    for (int_tp i = 0; i < num; ++i) {
+      const int_tp label = static_cast<int_tp>(bottom_label[i]);
+      for (int_tp j = 0; j < dim; ++j) {
         Dtype prob = std::max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
         bottom_diff[i * dim + j] = scale * infogain_mat[label * dim + j] / prob;
       }

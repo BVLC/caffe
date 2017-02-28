@@ -1,16 +1,58 @@
 ## Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
+# 32 bit / 64 bit indexing
+# USE_INDEX_64 := 1
+
+# GreenTea (ViennaCL/OpenCL) backend switch
+
+# Enable the CUDA backend
+# USE_CUDA := 1
+
+# Enable the OpenCL/Greentea backend
+USE_GREENTEA := 1
+# Enable the Greentea-LibDNN convolution backend
+# USE_LIBDNN := 1
+
+# Enable the Intel spatial convolutions
+# USE_INTEL_SPATIAL := 1
+
+# Folder of the ViennaCL header-only library
+VIENNACL_DIR = ../ViennaCL
+
+# Override BLAS, use CLBlast instead of ViennacLBLAS.
+# USE_CLBLAST := 1
+# Custom CLBlast lib and include directories.
+# CLBLAST_INCLUDE := /path/to/clblast/include
+# CLBLAST_LIB     := /path/to/clblast/lib
+
+# Override BLAS, use clBLAS insead of ViennaclBLAS.
+# USE_CLBLAS := 1
+# Custom clBLAS lib and include directories.
+# CLBLAS_INCLUDE := /path/to/clblas/include
+# CLBLAS_LIB     := /path/to/clblas/lib
+
+# Override BLAS, use ISAAC instead of ViennaclBLAS.
+# USE_ISAAC := 1
+
+# Uncomment for FFT
+# USE_FFT := 1
+
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+# CPU OpenMP switch. Do not use OpenMP on dual socket systems!
+USE_OPENMP := 1
+
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
 # USE_LMDB := 0
+# This code is taken from https://github.com/sh1r0/caffe-android-lib
+# USE_HDF5 := 0
 
 # uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
 #	You should not set this flag if you will be reading LMDBs with any
@@ -112,6 +154,7 @@ DISTRIBUTE_DIR := distribute
 
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
+# VIENNACL_DEBUG := 0
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0

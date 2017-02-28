@@ -1,12 +1,15 @@
 #include <cstdio>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
+#include "caffe/net.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
-#include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 namespace caffe {
@@ -25,19 +28,24 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
   return SolverAction::NONE;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_(), callbacks_(), requested_early_exit_(false) {
+    : net_(),
+      device_(Caffe::GetDefaultDevice()), callbacks_(),
+              requested_early_exit_(false) {
   Init(param);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_(), callbacks_(), requested_early_exit_(false) {
+    : net_(),
+      device_(Caffe::GetDefaultDevice()), callbacks_(),
+              requested_early_exit_(false) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
 }
+
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
@@ -47,7 +55,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
   if (param_.random_seed() >= 0) {
-    Caffe::set_random_seed(param_.random_seed() + Caffe::solver_rank());
+    Caffe::set_random_seed(param_.random_seed() + Caffe::solver_rank(),
+                           Caffe::GetDefaultDevice());
   }
   // Scaffolding code
   InitTrainNet();
@@ -59,15 +68,26 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   current_step_ = 0;
 }
 
-template <typename Dtype>
+
+template<typename Dtype>
+void Solver<Dtype>::UpdateSolverParams(const SolverParameter& param) {
+  param_ = param;
+}
+
+template<typename Dtype>
+SolverParameter Solver<Dtype>::GetSolverParams() {
+  return param_;
+}
+
+template<typename Dtype>
 void Solver<Dtype>::InitTrainNet() {
-  const int num_train_nets = param_.has_net() + param_.has_net_param() +
-      param_.has_train_net() + param_.has_train_net_param();
+  const int_tp num_train_nets = param_.has_net() + param_.has_net_param()
+      + param_.has_train_net() + param_.has_train_net_param();
   const string& field_names = "net, net_param, train_net, train_net_param";
-  CHECK_GE(num_train_nets, 1) << "SolverParameter must specify a train net "
-      << "using one of these fields: " << field_names;
-  CHECK_LE(num_train_nets, 1) << "SolverParameter must not contain more than "
-      << "one of these fields specifying a train_net: " << field_names;
+  CHECK_GE(num_train_nets, 1)<< "SolverParameter must specify a train net "
+  << "using one of these fields: " << field_names;
+  CHECK_LE(num_train_nets, 1)<< "SolverParameter must not contain more than "
+  << "one of these fields specifying a train_net: " << field_names;
   NetParameter net_param;
   if (param_.has_train_net_param()) {
     LOG_IF(INFO, Caffe::root_solver())
@@ -97,34 +117,36 @@ void Solver<Dtype>::InitTrainNet() {
   net_state.MergeFrom(net_param.state());
   net_state.MergeFrom(param_.train_state());
   net_param.mutable_state()->CopyFrom(net_state);
-  net_.reset(new Net<Dtype>(net_param));
+  net_.reset(new Net<Dtype>(net_param, this->device_));
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Solver<Dtype>::InitTestNets() {
   CHECK(Caffe::root_solver());
   const bool has_net_param = param_.has_net_param();
   const bool has_net_file = param_.has_net();
-  const int num_generic_nets = has_net_param + has_net_file;
+  const int_tp num_generic_nets = has_net_param + has_net_file;
   CHECK_LE(num_generic_nets, 1)
-      << "Both net_param and net_file may not be specified.";
-  const int num_test_net_params = param_.test_net_param_size();
-  const int num_test_net_files = param_.test_net_size();
-  const int num_test_nets = num_test_net_params + num_test_net_files;
+        << "Both net_param and net_file may not be specified.";
+  const int_tp num_test_net_params = param_.test_net_param_size();
+  const int_tp num_test_net_files = param_.test_net_size();
+  const int_tp num_test_nets = num_test_net_params + num_test_net_files;
   if (num_generic_nets) {
-      CHECK_GE(param_.test_iter_size(), num_test_nets)
-          << "test_iter must be specified for each test network.";
+    CHECK_GE(param_.test_iter_size(), num_test_nets)
+        << "test_iter must be specified for each test network.";
   } else {
-      CHECK_EQ(param_.test_iter_size(), num_test_nets)
-          << "test_iter must be specified for each test network.";
+    CHECK_EQ(param_.test_iter_size(), num_test_nets)
+    << "test_iter must be specified for each test network.";
   }
   // If we have a generic net (specified by net or net_param, rather than
   // test_net or test_net_param), we may have an unlimited number of actual
   // test networks -- the actual number is given by the number of remaining
   // test_iters after any test nets specified by test_net_param and/or test_net
   // are evaluated.
-  const int num_generic_net_instances = param_.test_iter_size() - num_test_nets;
-  const int num_test_net_instances = num_test_nets + num_generic_net_instances;
+  const int_tp num_generic_net_instances = param_.test_iter_size()
+      - num_test_nets;
+  const int_tp num_test_net_instances = num_test_nets
+      + num_generic_net_instances;
   if (param_.test_state_size()) {
     CHECK_EQ(param_.test_state_size(), num_test_net_instances)
         << "test_state must be unspecified or specified once per test net.";
@@ -132,33 +154,33 @@ void Solver<Dtype>::InitTestNets() {
   if (num_test_net_instances) {
     CHECK_GT(param_.test_interval(), 0);
   }
-  int test_net_id = 0;
+  int_tp test_net_id = 0;
   vector<string> sources(num_test_net_instances);
   vector<NetParameter> net_params(num_test_net_instances);
-  for (int i = 0; i < num_test_net_params; ++i, ++test_net_id) {
-      sources[test_net_id] = "test_net_param";
-      net_params[test_net_id].CopyFrom(param_.test_net_param(i));
+  for (int_tp i = 0; i < num_test_net_params; ++i, ++test_net_id) {
+    sources[test_net_id] = "test_net_param";
+    net_params[test_net_id].CopyFrom(param_.test_net_param(i));
   }
-  for (int i = 0; i < num_test_net_files; ++i, ++test_net_id) {
-      sources[test_net_id] = "test_net file: " + param_.test_net(i);
-      ReadNetParamsFromTextFileOrDie(param_.test_net(i),
-          &net_params[test_net_id]);
+  for (int_tp i = 0; i < num_test_net_files; ++i, ++test_net_id) {
+    sources[test_net_id] = "test_net file: " + param_.test_net(i);
+    ReadNetParamsFromTextFileOrDie(param_.test_net(i),
+                                   &net_params[test_net_id]);
   }
-  const int remaining_test_nets = param_.test_iter_size() - test_net_id;
+  const int_tp remaining_test_nets = param_.test_iter_size() - test_net_id;
   if (has_net_param) {
-    for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
+    for (int_tp i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
       sources[test_net_id] = "net_param";
       net_params[test_net_id].CopyFrom(param_.net_param());
     }
   }
   if (has_net_file) {
-    for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
+    for (int_tp i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
       sources[test_net_id] = "net file: " + param_.net();
       ReadNetParamsFromTextFileOrDie(param_.net(), &net_params[test_net_id]);
     }
   }
   test_nets_.resize(num_test_net_instances);
-  for (int i = 0; i < num_test_net_instances; ++i) {
+  for (int_tp i = 0; i < num_test_net_instances; ++i) {
     // Set the correct NetState.  We start with the solver defaults (lowest
     // precedence); then, merge in any NetState specified by the net_param
     // itself; finally, merge in any NetState specified by the test_state
@@ -172,15 +194,15 @@ void Solver<Dtype>::InitTestNets() {
     net_params[i].mutable_state()->CopyFrom(net_state);
     LOG(INFO)
         << "Creating test net (#" << i << ") specified by " << sources[i];
-    test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+    test_nets_[i].reset(new Net<Dtype>(net_params[i], this->device_));
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Step(int iters) {
-  const int start_iter = iter_;
-  const int stop_iter = iter_ + iters;
+Dtype Solver<Dtype>::Step(int_tp iters) {
+  const int_tp start_iter = iter_;
+  const int_tp stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
   losses_.clear();
   smoothed_loss_ = 0;
@@ -200,14 +222,14 @@ void Solver<Dtype>::Step(int iters) {
       }
     }
 
-    for (int i = 0; i < callbacks_.size(); ++i) {
+    for (int_tp i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_start();
     }
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     // accumulate the loss and gradient
     Dtype loss = 0;
-    for (int i = 0; i < param_.iter_size(); ++i) {
+    for (int_tp i = 0; i < param_.iter_size(); ++i) {
       loss += net_->ForwardBackward();
     }
     loss /= param_.iter_size();
@@ -222,18 +244,18 @@ void Solver<Dtype>::Step(int iters) {
       iteration_timer_.Start();
       iterations_last_ = iter_;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
-      int score_index = 0;
-      for (int j = 0; j < result.size(); ++j) {
+      int_tp score_index = 0;
+      for (int_tp j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
         const string& output_name =
-            net_->blob_names()[net_->output_blob_indices()[j]];
+        net_->blob_names()[net_->output_blob_indices()[j]];
         const Dtype loss_weight =
-            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
-        for (int k = 0; k < result[j]->count(); ++k) {
+        net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+        for (int_tp k = 0; k < result[j]->count(); ++k) {
           ostringstream loss_msg_stream;
           if (loss_weight) {
             loss_msg_stream << " (* " << loss_weight
-                            << " = " << loss_weight * result_vec[k] << " loss)";
+            << " = " << loss_weight * result_vec[k] << " loss)";
           }
           LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
               << score_index++ << ": " << output_name << " = "
@@ -241,7 +263,7 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
-    for (int i = 0; i < callbacks_.size(); ++i) {
+    for (int_tp i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_gradients_ready();
     }
     ApplyUpdate();
@@ -265,9 +287,10 @@ void Solver<Dtype>::Step(int iters) {
       break;
     }
   }
+  return smoothed_loss_;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
@@ -316,27 +339,28 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   LOG(INFO) << "Optimization Done.";
 }
 
+
 template <typename Dtype>
 void Solver<Dtype>::TestAll() {
-  for (int test_net_id = 0;
+  for (int_tp test_net_id = 0;
        test_net_id < test_nets_.size() && !requested_early_exit_;
        ++test_net_id) {
     Test(test_net_id);
   }
 }
 
-template <typename Dtype>
-void Solver<Dtype>::Test(const int test_net_id) {
+template<typename Dtype>
+void Solver<Dtype>::Test(const int_tp test_net_id) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
-      ShareTrainedLayersWith(net_.get());
+  ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
-  vector<int> test_score_output_id;
+  vector<int_tp> test_score_output_id;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
-  for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
+  for (int_tp i = 0; i < param_.test_iter(test_net_id); ++i) {
     SolverAction::Enum request = GetRequestedAction();
     // Check to see if stoppage of testing/training has been requested.
     while (request != SolverAction::NONE) {
@@ -359,18 +383,18 @@ void Solver<Dtype>::Test(const int test_net_id) {
       loss += iter_loss;
     }
     if (i == 0) {
-      for (int j = 0; j < result.size(); ++j) {
+      for (int_tp j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
-        for (int k = 0; k < result[j]->count(); ++k) {
+        for (int_tp k = 0; k < result[j]->count(); ++k) {
           test_score.push_back(result_vec[k]);
           test_score_output_id.push_back(j);
         }
       }
     } else {
-      int idx = 0;
-      for (int j = 0; j < result.size(); ++j) {
+      int_tp idx = 0;
+      for (int_tp j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
-        for (int k = 0; k < result[j]->count(); ++k) {
+        for (int_tp k = 0; k < result[j]->count(); ++k) {
           test_score[idx++] += result_vec[k];
         }
       }
@@ -384,16 +408,16 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
-  for (int i = 0; i < test_score.size(); ++i) {
-    const int output_blob_index =
-        test_net->output_blob_indices()[test_score_output_id[i]];
+  for (int_tp i = 0; i < test_score.size(); ++i) {
+    const int_tp output_blob_index =
+    test_net->output_blob_indices()[test_score_output_id[i]];
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
-                      << " = " << loss_weight * mean_score << " loss)";
+      << " = " << loss_weight * mean_score << " loss)";
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
@@ -472,14 +496,14 @@ void Solver<Dtype>::Restore(const char* state_file) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
-    int average_loss) {
+void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int_tp start_iter,
+    int_tp average_loss) {
   if (losses_.size() < average_loss) {
     losses_.push_back(loss);
-    int size = losses_.size();
+    int_tp size = losses_.size();
     smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
   } else {
-    int idx = (iter_ - start_iter) % average_loss;
+    int_tp idx = (iter_ - start_iter) % average_loss;
     smoothed_loss_ += (loss - losses_[idx]) / average_loss;
     losses_[idx] = loss;
   }
@@ -488,3 +512,4 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
 INSTANTIATE_CLASS(Solver);
 
 }  // namespace caffe
+

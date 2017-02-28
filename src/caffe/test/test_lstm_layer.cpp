@@ -46,7 +46,7 @@ class LSTMLayerTest : public MultiDeviceTest<TypeParam> {
   void ReshapeBlobs(int num_timesteps, int num_instances) {
     blob_bottom_.Reshape(num_timesteps, num_instances, 3, 2);
     blob_bottom_static_.Reshape(num_instances, 2, 3, 4);
-    vector<int> shape(2);
+    vector<int_tp> shape(2);
     shape[0] = num_timesteps;
     shape[1] = num_instances;
     blob_bottom_cont_.Reshape(shape);
@@ -93,7 +93,7 @@ TYPED_TEST(LSTMLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;
   LSTMLayer<Dtype> layer(this->layer_param_);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  vector<int> expected_top_shape = this->blob_bottom_.shape();
+  vector<int_tp> expected_top_shape = this->blob_bottom_.shape();
   expected_top_shape.resize(3);
   expected_top_shape[2] = this->num_output_;
   EXPECT_TRUE(this->blob_top_.shape() == expected_top_shape);
@@ -119,10 +119,10 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   filler_param.set_mean(0);
   filler_param.set_std(1);
   GaussianFiller<Dtype> sequence_filler(filler_param);
-  Caffe::set_random_seed(1);
+  Caffe::set_random_seed(1, Caffe::GetDefaultDevice());
   sequence_filler.Fill(&this->blob_bottom_);
   shared_ptr<LSTMLayer<Dtype> > layer(new LSTMLayer<Dtype>(this->layer_param_));
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   LOG(INFO) << "Calling forward for full sequence LSTM";
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -137,13 +137,13 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   // check that we get the same result.
   this->ReshapeBlobs(1, num);
   layer.reset(new LSTMLayer<Dtype>(this->layer_param_));
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   const int bottom_count = this->blob_bottom_.count();
   const int top_count = this->blob_top_.count();
   const Dtype kEpsilon = 1e-5;
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = t > 0;
@@ -160,11 +160,11 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
 
   // Process the batch one timestep at a time with all cont blobs set to 0.
   // Check that we get a different result, except in the first timestep.
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer.reset(new LSTMLayer<Dtype>(this->layer_param_));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = 0;

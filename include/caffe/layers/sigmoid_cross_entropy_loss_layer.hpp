@@ -18,7 +18,7 @@ namespace caffe {
  *                  p_n \log \hat{p}_n +
  *                  (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
- *        @f$, often used for predicting targets interpreted as probabilities.
+ *        @f$, often used for predicting targets int_tperpreted as probabilities.
  *
  * This layer is implemented rather than separate
  * SigmoidLayer + CrossEntropyLayer
@@ -102,7 +102,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// outputs will be read from valid_count, unless it is -1 in which case
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
+      LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
 
   /// The internal SigmoidLayer used to map predictions to probabilities.
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
@@ -116,7 +116,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// How to normalize the loss.
   LossParameter_NormalizationMode normalization_;
   Dtype normalizer_;

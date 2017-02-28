@@ -68,7 +68,7 @@ TYPED_TEST(SplitLayerTest, Test) {
   SplitLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     Dtype bottom_value = this->blob_bottom_->cpu_data()[i];
     EXPECT_EQ(bottom_value, this->blob_top_a_->cpu_data()[i]);
     EXPECT_EQ(bottom_value, this->blob_top_b_->cpu_data()[i]);

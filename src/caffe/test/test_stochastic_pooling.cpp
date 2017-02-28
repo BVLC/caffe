@@ -24,7 +24,7 @@ class StochasticPoolingLayerTest : public MultiDeviceTest<TypeParam> {
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     blob_bottom_->Reshape(2, 3, 6, 5);
     // fill the values
     FillerParameter filler_param;
@@ -56,8 +56,8 @@ TYPED_TEST_CASE(CPUStochasticPoolingLayerTest, TestDtypes);
 TYPED_TEST(CPUStochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -79,8 +79,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -90,19 +90,19 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
   TypeParam total = 0;
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int ph = 0; ph < this->blob_top_->height(); ++ph) {
-        for (int pw = 0; pw < this->blob_top_->width(); ++pw) {
+  for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int_tp ph = 0; ph < this->blob_top_->height(); ++ph) {
+        for (int_tp pw = 0; pw < this->blob_top_->width(); ++pw) {
           TypeParam pooled = top_data[this->blob_top_->offset(n, c, ph, pw)];
           total += pooled;
-          int hstart = ph * 2;
-          int hend = min(hstart + 3, this->blob_bottom_->height());
-          int wstart = pw * 2;
-          int wend = min(wstart + 3, this->blob_bottom_->width());
+          int_tp hstart = ph * 2;
+          int_tp hend = min(hstart + 3, this->blob_bottom_->height());
+          int_tp wstart = pw * 2;
+          int_tp wend = min(wstart + 3, this->blob_bottom_->width());
           bool has_equal = false;
-          for (int h = hstart; h < hend; ++h) {
-            for (int w = wstart; w < wend; ++w) {
+          for (int_tp h = hstart; h < hend; ++h) {
+            for (int_tp w = wstart; w < wend; ++w) {
               has_equal |= (pooled == bottom_data[this->blob_bottom_->
                   offset(n, c, h, w)]);
             }
@@ -122,8 +122,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochasticTestPhase) {
   LayerParameter layer_param;
   layer_param.set_phase(TEST);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -132,18 +132,18 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochasticTestPhase) {
   // Check if the output is correct - it should do random sampling
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int ph = 0; ph < this->blob_top_->height(); ++ph) {
-        for (int pw = 0; pw < this->blob_top_->width(); ++pw) {
+  for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int_tp ph = 0; ph < this->blob_top_->height(); ++ph) {
+        for (int_tp pw = 0; pw < this->blob_top_->width(); ++pw) {
           TypeParam pooled = top_data[this->blob_top_->offset(n, c, ph, pw)];
-          int hstart = ph * 2;
-          int hend = min(hstart + 3, this->blob_bottom_->height());
-          int wstart = pw * 2;
-          int wend = min(wstart + 3, this->blob_bottom_->width());
+          int_tp hstart = ph * 2;
+          int_tp hend = min(hstart + 3, this->blob_bottom_->height());
+          int_tp wstart = pw * 2;
+          int_tp wend = min(wstart + 3, this->blob_bottom_->width());
           bool smaller_than_max = false;
-          for (int h = hstart; h < hend; ++h) {
-            for (int w = wstart; w < wend; ++w) {
+          for (int_tp h = hstart; h < hend; ++h) {
+            for (int_tp w = wstart; w < wend; ++w) {
               smaller_than_max |= (pooled <= bottom_data[this->blob_bottom_->
                   offset(n, c, h, w)]);
             }
@@ -159,8 +159,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestGradient) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);

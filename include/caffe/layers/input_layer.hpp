@@ -29,8 +29,8 @@ class InputLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "Input"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

@@ -4,9 +4,18 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
+#ifdef USE_GREENTEA
+  // Direct async to GPU currently unsupported on OpenCL
+  if (this->device_->backend() == BACKEND_OpenCL) {
+    this->Forward_cpu(bottom, top);
+    return;
+  }
+#endif  // USE_GREENTEA
+
   if (prefetch_current_) {
     prefetch_free_.push(prefetch_current_);
   }

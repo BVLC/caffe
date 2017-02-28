@@ -59,14 +59,14 @@ TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   EXPECT_EQ(this->blob_top_a_->width(), 4);
   EXPECT_EQ(this->blob_top_b_->count(), 0);
   EXPECT_EQ(this->blob_top_c_->count(), 0);
-  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
-    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+  for (int_tp i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int_tp j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
       EXPECT_EQ(0, this->blob_top_vec_[i]->cpu_data()[j]);
     }
   }
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
-    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+  for (int_tp i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int_tp j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
       EXPECT_EQ(0, this->blob_top_vec_[i]->cpu_data()[j]);
     }
   }
@@ -97,14 +97,14 @@ TYPED_TEST(DummyDataLayerTest, TestTwoTopConstant) {
   EXPECT_EQ(this->blob_top_b_->height(), 1);
   EXPECT_EQ(this->blob_top_b_->width(), 4);
   EXPECT_EQ(this->blob_top_c_->count(), 0);
-  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
-    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+  for (int_tp i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int_tp j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
       EXPECT_EQ(7, this->blob_top_vec_[i]->cpu_data()[j]);
     }
   }
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
-    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+  for (int_tp i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int_tp j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
       EXPECT_EQ(7, this->blob_top_vec_[i]->cpu_data()[j]);
     }
   }
@@ -141,51 +141,51 @@ TYPED_TEST(DummyDataLayerTest, TestThreeTopConstantGaussianConstant) {
   EXPECT_EQ(this->blob_top_c_->channels(), 3);
   EXPECT_EQ(this->blob_top_c_->height(), 2);
   EXPECT_EQ(this->blob_top_c_->width(), 4);
-  for (int i = 0; i < this->blob_top_a_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_a_->count(); ++i) {
     EXPECT_EQ(7, this->blob_top_a_->cpu_data()[i]);
   }
   // Blob b uses a Gaussian filler, so SetUp should not have initialized it.
   // Blob b's data should therefore be the default Blob data value: 0.
-  for (int i = 0; i < this->blob_top_b_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_b_->count(); ++i) {
     EXPECT_EQ(0, this->blob_top_b_->cpu_data()[i]);
   }
-  for (int i = 0; i < this->blob_top_c_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_c_->count(); ++i) {
     EXPECT_EQ(9, this->blob_top_c_->cpu_data()[i]);
   }
 
   // Do a Forward pass to fill in Blob b with Gaussian data.
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_a_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_a_->count(); ++i) {
     EXPECT_EQ(7, this->blob_top_a_->cpu_data()[i]);
   }
   // Check that the Gaussian's data has been filled in with values within
   // 10 standard deviations of the mean. Record the first and last sample.
   // to check that they're different after the next Forward pass.
-  for (int i = 0; i < this->blob_top_b_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_b_->count(); ++i) {
     EXPECT_NEAR(gaussian_mean, this->blob_top_b_->cpu_data()[i],
                 gaussian_std * 10);
   }
   const TypeParam first_gaussian_sample = this->blob_top_b_->cpu_data()[0];
   const TypeParam last_gaussian_sample =
       this->blob_top_b_->cpu_data()[this->blob_top_b_->count() - 1];
-  for (int i = 0; i < this->blob_top_c_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_c_->count(); ++i) {
     EXPECT_EQ(9, this->blob_top_c_->cpu_data()[i]);
   }
 
   // Do another Forward pass to fill in Blob b with Gaussian data again,
   // checking that we get different values.
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_a_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_a_->count(); ++i) {
     EXPECT_EQ(7, this->blob_top_a_->cpu_data()[i]);
   }
-  for (int i = 0; i < this->blob_top_b_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_b_->count(); ++i) {
     EXPECT_NEAR(gaussian_mean, this->blob_top_b_->cpu_data()[i],
                 gaussian_std * 10);
   }
   EXPECT_NE(first_gaussian_sample, this->blob_top_b_->cpu_data()[0]);
   EXPECT_NE(last_gaussian_sample,
       this->blob_top_b_->cpu_data()[this->blob_top_b_->count() - 1]);
-  for (int i = 0; i < this->blob_top_c_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_c_->count(); ++i) {
     EXPECT_EQ(9, this->blob_top_c_->cpu_data()[i]);
   }
 }

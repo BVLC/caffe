@@ -33,13 +33,13 @@ void LogLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LogLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   if (input_scale_ == Dtype(1) && input_shift_ == Dtype(0)) {
     caffe_log(count, bottom_data, top_data);
   } else {
-    caffe_copy(count, bottom_data, top_data);
+    caffe_cpu_copy(count, bottom_data, top_data);
     if (input_scale_ != Dtype(1)) {
       caffe_scal(count, input_scale_, top_data);
     }
@@ -57,11 +57,11 @@ template <typename Dtype>
 void LogLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) { return; }
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  caffe_copy(count, bottom_data, bottom_diff);
+  caffe_cpu_copy(count, bottom_data, bottom_diff);
   if (input_scale_ != Dtype(1)) {
     caffe_scal(count, input_scale_, bottom_diff);
   }

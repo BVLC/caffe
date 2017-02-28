@@ -24,8 +24,8 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Concat"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -59,7 +59,7 @@ class ConcatLayer : public Layer<Dtype> {
    *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
    *      with respect to concatenated outputs @f$ y @f$
    * @param propagate_down see Layer::Backward.
-   * @param bottom input Blob vector (length K), into which the top gradient
+   * @param bottom input Blob vector (length K), int_tpo which the top gradient
    *        @f$ \frac{\partial E}{\partial y} @f$ is deconcatenated back to the
    *        inputs @f$
    *        \left[ \begin{array}{cccc}
@@ -76,10 +76,10 @@ class ConcatLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
-  int num_concats_;
-  int concat_input_size_;
-  int concat_axis_;
+  int_tp count_;
+  int_tp num_concats_;
+  int_tp concat_input_size_;
+  int_tp concat_axis_;
 };
 
 }  // namespace caffe

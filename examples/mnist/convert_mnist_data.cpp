@@ -16,6 +16,11 @@
 #include <lmdb.h>
 #endif
 
+#if defined(_MSC_VER)
+#include <direct.h>
+#define mkdir(X, Y) _mkdir(X)
+#endif
+
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -23,6 +28,7 @@
 #include <string>
 
 #include "boost/scoped_ptr.hpp"
+#include "caffe/definitions.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/format.hpp"
@@ -78,7 +84,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   // Storing to db
   char label;
   char* pixels = new char[rows * cols];
-  int count = 0;
+  int_tp count = 0;
   string value;
 
   Datum datum;
@@ -87,7 +93,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (int item_id = 0; item_id < num_items; ++item_id) {
+  for (int_tp item_id = 0; item_id < num_items; ++item_id) {
     image_file.read(pixels, rows * cols);
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);

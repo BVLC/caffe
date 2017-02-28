@@ -2894,7 +2894,7 @@ TEST_F(NetUpgradeTest, TestImageNet) {
 TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
   LayerParameter layer_param;
   shared_ptr<Layer<float> > layer;
-  for (int i = 0; i < V1LayerParameter_LayerType_LayerType_ARRAYSIZE; ++i) {
+  for (int_tp i = 0; i < V1LayerParameter_LayerType_LayerType_ARRAYSIZE; ++i) {
     ASSERT_TRUE(V1LayerParameter_LayerType_IsValid(i));
     V1LayerParameter_LayerType v1_type = V1LayerParameter_LayerType(i);
     string v2_layer_type(UpgradeV1LayerType(v1_type));

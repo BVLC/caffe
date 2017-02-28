@@ -47,7 +47,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
 // instead of duplicated here and in SoftMaxWithLossLayer
 template <typename Dtype>
 Dtype SigmoidCrossEntropyLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
@@ -87,7 +87,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const Dtype* target = bottom[1]->cpu_data();
   int valid_count = 0;
   Dtype loss = 0;
-  for (int i = 0; i < bottom[0]->count(); ++i) {
+  for (int_tp i = 0; i < bottom[0]->count(); ++i) {
     const int target_value = static_cast<int>(target[i]);
     if (has_ignore_label_ && target_value == ignore_label_) {
       continue;
@@ -110,7 +110,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
   }
   if (propagate_down[0]) {
     // First, compute the diff
-    const int count = bottom[0]->count();
+    const int_tp count = bottom[0]->count();
     const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
     const Dtype* target = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();

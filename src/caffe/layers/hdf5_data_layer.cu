@@ -1,7 +1,8 @@
+#ifdef USE_HDF5
 /*
-TODO:
-- only load parts of the file, in accordance with a prototxt param "max_mem"
-*/
+ TODO:
+ - only load parts of the file, in accordance with a prototxt param "max_mem"
+ */
 
 #include <stdint.h>
 #include <vector>
@@ -13,11 +14,19 @@ TODO:
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
-  for (int i = 0; i < batch_size; ++i) {
+#ifdef USE_GREENTEA
+  // GPU mode on data layers currently unsupported on OpenCL.
+  if (this->device_->backend() == BACKEND_OpenCL) {
+    this->Forward_cpu(bottom, top);
+    return;
+  }
+#endif  // USE_GREENTEA
+
+  const int_tp batch_size = this->layer_param_.hdf5_data_param().batch_size();
+  for (int_tp i = 0; i < batch_size; ++i) {
     while (Skip()) {
       Next();
     }
@@ -34,3 +43,4 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 INSTANTIATE_LAYER_GPU_FUNCS(HDF5DataLayer);
 
 }  // namespace caffe
+#endif  // USE_HDF5

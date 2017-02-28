@@ -55,8 +55,8 @@ TYPED_TEST(EmbedLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EmbedParameter* embed_param = layer_param.mutable_embed_param();
-  const int kNumOutput = 10;
-  const int kInputDim = 5;
+  const int_tp kNumOutput = 10;
+  const int_tp kInputDim = 5;
   embed_param->set_num_output(kNumOutput);
   embed_param->set_input_dim(kInputDim);
   embed_param->mutable_weight_filler()->set_type("uniform");
@@ -66,22 +66,22 @@ TYPED_TEST(EmbedLayerTest, TestForward) {
   shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(1, layer->blobs().size());
-  vector<int> weight_shape(2);
+  vector<int_tp> weight_shape(2);
   weight_shape[0] = kInputDim;
   weight_shape[1] = kNumOutput;
   ASSERT_TRUE(weight_shape == layer->blobs()[0]->shape());
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     this->blob_bottom_->mutable_cpu_data()[i] = caffe_rng_rand() % kInputDim;
   }
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  vector<int> weight_offset(2, 0);
-  vector<int> top_offset(5, 0);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    weight_offset[0] = static_cast<int>(this->blob_bottom_->cpu_data()[i]);
+  vector<int_tp> weight_offset(2, 0);
+  vector<int_tp> top_offset(5, 0);
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
+    weight_offset[0] = static_cast<int_tp>(this->blob_bottom_->cpu_data()[i]);
     weight_offset[1] = 0;
     top_offset[0] = i;
     top_offset[4] = 0;
-    for (int j = 0; j < kNumOutput; ++j) {
+    for (int_tp j = 0; j < kNumOutput; ++j) {
       EXPECT_EQ(layer->blobs()[0]->data_at(weight_offset),
                 this->blob_top_->data_at(top_offset));
       ++top_offset[4];
@@ -94,8 +94,8 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EmbedParameter* embed_param = layer_param.mutable_embed_param();
-  const int kNumOutput = 10;
-  const int kInputDim = 5;
+  const int_tp kNumOutput = 10;
+  const int_tp kInputDim = 5;
   embed_param->set_num_output(kNumOutput);
   embed_param->set_input_dim(kInputDim);
   embed_param->mutable_weight_filler()->set_type("uniform");
@@ -106,24 +106,24 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
   shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(2, layer->blobs().size());
-  vector<int> weight_shape(2);
+  vector<int_tp> weight_shape(2);
   weight_shape[0] = kInputDim;
   weight_shape[1] = kNumOutput;
   ASSERT_TRUE(weight_shape == layer->blobs()[0]->shape());
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     this->blob_bottom_->mutable_cpu_data()[i] = caffe_rng_rand() % kInputDim;
   }
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  vector<int> bias_offset(1, 0);
-  vector<int> weight_offset(2, 0);
-  vector<int> top_offset(5, 0);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    weight_offset[0] = static_cast<int>(this->blob_bottom_->cpu_data()[i]);
+  vector<int_tp> bias_offset(1, 0);
+  vector<int_tp> weight_offset(2, 0);
+  vector<int_tp> top_offset(5, 0);
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
+    weight_offset[0] = static_cast<int_tp>(this->blob_bottom_->cpu_data()[i]);
     weight_offset[1] = 0;
     top_offset[0] = i;
     top_offset[4] = 0;
     bias_offset[0] = 0;
-    for (int j = 0; j < kNumOutput; ++j) {
+    for (int_tp j = 0; j < kNumOutput; ++j) {
       EXPECT_FLOAT_EQ(layer->blobs()[0]->data_at(weight_offset) +
                 layer->blobs()[1]->data_at(bias_offset),
                 this->blob_top_->data_at(top_offset));
@@ -136,6 +136,12 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
 
 TYPED_TEST(EmbedLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
+  // Skip the test on unsupported OpenCL devices with double
+  if (!Caffe::GetDefaultDevice()->
+        CheckCapability("cl_khr_int64_base_atomics")
+        && is_same<Dtype, double>::value) {
+    return;
+  }
   LayerParameter layer_param;
   EmbedParameter* embed_param = layer_param.mutable_embed_param();
   embed_param->set_num_output(10);
@@ -156,6 +162,12 @@ TYPED_TEST(EmbedLayerTest, TestGradient) {
 
 TYPED_TEST(EmbedLayerTest, TestGradientWithBias) {
   typedef typename TypeParam::Dtype Dtype;
+  // Skip the test on unsupported OpenCL devices with double
+  if (!Caffe::GetDefaultDevice()->
+        CheckCapability("cl_khr_int64_base_atomics")
+        && is_same<Dtype, double>::value) {
+    return;
+  }
   LayerParameter layer_param;
   EmbedParameter* embed_param = layer_param.mutable_embed_param();
   embed_param->set_num_output(10);

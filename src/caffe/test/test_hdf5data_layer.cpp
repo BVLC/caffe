@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include <string>
 #include <vector>
 
@@ -63,12 +64,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   param.add_top("label2");
 
   HDF5DataParameter* hdf5_data_param = param.mutable_hdf5_data_param();
-  int batch_size = 5;
+  int_tp batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
-  int num_cols = 8;
-  int height = 6;
-  int width = 5;
+  int_tp num_cols = 8;
+  int_tp height = 6;
+  int_tp width = 5;
 
   // Test that the layer setup got the correct parameters.
   HDF5DataLayer<Dtype> layer(param);
@@ -89,23 +90,23 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // Go through the data 10 times (5 batches).
-  const int data_size = num_cols * height * width;
-  for (int iter = 0; iter < 10; ++iter) {
+  const int_tp data_size = num_cols * height * width;
+  for (int_tp iter = 0; iter < 10; ++iter) {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     // On even iterations, we're reading the first half of the data.
     // On odd iterations, we're reading the second half of the data.
     // NB: label is 1-indexed
-    int label_offset = 1 + ((iter % 2 == 0) ? 0 : batch_size);
-    int label2_offset = 1 + label_offset;
-    int data_offset = (iter % 2 == 0) ? 0 : batch_size * data_size;
+    int_tp label_offset = 1 + ((iter % 2 == 0) ? 0 : batch_size);
+    int_tp label2_offset = 1 + label_offset;
+    int_tp data_offset = (iter % 2 == 0) ? 0 : batch_size * data_size;
 
     // Every two iterations we are reading the second file,
     // which has the same labels, but data is offset by total data size,
     // which is 2400 (see generate_sample_data).
-    int file_offset = (iter % 4 < 2) ? 0 : 2400;
+    int_tp file_offset = (iter % 4 < 2) ? 0 : 2400;
 
-    for (int i = 0; i < batch_size; ++i) {
+    for (int_tp i = 0; i < batch_size; ++i) {
       EXPECT_EQ(
         label_offset + i,
         this->blob_top_label_->cpu_data()[i]);
@@ -113,11 +114,11 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
         label2_offset + i,
         this->blob_top_label2_->cpu_data()[i]);
     }
-    for (int i = 0; i < batch_size; ++i) {
-      for (int j = 0; j < num_cols; ++j) {
-        for (int h = 0; h < height; ++h) {
-          for (int w = 0; w < width; ++w) {
-            int idx = (
+    for (int_tp i = 0; i < batch_size; ++i) {
+      for (int_tp j = 0; j < num_cols; ++j) {
+        for (int_tp h = 0; h < height; ++h) {
+          for (int_tp w = 0; w < width; ++w) {
+            int_tp idx = (
               i * num_cols * height * width +
               j * height * width +
               h * width + w);
@@ -164,3 +165,4 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
 }
 
 }  // namespace caffe
+#endif  // USE_HDF5
