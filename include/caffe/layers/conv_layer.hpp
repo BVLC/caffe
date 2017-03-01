@@ -19,9 +19,9 @@ namespace caffe {
  *   high-throughput and generality of input and filter dimensions but comes at
  *   the cost of memory for matrices. This makes use of efficiency in BLAS.
  *
- *   The input is "im2col" transformed to a channel K' x H x W data matrix
+ *   The input is "im2col" transformed to a channel K' x (H x W) data matrix
  *   for multiplication with the N' x K' filter matrix to yield a
- *   N' x H x W output matrix that is then "col2im" restored. K' is the
+ *   N' x (H x W) output matrix that is then "col2im" restored. K' is the
  *   input channel * kernel height * kernel width dimension of the unrolled
  *   inputs so that the im2col matrix has a column for each input region to
  *   be filtered. col2im restores the output spatial structure by rolling up
