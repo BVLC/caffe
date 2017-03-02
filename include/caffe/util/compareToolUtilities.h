@@ -200,6 +200,8 @@ bool compareDataWithFileData(const char *referenceFileName,
     typedef uint32_t CastType;
     const char *format = "%i;%08X;%08X;%g;%g;%g\n";
     const float epsilon = static_cast<float>(FLAGS_epsilon);
+    bool is_nan_filler =
+      std::isnan(static_cast<float>(FLAGS_buffer_filler));
 
     Data<float> referenceData;
     char file_path[FILENAME_MAX];
@@ -220,7 +222,6 @@ bool compareDataWithFileData(const char *referenceFileName,
 
     *maxDiff = -1;
     *diffCounter = 0;
-
     int dataSize = referenceData.getDataSize();
     const float *referenceDataPointer = referenceData.getDataPointer();
     for (int i = 0; i < dataSize; i++) {
@@ -229,6 +230,10 @@ bool compareDataWithFileData(const char *referenceFileName,
         float diff = caffe::floatDiff(a, b, epsilon);
 
         if (diff != FP_ZERO) {
+            if (std::isnan(a) && std::isnan(b) &&  is_nan_filler){
+                continue;
+            }
+
             fprintf(file, format, i,
                 *reinterpret_cast<CastType *> (&a),
                 *reinterpret_cast<CastType *> (&b), diff, a, b);
@@ -272,18 +277,33 @@ void checkData(const char *referenceFileName, const float *targetDataPointer,
 void checkAllNans(const float *targetDataPointer, unsigned count,
   const char *bufferName, const char *layerName,
   std::unordered_set<string> *erronousLayers) {
-    for (int i = 0; i < count; i++) {
-        if (!std::isnan(targetDataPointer[i])) {
-            Log::log("Not all elements in %s are NaNs\n", bufferName);
-            (*erronousLayers).insert(layerName);
-            return;
+    float buffer_filler = static_cast<float>(FLAGS_buffer_filler);
+    float epsilon = static_cast<float>(FLAGS_epsilon);
+    if (std::isnan(buffer_filler)){
+        for (int i = 0; i < count; i++) {
+            if (!std::isnan(targetDataPointer[i])) {
+                Log::log("Not all elements in %s are NaNs\n", bufferName);
+                (*erronousLayers).insert(layerName);
+                return;
+            }
+        }
+    } else {
+        for (int i = 0; i < count; i++) {
+            if (caffe::floatDiff(targetDataPointer[i], buffer_filler, epsilon)
+              != FP_ZERO) {
+                Log::log("Not all elements in %s are %.1f\n",
+                  bufferName, buffer_filler);
+                (*erronousLayers).insert(layerName);
+                return;
+            }
         }
     }
 }
 
 int collectAndCheckLayerData(bool collect_step,
   bool use_gpu, const char *output_dir) {
-    Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
+    Net<float> caffe_net(FLAGS_model, caffe::TRAIN, FLAGS_level,
+      NULL, NULL, FLAGS_engine);
     const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
     const vector<shared_ptr<Blob<float> > >& params = caffe_net.params();
     const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
@@ -298,7 +318,7 @@ int collectAndCheckLayerData(bool collect_step,
     char file_name[FILENAME_MAX];
     char file_path[FILENAME_MAX];
     string message_prefix = collect_step ? "Collecting" : "Comparing";
-
+    float buffer_filler = static_cast<float>(FLAGS_buffer_filler);
     LOG(INFO) << message_prefix << " weights";
     for (int i = 0; i < params.size(); i++) {
         if (collect_step) {
@@ -311,7 +331,7 @@ int collectAndCheckLayerData(bool collect_step,
                 &erronous_layers);
         }
 
-        caffe::caffe_set(params[i]->count(), std::nanf(""),
+        caffe::caffe_set(params[i]->count(), buffer_filler,
             params[i]->mutable_cpu_diff());
     }
 
@@ -332,12 +352,12 @@ int collectAndCheckLayerData(bool collect_step,
         }
 
         for (int j = 0; j < bottom_vecs[i].size(); j++) {
-            caffe::caffe_set(bottom_vecs[i][j]->count(), std::nanf(""),
+            caffe::caffe_set(bottom_vecs[i][j]->count(), buffer_filler,
                 bottom_vecs[i][j]->mutable_cpu_diff());
         }
 
         for (int j = 0; j < top_vecs[i].size(); j++) {
-            caffe::caffe_set(top_vecs[i][j]->count(), std::nanf(""),
+            caffe::caffe_set(top_vecs[i][j]->count(), buffer_filler,
                 top_vecs[i][j]->mutable_cpu_diff());
         }
 
