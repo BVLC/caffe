@@ -50,14 +50,14 @@ namespace caffe {
         float a = std::nanf(""), b = std::nanf("");
         float epsilon = 1.0e-3f;
         float diff = caffe::floatDiff(a, b, epsilon);
-        EXPECT_TRUE(std:isnan(diff));
+        EXPECT_TRUE(std::isnan(diff));
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsFiniteAndNan) {
         float a = std::nanf(""), b = 1.12345f;
         float epsilon = 1.0e-3f;
         float diff = caffe::floatDiff(a, b, epsilon);
-        EXPECT_TRUE(std:isnan(diff));
+        EXPECT_TRUE(std::isnan(diff));
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsInfinity) {
@@ -65,7 +65,7 @@ namespace caffe {
             b = std::numeric_limits<float>::infinity();
         float epsilon = 1.0e-3f;
         float diff = caffe::floatDiff(a, b, epsilon);
-        EXPECT_TRUE(std:isnan(diff));
+        EXPECT_TRUE(std::isnan(diff));
     }
 
     TEST_F(FloatCompareTest, TestCompareFloatsBigNegative) {
