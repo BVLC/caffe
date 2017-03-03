@@ -4920,7 +4920,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "// Copied from caffe.pb.h, must keep consistent with the original definition",    // NOLINT
-"#if TYPE==TYPE_FLOAT",    // NOLINT
+"#ifndef __SOFTMAX_LOSS_CL__",    // NOLINT
+"#define __SOFTMAX_LOSS_CL__",    // NOLINT
 "enum LossParameter_NormalizationMode {",    // NOLINT
 "LossParameter_NormalizationMode_FULL = 0,",    // NOLINT
 "LossParameter_NormalizationMode_VALID = 1,",    // NOLINT
