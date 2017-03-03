@@ -1,0 +1,276 @@
+diff --git a/PythonAPI/pycocoDemo.ipynb b/PythonAPI/pycocoDemo.ipynb
+index 8bb9639..10bf57c 100644
+--- a/PythonAPI/pycocoDemo.ipynb
++++ b/PythonAPI/pycocoDemo.ipynb
+@@ -4,7 +4,7 @@
+    "cell_type": "code",
+    "execution_count": 3,
+    "metadata": {
+-    "collapsed": true
++    "collapsed": True
+    },
+    "outputs": [],
+    "source": [
+@@ -21,7 +21,7 @@
+    "cell_type": "code",
+    "execution_count": 4,
+    "metadata": {
+-    "collapsed": true
++    "collapsed": True
+    },
+    "outputs": [],
+    "source": [
+@@ -34,7 +34,7 @@
+    "cell_type": "code",
+    "execution_count": 5,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -57,8 +57,8 @@
+    "cell_type": "code",
+    "execution_count": 6,
+    "metadata": {
+-    "collapsed": false,
+-    "scrolled": true
++    "collapsed": False,
++    "scrolled": True
+    },
+    "outputs": [
+     {
+@@ -87,7 +87,7 @@
+    "cell_type": "code",
+    "execution_count": 7,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -101,7 +101,7 @@
+    "cell_type": "code",
+    "execution_count": 8,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -129,7 +129,7 @@
+    "cell_type": "code",
+    "execution_count": 9,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -155,7 +155,7 @@
+    "cell_type": "code",
+    "execution_count": 10,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -179,7 +179,7 @@
+    "cell_type": "code",
+    "execution_count": 11,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -206,7 +206,7 @@
+    "cell_type": "code",
+    "execution_count": 12,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -230,7 +230,7 @@
+    "cell_type": "code",
+    "execution_count": 13,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+diff --git a/PythonAPI/pycocoEvalDemo.ipynb b/PythonAPI/pycocoEvalDemo.ipynb
+index 8b2ff08..1c5b95e 100644
+--- a/PythonAPI/pycocoEvalDemo.ipynb
++++ b/PythonAPI/pycocoEvalDemo.ipynb
+@@ -4,7 +4,7 @@
+    "cell_type": "code",
+    "execution_count": 1,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -22,7 +22,7 @@
+    "cell_type": "code",
+    "execution_count": 2,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -44,7 +44,7 @@
+    "cell_type": "code",
+    "execution_count": 3,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -70,7 +70,7 @@
+    "cell_type": "code",
+    "execution_count": 4,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -95,7 +95,7 @@
+    "cell_type": "code",
+    "execution_count": 5,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -108,7 +108,7 @@
+    "cell_type": "code",
+    "execution_count": 6,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+diff --git a/PythonAPI/pycocoViewDemo.ipynb b/PythonAPI/pycocoViewDemo.ipynb
+index 9acd13e..e894277 100644
+--- a/PythonAPI/pycocoViewDemo.ipynb
++++ b/PythonAPI/pycocoViewDemo.ipynb
+@@ -4,7 +4,7 @@
+    "cell_type": "code",
+    "execution_count": 1,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -23,7 +23,7 @@
+    "cell_type": "code",
+    "execution_count": 2,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -44,7 +44,7 @@
+    "cell_type": "code",
+    "execution_count": 3,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -71,7 +71,7 @@
+    "cell_type": "code",
+    "execution_count": 4,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -83,7 +83,7 @@
+    "cell_type": "code",
+    "execution_count": 5,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+@@ -118,7 +118,7 @@
+    "cell_type": "code",
+    "execution_count": 6,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [],
+    "source": [
+@@ -134,7 +134,7 @@
+    "cell_type": "code",
+    "execution_count": 7,
+    "metadata": {
+-    "collapsed": false
++    "collapsed": False
+    },
+    "outputs": [
+     {
+diff --git a/PythonAPI/scripts/batch_get_image_size.py b/PythonAPI/scripts/batch_get_image_size.py
+index bd08ad5..8244ad2 100644
+--- a/PythonAPI/scripts/batch_get_image_size.py
++++ b/PythonAPI/scripts/batch_get_image_size.py
+@@ -2,16 +2,16 @@ import os
+ import subprocess
+ import sys
+ 
+-HOMEDIR = os.path.expanduser("~")
++# The caffe root.
++CAFFE_ROOT = os.environ['CAFFE_ROOT']
++datapath = os.environ['DATAPATH']
+ CURDIR = os.path.dirname(os.path.realpath(__file__))
+ 
+ ### Modify the address and parameters accordingly ###
+ # If true, redo the whole thing.
+ redo = True
+-# The caffe root.
+-CAFFE_ROOT = "{}/projects/caffe".format(HOMEDIR)
+ # The root directory which stores the coco images, annotations, etc.
+-coco_data_dir = "{}/data/coco".format(HOMEDIR)
++coco_data_dir = "{}/data/coco".format(datapath)
+ # The sets that we want to get the size info.
+ anno_sets = ["image_info_test-dev2015", "instances_minival2014"]
+ # The directory which contains the full annotation files for each set.
+diff --git a/PythonAPI/scripts/batch_split_annotation.py b/PythonAPI/scripts/batch_split_annotation.py
+index 6081fd5..dec0083 100644
+--- a/PythonAPI/scripts/batch_split_annotation.py
++++ b/PythonAPI/scripts/batch_split_annotation.py
+@@ -2,14 +2,14 @@ import os
+ import subprocess
+ import sys
+ 
+-HOMEDIR = os.path.expanduser("~")
++datapath = os.environ['DATAPATH']
+ CURDIR = os.path.dirname(os.path.realpath(__file__))
+ 
+ ### Modify the address and parameters accordingly ###
+ # If true, redo the whole thing.
+ redo = True
+ # The root directory which stores the coco images, annotations, etc.
+-coco_data_dir = "{}/data/coco".format(HOMEDIR)
++coco_data_dir = "{}/data/coco".format(datapath)
+ # The sets that we want to split. These can be downloaded at: http://mscoco.org
+ # Unzip all the files after download.
+ anno_sets = ["image_info_test2014", "image_info_test2015", "image_info_test-dev2015",

@@ -1,0 +1,54 @@
+#Example of running:
+#stap <PATH TO CAFFE BINARY>/scripts/profile.stp  -v --dyninst -c  <PATH TO CAFFE BINARY>/tools/caffe <arguments>| c++filt
+
+global timings_start  # Giving size of array here will cause error if size is exceeded , but allow avoid realocation of arrays
+global timings
+global counts
+global histo
+
+global final_results # Container to combine data from many threads
+
+##@define function_name %( "*sync*"  %)   # Handy macro to define name of functions to be traced
+#
+@define make_entry_and_exit_probe(process_name,func_name) %(
+   
+probe process(@process_name).function(@func_name).call
+{
+  timings_start[ppfunc(),tid()] = gettimeofday_us()
+  counts[ppfunc()] <<< 1
+}
+
+probe process(@process_name).function(@func_name).return
+{
+  timings[ppfunc(),tid()] += gettimeofday_us()  - timings_start[ppfunc(),tid()];
+  histo[ppfunc()] <<< gettimeofday_us()  - timings_start[ppfunc(),tid()];
+}
+   
+%)
+
+# For Caffe C++ we need mangled names put here (can use wildcards "*" for rescue)
+@make_entry_and_exit_probe([DIRNAME_OF_CAFFE_TOOL_BINARY],"_Z4timev")
+
+# Tracing functions of shared lib, example of using wildcards for names of functions
+@make_entry_and_exit_probe([DIRNAME_OF_LIBCAFFE],"*caffe_set*") # caffe_set<float>
+
+probe end
+{
+  # Get per thread results and put them in final container
+ foreach([x,tid] in timings) 
+ {
+   final_results[x] += timings[x,tid]
+ }
+
+ # Presents results
+ printf("\n\nInclusive profiling results:\n")
+ foreach([x] in final_results-) { printf("%s, count: %d total time: %d us\n",x,@count(counts[x]),final_results[x])}
+
+   foreach([x] in histo-) 
+   {
+     printf("Histogram of func: %s:\n",[x]);
+     print(@hist_log(histo[x]))
+   }
+}
+
+
