@@ -227,13 +227,12 @@ bool compareDataWithFileData(const char *referenceFileName,
     for (int i = 0; i < dataSize; i++) {
         float a = referenceDataPointer[i];
         float b = targetDataPointer[i];
+        if (std::isnan(a) && std::isnan(b) && is_nan_filler){
+            continue;
+        }
+
         float diff = caffe::floatDiff(a, b, epsilon);
-
         if (diff != FP_ZERO) {
-            if (std::isnan(a) && std::isnan(b) &&  is_nan_filler){
-                continue;
-            }
-
             fprintf(file, format, i,
                 *reinterpret_cast<CastType *> (&a),
                 *reinterpret_cast<CastType *> (&b), diff, a, b);
