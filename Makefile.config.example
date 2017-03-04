@@ -11,6 +11,7 @@
 
 # Enable the OpenCL/Greentea backend
 USE_GREENTEA := 1
+DISABLE_DEVICE_HOST_UNIFIED_MEMORY := 0
 # Enable the Greentea-LibDNN convolution backend
 # USE_LIBDNN := 1
 

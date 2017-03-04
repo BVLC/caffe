@@ -339,6 +339,10 @@ ifeq ($(USE_INDEX_64),1)
 	COMMON_FLAGS += -DUSE_INDEX_64
 endif
 
+ifeq ($(DISABLE_DEVICE_HOST_UNIFIED_MEMORY),1)
+	COMMON_FLAGS += -DDISABLE_DEVICE_HOST_UNIFIED_MEMORY
+endif
+
 ifeq ($(USE_GREENTEA),1)
 	# Find a valid OpenCL library
 	# TODO: Validate and complete this based on different SDKs
