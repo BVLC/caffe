@@ -60,6 +60,13 @@ class TestNet(unittest.TestCase):
         for bl in blobs:
             total += bl.data.sum() + bl.diff.sum()
 
+    def test_layer_dict(self):
+        layer_dict = self.net.layer_dict
+        self.assertEqual(list(layer_dict.keys()), list(self.net._layer_names))
+        for i, name in enumerate(self.net._layer_names):
+            self.assertEqual(layer_dict[name].type,
+                             self.net.layers[i].type)
+
     def test_forward_backward(self):
         self.net.forward()
         self.net.backward()
@@ -173,12 +180,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, blobs):
         net_blobs = [b for b in net.blobs.keys() if 'data' not in b]
@@ -238,12 +245,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, blobs):
         net_blobs = [b for b in net.blobs.keys() if 'data' not in b]
@@ -320,12 +327,12 @@ layer {
 """
 
     def setUp(self):
-        self.f = tempfile.NamedTemporaryFile(mode='w+')
+        self.f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         self.f.write(self.TEST_NET)
-        self.f.flush()
+        self.f.close()
 
     def tearDown(self):
-        self.f.close()
+        os.remove(self.f.name)
 
     def check_net(self, net, outputs):
         self.assertEqual(list(net.blobs['data'].shape), [1,1,10,10])

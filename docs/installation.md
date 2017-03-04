@@ -64,7 +64,7 @@ Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library. The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
-* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
+* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with [free](https://registrationcenter.intel.com/en/forms/?productid=2558) licenses.
     1. Install MKL.
     2. Set up MKL environment (Details: [Linux](https://software.intel.com/en-us/node/528499), [OS X](https://software.intel.com/en-us/node/528659)). Example: *source /opt/intel/mkl/bin/mklvars.sh intel64*
     3. Set `BLAS := mkl` in `Makefile.config`
