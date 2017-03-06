@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/layers/multibox_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -228,8 +229,10 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     EncodeLocPrediction(all_loc_preds, all_gt_bboxes, all_match_indices_,
                         prior_bboxes, prior_variances, multibox_loss_param_,
                         loc_pred_data, loc_gt_data);
+    PERFORMANCE_MEASUREMENT_BEGIN();
     loc_loss_layer_->Reshape(loc_bottom_vec_, loc_top_vec_);
     loc_loss_layer_->Forward(loc_bottom_vec_, loc_top_vec_);
+    PERFORMANCE_MEASUREMENT_END("FW_Smooth_L1");
   } else {
     loc_loss_.mutable_cpu_data()[0] = 0;
   }
@@ -269,8 +272,10 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     EncodeConfPrediction(conf_data, num_, num_priors_, multibox_loss_param_,
                          all_match_indices_, all_neg_indices_, all_gt_bboxes,
                          conf_pred_data, conf_gt_data);
+    PERFORMANCE_MEASUREMENT_BEGIN();
     conf_loss_layer_->Reshape(conf_bottom_vec_, conf_top_vec_);
     conf_loss_layer_->Forward(conf_bottom_vec_, conf_top_vec_);
+    PERFORMANCE_MEASUREMENT_END("FW_Softmax");
   } else {
     conf_loss_.mutable_cpu_data()[0] = 0;
   }
@@ -312,8 +317,10 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       // Only back propagate on prediction, not ground truth.
       loc_propagate_down.push_back(true);
       loc_propagate_down.push_back(false);
+      PERFORMANCE_MEASUREMENT_BEGIN();
       loc_loss_layer_->Backward(loc_top_vec_, loc_propagate_down,
                                 loc_bottom_vec_);
+      PERFORMANCE_MEASUREMENT_END("BW_Smooth_L1");
       // Scale gradient.
       Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
           normalization_, num_, num_priors_, num_matches_);
@@ -353,8 +360,10 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       // Only back propagate on prediction, not ground truth.
       conf_propagate_down.push_back(true);
       conf_propagate_down.push_back(false);
+      PERFORMANCE_MEASUREMENT_BEGIN();
       conf_loss_layer_->Backward(conf_top_vec_, conf_propagate_down,
                                  conf_bottom_vec_);
+      PERFORMANCE_MEASUREMENT_END("BW_Softmax");
       // Scale gradient.
       Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
           normalization_, num_, num_priors_, num_matches_);
