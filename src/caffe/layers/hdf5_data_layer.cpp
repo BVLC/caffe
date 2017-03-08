@@ -39,8 +39,9 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 
   for (int i = 0; i < top_size; ++i) {
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
+    // Allow reshape here, as we are loading data not params
     hdf5_load_nd_dataset(file_id, this->layer_param_.top(i).c_str(),
-        MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get());
+        MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get(), true);
   }
 
   herr_t status = H5Fclose(file_id);
