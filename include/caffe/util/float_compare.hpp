@@ -45,7 +45,8 @@ namespace caffe {
     float floatDiff(const float &a, const float &b, const float &epsilon) {
         float diff = fabs(a - b);
         if (!std::isfinite(diff)) {
-            return 1.f;
+            static float nan_float = std::nanf("");
+            return nan_float;
         }
 
         if (diff <= epsilon ||

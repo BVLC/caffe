@@ -117,6 +117,7 @@ DEFINE_bool(fast_compare, false,
     "Optional; Break layer comparison after fast_compare_max errors found");
 DEFINE_int32(fast_compare_max, 50,
     "Optional; Max errors for fast_compare");
+DEFINE_double(buffer_filler, std::nanf(""), "Buffer filler for compare tool");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
