@@ -68,8 +68,8 @@ void hdf5_load_nd_dataset_helper(
     if (blob_dims != blob->shape()) {
       // create shape string for error message
       ostringstream stream;
-      int count = 1;
-      for (int i = 0; i < blob_dims.size(); ++i) {
+      int_tp count = 1;
+      for (int_tp i = 0; i < blob_dims.size(); ++i) {
         stream << blob_dims[i] << " ";
         count = count * blob_dims[i];
       }
@@ -107,7 +107,7 @@ template <>
 void hdf5_save_nd_dataset<float>(
     const hid_t file_id, const string& dataset_name, const Blob<float>& blob,
     bool write_diff) {
-  int num_axes = blob.num_axes();
+  int_tp num_axes = blob.num_axes();
   hsize_t *dims = new hsize_t[num_axes];
   for (int_tp i = 0; i < num_axes; ++i) {
     dims[i] = blob.shape(i);
