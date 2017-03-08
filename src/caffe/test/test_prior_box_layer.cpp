@@ -68,7 +68,12 @@ class PriorBoxLayerTest : public CPUDeviceTest<Dtype> {
     blob_bottom_vec_.push_back(blob_data_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~PriorBoxLayerTest() { delete blob_bottom_; delete blob_top_; }
+  virtual ~PriorBoxLayerTest()
+  {
+    delete blob_top_;
+    delete blob_data_;
+    delete blob_bottom_;
+  }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_data_;
   Blob<Dtype>* const blob_top_;

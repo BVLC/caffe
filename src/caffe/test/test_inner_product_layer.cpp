@@ -70,7 +70,8 @@ class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
   virtual ~InnerProductLayerTest() {
     delete blob_bottom_;
     delete blob_bottom_nobatch_;
-    delete blob_top_;
+    std::for_each(this->blob_top_vec_.begin(), this->blob_top_vec_.end(),
+                                      [](Blob<Dtype>* pPtr) {delete pPtr; });
   }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_bottom_nobatch_;
@@ -205,6 +206,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
     Blob<Dtype>* const top = new Blob<Dtype>();
     top->ReshapeLike(*this->blob_top_);
     caffe_copy(count, this->blob_top_->cpu_data(), top->mutable_cpu_data());
+    std::for_each(this->blob_top_vec_.begin(), this->blob_top_vec_.end(),
+                                      [](Blob<Dtype>* pPtr) { delete pPtr; });
     this->blob_top_vec_.clear();
     this->blob_top_vec_.push_back(new Blob<Dtype>());
     inner_product_param->set_transpose(true);
@@ -377,6 +380,8 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
     Blob<Dtype>* const bottom_diff = new Blob<Dtype>();
     bottom_diff->CopyFrom(*this->blob_bottom_vec_[0], true, true);
     // repeat original top with tranposed ip
+    std::for_each(this->blob_top_vec_.begin(), this->blob_top_vec_.end(),
+                                      [](Blob<Dtype>* pPtr) {delete pPtr; });
     this->blob_top_vec_.clear();
     this->blob_top_vec_.push_back(new Blob<Dtype>());
     inner_product_param->set_transpose(true);
