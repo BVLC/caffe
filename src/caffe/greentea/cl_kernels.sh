@@ -37,7 +37,7 @@ echo "#ifdef DISABLE_DOUBLE_SUPPORT" >> $SOURCE
 echo "  #define DOUBLE_SUPPORT \"#define DISABLE_DOUBLE_SUPPORT\n\"" >> $SOURCE
 echo "#else" >> $SOURCE
 echo "  #define DOUBLE_SUPPORT \"#define ENABLE_DOUBLE_SUPPORT\n\"" >> $SOURCE
-echo "#endif //DISABLE_DOUBLE_SUPPORT" >> $SOURCE
+echo "#endif  // DISABLE_DOUBLE_SUPPORT" >> $SOURCE
 
 echo "namespace caffe {" >> $SOURCE
 
