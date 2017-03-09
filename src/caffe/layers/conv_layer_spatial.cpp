@@ -182,7 +182,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 // to feed al the EUs.
 // FIXME for the gemm like convolution, switch back to eaxct image size.
 
-#define ADJUST_INPUT_IMAGE_SIZE(x) (x)  // ((x) > 16 * 16 ? 256 : (x))
+#define TUNING_SIZE(x) ((x) > 256 ? 256 : (ALIGN(x, 16)))
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -196,8 +196,8 @@ void ConvolutionLayerSpatial<float>::generate_key() {
              << dilation_h_ << "_"
              << dilation_w_ << "_"
              << bias_term_ << "_"
-             << width_ << "_"
-             << height_ << "_"
+             << TUNING_SIZE(width_) << "_"
+             << TUNING_SIZE(height_) << "_"
              << pad_w_ << "_"
              << pad_h_ << "_"
              << num_ << "_"
