@@ -585,6 +585,10 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
       }
 
       if (err == CL_SUCCESS) {
+        kernel.arg(argIdx++, (uint16_t)width_);
+        kernel.arg(argIdx++, (uint16_t)height_);
+        kernel.arg(argIdx++, (uint16_t)output_w_);
+        kernel.arg(argIdx++, (uint16_t)output_h_);
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
         err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      kernel.handle().get(), 3,
@@ -593,7 +597,6 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                                      config->local_work_size, 0, NULL,
                                      NULL);
         OCL_CHECK(err);
-
       }
       if (err != CL_SUCCESS)
         break;
@@ -801,32 +804,20 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DSTRIDE_Y=" << stride_h_ <<
         " -DDILATION_X=" << dilation_w_ <<
         " -DDILATION_Y=" << dilation_h_ <<
-        " -DINPUT_WIDTH=" << width_ <<
-        " -DINPUT_HEIGHT=" << height_ <<
         " -DINPUT_DEPTH=" << channels_ <<
         " -DWIDTH1=" << M_ <<
         " -DOUT_PADDING_LEFT=" << 0 <<
         " -DOUT_PADDING_HEIGHT=" << 0 <<
-        " -DOUT_WIDTH=" << output_width <<
-        " -DOUT_HEIGHT=" << output_height <<
         " -DOUT_DEPTH=" << M_ <<
-        " -DOUT_PITCH_X=" << output_width <<
-        " -DOUT_PITCH_Y=" << output_width * output_height <<
-        " -DOUT_PITCH_Z=" << output_width * output_height * M_ <<
         " -DNUM_BATCHES=" << num_ <<
         " -DDY=" << globalWorkSizeDY <<
         " -DDX=" << globalWorkSizeDX <<
         " -DKERNEL_WIDTH_DIV2=" << kernel_w_ / 2 <<
         " -DKERNEL_SLICE_DIV2=" << (kernel_w_ * kernel_h_) / 2 <<
         " -DTILE_N_LAST=" << M_ % 32 <<
-        " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8 <<
-        " -DRIGHT_PARTIAL_TILE_K=" << output_w_ % globalWorkSizeDX;
+        " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8;
 
-  optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_
-                << " -DALIGNED_INPUT_SIZE=" << height_ * width_ * channels_
-                << " -DROW_PITCH=" <<   width_
-                << " -DSLICE_PITCH=" << width_ * height_
-                << " -DBATCH_PITCH=" << width_ * height_ * M_;
+  optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
   size_t sgemm_m = alignedExpandHeight;
   size_t sgemm_n = alignedFilterWidth;
   size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );  // NOLINT
