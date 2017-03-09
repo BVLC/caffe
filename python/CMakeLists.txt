@@ -12,7 +12,7 @@ if(MSVC)
 endif()
 caffe_default_properties(pycaffe)
 set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
-target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
+#target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
 
 if(UNIX OR APPLE)
     set(__linkname "${PROJECT_SOURCE_DIR}/python/caffe/_caffe.so")
