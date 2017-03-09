@@ -110,7 +110,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "int_tp c = (index / dim) % channels / div_factor;",    // NOLINT
 "out_diff[index] = in_diff[index]",    // NOLINT
-"* ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * slope_data[c]);",    // NOLINT
+"* ((Dtype)(in_data[index] > 0?1.0:0.0) + (Dtype)(in_data[index] <= 0?1.0:0.0) * slope_data[c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT

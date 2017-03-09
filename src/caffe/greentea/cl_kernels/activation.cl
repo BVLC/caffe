@@ -88,7 +88,7 @@ __kernel void TEMPLATE(prelu_backward,Dtype)(const int_tp n, const int_tp channe
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     int_tp c = (index / dim) % channels / div_factor;
     out_diff[index] = in_diff[index]
-        * ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * slope_data[c]);
+        * ((Dtype)(in_data[index] > 0?1.0:0.0) + (Dtype)(in_data[index] <= 0?1.0:0.0) * slope_data[c]);
   }
 }
 
