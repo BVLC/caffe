@@ -314,6 +314,7 @@ int collectAndCheckLayerData(bool collect_step,
     FILE *infoFile = fopen(use_gpu ?
         (FLAGS_collect_dir + "/" + "GPUInfo.txt").c_str() :
         (FLAGS_collect_dir + "/" + "CPUInfo.txt").c_str(), "w+t");
+    CHECK(infoFile != NULL) << "Could not open info file";
     char file_name[FILENAME_MAX];
     char file_path[FILENAME_MAX];
     string message_prefix = collect_step ? "Collecting" : "Comparing";
