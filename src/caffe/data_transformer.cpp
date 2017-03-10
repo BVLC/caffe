@@ -48,7 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/im_transforms.hpp"
 #include "caffe/util/io.hpp"
 
-
 namespace caffe {
 
 template<typename Dtype>
@@ -84,17 +83,12 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
   }
 }
 
-
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const Datum& datum,
-                         Dtype* transformed_data, 
-                         NormalizedBBox* crop_bbox, RandNumbers& rand_num) {
-  const bool do_mirror = param_.mirror() && rand_num(2);
-  const string& data = datum.data();
-  const bool has_uint8 = data.size() > 0;
-  const bool has_mean_file = param_.has_mean_file();
-  const bool has_mean_values = mean_values_.size() > 0;
-
+void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_data,
+                                       NormalizedBBox* crop_bbox, RandNumbers& rand_num,
+                                       const bool do_mirror, const bool has_uint8,
+                                       const bool has_mean_file, const bool has_mean_values)
+{
   int transform_func_id = (do_mirror << 2) +
                           (has_mean_file << 1) +
                           has_mean_values;
@@ -138,6 +132,41 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           crop_bbox, rand_num); break;
     }
   }
+}
+
+namespace {
+  // Based on the path we're in (detection or classification), perform transformations on
+  // annotations.
+  template<typename AnnotationHandler>
+  void call_annotation_handler(AnnotationHandler& anno_handler, const bool do_resize, const bool do_mirror)
+  {
+    anno_handler(do_resize, do_mirror);
+  }
+
+  template<>
+  void call_annotation_handler<EmptyType>(EmptyType&, const bool, const bool)
+  {
+  }
+}
+  
+template<typename Dtype>
+template<typename AnnotationHandler>
+void DataTransformer<Dtype>::Transform(const Datum& datum,
+                                       Dtype* transformed_data, 
+                                       NormalizedBBox* crop_bbox,
+                                       RandNumbers& rand_num,
+                                       AnnotationHandler anno_handler)
+{
+  const bool do_mirror = param_.mirror() && rand_num(2);
+  const string& data = datum.data();
+  const bool has_uint8 = data.size() > 0;
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  Transform(datum, transformed_data, crop_bbox, rand_num,
+            do_mirror, has_uint8, has_mean_file, has_mean_values);
+
+  call_annotation_handler(anno_handler, /* do_resize */ true, do_mirror);
 }
 
 template<typename Dtype>
@@ -235,8 +264,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::GenerateRandNumbers(PreclcRandomNumbers& rn) {
-  int count = (param_.mirror()? 1:0) +
+void DataTransformer<Dtype>::GenerateRandNumbers(PreclcRandomNumbers& rn, bool sample_bboxes) {
+  int count = (sample_bboxes ? 1 : 0) + (param_.mirror()? 1:0) +
                   ((phase_ == TRAIN && param_.crop_size())? 2 : 0);
   rn.FillRandomNumbers(count, rand_num_);
 }
@@ -250,10 +279,13 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 }
 
 template<typename Dtype>
+template<typename AnnotationHandler>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob,
                                        NormalizedBBox* crop_bbox,
-                                       RandNumbers& rand_num) {
+                                       RandNumbers& rand_num,
+                                       AnnotationHandler anno_handler)
+{
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -267,7 +299,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-    return Transform(cv_img, transformed_blob, crop_bbox, rand_num);
+    return Transform(cv_img, transformed_blob, crop_bbox, rand_num, anno_handler);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -302,7 +334,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
-  Transform(datum, transformed_data, crop_bbox, rand_num);
+  Transform(datum, transformed_data, crop_bbox, rand_num, anno_handler);
 }
 
 template<typename Dtype>
@@ -335,56 +367,48 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
                                        Blob<Dtype>* transformed_blob,
-                                       RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all) {
+                                       RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all,
+				       RandNumbers& rand_num) {
   // Transform datum.
   const Datum& datum = anno_datum.datum();
   NormalizedBBox crop_bbox;
-  Transform(datum, transformed_blob, &crop_bbox, rand_num_);
 
-  // Transform annotation.
-  const bool do_resize = true;
-  //LOG(INFO) << "Before do_mirror";
-  const bool do_mirror = param_.mirror() && rand_num_(2);
-  //LOG(INFO) << "After do_mirror";
-  TransformAnnotation(anno_datum, do_resize, crop_bbox, do_mirror,
-                      transformed_anno_group_all);
+  // We need to call TransformAnnotation after do_mirror is set, based on precalculated
+  // values from RNG. RNG generates only one value for do_mirror, so the variable
+  // can be set only once. Otherwise, RNG's queue will be empty.
+  auto transform_annotation = [&](const bool do_resize, const bool do_mirror) -> void {
+    TransformAnnotation(anno_datum, do_resize, crop_bbox, do_mirror,
+                        transformed_anno_group_all);
+  };
+
+  Transform(datum, transformed_blob, &crop_bbox, rand_num, transform_annotation);
 }
-/*
-template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
-                                       Blob<Dtype>* transformed_blob,
-                                       RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all,
-                                       RandNumbers& rand_num) {
-  bool do_mirror;
-  Transform(anno_datum, transformed_blob, transformed_anno_group_all,
-            &do_mirror, rand_num);
-}
-*/
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
                                        Blob<Dtype>* transformed_blob,
-                                       vector<AnnotationGroup>* transformed_anno_vec) {
+                                       vector<AnnotationGroup>* transformed_anno_vec,
+				       RandNumbers& rand_num) {
   RepeatedPtrField<AnnotationGroup> transformed_anno_group_all;
-  Transform(anno_datum, transformed_blob, &transformed_anno_group_all);
+  Transform(anno_datum, transformed_blob, &transformed_anno_group_all, rand_num);
   
   for (int g = 0; g < transformed_anno_group_all.size(); ++g) {
     transformed_anno_vec->push_back(transformed_anno_group_all.Get(g));
   }
 }
-/*
+
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
                                        Blob<Dtype>* transformed_blob,
-                                       vector<AnnotationGroup>* transformed_anno_vec,
-                                       RandNumbers& rand_num) {
-  Transform(anno_datum, transformed_blob, transformed_anno_vec, rand_num);
+                                       vector<AnnotationGroup>* transformed_anno_vec) {
+  Transform(anno_datum, transformed_blob, transformed_anno_vec, rand_num_);
 }
-*/
+    
 template<typename Dtype>
-void DataTransformer<Dtype>::TransformAnnotation(const AnnotatedDatum& anno_datum, 
+//template<bool do_resize, bool do_mirror>
+void DataTransformer<Dtype>::TransformAnnotation(const AnnotatedDatum& anno_datum,
                                                  const bool do_resize,
-                                                 const NormalizedBBox& crop_bbox, 
+                                                 const NormalizedBBox& crop_bbox,
                                                  const bool do_mirror,
                                                  RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all) {
   const int img_height = anno_datum.datum().height();
@@ -692,10 +716,13 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 }
 
 template<typename Dtype>
+template<typename AnnotationHandler>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob, 
                                        NormalizedBBox* crop_bbox, 
-                                       RandNumbers& rand_num) {
+                                       RandNumbers& rand_num,
+                                       AnnotationHandler anno_handler)
+{
   const bool do_mirror = param_.mirror() && rand_num(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
@@ -722,6 +749,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     case 7: Transform<true , true , true >(cv_img, transformed_blob, crop_bbox, rand_num);
       break;
   }
+
+  //  const bool do_resize = true;
+  call_annotation_handler(anno_handler, /* do_resize*/ true, do_mirror);
 }
 
 template<typename Dtype>
@@ -1220,10 +1250,18 @@ template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
+  
   if (needs_rand) {
     rand_num_.Init();
   } else {
     rand_num_.Reset();
+  }
+}
+
+template <typename Dtype>
+void DataTransformer<Dtype>::ReinitRand() {
+  if (rand_num_.IsEmpty()) {
+    rand_num_.Init();
   }
 }
 
