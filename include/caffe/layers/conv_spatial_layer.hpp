@@ -166,7 +166,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                               int_tp swizzle_factor,
                               bool interleave = false);
   virtual void generate_key();
-  virtual std::string generate_unique_key();
   virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
   int_tp blockHeight,
                                             int_tp blockDepth);
@@ -228,7 +227,10 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   bool tuned_;
 
   std::string key_;
+  std::string short_key_;
   std::string kernel_name_;
+  std::stringstream cache_path_;
+
   Blob<Dtype> swizzled_weights_blob_;
   Blob<Dtype> bias_multiplier_;
 
