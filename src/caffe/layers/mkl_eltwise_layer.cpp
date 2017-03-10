@@ -247,9 +247,10 @@ void MKLEltwiseLayer<Dtype>::Forward_cpu(
     }
 
     { // local scope needed since the macro below contains variable declaration
+      PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
       PERFORMANCE_MEASUREMENT_BEGIN();
       e = dnnExecute<Dtype>(sumPrimitive, eltwise_res);
-      PERFORMANCE_MEASUREMENT_END_MKL("FW");
+      PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
     }
     CHECK_EQ(e, E_SUCCESS);
 

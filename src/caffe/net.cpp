@@ -152,9 +152,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CompileNet(param_with_splits, &param);
 
   // Printing processed model
-  LOG_IF(INFO, Caffe::root_solver())
-      << "Initializing net from parameters: " << std::endl
-      << param.DebugString();
+  if (Caffe::root_solver()) {
+    LOG(INFO) << "Initializing net from parameters: " << std::endl;
+    LOG(INFO).flush();
+    fflush(0);
+    param.PrintDebugString();
+    fflush(0);
+  }
 
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
