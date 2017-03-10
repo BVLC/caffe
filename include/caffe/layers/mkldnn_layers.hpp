@@ -374,5 +374,44 @@ private:
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;
 };
+
+// ===== MKLDNNSplitLayer ======================================
+template <typename Dtype>
+class MKLDNNSplitLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+public:
+    explicit MKLDNNSplitLayer(const LayerParameter& param)
+            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
+              splitBwd_pd_(), bwd_bottom_diff_memory_()
+            {
+    }
+    ~MKLDNNSplitLayer();
+
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "Split"; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitSplitFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitSplitBwd(const vector<Blob<Dtype>*>& top, const vector<Blob<Dtype>*>& bottom);
+
+  private:
+    vector<size_t> sizes_src_;
+    vector<size_t> strides_src_;
+    MKLDNNPrimitive<Dtype> splitBwd_;
+    shared_ptr<sum::primitive_desc> splitBwd_pd_;
+    shared_ptr<memory> bwd_bottom_diff_memory_;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_bottom_diff_;
+    vector<shared_ptr<primitive>> bwd_top_diff_primitives_;
+    vector<primitive::at> bwd_top_diffs_primitives_at_;
+    vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_top_diffs_;
+};
+
+
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
