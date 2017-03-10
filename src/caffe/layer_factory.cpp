@@ -418,8 +418,8 @@ shared_ptr<Layer<Dtype> > GetSplitLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new MKLSplitLayer<Dtype>(param));
 #endif
 #if defined(MKLDNN_SUPPORTED)
-  } else if(engine === SplitParameter_Engine_MKLDNN) {
-    return shared_ptr<Layer<Dtype> >(new MKLDNNSplit<Dtype>(param));
+  } else if(engine == SplitParameter_Engine_MKLDNN) {
+    return shared_ptr<Layer<Dtype> >(new MKLDNNSplitLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
