@@ -1128,7 +1128,7 @@ message EltwiseParameter {
     DEFAULT = 0;
     CAFFE = 1;
     MKL2017 = 3;
-    MKLDNN = 4;
+//    MKLDNN = 4; TODO: uncomment when eltwise support added with mkldnn
   }
   optional Engine engine = 4 [default = DEFAULT];
 }
