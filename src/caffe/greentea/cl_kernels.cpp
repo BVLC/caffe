@@ -5239,6 +5239,10 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   }
   ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
   ss << "#undef Dtype" << "\n\n";  // NOLINT
+  ss << "#undef Dtype2" << "\n\n";  // NOLINT
+  ss << "#undef Dtype4" << "\n\n";  // NOLINT
+  ss << "#undef Dtype8" << "\n\n";  // NOLINT
+  ss << "#undef Dtype16" << "\n\n";  // NOLINT
   ss << "#define Dtype double" << "\n\n";  // NOLINT
   ss << "#undef TYPE" << "\n\n";  // NOLINT
   ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
