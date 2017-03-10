@@ -17,6 +17,7 @@
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
+#include "viennacl/tools/sha1.hpp"
 #endif
 
 #include <boost/filesystem.hpp>
@@ -69,6 +70,28 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
                             kernel_h_, (kernel_w_ + 1) & ~1);
   swizzled_weights_ = NULL;
   bias_ = NULL;
+  if (std::getenv("CLCAFFE_CACHE_PATH"))
+    cache_path_ << std::getenv("CLCAFFE_CACHE_PATH");
+  else if (std::getenv("VIENNACL_CACHE_PATH"))
+    cache_path_ << std::getenv("VIENNACL_CACHE_PATH") << "/clCaffe";
+  else if (std::getenv("HOME")) {
+    cache_path_ << std::getenv("HOME") << "/.cache/clCaffe";
+  }
+  cache_path_ << "/spatialkernels/";
+  const boost::filesystem::path& path = cache_path_.str();
+  const boost::filesystem::path& dir =
+                 boost::filesystem::unique_path(path).string();
+  bool hasCacheDir = false;
+  if (!boost::filesystem::exists(dir))
+    hasCacheDir = boost::filesystem::create_directories(dir);
+  else
+    hasCacheDir = boost::filesystem::is_directory(dir);
+
+  if (hasCacheDir != true) {
+    std::cout << "Failed to create cache directory,"
+              << "will tune again for next running" << std::endl;
+    return;
+  }
 }
 
 template<typename Dtype>
@@ -175,8 +198,6 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 #define dbgPrint(x)
 #endif
 
-#define CACHE_DIRECTORY ".spatialkernels/"
-
 // For large enough input size, we do not need to tune kernels for different
 // size. The reason is with large input size, there will be enough work items
 // to feed al the EUs.
@@ -203,22 +224,20 @@ void ConvolutionLayerSpatial<float>::generate_key() {
              << num_ << "_"
              << M_;
 
-  key_ = keyBuilder.str();
-}
-
-template<>
-std::string ConvolutionLayerSpatial<float>::generate_unique_key() {
-  std::stringstream keyBuilder;
-  keyBuilder << key_ << "" << kernel_uid_;
-  kernel_uid_++;
-  return keyBuilder.str();
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context
+                                (this->device_->id());
+  std::string prefix = ctx.current_device().name() + ctx.current_device().vendor()
+                       + ctx.current_device().driver_version()
+                       + std::to_string(ctx.current_device().max_compute_units());
+  key_ = viennacl::tools::sha1(prefix + keyBuilder.str());
+  short_key_ = keyBuilder.str();
 }
 
 template<>
 std::string ConvolutionLayerSpatial<float>::generate_specific_key(
     int_tp type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
   std::stringstream keyBuilder;
-  keyBuilder << key_ << "_" << type << "_" << blockWidth << "_" << blockHeight
+  keyBuilder << short_key_ << "_" << type << "_" << blockWidth << "_" << blockHeight
              << "_" << blockDepth;
   return keyBuilder.str();
 }
@@ -1262,23 +1281,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
 
   tuned_ = true;
 
-  const boost::filesystem::path& path = CACHE_DIRECTORY;
-  const boost::filesystem::path& dir =
-                   boost::filesystem::unique_path(path).string();
-  bool hasCacheDir = false;
-  if (!boost::filesystem::exists(dir))
-    hasCacheDir = boost::filesystem::create_directory(dir);
-  else
-    hasCacheDir = boost::filesystem::is_directory(dir);
-
-  if (hasCacheDir != true) {
-    std::cout << "Failed to create cache directory,"
-              << "will tune again for next running" << std::endl;
-    return;
-  }
-
   string outputFile;
-  outputFile = CACHE_DIRECTORY + key_;
+  outputFile = cache_path_.str() + key_;
   std::ifstream cachedKernel(outputFile.c_str());
   std::ofstream outputKernel;
   outputKernel.open(outputFile.c_str());
@@ -1403,7 +1407,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
 
   // Find cached kernel configuration
   string outputFile;
-  outputFile = CACHE_DIRECTORY + key_;
+  outputFile = cache_path_.str() + key_;
   std::ifstream cachedKernel(outputFile.c_str());
   if (cachedKernel) {
     int_tp x, y, z, type;
@@ -1578,11 +1582,6 @@ void ConvolutionLayerSpatial<double>::calculate_global_size(
 template<>
 void ConvolutionLayerSpatial<double>::generate_key() {
   NOT_IMPLEMENTED;
-}
-template<>
-std::string ConvolutionLayerSpatial<double>::generate_unique_key() {
-  NOT_IMPLEMENTED;
-  return "";
 }
 
 template<>
