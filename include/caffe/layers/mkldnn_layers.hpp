@@ -59,20 +59,19 @@ namespace caffe {
 
 // =====  MKLDNNBatchNormLayer =======================================
 template <typename Dtype>
-class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype> {
 public:
     explicit MKLDNNBatchNormLayer(const LayerParameter& param)
-            : Layer<Dtype>(param)
-            , fwd_top_data    ()
-            , fwd_bottom_data ()
-            , BatchNormFwd_pd()
-            , output_memory(), scaleshift_memory()
-            , mean_memory()
-            , variance_memory()
-            , input_primitive()
-        {}
-
+        : Layer<Dtype>(param)
+        , fwd_top_data(), fwd_bottom_data()
+        , bwd_top_diff(), bwd_bottom_diff()
+        , BatchNormFwd_pd(), BatchNormBwd_pd()
+        , mean_memory(), variance_memory()
+        , scaleshift_memory(), bwd_scaleshift_diff_memory()
+        , output_memory(), bwd_bottom_diff_memory()
+        , input_primitive(), bwd_top_diff_primitive() {}
     ~MKLDNNBatchNormLayer() {}
+
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -85,12 +84,21 @@ protected:
                                 , const vector<Blob<Dtype>*>& bottom);
 private:
     void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,
+            const vector<bool>& propagate_down,
+            const vector<Blob<Dtype>*>& bottom);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
+    shared_ptr<batch_normalization_backward::primitive_desc> BatchNormBwd_pd;
 
-    MKLDNNPrimitive<Dtype> BatchNormFwd;
-    shared_ptr<memory> output_memory, scaleshift_memory, mean_memory, variance_memory;
-    shared_ptr<primitive> input_primitive;
+    MKLDNNPrimitive<Dtype> BatchNormFwd, BatchNormBwd;
+    shared_ptr<memory> mean_memory, variance_memory;
+
+    shared_ptr<memory> scaleshift_memory, bwd_scaleshift_diff_memory;
+    shared_ptr<memory> output_memory, bwd_bottom_diff_memory;
+
+    shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 
     int32_t num_, width_, height_, channels_;
     Dtype eps_, moving_average_fraction_;
@@ -329,7 +337,8 @@ class MKLDNNConcatLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
 public:
     explicit MKLDNNConcatLayer(const LayerParameter& param)
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
-            concatFwd_pd(), output_memory(),
+            concatFwd_pd(), fwd_output_memory(),
+            bwd_reorder_input_memory(), bwd_reorder_output_memory(),
             fwd_top_data(), fwd_bottom_data(), split_channels() {
     }
 protected:
@@ -343,18 +352,66 @@ protected:
     virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 , const vector<Blob<Dtype>*>& bottom);
 private:
-    void InitConcat(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConcatFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitConcatBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
 
     shared_ptr<concat::primitive_desc> concatFwd_pd;
-    shared_ptr<memory> output_memory;
-    vector<shared_ptr<primitive>> input_primitives_;
-    vector<primitive::at> input_primitives_at_;
+    shared_ptr<memory> fwd_output_memory;
+    shared_ptr<primitive> bwd_reorder_input_memory;
+    vector<shared_ptr<memory>> bwd_reorder_output_memory;
+    vector<shared_ptr<memory>> bwd_bottom_memory_;
+    vector<shared_ptr<primitive>> fwd_input_primitives_;
+    vector<primitive::at> fwd_input_primitives_at_;
     MKLDNNPrimitive<Dtype> concatFwd;
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data;
     vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff;
+    vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_bottom_diff;
+    vector<MKLDNNPrimitive<Dtype> > reorders;
     vector<int> split_channels;
 
     int32_t num_, width_, height_, channels_, num_concats_;
+    int concat_dimension;
 };
+
+// ===== MKLDNNSplitLayer ======================================
+template <typename Dtype>
+class MKLDNNSplitLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
+public:
+    explicit MKLDNNSplitLayer(const LayerParameter& param)
+            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
+              splitBwd_pd_(), bwd_bottom_diff_memory_()
+            {
+    }
+    ~MKLDNNSplitLayer();
+
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "Split"; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitSplitFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitSplitBwd(const vector<Blob<Dtype>*>& top, const vector<Blob<Dtype>*>& bottom);
+
+  private:
+    vector<size_t> sizes_src_;
+    vector<size_t> strides_src_;
+    MKLDNNPrimitive<Dtype> splitBwd_;
+    shared_ptr<sum::primitive_desc> splitBwd_pd_;
+    shared_ptr<memory> bwd_bottom_diff_memory_;
+    shared_ptr<MKLDNNDiff<Dtype> > bwd_bottom_diff_;
+    vector<shared_ptr<primitive>> bwd_top_diff_primitives_;
+    vector<primitive::at> bwd_top_diffs_primitives_at_;
+    vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_top_diffs_;
+};
+
+
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_

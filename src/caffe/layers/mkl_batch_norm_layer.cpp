@@ -404,9 +404,9 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(use_global_stats_? batchNormFwdInference : batchNormFwd,
                                                                  BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("FW");
   CHECK_EQ(e, E_SUCCESS);
-  
+
   if (!use_global_stats_) {
      // compute and save moving average
     this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
@@ -455,10 +455,10 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
   } else {
     BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
-  
+
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwd, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("BW");
   CHECK_EQ(e, E_SUCCESS);
 
   if (use_weight_bias_) {

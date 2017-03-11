@@ -64,7 +64,6 @@ template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const Dtype* mult = sum_multiplier_.cpu_data();
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   // assert(dim == channels);
@@ -76,13 +75,13 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     Dtype *top_data = top[0]->mutable_cpu_data() + channels*i;
 
     Dtype scale_data = bottom_data[0];
-    for (int j = 1; j < channels; j++) {
+    for (int j = 1; j < channels; ++j) {
         scale_data = std::max(scale_data, bottom_data[j]);
     }
 
     // subtraction
     for (int j = 0; j < channels; j++) {
-      top_data[j] = bottom_data[j] - scale_data*mult[j];
+      top_data[j] = bottom_data[j] - scale_data;
     }
 
     // exponentiation
@@ -90,7 +89,10 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     caffe_exp<Dtype>(dim, top_data, top_data);
 
     // sum after exp
-    scale_data = caffe_cpu_dot(dim, top_data, mult);
+    scale_data = top_data[0];
+    for (int j = 1; j < channels; j++) {
+      scale_data += top_data[j];
+    }
 
     // division
     caffe_scal(dim, Dtype(1)/scale_data, top_data);

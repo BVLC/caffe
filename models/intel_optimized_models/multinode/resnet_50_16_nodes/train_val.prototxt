@@ -22,8 +22,8 @@ transform_param {
    mean_value: 123
 }
   data_param {
-    source: "/data/compressed_lmdb/ilsvrc12_train_lmdb"
-    batch_size: 128
+    source: "examples/imagenet/ilsvrc12_train_lmdb"
+    batch_size: 16
     backend: LMDB
     shuffle: true
   }
@@ -46,7 +46,7 @@ transform_param {
    mean_value: 123
 }
   data_param {
-    source: "/data/compressed_lmdb/ilsvrc12_val_lmdb/"
+    source: "examples/imagenet/ilsvrc12_val_lmdb"
     batch_size: 10
     backend: LMDB
   }
@@ -2293,37 +2293,14 @@ bottom: "label"
 top: "loss"
 
 }
-#layer {
-#name: "accuracy"
-#type: "Accuracy"
-#bottom: "score"
-#bottom: "label"
-#top: "accuracy"
-#include {
-#  phase: TEST
-#}
 layer {
-  name: "loss3/top-1"
-  type: "Accuracy"
-  bottom: "score"
-  bottom: "label"
-  top: "loss3/top-1"
-  include {
-    phase: TEST
-  }
-}
-layer {
-  name: "loss3/top-5"
-  type: "Accuracy"
-  bottom: "score"
-  bottom: "label"
-  top: "loss3/top-5"
-  include {
-    phase: TEST
-  }
-  accuracy_param {
-    top_k: 5
-  }
+name: "accuracy"
+type: "Accuracy"
+bottom: "score"
+bottom: "label"
+top: "accuracy"
+include {
+  phase: TEST
 }
 
-#}
+}

@@ -211,6 +211,29 @@ void MKLConvolutionLayer<Dtype>::Init(
       dnnBorderZeros);
   }
 
+  // ---- Blobs Reshape -----------------------------------
+  // Initialize and fill the weights:
+  // output channels x input channels per-group x kernel height x kernel width
+  vector<int> weight_shape(2);
+  weight_shape[0] = oc;
+  weight_shape[1] = ic / g;
+  
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
+    weight_shape.push_back(this->kernel_shape_.cpu_data()[i]);
+  }
+  Blob<Dtype> tmpBlob(weight_shape);
+  caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(), tmpBlob.mutable_cpu_data());
+  this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
+  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[0]->mutable_cpu_data());
+  // If necessary, initialize and fill the biases.
+  if (this->bias_term_) {
+    vector<int> bias_shape(this->bias_term_, this->num_output_);
+	tmpBlob.Reshape(bias_shape);
+    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(), tmpBlob.mutable_cpu_data());
+	  this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
+	  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[1]->mutable_cpu_data());
+  }
+
   CHECK_EQ(status, 0)
           << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
           << status << "\n";
@@ -471,7 +494,7 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   }
   PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_MKL("FW");
 
   CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
 }
@@ -525,12 +548,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     }
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
+    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_prop");
 
 #ifdef USE_MLSL
     this->on_delinp_ready(propagate_down);
 #endif /* USE_MLSL */
-
-    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME_SFX("BW", "_prop"));
 
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
@@ -570,7 +592,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     }
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
-    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_END_MKL("BW");
 
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
 
@@ -606,7 +628,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       PERFORMANCE_MEASUREMENT_BEGIN();
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
               convert_resources);
-      PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME_SFX("BW", "_diff"));
+      PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_diff");
 
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
     }
@@ -648,7 +670,7 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
-    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME_SFX("BW", "_bias"));
+    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_bias");
 
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
 

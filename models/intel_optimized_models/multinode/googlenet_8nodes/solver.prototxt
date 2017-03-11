@@ -1,0 +1,27 @@
+#This is Intel(R) optimized (in terms of time to train) version of solver for model described in the [GoogLeNet](http://arxiv.org/abs/1409.4842) publication.
+#Original solver.prototxt can be found in /models/bvlc_googlenet/ directory of this repository.
+#Differences:
+#- base_lr is set to 0.06
+#- max_iter is set to 182000
+#
+#- bias_filler value changed to 0.1
+#
+#Top-5 and Top-1 results achieved with this version of solver:
+#Top-5: 88.85%
+#Top-1: 68.58%
+#Training was performed using server equipped with Intel(R) Xeon Phi(TM) CPU 7250 processor. 
+net: "models/intel_optimized_models/multinode/googlenet_8nodes/train_val.prototxt"
+#test_iter: 1000
+#test_interval: 10000
+#test_initialization: false
+display: 40
+average_loss: 40
+base_lr: 0.06
+lr_policy: "poly"
+power: 0.5
+max_iter: 182000
+momentum: 0.9
+weight_decay: 0.0002
+snapshot: 50000
+snapshot_prefix: "models/intel_optimized_models/multinode/googlenet_8nodes/googlenet"
+solver_mode: CPU
