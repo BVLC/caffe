@@ -6,10 +6,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$CaffeRoot = Resolve-Path (Join-Path $PSScriptRoot ..\..)
+$CaffeRoot = (Resolve-Path (Join-Path $PSScriptRoot ..\..))
 $EXAMPLE = "$CaffeRoot\examples\mnist"
 $DATA = "$CaffeRoot\data\mnist"
-if($BuildDir -eq $null) {
+if("$BuildDir" -eq "") {
   $BuildDir = "$CaffeRoot\build"
 }
 $BUILD = "$BuildDir\examples\mnist"
