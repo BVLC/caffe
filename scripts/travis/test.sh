@@ -9,11 +9,6 @@ if $WITH_CUDA ; then
   exit 0
 fi
 
-if ! $WITH_CMAKE ; then
-  make runtest
-  make pytest
-else
-  cd build
-  make runtest
-  make pytest
-fi
+cd build
+make runtest
+make pytest

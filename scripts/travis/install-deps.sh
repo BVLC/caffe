@@ -8,6 +8,7 @@ source $BASEDIR/defaults.sh
 apt-get -y update
 apt-get install -y --no-install-recommends \
   build-essential \
+  cmake \
   libboost-filesystem-dev \
   libboost-python-dev \
   libboost-system-dev \
@@ -18,10 +19,6 @@ apt-get install -y --no-install-recommends \
   libopenblas-dev \
   python-virtualenv \
   wget
-
-if $WITH_CMAKE ; then
-  apt-get install -y --no-install-recommends cmake
-fi
 
 if ! $WITH_PYTHON3 ; then
   # Python2

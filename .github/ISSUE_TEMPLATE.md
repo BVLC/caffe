@@ -8,7 +8,7 @@ Please read the [guidelines for contributing](https://github.com/BVLC/caffe/blob
 
 ### Steps to reproduce
 
-If you are having difficulty building Caffe or training a model, please ask the caffe-users mailing list. If you are reporting a build error that seems to be due to a bug in Caffe, please attach your build configuration (either Makefile.config or CMakeCache.txt) and the output of the make (or cmake) command.
+If you are having difficulty building Caffe or training a model, please ask the caffe-users mailing list. If you are reporting a build error that seems to be due to a bug in Caffe, please attach your build configuration (CMakeCache.txt) and the output of the cmake command.
 
 ### Your system configuration
 Operating system:
