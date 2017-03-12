@@ -374,6 +374,48 @@ class NCCL {
  public:
   NCCL(shared_ptr<Solver<Dtype> > solver, const string& uid) {}
 };
+
+bool HasNCCL() {
+  return false;
+}
+#else
+#if PY_MAJOR_VERSION == 3
+// Python3 requires explicit conversion from std::string to bytes
+// since std::string maps to unicode strings by default.
+shared_ptr<NCCL<Dtype> > NCCL_Init(shared_ptr<Solver<Dtype> > solver,
+                                   bp::object uid) {
+  PyObject* py_uid = uid.ptr();
+
+  if (!PyBytes_Check(py_uid)) {
+    PyErr_SetString(PyExc_TypeError, "uid must be of bytes type");
+    throw bp::error_already_set();
+  }
+  int size = PyBytes_Size(py_uid);
+  const char* bytes = PyBytes_AsString(py_uid);
+  std::string uid_str;
+  uid_str.resize(size);
+  memcpy(&uid_str[0], bytes, size*sizeof(char));  // NOLINT(caffe/alt_fn)
+  return shared_ptr< NCCL<Dtype> >(new NCCL<Dtype>(solver, uid_str));
+}
+
+bp::object NCCL_New_Uid() {
+  std::string uid = NCCL<Dtype>::new_uid();
+  PyObject* py_uid = PyBytes_FromString(uid.c_str());
+  return bp::object(bp::handle<>(py_uid));
+}
+#else
+shared_ptr<NCCL<Dtype> > NCCL_Init(shared_ptr<Solver<Dtype> > solver,
+                                   std::string uid) {
+  return shared_ptr< NCCL<Dtype> >(new NCCL<Dtype>(solver, uid));
+  }
+
+std::string NCCL_New_Uid() {
+  return NCCL<Dtype>::new_uid();
+}
+#endif  // PY_MAJOR_VERSION == 3
+bool HasNCCL() {
+  return true;
+}
 #endif
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
@@ -388,6 +430,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("init_log", &InitLog);
   bp::def("init_log", &InitLogInfo);
   bp::def("log", &Log);
+  bp::def("has_nccl", &HasNCCL);
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_random_seed", &set_random_seed);
@@ -543,9 +586,10 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<NCCL<Dtype>, shared_ptr<NCCL<Dtype> >,
     boost::noncopyable>("NCCL",
-                        bp::init<shared_ptr<Solver<Dtype> >, const string&>())
+                        bp::no_init)
 #ifdef USE_NCCL
-    .def("new_uid", &NCCL<Dtype>::new_uid).staticmethod("new_uid")
+    .def("__init__", bp::make_constructor(&NCCL_Init))
+    .def("new_uid", NCCL_New_Uid).staticmethod("new_uid")
     .def("bcast", &NCCL<Dtype>::Broadcast)
 #endif
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
