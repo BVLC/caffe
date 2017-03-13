@@ -11,7 +11,7 @@ function(Download_MKLDNN)
                       CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
 #--Download step
                       GIT_REPOSITORY https://github.com/01org/mkl-dnn.git
-                      GIT_TAG 10acb154eba2b05e862c91d7bebfc32dee3bd236
+                      GIT_TAG 4c1d921bac0a10ef433ea5f667fdc7e4b04e1a4f
 #--Build step
                       BINARY_DIR ${MKLDNN_BUILD_DIR}
                       BUILD_COMMAND cmake ${MKLDNN_SOURCE_DIR}
