@@ -287,7 +287,7 @@ inline void SyncedMemory::to_gpu() {
                           << size_ << " failed.";
           device_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
-          //ctx.get_queue().finish();
+          // ctx.get_queue().finish();
         }
         if (!own_zero_copy_data_) {
           greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
