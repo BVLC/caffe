@@ -251,7 +251,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf m hdf5_serial_hl hdf5_serial
 BOOST_LIBRARIES += boost_system boost_filesystem boost_regex
 
 # handle IO dependencies
@@ -482,7 +482,6 @@ ifeq ($(PERFORMANCE_MONITORING), 1)
 endif
 
 ifneq ($(origin MKLDNNROOT), undefined)
-	include Makefile.mkldnn
 	MKLDNNROOT_DIR := $(MKLDNNROOT)
 	ifneq ($(MKLDNNROOT_DIR),"")
 		MKLDNNROOT_INCLUDE_DIR := $(MKLDNNROOT_DIR)/include
@@ -497,7 +496,15 @@ ifneq ($(origin MKLDNNROOT), undefined)
 		endif
 	endif
 else
-	MKLDNN_BUILD = 1
+	MKLDNN_ROOTDIR := external/mkldnn
+	MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
+	MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
+	MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
+	MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
+	
+	ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
+		MKLDNN_BUILD := 1
+	endif
 	include Makefile.mkldnn
 	CXXFLAGS += -DMKLDNN_SUPPORTED 
 	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
@@ -546,7 +553,7 @@ else ifeq ($(BLAS), open)
 	LIBRARIES += openblas
 else
 	# ATLAS
-	ifeq ($(LINUX), 1)
+	ifeq ($(LINUX), 0)
 		ifeq ($(BLAS), atlas)
 			# Linux simply has cblas and atlas
 			LIBRARIES += cblas atlas
@@ -572,6 +579,7 @@ LIBRARY_DIRS += $(BLAS_LIB)
 INCLUDE_DIRS += $(MKLDNN_INCLUDE)
 LIBRARY_DIRS += $(MKLDNN_LIB)
 
+INCLUDE_DIRS += /usr/include/hdf5/serial
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 # Automatic dependency generation (nvcc is handled separately)
@@ -619,7 +627,7 @@ endif
 ##############################
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles warn everything
+	superclean supercleanlist supercleanfiles warn everything mkldnn
 
 # Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
 # if no openmp is supported in compiler then openmp compiler flags are not to be updated 
