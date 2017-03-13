@@ -11,7 +11,7 @@
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
 
 /* Temporary (TODO: remove) */
-#if 1
+#if 0
   #define CMAKE_SOURCE_DIR SOURCE_FOLDER "/src/"
   #define EXAMPLES_SOURCE_DIR BINARY_FOLDER "/examples/"
   #define CMAKE_EXT ".gen.cmake"
