@@ -226,9 +226,10 @@ void ConvolutionLayerSpatial<float>::generate_key() {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context
                                 (this->device_->id());
-  std::string prefix = ctx.current_device().name() + ctx.current_device().vendor()
-                       + ctx.current_device().driver_version()
-                       + std::to_string(ctx.current_device().max_compute_units());
+  std::string prefix = ctx.current_device().name()
+                  + ctx.current_device().vendor()
+                  + ctx.current_device().driver_version()
+                  + std::to_string(ctx.current_device().max_compute_units());
   key_ = viennacl::tools::sha1(prefix + keyBuilder.str());
   short_key_ = keyBuilder.str();
 }
@@ -237,7 +238,10 @@ template<>
 std::string ConvolutionLayerSpatial<float>::generate_specific_key(
     int_tp type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
   std::stringstream keyBuilder;
-  keyBuilder << short_key_ << "_" << type << "_" << blockWidth << "_" << blockHeight
+  keyBuilder << short_key_
+             << "_" << type
+             << "_" << blockWidth
+             << "_" << blockHeight
              << "_" << blockDepth;
   return keyBuilder.str();
 }
@@ -430,7 +434,7 @@ bool ConvolutionLayerSpatial<float>::create_basic_kernel(
                 << kernel_name_;
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  if(IsBeignet(&ctx))
+  if (IsBeignet(&ctx))
     optionsString << " -D__BEIGNET__";
   string options = optionsString.str();
   try {
@@ -483,7 +487,7 @@ void ConvolutionLayerSpatial<Dtype>::setBufferKernelArg(
                         CL_BUFFER_CREATE_TYPE_REGION,
                         &region, &error);
   if (error != CL_SUCCESS) {
-    dbgPrint( std::cout << "Failed to create sub buffer ("
+    dbgPrint(std::cout << "Failed to create sub buffer ("
                         << error << ")." << std::endl);
     throw(error);
   }
@@ -529,15 +533,20 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
                              * (channels_ / group_) * M_ * g;
       cl_uint argIdx = 0;
       try {
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bottom_data,
-                           image_offset, total_bottom_size - image_offset,
+        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                           (cl_mem) bottom_data,
+                           image_offset,
+                           total_bottom_size - image_offset,
                            true, false);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) swizzled_weights_,
-                           kernel_offset, total_kernel_size - kernel_offset,
+                           kernel_offset,
+                           total_kernel_size - kernel_offset,
                            true, true);
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
-                           bias_offset_, total_bias_size - bias_offset_,
+        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                           (cl_mem) bias_,
+                           bias_offset_,
+                           total_bias_size - bias_offset_,
                            true, true);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) top_data,
@@ -584,15 +593,20 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
       int_tp kernel_offset = kernel_h_ * kernel_w_
                              * (channels_ / group_) * M_ * g;
       try {
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bottom_data,
-                           image_offset, total_bottom_size - image_offset,
+        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                           (cl_mem) bottom_data,
+                           image_offset,
+                           total_bottom_size - image_offset,
                            true, false);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) swizzled_weights_,
-                           kernel_offset, total_kernel_size - kernel_offset,
+                           kernel_offset,
+                           total_kernel_size - kernel_offset,
                            true, true);
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx, (cl_mem) bias_,
-                           bias_offset_, total_bias_size - bias_offset_,
+        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                           (cl_mem) bias_,
+                           bias_offset_,
+                           total_bias_size - bias_offset_,
                            true, true);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) top_data,
@@ -608,7 +622,8 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)height_);
         kernel.arg(argIdx++, (uint16_t)output_w_);
         kernel.arg(argIdx++, (uint16_t)output_h_);
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+        viennacl::ocl::context &ctx =
+          viennacl::ocl::get_context(this->device_->id());
         err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      kernel.handle().get(), 3,
                                      NULL,
@@ -636,8 +651,8 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
             + output_w_ * output_h_ * M_ * g;
 
         cl_uint argIdx = 0;
-        int_tp kernel_offset = kernel_h_ * kernel_w_ * (channels_ / group_) * M_
-            * g;
+        int_tp kernel_offset = kernel_h_ * kernel_w_
+                               * (channels_ / group_) * M_ * g;
 
         kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
         kernel.arg(argIdx++, image_offset);
@@ -743,7 +758,6 @@ bool ConvolutionLayerSpatial<float>::verify_result(
     return true;
   else if (config->tested)
     return false;
-  
   greentea_memset(this->device_->id(), top[index]->count(), 0,
                   (cl_mem)top[index]->mutable_gpu_data(), 0);
   config->executionTime = timed_convolve(bottom, top, index, numImages,
@@ -847,7 +861,7 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
 
   size_t local_size[3] = { 1, static_cast<size_t>(simd_size), 1 };
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  if(IsBeignet(&ctx))
+  if (IsBeignet(&ctx))
     optionsString << " -D__BEIGNET__";
   else
     optionsString <<
@@ -929,7 +943,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
       ALIGN(num_output_maps, simd_size) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
-  int tile_x = (((output_block_width - 1) * stride_w_ + kernel_w_ * dilation_w_) + 3) & ~3;
+  int tile_x = (((output_block_width - 1) * stride_w_
+               + kernel_w_ * dilation_w_) + 3) & ~3;
   int tile_y = (output_block_height -1) * stride_h_ + kernel_h_ * dilation_h_;
   int tile_y_stride = (4 * simd_size) / tile_x;
   int invec_size = (tile_y + tile_y_stride - 1) / tile_y_stride;
@@ -962,7 +977,7 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
 
   string options = optionsString.str();
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  if(IsBeignet(&ctx))
+  if (IsBeignet(&ctx))
     optionsString << " -D__BEIGNET__";
   viennacl::ocl::program & program = submit_conv_spatial_program(&ctx,
                                                                  kernel_name_,
@@ -1150,7 +1165,8 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                    static_cast<float>(width * height))
                  >= max_compute_units * 7 * 16))
             continue;
-          int tile_x = (kernel_w_ * dilation_w_ + (width - 1) * stride_w_ + 3) & ~3;
+          int tile_x = (kernel_w_ * dilation_w_
+                       + (width - 1) * stride_w_ + 3) & ~3;
           int tile_y = kernel_h_ * dilation_h_ + (height - 1) * stride_h_;
           if (tile_x > (4 * simd_size))
             continue;
@@ -1212,7 +1228,6 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
         dbgPrint(std::cout << "Kernel "
                            << kernelQueue[x]->kernelName
                            << " pass verification" << std::endl);
-
       }
     }
 #endif
@@ -1453,8 +1468,8 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> foo;
     cachedKernel >> bestKernelConfig->use_null_local;
     tuned_ = true;
-    // If kernel type changed to type 2 or 4, we need to reset the swizzled weights
-    // pointer to invalidate the previous swizzled weights data.
+    // If kernel type changed to type 2 or 4, we need to reset the swizzled
+    // weights pointer to invalidate the previous swizzled weights data.
     if (prev_kernel_type != bestKernelConfig->kernelType &&
         (bestKernelConfig->kernelType == 2 ||
          bestKernelConfig->kernelType == 5))

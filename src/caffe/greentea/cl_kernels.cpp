@@ -503,6 +503,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype out = arg;",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = (_data_);} while(0)",    // NOLINT
+"",    // NOLINT
 "#define __CAT(x, y) x##y",    // NOLINT
 "#define CAT(x, y) __CAT(x, y)",    // NOLINT
 "#define LOOP0(VAR, STMT)",    // NOLINT
