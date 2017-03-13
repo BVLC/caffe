@@ -6,6 +6,8 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
   Dtype out = arg;
 }
 
+#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = (_data_);} while(0)
+
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
 #define LOOP0(VAR, STMT)
@@ -28,7 +30,8 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
 #define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))
 
 #ifdef MULTI
-__kernel void CFMulti(__global Dtype* image_data,
+__kernel void CFMultiNoPadding(
+    __global Dtype* image_data,
     int_tp image_offset,
     __global Dtype* kernel_data, int_tp kernel_offset,
     __global Dtype* bias,const int_tp bias_offset,
@@ -36,7 +39,9 @@ __kernel void CFMulti(__global Dtype* image_data,
     const ushort input_width,
     const ushort input_height,
     const ushort output_width,
-    const ushort output_height) {
+    const ushort output_height,
+    const ushort pad_w,
+    const ushort pad_h) {
 
   const int_tp outputX = get_global_id(0);
   const int_tp outputY = get_global_id(1);
@@ -44,20 +49,17 @@ __kernel void CFMulti(__global Dtype* image_data,
   if(outputX < output_width && outputY < output_height)
   {
     Dtype sum[ZPAR];
-    Dtype4 vectorSum[ZPAR];
     for(int_tp kern =0; kern < ZPAR; kern++)
     {
       sum[kern] = 0.0f;
-      vectorSum[kern] = (0.0f,0.0f,0.0f,0.0f);
     }
 
+    const int_tp org_y = outputY * STRIDE_H - pad_h;
+    const int_tp org_x = outputX * STRIDE_W - pad_w;
     const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;
     const int_tp biasIndex=bias_offset + kernelNum;
-    const int_tp local_image_offset = outputY*STRIDE_H*input_width + outputX*STRIDE_W;
+    const int_tp local_image_offset = org_y*input_width + org_x;
     const int_tp imageSize = input_width*input_height;
-    const int_tp float4Reads = KERNEL_W / 4;
-    const int_tp floatReads = KERNEL_W % 4;
-    Dtype4 imageCache;
 
     __global Dtype* image_dataPtrFloat = (image_data + (image_offset + local_image_offset));
     __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
@@ -66,57 +68,47 @@ __kernel void CFMulti(__global Dtype* image_data,
     {
       for(int_tp y = 0; y < KERNEL_H; y++)
       {
-
-        for(int_tp x=0; x< float4Reads; x++)
+        for(int_tp x = 0; x < KERNEL_W; x++)
         {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[x];
+          if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))
+          {
+            continue;
+          }
           for(int_tp kern =0; kern < ZPAR; kern++)
           {
-            vectorSum[kern] += imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[x];
+            sum[kern] += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS + x];
           }
         }
-
-        if(floatReads == 1)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s0 += ( imageCache * ( (__global Dtype4*) &(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]) )[float4Reads] ).s0;
-        }
-        else if(floatReads == 2)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s01 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s01;
-        }
-        else if(floatReads == 3)
-        {
-          imageCache = ((__global Dtype4*)image_dataPtrFloat)[float4Reads];
-          for(int_tp kern =0; kern < ZPAR; kern++)
-          vectorSum[kern].s012 += (imageCache*((__global Dtype4*)&(kernel_dataPtrFloat[kern*KERNEL_H*KERNEL_W*CHANNELS]))[float4Reads]).s012;
-        }
-
-        image_dataPtrFloat += input_width;
+        image_dataPtrFloat += input_width * DILATION_Y;
         kernel_dataPtrFloat += KERNEL_W;
       }
-      image_dataPtrFloat += imageSize - input_width*KERNEL_H;
+      image_dataPtrFloat += imageSize - input_width*KERNEL_H*DILATION_Y;
     }
-    for(int_tp kern =0; kern < ZPAR; kern++)
-    sum[kern] = vectorSum[kern].x + vectorSum[kern].y + vectorSum[kern].z + vectorSum[kern].w;
 
     if(APPLY_BIAS == 1)
     {
       for(int_tp kern = 0; kern < ZPAR; kern++)
-      if(kernelNum+kern < OUTPUT_Z)
-      convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] =
-      sum[kern] + bias[biasIndex +kern];
+      {
+        if(kernelNum+kern < OUTPUT_Z)
+        {
+            int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
+            ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);
+        }
+      }
     }
     else
-    for(int_tp kern = 0; kern < ZPAR; kern++)
-    if(kernelNum+kern < OUTPUT_Z)
-    convolved_image[convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX] = sum[kern];
+    {
+        for(int_tp kern = 0; kern < ZPAR; kern++)
+        {
+            if(kernelNum+kern < OUTPUT_Z)
+            {
+                int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
+                ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);
+            }
+        }
+    }
   }
 }
-
 #endif
 
 
@@ -256,7 +248,7 @@ convolve_simd(  // __global float *inputs, __global float* weights, __global flo
               {
                 for(int_tp br=0; br < OUT_BLOCK_HEIGHT; br++) {
                   for(int_tp bc=0; bc < OUT_BLOCK_WIDTH; bc++) {
-                    float input = BLOCK_IN((br * STRIDEY + kr) * TILE_X + bc * STRIDEX + kc);
+                    float input = BLOCK_IN((br * STRIDEY + kr * DILATION_Y) * TILE_X + bc * STRIDEX + kc * DILATION_X);
                     out[br * OUT_BLOCK_WIDTH + bc] = mad(weight_buf.w[w_idx % WEIGHT_PREF], input, out[br * OUT_BLOCK_WIDTH + bc]);
                   }
                 }
@@ -385,6 +377,14 @@ typedef struct float14 { float s0; float s1; float s2; float s3; float s4; float
 typedef struct float15 { float s0; float s1; float s2; float s3; float s4; float s5;
                          float s6; float s7; float s8; float s9; float sa; float sb; float sc; float sd; float se; } float15;
 typedef struct float0 { float s0; } float0; //never used but makes compiler happy.
+
+#define OUT_PITCH_X output_width
+#define OUT_PITCH_Y (output_width * output_height)
+#define OUT_PITCH_Z (output_width * output_height * OUT_DEPTH)
+#define ALIGNED_INPUT_SIZE (input_height * input_width * INPUT_DEPTH)
+#define ROW_PITCH input_width
+#define SLICE_PITCH (input_width * input_height)
+
 #endif
 
 
@@ -410,7 +410,11 @@ __kernel void Conv_Interleaved(
     const __global float *src0,
     const __global float *src1,
     const __global float *biases,
-    __global float *dst)
+    __global float *dst,
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height)
 {
     const int group_x = get_group_id(0);
     const int group_y = get_group_id(1);
@@ -448,9 +452,9 @@ __kernel void Conv_Interleaved(
         // Src0 (patch input) is directly used as atile.
         // Each work item points to the start of a different patch.
         // atile is M rows x K columns.
-        int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;
-        int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+        int curr_x = ( global_y % output_width ) * STRIDE_X;
+        int curr_y = ( global_y / output_width ) * STRIDE_Y;
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
         int saved_y = curr_y;
 #endif
         const __global float *src0_read = src0
@@ -470,7 +474,7 @@ __kernel void Conv_Interleaved(
         do
         {
             int patch_row = 0;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
             curr_y = saved_y;
 #endif
 
@@ -488,7 +492,7 @@ __kernel void Conv_Interleaved(
                 // ...
                 const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
 
-#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0
+#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1
                 float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];
                 float*  pblockA00 = (float*)(&blockA00);
 #else
@@ -497,14 +501,14 @@ __kernel void Conv_Interleaved(
                 int pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA00[pos] = src0_read[pos];
+                  if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA00[pos] = src0_read[pos * DILATION_X];
                   else
                     pblockA00[pos] = 0;
                 })
-                curr_y++;
+                curr_y += DILATION_Y;
 #endif
-                src0_read += ROW_PITCH;
+                src0_read += (ROW_PITCH * DILATION_Y);
 
                 float blockB00[KERNEL_WIDTH*4];
                 float8* p8BlockB00 = (float8*)blockB00;
@@ -551,7 +555,7 @@ __kernel void Conv_Interleaved(
             //while( ++patch_row < 1 ); //debug
             while( ++patch_row < KERNEL_HEIGHT );
 
-            src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+            src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y); // reset to start of next slice of patch
         } 
         //while ( ++patch_depth < 1 ); //debug
         while ( ++patch_depth < INPUT_DEPTH );
@@ -561,14 +565,15 @@ __kernel void Conv_Interleaved(
         __global float *out = dst 
          + global_z * OUT_PITCH_Z                                                   // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset
-         + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
-         + ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
+         + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
+
         float bias[4];
         float4 *bias_vec;
         bias_vec = (float4*)bias;
         *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
 
-        if (global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+        if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
             {
@@ -595,9 +600,9 @@ __kernel void Conv_Interleaved(
         // Src0 (patch input) is directly used as atile.
         // Each work item points to the start of a different patch.
         // atile is M rows x K columns.
-        int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;
-        int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+        int curr_x = ( global_y % output_width ) * STRIDE_X;
+        int curr_y = ( global_y / output_width ) * STRIDE_Y;
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
         int saved_y = curr_y;
 #endif
         const __global float *src0_read = src0
@@ -617,14 +622,14 @@ __kernel void Conv_Interleaved(
         do
         {
             int patch_row = 0;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
             curr_y = saved_y;
 #endif
             do
             {
                 // Load atile and interleaved btile.
                 const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0
+#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1
                 float_t blockA00 = ( (const __global float_t*)src0_read )[  0  ];
                 float*  pblockA00 = (float*)(&blockA00);
 #else
@@ -633,14 +638,14 @@ __kernel void Conv_Interleaved(
                 int pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA00[pos] = src0_read[pos];
+                  if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA00[pos] = src0_read[pos * DILATION_X];
                   else
                     pblockA00[pos] = 0;
                 })
-                curr_y++;
+                curr_y += DILATION_Y;
 #endif
-                src0_read += ROW_PITCH;
+                src0_read += (ROW_PITCH * DILATION_Y);
                 float blockB[KERNEL_WIDTH * TILE_N_LAST_DIV8];
 
                 interleaved_y = 0;
@@ -710,7 +715,7 @@ __kernel void Conv_Interleaved(
             //while( ++patch_row < 1 ); //debug
             while( ++patch_row < KERNEL_HEIGHT );
 
-            src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+            src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch
         } 
         //while ( ++patch_depth < 1 );  //debug
         while ( ++patch_depth < INPUT_DEPTH );
@@ -720,14 +725,15 @@ __kernel void Conv_Interleaved(
         __global float *out = dst 
          + global_z * OUT_PITCH_Z                                                   // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset
-         + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
-         + ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
+         + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
+
         float bias[4];
         float4 *bias_vec;
         bias_vec = (float4*)bias;
         *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
 
-        if (global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+        if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
             {
@@ -754,7 +760,11 @@ __kernel void Conv_Interleaved(
     const __global Dtype *src0,
     const __global Dtype *src1,
     const __global Dtype *biases,
-    __global Dtype *dst)
+    __global Dtype *dst,
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height)
 {
     const int group_x = get_group_id(0);
     const int group_y = get_group_id(1);
@@ -773,9 +783,9 @@ __kernel void Conv_Interleaved(
     // Src0 (patch input) is directly used as atile.
     // Each work item points to the start of a different patch.
     // atile is M rows x K columns.
-    int curr_x = ( global_y % OUT_WIDTH ) * STRIDE_X;
-    int curr_y = ( global_y / OUT_WIDTH ) * STRIDE_Y;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+    int curr_x = ( global_y % output_width ) * STRIDE_X;
+    int curr_y = ( global_y / output_width ) * STRIDE_Y;
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
     int saved_y = curr_y;
 #endif
 
@@ -814,14 +824,18 @@ __kernel void Conv_Interleaved(
     // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch
     // and KERNEL_WIDTH/2 rows of interleaved filter.
     int patch_depth = 0;
+#ifndef __BEIGNET__
     __attribute__((opencl_unroll_hint(1)))
+#endif
     do
     {
         int patch_row = 0;
 #if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
         curr_y = saved_y;
 #endif
+#ifndef __BEIGNET__
         __attribute__((opencl_unroll_hint(1)))
+#endif
         do
         {
             // Load atile and btile.
@@ -836,7 +850,7 @@ __kernel void Conv_Interleaved(
             // ...
             const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
 
-#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0
+#if INPUT_PAD_W == 0 && INPUT_PAD_H == 0 && DILATION_X == 1 && DILATION_Y == 1
             Dtype_t blockA00 = ( (const __global Dtype_t*)src0_read )[  0  ];
             Dtype*  pblockA00 = (Dtype*)(&blockA00);
 #else
@@ -845,14 +859,14 @@ __kernel void Conv_Interleaved(
             int pos = 0;
             LOOP(KERNEL_WIDTH, pos,
             {
-              if (curr_y >= INPUT_PAD_H && curr_y < INPUT_HEIGHT + INPUT_PAD_H && curr_x + pos >= INPUT_PAD_W && curr_x + pos < INPUT_WIDTH + INPUT_PAD_W)
-                pblockA00[pos] = src0_read[pos];
+              if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + pos * DILATION_X >= INPUT_PAD_W && curr_x + pos * DILATION_X < input_width + INPUT_PAD_W)
+                pblockA00[pos] = src0_read[pos * DILATION_X];
               else
                 pblockA00[pos] = 0;
             })
-            curr_y++;
+            curr_y += DILATION_Y;
 #endif
-            src0_read += ROW_PITCH;
+            src0_read += ROW_PITCH * DILATION_X;
             uint blockB00[KERNEL_WIDTH * 2];
             uint4* p4BlockB00 = (uint4*)blockB00;
             uint2* p2BlockB00 = (uint2*)blockB00;
@@ -892,7 +906,7 @@ __kernel void Conv_Interleaved(
         //while( ++patch_row < 1 ); //debug
         while( ++patch_row < KERNEL_HEIGHT );
 
-        src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
+        src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch
     }
     //while ( ++patch_depth < 1 );  //debug
     while ( ++patch_depth < INPUT_DEPTH );
@@ -902,8 +916,8 @@ __kernel void Conv_Interleaved(
     __global Dtype *out = dst
      + global_z * OUT_PITCH_Z                                                   // batch offset
      + ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset
-     + ( ( global_y * TILE_M ) / OUT_WIDTH + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
-     + ( ( global_y * TILE_M ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+     + ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
+     + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
     Dtype bias[2];
     Dtype2 *bias_vec;
@@ -913,7 +927,7 @@ __kernel void Conv_Interleaved(
     if (group_x > 0xFFFFFFFEul)
       out[0] = bias[0] + bias[1];
 
-    if (global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+    if (global_y * TILE_M < output_width * output_height )
     {
 #if ( ( OUT_DEPTH % TILE_N ) == 0 )
         for (int i = 0; i < 16; i++)
@@ -995,7 +1009,11 @@ __kernel void Conv_Interleaved(
     const __global float *src0,
     const __global float *src1,
     const __global float *biases,
-    __global float *dst)
+    __global float *dst,
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height)
 {
     const int group_x = get_group_id(0);
     const int group_y = get_group_id(1);
@@ -1037,11 +1055,11 @@ __kernel void Conv_Interleaved(
         // Src0 (patch input) is directly used as atile.
         // Each work item points to the start of a different patch.
         // atile is M rows x K columns.
-        int curr_x0 = ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X;
-        int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;
-        int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;
-        int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+        int curr_x0 = ( ( global_y * TILE_M + 0 ) % output_width ) * STRIDE_X;
+        int curr_x1 = ( ( global_y * TILE_M + 1 ) % output_width ) * STRIDE_X;
+        int curr_y0 = ( ( global_y * TILE_M + 0 ) / output_width ) * STRIDE_Y;
+        int curr_y1 = ( ( global_y * TILE_M + 1 ) / output_width ) * STRIDE_Y;
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
         int saved_y0 = curr_y0;
         int saved_y1 = curr_y1;
 #endif
@@ -1079,7 +1097,7 @@ __kernel void Conv_Interleaved(
                 // (0, 2) (8, 2) (16, 2) (24, 2) ...       ...
                 // ...
                 const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0
+#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0 && DILATION_X == 1 && DILATION_Y == 1
                 float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;
                 float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;
                 float*  pblockA00 = (float*)(&blockA00);
@@ -1090,25 +1108,25 @@ __kernel void Conv_Interleaved(
                 int pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA00[pos] = src0_read0[pos];
+                  if (curr_y0 >= INPUT_PAD_H && curr_y0 < input_height + INPUT_PAD_H && curr_x0 + pos * DILATION_X >= INPUT_PAD_W && curr_x0 + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA00[pos] = src0_read0[pos * DILATION_X];
                   else
                     pblockA00[pos] = 0;
                 })
-                curr_y0++;
+                curr_y0 += DILATION_Y;
                 float_t blockA01;
                 float*  pblockA01 = (float*)(&blockA01);
                 pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA01[pos] = src0_read1[pos];
+                  if (curr_y1 >= INPUT_PAD_H && curr_y1 < input_height + INPUT_PAD_H && curr_x1 + pos * DILATION_X >= INPUT_PAD_W && curr_x1 + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA01[pos] = src0_read1[pos * DILATION_X];
                   else
                     pblockA01[pos] = 0;
                 })
-                curr_y1++;
-                src0_read0 += ROW_PITCH;
-                src0_read1 += ROW_PITCH;
+                curr_y1 += DILATION_Y;
+                src0_read0 += ROW_PITCH * DILATION_Y;
+                src0_read1 += ROW_PITCH * DILATION_Y;
 #endif
                 float blockB00[KERNEL_WIDTH*4];
                 float8* p8BlockB00 = (float8*)blockB00;
@@ -1166,12 +1184,12 @@ __kernel void Conv_Interleaved(
 
             //while( ++patch_row < 1 ); //debug
             while( ++patch_row < KERNEL_HEIGHT );
-#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0 || DILATION_X != 1 || DILATION_Y != 1
             curr_y0 = saved_y0;
             curr_y1 = saved_y1;
 #endif
-            src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
-            src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH );
+            src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch
+            src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );
         } 
         //while ( ++patch_depth < 1 );  //debug
         while ( ++patch_depth < INPUT_DEPTH );
@@ -1181,20 +1199,20 @@ __kernel void Conv_Interleaved(
         __global float *out0 = dst 
          + global_z * OUT_PITCH_Z                                                       // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
-         + ( ( global_y * TILE_M + 0 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
-         + ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+         + ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
         __global float *out1 = dst 
          + global_z * OUT_PITCH_Z                                                       // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
-         + ( ( global_y * TILE_M + 1 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
-         + ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+         + ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
         float bias[4];
         float4 *bias_vec;
         bias_vec = (float4*)bias;
         *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
 
-        if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+        if( global_y * TILE_M < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {
@@ -1204,7 +1222,7 @@ __kernel void Conv_Interleaved(
                 out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);
             }
         }
-        if( global_y * TILE_M + 1 < OUT_WIDTH * OUT_HEIGHT )
+        if( global_y * TILE_M + 1 < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {
@@ -1233,11 +1251,11 @@ __kernel void Conv_Interleaved(
         // Src0 (patch input) is directly used as atile.
         // Each work item points to the start of a different patch.
         // atile is M rows x K columns.
-        int curr_x0 = ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) * STRIDE_X;
-        int curr_x1 = ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) * STRIDE_X;
-        int curr_y0 = ( ( global_y * TILE_M + 0 ) / OUT_WIDTH ) * STRIDE_Y;
-        int curr_y1 = ( ( global_y * TILE_M + 1 ) / OUT_WIDTH ) * STRIDE_Y;
-#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0
+        int curr_x0 = ( ( global_y * TILE_M + 0 ) % output_width ) * STRIDE_X;
+        int curr_x1 = ( ( global_y * TILE_M + 1 ) % output_width ) * STRIDE_X;
+        int curr_y0 = ( ( global_y * TILE_M + 0 ) / output_width ) * STRIDE_Y;
+        int curr_y1 = ( ( global_y * TILE_M + 1 ) / output_width ) * STRIDE_Y;
+#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
         int saved_y0 = curr_y0;
         int saved_y1 = curr_y1;
 #endif
@@ -1266,7 +1284,7 @@ __kernel void Conv_Interleaved(
             {
                 // Load atile and interleaved btile.
                 const bool kernel_width_is_odd = KERNEL_WIDTH % 2 == 1;
-#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0
+#if INPUT_PAD_H == 0 && INPUT_PAD_W == 0 && DILATION_X == 1 && DILATION_Y == 1
                 float_t blockA00 = ( (const __global float_t*)src0_read0 )[  0  ]; src0_read0 += ROW_PITCH;
                 float_t blockA01 = ( (const __global float_t*)src0_read1 )[  0  ]; src0_read1 += ROW_PITCH;
                 float*  pblockA00 = (float*)(&blockA00);
@@ -1277,25 +1295,25 @@ __kernel void Conv_Interleaved(
                 int pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y0 >= INPUT_PAD_H && curr_y0 < INPUT_HEIGHT + INPUT_PAD_H && curr_x0 + pos >= INPUT_PAD_W && curr_x0 + pos< INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA00[pos] = src0_read0[pos];
+                  if (curr_y0 >= INPUT_PAD_H && curr_y0 < input_height + INPUT_PAD_H && curr_x0 + pos * DILATION_X >= INPUT_PAD_W && curr_x0 + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA00[pos] = src0_read0[pos * DILATION_X];
                   else
                     pblockA00[pos] = 0;
                 })
-                curr_y0++;
+                curr_y0 += DILATION_Y;
                 float_t blockA01;
                 float*  pblockA01 = (float*)(&blockA01);
                 pos = 0;
                 LOOP(KERNEL_WIDTH, pos,
                 {
-                  if (curr_y1 >= INPUT_PAD_H && curr_y1 < INPUT_HEIGHT + INPUT_PAD_H && curr_x1 + pos >= INPUT_PAD_W && curr_x1 + pos < INPUT_WIDTH + INPUT_PAD_W)
-                    pblockA01[pos] = src0_read1[pos];
+                  if (curr_y1 >= INPUT_PAD_H && curr_y1 < input_height + INPUT_PAD_H && curr_x1 + pos * DILATION_X >= INPUT_PAD_W && curr_x1 + pos * DILATION_X < input_width + INPUT_PAD_W)
+                    pblockA01[pos] = src0_read1[pos * DILATION_X];
                   else
                     pblockA01[pos] = 0;
                 })
-                curr_y1++;
-                src0_read0 += ROW_PITCH;
-                src0_read1 += ROW_PITCH;
+                curr_y1 += DILATION_Y;
+                src0_read0 += (ROW_PITCH * DILATION_Y);
+                src0_read1 += (ROW_PITCH * DILATION_Y);
 #endif
                 float blockB[KERNEL_WIDTH * TILE_N_LAST_DIV8];
 
@@ -1374,12 +1392,12 @@ __kernel void Conv_Interleaved(
 
             //while( ++patch_row < 1 ); //debug
             while( ++patch_row < KERNEL_HEIGHT );
-#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
+#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0 || DILATION_X != 1 || DILATION_Y != 1
             curr_y0 = saved_y0;
             curr_y1 = saved_y1;
 #endif
-            src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH ); // reset to start of next slice of patch
-            src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH );
+            src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch
+            src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );
         } 
         //while ( ++patch_depth < 1 );  //debug
         while ( ++patch_depth < INPUT_DEPTH );
@@ -1389,19 +1407,19 @@ __kernel void Conv_Interleaved(
         __global float *out0 = dst 
          + global_z * OUT_PITCH_Z                                                       // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
-         + ( ( global_y * TILE_M + 0 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
-         + ( ( global_y * TILE_M + 0 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+         + ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
         __global float *out1 = dst 
          + global_z * OUT_PITCH_Z                                                       // batch offset
          + ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset
-         + ( ( global_y * TILE_M + 1 ) / OUT_WIDTH + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
-         + ( ( global_y * TILE_M + 1 ) % OUT_WIDTH ) + OUT_PADDING_LEFT;               // x offset
+         + ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
+         + ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
         float bias[4];
         float4 *bias_vec;
         bias_vec = (float4*)bias;
         *bias_vec = as_float4(intel_sub_group_block_read4((__global uint *)biases + group_x * TILE_N));
-        if( global_y * TILE_M < OUT_WIDTH * OUT_HEIGHT )
+        if( global_y * TILE_M < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {
@@ -1411,7 +1429,7 @@ __kernel void Conv_Interleaved(
                 if ( TILE_N_LAST_DIV8 > 3 ) out0[(24+i) * OUT_PITCH_Y] = blockC0[3][i] + intel_sub_group_shuffle(bias[3], i);
             }
         }
-        if( global_y * TILE_M + 1 < OUT_WIDTH * OUT_HEIGHT )
+        if( global_y * TILE_M + 1 < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {

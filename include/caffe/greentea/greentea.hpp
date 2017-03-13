@@ -49,6 +49,7 @@ namespace caffe {
 #ifdef USE_GREENTEA
 viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
                                          viennacl::ocl::context *ctx);
+bool IsBeignet(viennacl::ocl::context *ctx);
 #endif
 
 enum Backend {

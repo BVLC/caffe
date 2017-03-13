@@ -143,7 +143,8 @@ __kernel void TEMPLATE(softmax_forward,Dtype)(const int_tp num, const int_tp cha
 }
 
 // Copied from caffe.pb.h, must keep consistent with the original definition
-#if TYPE==TYPE_FLOAT
+#ifndef __SOFTMAX_LOSS_CL__
+#define __SOFTMAX_LOSS_CL__
 enum LossParameter_NormalizationMode {
   LossParameter_NormalizationMode_FULL = 0,
   LossParameter_NormalizationMode_VALID = 1,

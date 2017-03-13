@@ -144,7 +144,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context
                                     (this->device_->id());
-    if (this->device_->CheckCapability("cl_intel_subgroups")) {
+    if (this->device_->CheckCapability("cl_intel_subgroups")
+        && inner_num_ < 128) {
       viennacl::ocl::program &program = this->device_->program();
       viennacl::ocl::kernel *oclk_softmax_forward_kernel;
       if (use_slm_)
