@@ -288,7 +288,7 @@ void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
 }
 
 // Seems boost cannot call the base method directly
-void Solver_add_nccl(SGDSolver<Dtype>* solver
+void Solver_add_nccl(Solver<Dtype>* solver
 #ifdef USE_NCCL
   , NCCL<Dtype>* nccl
 #endif
