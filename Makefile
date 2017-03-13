@@ -251,7 +251,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf m hdf5_serial_hl hdf5_serial
+LIBRARIES += glog gflags protobuf m hdf5_hl hdf5
 BOOST_LIBRARIES += boost_system boost_filesystem boost_regex
 
 # handle IO dependencies
@@ -579,7 +579,6 @@ LIBRARY_DIRS += $(BLAS_LIB)
 INCLUDE_DIRS += $(MKLDNN_INCLUDE)
 LIBRARY_DIRS += $(MKLDNN_LIB)
 
-INCLUDE_DIRS += /usr/include/hdf5/serial
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 # Automatic dependency generation (nvcc is handled separately)
