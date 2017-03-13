@@ -165,12 +165,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                               const vector<Blob<Dtype>*>& top,
                               int_tp swizzle_factor,
                               bool interleave = false);
-  virtual void pad_image(const vector<Blob<Dtype>*>& bottom,
-                         const vector<Blob<Dtype>*>& top,
-                         int_tp image_offset, kernelConfig* config,
-                         int_tp imgNum);
-  virtual void generate_key(bool need_padding = true);
-  virtual std::string generate_unique_key();
+  virtual void generate_key();
   virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
   int_tp blockHeight,
                                             int_tp blockDepth);
@@ -197,7 +192,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   const Dtype* bottom_data;
   Dtype* top_data;
-  Dtype* col_data;
   const Dtype* weight;
   const Dtype* weight_cpu;
   Dtype* swizzled_weights_;
@@ -205,7 +199,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp col_offset;
   int_tp top_offset;
   int_tp output_h_, output_w_;
-  int_tp padded_height_, padded_width_;
   const Dtype* bias_;
   int_tp bias_offset_;
   int_tp bottom_index_;
@@ -218,6 +211,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp pad_w_;
   int_tp stride_h_;
   int_tp stride_w_;
+  int_tp dilation_h_;
+  int_tp dilation_w_;
 
   /// M_ is the channel dimension of the output for a single group, which is the
   /// leading dimension of the filter matrix.
@@ -230,14 +225,12 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp N_;
 
   bool tuned_;
-  // if need_padding_ is true, we need to pad the input image,
-  // otherwise, we don't need to pad it then the convolution kernel
-  // need to handle it.
-  bool need_padding_;
 
   std::string key_;
+  std::string short_key_;
   std::string kernel_name_;
-  Blob<Dtype> spatial_col_buffer_;
+  std::stringstream cache_path_;
+
   Blob<Dtype> swizzled_weights_blob_;
   Blob<Dtype> bias_multiplier_;
 

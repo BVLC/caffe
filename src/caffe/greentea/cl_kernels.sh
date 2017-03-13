@@ -164,6 +164,10 @@ echo "  }" >> $SOURCE
 
 echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
