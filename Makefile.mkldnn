@@ -10,11 +10,11 @@ MKLDNN_CC := $(CC)
 
 # We do this because earlier versions of CMake have problems with ccache
 ifneq (,$(findstring ccache,$(CXX)))
-		MKLDNN_CXX = $(lastword $(CXX))
+      MKLDNN_CXX = $(lastword $(CXX))
 endif
 
 ifneq (,$(findstring ccache,$(CC)))
-	MKLDNN_CC = $(lastword $(CC))
+      MKLDNN_CC = $(lastword $(CC))
 endif
 
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
