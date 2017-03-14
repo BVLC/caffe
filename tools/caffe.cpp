@@ -527,6 +527,8 @@ int time() {
   Net<float> caffe_net(FLAGS_model, phase, FLAGS_level, &stages, NULL,
                        FLAGS_engine);
 
+  PERFORMANCE_INIT_MONITOR();
+
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
   LOG(INFO) << "Performing Forward";

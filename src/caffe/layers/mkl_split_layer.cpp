@@ -246,9 +246,10 @@ void MKLSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("BW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(sumPrimitive, sum_res);
-  PERFORMANCE_MEASUREMENT_END_MKL("BW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }
