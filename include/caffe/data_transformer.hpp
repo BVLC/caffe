@@ -77,10 +77,10 @@ class GenRandNumbers: public RandNumbers {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));
   }
-  
+
   void Reset() { rng_.reset(); }
   bool IsEmpty() { return (rng_.get() == nullptr); }
-  
+
   virtual uint32_t GetNextNumber() {
     CHECK(rng_);
     caffe::rng_t* rng = static_cast<caffe::rng_t*>(rng_->generator());
@@ -109,12 +109,12 @@ class PreclcRandomNumbers: public RandNumbers {
 };
 
 namespace {
-  // We use these type and value to distinguish when 
+  // We use these type and value to distinguish when
   // annotation handler should be used.
   struct EmptyType { };
   EmptyType empty_value;
 }
-  
+
 /**
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
@@ -131,7 +131,7 @@ class DataTransformer {
    */
   void InitRand();
   void ReinitRand();
-  
+
   void GenerateRandNumbers(PreclcRandomNumbers& rn, bool sample_bboxes = false);
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -192,7 +192,7 @@ class DataTransformer {
 		 Blob<Dtype>* transformed_blob,
 		 vector<AnnotationGroup>* transformed_anno_vec,
 		 RandNumbers& rand_num);
-  
+
   /**
    * @brief Transform the annotation according to the transformation applied
    * to the datum.
@@ -267,12 +267,12 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
   template<typename AnnotationHandler = EmptyType>
-  void Transform(const cv::Mat& cv_img, 
+  void Transform(const cv::Mat& cv_img,
                  Blob<Dtype>* transformed_blob,
                  NormalizedBBox* crop_bbox,
                  RandNumbers& rand_num,
                  AnnotationHandler anno_handler = empty_value);
-  void Transform(const cv::Mat& cv_img, 
+  void Transform(const cv::Mat& cv_img,
                  Blob<Dtype>* transformed_blob,
                  RandNumbers& rand_num);
   void Transform(const cv::Mat& cv_img,
@@ -356,7 +356,7 @@ class DataTransformer {
   void Transform(const Datum& datum, Dtype* transformed_data,
                  NormalizedBBox* crop_bbox, RandNumbers& rand_num,
                  AnnotationHandler annotation_handler = empty_value);
-  
+
   void Transform(const Datum& datum, Dtype* transformed_data,
                 RandNumbers& rand_num);
 
@@ -385,10 +385,10 @@ class DataTransformer {
                  NormalizedBBox* crop_bbox, RandNumbers& rand_num,
                  const bool do_mirror, const bool has_uint8,
                  const bool has_mean_file, const bool has_mean_values);
-  
+
   template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-  void Transform(const cv::Mat& cv_img, 
-                 Blob<Dtype>* transformed_blob, 
+  void Transform(const cv::Mat& cv_img,
+                 Blob<Dtype>* transformed_blob,
                  NormalizedBBox* crop_bbox,
                  RandNumbers& rand_num);
 

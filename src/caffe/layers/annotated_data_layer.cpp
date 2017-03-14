@@ -232,7 +232,6 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         bool has_sampled = false;
         if (batch_samplers_.size() > 0) {
           // Generate sampled bboxes from expand_datum.
-          vector<NormalizedBBox> ssampled_bboxes;
           GenerateBatchSamples(*expand_datum, batch_samplers_, &sampled_bboxes[item_id]);
 
           if (sampled_bboxes[item_id].size() > 0) {
@@ -247,11 +246,11 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // RNG needs to be reinitialized because in some cases, when transform params are not set
     // RNG is a NULL.
     this->data_transformer_->ReinitRand();
-    
+
     for (int item_id = 0; item_id < batch_size; ++item_id) {
       PreclcRandomNumbers precalculated_rand_numbers;
       this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers, /* sample_bboxes */ have_samples[item_id]);
-      
+
 #pragma omp task firstprivate(precalculated_rand_numbers, item_id) shared(num_bboxes, all_anno, expand_data, sampled_bboxes, have_samples)
       {
         boost::shared_ptr<AnnotatedDatum> sampled_datum;
@@ -270,7 +269,7 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         data_blob.Reshape(top_shape);
         vector<int> shape =
           this->data_transformer_->InferBlobShape(sampled_datum->datum());
-        
+
         if (transform_param.has_resize_param()) {
           if (transform_param.resize_param().resize_mode() ==
             ResizeParameter_Resize_mode_FIT_SMALL_SIZE) {
@@ -290,7 +289,6 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         // Apply data transformations (mirror, scale, crop...)
         int offset = batch->data_.offset(item_id);
         data_blob.set_cpu_data(top_data + offset);
-        vector<AnnotationGroup> transformed_anno_vec;
         if (this->output_labels_) {
           if (has_anno_type_) {
             // Make sure all data have same annotation type.
@@ -302,7 +300,6 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
                        "Different AnnotationType.";
             }
             // Transform datum and annotation_group at the same time
-            transformed_anno_vec.clear();
             this->data_transformer_->Transform(*sampled_datum,
                                                &data_blob,
                                                &all_anno[item_id],

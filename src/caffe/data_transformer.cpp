@@ -148,11 +148,11 @@ namespace {
   {
   }
 }
-  
+
 template<typename Dtype>
 template<typename AnnotationHandler>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Dtype* transformed_data, 
+                                       Dtype* transformed_data,
                                        NormalizedBBox* crop_bbox,
                                        RandNumbers& rand_num,
                                        AnnotationHandler anno_handler)
@@ -365,7 +365,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
+void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum,
                                        Blob<Dtype>* transformed_blob,
                                        RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all,
 				       RandNumbers& rand_num) {
@@ -385,13 +385,13 @@ void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum, 
+void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum,
                                        Blob<Dtype>* transformed_blob,
                                        vector<AnnotationGroup>* transformed_anno_vec,
 				       RandNumbers& rand_num) {
   RepeatedPtrField<AnnotationGroup> transformed_anno_group_all;
   Transform(anno_datum, transformed_blob, &transformed_anno_group_all, rand_num);
-  
+
   for (int g = 0; g < transformed_anno_group_all.size(); ++g) {
     transformed_anno_vec->push_back(transformed_anno_group_all.Get(g));
   }
@@ -403,7 +403,7 @@ void DataTransformer<Dtype>::Transform(const AnnotatedDatum& anno_datum,
                                        vector<AnnotationGroup>* transformed_anno_vec) {
   Transform(anno_datum, transformed_blob, transformed_anno_vec, rand_num_);
 }
-    
+
 template<typename Dtype>
 //template<bool do_resize, bool do_mirror>
 void DataTransformer<Dtype>::TransformAnnotation(const AnnotatedDatum& anno_datum,
@@ -718,8 +718,8 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 template<typename AnnotationHandler>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-                                       Blob<Dtype>* transformed_blob, 
-                                       NormalizedBBox* crop_bbox, 
+                                       Blob<Dtype>* transformed_blob,
+                                       NormalizedBBox* crop_bbox,
                                        RandNumbers& rand_num,
                                        AnnotationHandler anno_handler)
 {
@@ -1250,7 +1250,7 @@ template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
-  
+
   if (needs_rand) {
     rand_num_.Init();
   } else {
