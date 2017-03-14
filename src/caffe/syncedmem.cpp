@@ -63,6 +63,9 @@ void CaffeFreeHost(void* ptr, device* dev) {
       cudaFreeHost(ptr);
       return;
 #endif  // USE_CUDA
+    } else {
+      free(ptr);
+      return;
     }
   }
 #endif
