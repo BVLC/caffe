@@ -2,6 +2,8 @@
 """
 Trains a model using one or more GPUs.
 """
+import os
+import sys
 from multiprocessing import Process
 
 import caffe
@@ -63,6 +65,14 @@ def time(solver, nccl):
 
 
 def solve(proto, snapshot, gpus, timing, uid, rank):
+    if sys.platform == 'win32':
+        # add nvml.dll directory to search path for LoadLibrary
+        nvtoolsext = os.path.abspath(os.environ.get('NVTOOLSEXT_PATH', ''))
+        nvsmi = os.path.join(nvtoolsext, '..', 'NVSMI')
+        nvmldllpath = os.path.join(nvsmi, 'nvml.dll')
+        if not os.path.exists(nvmldllpath):
+            raise FileNotFoundError('nvml.dll not found in {}'.format(nvsmi))
+        os.environ['PATH'] += ';{}'.format(nvsmi)
     caffe.set_mode_gpu()
     caffe.set_device(gpus[rank])
     caffe.set_solver_count(len(gpus))
