@@ -412,6 +412,55 @@ private:
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_top_diffs_;
 };
 
+// =====  MKLDNNEltwiseLayer =======================================
+template <typename Dtype>
+class MKLDNNEltwiseLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype>  {
+public:
+  explicit MKLDNNEltwiseLayer(const LayerParameter& param)
+    : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
+    , fwd_top_data(), fwd_bottom_data()
+    , eltwiseFwd_pd()
+    , fwd_top_data_memory()
+    , fwd_bottom_data_primitives_()
+    , num_(0), width_(0), height_(0), channels_(0)
+    , num_bottoms_(0)
+  {}
+  ~MKLDNNEltwiseLayer() {}
+
+protected:
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual inline const char* type() const { return "Eltwise"; }
+    virtual inline int MinBottomBlobs() const { return 2; }
+    virtual inline int ExactNumTopBlobs() const { return 1; }
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+    virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+private:
+    void InitEltwiseFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+    void InitEltwiseBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
+                                , const vector<Blob<Dtype>*>& bottom);
+   
+    shared_ptr<MKLDNNData<Dtype> > fwd_top_data;
+    vector<shared_ptr<MKLDNNData<Dtype> > > fwd_bottom_data;
+    shared_ptr<sum::primitive_desc> eltwiseFwd_pd;
+    MKLDNNPrimitive<Dtype> eltwiseFwd;
+
+    shared_ptr<memory> fwd_top_data_memory;
+    vector<shared_ptr<primitive>> fwd_bottom_data_primitives_;
+    vector<primitive::at> fwd_bottom_data_primitives_at_;
+
+    EltwiseParameter_EltwiseOp op_;
+    vector<Dtype> coeffs_;
+    Blob<int> max_idx_;    
+    int32_t num_, width_, height_, channels_;
+    int32_t num_bottoms_;
+    bool stable_prod_grad_;
+};
+
 
 }  // namespace caffe
 #endif  // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
