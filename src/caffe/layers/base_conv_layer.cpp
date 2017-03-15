@@ -309,8 +309,8 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 #endif
 
-  int col_buffer_mt_size = num_of_threads_ * col_buffer_.count();
-  int weight_diff_mt_size = num_of_threads_ * this->blobs_[0]->count();
+  size_t col_buffer_mt_size = num_of_threads_ * static_cast<size_t>(col_buffer_.count());
+  size_t weight_diff_mt_size = num_of_threads_ * static_cast<size_t>(this->blobs_[0]->count());
 
   col_buffer_mt_.resize(col_buffer_mt_size);
   weight_diff_mt_.resize(weight_diff_mt_size);
