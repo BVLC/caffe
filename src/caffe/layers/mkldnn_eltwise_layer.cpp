@@ -130,8 +130,14 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     int32_t ih = this->height_;
     int32_t ic = this->channels_;
 
-    // We just do simple adding so scale is 1.0 for all inputs we have
-    std::vector<double> scale(bottom.size(), 1.0);
+    // If we just do simple adding, scale is 1.0 for all inputs we have
+    std::vector<double> scale(num_bottoms_, 1.0);
+    //Eltwise layer is supporting multiplication coefficient and this scale value can be used for that.
+    for (int i = 0; i < num_bottoms_; ++i) 
+    {
+        scale[i] = coeffs_[i];
+    }
+
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_nchw = memory::format::nchw;
@@ -155,15 +161,15 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
                 = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
             bottom_data_mfmt = static_cast<memory::format>(
                 mem_descr->prv_memory_pd()->desc().data.format);
-            bottom_data_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));     //Not sure?
+            bottom_data_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
             prv_bottom_data_mpd.reset(new memory::primitive_desc(
                 {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
         }
         else
         {
-            bottom_data_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, bottom_data_mfmt));     //Not sure?
+            bottom_data_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, bottom_data_mfmt));
         }
-        top_data_md = bottom_data_md;   //Not sure?
+        top_data_md = bottom_data_md;
 
         bottom_data_mpd.push_back(memory::primitive_desc(
             {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
@@ -177,14 +183,8 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
 
     shared_ptr<memory::primitive_desc> usr_top_data_mpd(new memory::primitive_desc(
         {{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));   
-    //shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc(eltwiseFwd_pd->top_data_primitive_desc()));      //Not sure?
-    shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));   //Delete
+    shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
     
-    // ---- Initialize eltwise primitive descriptor -------------
-    //sum::desc eltwiseFwd_desc(propagation, *bottom_data_md);    //?
-    //error: 'desc' is not a member of 'mkldnn::sum'
-    //sum::desc eltwiseFwd_desc(new memory::desc({{n, ic, ih, iw}}, mpcsn, mfmt_nchw));
-
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")

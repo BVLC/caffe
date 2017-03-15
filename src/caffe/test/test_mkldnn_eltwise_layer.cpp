@@ -152,7 +152,6 @@ TYPED_TEST(MKLDNNEltwiseLayerTest, TestSum) {
   }
 }
 
-/*
 TYPED_TEST(MKLDNNEltwiseLayerTest, TestSumCoeff) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -176,6 +175,7 @@ TYPED_TEST(MKLDNNEltwiseLayerTest, TestSumCoeff) {
   }
 }
 
+/*
 TYPED_TEST(MKLDNNEltwiseLayerTest, TestStableProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;

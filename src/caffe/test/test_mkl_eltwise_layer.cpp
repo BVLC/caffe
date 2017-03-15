@@ -136,17 +136,10 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSum) {
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
   const int count = this->blob_top_->count();
-  //cout << "Debug info: " << "count of top blob: " << count << endl;
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
   for (int i = 0; i < count; ++i) {
-    //cout << "Debug info: " << "data[" << i << "]: " << data[i] << endl;
-    //cout << "Debug info: " << "in_data_a[" << i << "]: " << in_data_a[i] << endl;
-    //cout << "Debug info: " << "in_data_b[" << i << "]: " << in_data_b[i] << endl;
-    //cout << "Debug info: " << "in_data_c[" << i << "]: " << in_data_c[i] << endl;
-    //cout << "Debug info: " << "sum result: " << in_data_a[i] + in_data_b[i] + in_data_c[i] << endl;
-    //cout << "Debug info: " << "End of sum execution of data[" << i << "]" << endl;
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i], 1e-4);
   }
 }
