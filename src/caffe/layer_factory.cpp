@@ -524,7 +524,7 @@ shared_ptr<Layer<Dtype> > GetConcatLayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(Concat, GetConcatLayer);
 
-// Get concat layer according to engine.
+// Get Eltwise layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   EltwiseParameter_Engine engine = param.eltwise_param().engine();
@@ -538,13 +538,10 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
     else if (ep.isEngine("MKL2017"))
       engine = EltwiseParameter_Engine_MKL2017;
 #endif
-// TODO: Uncomment when eltwise layer support added
-/*
 #if defined(MKLDNN_SUPPORTED)
     else if (ep.isEngine("MKLDNN"))
       engine = EltwiseParameter_Engine_MKLDNN;
 #endif
-*/
   }
 
   if (engine == EltwiseParameter_Engine_DEFAULT) {
@@ -556,13 +553,10 @@ shared_ptr<Layer<Dtype> > GetEltwiseLayer(const LayerParameter& param) {
   } else if (engine == EltwiseParameter_Engine_MKL2017) {
     return shared_ptr<Layer<Dtype> >(new MKLEltwiseLayer<Dtype>(param));
 #endif
-// TODO: Uncomment when eltwise layer support added
-/*
-#if defined(MKL2017_SUPPORTED)
+#ifdef MKLDNN_SUPPORTED
   } else if (engine == EltwiseParameter_Engine_MKLDNN) {
-    return shared_ptr<Layer<Dtype> >(new MKLEltwiseLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new MKLDNNEltwiseLayer<Dtype>(param));
 #endif
-*/
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknow engine.";
   }

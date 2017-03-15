@@ -35,7 +35,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#if defined(MKL2017_SUPPORTED)
+#ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <vector>
 
@@ -44,18 +44,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layers/mkl_layers.hpp"
+
+#include "caffe/layers/mkldnn_layers.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
 template <typename TypeParam>
-class MKLEltwiseLayerTest : public MultiDeviceTest<TypeParam> {
+class MKLDNNEltwiseLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  MKLEltwiseLayerTest()
+  MKLDNNEltwiseLayerTest()
       : blob_bottom_a_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_b_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
@@ -72,7 +74,7 @@ class MKLEltwiseLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_c_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~MKLEltwiseLayerTest() {
+  virtual ~MKLDNNEltwiseLayerTest() {
     delete blob_bottom_a_;
     delete blob_bottom_b_;
     delete blob_bottom_c_;
@@ -86,17 +88,16 @@ class MKLEltwiseLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<CPUDevice<float>,
-                         CPUDevice<double> > TestDtypesCPU;
-TYPED_TEST_CASE(MKLEltwiseLayerTest, TestDtypesCPU);
+typedef ::testing::Types<CPUDevice<float> > TestDtypesCPU;
+TYPED_TEST_CASE(MKLDNNEltwiseLayerTest, TestDtypesCPU);
 
-TYPED_TEST(MKLEltwiseLayerTest, TestSetUp) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
-  shared_ptr<MKLEltwiseLayer<Dtype> > layer(
-      new MKLEltwiseLayer<Dtype>(layer_param));
+  shared_ptr<MKLDNNEltwiseLayer<Dtype> > layer(
+      new MKLDNNEltwiseLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -105,13 +106,13 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSetUp) {
 }
 
 /*
-TYPED_TEST(MKLEltwiseLayerTest, TestProd) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestProd) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
-  shared_ptr<MKLEltwiseLayer<Dtype> > layer(
-      new MKLEltwiseLayer<Dtype>(layer_param));
+  shared_ptr<MKLDNNEltwiseLayer<Dtype> > layer(
+      new MKLDNNEltwiseLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
@@ -125,13 +126,13 @@ TYPED_TEST(MKLEltwiseLayerTest, TestProd) {
 }
 */
 
-TYPED_TEST(MKLEltwiseLayerTest, TestSum) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestSum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
-  shared_ptr<MKLEltwiseLayer<Dtype> > layer(
-      new MKLEltwiseLayer<Dtype>(layer_param));
+  shared_ptr<MKLDNNEltwiseLayer<Dtype> > layer(
+      new MKLDNNEltwiseLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
@@ -152,7 +153,7 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSum) {
 }
 
 /*
-TYPED_TEST(MKLEltwiseLayerTest, TestSumCoeff) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestSumCoeff) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
@@ -160,8 +161,8 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSumCoeff) {
   eltwise_param->add_coeff(1);
   eltwise_param->add_coeff(-0.5);
   eltwise_param->add_coeff(2);
-  shared_ptr<MKLEltwiseLayer<Dtype> > layer(
-      new MKLEltwiseLayer<Dtype>(layer_param));
+  shared_ptr<MKLDNNEltwiseLayer<Dtype> > layer(
+      new MKLDNNEltwiseLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
@@ -175,42 +176,42 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSumCoeff) {
   }
 }
 
-TYPED_TEST(MKLEltwiseLayerTest, TestStableProdGradient) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestStableProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
   eltwise_param->set_stable_prod_grad(true);
-  MKLEltwiseLayer<Dtype> layer(layer_param);
+  MKLDNNEltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 
-TYPED_TEST(MKLEltwiseLayerTest, TestUnstableProdGradient) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestUnstableProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
   eltwise_param->set_stable_prod_grad(false);
-  MKLEltwiseLayer<Dtype> layer(layer_param);
+  MKLDNNEltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 */
-TYPED_TEST(MKLEltwiseLayerTest, TestSumGradient) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestSumGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
-  MKLEltwiseLayer<Dtype> layer(layer_param);
+  MKLDNNEltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 /*
-TYPED_TEST(MKLEltwiseLayerTest, TestSumCoeffGradient) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestSumCoeffGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
@@ -218,19 +219,19 @@ TYPED_TEST(MKLEltwiseLayerTest, TestSumCoeffGradient) {
   eltwise_param->add_coeff(1);
   eltwise_param->add_coeff(-0.5);
   eltwise_param->add_coeff(2);
-  MKLEltwiseLayer<Dtype> layer(layer_param);
+  MKLDNNEltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 
-TYPED_TEST(MKLEltwiseLayerTest, TestMax) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestMax) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
-  shared_ptr<MKLEltwiseLayer<Dtype> > layer(
-      new MKLEltwiseLayer<Dtype>(layer_param));
+  shared_ptr<MKLDNNEltwiseLayer<Dtype> > layer(
+      new MKLDNNEltwiseLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
@@ -244,16 +245,16 @@ TYPED_TEST(MKLEltwiseLayerTest, TestMax) {
   }
 }
 
-TYPED_TEST(MKLEltwiseLayerTest, TestMaxGradient) {
+TYPED_TEST(MKLDNNEltwiseLayerTest, TestMaxGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
-  MKLEltwiseLayer<Dtype> layer(layer_param);
+  MKLDNNEltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-4, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 */
 }  // namespace caffe
-#endif  // #if defined(MKL2017_SUPPORTED)
+#endif  // #ifdef MKLDNN_SUPPORTED
