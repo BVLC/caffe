@@ -229,7 +229,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef MKLDNN_SUPPORTED
     else if (ep.isEngine("MKLDNN")) {
       PoolingParameter_PoolMethod method = param.pooling_param().pool();
-      if (method == PoolingParameter_PoolMethod_MAX)
+      if (method != PoolingParameter_PoolMethod_STOCHASTIC)
         engine = PoolingParameter_Engine_MKLDNN;
     }
 #endif

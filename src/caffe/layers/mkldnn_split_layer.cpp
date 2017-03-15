@@ -69,7 +69,7 @@ void MKLDNNSplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   this->sizes_src_.resize(dim_src);
   this->strides_src_.resize(dim_src);
   for (size_t d = 0; d < dim_src; ++d) {
-    this->sizes_src_[d] = bottom[0]->shape()[dim_src - d - 1];
+    this->sizes_src_[d] = bottom[0]->shape()[d];
     this->strides_src_[d] = (d == 0) ?
                 1 : this->strides_src_[d-1]*this->sizes_src_[d-1];
   }
