@@ -233,6 +233,9 @@ void MKLDNNEltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 
     for (int i = 0; i < num_bottoms_; ++i) 
     {
+        //Eltwise layer is not supporting multiplication coefficient in Backward due to lack of supporting scale and copy primitives in MKL-DNN
+        CHECK_EQ(coeffs_[i], Dtype(1)) << "Not supported yet";
+
         bottom[i]->ShareDiff(*top[0]);
     }
 }
