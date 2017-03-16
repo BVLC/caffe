@@ -559,7 +559,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestDilated3DConvolution) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Convolution) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Convolution) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -586,7 +586,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Convolution) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1ConvolutionReLU) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1ConvolutionReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
