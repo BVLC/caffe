@@ -1,9 +1,9 @@
 CAFFE_ROOTDIR := $(shell pwd)
-#MKLDNN_ROOTDIR := external/mkldnn
-#MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
-#MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
-#MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
-#MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
+MKLDNN_ROOTDIR := external/mkldnn
+MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
+MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
+MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
+MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
 MKLDNN_COMMIT := 10acb154eba2b05e862c91d7bebfc32dee3bd236
 MKLDNN_CXX := $(CXX)
 MKLDNN_CC := $(CC)
@@ -20,6 +20,7 @@ endif
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
 MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
 
+ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
 mkldnn_download:
 	git clone --no-checkout $(MKLDNN_GITHUB) $(MKLDNN_TMPDIR)
 	rsync -a $(MKLDNN_TMPDIR)/ $(MKLDNN_SRCDIR) && rm -rf $(MKLDNN_TMPDIR)
@@ -29,12 +30,31 @@ mkldnn_build: mkldnn_download
 	cmake $(MKLDNN_CMAKE_FLAGS)
 	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR)
 	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) install
+else
+mkldnn_download:
+mkldnn_build:
+endif
 
 mkldnn_clean:
 	@rm -rf $(MKLDNN_SRCDIR) $(MKLDNN_BUILDDIR) $(MKLDNN_INSTALLDIR) $(MKLDNN_TMPDIR)
 
-ifeq ($(MKLDNN_BUILD),1)
-mkldnn: mkldnn_build
+mkldnnroot_set:
+	$(eval CXXFLAGS += -DMKLDNN_SUPPORTED) \
+	$(eval INCLUDE_DIRS += $(MKLDNNROOT)/include)
+	$(eval MKLDNN_LDFLAGS += -lmkldnn -L$(MKLDNNROOT)/lib) \
+	$(eval MKLDNN_LDFLAGS += -Wl,-rpath,$(MKLDNNROOT)/lib) \
+
+
+mkldnnroot_notset: mkldnn_build
+	$(eval CXXFLAGS += -DMKLDNN_SUPPORTED) \
+	$(eval INCLUDE_DIRS += $(MKLDNN_INSTALLDIR)/include) \
+	$(eval MKLDNN_LDFLAGS += -lmkldnn) \
+	$(eval MKLDNN_LDFLAGS += -L$(MKLDNN_INSTALLDIR)/lib -Wl,-rpath,${MKLDNN_INSTALLDIR}/lib)
+
+ifneq ($(origin MKLDNNROOT), undefined)
+ifdef MKLDNNROOT
+mkldnn: mkldnnroot_set
+endif
 else
-mkldnn:
+mkldnn: mkldnnroot_notset
 endif

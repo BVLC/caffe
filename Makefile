@@ -481,38 +481,9 @@ ifeq ($(PERFORMANCE_MONITORING), 1)
 	CXXFLAGS += -DPERFORMANCE_MONITORING
 endif
 
-ifneq ($(origin MKLDNNROOT), undefined)
-	MKLDNNROOT_DIR := $(MKLDNNROOT)
-	ifneq ($(MKLDNNROOT_DIR),"")
-		MKLDNNROOT_INCLUDE_DIR := $(MKLDNNROOT_DIR)/include
-		ifneq ("$(wildcard $(MKLDNNROOT_INCLUDE_DIR)/mkldnn.hpp)","")
-			CXXFLAGS += -DMKLDNN_SUPPORTED 
-			ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
-				CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
-			endif
-			MKLDNN_LDFLAGS += -lmkldnn
-			MKLDNN_LDFLAGS += -L$(MKLDNNROOT)/lib -Wl,-rpath,$(MKLDNNROOT)/lib
-			MKLDNN_INCLUDE += $(MKLDNNROOT)/include
-		endif
-	endif
-else
-	MKLDNN_ROOTDIR := external/mkldnn
-	MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
-	MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
-	MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
-	MKLDNN_INSTALLDIR := $(MKLDNN_ROOTDIR)/install
-	
-	ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
-		MKLDNN_BUILD := 1
-	endif
-	include Makefile.mkldnn
-	CXXFLAGS += -DMKLDNN_SUPPORTED 
-	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
-		CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
-	endif
-	MKLDNN_INCLUDE ?= $(MKLDNN_INSTALLDIR)/include
-	MKLDNN_LDFLAGS+=-lmkldnn
-	MKLDNN_LDFLAGS+=-L$(MKLDNN_INSTALLDIR)/lib -Wl,-rpath,$(MKLDNN_INSTALLDIR)/lib
+include Makefile.mkldnn
+ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
+	CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
 endif
 
 # BOOST configuration
@@ -626,7 +597,7 @@ endif
 ##############################
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles warn everything mkldnn
+	superclean supercleanlist supercleanfiles warn everything mkldnn mkldnn_clean
 
 # Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
 # if no openmp is supported in compiler then openmp compiler flags are not to be updated 
@@ -662,7 +633,7 @@ endif
 # set_env should be at the end
 all: lib tools examples
 
-lib: mkldnn $(STATIC_NAME) $(DYNAMIC_NAME)
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -786,7 +757,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS) mkldnn
+$(BUILD_DIR)/%.o: %.cpp | mkldnn $(ALL_BUILD_DIRS)
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXX_HARDENING_FLAGS) $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
