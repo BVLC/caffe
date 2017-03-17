@@ -839,6 +839,7 @@ message SplitParameter {
     DEFAULT = 0;
     CAFFE = 1;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 1 [default = DEFAULT];
 }
@@ -1127,6 +1128,7 @@ message EltwiseParameter {
     DEFAULT = 0;
     CAFFE = 1;
     MKL2017 = 3;
+    MKLDNN = 4;
   }
   optional Engine engine = 4 [default = DEFAULT];
 }

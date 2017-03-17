@@ -117,6 +117,7 @@ DEFINE_bool(fast_compare, false,
     "Optional; Break layer comparison after fast_compare_max errors found");
 DEFINE_int32(fast_compare_max, 50,
     "Optional; Max errors for fast_compare");
+DEFINE_double(buffer_filler, std::nanf(""), "Buffer filler for compare tool");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -525,6 +526,8 @@ int time() {
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, phase, FLAGS_level, &stages, NULL,
                        FLAGS_engine);
+
+  PERFORMANCE_INIT_MONITOR();
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
