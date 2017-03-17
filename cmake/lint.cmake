@@ -26,7 +26,9 @@ foreach(ext ${EXCLUDE_FILE_EXTENSTIONS})
 endforeach()
 
 # exclude generated pb files
-list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+if(EXCLUDED_FILES)
+  list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+endif()
 
 execute_process(
     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}
