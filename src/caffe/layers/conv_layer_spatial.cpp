@@ -512,12 +512,10 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
-
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
   viennacl::ocl::kernel &kernel = program.get_kernel(config->kernelName);
   cl_int err = CL_SUCCESS;
-
   if (config->kernelType == 2) {
     swizzleWeights(bottom, top, config->workItem_output[2], false);
     size_t total_bottom_size = bottom_dim_ * numImages;
@@ -562,10 +560,16 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)height_);
         kernel.arg(argIdx++, (uint16_t)output_w_);
         kernel.arg(argIdx++, (uint16_t)output_h_);
+        const int_tp output_block_w = config->workItem_output[0];
+        const int_tp output_block_h = config->workItem_output[1];
+        size_t global_size[3] = { (size_t) (output_w_ + output_block_w - 1)
+             / output_block_w, (size_t) (output_h_ + output_block_h - 1)
+             / output_block_h, (size_t) config->global_work_size[2]};
+
         err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      kernel.handle().get(), 3,
                                      NULL,
-                                     config->global_work_size,
+                                     global_size,
                                      config->local_work_size, 0, NULL,
                                      NULL);
       }
@@ -624,10 +628,35 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)output_h_);
         viennacl::ocl::context &ctx =
           viennacl::ocl::get_context(this->device_->id());
+        int out_pitch_y = output_w_ * output_h_;
+        int out_pitch_z = out_pitch_y * M_;
+        int aligned_input_size = height_ * width_ * channels_ / group_;
+        int slice_pitch = width_ * height_;
+        kernel.arg(argIdx++, (uint32_t)out_pitch_y);
+        kernel.arg(argIdx++, (uint32_t)out_pitch_z);
+        kernel.arg(argIdx++, (uint32_t)aligned_input_size);
+        kernel.arg(argIdx++, (uint32_t)slice_pitch);
+
+        int blockM = config->workItem_output[0];
+        int blockK = config->workItem_output[1];
+        int blockN = config->workItem_output[2];
+        int_tp alignedFilterWidth = ALIGN(M_, blockN);
+        int_tp alignedExpandHeight = ALIGN(output_w_ * output_h_, blockM);
+        int_tp globalWorkSizeDX = blockN;
+        int_tp globalWorkSizeDY = blockM;
+        size_t sgemm_m = alignedExpandHeight;
+        size_t sgemm_n = alignedFilterWidth;
+        size_t gx = (size_t) ceil(static_cast<float>(sgemm_n)
+                             / static_cast<float>(globalWorkSizeDX));
+        size_t gy = (size_t) ceil(static_cast<float>(sgemm_m)
+                             / static_cast<float>(globalWorkSizeDY));
+        gy = ALIGN(gy, blockK);
+        size_t global_size[3] = { gx, gy, config->global_work_size[2] };
+
         err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      kernel.handle().get(), 3,
                                      NULL,
-                                     config->global_work_size,
+                                     global_size,
                                      config->local_work_size, 0, NULL,
                                      NULL);
         OCL_CHECK(err);
@@ -668,6 +697,11 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)output_h_);
         kernel.arg(argIdx++, (uint16_t)pad_w_);
         kernel.arg(argIdx++, (uint16_t)pad_h_);
+
+        int_tp workItemOutput[3] = { 1, 1, 1 };
+        size_t localSize[3] = { 1, 1, 1 };
+        size_t globalSize[3];
+        calculate_global_size(1, workItemOutput, localSize, globalSize);
         if (config->use_null_local) {
           err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                        kernel.handle().get(), 3,
@@ -804,12 +838,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
                                                  blockN);
   int_tp workItemOutput[3] = { blockM, blockK, blockN };
 
-  int_tp output_width = output_w_;
-  int_tp output_height = output_h_;
   int_tp simd_size = blockK;
   int_tp num_batches = num_;
-  int_tp alignedFilterWidth = ALIGN(M_, blockN);
-  int_tp alignedExpandHeight = ALIGN(output_width * output_height, blockM);
   int_tp globalWorkSizeDX = blockN;
   int_tp globalWorkSizeDY = blockM;
 
@@ -851,13 +881,8 @@ bool ConvolutionLayerSpatial<float>::create_gemm_like_conv_kernel(
         " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8;
 
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
-  size_t sgemm_m = alignedExpandHeight;
-  size_t sgemm_n = alignedFilterWidth;
-  size_t gx = (size_t) ceil( (float) sgemm_n / (float) globalWorkSizeDX );  // NOLINT
-  size_t gy = (size_t) ceil( (float) sgemm_m / (float) globalWorkSizeDY );  // NOLINT
-  gy = ALIGN(gy, blockK);
   size_t gz = num_batches;
-  size_t global_size[3] = { gx, gy, gz };
+  size_t global_size[3] = { 0, 0, gz };
 
   size_t local_size[3] = { 1, static_cast<size_t>(simd_size), 1 };
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
@@ -909,8 +934,6 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                                                  blockDepth);
   int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
   const int_tp num_output_maps = M_;
-  int_tp output_width = output_w_;
-  int_tp output_height = output_h_;
   int_tp output_block_width = blockWidth;
   int_tp output_block_height = blockHeight;
   int_tp num_batches = num_;
@@ -929,18 +952,8 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -D convolve_simd="
                 << kernel_name_;
 
-  const int_tp last_block_width =
-      (output_width % output_block_width == 0) ?
-          output_block_width : output_width % output_block_width;
-  const int_tp last_block_height =
-      (output_height % output_block_height == 0) ?
-          output_block_height : output_height % output_block_height;
-
-  size_t global_size[3] = { (size_t) (output_width + output_block_width - 1)
-      / output_block_width, (size_t) (output_height + output_block_height - 1)
-      / output_block_height,
-      (size_t) num_batches *
-      ALIGN(num_output_maps, simd_size) };
+  size_t global_size[3] = { 0, 0,
+                (size_t) num_batches * ALIGN(num_output_maps, simd_size) };
 
   size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
   int tile_x = (((output_block_width - 1) * stride_w_
@@ -953,8 +966,6 @@ bool ConvolutionLayerSpatial<float>::setup_IDLF(
                 << " -D filter_qualifier=__global" << " -D OUT_BLOCK_WIDTH="
                 << output_block_width << " -D OUT_BLOCK_HEIGHT="
                 << output_block_height
-                << " -D LAST_BLOCK_WIDTH=" << last_block_width
-                << " -D LAST_BLOCK_HEIGHT=" << last_block_height
                 << " -D INPUT_DEPTH=" << channels_ / group_
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << num_output_
