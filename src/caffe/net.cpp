@@ -182,7 +182,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
-    if (param.engine() != "")
+    if (param.engine() != "" && param.layer(layer_id).engine() == "")
       param.mutable_layer(layer_id)->set_engine(param.engine());
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
