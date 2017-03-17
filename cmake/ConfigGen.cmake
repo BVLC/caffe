@@ -1,32 +1,5 @@
 
 ################################################################################################
-# Helper function to fetch caffe includes which will be passed to dependent projects
-# Usage:
-#   caffe_get_current_includes(<includes_list_variable>)
-function(caffe_get_current_includes includes_variable)
-  get_property(current_includes DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-  caffe_convert_absolute_paths(current_includes)
-
-  # remove at most one ${PROJECT_BINARY_DIR} include added for caffe_config.h
-  list(FIND current_includes ${PROJECT_BINARY_DIR} __index)
-  list(REMOVE_AT current_includes ${__index})
-
-  # removing numpy includes (since not required for client libs)
-  set(__toremove "")
-  foreach(__i ${current_includes})
-    if(${__i} MATCHES "python")
-      list(APPEND __toremove ${__i})
-    endif()
-  endforeach()
-  if(__toremove)
-    list(REMOVE_ITEM current_includes ${__toremove})
-  endif()
-
-  caffe_list_unique(current_includes)
-  set(${includes_variable} ${current_includes} PARENT_SCOPE)
-endfunction()
-
-################################################################################################
 # Helper function to get all list items that begin with given prefix
 # Usage:
 #   caffe_get_items_with_prefix(<prefix> <list_variable> <output_variable>)
@@ -47,21 +20,8 @@ endfunction()
 function(caffe_generate_export_configs)
   set(install_cmake_suffix "share/Caffe")
 
-  # ---[ Configure build-tree CaffeConfig.cmake file ]---
-  caffe_get_current_includes(Caffe_INCLUDE_DIRS)
-
-  set(Caffe_DEFINITIONS "")
   if(NOT HAVE_CUDA)
     set(HAVE_CUDA FALSE)
-    list(APPEND Caffe_DEFINITIONS -DCPU_ONLY)
-  endif()
-
-  # Disable autolinking on platforms that defaults to this
-  # e.g. Windows
-  list(APPEND Caffe_DEFINITIONS -DBOOST_ALL_NO_LIB)
-
-  if(USE_OPENCV)
-    list(APPEND Caffe_DEFINITIONS -DUSE_OPENCV)
   endif()
 
   set(GFLAGS_IMPORTED OFF)
@@ -87,21 +47,15 @@ function(caffe_generate_export_configs)
 
   set(LMDB_IMPORTED OFF)
   if(USE_LMDB)
-    list(APPEND Caffe_DEFINITIONS -DUSE_LMDB)
-    if (ALLOW_LMDB_NOLOCK)
-        list(APPEND Caffe_DEFINITIONS -DALLOW_LMDB_NOLOCK)
-    endif()
     foreach(_lib ${LMDB_LIBRARIES})
       if(TARGET ${_lib})
         set(LMDB_IMPORTED ON)
       endif()
     endforeach()
   endif()
-
   set(LEVELDB_IMPORTED OFF)
   set(SNAPPY_IMPORTED OFF)
   if(USE_LEVELDB)
-    list(APPEND Caffe_DEFINITIONS -DUSE_LEVELDB)
     foreach(_lib ${LevelDB_LIBRARIES})
       if(TARGET ${_lib})
         set(LEVELDB_IMPORTED ON)
@@ -114,16 +68,11 @@ function(caffe_generate_export_configs)
     endforeach()
   endif()
 
-
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
-  else()
-    list(APPEND DEFINITIONS -DUSE_CUDNN)
   endif()
 
-  if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
-    list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
-  endif()
+  # ---[ Configure build-tree CaffeConfig.cmake file ]---
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/CaffeConfig.cmake" @ONLY)
 
@@ -132,18 +81,6 @@ function(caffe_generate_export_configs)
   export(PACKAGE Caffe)
 
   # ---[ Configure install-tree CaffeConfig.cmake file ]---
-
-  # remove source and build dir includes
-  caffe_get_items_with_prefix(${PROJECT_SOURCE_DIR} Caffe_INCLUDE_DIRS __insource)
-  caffe_get_items_with_prefix(${PROJECT_BINARY_DIR} Caffe_INCLUDE_DIRS __inbinary)
-  list(REMOVE_ITEM Caffe_INCLUDE_DIRS ${__insource} ${__inbinary})
-
-  # add `install` include folder
-  set(lines
-     "get_filename_component(__caffe_include \"\${Caffe_CMAKE_DIR}/../../include\" ABSOLUTE)\n"
-     "list(APPEND Caffe_INCLUDE_DIRS \${__caffe_include})\n"
-     "unset(__caffe_include)\n")
-  string(REPLACE ";" "" Caffe_INSTALL_INCLUDE_DIR_APPEND_COMMAND ${lines})
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/cmake/CaffeConfig.cmake" @ONLY)
 
