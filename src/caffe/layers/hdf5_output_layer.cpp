@@ -1,8 +1,6 @@
-
-
-#include <vector>
+#include <sstream>
 #include <string>
-#include <sstream>  
+#include <vector>
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
@@ -27,10 +25,10 @@ HDF5OutputLayer<Dtype>::~HDF5OutputLayer<Dtype>() {
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::SaveBlobs() {
   // TODO: no limit on the number of blobs
-  static int cnt_file=0;
+  static int cnt_file = 0;
   ostringstream oss;
   oss.clear();
-  oss<<cnt_file++;
+  oss << cnt_file++;
   file_name_ = this->layer_param_.hdf5_output_param().file_name()+"_"+oss.str();
   file_id_ = H5Fcreate(file_name_.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
                        H5P_DEFAULT);
