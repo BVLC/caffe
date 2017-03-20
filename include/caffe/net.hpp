@@ -333,6 +333,8 @@ class Net {
 
   /// @brief The network name
   string name_;
+  /// @brief The engine name
+  string engine_name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
   /// @brief Individual layers in the net
