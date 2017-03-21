@@ -19,7 +19,7 @@ class Cursor {
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;
-
+  
   DISABLE_COPY_AND_ASSIGN(Cursor);
 };
 
@@ -41,6 +41,7 @@ class DB {
   virtual void Close() = 0;
   virtual Cursor* NewCursor() = 0;
   virtual Transaction* NewTransaction() = 0;
+  virtual int Count() = 0;
 
   DISABLE_COPY_AND_ASSIGN(DB);
 };

@@ -62,7 +62,8 @@ class LevelDB : public DB {
   virtual LevelDBTransaction* NewTransaction() {
     return new LevelDBTransaction(db_);
   }
-
+  virtual int Count() { return -1; }
+  
  private:
   leveldb::DB* db_;
 };

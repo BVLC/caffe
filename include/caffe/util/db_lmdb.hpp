@@ -35,7 +35,7 @@ class LMDBCursor : public Cursor {
         mdb_value_.mv_size);
   }
   virtual bool valid() { return valid_; }
-
+  
  private:
   void Seek(MDB_cursor_op op) {
     int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, op);
@@ -83,7 +83,8 @@ class LMDB : public DB {
   }
   virtual LMDBCursor* NewCursor();
   virtual LMDBTransaction* NewTransaction();
-
+  virtual int Count();
+  
  private:
   MDB_env* mdb_env_;
   MDB_dbi mdb_dbi_;

@@ -117,6 +117,13 @@ TYPED_TEST(DBTest, TestKeyValue) {
   EXPECT_FALSE(cursor->valid());
 }
 
+TYPED_TEST(DBTest, TestCount) {
+  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  db->Open(this->source_, db::READ);
+  int count = db->Count();
+  ASSERT_TRUE(count == -1 || count == 2); // leveldb does not have count
+}
+  
 TYPED_TEST(DBTest, TestWrite) {
   scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
   db->Open(this->source_, db::WRITE);

@@ -53,6 +53,14 @@ LMDBTransaction* LMDB::NewTransaction() {
   return new LMDBTransaction(mdb_env_);
 }
 
+int LMDB::Count() {
+  MDB_stat stats;
+  int err = mdb_env_stat(mdb_env_,&stats);
+  if (err != 0)
+    return -1;
+  return stats.ms_entries;
+}
+
 void LMDBTransaction::Put(const string& key, const string& value) {
   keys.push_back(key);
   values.push_back(value);
