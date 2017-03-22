@@ -716,7 +716,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
       //CHECK(target_blobs[j]->shape() == source_blob->shape())
-      if (target_blobs[j]->shape() == source_blob->shape()) {
+      if (target_blobs[j]->shape() != source_blob->shape()) {
 	LOG(ERROR) << "Cannot share param " << j << " weights from layer '"
 		   << source_layer_name << "'; shape mismatch.  Source param shape is "
 		   << source_blob->shape_string() << "; target param shape is "
