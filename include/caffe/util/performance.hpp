@@ -226,10 +226,10 @@ namespace performance {
     }
 
     void Suspend() {
-      process_accumulator_ = PreciseTime::GetProcessTime()
-        - process_time_stamp_;
-      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
-        - monotonic_time_stamp_;
+      process_accumulator_ = process_accumulator_ +
+        PreciseTime::GetProcessTime() - process_time_stamp_;
+      monotonic_accumulator_ = monotonic_accumulator_ +
+        PreciseTime::GetMonotonicTime() - monotonic_time_stamp_;
     }
 
     void Resume() {
@@ -257,10 +257,10 @@ namespace performance {
     }
 
     void Stop() {
-      process_accumulator_ = PreciseTime::GetProcessTime()
-        - process_time_stamp_;
-      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
-        - monotonic_time_stamp_;
+      process_accumulator_ = process_accumulator_ +
+        PreciseTime::GetProcessTime() - process_time_stamp_;
+      monotonic_accumulator_ = monotonic_accumulator_ + 
+        PreciseTime::GetMonotonicTime() - monotonic_time_stamp_;
 
       static Measurement*& stack = GetStack();
 
