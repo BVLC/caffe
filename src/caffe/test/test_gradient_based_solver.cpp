@@ -28,7 +28,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       seed_(1701), num_(4), channels_(3), height_(10), width_(10),
       share_(false) {
         input_file_ = new string(
-        CMAKE_SOURCE_DIR "caffe/test/test_data/solver_data_list.txt" CMAKE_EXT);
+        ABS_TEST_DATA_DIR "/solver_data_list.txt");
       }
   ~GradientBasedSolverTest() {
     delete input_file_;
