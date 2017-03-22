@@ -205,7 +205,8 @@ void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
         }
         break;
       default:
-        LOG(FATAL) << "Unknown resize mode.";
+        LOG(ERROR) << "Unknown resize mode.";
+	LOG(FATAL) << "fatal error";
     }
   } else {
     // Clip the normalized bbox first.
@@ -349,7 +350,8 @@ bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
     float bbox_coverage = BBoxCoverage(bbox, src_bbox);
     return bbox_coverage > emit_constraint.emit_overlap();
   } else {
-    LOG(FATAL) << "Unknown emit type.";
+    LOG(ERROR) << "Unknown emit type.";
+    LOG(FATAL) << "fatal error";
     return false;
   }
 }
@@ -436,7 +438,8 @@ void EncodeBBox(
           (bbox.ymax() - prior_bbox.ymax()) / prior_height / prior_variance[3]);
     }
   } else {
-    LOG(FATAL) << "Unknown LocLossType.";
+    LOG(ERROR) << "Unknown LocLossType.";
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -521,7 +524,8 @@ void DecodeBBox(
           prior_bbox.ymax() + prior_variance[3] * bbox.ymax() * prior_height);
     }
   } else {
-    LOG(FATAL) << "Unknown LocLossType.";
+    LOG(ERROR) << "Unknown LocLossType.";
+    LOG(FATAL) << "fatal error";
   }
   float bbox_size = BBoxSize(*decode_bbox);
   decode_bbox->set_size(bbox_size);
@@ -572,7 +576,8 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
       }
       if (all_loc_preds[i].find(label) == all_loc_preds[i].end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
+        LOG(ERROR) << "Could not find location predictions for label " << label;
+	LOG(FATAL) << "fatal error";
       }
       const vector<NormalizedBBox>& label_loc_preds =
           all_loc_preds[i].find(label)->second;
@@ -714,7 +719,8 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
       }
       break;
     default:
-      LOG(FATAL) << "Unknown matching type.";
+      LOG(ERROR) << "Unknown matching type.";
+      LOG(FATAL) << "fatal error";
       break;
   }
 
@@ -1311,7 +1317,8 @@ void ComputeLocLoss(const Blob<Dtype>& loc_pred, const Blob<Dtype>& loc_gt,
           } else if (loc_loss_type == MultiBoxLossParameter_LocLossType_L2) {
             loss += 0.5 * val * val;
           } else {
-            LOG(FATAL) << "Unknown loc loss type.";
+            LOG(ERROR) << "Unknown loc loss type.";
+	    LOG(FATAL) << "fatal error";
           }
         }
         loc_loss[j] = loss;
@@ -1433,7 +1440,8 @@ void ComputeConfLoss(const Dtype* conf_data, const int num,
               log(1 + exp(input - 2 * input * (input >= 0)));
         }
       } else {
-        LOG(FATAL) << "Unknown conf loss type.";
+        LOG(ERROR) << "Unknown conf loss type.";
+	LOG(FATAL) << "fatal error";
       }
       conf_loss.push_back(loss);
     }
@@ -1515,7 +1523,8 @@ void ComputeConfLoss(const Dtype* conf_data, const int num,
               log(1 + exp(input - 2 * input * (input >= 0)));
         }
       } else {
-        LOG(FATAL) << "Unknown conf loss type.";
+        LOG(ERROR) << "Unknown conf loss type.";
+	LOG(FATAL) << "fatal error";
       }
       conf_loss.push_back(loss);
     }
@@ -1596,7 +1605,8 @@ void EncodeConfPrediction(const Dtype* conf_data, const int num,
               conf_gt_data[idx * num_classes + gt_label] = 1;
               break;
             default:
-              LOG(FATAL) << "Unknown conf loss type.";
+              LOG(ERROR) << "Unknown conf loss type.";
+	      LOG(FATAL) << "fatal error";
           }
           if (do_neg_mining) {
             // Copy scores for matched bboxes.
@@ -1625,7 +1635,8 @@ void EncodeConfPrediction(const Dtype* conf_data, const int num,
               }
               break;
             default:
-              LOG(FATAL) << "Unknown conf loss type.";
+              LOG(ERROR) << "Unknown conf loss type.";
+	      LOG(FATAL) << "fatal error";
           }
           ++count;
         }
@@ -2079,7 +2090,8 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
       prev_rec = (*rec)[i];
     }
   } else {
-    LOG(FATAL) << "Unknown ap_version: " << ap_version;
+    LOG(ERROR) << "Unknown ap_version: " << ap_version;
+    LOG(FATAL) << "fatal error";
   }
 }
 

@@ -222,12 +222,14 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
         return ReadTxtToAnnotatedDatum(labelfile, ori_height, ori_width,
                                        anno_datum);
       } else {
-        LOG(FATAL) << "Unknown label file type.";
+        LOG(ERROR) << "Unknown label file type.";
+	LOG(FATAL) << "fatal error";
         return false;
       }
       break;
     default:
-      LOG(FATAL) << "Unknown annotation type.";
+      LOG(ERROR) << "Unknown annotation type.";
+      LOG(FATAL) << "fatal error";
       return false;
   }
 }
@@ -289,7 +291,8 @@ bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
         if (v2.first == "name") {
           string name = pt2.data();
           if (name_to_label.find(name) == name_to_label.end()) {
-            LOG(FATAL) << "Unknown name: " << name;
+            LOG(ERROR) << "Unknown name: " << name;
+	    LOG(FATAL) << "fatal error";
           }
           int label = name_to_label.find(name)->second;
           bool found_group = false;
@@ -390,7 +393,8 @@ bool ReadJSONToAnnotatedDatum(const string& labelfile, const int img_height,
     // Get category_id.
     string name = object.get<string>("category_id");
     if (name_to_label.find(name) == name_to_label.end()) {
-      LOG(FATAL) << "Unknown name: " << name;
+      LOG(ERROR) << "Unknown name: " << name;
+      LOG(FATAL) << "fatal error";
     }
     int label = name_to_label.find(name)->second;
     bool found_group = false;
@@ -579,7 +583,8 @@ bool ReadLabelFileToLabelMap(const string& filename, bool include_background,
         map_item->set_display_name(fields[2]);
         break;
       default:
-        LOG(FATAL) << "The number of fields should be [1, 3].";
+        LOG(ERROR) << "The number of fields should be [1, 3].";
+	LOG(FATAL) << "fatal error";
         break;
     }
   }
@@ -596,7 +601,8 @@ bool MapNameToLabel(const LabelMap& map, const bool strict_check,
     const int label = map.item(i).label();
     if (strict_check) {
       if (!name_to_label->insert(std::make_pair(name, label)).second) {
-        LOG(FATAL) << "There are many duplicates of name: " << name;
+        LOG(ERROR) << "There are many duplicates of name: " << name;
+	LOG(FATAL) << "fatal error";
         return false;
       }
     } else {
@@ -616,7 +622,8 @@ bool MapLabelToName(const LabelMap& map, const bool strict_check,
     const int label = map.item(i).label();
     if (strict_check) {
       if (!label_to_name->insert(std::make_pair(label, name)).second) {
-        LOG(FATAL) << "There are many duplicates of label: " << label;
+        LOG(ERROR) << "There are many duplicates of label: " << label;
+	LOG(FATAL) << "fatal error";
         return false;
       }
     } else {
@@ -637,7 +644,8 @@ bool MapLabelToDisplayName(const LabelMap& map, const bool strict_check,
     if (strict_check) {
       if (!label_to_display_name->insert(
               std::make_pair(label, display_name)).second) {
-        LOG(FATAL) << "There are many duplicates of label: " << label;
+        LOG(ERROR) << "There are many duplicates of label: " << label;
+	LOG(FATAL) << "fatal error";
         return false;
       }
     } else {

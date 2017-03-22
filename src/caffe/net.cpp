@@ -402,8 +402,9 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
     // raise an error.
-    LOG(FATAL) << "Top blob '" << blob_name
+    LOG(ERROR) << "Top blob '" << blob_name
                << "' produced by multiple sources.";
+    LOG(FATAL) << "fatal error";
   } else {
     // Normal output.
     if (Caffe::root_solver()) {
@@ -431,8 +432,9 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
-    LOG(FATAL) << "Unknown bottom blob '" << blob_name << "' (layer '"
+    LOG(ERROR) << "Unknown bottom blob '" << blob_name << "' (layer '"
                << layer_param.name() << "', bottom index " << bottom_id << ")";
+    LOG(FATAL) << "fatal error";
   }
   const int blob_id = (*blob_name_to_idx)[blob_name];
   LOG_IF(INFO, Caffe::root_solver())
@@ -505,20 +507,26 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     if (param_size > param_id && (layer_param.param(param_id).share_mode() ==
                                   ParamSpec_DimCheckMode_PERMISSIVE)) {
       // Permissive dimension checking -- only check counts are the same.
-      CHECK_EQ(this_blob->count(), owner_blob->count())
-          << "Cannot share param '" << param_name << "' owned by layer '"
-          << layer_names_[owner_layer_id] << "' with layer '"
-          << layer_names_[layer_id] << "'; count mismatch.  Owner layer param "
-          << "shape is " << owner_blob->shape_string() << "; sharing layer "
-          << "shape is " << this_blob->shape_string();
+      //CHECK_EQ(this_blob->count(), owner_blob->count())
+      if (this_blob->count() != owner_blob->count()) {
+	LOG(ERROR) << "Cannot share param '" << param_name << "' owned by layer '"
+		   << layer_names_[owner_layer_id] << "' with layer '"
+		   << layer_names_[layer_id] << "'; count mismatch.  Owner layer param "
+		   << "shape is " << owner_blob->shape_string() << "; sharing layer "
+		   << "shape is " << this_blob->shape_string();
+	LOG(FATAL) << "fatal error";
+      }
     } else {
       // Strict dimension checking -- all dims must be the same.
-      CHECK(this_blob->shape() == owner_blob->shape())
-          << "Cannot share param '" << param_name << "' owned by layer '"
-          << layer_names_[owner_layer_id] << "' with layer '"
-          << layer_names_[layer_id] << "'; shape mismatch.  Owner layer param "
-          << "shape is " << owner_blob->shape_string() << "; sharing layer "
-          << "expects shape " << this_blob->shape_string();
+      //CHECK(this_blob->shape() == owner_blob->shape())
+      if (this_blob->shape() != owner_blob->shape()) {
+        LOG(ERROR)  << "Cannot share param '" << param_name << "' owned by layer '"
+		    << layer_names_[owner_layer_id] << "' with layer '"
+		    << layer_names_[layer_id] << "'; shape mismatch.  Owner layer param "
+		    << "shape is " << owner_blob->shape_string() << "; sharing layer "
+		    << "expects shape " << this_blob->shape_string();
+	LOG(FATAL) << "fatal error";
+      }
     }
     const int learnable_param_id = learnable_param_ids_[owner_net_param_id];
     learnable_param_ids_.push_back(learnable_param_id);
@@ -700,15 +708,21 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     DLOG(INFO) << "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
-        << "Incompatible number of blobs for layer " << source_layer_name;
+    //CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
+    if (target_blobs.size() != source_layer->blobs().size()) {
+      LOG(ERROR) << "Incompatible number of blobs for layer " << source_layer_name;
+      LOG(FATAL) << "fatal error";
+    }
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
-      CHECK(target_blobs[j]->shape() == source_blob->shape())
-          << "Cannot share param " << j << " weights from layer '"
-          << source_layer_name << "'; shape mismatch.  Source param shape is "
-          << source_blob->shape_string() << "; target param shape is "
-          << target_blobs[j]->shape_string();
+      //CHECK(target_blobs[j]->shape() == source_blob->shape())
+      if (target_blobs[j]->shape() == source_blob->shape()) {
+	LOG(ERROR) << "Cannot share param " << j << " weights from layer '"
+		   << source_layer_name << "'; shape mismatch.  Source param shape is "
+		   << source_blob->shape_string() << "; target param shape is "
+		   << target_blobs[j]->shape_string();
+	LOG(FATAL) << "fatal error";
+      }
       target_blobs[j]->ShareData(*source_blob);
     }
   }
@@ -768,19 +782,23 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     DLOG(INFO) << "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
-        << "Incompatible number of blobs for layer " << source_layer_name;
+    //CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
+    if (target_blobs.size() != source_layer.blobs_size()) {
+      LOG(ERROR) << "Incompatible number of blobs for layer " << source_layer_name;
+      LOG(FATAL) << "fatal error";
+    }
     for (int j = 0; j < target_blobs.size(); ++j) {
       if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
         Blob<Dtype> source_blob;
         const bool kReshape = true;
         source_blob.FromProto(source_layer.blobs(j), kReshape);
-        LOG(FATAL) << "Cannot copy param " << j << " weights from layer '"
+        LOG(ERROR) << "Cannot copy param " << j << " weights from layer '"
             << source_layer_name << "'; shape mismatch.  Source param shape is "
             << source_blob.shape_string() << "; target param shape is "
             << target_blobs[j]->shape_string() << ". "
             << "To learn this layer's parameters from scratch rather than "
             << "copying from a saved net, rename the layer.";
+	LOG(FATAL) << "fatal error";
       }
       const bool kReshape = false;
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
@@ -843,8 +861,9 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
           // ...but it's weight-shared in target, so that's fine.
           continue;
         } else {
-          LOG(FATAL) << "Incompatible number of blobs for layer "
+          LOG(ERROR) << "Incompatible number of blobs for layer "
               << source_layer_name;
+	  LOG(FATAL) << "fatal error";
         }
       }
       hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,

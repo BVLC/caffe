@@ -64,13 +64,15 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (use_dilation) {
-      LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
+      LOG(ERROR) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
+      LOG(FATAL) << "fatal error";
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return shared_ptr<Layer<Dtype> >();
@@ -109,7 +111,8 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     }
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return 0;
@@ -148,7 +151,8 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
     }
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return 0;
@@ -173,7 +177,8 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return shared_ptr<Layer<Dtype> >();
@@ -198,7 +203,8 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNSigmoidLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return shared_ptr<Layer<Dtype> >();
@@ -223,7 +229,8 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNSoftmaxLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return shared_ptr<Layer<Dtype> >();
@@ -248,7 +255,8 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNTanHLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(ERROR) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL) << "fatal error";
     throw;  // Avoids missing return warning
   }
   return shared_ptr<Layer<Dtype> >();

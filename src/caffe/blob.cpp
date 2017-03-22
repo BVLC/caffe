@@ -183,7 +183,8 @@ void Blob<Dtype>::Update() {
 #endif
     break;
   default:
-    LOG(FATAL) << "Syncedmem not initialized.";
+    LOG(ERROR) << "Syncedmem not initialized.";
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -222,7 +223,8 @@ Dtype Blob<Dtype>::asum_data() const {
   case SyncedMemory::UNINITIALIZED:
     return 0;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(FATAL) << "fatal error";
   }
   return 0;
 }
@@ -262,7 +264,8 @@ Dtype Blob<Dtype>::asum_diff() const {
   case SyncedMemory::UNINITIALIZED:
     return 0;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << diff_->head();
+    LOG(FATAL) << "fatal error";
   }
   return 0;
 }
@@ -304,7 +307,8 @@ Dtype Blob<Dtype>::sumsq_data() const {
   case SyncedMemory::UNINITIALIZED:
     return 0;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(FATAL) << "fatal error";
   }
   return sumsq;
 }
@@ -346,7 +350,8 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   case SyncedMemory::UNINITIALIZED:
     return 0;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(FATAL) << "fatal error";
   }
   return sumsq;
 }
@@ -384,7 +389,8 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
   case SyncedMemory::UNINITIALIZED:
     return;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << data_->head();
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -421,7 +427,8 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   case SyncedMemory::UNINITIALIZED:
     return;
   default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
+    LOG(ERROR) << "Unknown SyncedMemory head state: " << diff_->head();
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -454,7 +461,8 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     if (reshape) {
       ReshapeLike(source);
     } else {
-      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+      LOG(ERROR) << "Trying to copy blobs of different sizes.";
+      LOG(FATAL) << "fatal error";
     }
   }
   switch (Caffe::mode()) {
@@ -477,7 +485,8 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     }
     break;
   default:
-    LOG(FATAL) << "Unknown caffe mode.";
+    LOG(ERROR) << "Unknown caffe mode.";
+    LOG(FATAL) << "fatal error";
   }
 }
 

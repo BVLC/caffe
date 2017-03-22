@@ -90,7 +90,8 @@ void SparseInnerProductLayer<Dtype>::Backward_cpu(
     }
     if (propagate_down[0]) {
       // there is a bug in the code because this is called no matter what!
-      LOG(FATAL) << "propagate down not supported for sparse inner product";
+      LOG(ERROR) << "propagate down not supported for sparse inner product";
+      LOG(FATAL) << "fatal error";
     }
 }
 

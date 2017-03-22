@@ -136,7 +136,8 @@ void SparseDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (SparseBlob<Dtype> * sparseBlob = dynamic_cast<SparseBlob<Dtype>*>(top[0])) {
     sparseBlob->Reshape(top_shape, 1);
   } else {
-    LOG(FATAL)<< "The top blob in the sparse data layer is not sparse\n";
+    LOG(ERROR)<< "The top blob in the sparse data layer is not sparse";
+    LOG(FATAL) << "fatal error";
   }
   //top[0]->Reshape(top_shape);
   //std::cerr << "top shape0=" << top_shape[0] << " / top shape1=" << top_shape[1] << std::endl;

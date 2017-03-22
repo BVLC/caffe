@@ -60,8 +60,9 @@ void ReductionLayer<Dtype>::Forward_cpu(
       *top_data = caffe_cpu_dot(dim_, bottom_data, bottom_data);
       break;
     default:
-      LOG(FATAL) << "Unknown reduction op: "
+      LOG(ERROR) << "Unknown reduction op: "
           << ReductionParameter_ReductionOp_Name(op_);
+      LOG(FATAL) << "fatal error";
     }
     bottom_data += dim_;
     ++top_data;
@@ -90,8 +91,9 @@ void ReductionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     bottom_data = bottom[0]->cpu_data();
     break;
   default:
-    LOG(FATAL) << "Unknown reduction op: "
+    LOG(ERROR) << "Unknown reduction op: "
         << ReductionParameter_ReductionOp_Name(op_);
+    LOG(FATAL) << "fatal error";
   }
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -110,8 +112,9 @@ void ReductionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_cpu_scale(dim_, 2 * bottom_coeff, bottom_data, bottom_diff);
       break;
     default:
-      LOG(FATAL) << "Unknown reduction op: "
+      LOG(ERROR) << "Unknown reduction op: "
           << ReductionParameter_ReductionOp_Name(op_);
+      LOG(FATAL) << "fatal error";
     }
     bottom_data += dim_;
     bottom_diff += dim_;

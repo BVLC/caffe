@@ -42,7 +42,8 @@ void BasePrefetchingSparseDataLayer<Dtype>::Forward_gpu(
       caffe_copy<int>(batch->data_.shape()[0]+1, batch->data_.gpu_ptr(),
          sparseBlob->mutable_gpu_ptr());
     } else {
-    LOG(FATAL) << "The top blob in the data layer sparse is not sparse";
+    LOG(ERROR) << "The top blob in the data layer sparse is not sparse";
+    LOG(FATAL) << "fatal error";
     }
  
   DLOG(INFO) << "Prefetch sparse copied (forward)";

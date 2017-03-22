@@ -23,8 +23,8 @@ void MemorySparseDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bo
       sparseBlob->Reshape(batch_size_, channels_, height_, width_);
       top[1]->Reshape(label_shape);
     } else {
-    std::cerr << "\nFatal error: The top blob in the memory sparse data layer is not sparse\n";
-    LOG(FATAL)<< "The top blob in the memory sparse data layer is not sparse\n";
+    LOG(ERROR)<< "The top blob in the memory sparse data layer is not sparse\n";
+    LOG(FATAL) << "fatal error";
   }
   added_data_.Reshape(batch_size_, channels_, height_, width_);
   added_label_.Reshape(label_shape);
@@ -114,8 +114,9 @@ void MemorySparseDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& botto
       sparseBlob->Reshape(batch_size_, channels_, height_, width_);
       sparseBlob->set_cpu_data(data_,indices_,ptr_+ptr_pos_,nnz - nnz_pos_,nnz);
     } else {
-    LOG(FATAL) << "The top blob in the memory sparse data layer is not sparse";
-    }
+    LOG(ERROR) << "The top blob in the memory sparse data layer is not sparse";
+    LOG(FATAL) << "fatal error";
+  }
  
   DLOG(INFO) << "Prefetch sparse copied (forward)";
   top[1]->Reshape(batch_size_, 1, 1, 1);

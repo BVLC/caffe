@@ -223,7 +223,8 @@ void BasePrefetchingSparseDataLayer<Dtype>::Forward_cpu(
       caffe_copy<int>(batch->data_.shape()[0]+1, batch->data_.cpu_ptr(),
          sparseBlob->mutable_cpu_ptr());
     } else {
-    LOG(FATAL) << "The top blob in the sparse data layer is not sparse";
+    LOG(ERROR) << "The top blob in the sparse data layer is not sparse";
+    LOG(FATAL) << "fatal error";
     }
  
   DLOG(INFO) << "Prefetch sparse copied (forward)";

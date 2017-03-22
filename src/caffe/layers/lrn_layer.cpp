@@ -100,7 +100,8 @@ void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     WithinChannelForward(bottom, top);
     break;
   default:
-    LOG(FATAL) << "Unknown normalization region.";
+    LOG(ERROR) << "Unknown normalization region.";
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -172,7 +173,8 @@ void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     WithinChannelBackward(top, propagate_down, bottom);
     break;
   default:
-    LOG(FATAL) << "Unknown normalization region.";
+    LOG(ERROR) << "Unknown normalization region.";
+    LOG(FATAL) << "fatal error";
   }
 }
 

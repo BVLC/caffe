@@ -88,7 +88,8 @@ void UpdateBBoxByResizePolicy(const ResizeParameter& param,
       y_max = std::min(new_height, y_max * new_height / old_height);
       break;
     default:
-      LOG(FATAL) << "Unknown resize mode.";
+      LOG(ERROR) << "Unknown resize mode.";
+      LOG(FATAL) << "fatal error";
   }
   bbox->set_xmin(x_min / new_width);
   bbox->set_ymin(y_min / new_height);
@@ -117,7 +118,8 @@ void InferNewSize(const ResizeParameter& resize_param,
       }
       break;
     default:
-      LOG(FATAL) << "Unknown resize mode.";
+      LOG(ERROR) << "Unknown resize mode.";
+      LOG(FATAL) << "fatal error";
   }
   *new_height = height;
   *new_width = width;
@@ -354,7 +356,8 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
       pad_mode = cv::BORDER_REPLICATE;
       break;
     default:
-      LOG(FATAL) << "Unknown pad mode.";
+      LOG(ERROR) << "Unknown pad mode.";
+      LOG(FATAL) << "fatal error";
   }
 
   int interp_mode = cv::INTER_LINEAR;
@@ -379,7 +382,8 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
         interp_mode = cv::INTER_LANCZOS4;
         break;
       default:
-        LOG(FATAL) << "Unknown interp mode.";
+        LOG(ERROR) << "Unknown interp mode.";
+	LOG(FATAL) << "fatal error";
     }
   }
 

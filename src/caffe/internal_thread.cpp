@@ -34,7 +34,8 @@ void InternalThread::StartInternalThread() {
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
           rand_seed, solver_count, root_solver));
   } catch (std::exception& e) {
-    LOG(FATAL) << "Thread exception: " << e.what();
+    LOG(ERROR) << "Thread exception: " << e.what();
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -58,7 +59,8 @@ void InternalThread::StopInternalThread() {
       thread_->join();
     } catch (boost::thread_interrupted&) {
     } catch (std::exception& e) {
-      LOG(FATAL) << "Thread exception: " << e.what();
+      LOG(ERROR) << "Thread exception: " << e.what();
+      LOG(FATAL) << "fatal error";
     }
   }
 }

@@ -77,7 +77,8 @@ void SparseInnerProductLayer<Dtype>::Backward_gpu(
                             this->blobs_[1]->mutable_gpu_diff());
     }
     if (propagate_down[0]) {
-      LOG(FATAL) << "propagate down is not supported by sparse inner product";
+      LOG(ERROR) << "propagate down is not supported by sparse inner product";
+      LOG(FATAL) << "fatal error";
     }
 }
 

@@ -172,7 +172,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     // Transform the cv::image into blob.
     return Transform(cv_img, transformed_blob, crop_bbox, do_mirror);
 #else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(FATAL) << "fatal error";
 #endif  // USE_OPENCV
   } else {
     if (param_.force_color() || param_.force_gray()) {
@@ -337,7 +338,8 @@ void DataTransformer<Dtype>::TransformAnnotation(
       }
     }
   } else {
-    LOG(FATAL) << "Unknown annotation type.";
+    LOG(ERROR) << "Unknown annotation type.";
+    LOG(FATAL) << "fatal error";
   }
 }
 
@@ -366,7 +368,8 @@ void DataTransformer<Dtype>::CropImage(const Datum& datum,
     crop_datum->set_label(datum.label());
     return;
 #else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(FATAL) << "fatal error";
 #endif  // USE_OPENCV
   } else {
     if (param_.force_color() || param_.force_gray()) {
@@ -453,7 +456,8 @@ void DataTransformer<Dtype>::ExpandImage(const Datum& datum,
     expand_datum->set_label(datum.label());
     return;
 #else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(FATAL) << "fatal error";
 #endif  // USE_OPENCV
   } else {
     if (param_.force_color() || param_.force_gray()) {
@@ -563,7 +567,8 @@ void DataTransformer<Dtype>::DistortImage(const Datum& datum,
     distort_datum->set_label(datum.label());
     return;
 #else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(FATAL) << "fatal error";
 #endif  // USE_OPENCV
   } else {
     LOG(ERROR) << "Only support encoded datum now";
@@ -1048,7 +1053,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
     // InferBlobShape using the cv::image.
     return InferBlobShape(cv_img);
 #else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
+    LOG(FATAL) << "fatal error";
 #endif  // USE_OPENCV
   }
 

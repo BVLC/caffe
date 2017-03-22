@@ -160,7 +160,8 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
       const string& blob_name = layer_connection.bottom(j);
       if (blob_name_to_last_top_idx.find(blob_name) ==
           blob_name_to_last_top_idx.end()) {
-        LOG(FATAL) << "Unknown blob input " << blob_name << " to layer " << j;
+        LOG(ERROR) << "Unknown blob input " << blob_name << " to layer " << j;
+	LOG(FATAL) << "fatal error";
       }
       const int top_idx = blob_name_to_last_top_idx[blob_name];
       if (top_idx == -1) {
@@ -598,7 +599,8 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
   } else if (type == "window_data") {
     return V1LayerParameter_LayerType_WINDOW_DATA;
   } else {
-    LOG(FATAL) << "Unknown layer name: " << type;
+    LOG(ERROR) << "Unknown layer name: " << type;
+    LOG(FATAL) << "fatal error";
     return V1LayerParameter_LayerType_NONE;
   }
 }
@@ -666,11 +668,12 @@ void UpgradeNetDataTransformation(NetParameter* net_param) {
 
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
   if (v1_net_param.layer_size() > 0) {
-    LOG(FATAL) << "Refusing to upgrade inconsistent NetParameter input; "
+    LOG(ERROR) << "Refusing to upgrade inconsistent NetParameter input; "
         << "the definition includes both 'layer' and 'layers' fields. "
         << "The current format defines 'layer' fields with string type like "
         << "layer { type: 'Layer' ... } and not layers { type: LAYER ... }. "
         << "Manually switch the definition to 'layer' format to continue.";
+    LOG(FATAL) << "fatal error";
   }
   bool is_fully_compatible = true;
   net_param->CopyFrom(v1_net_param);
@@ -726,8 +729,9 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
       mode = ParamSpec_DimCheckMode_PERMISSIVE;
       break;
     default:
-      LOG(FATAL) << "Unknown blob_share_mode: "
+      LOG(ERROR) << "Unknown blob_share_mode: "
                  << v1_layer_param.blob_share_mode(i);
+      LOG(FATAL) << "fatal error";
       break;
     }
     layer_param->mutable_param(i)->set_share_mode(mode);
@@ -954,7 +958,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   case V1LayerParameter_LayerType_THRESHOLD:
     return "Threshold";
   default:
-    LOG(FATAL) << "Unknown V1LayerParameter layer type: " << type;
+    LOG(ERROR) << "Unknown V1LayerParameter layer type: " << type;
+    LOG(FATAL) << "fatal error";
     return "";
   }
 }
@@ -1057,7 +1062,8 @@ bool UpgradeSolverType(SolverParameter* solver_param) {
       type = "Adam";
       break;
     default:
-      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+      LOG(ERROR) << "Unknown SolverParameter solver_type: " << type;
+      LOG(FATAL) << "fatal error";
     }
     solver_param->set_type(type);
     solver_param->clear_solver_type();

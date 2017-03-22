@@ -1626,7 +1626,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestJaccardOverlap) {
   EXPECT_NEAR(overlap, 0., eps);
 }
 
-TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
+  /*TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
   int num = 4;
   Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
   TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
@@ -2026,7 +2026,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlappedMultiClass) {
   // bbox2 with all other bboxes
   EXPECT_EQ(overlapped_cpu_data[14], 1);
   EXPECT_EQ(overlapped_cpu_data[15], 0);
-}
+  }*/
 
 TYPED_TEST(GPUBBoxUtilTest, TestSoftMaxGPU) {
   const int num = 2;

@@ -222,13 +222,15 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       }
       if (conf_scores.find(c) == conf_scores.end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for label " << c;
+        LOG(ERROR) << "Could not find confidence predictions for label " << c;
+	LOG(FATAL) << "fatal error";
       }
       const vector<float>& scores = conf_scores.find(c)->second;
       int label = share_location_ ? -1 : c;
       if (decode_bboxes.find(label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
+        LOG(ERROR) << "Could not find location predictions for label " << label;
+	LOG(FATAL) << "fatal error";
         continue;
       }
       const vector<NormalizedBBox>& bboxes = decode_bboxes.find(label)->second;
@@ -244,7 +246,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         const vector<int>& label_indices = it->second;
         if (conf_scores.find(label) == conf_scores.end()) {
           // Something bad happened for current label.
-          LOG(FATAL) << "Could not find location predictions for " << label;
+          LOG(ERROR) << "Could not find location predictions for " << label;
+	  LOG(FATAL) << "fatal error";
           continue;
         }
         const vector<float>& scores = conf_scores.find(label)->second;
@@ -304,14 +307,16 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       int label = it->first;
       if (conf_scores.find(label) == conf_scores.end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for " << label;
+        LOG(ERROR) << "Could not find confidence predictions for " << label;
+	LOG(FATAL) << "fatal error";
         continue;
       }
       const vector<float>& scores = conf_scores.find(label)->second;
       int loc_label = share_location_ ? -1 : label;
       if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for " << loc_label;
+        LOG(ERROR) << "Could not find location predictions for " << loc_label;
+	LOG(FATAL) << "fatal error";
         continue;
       }
       const vector<NormalizedBBox>& bboxes =

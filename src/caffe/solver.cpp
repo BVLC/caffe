@@ -337,7 +337,8 @@ void Solver<Dtype>::TestAll() {
     } else if (param_.eval_type() == "detection") {
       TestDetection(test_net_id);
     } else {
-      LOG(FATAL) << "Unknown evaluation type: " << param_.eval_type();
+      LOG(ERROR) << "Unknown evaluation type: " << param_.eval_type();
+      LOG(FATAL) << "fatal error";
     }
   }
 }
@@ -490,17 +491,20 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
   }
   for (int i = 0; i < all_true_pos.size(); ++i) {
     if (all_true_pos.find(i) == all_true_pos.end()) {
-      LOG(FATAL) << "Missing output_blob true_pos: " << i;
+      LOG(ERROR) << "Missing output_blob true_pos: " << i;
+      LOG(FATAL) << "fatal error";
     }
     const map<int, vector<pair<float, int> > >& true_pos =
         all_true_pos.find(i)->second;
     if (all_false_pos.find(i) == all_false_pos.end()) {
-      LOG(FATAL) << "Missing output_blob false_pos: " << i;
+      LOG(ERROR) << "Missing output_blob false_pos: " << i;
+      LOG(FATAL) << "fatal error";
     }
     const map<int, vector<pair<float, int> > >& false_pos =
         all_false_pos.find(i)->second;
     if (all_num_pos.find(i) == all_num_pos.end()) {
-      LOG(FATAL) << "Missing output_blob num_pos: " << i;
+      LOG(ERROR) << "Missing output_blob num_pos: " << i;
+      LOG(FATAL) << "fatal error";
     }
     const map<int, int>& num_pos = all_num_pos.find(i)->second;
     map<int, float> APs;
@@ -550,7 +554,8 @@ void Solver<Dtype>::Snapshot() {
     model_filename = SnapshotToHDF5();
     break;
   default:
-    LOG(FATAL) << "Unsupported snapshot format.";
+    LOG(ERROR) << "Unsupported snapshot format.";
+    LOG(FATAL) << "fatal error";
   }
 
   SnapshotSolverState(model_filename);
@@ -567,9 +572,10 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
       probe_ofs.close();
       std::remove(probe_filename.c_str());
     } else {
-      LOG(FATAL) << "Cannot write to snapshot prefix '"
+      LOG(ERROR) << "Cannot write to snapshot prefix '"
           << param_.snapshot_prefix() << "'.  Make sure "
           << "that the directory exists and is writeable.";
+      LOG(FATAL) << "fatal error";
     }
   }
 }
