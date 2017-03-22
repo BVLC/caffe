@@ -12,8 +12,10 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
-namespace caffe {
 
+
+namespace caffe {
+#ifdef BUILD_halide
 template <typename TypeParam>
 class HalideTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
@@ -64,7 +66,6 @@ class HalideTest : public MultiDeviceTest<TypeParam> {
     Caffe::set_random_seed(1701);
   }
 };
-
 
 typedef ::testing::Types< GPUDevice<float> > TestFloatGPU;
 
@@ -131,6 +132,5 @@ TYPED_TEST(HalideTest, TestHasBlob) {
     EXPECT_EQ(blob_top->cpu_data()[i + 14], 9.5);
   }
 }
-
-
+#endif  // BUILD_halide
 }  // namespace caffe

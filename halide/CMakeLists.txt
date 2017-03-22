@@ -15,10 +15,10 @@ if(BUILD_halide)
     # this is done so that we can have a many objects to one wrapper mapping
 
     file(GLOB wrappers wrappers/*.cpp)
-    FOREACH(wrapperCppPath ${wrappers})
+    foreach(wrapperCppPath ${wrappers})
         # Generate output file name
         get_filename_component(wrapper_obj ${wrapperCppPath} NAME_WE)
-        MESSAGE(STATUS "Process file: ${wrapperCppPath} -> ${wrapper_obj}")
+        message(STATUS "Halide build: found wrapper ${wrapper_obj} at ${wrapperCppPath}")
         set_source_files_properties(${wrapperCppPath} PROPERTIES COMPILE_FLAGS "-shared -g -std=c++11 -fPIC -fno-rtti")
         set( wrapper_target "${wrapper_obj}${target_name_mod}")
         add_library(${wrapper_target} ${wrapperCppPath} )
@@ -32,8 +32,7 @@ if(BUILD_halide)
         #caffe_set_runtime_directory(${wrapper_target} "${PROJECT_BINARY_DIR}/test")
         #set_target_properties(${wrapper_target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test")
 
-    ENDFOREACH(wrapperCppPath)
-
+    endforeach(wrapperCppPath)
 
     # ---[ Adding generator target
     file(GLOB gen_srcs generator/*.cpp)
@@ -55,12 +54,12 @@ if(BUILD_halide)
 
 
         file(GLOB gens generator/*.gen)
-        FOREACH(infilePath ${gens})
+        foreach(infilePath ${gens})
             # Generate output file name
             get_filename_component(in_obj ${infilePath} NAME_WE)
-            MESSAGE(STATUS "Process file: ${gens} -> ${in_obj}")
+            message(STATUS "Halide build: found generator ${in_obj} at ${infilePath}")
             SET(outfile "${PROJECT_BINARY_DIR}/halide/${in_obj}")
-            MESSAGE(WARNING "Output file: ${outfile}.o")
+            #message(WARNING "Output file: ${outfile}.o")
             set( in_tgt "${in_obj}${target_name_mod}")
             add_custom_target(halide_generator_run_${in_tgt}
               #OUTPUT "${outfile}"
@@ -77,21 +76,23 @@ if(BUILD_halide)
                 IMPORTED_LOCATION ${outfile}.o
                 INTERFACE_INCLUDE_DIRECTORIES  ${PROJECT_BINARY_DIR}/halide/)
 
-            FOREACH(wrapperCppPath ${wrappers})
+            foreach(wrapperCppPath ${wrappers})
                 # Generate output file name
                 get_filename_component(wrapper_obj ${wrapperCppPath} NAME_WE)
                 set_source_files_properties(${wrapperCppPath} PROPERTIES COMPILE_FLAGS "-shared -g -std=c++11 -fPIC -fno-rtti")
                 set( wrapper_target "${wrapper_obj}${target_name_mod}")
-                message("XXX ${wrapper_target} halide_generator_run_${in_tgt}")
+                #message(STATUS "Halide build: linking ${wrapper_target} with halide_generator_run_${in_tgt}")
                 add_dependencies(${wrapper_target} halide_generator_run_${in_tgt})
 
                 target_link_libraries(${wrapper_target} ${in_tgt})
 
 
 
-            ENDFOREACH(wrapperCppPath)
-        ENDFOREACH(infilePath)
+            endforeach(wrapperCppPath)
+        endforeach(infilePath)
     endif()
+
+    message(STATUS "Halide build info: each wrapper is linked with all avaliable genertors")
 
 
 endif()

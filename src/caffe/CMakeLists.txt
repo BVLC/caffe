@@ -21,11 +21,17 @@ if(HAVE_CUDA)
 endif()
 
 add_library(caffe ${srcs})
-target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
+#target_link_libraries(caffe PUBLIC proto ${Caffe_LINKER_LIBS})
 
-# this is needed for halide_cuda_wrap_device_ptr
-set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS "${PROJECT_BINARY_DIR}/halide/testfunc.o")
+if(BUILD_halide)
+  # this links halide_cuda_wrap_device_ptr, it would be more sensible to get this
+  # from somewhere else
+  set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS "${PROJECT_BINARY_DIR}/halide/testfunc.o")
+else()
+  set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS)
+endif()
 target_compile_definitions(caffe PRIVATE USE_HALIDE=${BUILD_haide})
+
 
 caffe_default_properties(caffe)
 target_link_libraries(caffe ${Caffe_LINKER_LIBS})

@@ -17,7 +17,6 @@
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#include "caffe/test/test_caffe_main.hpp"
 
 
 #define CHECK_DL { dlsym_error = dlerror(); \
