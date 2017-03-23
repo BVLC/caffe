@@ -16,7 +16,6 @@ __host__ __device__ Dtype BBoxSizeGPU(const Dtype* bbox,
     const bool normalized) {
   if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
-    LOG(ERROR) << "Invalid bbox=" << bbox[0] << " " << bbox[1] << " " << bbox[2] << " " << bbox[3] << std::endl;
     return Dtype(0.);
   } else {
     const Dtype width = bbox[2] - bbox[0];
