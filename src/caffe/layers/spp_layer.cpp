@@ -51,6 +51,11 @@ using std::min;
 using std::max;
 
 template <typename Dtype>
+SPPLayer<Dtype>::~SPPLayer() {
+  std::for_each(split_top_vec_.begin(),split_top_vec_.end(), 
+                                                [](Blob<Dtype>* p){delete p;});
+}
+template <typename Dtype>
 LayerParameter SPPLayer<Dtype>::GetPoolingParam(const int pyramid_level,
       const int bottom_h, const int bottom_w, const SPPParameter spp_param) {
   LayerParameter pooling_param;
@@ -112,6 +117,8 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(bottom_w_, 0) << "Input dimensions cannot be zero.";
 
   pyramid_height_ = spp_param.pyramid_height();
+  std::for_each(split_top_vec_.begin(),split_top_vec_.end(), 
+                                                [](Blob<Dtype>* p){delete p;});
   split_top_vec_.clear();
   pooling_bottom_vecs_.clear();
   pooling_layers_.clear();

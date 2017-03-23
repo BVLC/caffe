@@ -57,6 +57,7 @@ class SPPLayer : public Layer<Dtype> {
  public:
   explicit SPPLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  ~SPPLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -88,7 +89,6 @@ class SPPLayer : public Layer<Dtype> {
   shared_ptr<SplitLayer<Dtype> > split_layer_;
   /// top vector holder used in call to the underlying SplitLayer::Forward
   vector<Blob<Dtype>*> split_top_vec_;
-//  vector<shared_ptr<Blob<Dtype> > > split_top_vec_cont_;
   /// bottom vector holder used in call to the underlying PoolingLayer::Forward
   vector<shared_ptr<vector<Blob<Dtype>*> > > pooling_bottom_vecs_;
   /// the internal Pooling layers of different kernel sizes
@@ -107,7 +107,6 @@ class SPPLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> concat_bottom_vec_;
   /// the internal Concat layers that the Flatten layers feed into
   shared_ptr<ConcatLayer<Dtype> > concat_layer_;
-  vector<shared_ptr<Blob<Dtype> > > split_top_vec_cont_;
 };
 
 }  // namespace caffe
