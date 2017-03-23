@@ -369,12 +369,9 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using layout of " << mem_descr->name
             << " as input layout for " << this->layer_param_.name();
 
-    // copy shared_ptr
-    fwd_bottom_data = mem_descr;
-
     // Now create poolingFwd
     status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
-            algorithm, fwd_bottom_data->layout_int, kernel_size,
+            algorithm, mem_descr->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
@@ -382,7 +379,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     // Now create poolingBwd
     status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL,
-            algorithm, fwd_bottom_data->layout_int, kernel_size,
+            algorithm, mem_descr->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
