@@ -2,6 +2,7 @@
 #define CAFFE_GREENTEA_LIBDNN_HPP_
 
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -86,6 +87,7 @@ struct LibDNNConvConfig {
   bool fast_unsafe_math = false;
   bool weights_backward = true;
   bool bias_backward = true;
+  bool phase_test = true;
   libdnnConvolutionWeightAlgo_t wgalgo =
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
@@ -147,7 +149,6 @@ class LibDNN {
 #endif  // USE_CUDA
 
   std::string kernel_;
-
   bool fast_unsafe_math_;
 };
 
@@ -238,6 +239,242 @@ class LibDNNConv : public LibDNN<Dtype> {
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
 };
+
+#ifdef USE_GREENTEA
+template<typename Dtype>
+class LibDNNConvSpatial : public LibDNN<Dtype> {
+ public:
+  explicit LibDNNConvSpatial(LibDNNConvConfig config);
+  void Forward(const Dtype* bottom_data, const Dtype* weight,
+               const Dtype* bias,
+               Dtype* top_data, int_tp batch_size);
+  void ForwardBenchmark(const Dtype* bottom_data, const Dtype* weight,
+               const Dtype* bias,
+               Dtype* top_data, int_tp batch_size);
+  void Backward(bool prop_down_data, bool prop_down_weights,
+                const Dtype* top_data, const Dtype* top_diff,
+                const Dtype* weight, Dtype* weight_diff,
+                const Dtype* bias, Dtype* bias_diff,
+                const Dtype* bottom_data, Dtype* bottom_diff,
+                int_tp batch_size);
+
+  void Tune(Dtype* top_data, Dtype* top_diff,
+            const Dtype* weight, Dtype* weight_diff,
+            const Dtype* bias, Dtype* bias_diff,
+            const Dtype* bottom_data, Dtype* bottom_diff,
+            int_tp batch_size);
+
+  const LibDNNConvConfig get_config();
+
+ protected:
+  void GenerateKernels();
+  std::string string_identifier();
+  std::string generate_fw_defs();
+  std::string generate_fw_kernels(int_tp kernelType,
+                                  int_tp blockM,
+                                  int_tp blockK,
+                                  int_tp blockN);
+
+ private:
+  LibDNNConvConfig config_;
+
+  // Convolution parameters
+  int_tp num_axes_;
+  int_tp fmaps_in_;
+  int_tp fmaps_out_;
+  int_tp group_;
+
+  std::vector<int_tp> pad_;
+  std::vector<int_tp> stride_;
+  std::vector<int_tp> dilation_;
+  std::vector<int_tp> kernel_shape_;
+  std::vector<int_tp> im_in_shape_;
+  std::vector<int_tp> im_out_shape_;
+
+  // Compile and method flags
+  bool bias_term_;
+  Dtype bias_multiplier_;
+
+  struct kernelConfig {
+    string kernelName;
+    float executionTime;
+    size_t local_work_size[3];
+    size_t global_work_size[3];
+    int_tp workItem_output[3];
+    bool verified;
+    bool autoTune;
+    bool tested;
+    bool swizzle_weights;
+    bool use_null_local;
+    int_tp kernelType;
+
+    kernelConfig() {
+    }
+    kernelConfig(string name, size_t* global_size, size_t* local_size,
+    int_tp* workItem,
+                 bool tune, bool swizzle, bool null_local,
+                 int_tp type = 0) {
+      kernelName = name;
+      for (int_tp x = 0; x < 3; x++) {
+        local_work_size[x] = local_size[x];
+        global_work_size[x] = global_size[x];
+        workItem_output[x] = workItem[x];
+      }
+      autoTune = tune;
+      swizzle_weights = swizzle;
+      use_null_local = null_local;
+      verified = false;
+      tested = false;
+      kernelType = type;
+    }
+  };
+
+  void GenerateHelperKernels();
+  viennacl::ocl::program compile_fw_kernel();
+  void calculate_verify_data(const Dtype* bottom,
+                             const Dtype* w,
+                             const Dtype* bias,
+                             Dtype* verify_data);
+
+  virtual void setup_convolution(const Dtype *bottom,
+                                 const Dtype *top,
+                                 const Dtype *verify_blob);
+  virtual void create_convolution_kernel(const Dtype *bottom,
+                                         const Dtype *top,
+                                         int_tp kernelType,
+                                         int_tp blockWidth,
+                                         int_tp blockHeight,
+                                         int_tp blockDepth);
+  virtual bool setup_IDLF(const Dtype *bottom,
+                          const Dtype *top, int_tp blockWidth,
+                          int_tp blockHeight,
+                          int_tp blockDepth);
+  virtual bool create_basic_kernel(const Dtype *bottom,
+                                   const Dtype *top,
+                                   int_tp blockWidth,
+                                   int_tp blockHeight,
+                                   int_tp blockDepth);
+  virtual bool create_gemm_like_conv_kernel(const Dtype *bottom,
+                                   const Dtype *top,
+                                   int_tp blockWidth,
+                                   int_tp blockHeight,
+                                   int_tp blockDepth);
+  virtual cl_int convolve(const Dtype *bottom,
+                          const Dtype *top, int_tp index,
+                          int_tp numImages,
+                          kernelConfig* config);
+  virtual float timed_convolve(const Dtype *bottom,
+                               const Dtype *top, int_tp index,
+                               int_tp numImages,
+                               kernelConfig* config);
+  virtual bool verify_result(const Dtype *bottom,
+                             const Dtype *top, int_tp index,
+                             int_tp numImages, const Dtype *verify_blob,
+                             kernelConfig* config);
+  virtual bool tune_local_size(const Dtype *bottom,
+                               const Dtype *top, kernelConfig*);
+  virtual void swizzleWeights(const Dtype *bottom,
+                              const Dtype *top,
+                              int_tp swizzle_factor,
+                              bool interleave = false);
+  virtual void generate_key();
+  virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
+  int_tp blockHeight,
+                                            int_tp blockDepth);
+  virtual void calculate_global_size(int_tp batch, int_tp* workItemOutput,
+                                     size_t* localSizes, size_t* globalSizes);
+  void load_cached_kernels(const Dtype *bottom,
+                           const Dtype *top);
+  void SetUp(const Dtype *bottom,
+             const Dtype *top, caffe::Backend backend);
+  void setBufferKernelArg(const Dtype *bottom,
+                          const Dtype *top,
+                          viennacl::ocl::kernel *cl_kernel,
+                          const cl_uint &argIdx,
+                          viennacl::ocl::context *ctx,
+                          cl_mem buffer, size_t offset,
+                          size_t size, bool readOnly,
+                          bool preserved);
+  void cleanTmpSubBuffers(const Dtype *bottom,
+                          const Dtype *top);
+  std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
+  std::vector<cl_mem> tmpSubBuffers;
+  const Dtype* bottom_data_;
+  Dtype* top_data_;
+  Dtype* col_data_;
+  const Dtype* weight_;
+  uint64_t prev_weight_seq_id_;
+  Dtype* swizzled_weights;
+  int_tp weight_offset;
+  int_tp col_offset;
+  int_tp top_offset;
+  int_tp output_h_, output_w_;
+  int_tp padded_height_, padded_width_;
+  const Dtype* bias_;
+  int_tp bias_offset_;
+  int_tp bottom_index_;
+
+  int_tp kernel_h_;
+  int_tp kernel_w_;
+  int_tp height_;
+  int_tp width_;
+  int_tp pad_h_;
+  int_tp pad_w_;
+  int_tp stride_h_;
+  int_tp stride_w_;
+  int_tp dilation_h_;
+  int_tp dilation_w_;
+
+  /// M_ is the channel dimension of the output for a single group, which is the
+  /// leading dimension of the filter matrix.
+  int_tp M_;
+  /// K_ is the dimension of an unrolled input for a single group, which is the
+  /// leading dimension of the data matrix.
+  int_tp K_;
+  /// N_ is the spatial dimension of the output, the H x W, which are the last
+  /// dimensions of the data and filter matrices.
+  int_tp N_;
+
+  bool tuned_;
+  bool try_cache_;
+  // if need_padding_ is true, we need to pad the input image,
+  // otherwise, we don't need to pad it then the convolution kernel
+  // need to handle it.
+  bool need_padding_;
+
+  std::string key_;
+  std::string short_key_;
+  std::string kernel_name_;
+  std::stringstream cache_path_;
+
+  Dtype *swizzled_weights_;
+
+  int_tp kernel_index_;
+  int_tp kernel_uid_;
+
+  vector<kernelConfig*> kernelQueue;
+  kernelConfig* bestKernelConfig;
+
+  // derived from BaseConvolutionLayer
+  int_tp bottom_dim_;
+  int_tp top_dim_;
+
+  int_tp num_;
+  int_tp channels_;
+  int_tp out_spatial_dim_;
+  int_tp num_output_;
+  bool is_1x1_;
+
+  int_tp kernel_dim_;
+  int_tp in_spatial_dim_;
+
+  int_tp kernelType_;
+  int_tp blockM_;
+  int_tp blockK_;
+  int_tp blockN_;
+  std::string options_;
+};
+#endif
 
 struct LibDNNPoolConfig {
   LibDNNPoolConfig() :
