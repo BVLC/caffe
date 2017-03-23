@@ -57,6 +57,7 @@ class SPPLayer : public Layer<Dtype> {
  public:
   explicit SPPLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  ~SPPLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -89,19 +90,19 @@ class SPPLayer : public Layer<Dtype> {
   /// top vector holder used in call to the underlying SplitLayer::Forward
   vector<Blob<Dtype>*> split_top_vec_;
   /// bottom vector holder used in call to the underlying PoolingLayer::Forward
-  vector<vector<Blob<Dtype>*>*> pooling_bottom_vecs_;
+  vector<shared_ptr<vector<Blob<Dtype>*> > > pooling_bottom_vecs_;
   /// the internal Pooling layers of different kernel sizes
   vector<shared_ptr<PoolingLayer<Dtype> > > pooling_layers_;
   /// top vector holders used in call to the underlying PoolingLayer::Forward
-  vector<vector<Blob<Dtype>*>*> pooling_top_vecs_;
+  vector<shared_ptr<vector<Blob<Dtype>*> > > pooling_top_vecs_;
   /// pooling_outputs stores the outputs of the PoolingLayers
-  vector<Blob<Dtype>*> pooling_outputs_;
+  vector<shared_ptr<Blob<Dtype> > > pooling_outputs_;
   /// the internal Flatten layers that the Pooling layers feed into
-  vector<FlattenLayer<Dtype>*> flatten_layers_;
+  vector<shared_ptr<FlattenLayer<Dtype> > > flatten_layers_;
   /// top vector holders used in call to the underlying FlattenLayer::Forward
-  vector<vector<Blob<Dtype>*>*> flatten_top_vecs_;
+  vector<shared_ptr<vector<Blob<Dtype>*> > > flatten_top_vecs_;
   /// flatten_outputs stores the outputs of the FlattenLayers
-  vector<Blob<Dtype>*> flatten_outputs_;
+  vector<shared_ptr<Blob<Dtype> > > flatten_outputs_;
   /// bottom vector holder used in call to the underlying ConcatLayer::Forward
   vector<Blob<Dtype>*> concat_bottom_vec_;
   /// the internal Concat layers that the Flatten layers feed into
