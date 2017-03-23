@@ -120,6 +120,7 @@ if(ANDROID)
   caffe_enable_cpp11_support()
 endif()
 
+
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 
@@ -149,10 +150,6 @@ endif()
 
 if(USE_INDEX_64)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_INDEX_64)
-endif()
-
-if(NOT MSVC)
-  add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
 endif()
 
 # ---[ Warnings

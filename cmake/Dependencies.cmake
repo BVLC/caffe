@@ -6,18 +6,14 @@ set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
-include_directories(SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
-add_definitions(-DBOOST_ALL_NO_LIB)
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
+list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_ALL_NO_LIB)
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
 
-
-if(DEFINED MSVC)
-  # We should define this only when necessary,
-  # i.e VS 2013 Update 4 or earlier.
-  add_definitions(-DBOOST_NO_CXX11_TEMPLATE_ALIASES)
+if(DEFINED MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.0.40629.00)
+  # Required for VS 2013 Update 4 or earlier.
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_NO_CXX11_TEMPLATE_ALIASES)
 endif()
-
 # ---[ Threads
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
@@ -305,7 +301,7 @@ if(BUILD_python)
   if(PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND)
     set(HAVE_PYTHON TRUE)
     if(Boost_USE_STATIC_LIBS AND MSVC)
-      add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+      list(APPEND Caffe_DEFINITIONS PUBLIC -DBOOST_PYTHON_STATIC_LIB)
     endif()
     if(BUILD_python_layer)
       list(APPEND Caffe_DEFINITIONS PRIVATE -DWITH_PYTHON_LAYER)
