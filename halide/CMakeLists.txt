@@ -5,15 +5,59 @@ if(BUILD_halide)
 
     #add_subdirectory(test)
 
-    #Target name modification
-    #The general cmake script takes its target names from files. This variable
-    #prevents having two similarly named files in one build.
+    # Target name modification
+    # In general take target names from *.gen files. This variable would allow chaning
+    # names, e.g. in the case where test functions have the same name.
     set(target_name_mod "")
 
-    # compile the wrapper, specify this first because we want to have their target handles
-    # so that we can add all objects to it ( which we will specify next
-    # this is done so that we can have a many objects to one wrapper mapping
+    # ---[ Create generator executable
+    file(GLOB gen_srcs generator/*.cpp)
+    if(gen_srcs)
+        set_source_files_properties(${gen_srcs} PROPERTIES COMPILE_FLAGS "-std=c++11 -g -fno-rtti")
+        link_directories(${HALIDE_BIN_DIR})
+        set(local_generator_tgt "halide_object_generator${target_name_mod}")
+        add_executable(${local_generator_tgt} ${gen_srcs})
+        target_include_directories(${local_generator_tgt} PUBLIC ${HALIDE_INCLUDE_DIR})
+        target_link_libraries(${local_generator_tgt} pthread dl  pthread z
+                              ${Halide_LINKER_LIBS})
+        caffe_default_properties(${local_generator_tgt})
+        caffe_set_runtime_directory(${local_generator_tgt} "${PROJECT_BINARY_DIR}/halide")
+        install(TARGETS ${local_generator_tgt} DESTINATION bin)
+    endif()
 
+
+    # ---[ Run generator executable to generate halide objects
+    set(Halide_OBJECTS "")
+    file(GLOB gens generator/*.gen)
+    foreach(infilePath ${gens})
+        # Generate output file name
+        get_filename_component(in_obj ${infilePath} NAME_WE)
+        message(STATUS "Halide build: found generator ${in_obj} at ${infilePath}")
+        SET(outfile "${PROJECT_BINARY_DIR}/halide/${in_obj}.o")
+        set( in_tgt "${in_obj}${target_name_mod}")
+        #message(STATUS halide_generator_run_${in_tgt} "creates" ${outfile} )
+
+        # add_custom_target is of type UTILITY which we cant linked
+        add_custom_target(
+          halide_generator_run_${in_tgt}
+          #OUTPUT ${outfile}
+          COMMAND ${local_generator_tgt} -g ${in_obj} target=cuda -e o,h -o .
+          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/halide
+          COMMENT "ran generated ${local_generator_tgt} in ${PROJECT_BINARY_DIR}/halide"
+          SOURCES ${halide_object_SOURCES}
+        )
+        # so import the outputs and treat them like a library
+        add_library( ${in_tgt} STATIC IMPORTED GLOBAL)
+        set_target_properties(${in_tgt}
+            PROPERTIES
+            IMPORTED_LOCATION ${outfile}
+            INTERFACE_INCLUDE_DIRECTORIES  ${PROJECT_BINARY_DIR}/halide/)
+        # make sure we run the generator
+        add_dependencies(${in_tgt} halide_generator_run_${in_tgt})
+        list(APPEND Halide_OBJECTS ${in_tgt})
+    endforeach(infilePath)
+
+    # ---[ Compile halide wrapers and link in halide objects
     file(GLOB wrappers wrappers/*.cpp)
     foreach(wrapperCppPath ${wrappers})
         # Generate output file name
@@ -23,76 +67,13 @@ if(BUILD_halide)
         set( wrapper_target "${wrapper_obj}${target_name_mod}")
         add_library(${wrapper_target} ${wrapperCppPath} )
         target_include_directories(${wrapper_target} PUBLIC ${HALIDE_INCLUDE_DIR} ${PROJECT_BINARY_DIR}/halide)
-        target_link_libraries(${wrapper_target} pthread dl pthread z glog gflags boost_system-mt caffe
-                              ${Halide_LINKER_LIBS})
-
+        # Add extra wrapper depedancies here.
+        target_link_libraries(${wrapper_target} caffe ${Halide_LINKER_LIBS})
         caffe_default_properties(${wrapper_target})
         caffe_set_runtime_directory(${wrapper_target} "${PROJECT_BINARY_DIR}/halide")
         install(TARGETS ${wrapper_target} DESTINATION lib/halide)
-        #caffe_set_runtime_directory(${wrapper_target} "${PROJECT_BINARY_DIR}/test")
-        #set_target_properties(${wrapper_target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test")
-
+        add_dependencies(${wrapper_target} ${Halide_OBJECTS})
+        target_link_libraries(${wrapper_target} ${Halide_OBJECTS})
     endforeach(wrapperCppPath)
-
-    # ---[ Adding generator target
-    file(GLOB gen_srcs generator/*.cpp)
-    if(gen_srcs)
-        set_source_files_properties(${gen_srcs} PROPERTIES COMPILE_FLAGS "-std=c++11 -g -fno-rtti")
-        link_directories(${HALIDE_BIN_DIR})
-
-        set(local_generator_tgt "halide_object_generator${target_name_mod}")
-        add_executable(${local_generator_tgt} ${gen_srcs})
-
-        target_include_directories(${local_generator_tgt} PUBLIC ${HALIDE_INCLUDE_DIR})
-        target_link_libraries(${local_generator_tgt} pthread dl  pthread z
-                              ${Halide_LINKER_LIBS})
-
-        caffe_default_properties(${local_generator_tgt})
-        caffe_set_runtime_directory(${local_generator_tgt} "${PROJECT_BINARY_DIR}/halide")
-
-        install(TARGETS ${local_generator_tgt} DESTINATION bin)
-
-
-        file(GLOB gens generator/*.gen)
-        foreach(infilePath ${gens})
-            # Generate output file name
-            get_filename_component(in_obj ${infilePath} NAME_WE)
-            message(STATUS "Halide build: found generator ${in_obj} at ${infilePath}")
-            SET(outfile "${PROJECT_BINARY_DIR}/halide/${in_obj}")
-            #message(WARNING "Output file: ${outfile}.o")
-            set( in_tgt "${in_obj}${target_name_mod}")
-            add_custom_target(halide_generator_run_${in_tgt}
-              #OUTPUT "${outfile}"
-              COMMAND ${local_generator_tgt} -g ${in_obj} -o . target=cuda
-              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/halide
-              COMMENT "run generated ${local_generator_tgt} in ${PROJECT_BINARY_DIR}/halide"
-              SOURCES ${halide_object_SOURCES}
-            )
-            set( wrapper_target "${wrapper_obj}${target_name_mod}")
-
-            add_library( ${in_tgt} STATIC IMPORTED GLOBAL)
-            set_target_properties(${in_tgt}
-                PROPERTIES
-                IMPORTED_LOCATION ${outfile}.o
-                INTERFACE_INCLUDE_DIRECTORIES  ${PROJECT_BINARY_DIR}/halide/)
-
-            foreach(wrapperCppPath ${wrappers})
-                # Generate output file name
-                get_filename_component(wrapper_obj ${wrapperCppPath} NAME_WE)
-                set_source_files_properties(${wrapperCppPath} PROPERTIES COMPILE_FLAGS "-shared -g -std=c++11 -fPIC -fno-rtti")
-                set( wrapper_target "${wrapper_obj}${target_name_mod}")
-                #message(STATUS "Halide build: linking ${wrapper_target} with halide_generator_run_${in_tgt}")
-                add_dependencies(${wrapper_target} halide_generator_run_${in_tgt})
-
-                target_link_libraries(${wrapper_target} ${in_tgt})
-
-
-
-            endforeach(wrapperCppPath)
-        endforeach(infilePath)
-    endif()
-
-    message(STATUS "Halide build info: each wrapper is linked with all avaliable genertors")
-
-
+    message(STATUS "Halide build info: wrappers linked with: ${Halide_OBJECTS}")
 endif()

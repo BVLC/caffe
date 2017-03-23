@@ -21,17 +21,25 @@ if(HAVE_CUDA)
 endif()
 
 add_library(caffe ${srcs})
-#target_link_libraries(caffe PUBLIC proto ${Caffe_LINKER_LIBS})
-
 if(BUILD_halide)
-  # this links halide_cuda_wrap_device_ptr, it would be more sensible to get this
-  # from somewhere else
-  set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS "${PROJECT_BINARY_DIR}/halide/testfunc.o")
-else()
-  set_property(TARGET caffe APPEND PROPERTY LINK_FLAGS)
-endif()
-target_compile_definitions(caffe PRIVATE USE_HALIDE=${BUILD_haide})
+  # Double check that the file we want to link exists, because for some
+  # reason halide was outputting .a files
+  add_custom_target(
+    testfunc_check_exists
+    COMMAND if [ -e testfunc.o ]; then echo '-- Found testfunc:  ${PROJECT_BINARY_DIR}/halide/testfunc.o' \; fi
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/halide
+    COMMENT "ran testfunc_check"
+  )
+  add_dependencies(testfunc_check_exists testfunc)
+  add_dependencies(caffe testfunc_check_exists)
+  add_dependencies(caffe testfunc)
 
+  target_link_libraries(caffe PUBLIC proto testfunc)
+  #TODO(max): is this needed?
+  target_compile_definitions(caffe PRIVATE USE_HALIDE=${BUILD_haide})
+else()
+  target_link_libraries(caffe PUBLIC proto ${Caffe_LINKER_LIBS})
+endif()
 
 caffe_default_properties(caffe)
 target_link_libraries(caffe ${Caffe_LINKER_LIBS})

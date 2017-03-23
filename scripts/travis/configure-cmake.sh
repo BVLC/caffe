@@ -29,7 +29,7 @@ else
 fi
 
 if $WITH_HALIDE ; then
-  ARGS="$ARGS -DBUILD_halide=On -DHALIDE_ROOT_DIR=/home/travis/halide -DHALIDE_LIBRARIES=/home/travis/halide/lib/libHalide.a -DHALIDE_INCLUDE_DIR=/home/travis/halide/include"
+  ARGS="$ARGS -DBUILD_halide=On -DHALIDE_ROOT_DIR=/home/travis/halide -DHALIDE_LIBRARIES=/home/travis/halide/bin/libHalide.so -DHALIDE_INCLUDE_DIR=/home/travis/halide/include"
 fi
 
 cmake .. $ARGS
