@@ -5,14 +5,14 @@ endif()
 
 file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
 
-add_library(pycaffe SHARED ${python_srcs})
-target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
+add_library(pycaffe MODULE ${python_srcs})
+caffe_default_properties(pycaffe)
+set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
 if(MSVC)
   set_target_properties(pycaffe PROPERTIES SUFFIX ".pyd")
 endif()
-caffe_default_properties(pycaffe)
-set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
 #target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
+target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES})
 
 if(UNIX OR APPLE)
     set(__linkname "${PROJECT_SOURCE_DIR}/python/caffe/_caffe.so")

@@ -1,14 +1,25 @@
-set(DEPENDENCIES_URL_1800_27 "https://github.com/willyd/caffe-builder/releases/download/v1.1.0/libraries_v120_x64_py27_1.1.0.tar.bz2")
+set(DEPENDENCIES_VERSION 1.1.0)
+set(DEPENDENCIES_NAME_1800_27 libraries_v120_x64_py27_${DEPENDENCIES_VERSION})
+set(DEPENDENCIES_NAME_1900_27 libraries_v140_x64_py27_${DEPENDENCIES_VERSION})
+set(DEPENDENCIES_NAME_1900_35 libraries_v140_x64_py35_${DEPENDENCIES_VERSION})
+
+set(DEPENDENCIES_URL_BASE https://github.com/willyd/caffe-builder/releases/download)
+set(DEPENDENCIES_FILE_EXT .tar.bz2)
+set(DEPENDENCIES_URL_1800_27 "${DEPENDENCIES_URL_BASE}/v${DEPENDENCIES_VERSION}/${DEPENDENCIES_NAME_1800_27}${DEPENDENCIES_FILE_EXT}")
 set(DEPENDENCIES_SHA_1800_27 "ba833d86d19b162a04d68b09b06df5e0dad947d4")
-set(DEPENDENCIES_URL_1900_27 "https://github.com/willyd/caffe-builder/releases/download/v1.1.0/libraries_v140_x64_py27_1.1.0.tar.bz2")
+set(DEPENDENCIES_URL_1900_27 "${DEPENDENCIES_URL_BASE}/v${DEPENDENCIES_VERSION}/${DEPENDENCIES_NAME_1900_27}${DEPENDENCIES_FILE_EXT}")
 set(DEPENDENCIES_SHA_1900_27 "17eecb095bd3b0774a87a38624a77ce35e497cd2")
-set(DEPENDENCIES_URL_1900_35 "https://github.com/willyd/caffe-builder/releases/download/v1.1.0/libraries_v140_x64_py35_1.1.0.tar.bz2")
+set(DEPENDENCIES_URL_1900_35 "${DEPENDENCIES_URL_BASE}/v${DEPENDENCIES_VERSION}/${DEPENDENCIES_NAME_1900_35}${DEPENDENCIES_FILE_EXT}")
 set(DEPENDENCIES_SHA_1900_35 "f060403fd1a7448d866d27c0e5b7dced39c0a607")
 
 caffe_option(USE_PREBUILT_DEPENDENCIES "Download and use the prebuilt dependencies" ON IF MSVC)
 if(MSVC)
-  set(CAFFE_DEPENDENCIES_DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "Download directory for prebuilt dependencies")
-  set(CAFFE_DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR})
+  file(TO_CMAKE_PATH $ENV{USERPROFILE} USERPROFILE_DIR)
+  if(NOT EXISTS ${USERPROFILE_DIR})
+    message(FATAL_ERROR "Could not find %USERPROFILE% directory. Please specify an alternate CAFFE_DEPENDENCIES_ROOT_DIR")
+  endif()
+  set(CAFFE_DEPENDENCIES_ROOT_DIR ${USERPROFILE_DIR}/.caffe/dependencies CACHE PATH "Prebuild depdendencies root directory")
+  set(CAFFE_DEPENDENCIES_DOWNLOAD_DIR ${CAFFE_DEPENDENCIES_ROOT_DIR}/download CACHE PATH "Download directory for prebuilt dependencies")
 endif()
 if(USE_PREBUILT_DEPENDENCIES)
     # Determine the python version
@@ -31,10 +42,16 @@ if(USE_PREBUILT_DEPENDENCIES)
     # set the dependencies URL and SHA1
     set(DEPENDENCIES_URL ${DEPENDENCIES_URL_${MSVC_VERSION}_${_pyver}})
     set(DEPENDENCIES_SHA ${DEPENDENCIES_SHA_${MSVC_VERSION}_${_pyver}})
-    # create the download directory if it does not exist
-    if(NOT EXISTS ${CAFFE_DEPENDENCIES_DOWNLOAD_DIR})
-      file(MAKE_DIRECTORY ${CAFFE_DEPENDENCIES_DOWNLOAD_DIR})
-    endif()
+    set(CAFFE_DEPENDENCIES_DIR ${CAFFE_DEPENDENCIES_ROOT_DIR}/${DEPENDENCIES_NAME_${MSVC_VERSION}_${_pyver}})
+
+    foreach(_dir ${CAFFE_DEPENDENCIES_ROOT_DIR}
+                 ${CAFFE_DEPENDENCIES_DOWNLOAD_DIR}
+                 ${CAFFE_DEPENDENCIES_DIR})
+      # create the directory if it does not exist
+      if(NOT EXISTS ${_dir})
+        file(MAKE_DIRECTORY ${_dir})
+      endif()
+    endforeach()
     # download and extract the file if it does not exist or if does not match the sha1
     get_filename_component(_download_filename ${DEPENDENCIES_URL} NAME)
     set(_download_path ${CAFFE_DEPENDENCIES_DOWNLOAD_DIR}/${_download_filename})
@@ -50,7 +67,7 @@ if(USE_PREBUILT_DEPENDENCIES)
         endif()
     endif()
     if(_download_file)
-        message(STATUS "Downloading file dependencies")
+        message(STATUS "Downloading prebuilt dependencies to ${_download_path}")
         file(DOWNLOAD "${DEPENDENCIES_URL}"
                       "${_download_path}"
                       EXPECTED_HASH SHA1=${DEPENDENCIES_SHA}
