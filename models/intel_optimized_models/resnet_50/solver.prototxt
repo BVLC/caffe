@@ -1,26 +1,16 @@
-#This is Intel(R) optimized (in terms of time to train) version of solver for model described in the [Deep Residual Learning for Image Recognition](https://arxiv.org/pdf/1512.03385v1) publication.
-#Original solver.prototxt can be found in /models/default_resnet_50/ directory of this repository.
-#Differences:
-#- gamma is set to 0.51
-#- stepsize is set to 60000
-#
-#Top-5 and Top-1 results achieved with this version of solver:
-#Top-5: 89.16%
-#Top-1: 68.86%
-#Training was performed using server equipped with Intel(R) Xeon Phi(TM) CPU 7250 processor. 
-net: "models/intel_optimized_models/resnet_50/train_val.prototxt"
-test_iter: 100
-test_interval: 10000
-test_initialization: false
-display: 40
-average_loss: 40
+#This solver is described by Computer Vision Group Jena (CVGJ) in [ImageNet pre-trained models with batch normalization] (https://arxiv.org/pdf/1612.01452.pdf)
+net: "train_val.prototxt"
+test_iter: 5000
+test_interval: 15000
 base_lr: 0.1
-lr_policy: "step"
-stepsize: 60000
-gamma: 0.51
-max_iter: 600000
+display: 20
+iter_size: 2
+max_iter: 320000
+lr_policy: "poly"
+power: 1
 momentum: 0.9
 weight_decay: 0.0001
-snapshot: 50000
-snapshot_prefix: "models/intel_optimized_models/resnet_50/resnet_50"
+snapshot: 30000
+snapshot_prefix: "caffe-resnet50"
+test_initialization: false
 solver_mode: CPU

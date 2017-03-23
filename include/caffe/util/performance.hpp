@@ -38,21 +38,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PerformanceH
 
 #ifdef PERFORMANCE_MONITORING
+
+#define PERFORMANCE_EVENT_ID_UNSET (-1)
+
+#define PERFORMANCE_EVENT_ID_DECL(id_name) \
+  int id_name
+
+#define PERFORMANCE_EVENT_ID_RESET(id_name) \
+  id_name = PERFORMANCE_EVENT_ID_UNSET
+
+#define PERFORMANCE_EVENT_ID_INIT(id_name, event_name) \
+  if ((id_name) == PERFORMANCE_EVENT_ID_UNSET)         \
+    id_name = performance::monitor.GetEventIdByName(event_name)
+
 #define PERFORMANCE_MEASUREMENT_BEGIN()            \
   performance::Measurement m_MACRO;                \
   m_MACRO.Start();
 
-#define PERFORMANCE_MEASUREMENT_END(name)                        \
-  m_MACRO.Stop();                                                \
-  const char* n_MACRO = name;                                    \
-  int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+#define PERFORMANCE_MEASUREMENT_END(name)                                \
+  m_MACRO.Stop();                                                        \
+  int id_MACRO = performance::monitor.GetEventIdByName(name);            \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
 
-#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                        \
-  m_MACRO.Stop();                                                       \
-  static const char* n_MACRO = name;                                    \
-  static int id_MACRO = performance::monitor.GetEventIdByName(n_MACRO); \
+#define PERFORMANCE_MEASUREMENT_END_STATIC(name)                     \
+  m_MACRO.Stop();                                                    \
+  static int id_MACRO = performance::monitor.GetEventIdByName(name); \
   performance::monitor.UpdateEventById(id_MACRO, m_MACRO);
+
+#define PERFORMANCE_MEASUREMENT_END_ID(id_name)           \
+  m_MACRO.Stop();                                         \
+  performance::monitor.UpdateEventById(id_name, m_MACRO);
 
 #define PERFORMANCE_CREATE_MONITOR() \
   namespace performance {            \
@@ -62,27 +77,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   performance::monitor.EnableMeasurements(); \
   performance::monitor.MarkAsInitialized();
 
-#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)             \
+#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)       \
+  do {                                                \
+    static char name[256];                            \
+    snprintf(name, sizeof(name), "%s_mkl_%s", prefix, \
+      this->layer_param_.name().c_str());             \
+    PERFORMANCE_MEASUREMENT_END(name);                \
+  } while(0)
+
+#define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix) \
+  do {                                                           \
+    static char name[256];                                       \
+    snprintf(name, sizeof(name), "%s_mkl_%s%s", prefix,          \
+      this->layer_param_.name().c_str(), suffix);                \
+    PERFORMANCE_MEASUREMENT_END(name);                           \
+  } while(0)
+
+#define PERFORMANCE_MKL_NAME_DETAILED(prefix, suffix)        \
   (std::string(prefix) + "_mkl_" + this->layer_param_.name() \
-    + std::string(suffix)).c_str();
+    + std::string(suffix)).c_str()
 
 #define PERFORMANCE_MKL_NAME(prefix) \
-  (std::string(prefix) + "_mkl_" + this->layer_param_.name()).c_str();
+  (std::string(prefix) + "_mkl_" + this->layer_param_.name()).c_str()
 
 #else
+#define PERFORMANCE_EVENT_ID_DECL(id_name)
+#define PERFORMANCE_EVENT_ID_RESET(id_name)
+#define PERFORMANCE_EVENT_ID_INIT(id_name, event_name)
 #define PERFORMANCE_MEASUREMENT_BEGIN()
 #define PERFORMANCE_MEASUREMENT_END(name)
 #define PERFORMANCE_MEASUREMENT_END_STATIC(name)
+#define PERFORMANCE_MEASUREMENT_END_ID(id_name)
 #define PERFORMANCE_CREATE_MONITOR()
 #define PERFORMANCE_INIT_MONITOR()
-#define PERFORMANCE_MKL_NAME_SFX(prefix, suffix)
-#define PERFORMANCE_MKL_NAME(prefix)
+#define PERFORMANCE_MEASUREMENT_END_MKL(prefix)
+#define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix)
 #endif
 
 #ifdef PERFORMANCE_MONITORING
+
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef PERFORMANCE_MONITORING_USE_TSC
+#include <unistd.h>
+#endif
 #include <map>
 #include <string>
 #include <utility>
@@ -95,6 +134,31 @@ namespace performance {
 
     uint64_t time_stamp_;
 
+#ifdef PERFORMANCE_MONITORING_USE_TSC
+    static double GetTSCFreq() {
+      static double tsc_freq = 0;
+      if (!tsc_freq) {
+        // Calibrate the frequency
+        const int usleep_one_second = 1000000;
+        uint64_t tsc0 = GetTSC();
+        usleep(usleep_one_second);
+        uint64_t tsc1 = GetTSC();
+        uint64_t tsc_diff = tsc1 - tsc0;
+        tsc_freq = (double)tsc_diff / clocks_per_second_;
+      }
+      return tsc_freq;
+    }
+
+    static uint64_t GetTSC() {
+      uint32_t lo, hi;
+      __asm__ volatile("rdtscp" : "=a"(lo), "=d"(hi) : : "%ecx");
+      return (uint64_t)lo | ((uint64_t)hi << 32);
+    }
+
+    static PreciseTime GetTimeStamp(clockid_t clock_id) {
+      return PreciseTime((uint64_t)(GetTSC() / GetTSCFreq()));
+    }
+#else
     static PreciseTime GetTimeStamp(clockid_t clock_id) {
       timespec current_time;
       clock_gettime(clock_id, &current_time);
@@ -102,9 +166,16 @@ namespace performance {
       return PreciseTime(clocks_per_second_ * ((uint64_t)current_time.tv_sec)
         + ((uint64_t)current_time.tv_nsec));
     }
+#endif
 
    public:
     PreciseTime() {
+    }
+
+    static void Calibrate() {
+#ifdef PERFORMANCE_MONITORING_USE_TSC
+      GetTSCFreq();
+#endif
     }
 
     explicit PreciseTime(uint64_t time_stamp) : time_stamp_(time_stamp) {
@@ -155,10 +226,10 @@ namespace performance {
     }
 
     void Suspend() {
-      process_accumulator_ = PreciseTime::GetProcessTime()
-        - process_time_stamp_;
-      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
-        - monotonic_time_stamp_;
+      process_accumulator_ = process_accumulator_ +
+        PreciseTime::GetProcessTime() - process_time_stamp_;
+      monotonic_accumulator_ = monotonic_accumulator_ +
+        PreciseTime::GetMonotonicTime() - monotonic_time_stamp_;
     }
 
     void Resume() {
@@ -186,10 +257,10 @@ namespace performance {
     }
 
     void Stop() {
-      process_accumulator_ = PreciseTime::GetProcessTime()
-        - process_time_stamp_;
-      monotonic_accumulator_ = PreciseTime::GetMonotonicTime()
-        - monotonic_time_stamp_;
+      process_accumulator_ = process_accumulator_ +
+        PreciseTime::GetProcessTime() - process_time_stamp_;
+      monotonic_accumulator_ = monotonic_accumulator_ + 
+        PreciseTime::GetMonotonicTime() - monotonic_time_stamp_;
 
       static Measurement*& stack = GetStack();
 
@@ -495,6 +566,8 @@ namespace performance {
     Monitor() {
       events_.reserve(64);
 
+      PreciseTime::Calibrate();
+
       are_measurements_enabled_ = false;
 
       total_monotonic_time_ = PreciseTime::GetMonotonicTime();
@@ -521,7 +594,7 @@ namespace performance {
 
     unsigned GetEventIdByName(const char *event_name) {
       if (!are_measurements_enabled_)
-        return 0;
+        return PERFORMANCE_EVENT_ID_UNSET;
 
       Pair pair(event_name, events_.size());
       Status status = event_name_id_map_.insert(pair);

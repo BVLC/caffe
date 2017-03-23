@@ -467,9 +467,10 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
 
   // eltw1 verification
   Layer<Dtype>* eltw1_layer = net->layer_by_name("eltw1").get();
-  EltwiseLayer<Dtype>* eltw1_caffe =
-          dynamic_cast<EltwiseLayer<Dtype>* >(eltw1_layer);
-  EXPECT_NE(null_ptr, eltw1_caffe);
+  // TODO: Change to MKLDNNEltwiseLayer when eltwise layer support added
+  MKLDNNEltwiseLayer<Dtype>* eltw1_mkldnn =
+          dynamic_cast<MKLDNNEltwiseLayer<Dtype>* >(eltw1_layer);
+  EXPECT_NE(null_ptr, eltw1_mkldnn);
 
   // Do all the automatically inserted splits have correct engine?
   const vector<shared_ptr<Layer<Dtype> > >& layers = net->layers();
@@ -477,8 +478,8 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
     if (layers[i]->layer_param().type() == "Split") {
       string name = layers[i]->layer_param().name();
       Layer<Dtype>* split_layer = net->layer_by_name(name).get();
-      SplitLayer<Dtype>* split_caffe =
-          dynamic_cast<SplitLayer<Dtype>* >(split_layer);
+      MKLDNNSplitLayer<Dtype>* split_caffe =
+          dynamic_cast<MKLDNNSplitLayer<Dtype>* >(split_layer);
       EXPECT_NE(null_ptr, split_caffe);
     }
   }

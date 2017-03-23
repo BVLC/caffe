@@ -279,9 +279,10 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
       reinterpret_cast<void*>(top[0]->mutable_cpu_data());
   }
 
-  PERFORMANCE_MEASUREMENT_BEGIN()
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(concatFwd_, concat_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"))
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -312,9 +313,10 @@ void MKLConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(concatBwd_, concat_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }

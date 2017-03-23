@@ -132,7 +132,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   if (filtered_param.engine() == "")
     filtered_param.set_engine("MKLDNN");
 #endif
-
+  engine_name_ = filtered_param.engine();
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
 
@@ -152,9 +152,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CompileNet(param_with_splits, &param);
 
   // Printing processed model
-  LOG_IF(INFO, Caffe::root_solver())
-      << "Initializing net from parameters: " << std::endl
-      << param.DebugString();
+  if (Caffe::root_solver()) {
+    LOG(INFO) << "Initializing net from parameters: " << std::endl;
+    LOG(INFO).flush();
+    fflush(0);
+    param.PrintDebugString();
+    fflush(0);
+  }
 
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
@@ -178,7 +182,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
-    if (param.engine() != "")
+    if (param.engine() != "" && param.layer(layer_id).engine() == "")
       param.mutable_layer(layer_id)->set_engine(param.engine());
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
@@ -596,6 +600,10 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
                                scale_param().bias_term();
         layer_param->mutable_batch_norm_param()->
         set_bias_term(scale_bias_term);
+        if (consumer_layer_param.blobs_size() == 2) {
+          layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(0));
+          layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(1));
+        }
       }
     }
 
@@ -1219,7 +1227,12 @@ void Net<Dtype>::Reshape() {
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
+void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
+  NetParameter param_tmp = param_inp;
+  param_tmp.set_engine(engine_name_);
+  NetParameter param;
+  CompileNet(param_tmp, &param);
+
   int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layer(i);

@@ -1,0 +1,24 @@
+#This is Intel(R) optimized (in terms of time to train) version of solver for model GoogLeNet v2.
+#Original solver.prototxt can be found in /models/default_resnet_50/ directory of this repository.
+#Differences:
+#- lr_policy is set to poly instead of step
+#- base_lr is set to 0.05
+#- max_iter is decreased to 100000
+#
+#Top-5 and Top-1 results achieved with this version of solver:
+#Top-5: 89.40%
+#Top-1: 69.02%
+#Training was performed using server equipped with Intel(R) Xeon Phi(TM) CPU 7250 processor. 
+
+net: "models/intel_optimized_models/multinode/googlenet_v2_4nodes/train_val.prototxt"
+base_lr: 0.05
+display: 40
+max_iter: 100000
+lr_policy: "poly"
+power: 0.5
+momentum: 0.9
+weight_decay: 0.0002
+snapshot: 10000
+snapshot_prefix: "models/intel_optimized_models/multinode/googlenet_v2_4nodes/default_googlenet_v2"
+solver_mode: CPU
+average_loss: 40

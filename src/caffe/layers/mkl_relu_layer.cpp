@@ -273,9 +273,10 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using cpu_data for top in mklReLU.";
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(reluFwd_, relu_res);
-  PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -312,9 +313,10 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       DLOG(INFO) << "Using mutable_prv (out-of-place) in mklReLU-backward.";
     }
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     e = dnnExecute<Dtype>(reluBwd_, relu_res);
-    PERFORMANCE_MEASUREMENT_END(PERFORMANCE_MKL_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
     CHECK_EQ(e, E_SUCCESS);
   }
