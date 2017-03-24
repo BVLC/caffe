@@ -599,6 +599,8 @@ endif
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything mkldnn mkldnn_clean
 
+.DEFAULT_GOAL := all
+
 # Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
 # if no openmp is supported in compiler then openmp compiler flags are not to be updated 
 # TODO: FIX for ICC?
