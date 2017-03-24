@@ -250,7 +250,7 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(e, E_SUCCESS);
     }
   }
-
+  
   dnnError_t e;
   void* relu_res[dnnResourceNumber];
   relu_res[dnnResourceSrc] = bottom_data;
@@ -298,13 +298,8 @@ void MKLReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     relu_res[dnnResourceDiffDst] = bwd_top_diff_->get_converted_prv(top[0],
             true);
     if (bwd_bottom_diff_->conversion_needed()) {
-      if (NULL != bottom[0]->get_prv_data_descriptor()) {
-        bottom[0]->set_prv_diff_descriptor(fwd_bottom_data_);
-        DLOG(INFO) << "Using top as bottom (in-place) in mklReLU-backward.";
-      } else {
-        bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff_);
-        DLOG(INFO) << "Using top as bottom (in-place) in mklReLU-backward.";
-      }
+      bottom[0]->set_prv_diff_descriptor(bwd_bottom_diff_);
+      DLOG(INFO) << "Using top as bottom (in-place) in mklReLU-backward.";
       relu_res[dnnResourceDiffSrc] = bottom[0]->mutable_prv_diff();
     } else {
       relu_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
