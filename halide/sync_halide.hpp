@@ -15,7 +15,7 @@ buffer_t HalideWrapBlob(const Blob<Dtype>& blob, bool data = true) {
     "than four axes";
   buffer_t buf = {};
   for (int i = 0; i < blob.num_axes(); ++i) {
-    // XXX reversing dimensions here -- should I?
+    // reversing dimensions here (maybe unecessary)
     buf.extent[blob.num_axes() - 1 - i] = blob.shape(i);
     buf.stride[blob.num_axes() - 1 - i] = blob.count(i + 1);
   }
@@ -27,10 +27,10 @@ buffer_t HalideWrapBlob(const Blob<Dtype>& blob, bool data = true) {
     mem = blob.diff();
   }
   // not using mutable_ accessors since we don't want to cause a copy here
-  // XXX this will force unneeded GPU -> CPU -> GPU copies
+  // this will force unneeded GPU -> CPU -> GPU copies
   buf.host = const_cast<uint8_t*>(
       reinterpret_cast<const uint8_t*>(mem->cpu_data()));
-  // XXX this will force a GPU allocation
+  // this will force a GPU allocation
   CHECK_EQ(halide_cuda_wrap_device_ptr(NULL, &buf,
       reinterpret_cast<uintptr_t>(mem->gpu_data())), 0);
   buf.host_dirty = mem->head() == SyncedMemory::HEAD_AT_CPU;
@@ -38,7 +38,6 @@ buffer_t HalideWrapBlob(const Blob<Dtype>& blob, bool data = true) {
   return buf;
 }
 
-// XXX XXX
 template <typename Dtype>
 buffer_t HalideWrapBlobFlat(const Blob<Dtype>& blob, bool data = true) {
   buffer_t buf = {};
@@ -52,10 +51,10 @@ buffer_t HalideWrapBlobFlat(const Blob<Dtype>& blob, bool data = true) {
     mem = blob.diff();
   }
   // not using mutable_ accessors since we don't want to cause a copy here
-  // XXX this will force unneeded GPU -> CPU -> GPU copies
+  // this will force unneeded GPU -> CPU -> GPU copies
   buf.host = const_cast<uint8_t*>(
       reinterpret_cast<const uint8_t*>(mem->cpu_data()));
-  // XXX this will force a GPU allocation
+  // this will force a GPU allocation
   CHECK_EQ(halide_cuda_wrap_device_ptr(NULL, &buf,
       reinterpret_cast<uintptr_t>(mem->gpu_data())), 0);
   buf.host_dirty = mem->head() == SyncedMemory::HEAD_AT_CPU;

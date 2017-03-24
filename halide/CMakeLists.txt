@@ -2,12 +2,11 @@
 # var and lack of add_subdirectory call.
 
 if(BUILD_halide)
-
-    #add_subdirectory(test)
-
-    # Target name modification
-    # In general take target names from *.gen files. This variable would allow chaning
-    # names, e.g. in the case where test functions have the same name.
+    # Target name modification:
+    # In general take target names from *.gen files. This variable would allow
+    # chaning names dependent on which subdir a copy of this cmake file is in.
+    # This could be used to speparate test functions with the same name as
+    # non test-functions.
     set(target_name_mod "")
 
     # ---[ Create generator executable
@@ -35,7 +34,6 @@ if(BUILD_halide)
         message(STATUS "Halide build: found generator ${in_obj} at ${infilePath}")
         SET(outfile "${PROJECT_BINARY_DIR}/halide/${in_obj}.o")
         set( in_tgt "${in_obj}${target_name_mod}")
-        #message(STATUS halide_generator_run_${in_tgt} "creates" ${outfile} )
 
         # add_custom_target is of type UTILITY which we cant linked
         add_custom_target(

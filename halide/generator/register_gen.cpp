@@ -25,10 +25,7 @@ class GenBlur : public Halide::Generator<GenBlur> {
     blur_x(x, y, c, b) = (inp_c(x-1, y, c, b) + inp_c(x, y, c, b) + inp_c(x+1, y, c, b))/3;
     blur_y(x, y, c, b) = (blur_x(x, y-1, c, b) + blur_x(x, y, c, b) + blur_x(x, y+1,c ,b))/3;
 
-    // The schedule - defines order, locality; implies storage
-    //blur_y.tile(x, y, xi, yi, 256, 32)
-    //      .vectorize(xi, 8).parallel(y);
-    //blur_x.compute_at(blur_y, x).vectorize(x, 8);
+    // The schedule goes here
 
     return blur_y;
   }
