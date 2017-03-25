@@ -41,6 +41,9 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+  } else {
+    if (data_.use_count() > 1) data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    if (diff_.use_count() > 1) diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
   }
 }
 
@@ -155,12 +158,14 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
+  if (capacity_ > count_) capacity_ = count_;
   data_ = other.data();
 }
 
 template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
+  if (capacity_ > count_) capacity_ = count_;
   diff_ = other.diff();
 }
 
