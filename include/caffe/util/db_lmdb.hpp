@@ -3,6 +3,7 @@
 #define CAFFE_UTIL_DB_LMDB_HPP
 
 #include <string>
+#include <vector>
 
 #include "lmdb.h"
 
@@ -54,14 +55,16 @@ class LMDBCursor : public Cursor {
 
 class LMDBTransaction : public Transaction {
  public:
-  explicit LMDBTransaction(MDB_dbi* mdb_dbi, MDB_txn* mdb_txn)
-    : mdb_dbi_(mdb_dbi), mdb_txn_(mdb_txn) { }
+  explicit LMDBTransaction(MDB_env* mdb_env)
+    : mdb_env_(mdb_env) { }
   virtual void Put(const string& key, const string& value);
-  virtual void Commit() { MDB_CHECK(mdb_txn_commit(mdb_txn_)); }
+  virtual void Commit();
 
  private:
-  MDB_dbi* mdb_dbi_;
-  MDB_txn* mdb_txn_;
+  MDB_env* mdb_env_;
+  vector<string> keys, values;
+
+  void DoubleMapSize();
 
   DISABLE_COPY_AND_ASSIGN(LMDBTransaction);
 };

@@ -14,7 +14,8 @@ namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
   return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param)
-      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param);
+      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param)
+      || NetNeedsBatchNormUpgrade(net_param);
 }
 
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
@@ -70,6 +71,14 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
               << "input fields.";
     LOG(WARNING) << "Note that future Caffe releases will only support "
                  << "input layers and not input fields.";
+  }
+  // NetParameter uses old style batch norm layers; try to upgrade it.
+  if (NetNeedsBatchNormUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade batch norm layers using deprecated "
+              << "params: " << param_file;
+    UpgradeNetBatchNorm(param);
+    LOG(INFO) << "Successfully upgraded batch norm layers using deprecated "
+              << "params.";
   }
   return success;
 }
@@ -989,6 +998,35 @@ void UpgradeNetInput(NetParameter* net_param) {
   net_param->clear_input();
   net_param->clear_input_shape();
   net_param->clear_input_dim();
+}
+
+bool NetNeedsBatchNormUpgrade(const NetParameter& net_param) {
+  for (int i = 0; i < net_param.layer_size(); ++i) {
+    // Check if BatchNorm layers declare three parameters, as required by
+    // the previous BatchNorm layer definition.
+    if (net_param.layer(i).type() == "BatchNorm"
+        && net_param.layer(i).param_size() == 3) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void UpgradeNetBatchNorm(NetParameter* net_param) {
+  for (int i = 0; i < net_param->layer_size(); ++i) {
+    // Check if BatchNorm layers declare three parameters, as required by
+    // the previous BatchNorm layer definition.
+    if (net_param->layer(i).type() == "BatchNorm"
+        && net_param->layer(i).param_size() == 3) {
+      // set lr_mult and decay_mult to zero. leave all other param intact.
+      for (int ip = 0; ip < net_param->layer(i).param_size(); ip++) {
+        ParamSpec* fixed_param_spec =
+          net_param->mutable_layer(i)->mutable_param(ip);
+        fixed_param_spec->set_lr_mult(0.f);
+        fixed_param_spec->set_decay_mult(0.f);
+      }
+    }
+  }
 }
 
 // Return true iff the solver contains any old solver_type specified as enums
