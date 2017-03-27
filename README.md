@@ -117,10 +117,6 @@ CMake can be used to build a shared library instead of the default static librar
 
 Should you encounter any error please post the output of the above commands by redirecting the output to a file and open a topic on the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users) mailing list.
 
-## Previous Visual Studio based build
-
-The previous windows build based on Visual Studio project files is now deprecated. However, it is still available in the `windows` folder. Please see the [README.md](windows/README.md) in there for details.
-
 ## Known issues
 
 - The `GPUTimer` related test cases always fail on Windows. This seems to be a difference between UNIX and Windows.
