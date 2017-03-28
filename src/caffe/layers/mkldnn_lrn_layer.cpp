@@ -178,7 +178,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRNFwd(const vector<Blob<Dtype>*>& bottom, const
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
-    //memory::format scratch_mfmt = memory::format::nchw;
 
     shared_ptr<MemPD> usr_data_memory_pd(new MemPD({{tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
@@ -288,7 +287,6 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
-    //memory::format scratch_mfmt = memory::format::nchw;
 
     shared_ptr<MemPD> usr_data_memory_pd(new MemPD({{tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
