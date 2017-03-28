@@ -640,17 +640,30 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
 
     // If current layer is Convolution of MKLDNN engine..
+    /*
+    //Old Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || ((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos)) || ((G == "" && H == 0 && I == string::npos)))))
+    //New tmp Structure:    if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos))) || ((G == "" && H == 0 && I == string::npos)))))
+    //New Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && (E == 0 && F == string::npos)) || (G == "" && H == 0 && I == string::npos))))
+    //Old Structure:
+    //if ((A == TEST) &&
+    //    (B == 0) &&
+    //   ((C == ConvolutionParameter_Engine_MKLDNN)
+    //   || ((D == ConvolutionParameter_Engine_DEFAULT) &&
+    //        ((E == 0
+    //        && F == string::npos)) ||
+    //        ((G == "" &&
+    //          H == 0 &&
+    //          I == string::npos)))))
+    */
     if ((param.state().phase() == TEST) && 
         (layer_param->type().compare("Convolution") == 0) &&
-       ((layer_param->convolution_param().engine() ==
-         ConvolutionParameter_Engine_MKLDNN)
-       || ((layer_param->convolution_param().engine() ==
-           ConvolutionParameter_Engine_DEFAULT) &&
-            ((param.engine().compare(0, 6, "MKLDNN") == 0
+       ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
+       || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0
             && param.engine().find(":DLA", 6) == string::npos)) ||
-            ((param.engine() == "" &&
+            (param.engine() == "" &&
               layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos))))) {
+              layer_param->engine().find(":DLA", 6) == string::npos)))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -660,16 +673,28 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer lauyer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
+      /*
+      //Old Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || ((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos)) || ((F == "" && G == 0 && H == string::npos)))))
+      //New tmp Structure:  if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos))) || ((F == "" && G == 0 && H == string::npos)))))
+      //New Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && (D == 0 && E == string::npos)) || (F == "" && G == 0 && H == string::npos))))
+      //Old Structure:
+      //if ((A == 0) &&
+      //  ((B == ReLUParameter_Engine_MKLDNN)
+      //  || ((C == ReLUParameter_Engine_DEFAULT) &&
+      //      ((D == 0
+      //      && E == string::npos)) ||
+      //      ((F == "" &&
+      //        G == 0 &&
+      //        H == string::npos)))))
+      */
       if ((consumer_layer_param.type().compare("ReLU") == 0) &&
-        ((consumer_layer_param.relu_param().engine() ==
-          ReLUParameter_Engine_MKLDNN)
-        || ((consumer_layer_param.relu_param().engine() ==
-            ReLUParameter_Engine_DEFAULT) &&
-            ((param.engine().compare(0, 6, "MKLDNN") == 0
+        ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
+        || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0
             && param.engine().find(":DLA", 6) == string::npos)) ||
-            ((param.engine() == "" &&
+            (param.engine() == "" &&
               layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos))))) {
+              layer_param->engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);

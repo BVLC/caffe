@@ -46,10 +46,10 @@ namespace caffe {
 
 template <typename Dtype>
 MKLDNNLRNLayer<Dtype>::MKLDNNLRNLayer(const LayerParameter& param)
-		: MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
-		, fwd_bottom_data(NULL), fwd_top_data(NULL)
-		, bwd_bottom_diff(NULL), bwd_top_diff(NULL)
-		, lrnFwd_pd(NULL), lrnBwd_pd(NULL)
+        : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
+        , fwd_top_data(NULL), fwd_bottom_data(NULL)
+        , bwd_top_diff(NULL), bwd_bottom_diff(NULL)
+        , lrnFwd_pd(NULL), lrnBwd_pd(NULL)
 		, fwd_top_data_memory(NULL), bwd_bottom_diff_memory(NULL)
 		, scratch_memory(NULL)
 		, fwd_bottom_data_primitive(NULL), bwd_top_diff_primitive(NULL)
@@ -178,7 +178,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNFwd(const vector<Blob<Dtype>*>& bottom, const
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
-    memory::format scratch_mfmt = memory::format::nchw;
+    //memory::format scratch_mfmt = memory::format::nchw;
 
     shared_ptr<MemPD> usr_data_memory_pd(new MemPD({{tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
@@ -288,7 +288,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
-    memory::format scratch_mfmt = memory::format::nchw;
+    //memory::format scratch_mfmt = memory::format::nchw;
 
     shared_ptr<MemPD> usr_data_memory_pd(new MemPD({{tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
