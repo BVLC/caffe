@@ -206,6 +206,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
     Blob<Dtype>* const top = new Blob<Dtype>();
     top->ReshapeLike(*this->blob_top_);
     caffe_copy(count, this->blob_top_->cpu_data(), top->mutable_cpu_data());
+    std::for_each(this->blob_top_vec_.begin(), this->blob_top_vec_.end(),
+                                      [](Blob<Dtype>* pPtr) {delete pPtr; });
     this->blob_top_vec_.clear();
     this->blob_top_vec_.push_back(new Blob<Dtype>());
     inner_product_param->set_transpose(true);
