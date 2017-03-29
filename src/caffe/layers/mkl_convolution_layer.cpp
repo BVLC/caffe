@@ -401,7 +401,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                        this->channels_ == bottom[0]->channels() &&
                        this->num_ == bottom[0]->num()) ? false : true;
 
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 
   if (reinitialize == true) {
     Init(bottom, top);

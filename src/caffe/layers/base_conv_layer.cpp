@@ -228,7 +228,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void BaseConvolutionLayer<Dtype>::BeforeReshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
@@ -296,25 +296,11 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     caffe_set(bias_multiplier_.count(), Dtype(1),
         bias_multiplier_.mutable_cpu_data());
   }
+}
 
-  // ---- openmp ------------------------------------------
-  num_of_threads_ = 1;
-#ifdef _OPENMP
-  num_of_threads_ = omp_get_max_threads() < bottom[0]->shape(0) ?
-                    omp_get_max_threads() : bottom[0]->shape(0);
-  if (num_of_threads_ < 1) {
-     LOG(WARNING) << "Base Conv layer: omp_get_max_threads() ="
-                  << num_of_threads_;
-     num_of_threads_ = 1;
-  }
-#endif
-
-  size_t col_buffer_mt_size = num_of_threads_ * static_cast<size_t>(col_buffer_.count());
-  size_t weight_diff_mt_size = num_of_threads_ * static_cast<size_t>(this->blobs_[0]->count());
-
-  col_buffer_mt_.resize(col_buffer_mt_size);
-  weight_diff_mt_.resize(weight_diff_mt_size);
-
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::AfterReshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
 #ifdef USE_MLSL
   if (this->layerOp == NULL) {
     DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
@@ -341,6 +327,37 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     delete myRegInfo;
   }
 #endif /* USE_MLSL */
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  BeforeReshape(bottom, top);
+ // ---- openmp ------------------------------------------
+  num_of_threads_ = 1;
+#ifdef _OPENMP
+  num_of_threads_ = omp_get_max_threads() < bottom[0]->shape(0) ?
+                    omp_get_max_threads() : bottom[0]->shape(0);
+  if (num_of_threads_ < 1) {
+     LOG(WARNING) << "Base Conv layer: omp_get_max_threads() ="
+                  << num_of_threads_;
+     num_of_threads_ = 1;
+  }
+#endif
+
+  col_buffer_mt_size = num_of_threads_ * static_cast<size_t>(col_buffer_.count());
+  weight_diff_mt_size = num_of_threads_ * static_cast<size_t>(this->blobs_[0]->count());
+
+  col_buffer_mt_.resize(col_buffer_mt_size);
+  weight_diff_mt_.resize(weight_diff_mt_size);
+  AfterReshape(top, bottom);
+}
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::ReshapeForMKL(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  BeforeReshape(bottom, top);
+  AfterReshape(bottom, top);
 }
 
 template <typename Dtype>
