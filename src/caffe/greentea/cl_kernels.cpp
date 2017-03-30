@@ -5199,6 +5199,10 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << "#undef Dtype8" << "\n\n";  // NOLINT
   ss << "#undef Dtype16" << "\n\n";  // NOLINT
   ss << "#define Dtype double" << "\n\n";  // NOLINT
+  ss << "#define Dtype2 double2" << "\n\n";  // NOLINT
+  ss << "#define Dtype4 double4" << "\n\n";  // NOLINT
+  ss << "#define Dtype8 double8" << "\n\n";  // NOLINT
+  ss << "#define Dtype16 double16" << "\n\n";  // NOLINT
   ss << "#undef TYPE" << "\n\n";  // NOLINT
   ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
   for (int i = 0; i < cl_kernels.size(); ++i) {
@@ -5264,10 +5268,18 @@ std::string getKernelBundleSource(int index) {
 #endif
   if (std::is_same<Dtype, float>::value) {
     ss << "#define Dtype float" << "\n\n";  // NOLINT
+    ss << "#define Dtype2 float2" << "\n\n";  // NOLINT
+    ss << "#define Dtype4 float4" << "\n\n";  // NOLINT
+    ss << "#define Dtype8 float8" << "\n\n";  // NOLINT
+    ss << "#define Dtype16 float16" << "\n\n";  // NOLINT
     ss << "#define TYPE TYPE_FLOAT" << "\n\n";  // NOLINT
   } else {
     ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
     ss << "#define Dtype double" << "\n\n";  // NOLINT
+    ss << "#define Dtype2 double2" << "\n\n";  // NOLINT
+    ss << "#define Dtype4 double4" << "\n\n";  // NOLINT
+    ss << "#define Dtype8 double8" << "\n\n";  // NOLINT
+    ss << "#define Dtype16 double16" << "\n\n";  // NOLINT
     ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
   }
   for (int j = 0; j < cl_kernels[index].size(); ++j) {
