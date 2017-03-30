@@ -107,7 +107,7 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+    BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
     init_properties(bottom, top);
 }
 
