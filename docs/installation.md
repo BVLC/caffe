@@ -11,10 +11,10 @@ The official Makefile and `Makefile.config` build are complemented by a [communi
 **Step-by-step Instructions**:
 
 - [Docker setup](https://github.com/BVLC/caffe/tree/master/docker) *out-of-the-box brewing*
-- [Ubuntu installation](install_apt.html) *the standard platform*
-- [Debian installation](install_apt_debian.html) *install caffe with a single command*
-- [OS X installation](install_osx.html)
-- [RHEL / CentOS / Fedora installation](install_yum.html)
+- [Ubuntu installation](install_apt.md) *the standard platform*
+- [Debian installation](install_apt_debian.md) *install caffe with a single command*
+- [OS X installation](install_osx.md)
+- [RHEL / CentOS / Fedora installation](install_yum.md)
 - [Windows](https://github.com/BVLC/caffe/tree/windows) *see the Windows branch led by Guillaume Dumont*
 - [OpenCL](https://github.com/BVLC/caffe/tree/opencl) *see the OpenCL branch led by Fabian Tschopp*
 - [AWS AMI](https://github.com/bitfusionio/amis/tree/master/awsmrkt-bfboost-ubuntu14-cuda75-caffe) *pre-configured for AWS*
