@@ -9,6 +9,16 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+// add ctrl-c interrupt support for matlab during solver.step()
+#ifdef MATLAB_MEX_FILE
+#include "mex.h"
+#ifdef __cplusplus 
+extern "C" bool utIsInterruptPending();
+#else
+extern bool utIsInterruptPending();
+#endif
+#endif
+
 namespace caffe {
 
 template<typename Dtype>
@@ -259,7 +269,11 @@ void Solver<Dtype>::Step(int iters) {
          (request == SolverAction::SNAPSHOT)) {
       Snapshot();
     }
-    if (SolverAction::STOP == request) {
+#ifdef MATLAB_MEX_FILE
+	if (SolverAction::STOP == request || utIsInterruptPending()) {		// check for a CTRL-C from Matlab
+#else
+	if (SolverAction::STOP == request) {
+#endif
       requested_early_exit_ = true;
       // Break out of training loop.
       break;
