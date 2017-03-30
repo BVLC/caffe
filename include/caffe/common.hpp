@@ -170,6 +170,12 @@ class Caffe {
   inline static void set_multiprocess(bool val) { Get().multiprocess_ = val; }
   inline static bool root_solver() { return Get().solver_rank_ == 0; }
 
+#ifdef MATLAB_MEX_FILE
+  // Whether is called from matlab
+  inline static bool using_Matlab() { return Get().using_Matlab_; }
+  inline static void set_using_Matlab(bool val) { Get().using_Matlab_ = val; }
+#endif
+
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
@@ -183,6 +189,11 @@ class Caffe {
   int solver_count_;
   int solver_rank_;
   bool multiprocess_;
+
+#ifdef MATLAB_MEX_FILE
+  // Use matlab
+  bool using_Matlab_ = false;
+#endif
 
  private:
   // The private constructor to avoid duplicate instantiation.

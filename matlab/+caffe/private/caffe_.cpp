@@ -586,6 +586,41 @@ static handler_registry handlers[] = {
 };
 
 /** -----------------------------------------------------------------
+** failure handling.
+**/
+
+// Failure function to prevent Matlab from crushing
+// by throwing an exception
+// Failurefunction might be called multiple times, therefore set a first-call variable
+bool firstFail = true;
+void MyFailureFunction(){
+	if (Caffe::using_Matlab() && firstFail){
+		firstFail = false;
+		mexPrintf("failure function\n");
+		throw ("Fatal Error");
+		exit(1);		// this shouldn't be reached.
+	}
+}
+
+// Matlab sink, to display (abnormal) log message in matlab
+// The logsink::send might be called multiple times, therefore set a first-call variable
+// Have to use warnmsg type, otherwise matlab still crushes
+bool firstFatalLog = true;
+class MatlabSink : public google::LogSink {
+	virtual void send(google::LogSeverity severity, const char* full_filename,
+		const char* base_filename, int line,
+		const struct ::tm* tm_time,
+		const char* message, size_t message_len){
+		if (severity > google::INFO && Caffe::using_Matlab() && firstFatalLog){
+			firstFatalLog = false;
+			mexWarnMsgTxt(LogSink::ToString(severity, base_filename, line, tm_time, message, message_len).c_str());
+		}
+	}
+
+} MyMatlabSink;
+
+
+/** -----------------------------------------------------------------
  ** matlab entry point.
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
@@ -596,16 +631,29 @@ void mexFunction(MEX_ARGS) {
 #endif  // _MSC_VER
   mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
+  Caffe::set_using_Matlab(true);	// set using_Matlab flag
+  plhs[0] = mxCreateDoubleScalar(0.0); // return 0 as default
   // Handle input command
   char* cmd = mxArrayToString(prhs[0]);
   bool dispatched = false;
-  // Dispatch to cmd handler
-  for (int i = 0; handlers[i].func != NULL; i++) {
-    if (handlers[i].cmd.compare(cmd) == 0) {
-      handlers[i].func(nlhs, plhs, nrhs-1, prhs+1);
-      dispatched = true;
-      break;
-    }
+
+  try{
+	  // Add customized failure function and logsink for matlab
+	  ::google::InstallFailureFunction(&MyFailureFunction);
+	  ::google::AddLogSink(&MyMatlabSink);
+	  // Dispatch to cmd handler
+	  for (int i = 0; handlers[i].func != NULL; i++) {
+		  if (handlers[i].cmd.compare(cmd) == 0) {
+			  handlers[i].func(nlhs, plhs, nrhs - 1, prhs + 1);
+			  dispatched = true;
+			  break;
+		  }
+	  }
+  }
+  catch (...){
+	  dispatched = true;
+	  plhs[0] = mxCreateDoubleScalar(-1.0);
+	  mexPrintf("Fatal error occured. Return -1 as output.\n");
   }
   if (!dispatched) {
     ostringstream error_msg;
@@ -613,4 +661,5 @@ void mexFunction(MEX_ARGS) {
     mxERROR(error_msg.str().c_str());
   }
   mxFree(cmd);
+  Caffe::set_using_Matlab(false);	// clear using_Matlab flag
 }
