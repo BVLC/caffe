@@ -67,12 +67,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
  protected:
   // Split Reshape into two parts
-  // Part 1 for normal conv blob reshape 
+  // Part 1 for normal blob reshape 
   // Part 2 for openmp optimization for CAFFE engine (only)
-  // Part 3 for multinode training
-  void BeforeReshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  void AfterReshape(const vector<Blob<Dtype>*>& bottom,
+  void DoReshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   void ReshapeForMKL(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
