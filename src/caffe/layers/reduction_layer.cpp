@@ -26,12 +26,11 @@ void ReductionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   num_ = bottom[0]->count(0, axis_);
   dim_ = bottom[0]->count(axis_);
   CHECK_EQ(num_, top[0]->count());
-  if (op_ == ReductionParameter_ReductionOp_SUM ||
-      op_ == ReductionParameter_ReductionOp_MEAN) {
-    vector<int> sum_mult_shape(1, dim_);
-    sum_multiplier_.Reshape(sum_mult_shape);
-    caffe_set(dim_, Dtype(1), sum_multiplier_.mutable_cpu_data());
-  }
+
+  vector<int> sum_mult_shape(1, dim_);
+  sum_multiplier_.Reshape(sum_mult_shape);
+  caffe_set(dim_, Dtype(1), sum_multiplier_.mutable_cpu_data());
+
   coeff_ = this->layer_param().reduction_param().coeff();
   if (op_ == ReductionParameter_ReductionOp_MEAN) {
     coeff_ /= dim_;
@@ -42,30 +41,31 @@ template <typename Dtype>
 void ReductionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* mult_data = NULL;
-  if (sum_multiplier_.count() > 0) {
-    mult_data = sum_multiplier_.cpu_data();
-  }
   Dtype* top_data = top[0]->mutable_cpu_data();
-  for (int i = 0; i < num_; ++i) {
-    switch (op_) {
-    case ReductionParameter_ReductionOp_SUM:
-    case ReductionParameter_ReductionOp_MEAN:
-      *top_data = caffe_cpu_dot(dim_, mult_data, bottom_data);
-      break;
-    case ReductionParameter_ReductionOp_ASUM:
-      *top_data = caffe_cpu_asum(dim_, bottom_data);
-      break;
-    case ReductionParameter_ReductionOp_SUMSQ:
-      *top_data = caffe_cpu_dot(dim_, bottom_data, bottom_data);
-      break;
-    default:
-      LOG(FATAL) << "Unknown reduction op: "
-          << ReductionParameter_ReductionOp_Name(op_);
+
+  if (op_ == ReductionParameter_ReductionOp_SUM ||
+      op_ == ReductionParameter_ReductionOp_MEAN) {
+    const Dtype* mult_data = sum_multiplier_.cpu_data();
+    caffe_cpu_gemv<Dtype>(CblasNoTrans, num_, dim_,
+                          1, bottom_data, mult_data, 0, top_data);
+  } else {
+    for (int i = 0; i < num_; ++i) {
+      switch (op_) {
+      case ReductionParameter_ReductionOp_ASUM:
+        *top_data = caffe_cpu_asum(dim_, bottom_data);
+        break;
+      case ReductionParameter_ReductionOp_SUMSQ:
+        *top_data = caffe_cpu_dot(dim_, bottom_data, bottom_data);
+        break;
+      default:
+        LOG(FATAL) << "Unknown reduction op: "
+            << ReductionParameter_ReductionOp_Name(op_);
+      }
+      bottom_data += dim_;
+      ++top_data;
     }
-    bottom_data += dim_;
-    ++top_data;
   }
+
   if (coeff_ != Dtype(1)) {
     // Reset the top_data pointer.
     top_data = top[0]->mutable_cpu_data();
