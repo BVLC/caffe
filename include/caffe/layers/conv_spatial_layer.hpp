@@ -64,7 +64,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return 1;
   }
   virtual inline bool EqualNumBottomTopBlobs() const {
-    return true;
+    return IsFusedWithEltwiseReLU() ? false : true;
   }
 
  protected:
@@ -187,6 +187,27 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                           const vector<Blob<Dtype>*>& top);
   std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
   std::vector<cl_mem> tmpSubBuffers;
+
+  bool IsFused() const
+  {
+    return (this->layer_param_.convolution_param().fuse_type() != ConvolutionParameter_FuseType_UNFUSED);
+  }
+
+  bool IsFusedWithReLU() const
+  {
+    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
+  }
+
+  bool IsFusedWithMaxPoolAndReLU() const
+  {
+    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_MAX_POOLING_RELU);
+  }
+
+  bool IsFusedWithEltwiseReLU() const
+  {
+    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
+  }
+
 #endif
 #endif
 
@@ -239,6 +260,13 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   vector<kernelConfig*> kernelQueue;
   kernelConfig* bestKernelConfig;
+
+  // parameters for fused eltwise layer.
+  EltwiseParameter_EltwiseOp op_;                                                                                                                                                                                                        vector<Dtype> coeffs_;
+  Blob<int_tp> max_idx_;
+
+  bool stable_prod_grad_;
+
 };
 
 }  // namespace caffe
