@@ -188,10 +188,15 @@ echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT"
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
-echo "  // ctx->build_options(\"-cl-fast-relaxed-math -cl-mad-enable\");" >> $SOURCE
+echo "  string options;" >> $SOURCE
 echo "#ifdef USE_FFT" >> $SOURCE
-echo "  ctx->build_options(\"-DFFT\");" >> $SOURCE
+echo "  options = \" -DFFT \"" >> $SOURCE
 echo "#endif" >> $SOURCE
+echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
+echo "                    != std::string::npos;" >> $SOURCE
+echo "  if (!is_beignet)" >> $SOURCE
+echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
+echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
 echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
@@ -222,6 +227,10 @@ echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
 echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
+echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
+echo "                    != std::string::npos;" >> $SOURCE
+echo "  if (!is_beignet)" >> $SOURCE
+echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(ss.str(), name);" >> $SOURCE
 echo "  return program;" >> $SOURCE
