@@ -63,6 +63,38 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
     product_layer_->SetUp(product_bottom_vec_, top);
   }
+  if (IsFused()) {
+    CHECK(this->layer_param_.lrn_param().norm_region()
+          == LRNParameter_NormRegion_ACROSS_CHANNELS);
+    CHECK(this->phase_ == caffe::TEST);
+    CHECK(this->layer_param_.lrn_param().pooling_param().pool()
+          == PoolingParameter_PoolMethod_MAX);
+    CHECK(this->layer_param_.lrn_param().pooling_param().kernel_size(0)
+          < 6);
+    CHECK(this->layer_param_.lrn_param().pooling_param().stride(0) < 4);
+    CHECK(this->layer_param_.lrn_param().pooling_param().dilation_size() == 0);
+    pool_w_ = this->layer_param_.lrn_param().pooling_param().kernel_size(0);
+    pool_h_ = this->layer_param_.lrn_param().pooling_param().kernel_size(0);
+    pool_stride_w_ =  this->layer_param_.lrn_param().pooling_param().stride(0);
+    pool_stride_h_ =  this->layer_param_.lrn_param().pooling_param().stride(0);
+    // currently, only support the stride == pool - 1
+    CHECK(pool_w_ - pool_stride_w_ == 1 && pool_w_ < 8);
+    if (!this->layer_param_.lrn_param().unit_test_mode()) {
+      fuse_tuned_ = false;
+      tuned_use_fuse_ = false;
+    } else {
+      fuse_tuned_ = true;
+      tuned_use_fuse_ = this->layer_param_.lrn_param().unit_test_fuse_kernel();
+    }
+    lrn_top_vec_.push_back(&lrn_top_blob_);
+    LayerParameter pooling_param;
+    pooling_param.mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
+    pooling_param.mutable_pooling_param()->add_kernel_size(pool_w_);
+    pooling_param.mutable_pooling_param()->add_stride(pool_stride_w_);
+    pool_layer_.reset(new PoolingLayer<Dtype>(pooling_param));
+    lrn_top_blob_.ReshapeLike(*bottom[0]);
+    pool_layer_->SetUp(lrn_top_vec_, top);
+  }
 }
 
 template<typename Dtype>
@@ -76,7 +108,16 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   width_ = bottom[0]->width();
   switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    top[0]->Reshape(num_, channels_, height_, width_);
+    if (IsFused()) {
+      pooled_width_ = static_cast<int_tp>(ceil(
+              static_cast<float>(width_ - pool_w_) / pool_stride_w_)) + 1;
+      pooled_height_ = static_cast<int_tp>(ceil(
+              static_cast<float>(height_ - pool_h_) / pool_stride_h_)) + 1;
+      top[0]->Reshape(num_, channels_, pooled_width_, pooled_height_);
+      lrn_top_blob_.Reshape(num_, channels_, width_, height_);
+    } else {
+      top[0]->Reshape(num_, channels_, height_, width_);
+    }
     scale_.Reshape(num_, channels_, height_, width_);
     break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:

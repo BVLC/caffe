@@ -458,4 +458,74 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 
 #endif
 
+template <typename Dtype>
+class LRNFuseLayerTest : public GPUDeviceTest<Dtype> {
+ protected:
+  LRNFuseLayerTest()
+      : epsilon_(Dtype(1e-3)),
+        blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()) {}
+  virtual void SetUp() {
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
+    blob_bottom_->Reshape(1, 32, 55, 55);
+    // fill the values
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+  virtual ~LRNFuseLayerTest() { delete blob_bottom_; delete blob_top_; }
+
+  Dtype epsilon_;
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_top_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+TYPED_TEST_CASE(LRNFuseLayerTest, TestDtypes);
+
+TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
+  LayerParameter layer_param;
+
+  Blob<TypeParam> top_reference;
+  LRNLayer<TypeParam> lrnLayer(layer_param);
+
+  // calculate reference value by lrn layer followed by pooling layer
+  lrnLayer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  lrnLayer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  LayerParameter pooling_param;
+  pooling_param.mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
+  pooling_param.mutable_pooling_param()->add_kernel_size(3);
+  pooling_param.mutable_pooling_param()->add_stride(2);
+  PoolingLayer<TypeParam> pooling_layer(pooling_param);
+  vector<Blob<TypeParam>*> top_reference_vec;
+  top_reference_vec.push_back(&top_reference);
+  pooling_layer.SetUp(this->blob_top_vec_, top_reference_vec);
+  pooling_layer.Forward(this->blob_top_vec_, top_reference_vec);
+  // calculate result by lrn fused with pooling layer.
+  LayerParameter fused_layer_param;
+  fused_layer_param.set_phase(TEST);
+  fused_layer_param.mutable_lrn_param()->set_fuse_type(LRNParameter_FuseType_FUSED_POOL_MAX);
+  fused_layer_param.mutable_lrn_param()->set_unit_test_mode(true);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->add_kernel_size(3);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->add_stride(2);
+
+  bool test_fuse_kernel[2] = {true, false};
+  for (int_tp index = 0; index < 2; index++) {
+    fused_layer_param.mutable_lrn_param()->set_unit_test_fuse_kernel(test_fuse_kernel[index]);
+    LRNLayer<TypeParam> fused_layer(fused_layer_param);
+    fused_layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    fused_layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    for (int_tp i = 0; i < top_reference.count(); ++i) {
+      EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                  this->epsilon_);
+    }
+    memset(this->blob_top_->mutable_cpu_data(), 0, top_reference.count());
+  }
+}
+
 }  // namespace caffe
