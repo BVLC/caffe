@@ -6,7 +6,7 @@ __kernel void TEMPLATE(elu_forward,Dtype)(const int n, __global const Dtype* in,
                                           __global Dtype* out,
                                           Dtype alpha) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - 1.0);
+    out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - (Dtype)1.0);
   }
 }
 

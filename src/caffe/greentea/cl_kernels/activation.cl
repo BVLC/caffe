@@ -18,7 +18,7 @@ __kernel void TEMPLATE(relu_backward,Dtype)(const int_tp n,
                                             Dtype negative_slope) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     out_diff[index] = in_diff[index]
-        * ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * negative_slope);
+        * ((Dtype)(in_data[index] > 0?1.0:0.0) + (Dtype)(in_data[index] <= 0?1.0:0.0) * negative_slope);
   }
 }
 
@@ -36,7 +36,7 @@ __kernel void TEMPLATE(tanh_backward,Dtype)(const int_tp n,
                                             __global Dtype* out_diff) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     Dtype tanhx = out_data[index];
-    out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);
+    out_diff[index] = in_diff[index] * ((Dtype)1 - tanhx * tanhx);
   }
 }
 
@@ -44,7 +44,7 @@ __kernel void TEMPLATE(sigmoid_forward,Dtype)(const int_tp n,
                                               __global const Dtype* in,
                                               __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    out[index] = 1.0 / (1.0 + exp(-in[index]));
+    out[index] = (Dtype)1.0 / ((Dtype)1.0 + exp(-in[index]));
   }
 }
 
@@ -54,7 +54,7 @@ __kernel void TEMPLATE(sigmoid_backward,Dtype)(const int_tp n,
                                                __global Dtype* out_diff) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     const Dtype sigmoid_x = out_data[index];
-    out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);
+    out_diff[index] = in_diff[index] * sigmoid_x * ((Dtype)1 - sigmoid_x);
   }
 }
 
@@ -98,11 +98,11 @@ __kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp 
                                                    __global const Dtype* in_data,
                                                    __global Dtype* out_diff) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0?1.0:0.0);
+    out_diff[index] = in_diff[index] * in_data[index] * (Dtype)(in_data[index] <= 0?1.0:0.0);
     for (int k = 1; k < rows; k++) {
       out_diff[index] += in_diff[index + k * rowPitch]
           * in_data[index + k * rowPitch]
-          * (in_data[index + k * rowPitch] <= 0?1.0:0.0);
+          * (Dtype)(in_data[index + k * rowPitch] <= 0?1.0:0.0);
     }
   }
 }
