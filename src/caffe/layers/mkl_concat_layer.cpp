@@ -240,6 +240,7 @@ void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,
           bottom[n]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
+      fwd_bottom_data_[n] = mem_descr;
       layouts[n] = mem_descr->layout_int;
     }
   }

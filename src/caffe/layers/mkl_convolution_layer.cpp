@@ -217,29 +217,6 @@ void MKLConvolutionLayer<Dtype>::Init(
       dnnBorderZeros);
   }
 
-  // ---- Blobs Reshape -----------------------------------
-  // Initialize and fill the weights:
-  // output channels x input channels per-group x kernel height x kernel width
-  vector<int> weight_shape(2);
-  weight_shape[0] = oc;
-  weight_shape[1] = ic / g;
-  
-  for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    weight_shape.push_back(this->kernel_shape_.cpu_data()[i]);
-  }
-  Blob<Dtype> tmpBlob(weight_shape);
-  caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(), tmpBlob.mutable_cpu_data());
-  this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
-  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[0]->mutable_cpu_data());
-  // If necessary, initialize and fill the biases.
-  if (this->bias_term_) {
-    vector<int> bias_shape(this->bias_term_, this->num_output_);
-	tmpBlob.Reshape(bias_shape);
-    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(), tmpBlob.mutable_cpu_data());
-	  this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
-	  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[1]->mutable_cpu_data());
-  }
-
   CHECK_EQ(status, 0)
           << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
           << status << "\n";

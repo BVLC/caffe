@@ -267,6 +267,8 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       DLOG(INFO) << "Using layout of " << mem_descr->name
               << " as input layout for " << this->layer_param_.name();
 
+      fwd_bottom_data = mem_descr;
+
       dnnError_t e;
       e = dnnBatchNormalizationCreateForward<Dtype>(
         &batchNormFwd, NULL, mem_descr->layout_int, eps_, dnnUseScaleShift);
