@@ -9,7 +9,7 @@ __kernel void TEMPLATE(dropout_forward,Dtype)(const int_tp n,
                                               const Dtype scale,
                                               __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    out[index] = in[index] * ((mask[index] > threshold)?1.0:0.0) * scale;
+    out[index] = in[index] * (Dtype)((mask[index] > threshold)?1.0:0.0) * scale;
   }
 }
 
@@ -19,6 +19,6 @@ __kernel void TEMPLATE(dropout_backward,Dtype)(
     const Dtype scale,
     __global Dtype* out_diff) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    out_diff[index] = in_diff[index] * ((mask[index] > threshold)?1.0:0.0) * scale;
+    out_diff[index] = in_diff[index] * (Dtype)((mask[index] > threshold)?1.0:0.0) * scale;
   }
 }

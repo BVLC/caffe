@@ -7,7 +7,7 @@ __kernel void TEMPLATE(bnll_forward,Dtype)(const int_tp n,
                                            __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     if (in[index] > 0.0f) {
-      out[index] = in[index] + log((Dtype) (1.0 + exp(-in[index])));
+      out[index] = in[index] + log((Dtype) ((Dtype)1.0 + exp(-in[index])));
     } else {
       out[index] = log((Dtype) (1.0 + exp(in[index])));
     }
@@ -21,6 +21,6 @@ __kernel void TEMPLATE(bnll_backward,Dtype)(const int_tp n,
   Dtype kBNLL_THRESHOLD = 50.;
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     Dtype expval = exp(min(in_data[index], kBNLL_THRESHOLD));
-    out_diff[index] = in_diff[index] * expval / (expval + 1.);
+    out_diff[index] = in_diff[index] * expval / (expval + (Dtype)1.);
   }
 }
