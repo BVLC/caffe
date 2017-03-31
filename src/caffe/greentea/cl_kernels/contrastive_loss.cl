@@ -16,7 +16,7 @@ __kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp chan
       Dtype beta = 0.;
       Dtype dist = sqrt(dist_sq[n]);
       mdist = (margin - dist);
-      beta = -alpha * mdist / (dist + 1e-4) * diff[i];
+      beta = -alpha * mdist / (dist + (Dtype)1e-4) * diff[i];
       if (mdist > 0.) {
         bottom_diff[i] = beta;
       } else {

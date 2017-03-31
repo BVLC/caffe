@@ -10,9 +10,9 @@ __kernel void TEMPLATE(ada_delta_update,Dtype)(int_tp N, __global Dtype* g,
                                                Dtype local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype gi = g[i];
-    Dtype hi = h[i] = momentum * h[i] + (1.0 - momentum) * gi * gi;
+    Dtype hi = h[i] = momentum * h[i] + ((Dtype)1.0 - momentum) * gi * gi;
     gi = gi * sqrt((h2[i] + delta) / (hi + delta));
-    h2[i] = momentum * h2[i] + (1.0 - momentum) * gi * gi;
+    h2[i] = momentum * h2[i] + ((Dtype)1.0 - momentum) * gi * gi;
     g[i] = local_rate * gi;
   }
 }
