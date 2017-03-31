@@ -46,11 +46,38 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                  (cl_mem) (this->blobs_[1]->gpu_data()), 0,
                                  (cl_mem) top_data, 0);
     } else {
-      greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
-                               transpose_ ? CblasNoTrans : CblasTrans,
-                               M_, N_, K_, (Dtype) 1.,
-                               (cl_mem) bottom_data, 0, (cl_mem) weight, 0,
-                               (Dtype) 0., (cl_mem) top_data, 0);
+      viennacl::ocl::context &ctx =
+        viennacl::ocl::get_context(this->device_->id());
+      size_t max_image_size = std::min(ctx.devices()[0].image2d_max_width(),
+                                       ctx.devices()[0].image2d_max_height());
+      if (M_ <= max_image_size &&
+          N_ <= max_image_size &&
+          K_ <= max_image_size &&
+          std::is_same<Dtype, float>::value &&
+          this->device_->CheckCapability("cl_intel_subgroups")) {
+        if (this->phase_ != TEST) {
+          int height = !transpose_ ? N_ : K_;
+          int width = !transpose_ ? K_ : N_;
+          int padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
+          int padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
+          greentea_gpu_gemm_copy_buffer_to_image(this->device_->id(),
+                                    &weight_image_, (cl_mem) weight, 0,
+                                    false, !transpose_,
+                                    true, padded_height, padded_width,
+                                    height, width, (int)0, NULL, NULL);
+        }
+        greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
+                                 transpose_ ? CblasNoTrans : CblasTrans,
+                                 M_, N_, K_, (Dtype) 1.,
+                                 (cl_mem) bottom_data, 0, (cl_mem) weight_image_, 0,
+                                 (Dtype) 0., (cl_mem) top_data, 0, false, true);
+      } else
+        greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
+                                 transpose_ ? CblasNoTrans : CblasTrans,
+                                 M_, N_, K_, (Dtype) 1.,
+                                 (cl_mem) bottom_data, 0, (cl_mem) weight, 0,
+                                 (Dtype) 0., (cl_mem) top_data, 0);
+
       if (bias_term_)
         greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
                                  CblasNoTrans, M_, N_, 1, (Dtype) 1.,
