@@ -6,6 +6,16 @@
 
 namespace caffe {
 
+#define SET_COMMON_KERNEL_PARAMS  \
+         oclk_bn_use_global_stats.arg(argIdx++, num);   \
+         oclk_bn_use_global_stats.arg(argIdx++, channels_);   \
+         oclk_bn_use_global_stats.arg(argIdx++, spatial_dim); \
+         oclk_bn_use_global_stats.arg(argIdx++, scale_factor);  \
+         oclk_bn_use_global_stats.arg(argIdx++, eps_);  \
+         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));  \
+         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
+
+
 template<typename Dtype>
 void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
@@ -95,34 +105,93 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
 
-    if (bottom[0] != top[0]) {
+    if (use_global_stats_) {
+      const Dtype scale_factor =
+          this->blobs_[2]->cpu_data()[0] == 0 ?
+              0 : 1 / this->blobs_[2]->cpu_data()[0];
+
+      viennacl::ocl::program &program = this->device_->program();
+
+      bool fused_relu = this->layer_param_.batch_norm_param().fused_relu();
+
+      cl_uint argIdx = 0;
+      size_t global_work_size_[3] = {(size_t)num,
+                                     (size_t)channels_,
+                                     (size_t)spatial_dim};
+      if (bottom[0] == top[0]) {
+        if (fused_relu) {
+         viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
+           CL_KERNEL_SELECT("bn_use_global_stats_in_place_fused_relu"));
+
+         SET_COMMON_KERNEL_PARAMS
+
+         oclk_bn_use_global_stats.arg(argIdx++,
+                                      WrapHandle((cl_mem) top_data,
+                                      &ctx));
+         OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                   oclk_bn_use_global_stats.handle().get(), 3, NULL,
+                   global_work_size_, NULL, 0, NULL, NULL));
+        }
+        else {
+         viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
+           CL_KERNEL_SELECT("bn_use_global_stats_in_place"));
+
+         SET_COMMON_KERNEL_PARAMS
+
+         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+         OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                  oclk_bn_use_global_stats.handle().get(), 3, NULL, global_work_size_, NULL, 0, NULL, NULL));
+        }
+      } else {
+        if (fused_relu) {
+            viennacl::ocl::kernel &oclk_bn_use_global_stats =
+              program.get_kernel(
+                CL_KERNEL_SELECT("bn_use_global_stats_fused_relu"));
+
+            SET_COMMON_KERNEL_PARAMS
+
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) bottom_data, &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) top_data, &ctx));
+            OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                      oclk_bn_use_global_stats.handle().get(), 3, NULL,
+                      global_work_size_, NULL, 0, NULL, NULL));
+        }
+        else {
+            viennacl::ocl::kernel &oclk_bn_use_global_stats =
+              program.get_kernel(CL_KERNEL_SELECT("bn_use_global_stats"));
+
+            SET_COMMON_KERNEL_PARAMS
+
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) bottom_data, &ctx));
+            oclk_bn_use_global_stats.arg(argIdx++,
+              WrapHandle((cl_mem) top_data, &ctx));
+            OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                     oclk_bn_use_global_stats.handle().get(), 3, NULL,
+                     global_work_size_, NULL, 0, NULL, NULL));
+        }
+      }
+    } else {
+        // compute mean
+      if (bottom[0] != top[0]) {
         greentea_copy<Dtype>(bottom[0]->count(), (cl_mem) bottom_data, 0,
-                      (cl_mem) top_data, 0, &ctx);
+                    (cl_mem) top_data, 0, &ctx);
       }
 
-      if (use_global_stats_) {
-        // use the stored mean/variance estimates.
-        const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
-            0 : 1 / this->blobs_[2]->cpu_data()[0];
-        greentea_gpu_scale(this->device_->id(), variance_.count(), scale_factor,
-            (cl_mem) (this->blobs_[0]->gpu_data()), 0,
-            (cl_mem) (mean_.mutable_gpu_data()), 0);
-        greentea_gpu_scale(this->device_->id(), variance_.count(), scale_factor,
-            (cl_mem) (this->blobs_[1]->gpu_data()), 0,
-            (cl_mem) (variance_.mutable_gpu_data()), 0);
-      } else {
-        // compute mean
-        greentea_gpu_gemv<Dtype>(this->device_->id(),
-            CblasNoTrans, channels_ * num, spatial_dim,
-            1. / (num * spatial_dim), (cl_mem) bottom_data, 0,
-            (cl_mem) (spatial_sum_multiplier_.gpu_data()), 0, 0.,
-            (cl_mem) (num_by_chans_.mutable_gpu_data()), 0);
-        greentea_gpu_gemv<Dtype>(this->device_->id(),
-            CblasTrans, num, channels_, 1.,
-            (cl_mem) (num_by_chans_.gpu_data()), 0,
-            (cl_mem) (batch_sum_multiplier_.gpu_data()), 0, 0.,
-            (cl_mem) (mean_.mutable_gpu_data()), 0);
-      }
+
+      greentea_gpu_gemv<Dtype>(this->device_->id(),
+          CblasNoTrans, channels_ * num, spatial_dim,
+          1. / (num * spatial_dim), (cl_mem) bottom_data, 0,
+          (cl_mem) (spatial_sum_multiplier_.gpu_data()), 0, 0.,
+          (cl_mem) (num_by_chans_.mutable_gpu_data()), 0);
+      greentea_gpu_gemv<Dtype>(this->device_->id(),
+          CblasTrans, num, channels_, 1.,
+          (cl_mem) (num_by_chans_.gpu_data()), 0,
+          (cl_mem) (batch_sum_multiplier_.gpu_data()), 0, 0.,
+          (cl_mem) (mean_.mutable_gpu_data()), 0);
+
 
       // subtract mean
       greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans, CblasNoTrans,
@@ -170,10 +239,10 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
       // normalize variance
       greentea_gpu_add_scalar<Dtype>(this->device_->id(), variance_.count(),
-                              eps_, (cl_mem) (variance_.mutable_gpu_data()), 0);
+                           eps_, (cl_mem) (variance_.mutable_gpu_data()), 0);
       greentea_gpu_sqrt<Dtype>(this->device_->id(), variance_.count(),
-          (cl_mem) (variance_.gpu_data()), 0,
-          (cl_mem) (variance_.mutable_gpu_data()), 0);
+         (cl_mem) (variance_.gpu_data()), 0,
+         (cl_mem) (variance_.mutable_gpu_data()), 0);
 
       // replicate variance to input size
       greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans, CblasNoTrans,
@@ -187,13 +256,14 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           (cl_mem) (spatial_sum_multiplier_.gpu_data()), 0, 0.,
           (cl_mem) (temp_.mutable_gpu_data()), 0);
       greentea_gpu_div<Dtype>(this->device_->id(), temp_.count(),
-                       (cl_mem) top_data, 0, (cl_mem) (temp_.gpu_data()), 0,
-                       (cl_mem) top_data, 0);
+                      (cl_mem) top_data, 0, (cl_mem) (temp_.gpu_data()), 0,
+                      (cl_mem) top_data, 0);
       // TODO(cdoersch): The caching is only needed
       //                 because later in-place layers might clobber the data.
       //                 Can we skip this if they won't?
       greentea_copy<Dtype>(x_norm_.count(), (cl_mem)top_data, 0,
-                    (cl_mem) (x_norm_.mutable_gpu_data()), 0, &ctx);
+                   (cl_mem) (x_norm_.mutable_gpu_data()), 0, &ctx);
+    }
 #endif  // USE_GREENTEA
   }
 }
