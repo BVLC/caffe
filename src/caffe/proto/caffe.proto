@@ -526,6 +526,8 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+
+  optional bool fused_relu = 4 [ default = false ]; 
 }
 
 message BiasParameter {
@@ -626,6 +628,15 @@ message ConvolutionParameter {
   // implementation; for input blobs with num_axes != 2, this option is
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
+
+  enum FuseType {
+    UNFUSED = 0;
+    FUSED_CONV_MAX_POOLING_RELU = 1;
+    FUSED_CONV_RELU = 2;
+    FUSED_CONV_ELTWISE_RELU = 3;
+  }
+  optional FuseType fuse_type = 19 [default = UNFUSED]; // Whether to fuse convolution with other layers
+  optional EltwiseParameter eltwise_param = 20;
 }
 
 message CropParameter {
@@ -682,6 +693,7 @@ message DataParameter {
 
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+  optional bool scale_train = 2 [default = true];  // scale train or test phase
 }
 
 // DummyDataLayer fills any number of arbitrarily shaped blobs with random
@@ -879,6 +891,14 @@ message LRNParameter {
     CUDNN = 2;
   }
   optional Engine engine = 6 [default = DEFAULT];
+  enum FuseType {
+    UNFUSED = 0;
+    FUSED_POOL_MAX = 1;
+  }
+  optional FuseType fuse_type = 7 [default = UNFUSED]; // Whether to fuse convolution with other layers
+  optional PoolingParameter pooling_param = 8;
+  optional bool unit_test_mode = 9 [default = false]; 
+  optional bool unit_test_fuse_kernel = 10 [default = false];
 }
 
 message MemoryDataParameter {
