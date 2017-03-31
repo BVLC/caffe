@@ -12,7 +12,6 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
-
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (M_ == 1) {
@@ -55,16 +54,21 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           K_ <= max_image_size &&
           std::is_same<Dtype, float>::value &&
           this->device_->CheckCapability("cl_intel_subgroups")) {
-        if (this->phase_ != TEST) {
+        if (!test_only_ || copied_weight_data_ != this->blobs_[0]->data().get()) {
           int height = !transpose_ ? N_ : K_;
           int width = !transpose_ ? K_ : N_;
           int padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
           int padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
+          if (weight_image_) {
+            clReleaseMemObject((cl_mem)weight_image_);
+            weight_image_ = NULL;
+          }
           greentea_gpu_gemm_copy_buffer_to_image(this->device_->id(),
                                     &weight_image_, (cl_mem) weight, 0,
                                     false, !transpose_,
                                     true, padded_height, padded_width,
                                     height, width, (int)0, NULL, NULL);
+          copied_weight_data_ = this->blobs_[0]->data().get();
         }
         greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
                                  transpose_ ? CblasNoTrans : CblasTrans,
@@ -93,6 +97,8 @@ template<typename Dtype>
 void InnerProductLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+
+  test_only_ = false;
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->param_propagate_down_[0]) {

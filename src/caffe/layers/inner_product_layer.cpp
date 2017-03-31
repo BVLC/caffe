@@ -75,9 +75,13 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                   false, !transpose_,
                                   true, padded_height, padded_width,
                                   height, width, (int)0, NULL, NULL);
+        copied_weight_data_ = this->blobs_[0]->data().get();
     }
+  } else {
+    copied_weight_data_ = NULL;
   }
 
+  test_only_ = this->phase_ == TEST;
 }
 
 template<typename Dtype>
