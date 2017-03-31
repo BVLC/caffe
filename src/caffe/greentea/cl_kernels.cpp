@@ -40,7 +40,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype negative_slope) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "out_diff[index] = in_diff[index]",    // NOLINT
-"* ((in_data[index] > 0?1.0:0.0) + (in_data[index] <= 0?1.0:0.0) * negative_slope);",    // NOLINT
+"* ((Dtype)(in_data[index] > 0?1.0:0.0) + (Dtype)(in_data[index] <= 0?1.0:0.0) * negative_slope);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -58,7 +58,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype* out_diff) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "Dtype tanhx = out_data[index];",    // NOLINT
-"out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);",    // NOLINT
+"out_diff[index] = in_diff[index] * ((Dtype)1 - tanhx * tanhx);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -66,7 +66,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global const Dtype* in,",    // NOLINT
 "__global Dtype* out) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"out[index] = 1.0 / (1.0 + exp(-in[index]));",    // NOLINT
+"out[index] = (Dtype)1.0 / ((Dtype)1.0 + exp(-in[index]));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -76,7 +76,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype* out_diff) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "const Dtype sigmoid_x = out_data[index];",    // NOLINT
-"out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);",    // NOLINT
+"out_diff[index] = in_diff[index] * sigmoid_x * ((Dtype)1 - sigmoid_x);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -120,11 +120,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global const Dtype* in_data,",    // NOLINT
 "__global Dtype* out_diff) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0?1.0:0.0);",    // NOLINT
+"out_diff[index] = in_diff[index] * in_data[index] * (Dtype)(in_data[index] <= 0?1.0:0.0);",    // NOLINT
 "for (int k = 1; k < rows; k++) {",    // NOLINT
 "out_diff[index] += in_diff[index + k * rowPitch]",    // NOLINT
 "* in_data[index + k * rowPitch]",    // NOLINT
-"* (in_data[index + k * rowPitch] <= 0?1.0:0.0);",    // NOLINT
+"* (Dtype)(in_data[index + k * rowPitch] <= 0?1.0:0.0);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -177,11 +177,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(batch_norm_use_global_stats_in_place,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"Dtype TEMPLATE(bn_common,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
 "const Dtype scale, const Dtype eps,",    // NOLINT
 "__global const Dtype* mean,",    // NOLINT
 "__global const Dtype* variance,",    // NOLINT
-"__global Dtype* top) {",    // NOLINT
+"__global const Dtype* data,",    // NOLINT
+"int_tp *out_off) {",    // NOLINT
 "const int_tp idx_num = get_global_id(0);",    // NOLINT
 "const int_tp idx_chans = get_global_id(1);",    // NOLINT
 "const int_tp idx_spatial_dim = get_global_id(2);",    // NOLINT
@@ -192,28 +193,51 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "m = -scale * m;",    // NOLINT
 "v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);",    // NOLINT
 "",    // NOLINT
-"const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;",    // NOLINT
-"top[out_off] = v * (top[out_off] + m);",    // NOLINT
+"*out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;",    // NOLINT
+"return (v * (data[*out_off] + m));",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(batch_norm_use_global_stats,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bn_use_global_stats_in_place,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"const Dtype scale, const Dtype eps,",    // NOLINT
+"__global const Dtype* mean,",    // NOLINT
+"__global const Dtype* variance,",    // NOLINT
+"__global Dtype* top) {",    // NOLINT
+"int_tp out_off;",    // NOLINT
+"Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, top, &out_off);",    // NOLINT
+"top[out_off] = val;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bn_use_global_stats_in_place_fused_relu,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"const Dtype scale, const Dtype eps,",    // NOLINT
+"__global const Dtype* mean,",    // NOLINT
+"__global const Dtype* variance,",    // NOLINT
+"__global Dtype* top) {",    // NOLINT
+"int_tp out_off;",    // NOLINT
+"Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, top, &out_off);",    // NOLINT
+"top[out_off] = val > 0.0f ? val : 0.0f;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(bn_use_global_stats,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
 "const Dtype scale, const Dtype eps,",    // NOLINT
 "__global const Dtype* mean,",    // NOLINT
 "__global const Dtype* variance,",    // NOLINT
 "__global const Dtype* bottom,",    // NOLINT
 "__global Dtype* top) {",    // NOLINT
-"const int_tp idx_num = get_global_id(0);",    // NOLINT
-"const int_tp idx_chans = get_global_id(1);",    // NOLINT
-"const int_tp idx_spatial_dim = get_global_id(2);",    // NOLINT
+"int_tp out_off;",    // NOLINT
+"Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, bottom, &out_off);",    // NOLINT
+"top[out_off] = val;",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
-"Dtype m = mean[idx_chans];",    // NOLINT
-"Dtype v = variance[idx_chans];",    // NOLINT
-"",    // NOLINT
-"m = -scale * m;",    // NOLINT
-"v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);",    // NOLINT
-"",    // NOLINT
-"const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;",    // NOLINT
-"top[out_off] = v * (bottom[out_off] + m);",    // NOLINT
+"__kernel void TEMPLATE(bn_use_global_stats_fused_relu,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,",    // NOLINT
+"const Dtype scale, const Dtype eps,",    // NOLINT
+"__global const Dtype* mean,",    // NOLINT
+"__global const Dtype* variance,",    // NOLINT
+"__global const Dtype* bottom,",    // NOLINT
+"__global Dtype* top) {",    // NOLINT
+"int_tp out_off;",    // NOLINT
+"Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, bottom, &out_off);",    // NOLINT
+"top[out_off] =  val > 0.0f ? val : 0.0f;",    // NOLINT
 "}",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
@@ -312,7 +336,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype* out) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "if (in[index] > 0.0f) {",    // NOLINT
-"out[index] = in[index] + log((Dtype) (1.0 + exp(-in[index])));",    // NOLINT
+"out[index] = in[index] + log((Dtype) ((Dtype)1.0 + exp(-in[index])));",    // NOLINT
 "} else {",    // NOLINT
 "out[index] = log((Dtype) (1.0 + exp(in[index])));",    // NOLINT
 "}",    // NOLINT
@@ -326,7 +350,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype kBNLL_THRESHOLD = 50.;",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
 "Dtype expval = exp(min(in_data[index], kBNLL_THRESHOLD));",    // NOLINT
-"out_diff[index] = in_diff[index] * expval / (expval + 1.);",    // NOLINT
+"out_diff[index] = in_diff[index] * expval / (expval + (Dtype)1.);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 ""},   // NOLINT
@@ -462,7 +486,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype beta = 0.;",    // NOLINT
 "Dtype dist = sqrt(dist_sq[n]);",    // NOLINT
 "mdist = (margin - dist);",    // NOLINT
-"beta = -alpha * mdist / (dist + 1e-4) * diff[i];",    // NOLINT
+"beta = -alpha * mdist / (dist + (Dtype)1e-4) * diff[i];",    // NOLINT
 "if (mdist > 0.) {",    // NOLINT
 "bottom_diff[i] = beta;",    // NOLINT
 "} else {",    // NOLINT
@@ -528,6 +552,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#ifdef MULTI",    // NOLINT
 "__kernel void CFMultiNoPadding(",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"__global Dtype* eltwise_data,",    // NOLINT
+"#endif",    // NOLINT
 "__global Dtype* image_data,",    // NOLINT
 "int_tp image_offset,",    // NOLINT
 "__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
@@ -612,7 +639,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//Begin IDLF kernels below here",    // NOLINT
 "#ifdef IDLF",    // NOLINT
 "",    // NOLINT
-"#define activation_function(x) (x)",    // NOLINT
 "#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
 "",    // NOLINT
 "// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.",    // NOLINT
@@ -621,8 +647,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16/8 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
 "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))",    // NOLINT
-"kernel void",    // NOLINT
+"__kernel void",    // NOLINT
 "convolve_simd(  // __global float *inputs, __global float* weights, __global float* outputs",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"__global Dtype* eltwise_data,",    // NOLINT
+"#endif",    // NOLINT
 "__global float* inputs_base,",    // NOLINT
 "filter_qualifier float* weights_base,",    // NOLINT
 "__global float* biases_base,",    // NOLINT
@@ -630,7 +659,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
 "const ushort output_width,",    // NOLINT
-"const ushort output_height)",    // NOLINT
+"const ushort output_height,",    // NOLINT
+"const ushort last_block_width,",    // NOLINT
+"const ushort last_block_height)",    // NOLINT
 "{",    // NOLINT
 "__global float* outputs = outputs_base;",    // NOLINT
 "__global float* inputs = inputs_base;",    // NOLINT
@@ -658,8 +689,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;",    // NOLINT
 "",    // NOLINT
-"int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );",    // NOLINT
-"int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
+"int curr_local_y = ( lid / ( TILE_X / 4 ) );",    // NOLINT
+"int curr_local_x = ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
+"int curr_y = or * STRIDEY + INPUT_START_Y + curr_local_y;",    // NOLINT
+"int curr_x = oc * STRIDEX + INPUT_START_X + curr_local_x;",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
@@ -677,6 +710,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp reg = 0;",    // NOLINT
 "LOOP(INVEC_SIZE, reg,",    // NOLINT
 "{",    // NOLINT
+"if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE == TILE_Y || reg < INVEC_SIZE - 1) {",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {",    // NOLINT
 "if (curr_x < INPUT_PAD_W) {",    // NOLINT
@@ -706,6 +740,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#else",    // NOLINT
 "in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
 "#endif",    // NOLINT
+"}",    // NOLINT
 "in_offset += input_width * TILE_Y_STRIDE;",    // NOLINT
 "});",    // NOLINT
 "in_addr += input_height * input_width;",    // NOLINT
@@ -784,7 +819,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {",    // NOLINT
 "outputs[0] = BLOCK_IN(fm % SIMD_SIZE);",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
 "fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
 "",    // NOLINT
 "if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {",    // NOLINT
@@ -792,40 +826,39 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "float bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
-"",    // NOLINT
 "#ifndef WRITE_PADDED_VALUES",    // NOLINT
-"if(get_global_id(0) != (get_global_size(0)-1) &&",    // NOLINT
-"get_global_id(1) != (get_global_size(1)-1) )",    // NOLINT
+"if (or + OUT_BLOCK_HEIGHT < output_height &&",    // NOLINT
+"oc + OUT_BLOCK_WIDTH < output_width)",    // NOLINT
 "{",    // NOLINT
 "#endif",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
 "// this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
-"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#ifndef WRITE_PADDED_VALUES",    // NOLINT
-"} else if ( get_global_id(1) != (get_global_size(1)-1) )",    // NOLINT
+"} else if ( or + OUT_BLOCK_HEIGHT < output_height )",    // NOLINT
 "{",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
-"for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {",    // NOLINT
-"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"else if ( get_global_id(0) != (get_global_size(0)-1) )",    // NOLINT
+"else if ( oc + OUT_BLOCK_WIDTH < output_width )",    // NOLINT
 "{",    // NOLINT
-"for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
-"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "else",    // NOLINT
 "{",    // NOLINT
-"for(uint_tp r = 0; r < LAST_BLOCK_HEIGHT; r++) {",    // NOLINT
-"for(uint_tp c = 0; c < LAST_BLOCK_WIDTH; c++) {",    // NOLINT
-"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -876,11 +909,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "typedef struct float0 { float s0; } float0; //never used but makes compiler happy.",    // NOLINT
 "",    // NOLINT
 "#define OUT_PITCH_X output_width",    // NOLINT
-"#define OUT_PITCH_Y (output_width * output_height)",    // NOLINT
-"#define OUT_PITCH_Z (output_width * output_height * OUT_DEPTH)",    // NOLINT
-"#define ALIGNED_INPUT_SIZE (input_height * input_width * INPUT_DEPTH)",    // NOLINT
 "#define ROW_PITCH input_width",    // NOLINT
-"#define SLICE_PITCH (input_width * input_height)",    // NOLINT
+"",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"#define GEMM_LIKE_KERNEL_ARGS         __global Dtype* eltwise_data,     const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
+"#else",    // NOLINT
+"#define GEMM_LIKE_KERNEL_ARGS         const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
@@ -902,16 +937,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
+"#ifdef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
-"__kernel void Conv_Interleaved(",    // NOLINT
-"const __global float *src0,",    // NOLINT
-"const __global float *src1,",    // NOLINT
-"const __global float *biases,",    // NOLINT
-"__global float *dst,",    // NOLINT
-"const ushort input_width,",    // NOLINT
-"const ushort input_height,",    // NOLINT
-"const ushort output_width,",    // NOLINT
-"const ushort output_height)",    // NOLINT
+"#endif",    // NOLINT
+"__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
@@ -945,7 +974,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                            // batch offset",    // NOLINT
 "+ (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset",    // NOLINT
 "+ (curr_x - INPUT_PAD_W);                 // x offset",    // NOLINT
 "",    // NOLINT
@@ -1042,19 +1071,19 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y); // reset to start of next slice of patch",    // NOLINT
+"src0_read += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 ); //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                   // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"__global float *out = dst + out_offset;",    // NOLINT
 "float bias[4];",    // NOLINT
 "float4 *bias_vec;",    // NOLINT
 "bias_vec = (float4*)bias;",    // NOLINT
@@ -1064,10 +1093,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1093,7 +1122,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                            // batch offset",    // NOLINT
 "+ (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset",    // NOLINT
 "+ (curr_x - INPUT_PAD_W);                 // x offset",    // NOLINT
 "",    // NOLINT
@@ -1202,19 +1231,19 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                   // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"__global float *out = dst + out_offset;",    // NOLINT
 "float bias[4];",    // NOLINT
 "float4 *bias_vec;",    // NOLINT
 "bias_vec = (float4*)bias;",    // NOLINT
@@ -1224,10 +1253,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out[( 0+i) * OUT_PITCH_Y] = blockC[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out[( 8+i) * OUT_PITCH_Y] = blockC[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out[(16+i) * OUT_PITCH_Y] = blockC[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out[(24+i) * OUT_PITCH_Y] = blockC[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1243,15 +1272,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(16)))",    // NOLINT
 "#endif",    // NOLINT
-"__kernel void Conv_Interleaved(",    // NOLINT
-"const __global Dtype *src0,",    // NOLINT
-"const __global Dtype *src1,",    // NOLINT
-"const __global Dtype *biases,",    // NOLINT
-"__global Dtype *dst,",    // NOLINT
-"const ushort input_width,",    // NOLINT
-"const ushort input_height,",    // NOLINT
-"const ushort output_width,",    // NOLINT
-"const ushort output_height)",    // NOLINT
+"__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
@@ -1277,7 +1298,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif",    // NOLINT
 "",    // NOLINT
 "const __global Dtype *src0_read = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                            // batch offset",    // NOLINT
 "+ (curr_y - INPUT_PAD_H) * ROW_PITCH      // y offset",    // NOLINT
 "+ curr_x - INPUT_PAD_W;                 // x offset",    // NOLINT
 "const __global Dtype *src0_read_orig = src0_read;",    // NOLINT
@@ -1375,49 +1396,50 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//while( ++patch_row < 1 ); //debug",    // NOLINT
 "while( ++patch_row < KERNEL_HEIGHT );",    // NOLINT
 "",    // NOLINT
-"src0_read += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global Dtype *out = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                   // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                       // channel offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
+"__global Dtype *out = dst + out_offset;",    // NOLINT
 "",    // NOLINT
 "Dtype bias[2];",    // NOLINT
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
 "*bias_vec = as_float2(intel_sub_group_block_read2((__global uint *)biases + group_x * TILE_N));",    // NOLINT
 "// Work around a potential compiler bug.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul)",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
 "out[0] = bias[0] + bias[1];",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "#if ( ( OUT_DEPTH % TILE_N ) == 0 )",    // NOLINT
 "for (int i = 0; i < 16; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out[(16+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "#elif ( ( OUT_DEPTH % 16 ) == 0 )",    // NOLINT
 "if ( ( global_x + 1 ) < get_global_size(0) )",    // NOLINT
 "{",    // NOLINT
 "for ( int i = 0; i < 16; i++ )",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
-"out[(16+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "else",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 16; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#else",    // NOLINT
@@ -1425,8 +1447,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for ( int i = 0; i < 16; i++ )",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
-"out[(16+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "else",    // NOLINT
@@ -1435,18 +1457,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "for (int i = 0; i < OUT_DEPTH % 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[(16+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#else",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < OUT_DEPTH % 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
@@ -1473,16 +1495,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
+"#ifdef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
-"__kernel void Conv_Interleaved(",    // NOLINT
-"const __global float *src0,",    // NOLINT
-"const __global float *src1,",    // NOLINT
-"const __global float *biases,",    // NOLINT
-"__global float *dst,",    // NOLINT
-"const ushort input_width,",    // NOLINT
-"const ushort input_height,",    // NOLINT
-"const ushort output_width,",    // NOLINT
-"const ushort output_height)",    // NOLINT
+"#endif",    // NOLINT
+"__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
@@ -1523,11 +1539,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int saved_y1 = curr_y1;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read0 = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                                            // batch offset",    // NOLINT
 "+ (curr_y0 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
 "+ curr_x0 - INPUT_PAD_W;                // x offset",    // NOLINT
 "const __global float *src0_read1 = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                                            // batch offset",    // NOLINT
 "+ (curr_y1 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
 "+ curr_x1 - INPUT_PAD_W;                // x offset",    // NOLINT
 "",    // NOLINT
@@ -1603,7 +1619,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
 "// Perform MADs",    // NOLINT
 "kernel_idx = 0;",    // NOLINT
 "interleaved_y = 0;",    // NOLINT
@@ -1647,22 +1662,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "curr_y0 = saved_y0;",    // NOLINT
 "curr_y1 = saved_y1;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
-"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
+"src0_read0 += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read1 += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out0 = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"int_tp out0_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
-"__global float *out1 = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"int_tp out1_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
@@ -1675,20 +1688,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"out0[( 0+i) * OUT_PITCH_Y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out0[( 8+i) * OUT_PITCH_Y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out0[(16+i) * OUT_PITCH_Y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out0[(24+i) * OUT_PITCH_Y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"out1[( 0+i) * OUT_PITCH_Y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out1[( 8+i) * OUT_PITCH_Y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out1[(16+i) * OUT_PITCH_Y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out1[(24+i) * OUT_PITCH_Y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1719,11 +1732,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int saved_y1 = curr_y1;",    // NOLINT
 "#endif",    // NOLINT
 "const __global float *src0_read0 = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                                            // batch offset",    // NOLINT
 "+ (curr_y0 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
 "+ curr_x0 - INPUT_PAD_W;                // x offset",    // NOLINT
 "const __global float *src0_read1 = src0",    // NOLINT
-"+ ALIGNED_INPUT_SIZE * global_z                                            // batch offset",    // NOLINT
+"+ aligned_input_size * global_z                                            // batch offset",    // NOLINT
 "+ (curr_y1 - INPUT_PAD_H) * ROW_PITCH   // y offset",    // NOLINT
 "+ curr_x1 - INPUT_PAD_W;                // x offset",    // NOLINT
 "",    // NOLINT
@@ -1855,22 +1868,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "curr_y0 = saved_y0;",    // NOLINT
 "curr_y1 = saved_y1;",    // NOLINT
 "#endif",    // NOLINT
-"src0_read0 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
-"src0_read1 += SLICE_PITCH - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
+"src0_read0 += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y ); // reset to start of next slice of patch",    // NOLINT
+"src0_read1 += slice_pitch - ( KERNEL_HEIGHT * ROW_PITCH * DILATION_Y );",    // NOLINT
 "}",    // NOLINT
 "//while ( ++patch_depth < 1 );  //debug",    // NOLINT
 "while ( ++patch_depth < INPUT_DEPTH );",    // NOLINT
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out0 = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"int_tp out0_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
-"__global float *out1 = dst",    // NOLINT
-"+ global_z * OUT_PITCH_Z                                                       // batch offset",    // NOLINT
-"+ ( group_x * TILE_N ) * OUT_PITCH_Y                                           // channel offset",    // NOLINT
+"int_tp out1_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
@@ -1882,20 +1893,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out0[( 0+i) * OUT_PITCH_Y] = blockC0[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out0[( 8+i) * OUT_PITCH_Y] = blockC0[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out0[(16+i) * OUT_PITCH_Y] = blockC0[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out0[(24+i) * OUT_PITCH_Y] = blockC0[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out1[( 0+i) * OUT_PITCH_Y] = blockC1[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out1[( 8+i) * OUT_PITCH_Y] = blockC1[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out1[(16+i) * OUT_PITCH_Y] = blockC1[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out1[(24+i) * OUT_PITCH_Y] = blockC1[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -2003,7 +2014,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const Dtype scale,",    // NOLINT
 "__global Dtype* out) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"out[index] = in[index] * ((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
+"out[index] = in[index] * (Dtype)((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -2013,7 +2024,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const Dtype scale,",    // NOLINT
 "__global Dtype* out_diff) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"out_diff[index] = in_diff[index] * ((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
+"out_diff[index] = in_diff[index] * (Dtype)((mask[index] > threshold)?1.0:0.0) * scale;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 ""},   // NOLINT
@@ -2071,7 +2082,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype* out,",    // NOLINT
 "Dtype alpha) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - 1.0);",    // NOLINT
+"out[index] = in[index] > 0 ? in[index] : alpha * (exp(in[index]) - (Dtype)1.0);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
@@ -3028,6 +3039,1491 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#define TILE_M          32",    // NOLINT
+"#define TILE_K          8",    // NOLINT
+"#define TILE_N          8",    // NOLINT
+"",    // NOLINT
+"// common block to calculate (alpha * AxB + beta * C) and output to destination image.",    // NOLINT
+"",    // NOLINT
+"//#define USE_IMAGE_C",    // NOLINT
+"#ifdef USE_IMAGE_C",    // NOLINT
+"#define BLOCKC_READ8( _C, _coordC ) as_float8( intel_sub_group_block_read8( _C, _coordC ) )",    // NOLINT
+"#define BLOCKC_WRITE8( _C, _coordC, _val ) intel_sub_group_block_write8( _C, _coordC, as_uint8( _val ) )",    // NOLINT
+"#define MATC_PARAMETER __read_only image2d_t C, __write_only image2d_t dst",    // NOLINT
+"#define GEMM_OUTPUT(ALPHA1, BETA_NOT0) GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, C, dst, sizeof(uint))",    // NOLINT
+"#else",    // NOLINT
+"#define BLOCKC_READ8( _C, _coordC )           (float8) ( (_coordC.x + get_local_id(0) < N && _coordC.y < M) ? _C[ _coordC.y * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 1 < M) ? _C[ ( _coordC.y + 1 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 2 < M) ? _C[ ( _coordC.y + 2 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 3 < M) ? _C[ ( _coordC.y + 3 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 4 < M) ? _C[ ( _coordC.y + 4 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 5 < M) ? _C[ ( _coordC.y + 5 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 6 < M) ? _C[ ( _coordC.y + 6 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 7 < M) ? _C[ ( _coordC.y + 7 ) * N + _coordC.x + get_local_id(0) ] : 0)",    // NOLINT
+"",    // NOLINT
+"#define BLOCKC_WRITE8( _C, _coordC, _val) do {                     if (_coordC.x + get_local_id(0) < N) {                        if (_coordC.y < M)                          _C[ _coordC.y * N + _coordC.x + get_local_id(0) ] = _val.s0;                        if (_coordC.y + 1 < M)                          _C[ ( _coordC.y + 1 )* N + _coordC.x + get_local_id(0) ] = _val.s1;                        if (_coordC.y + 2 < M)                          _C[ ( _coordC.y + 2 )* N + _coordC.x + get_local_id(0) ] = _val.s2;                        if (_coordC.y + 3 < M)                          _C[ ( _coordC.y + 3 )* N + _coordC.x + get_local_id(0) ] = _val.s3;                        if (_coordC.y + 4 < M)                          _C[ ( _coordC.y + 4 )* N + _coordC.x + get_local_id(0) ] = _val.s4;                        if (_coordC.y + 5 < M)                          _C[ ( _coordC.y + 5 )* N + _coordC.x + get_local_id(0) ] = _val.s5;                        if (_coordC.y + 6 < M)                          _C[ ( _coordC.y + 6 )* N + _coordC.x + get_local_id(0) ] = _val.s6;                        if (_coordC.y + 7 < M)                          _C[ ( _coordC.y + 7 )* N + _coordC.x + get_local_id(0) ] = _val.s7;                      }} while(0)",    // NOLINT
+"#define MATC_PARAMETER __global Dtype * C, const int offC, const int M, const int N",    // NOLINT
+"#define GEMM_OUTPUT(ALPHA1, BETA_NOT0) GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, (C + offC), (C + offC), 1)",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#define GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, _C, _dst, _C_step)     int2    coordDst = (int2)( ( group_x * TILE_N ) * _C_step, ( group_y * TILE_M ) );     int2    coordC = coordDst;     float8 blockC00;     float8 blockC01;     float8 blockC02;     float8 blockC03;     if (BETA_NOT0) {         blockC00 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC01 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC02 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC03 = BLOCKC_READ8( _C, coordC );         if (!ALPHA1) {             blockC00 *= beta;             blockC01 *= beta;             blockC02 *= beta;             blockC03 *= beta;             blockC00 = mad(blockAxB00, (float8)alpha, blockC00);             blockC01 = mad(blockAxB01, (float8)alpha, blockC01);             blockC02 = mad(blockAxB02, (float8)alpha, blockC02);             blockC03 = mad(blockAxB03, (float8)alpha, blockC03);         } else {             blockC00 = mad(blockC00, (float8)beta, blockAxB00);             blockC01 = mad(blockC01, (float8)beta, blockAxB01);             blockC02 = mad(blockC02, (float8)beta, blockAxB02);             blockC03 = mad(blockC03, (float8)beta, blockAxB03);         }     } else {         if (!ALPHA1) {           blockC00 = blockAxB00 * alpha;           blockC01 = blockAxB01 * alpha;           blockC02 = blockAxB02 * alpha;           blockC03 = blockAxB03 * alpha;         } else {           blockC00 = blockAxB00;           blockC01 = blockAxB01;           blockC02 = blockAxB02;           blockC03 = blockAxB03;         }     }     BLOCKC_WRITE8( _dst, coordDst, blockC00 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC01 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC02 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC03 );",    // NOLINT
+"",    // NOLINT
+"// Get the specified column of the block of the block",    // NOLINT
+"#define TRANSPOSE_BLOCK_8( _block, _col )           (float8)( intel_sub_group_shuffle( _block.s0, _col ),                     intel_sub_group_shuffle( _block.s1, _col ),                     intel_sub_group_shuffle( _block.s2, _col ),                     intel_sub_group_shuffle( _block.s3, _col ),                     intel_sub_group_shuffle( _block.s4, _col ),                     intel_sub_group_shuffle( _block.s5, _col ),                     intel_sub_group_shuffle( _block.s6, _col ),                     intel_sub_group_shuffle( _block.s7, _col ) );",    // NOLINT
+"",    // NOLINT
+"// A's column block multiply B 's row block.",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                _result = mad( (float8)(_blockB.s0), acol0, _result );                  _result = mad( (float8)(_blockB.s1), acol1, _result );                  _result = mad( (float8)(_blockB.s2), acol2, _result );                  _result = mad( (float8)(_blockB.s3), acol3, _result );                  _result = mad( (float8)(_blockB.s4), acol4, _result );                  _result = mad( (float8)(_blockB.s5), acol5, _result );                  _result = mad( (float8)(_blockB.s6), acol6, _result );                  _result = mad( (float8)(_blockB.s7), acol7, _result );              }",    // NOLINT
+"",    // NOLINT
+"#define GEMM_NN(ALPHA1, BETA_NOT0) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha,     float beta,     int width0) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( ( group_x * TILE_N ) * sizeof(uint), 0 );     do     {          int2    coordBTemp = coordB;         float8  blockB00 = as_float8( intel_sub_group_block_read8( B, coordBTemp ) );    coordB.y += TILE_K;         int2    coordATemp = coordA;         float8  blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.x += TILE_K * sizeof(uint);         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"",    // NOLINT
+"GEMM_NN(1, 0) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_NN(1, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_NN(0, 0) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_NN(0, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"",    // NOLINT
+"#undef TRANSPOSE_BLOCK_8",    // NOLINT
+"#undef MULTIPLY_BLOCKS_8x8",    // NOLINT
+"",    // NOLINT
+"// replicate the first row to column block.",    // NOLINT
+"#define TRANSPOSE_BLOCK_8(_vec)         (float8)( intel_sub_group_shuffle(_vec, 0),                   intel_sub_group_shuffle(_vec, 1),                   intel_sub_group_shuffle(_vec, 2),                   intel_sub_group_shuffle(_vec, 3),                   intel_sub_group_shuffle(_vec, 4),                   intel_sub_group_shuffle(_vec, 5),                   intel_sub_group_shuffle(_vec, 6),                   intel_sub_group_shuffle(_vec, 7) )",    // NOLINT
+"",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               _result = mad( (float8)(_blockB.s0), TRANSPOSE_BLOCK_8(_blockA.s0), _result );                  _result = mad( (float8)(_blockB.s1), TRANSPOSE_BLOCK_8(_blockA.s1), _result );                  _result = mad( (float8)(_blockB.s2), TRANSPOSE_BLOCK_8(_blockA.s2), _result );                  _result = mad( (float8)(_blockB.s3), TRANSPOSE_BLOCK_8(_blockA.s3), _result );                  _result = mad( (float8)(_blockB.s4), TRANSPOSE_BLOCK_8(_blockA.s4), _result );                  _result = mad( (float8)(_blockB.s5), TRANSPOSE_BLOCK_8(_blockA.s5), _result );                  _result = mad( (float8)(_blockB.s6), TRANSPOSE_BLOCK_8(_blockA.s6), _result );                  _result = mad( (float8)(_blockB.s7), TRANSPOSE_BLOCK_8(_blockA.s7), _result );              }",    // NOLINT
+"",    // NOLINT
+"#define GEMM_TN(ALPHA1, BETA_NOT0) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha,     float beta,     int width0) {     const int group_x = get_group_id(0);    const int group_y = get_group_id(1);    float8 blockAxB00 = 0.0f;    float8 blockAxB01 = 0.0f;    float8 blockAxB02 = 0.0f;    float8 blockAxB03 = 0.0f;    int2    coordA = (int2)( group_y * TILE_M * sizeof(uint), 0 );    int2    coordB = (int2)( ( group_x * TILE_N ) * sizeof(uint), 0 );    do    {        int2    coordBTemp = coordB;        float8 blockB00 = as_float8( intel_sub_group_block_read8( B, coordBTemp ) );    coordB.y += TILE_K;        int2    coordATemp = coordA;        float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.y += TILE_K;        MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"",    // NOLINT
+"GEMM_TN(1, 0) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_TN(1, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_TN(0, 0) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_TN(0, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"",    // NOLINT
+"#undef MULTIPLY_BLOCKS_8x8",    // NOLINT
+"#undef TRANSPOSE_BLOCK_8",    // NOLINT
+"",    // NOLINT
+"// The same as GEMM_NN",    // NOLINT
+"#define TRANSPOSE_BLOCK_8( _block, _col )           (float8)( intel_sub_group_shuffle( _block.s0, _col),                     intel_sub_group_shuffle( _block.s1, _col),                     intel_sub_group_shuffle( _block.s2, _col),                     intel_sub_group_shuffle( _block.s3, _col),                     intel_sub_group_shuffle( _block.s4, _col),                     intel_sub_group_shuffle( _block.s5, _col),                     intel_sub_group_shuffle( _block.s6, _col),                     intel_sub_group_shuffle( _block.s7, _col) )",    // NOLINT
+"",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );              }",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"#define GEMM_NT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha,     float beta,     int padded_k,     int k) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.x += TILE_K * sizeof(uint);         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb.s0123 = read_imagef(_B, sampler, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4567 = read_imagef(_B, sampler, _coordBTemp); _coordB.x += 2;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
+"",    // NOLINT
+"GEMM_NT(1, 0, VEC4, 4) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_NT(1, 1, VEC4, 4) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_NT(0, 0, VEC4, 4) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_NT(0, 1, VEC4, 4) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb = *(__global float8*)&_B[_coordBTemp.y * k + _coordBTemp.x + offB];        _coordB.x += TILE_K;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __global float *B, int offB",    // NOLINT
+"",    // NOLINT
+"GEMM_NT(1, 0, BUFFER, 1) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_NT(1, 1, BUFFER, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_NT(0, 0, BUFFER, 1) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_NT(0, 1, BUFFER, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
+"",    // NOLINT
+"GEMM_NT(1, 0, SCALAR, 1) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_NT(1, 1, SCALAR, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_NT(0, 0, SCALAR, 1) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_NT(0, 1, SCALAR, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"#undef MULTIPLY_BLOCKS_8x8",    // NOLINT
+"#undef TRANSPOSE_BLOCK_8",    // NOLINT
+"",    // NOLINT
+"//The same as GEMM_TN.",    // NOLINT
+"#define TRANSPOSE_BLOCK_8(_vec)         (float8)( intel_sub_group_shuffle(_vec, 0),                   intel_sub_group_shuffle(_vec, 1),                   intel_sub_group_shuffle(_vec, 2),                   intel_sub_group_shuffle(_vec, 3),                   intel_sub_group_shuffle(_vec, 4),                   intel_sub_group_shuffle(_vec, 5),                   intel_sub_group_shuffle(_vec, 6),                   intel_sub_group_shuffle(_vec, 7) );",    // NOLINT
+"",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA.s0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA.s1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA.s2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA.s3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA.s4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA.s5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA.s6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA.s7 );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );              }",    // NOLINT
+"",    // NOLINT
+"#define GEMM_TT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha,     float beta,     int padded_k,     int k) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( group_y * TILE_M * sizeof(uint), 0 );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.y += TILE_K;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03 , blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0);}",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         blockB00.s0123 = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         blockB00.s4567 = read_imagef(B, _coordBTemp); _coordB.x += 2;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
+"",    // NOLINT
+"GEMM_TT(1, 0, VEC4, 4) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_TT(1, 1, VEC4, 4) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_TT(0, 0, VEC4, 4) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_TT(0, 1, VEC4, 4) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb = *(__global float8*)&_B[_coordBTemp.y * k + _coordBTemp.x + offB];        _coordB.x += TILE_K;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __global float *B, int offB",    // NOLINT
+"",    // NOLINT
+"GEMM_TT(1, 0, BUFFER, 1) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_TT(1, 1, BUFFER, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_TT(0, 0, BUFFER, 1) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_TT(0, 1, BUFFER, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
+"",    // NOLINT
+"#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
+"",    // NOLINT
+"GEMM_TT(1, 0, SCALAR, 1) // ALPHA == 1, BETA == 0",    // NOLINT
+"GEMM_TT(1, 1, SCALAR, 1) // ALPHA == 1, BETA != 0",    // NOLINT
+"GEMM_TT(0, 0, SCALAR, 1) // ALPHA != 1, BETA == 0",    // NOLINT
+"GEMM_TT(0, 1, SCALAR, 1) // ALPHA != 1, BETA != 0",    // NOLINT
+"#undef BLOCKB_READ8",    // NOLINT
+"#undef MATB_PARAMETER",    // NOLINT
+"",    // NOLINT
+"#undef MULTIPLY_BLOCKS_8x8",    // NOLINT
+"#undef TRANSPOSE_BLOCK_8",    // NOLINT
+"",    // NOLINT
+"#undef TILE_M",    // NOLINT
+"#undef TILE_K",    // NOLINT
+"#undef TILE_N",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_copy_image,Dtype)(",    // NOLINT
+"__global float* A,",    // NOLINT
+"__write_only image2d_t ImA,",    // NOLINT
+"int offA,",    // NOLINT
+"int width,",    // NOLINT
+"int height)",    // NOLINT
+"{",    // NOLINT
+"const int gidx = get_global_id(0);",    // NOLINT
+"const int gidy = get_global_id(1);",    // NOLINT
+"int2 coord_dst = (int2)(gidx, gidy);",    // NOLINT
+"if (gidx >= width || gidy >= height) {",    // NOLINT
+"write_imageui(ImA, coord_dst, (uint4)0);",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"__global float* A_off = A + offA;",    // NOLINT
+"uint4 srcA = convert_uint4(as_uchar4(A_off[gidy * width + gidx]));",    // NOLINT
+"write_imageui(ImA, coord_dst, srcA);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#define VEC_SIZE        4",    // NOLINT
+"#define LWG_HEIGHT      4",    // NOLINT
+"#define TILE_M          8",    // NOLINT
+"#define TILE_K          16",    // NOLINT
+"#define TILE_N          32",    // NOLINT
+"",    // NOLINT
+"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_NN, Dtype)(",    // NOLINT
+"const __global float *src0, int off0,",    // NOLINT
+"const __global float *src1, int off1,",    // NOLINT
+"__global float *dst, int offd,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"int start_index)",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int local_x = get_local_id(0);",    // NOLINT
+"const int local_y = get_local_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"",    // NOLINT
+"float4 brow;",    // NOLINT
+"float2 arow0, arow1, arow2, arow3, arow4, arow5, arow6, arow7;",    // NOLINT
+"",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"",    // NOLINT
+"const __global float *src0_read = src0 + local_x * ( TILE_K / 8 ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M ) * K + start_index + off0;",    // NOLINT
+"",    // NOLINT
+"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + ( group_x * TILE_N ) + start_index * N + off1;",    // NOLINT
+"",    // NOLINT
+"int border = -(group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M);",    // NOLINT
+"",    // NOLINT
+"int row0 = mad24(global_y, TILE_M, 0) < M ? 0 : border;",    // NOLINT
+"int row1 = mad24(global_y, TILE_M, 1) < M ? 1 : border;",    // NOLINT
+"int row2 = mad24(global_y, TILE_M, 2) < M ? 2 : border;",    // NOLINT
+"int row3 = mad24(global_y, TILE_M, 3) < M ? 3 : border;",    // NOLINT
+"int row4 = mad24(global_y, TILE_M, 4) < M ? 4 : border;",    // NOLINT
+"int row5 = mad24(global_y, TILE_M, 5) < M ? 5 : border;",    // NOLINT
+"int row6 = mad24(global_y, TILE_M, 6) < M ? 6 : border;",    // NOLINT
+"int row7 = mad24(global_y, TILE_M, 7) < M ? 7 : border;",    // NOLINT
+"",    // NOLINT
+"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : beta * ((__global float4 *)dst_write0)[0];",    // NOLINT
+"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 1 * N))[0] : beta * ((__global float4 *)(dst_write0 + 1 * N))[0];",    // NOLINT
+"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : beta * ((__global float4 *)(dst_write0 + 2 * N))[0];",    // NOLINT
+"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : beta * ((__global float4 *)(dst_write0 + 3 * N))[0];",    // NOLINT
+"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : beta * ((__global float4 *)(dst_write0 + 4 * N))[0];",    // NOLINT
+"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : beta * ((__global float4 *)(dst_write0 + 5 * N))[0];",    // NOLINT
+"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : beta * ((__global float4 *)(dst_write0 + 6 * N))[0];",    // NOLINT
+"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : beta * ((__global float4 *)(dst_write0 + 7 * N))[0];",    // NOLINT
+"",    // NOLINT
+"int end_index = min(start_index + 256, K);",    // NOLINT
+"int w = start_index;",    // NOLINT
+"while( w + TILE_K <= end_index ) {",    // NOLINT
+"arow0 = alpha * ((__global float2 *)(src0_read + row0 * K))[0];",    // NOLINT
+"arow1 = alpha * ((__global float2 *)(src0_read + row1 * K))[0];",    // NOLINT
+"arow2 = alpha * ((__global float2 *)(src0_read + row2 * K))[0];",    // NOLINT
+"arow3 = alpha * ((__global float2 *)(src0_read + row3 * K))[0];",    // NOLINT
+"arow4 = alpha * ((__global float2 *)(src0_read + row4 * K))[0];",    // NOLINT
+"arow5 = alpha * ((__global float2 *)(src0_read + row5 * K))[0];",    // NOLINT
+"arow6 = alpha * ((__global float2 *)(src0_read + row6 * K))[0];",    // NOLINT
+"arow7 = alpha * ((__global float2 *)(src0_read + row7 * K))[0];",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( index, suffix )           brow = ((__global float4 *)src1_read0)[0];  src1_read0 += N;         dot00 = mad( (float4)(intel_sub_group_shuffle( arow0, index ).s##suffix), brow, dot00 );         dot01 = mad( (float4)(intel_sub_group_shuffle( arow1, index ).s##suffix), brow, dot01 );         dot02 = mad( (float4)(intel_sub_group_shuffle( arow2, index ).s##suffix), brow, dot02 );         dot03 = mad( (float4)(intel_sub_group_shuffle( arow3, index ).s##suffix), brow, dot03 );         dot04 = mad( (float4)(intel_sub_group_shuffle( arow4, index ).s##suffix), brow, dot04 );         dot05 = mad( (float4)(intel_sub_group_shuffle( arow5, index ).s##suffix), brow, dot05 );         dot06 = mad( (float4)(intel_sub_group_shuffle( arow6, index ).s##suffix), brow, dot06 );         dot07 = mad( (float4)(intel_sub_group_shuffle( arow7, index ).s##suffix), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT(0, 0);",    // NOLINT
+"MM_DOT_PRODUCT(0, 1);",    // NOLINT
+"MM_DOT_PRODUCT(1, 0);",    // NOLINT
+"MM_DOT_PRODUCT(1, 1);",    // NOLINT
+"MM_DOT_PRODUCT(2, 0);",    // NOLINT
+"MM_DOT_PRODUCT(2, 1);",    // NOLINT
+"MM_DOT_PRODUCT(3, 0);",    // NOLINT
+"MM_DOT_PRODUCT(3, 1);",    // NOLINT
+"MM_DOT_PRODUCT(4, 0);",    // NOLINT
+"MM_DOT_PRODUCT(4, 1);",    // NOLINT
+"MM_DOT_PRODUCT(5, 0);",    // NOLINT
+"MM_DOT_PRODUCT(5, 1);",    // NOLINT
+"MM_DOT_PRODUCT(6, 0);",    // NOLINT
+"MM_DOT_PRODUCT(6, 1);",    // NOLINT
+"MM_DOT_PRODUCT(7, 0);",    // NOLINT
+"MM_DOT_PRODUCT(7, 1);",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"",    // NOLINT
+"src0_read += TILE_K;",    // NOLINT
+"w += TILE_K;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(w < end_index) {",    // NOLINT
+"arow0.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row0 * K)[0] : 0.0f;",    // NOLINT
+"arow0.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row0 * K)[1] : 0.0f;",    // NOLINT
+"arow1.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row1 * K)[0] : 0.0f;",    // NOLINT
+"arow1.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row1 * K)[1] : 0.0f;",    // NOLINT
+"arow2.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row2 * K)[0] : 0.0f;",    // NOLINT
+"arow2.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row2 * K)[1] : 0.0f;",    // NOLINT
+"arow3.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row3 * K)[0] : 0.0f;",    // NOLINT
+"arow3.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row3 * K)[1] : 0.0f;",    // NOLINT
+"arow4.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row4 * K)[0] : 0.0f;",    // NOLINT
+"arow4.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row4 * K)[1] : 0.0f;",    // NOLINT
+"arow5.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row5 * K)[0] : 0.0f;",    // NOLINT
+"arow5.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row5 * K)[1] : 0.0f;",    // NOLINT
+"arow6.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row6 * K)[0] : 0.0f;",    // NOLINT
+"arow6.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row6 * K)[1] : 0.0f;",    // NOLINT
+"arow7.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row7 * K)[0] : 0.0f;",    // NOLINT
+"arow7.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row7 * K)[1] : 0.0f;",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( index, suffix )           brow = (w < K) ? ((__global float4 *)src1_read0)[0] : 0.0f;  src1_read0 += N; w++;         dot00 = mad( (float4)(intel_sub_group_shuffle( arow0, index ).s##suffix), brow, dot00 );         dot01 = mad( (float4)(intel_sub_group_shuffle( arow1, index ).s##suffix), brow, dot01 );         dot02 = mad( (float4)(intel_sub_group_shuffle( arow2, index ).s##suffix), brow, dot02 );         dot03 = mad( (float4)(intel_sub_group_shuffle( arow3, index ).s##suffix), brow, dot03 );         dot04 = mad( (float4)(intel_sub_group_shuffle( arow4, index ).s##suffix), brow, dot04 );         dot05 = mad( (float4)(intel_sub_group_shuffle( arow5, index ).s##suffix), brow, dot05 );         dot06 = mad( (float4)(intel_sub_group_shuffle( arow6, index ).s##suffix), brow, dot06 );         dot07 = mad( (float4)(intel_sub_group_shuffle( arow7, index ).s##suffix), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT(0, 0);",    // NOLINT
+"MM_DOT_PRODUCT(0, 1);",    // NOLINT
+"MM_DOT_PRODUCT(1, 0);",    // NOLINT
+"MM_DOT_PRODUCT(1, 1);",    // NOLINT
+"MM_DOT_PRODUCT(2, 0);",    // NOLINT
+"MM_DOT_PRODUCT(2, 1);",    // NOLINT
+"MM_DOT_PRODUCT(3, 0);",    // NOLINT
+"MM_DOT_PRODUCT(3, 1);",    // NOLINT
+"MM_DOT_PRODUCT(4, 0);",    // NOLINT
+"MM_DOT_PRODUCT(4, 1);",    // NOLINT
+"MM_DOT_PRODUCT(5, 0);",    // NOLINT
+"MM_DOT_PRODUCT(5, 1);",    // NOLINT
+"MM_DOT_PRODUCT(6, 0);",    // NOLINT
+"MM_DOT_PRODUCT(6, 1);",    // NOLINT
+"MM_DOT_PRODUCT(7, 0);",    // NOLINT
+"MM_DOT_PRODUCT(7, 1);",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
+"if(mad24(global_x, 4, 3) < N) {",    // NOLINT
+"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy;",    // NOLINT
+"dst_write0[2] = dot00.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) {",    // NOLINT
+"dst_write[0] = dot01.xy;",    // NOLINT
+"dst_write0[2] = dot01.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) {",    // NOLINT
+"dst_write[0] = dot02.xy;",    // NOLINT
+"dst_write0[2] = dot02.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) {",    // NOLINT
+"dst_write[0] = dot03.xy;",    // NOLINT
+"dst_write0[2] = dot03.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) {",    // NOLINT
+"dst_write[0] = dot04.xy;",    // NOLINT
+"dst_write0[2] = dot04.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) {",    // NOLINT
+"dst_write[0] = dot05.xy;",    // NOLINT
+"dst_write0[2] = dot05.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) {",    // NOLINT
+"dst_write[0] = dot06.xy;",    // NOLINT
+"dst_write0[2] = dot06.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) {",    // NOLINT
+"dst_write[0] = dot07.xy;",    // NOLINT
+"dst_write0[2] = dot07.z;",    // NOLINT
+"}",    // NOLINT
+"} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"} else {",    // NOLINT
+"dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write0[0] = dot02.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write0[0] = dot03.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write0[0] = dot04.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write0[0] = dot05.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write0[0] = dot06.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write0[0] = dot07.x; }",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef VEC_SIZE",    // NOLINT
+"#undef LWG_HEIGHT",    // NOLINT
+"#undef TILE_M",    // NOLINT
+"#undef TILE_K",    // NOLINT
+"#undef TILE_N",    // NOLINT
+"",    // NOLINT
+"#define VEC_SIZE        1",    // NOLINT
+"#define LWG_HEIGHT      16",    // NOLINT
+"#define TILE_M          8",    // NOLINT
+"#define TILE_K          32",    // NOLINT
+"#define TILE_N          8",    // NOLINT
+"#define SLM_BLOCK       512",    // NOLINT
+"",    // NOLINT
+"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_NT, Dtype)(",    // NOLINT
+"const __global float *src0, int off0,",    // NOLINT
+"const __global float *src1, int off1,",    // NOLINT
+"__global float *dst, int offd,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta)",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int local_x = get_local_id(0);",    // NOLINT
+"const int local_y = get_local_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"",    // NOLINT
+"float8 dot00 = 0.f;",    // NOLINT
+"float8 dot01 = 0.f;",    // NOLINT
+"float8 dot02 = 0.f;",    // NOLINT
+"float8 dot03 = 0.f;",    // NOLINT
+"float8 dot04 = 0.f;",    // NOLINT
+"float8 dot05 = 0.f;",    // NOLINT
+"float8 dot06 = 0.f;",    // NOLINT
+"float8 dot07 = 0.f;",    // NOLINT
+"",    // NOLINT
+"float4 brow0;",    // NOLINT
+"float4 brow1;",    // NOLINT
+"float4 brow2;",    // NOLINT
+"float4 brow3;",    // NOLINT
+"float4 brow4;",    // NOLINT
+"float4 brow5;",    // NOLINT
+"float4 brow6;",    // NOLINT
+"float4 brow7;",    // NOLINT
+"",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"",    // NOLINT
+"const __global float *src0_read = src0 + local_x * ( TILE_K / 8 ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M ) * K + off0;",    // NOLINT
+"",    // NOLINT
+"const __global float *src1_read0 = src1 + ( group_x * TILE_N ) * K + off1;",    // NOLINT
+"",    // NOLINT
+"__local float slm_brow[8 * SLM_BLOCK];",    // NOLINT
+"__local float* slm_brow0;",    // NOLINT
+"",    // NOLINT
+"int local_index = mad24(local_y, 8, local_x) * 4;",    // NOLINT
+"int w;",    // NOLINT
+"for(int b_tile = 0; b_tile < K; b_tile += SLM_BLOCK) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(0, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(0, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(1, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(1, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(2, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(2, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(3, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(3, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(4, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(4, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(5, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(5, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(6, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(6, K, local_index)))[0];",    // NOLINT
+"((__local float4 *)(slm_brow + mad24(7, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(7, K, local_index)))[0];",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"",    // NOLINT
+"slm_brow0 = slm_brow + local_x * (TILE_K / 8);",    // NOLINT
+"w = b_tile;",    // NOLINT
+"int end_w = min(b_tile + SLM_BLOCK, K);",    // NOLINT
+"while( w + TILE_K <= end_w ) {",    // NOLINT
+"float4 arow;",    // NOLINT
+"",    // NOLINT
+"brow0 = ((__local float4 *)(slm_brow0 + 0 * SLM_BLOCK))[0];",    // NOLINT
+"brow1 = ((__local float4 *)(slm_brow0 + 1 * SLM_BLOCK))[0];",    // NOLINT
+"brow2 = ((__local float4 *)(slm_brow0 + 2 * SLM_BLOCK))[0];",    // NOLINT
+"brow3 = ((__local float4 *)(slm_brow0 + 3 * SLM_BLOCK))[0];",    // NOLINT
+"brow4 = ((__local float4 *)(slm_brow0 + 4 * SLM_BLOCK))[0];",    // NOLINT
+"brow5 = ((__local float4 *)(slm_brow0 + 5 * SLM_BLOCK))[0];",    // NOLINT
+"brow6 = ((__local float4 *)(slm_brow0 + 6 * SLM_BLOCK))[0];",    // NOLINT
+"brow7 = ((__local float4 *)(slm_brow0 + 7 * SLM_BLOCK))[0];",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _row, _dot )               arow = ((__global float4 *)(src0_read + _row * K))[0];                                       _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );             _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );             _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );             _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
+"MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
+"MM_DOT_PRODUCT( 1, dot01 );",    // NOLINT
+"MM_DOT_PRODUCT( 2, dot02 );",    // NOLINT
+"MM_DOT_PRODUCT( 3, dot03 );",    // NOLINT
+"MM_DOT_PRODUCT( 4, dot04 );",    // NOLINT
+"MM_DOT_PRODUCT( 5, dot05 );",    // NOLINT
+"MM_DOT_PRODUCT( 6, dot06 );",    // NOLINT
+"MM_DOT_PRODUCT( 7, dot07 );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"",    // NOLINT
+"src0_read += TILE_K;",    // NOLINT
+"slm_brow0 += TILE_K;",    // NOLINT
+"w += TILE_K;",    // NOLINT
+"}",    // NOLINT
+"src1_read0 += SLM_BLOCK;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(w < K) {",    // NOLINT
+"float4 arow;",    // NOLINT
+"",    // NOLINT
+"#define READ_BROW(_brow, _row)         _brow = ((__local float4 *)(slm_brow0 + _row * SLM_BLOCK))[0];         _brow.x = (mad24(local_x, 4, w) < K) ? _brow.x : 0.0f;         _brow.y = (mad24(local_x, 4, w + 1) < K) ? _brow.y : 0.0f;         _brow.z = (mad24(local_x, 4, w + 2) < K) ? _brow.z : 0.0f;         _brow.w = (mad24(local_x, 4, w + 3) < K) ? _brow.w : 0.0f;",    // NOLINT
+"READ_BROW(brow0, 0);",    // NOLINT
+"READ_BROW(brow1, 1);",    // NOLINT
+"READ_BROW(brow2, 2);",    // NOLINT
+"READ_BROW(brow3, 3);",    // NOLINT
+"READ_BROW(brow4, 4);",    // NOLINT
+"READ_BROW(brow5, 5);",    // NOLINT
+"READ_BROW(brow6, 6);",    // NOLINT
+"READ_BROW(brow7, 7);",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _row, _dot )           arow = ((__global float4 *)(src0_read + _row * K))[0];                                   arow.x = (mad24(local_x, 4, w) < K) ? arow.x : 0.0f;         arow.y = (mad24(local_x, 4, w + 1) < K) ? arow.y : 0.0f;         arow.z = (mad24(local_x, 4, w + 2) < K) ? arow.z : 0.0f;         arow.w = (mad24(local_x, 4, w + 3) < K) ? arow.w : 0.0f;         _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );         _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );         _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );         _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
+"MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
+"MM_DOT_PRODUCT( 1, dot01 );",    // NOLINT
+"MM_DOT_PRODUCT( 2, dot02 );",    // NOLINT
+"MM_DOT_PRODUCT( 3, dot03 );",    // NOLINT
+"MM_DOT_PRODUCT( 4, dot04 );",    // NOLINT
+"MM_DOT_PRODUCT( 5, dot05 );",    // NOLINT
+"MM_DOT_PRODUCT( 6, dot06 );",    // NOLINT
+"MM_DOT_PRODUCT( 7, dot07 );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#define REDUCE(_dot)     _dot = intel_sub_group_shuffle(_dot, 0) + intel_sub_group_shuffle(_dot, 1) + intel_sub_group_shuffle(_dot, 2) + intel_sub_group_shuffle(_dot, 3) +             intel_sub_group_shuffle(_dot, 4) + intel_sub_group_shuffle(_dot, 5) + intel_sub_group_shuffle(_dot, 6) + intel_sub_group_shuffle(_dot, 7);",    // NOLINT
+"REDUCE(dot00);",    // NOLINT
+"REDUCE(dot01);",    // NOLINT
+"REDUCE(dot02);",    // NOLINT
+"REDUCE(dot03);",    // NOLINT
+"REDUCE(dot04);",    // NOLINT
+"REDUCE(dot05);",    // NOLINT
+"REDUCE(dot06);",    // NOLINT
+"REDUCE(dot07);",    // NOLINT
+"#undef REDUCE",    // NOLINT
+"",    // NOLINT
+"float output = 0.0f;",    // NOLINT
+"#define OUTPUT( _dot)     output = (local_x == 0) ? _dot.s0 : output;     output = (local_x == 1) ? _dot.s1 : output;     output = (local_x == 2) ? _dot.s2 : output;     output = (local_x == 3) ? _dot.s3 : output;     output = (local_x == 4) ? _dot.s4 : output;     output = (local_x == 5) ? _dot.s5 : output;     output = (local_x == 6) ? _dot.s6 : output;     output = (local_x == 7) ? _dot.s7 : output;     dst_write0[0] = mad(output, alpha, beta * dst_write0[0]);     dst_write0 += N;",    // NOLINT
+"",    // NOLINT
+"if(global_x < N && global_y * 8 < M) {",    // NOLINT
+"OUTPUT(dot00);",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { OUTPUT(dot01); }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { OUTPUT(dot02); }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { OUTPUT(dot03); }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { OUTPUT(dot04); }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { OUTPUT(dot05); }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { OUTPUT(dot06); }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { OUTPUT(dot07); }",    // NOLINT
+"}",    // NOLINT
+"#undef OUTPUT",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef VEC_SIZE",    // NOLINT
+"#undef LWG_HEIGHT",    // NOLINT
+"#undef TILE_M",    // NOLINT
+"#undef TILE_K",    // NOLINT
+"#undef TILE_N",    // NOLINT
+"#undef SLM_BLOCK",    // NOLINT
+"",    // NOLINT
+"#define SLM_SIZE 64",    // NOLINT
+"void TEMPLATE(gemm_buffer_NT_M_2_edgerows,Dtype)(",    // NOLINT
+"const __global Dtype* srca_read0,",    // NOLINT
+"const __global Dtype* srca_read1,",    // NOLINT
+"const __global Dtype* srcb_read,",    // NOLINT
+"__local Dtype4* work0,",    // NOLINT
+"__local Dtype4* work1,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"int x_gid,",    // NOLINT
+"int lid,",    // NOLINT
+"Dtype alpha,",    // NOLINT
+"Dtype beta,",    // NOLINT
+"__global Dtype* dstc0,",    // NOLINT
+"__global Dtype* dstc1)",    // NOLINT
+"{",    // NOLINT
+"__local Dtype* work_each0 = (__local Dtype*)work0;",    // NOLINT
+"__local Dtype* work_each1 = (__local Dtype*)work1;",    // NOLINT
+"",    // NOLINT
+"int rows = N - x_gid * 4;",    // NOLINT
+"",    // NOLINT
+"Dtype4 dot0[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot1[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"",    // NOLINT
+"int i = lid;",    // NOLINT
+"while( i < K / 4) {",    // NOLINT
+"const Dtype4 b0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
+"const Dtype4 b1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"dot0[j] += b0 * vload4(i, srcb_read + j * K);",    // NOLINT
+"dot1[j] += b1 * vload4(i, srcb_read + j * K);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"i += get_local_size(0);",    // NOLINT
+"}",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"work_each0[lid * 4 + j] = dot0[j].x + dot0[j].y + dot0[j].z + dot0[j].w;",    // NOLINT
+"work_each1[lid * 4 + j] = dot1[j].x + dot1[j].y + dot1[j].z + dot1[j].w;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(i == K / 4) {",    // NOLINT
+"short tail_items = K % 4;",    // NOLINT
+"",    // NOLINT
+"if(tail_items != 0) {",    // NOLINT
+"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(short i = 0; i < tail_items; ++i) {",    // NOLINT
+"const Dtype at0 = srca_tail0[i];",    // NOLINT
+"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"work_each0[lid * 4 + j] += at0 * srcb_tail[i + j * K];",    // NOLINT
+"work_each1[lid * 4 + j] += at1 * srcb_tail[i + j * K];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride) {",    // NOLINT
+"work0[lid] += work0[lid+stride];",    // NOLINT
+"work1[lid] += work1[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"dstc0[(x_gid * 4  + j)] = alpha * work_each0[j] + beta * dstc0[(x_gid * 4 + j)];",    // NOLINT
+"dstc1[(x_gid * 4  + j)] = alpha * work_each1[j] + beta * dstc1[(x_gid * 4 + j)];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_NT_M_2,Dtype)(",    // NOLINT
+"__global const Dtype * A,",    // NOLINT
+"int offA,",    // NOLINT
+"__global const Dtype * B,",    // NOLINT
+"int offB,",    // NOLINT
+"__global Dtype * C,",    // NOLINT
+"int offC,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha_f,",    // NOLINT
+"float beta_f)",    // NOLINT
+"{",    // NOLINT
+"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
+"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"int x_gid = get_group_id(0);",    // NOLINT
+"int lid = get_local_id(0);",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
+"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
+"",    // NOLINT
+"__global Dtype4 *dstc0 = (__global Dtype4*)(C + offC);",    // NOLINT
+"__global Dtype4 *dstc1 = (__global Dtype4*)((__global Dtype*)(dstc0) + N);",    // NOLINT
+"",    // NOLINT
+"__local Dtype4 work0[SLM_SIZE];",    // NOLINT
+"__local Dtype4 work1[SLM_SIZE];",    // NOLINT
+"__local Dtype* work_each0 = (__local Dtype*)work0;",    // NOLINT
+"__local Dtype* work_each1 = (__local Dtype*)work1;",    // NOLINT
+"",    // NOLINT
+"if(x_gid == N / 4) {",    // NOLINT
+"TEMPLATE(gemm_buffer_NT_M_2_edgerows,Dtype)          (srca_read0, srca_read1, srcb_read, work0, work1, N, K, x_gid, lid, alpha, beta, (__global Dtype*)dstc0, (__global Dtype*)dstc1);",    // NOLINT
+"} else {",    // NOLINT
+"Dtype4 dot0[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot1[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"int i = lid;",    // NOLINT
+"while( i < K / 4) {",    // NOLINT
+"const Dtype4 b0 = vload4(i, srca_read0);",    // NOLINT
+"const Dtype4 b1 = vload4(i, srca_read1);",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"Dtype4 a = vload4(i, srcb_read + j * K);",    // NOLINT
+"dot0[j] += b0 * a;",    // NOLINT
+"dot1[j] += b1 * a;",    // NOLINT
+"}",    // NOLINT
+"i += get_local_size(0);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"work_each0[lid * 4 + j] = dot0[j].x + dot0[j].y + dot0[j].z + dot0[j].w;",    // NOLINT
+"work_each1[lid * 4 + j] = dot1[j].x + dot1[j].y + dot1[j].z + dot1[j].w;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(i == K / 4) {",    // NOLINT
+"short tail_items = K % 4;",    // NOLINT
+"if(tail_items != 0) {",    // NOLINT
+"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(short i = 0; i < tail_items; ++i) {",    // NOLINT
+"const Dtype at0 = srca_tail0[i];",    // NOLINT
+"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"work_each0[lid * 4 + j] += at0 * srcb_tail[i + j * K];",    // NOLINT
+"work_each1[lid * 4 + j] += at1 * srcb_tail[i + j * K];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride) {",    // NOLINT
+"work0[lid] += work0[lid+stride];",    // NOLINT
+"work1[lid] += work1[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"dstc0[x_gid] = alpha * work0[0] + beta * dstc0[x_gid];",    // NOLINT
+"dstc1[x_gid] = alpha * work1[0] + beta * dstc1[x_gid];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#undef SLM_SIZE",    // NOLINT
+"",    // NOLINT
+"#define SLM_SIZE 32",    // NOLINT
+"void TEMPLATE(gemm_buffer_NT_M_4_edgerows,Dtype)(",    // NOLINT
+"const __global Dtype* srca_read0,",    // NOLINT
+"const __global Dtype* srca_read1,",    // NOLINT
+"const __global Dtype* srca_read2,",    // NOLINT
+"const __global Dtype* srca_read3,",    // NOLINT
+"const __global Dtype* srcb_read,",    // NOLINT
+"__local Dtype4* work0,",    // NOLINT
+"__local Dtype4* work1,",    // NOLINT
+"__local Dtype4* work2,",    // NOLINT
+"__local Dtype4* work3,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"int x_gid,",    // NOLINT
+"int lid,",    // NOLINT
+"Dtype alpha,",    // NOLINT
+"Dtype beta,",    // NOLINT
+"__global Dtype* dstc0,",    // NOLINT
+"__global Dtype* dstc1,",    // NOLINT
+"__global Dtype* dstc2,",    // NOLINT
+"__global Dtype* dstc3)",    // NOLINT
+"{",    // NOLINT
+"__local Dtype* work_each0 = (__local Dtype*)(work0 + lid);",    // NOLINT
+"__local Dtype* work_each1 = (__local Dtype*)(work1 + lid);",    // NOLINT
+"__local Dtype* work_each2 = (__local Dtype*)(work2 + lid);",    // NOLINT
+"__local Dtype* work_each3 = (__local Dtype*)(work3 + lid);",    // NOLINT
+"",    // NOLINT
+"int rows = N - x_gid * 4;",    // NOLINT
+"",    // NOLINT
+"Dtype4 dot0[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot1[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot2[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot3[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"",    // NOLINT
+"int i = lid;",    // NOLINT
+"while( i < K / 4) {",    // NOLINT
+"const Dtype4 a0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
+"const Dtype4 a1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
+"const Dtype4 a2 = {srca_read2[i*4], srca_read2[(i*4+1)], srca_read2[(i*4+2)], srca_read2[(i*4+3)]};",    // NOLINT
+"const Dtype4 a3 = {srca_read3[i*4], srca_read3[(i*4+1)], srca_read3[(i*4+2)], srca_read3[(i*4+3)]};",    // NOLINT
+"#pragma unrol",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"dot0[j] += a0 * vload4(i, srcb_read + j * K);",    // NOLINT
+"dot1[j] += a1 * vload4(i, srcb_read + j * K);",    // NOLINT
+"dot2[j] += a2 * vload4(i, srcb_read + j * K);",    // NOLINT
+"dot3[j] += a3 * vload4(i, srcb_read + j * K);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"i += get_local_size(0);",    // NOLINT
+"}",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"work_each0[j] = dot0[j].x + dot0[j].y + dot0[j].z + dot0[j].w;",    // NOLINT
+"work_each1[j] = dot1[j].x + dot1[j].y + dot1[j].z + dot1[j].w;",    // NOLINT
+"work_each2[j] = dot2[j].x + dot2[j].y + dot2[j].z + dot2[j].w;",    // NOLINT
+"work_each3[j] = dot3[j].x + dot3[j].y + dot3[j].z + dot3[j].w;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(i == K / 4) {",    // NOLINT
+"short tail_items = K % 4;",    // NOLINT
+"",    // NOLINT
+"if(tail_items != 0) {",    // NOLINT
+"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail2 = srca_read2 + i * 4;",    // NOLINT
+"const __global Dtype *srca_tail3 = srca_read3 + i * 4;",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(short i = 0; i < tail_items; ++i) {",    // NOLINT
+"const Dtype at0 = srca_tail0[i];",    // NOLINT
+"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"const Dtype at2 = srca_tail2[i];",    // NOLINT
+"const Dtype at3 = srca_tail3[i];",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"work_each0[j] += at0 * srcb_tail[i + j * K];",    // NOLINT
+"work_each1[j] += at1 * srcb_tail[i + j * K];",    // NOLINT
+"work_each2[j] += at2 * srcb_tail[i + j * K];",    // NOLINT
+"work_each3[j] += at3 * srcb_tail[i + j * K];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride) {",    // NOLINT
+"work0[lid] += work0[lid+stride];",    // NOLINT
+"work1[lid] += work1[lid+stride];",    // NOLINT
+"work2[lid] += work2[lid+stride];",    // NOLINT
+"work3[lid] += work3[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < rows; ++j) {",    // NOLINT
+"dstc0[(x_gid * 4  + j)] = alpha * work_each0[j] + beta * dstc0[(x_gid * 4 + j)];",    // NOLINT
+"dstc1[(x_gid * 4  + j)] = alpha * work_each1[j] + beta * dstc1[(x_gid * 4 + j)];",    // NOLINT
+"dstc2[(x_gid * 4  + j)] = alpha * work_each2[j] + beta * dstc2[(x_gid * 4 + j)];",    // NOLINT
+"dstc3[(x_gid * 4  + j)] = alpha * work_each3[j] + beta * dstc3[(x_gid * 4 + j)];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_NT_M_4,Dtype)(",    // NOLINT
+"__global const Dtype * A,",    // NOLINT
+"int offA,",    // NOLINT
+"__global const Dtype * B,",    // NOLINT
+"int offB,",    // NOLINT
+"__global Dtype * C,",    // NOLINT
+"int offC,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha_f,",    // NOLINT
+"float beta_f)",    // NOLINT
+"{",    // NOLINT
+"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
+"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"int x_gid = get_group_id(0);",    // NOLINT
+"int lid = get_local_id(0);",    // NOLINT
+"int lsize = get_local_size(0);",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
+"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
+"const __global Dtype *srca_read2 = srca_read1 + K;",    // NOLINT
+"const __global Dtype *srca_read3 = srca_read2 + K;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
+"",    // NOLINT
+"__global Dtype4 *dstc0 = (__global Dtype4*)(C + offC);",    // NOLINT
+"__global Dtype4 *dstc1 = (__global Dtype4*)((__global Dtype*)(dstc0) + N);",    // NOLINT
+"__global Dtype4 *dstc2 = (__global Dtype4*)((__global Dtype*)(dstc1) + N);",    // NOLINT
+"__global Dtype4 *dstc3 = (__global Dtype4*)((__global Dtype*)(dstc2) + N);",    // NOLINT
+"",    // NOLINT
+"__local Dtype4 work0[SLM_SIZE];",    // NOLINT
+"__local Dtype4 work1[SLM_SIZE];",    // NOLINT
+"__local Dtype4 work2[SLM_SIZE];",    // NOLINT
+"__local Dtype4 work3[SLM_SIZE];",    // NOLINT
+"__local Dtype* work_each0 = (__local Dtype*)(work0 + lid);",    // NOLINT
+"__local Dtype* work_each1 = (__local Dtype*)(work1 + lid);",    // NOLINT
+"__local Dtype* work_each2 = (__local Dtype*)(work2 + lid);",    // NOLINT
+"__local Dtype* work_each3 = (__local Dtype*)(work3 + lid);",    // NOLINT
+"",    // NOLINT
+"if(x_gid == N / 4) {",    // NOLINT
+"TEMPLATE(gemm_buffer_NT_M_4_edgerows,Dtype)          (srca_read0, srca_read1, srca_read2, srca_read3, srcb_read,          work0, work1, work2, work3, N, K, x_gid, lid, alpha, beta,          (__global Dtype*)dstc0, (__global Dtype*)dstc1, (__global Dtype*)dstc2, (__global Dtype*)dstc3);",    // NOLINT
+"} else {",    // NOLINT
+"Dtype4 dot0[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot1[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot2[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"Dtype4 dot3[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"",    // NOLINT
+"int kid = lid;",    // NOLINT
+"while( kid < K / 4) {",    // NOLINT
+"const Dtype4 b0 = vload4(kid, srca_read0);",    // NOLINT
+"const Dtype4 b1 = vload4(kid, srca_read1);",    // NOLINT
+"const Dtype4 b2 = vload4(kid, srca_read2);",    // NOLINT
+"const Dtype4 b3 = vload4(kid, srca_read3);",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"Dtype4 a = vload4(kid, srcb_read + j * K);",    // NOLINT
+"dot0[j] += b0 * a;",    // NOLINT
+"dot1[j] += b1 * a;",    // NOLINT
+"dot2[j] += b2 * a;",    // NOLINT
+"dot3[j] += b3 * a;",    // NOLINT
+"}",    // NOLINT
+"kid += lsize;",    // NOLINT
+"}",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"work_each0[j] = dot0[j].x + dot0[j].y + dot0[j].z + dot0[j].w;",    // NOLINT
+"work_each1[j] = dot1[j].x + dot1[j].y + dot1[j].z + dot1[j].w;",    // NOLINT
+"work_each2[j] = dot2[j].x + dot2[j].y + dot2[j].z + dot2[j].w;",    // NOLINT
+"work_each3[j] = dot3[j].x + dot3[j].y + dot3[j].z + dot3[j].w;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(kid == (K >> 2)) {",    // NOLINT
+"short tail_items = K % 4;",    // NOLINT
+"if(tail_items != 0) {",    // NOLINT
+"int offset = kid << 2;",    // NOLINT
+"const __global Dtype *srcb_tail = srcb_read + offset;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_tail0 = srca_read0 + offset;",    // NOLINT
+"const __global Dtype *srca_tail1 = srca_read1 + offset;",    // NOLINT
+"const __global Dtype *srca_tail2 = srca_read2 + offset;",    // NOLINT
+"const __global Dtype *srca_tail3 = srca_read3 + offset;",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(short i = 0; i < tail_items; ++i) {",    // NOLINT
+"const Dtype at0 = srca_tail0[i];",    // NOLINT
+"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"const Dtype at2 = srca_tail2[i];",    // NOLINT
+"const Dtype at3 = srca_tail3[i];",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(int j = 0; j < 4; ++j) {",    // NOLINT
+"work_each0[j] += at0 * srcb_tail[i + j * K];",    // NOLINT
+"work_each1[j] += at1 * srcb_tail[i + j * K];",    // NOLINT
+"work_each2[j] += at2 * srcb_tail[i + j * K];",    // NOLINT
+"work_each3[j] += at3 * srcb_tail[i + j * K];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride) {",    // NOLINT
+"work0[lid] += work0[lid+stride];",    // NOLINT
+"work1[lid] += work1[lid+stride];",    // NOLINT
+"work2[lid] += work2[lid+stride];",    // NOLINT
+"work3[lid] += work3[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"dstc0[x_gid] = alpha * work0[0] + beta * dstc0[x_gid];",    // NOLINT
+"dstc1[x_gid] = alpha * work1[0] + beta * dstc1[x_gid];",    // NOLINT
+"dstc2[x_gid] = alpha * work2[0] + beta * dstc2[x_gid];",    // NOLINT
+"dstc3[x_gid] = alpha * work3[0] + beta * dstc3[x_gid];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#undef SLM_SIZE",    // NOLINT
+"",    // NOLINT
+"#define SLM_SIZE 16",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_NT_M_8,Dtype)(",    // NOLINT
+"__global const Dtype * A,",    // NOLINT
+"int offA,",    // NOLINT
+"__global const Dtype * B,",    // NOLINT
+"int offB,",    // NOLINT
+"__global Dtype * C,",    // NOLINT
+"int offC,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha_f,",    // NOLINT
+"float beta_f)",    // NOLINT
+"{",    // NOLINT
+"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
+"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"int x_gid = get_group_id(0);",    // NOLINT
+"int lid = get_local_id(0);",    // NOLINT
+"int lsize = get_local_size(0);",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
+"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
+"const __global Dtype *srca_read2 = srca_read1 + K;",    // NOLINT
+"const __global Dtype *srca_read3 = srca_read2 + K;",    // NOLINT
+"const __global Dtype *srca_read4 = srca_read3 + K;",    // NOLINT
+"const __global Dtype *srca_read5 = srca_read4 + K;",    // NOLINT
+"const __global Dtype *srca_read6 = srca_read5 + K;",    // NOLINT
+"const __global Dtype *srca_read7 = srca_read6 + K;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srcb_read = B + x_gid * K + offB;",    // NOLINT
+"",    // NOLINT
+"__global Dtype *dstc0 = C + offC;",    // NOLINT
+"__global Dtype *dstc1 = dstc0 + N;",    // NOLINT
+"__global Dtype *dstc2 = dstc1 + N;",    // NOLINT
+"__global Dtype *dstc3 = dstc2 + N;",    // NOLINT
+"__global Dtype *dstc4 = dstc3 + N;",    // NOLINT
+"__global Dtype *dstc5 = dstc4 + N;",    // NOLINT
+"__global Dtype *dstc6 = dstc5 + N;",    // NOLINT
+"__global Dtype *dstc7 = dstc6 + N;",    // NOLINT
+"",    // NOLINT
+"__local Dtype work0[SLM_SIZE];",    // NOLINT
+"__local Dtype work1[SLM_SIZE];",    // NOLINT
+"__local Dtype work2[SLM_SIZE];",    // NOLINT
+"__local Dtype work3[SLM_SIZE];",    // NOLINT
+"__local Dtype work4[SLM_SIZE];",    // NOLINT
+"__local Dtype work5[SLM_SIZE];",    // NOLINT
+"__local Dtype work6[SLM_SIZE];",    // NOLINT
+"__local Dtype work7[SLM_SIZE];",    // NOLINT
+"",    // NOLINT
+"Dtype4 dot0 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot1 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot2 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot3 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot4 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot5 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot6 = (Dtype4)(0.);",    // NOLINT
+"Dtype4 dot7 = (Dtype4)(0.);",    // NOLINT
+"",    // NOLINT
+"int kid = lid;",    // NOLINT
+"while( kid < K / 4) {",    // NOLINT
+"const Dtype4 a0 = vload4(kid, srca_read0);",    // NOLINT
+"const Dtype4 a1 = vload4(kid, srca_read1);",    // NOLINT
+"const Dtype4 a2 = vload4(kid, srca_read2);",    // NOLINT
+"const Dtype4 a3 = vload4(kid, srca_read3);",    // NOLINT
+"const Dtype4 a4 = vload4(kid, srca_read4);",    // NOLINT
+"const Dtype4 a5 = vload4(kid, srca_read5);",    // NOLINT
+"const Dtype4 a6 = vload4(kid, srca_read6);",    // NOLINT
+"const Dtype4 a7 = vload4(kid, srca_read7);",    // NOLINT
+"Dtype4 b = vload4(kid, srcb_read);",    // NOLINT
+"dot0 += a0 * b;",    // NOLINT
+"dot1 += a1 * b;",    // NOLINT
+"dot2 += a2 * b;",    // NOLINT
+"dot3 += a3 * b;",    // NOLINT
+"dot4 += a4 * b;",    // NOLINT
+"dot5 += a5 * b;",    // NOLINT
+"dot6 += a6 * b;",    // NOLINT
+"dot7 += a7 * b;",    // NOLINT
+"",    // NOLINT
+"kid += lsize;",    // NOLINT
+"}",    // NOLINT
+"work0[lid] = dot0.x + dot0.y + dot0.z + dot0.w;",    // NOLINT
+"work1[lid] = dot1.x + dot1.y + dot1.z + dot1.w;",    // NOLINT
+"work2[lid] = dot2.x + dot2.y + dot2.z + dot2.w;",    // NOLINT
+"work3[lid] = dot3.x + dot3.y + dot3.z + dot3.w;",    // NOLINT
+"work4[lid] = dot4.x + dot4.y + dot4.z + dot4.w;",    // NOLINT
+"work5[lid] = dot5.x + dot5.y + dot5.z + dot5.w;",    // NOLINT
+"work6[lid] = dot6.x + dot6.y + dot6.z + dot6.w;",    // NOLINT
+"work7[lid] = dot7.x + dot7.y + dot7.z + dot7.w;",    // NOLINT
+"",    // NOLINT
+"if(kid == (K >> 2)) {",    // NOLINT
+"short tail_items = K % 4;",    // NOLINT
+"if(tail_items != 0) {",    // NOLINT
+"int offset = kid << 2;",    // NOLINT
+"const __global Dtype *srcb_tail = srcb_read + offset;",    // NOLINT
+"",    // NOLINT
+"const __global Dtype *srca_tail0 = srca_read0 + offset;",    // NOLINT
+"const __global Dtype *srca_tail1 = srca_read1 + offset;",    // NOLINT
+"const __global Dtype *srca_tail2 = srca_read2 + offset;",    // NOLINT
+"const __global Dtype *srca_tail3 = srca_read3 + offset;",    // NOLINT
+"const __global Dtype *srca_tail4 = srca_read4 + offset;",    // NOLINT
+"const __global Dtype *srca_tail5 = srca_read5 + offset;",    // NOLINT
+"const __global Dtype *srca_tail6 = srca_read6 + offset;",    // NOLINT
+"const __global Dtype *srca_tail7 = srca_read7 + offset;",    // NOLINT
+"#pragma unroll",    // NOLINT
+"for(short item = 0; item < tail_items; ++item) {",    // NOLINT
+"work0[lid] += srca_tail0[item] * srcb_tail[item];",    // NOLINT
+"work1[lid] += srca_tail1[item] * srcb_tail[item];",    // NOLINT
+"work2[lid] += srca_tail2[item] * srcb_tail[item];",    // NOLINT
+"work3[lid] += srca_tail3[item] * srcb_tail[item];",    // NOLINT
+"work4[lid] += srca_tail4[item] * srcb_tail[item];",    // NOLINT
+"work5[lid] += srca_tail5[item] * srcb_tail[item];",    // NOLINT
+"work6[lid] += srca_tail6[item] * srcb_tail[item];",    // NOLINT
+"work7[lid] += srca_tail7[item] * srcb_tail[item];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride) {",    // NOLINT
+"work0[lid] += work0[lid+stride];",    // NOLINT
+"work1[lid] += work1[lid+stride];",    // NOLINT
+"work2[lid] += work2[lid+stride];",    // NOLINT
+"work3[lid] += work3[lid+stride];",    // NOLINT
+"work4[lid] += work4[lid+stride];",    // NOLINT
+"work5[lid] += work5[lid+stride];",    // NOLINT
+"work6[lid] += work6[lid+stride];",    // NOLINT
+"work7[lid] += work7[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"dstc0[x_gid] = alpha * work0[0] + beta * dstc0[x_gid];",    // NOLINT
+"dstc1[x_gid] = alpha * work1[0] + beta * dstc1[x_gid];",    // NOLINT
+"dstc2[x_gid] = alpha * work2[0] + beta * dstc2[x_gid];",    // NOLINT
+"dstc3[x_gid] = alpha * work3[0] + beta * dstc3[x_gid];",    // NOLINT
+"dstc4[x_gid] = alpha * work4[0] + beta * dstc4[x_gid];",    // NOLINT
+"dstc5[x_gid] = alpha * work5[0] + beta * dstc5[x_gid];",    // NOLINT
+"dstc6[x_gid] = alpha * work6[0] + beta * dstc6[x_gid];",    // NOLINT
+"dstc7[x_gid] = alpha * work7[0] + beta * dstc7[x_gid];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#undef SLM_SIZE",    // NOLINT
+"",    // NOLINT
+"#define VEC_SIZE        4",    // NOLINT
+"#define LWG_HEIGHT      4",    // NOLINT
+"#define TILE_M          8",    // NOLINT
+"#define TILE_K          16",    // NOLINT
+"#define TILE_N          32",    // NOLINT
+"",    // NOLINT
+"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_TN, Dtype)(",    // NOLINT
+"const __global float *src0, int off0,",    // NOLINT
+"const __global float *src1, int off1,",    // NOLINT
+"__global float *dst, int offd,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"int start_index)",    // NOLINT
+"",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int local_x = get_local_id(0);",    // NOLINT
+"const int local_y = get_local_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"",    // NOLINT
+"float4 brow;",    // NOLINT
+"",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"",    // NOLINT
+"const __global float *src0_read = src0 + (local_x * ( TILE_K / 8 ) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
+"",    // NOLINT
+"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + ( group_x * TILE_N ) + start_index * N + off1;",    // NOLINT
+"",    // NOLINT
+"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : (beta * ((__global float4 *)dst_write0)[0]);",    // NOLINT
+"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + N))[0] : (beta * ((__global float4 *)(dst_write0 + N))[0]);",    // NOLINT
+"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 2 * N))[0]);",    // NOLINT
+"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 3 * N))[0]);",    // NOLINT
+"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 4 * N))[0]);",    // NOLINT
+"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 5 * N))[0]);",    // NOLINT
+"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 6 * N))[0]);",    // NOLINT
+"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 7 * N))[0]);",    // NOLINT
+"",    // NOLINT
+"int end_index = min(start_index + 256, K);",    // NOLINT
+"while( start_index + TILE_K <= end_index ) {",    // NOLINT
+"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
+"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _arow )         brow = ((__global float4 *)src1_read0)[0];  src1_read0 += N;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 0 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 0 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 1 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 1 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 2 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 2 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 3 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 3 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 4 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 4 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 5 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 5 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 6 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 6 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 7 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 7 ) );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"",    // NOLINT
+"src0_read += TILE_K * M;",    // NOLINT
+"start_index += TILE_K;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(start_index < end_index) {",    // NOLINT
+"float8 arow0 = ((start_index + local_x * 2) < K) ? (alpha * ((__global float8 *)src0_read)[0]) : 0.0f;",    // NOLINT
+"float8 arow1 = ((start_index + local_x * 2 + 1) < K) ? (alpha * ((__global float8 *)(src0_read + M))[0]) : 0.0f;",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _arow )         brow = (start_index < K) ? ((__global float4 *)src1_read0)[0] : 0.0f;  src1_read0 += N; start_index++;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 0 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 0 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 1 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 1 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 2 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 2 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 3 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 3 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 4 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 4 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 5 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 5 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 6 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 6 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 7 ) );",    // NOLINT
+"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 7 ) );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
+"if(mad24(global_x, 4, 3) < N) {",    // NOLINT
+"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy; dst_write0[2] = dot00.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) {",    // NOLINT
+"dst_write[0] = dot01.xy; dst_write0[2] = dot01.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) {",    // NOLINT
+"dst_write[0] = dot02.xy; dst_write0[2] = dot02.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) {",    // NOLINT
+"dst_write[0] = dot03.xy; dst_write0[2] = dot03.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) {",    // NOLINT
+"dst_write[0] = dot04.xy; dst_write0[2] = dot04.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) {",    // NOLINT
+"dst_write[0] = dot05.xy; dst_write0[2] = dot05.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) {",    // NOLINT
+"dst_write[0] = dot06.xy; dst_write0[2] = dot06.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) {",    // NOLINT
+"dst_write[0] = dot07.xy; dst_write0[2] = dot07.z;",    // NOLINT
+"}",    // NOLINT
+"} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"} else {",    // NOLINT
+"dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write0[0] = dot02.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write0[0] = dot03.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write0[0] = dot04.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write0[0] = dot05.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write0[0] = dot06.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write0[0] = dot07.x; }",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef VEC_SIZE",    // NOLINT
+"#undef LWG_HEIGHT",    // NOLINT
+"#undef TILE_M",    // NOLINT
+"#undef TILE_K",    // NOLINT
+"#undef TILE_N",    // NOLINT
+"",    // NOLINT
+"#define VEC_SIZE        4",    // NOLINT
+"#define LWG_HEIGHT      4",    // NOLINT
+"#define TILE_M          8",    // NOLINT
+"#define TILE_K          16",    // NOLINT
+"#define TILE_N          32",    // NOLINT
+"",    // NOLINT
+"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_TT, Dtype)(",    // NOLINT
+"const __global float *src0, int off0,",    // NOLINT
+"const __global float *src1, int off1,",    // NOLINT
+"__global float *dst, int offd,",    // NOLINT
+"int M,",    // NOLINT
+"int N,",    // NOLINT
+"int K,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"int start_index)",    // NOLINT
+"",    // NOLINT
+"{",    // NOLINT
+"const int group_x = get_group_id(0);",    // NOLINT
+"const int group_y = get_group_id(1);",    // NOLINT
+"const int local_x = get_local_id(0);",    // NOLINT
+"const int local_y = get_local_id(1);",    // NOLINT
+"const int global_x = get_global_id(0);",    // NOLINT
+"const int global_y = get_global_id(1);",    // NOLINT
+"",    // NOLINT
+"float8 dot0 = 0.f;",    // NOLINT
+"float8 dot1 = 0.f;",    // NOLINT
+"float8 dot2 = 0.f;",    // NOLINT
+"float8 dot3 = 0.f;",    // NOLINT
+"",    // NOLINT
+"float16 brow0;",    // NOLINT
+"float16 brow1;",    // NOLINT
+"float16 brow2;",    // NOLINT
+"float16 brow3;",    // NOLINT
+"",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"",    // NOLINT
+"const __global float *src0_read = src0 + (local_x * ( TILE_K / 8 ) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
+"",    // NOLINT
+"const __global float *src1_read0 = src1 + (local_x * VEC_SIZE + ( group_x * TILE_N )) * K + start_index + off1;",    // NOLINT
+"",    // NOLINT
+"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : (beta * ((__global float4 *)dst_write0)[0]);",    // NOLINT
+"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + N))[0] : (beta * ((__global float4 *)(dst_write0 + N))[0]);",    // NOLINT
+"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 2 * N))[0]);",    // NOLINT
+"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 3 * N))[0]);",    // NOLINT
+"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 4 * N))[0]);",    // NOLINT
+"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 5 * N))[0]);",    // NOLINT
+"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 6 * N))[0]);",    // NOLINT
+"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 7 * N))[0]);",    // NOLINT
+"",    // NOLINT
+"int end_index = min(start_index + 256, K);",    // NOLINT
+"while( start_index + TILE_K <= end_index ) {",    // NOLINT
+"brow0 = ((__global float16 *)src1_read0)[0];",    // NOLINT
+"brow1 = ((__global float16 *)(src1_read0 + K))[0];",    // NOLINT
+"brow2 = ((__global float16 *)(src1_read0 + 2 * K))[0];",    // NOLINT
+"brow3 = ((__global float16 *)(src1_read0 + 3 * K))[0];",    // NOLINT
+"",    // NOLINT
+"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
+"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = mad( intel_sub_group_shuffle( arow0, 0 ), (float8)_brow.s0, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 0 ), (float8)_brow.s1, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 1 ), (float8)_brow.s2, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 1 ), (float8)_brow.s3, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 2 ), (float8)_brow.s4, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 2 ), (float8)_brow.s5, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 3 ), (float8)_brow.s6, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 3 ), (float8)_brow.s7, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 4 ), (float8)_brow.s8, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 4 ), (float8)_brow.s9, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 5 ), (float8)_brow.sa, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 5 ), (float8)_brow.sb, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 6 ), (float8)_brow.sc, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 6 ), (float8)_brow.sd, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 7 ), (float8)_brow.se, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 7 ), (float8)_brow.sf, _dot );",    // NOLINT
+"MM_DOT_PRODUCT( brow0, dot0 );",    // NOLINT
+"MM_DOT_PRODUCT( brow1, dot1 );",    // NOLINT
+"MM_DOT_PRODUCT( brow2, dot2 );",    // NOLINT
+"MM_DOT_PRODUCT( brow3, dot3 );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"",    // NOLINT
+"src1_read0 += TILE_K;",    // NOLINT
+"src0_read += TILE_K * M;",    // NOLINT
+"start_index += TILE_K;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(start_index < end_index) {",    // NOLINT
+"brow0 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
+"brow1 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
+"brow2 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
+"brow3 = ((__global float16 *)src1_read0)[0];",    // NOLINT
+"",    // NOLINT
+"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
+"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"",    // NOLINT
+"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 0 ), (float8)_brow.s0, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 0 ), (float8)_brow.s1, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 1 ), (float8)_brow.s2, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 1 ), (float8)_brow.s3, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 2 ), (float8)_brow.s4, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 2 ), (float8)_brow.s5, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 3 ), (float8)_brow.s6, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 3 ), (float8)_brow.s7, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 4 ), (float8)_brow.s8, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 4 ), (float8)_brow.s9, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 5 ), (float8)_brow.sa, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 5 ), (float8)_brow.sb, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 6 ), (float8)_brow.sc, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 6 ), (float8)_brow.sd, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 7 ), (float8)_brow.se, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 7 ), (float8)_brow.sf, _dot ) : _dot;",    // NOLINT
+"int w = start_index;",    // NOLINT
+"MM_DOT_PRODUCT( brow0, dot0 );",    // NOLINT
+"w = start_index;",    // NOLINT
+"MM_DOT_PRODUCT( brow1, dot1 );",    // NOLINT
+"w = start_index;",    // NOLINT
+"MM_DOT_PRODUCT( brow2, dot2 );",    // NOLINT
+"w = start_index;",    // NOLINT
+"MM_DOT_PRODUCT( brow3, dot3 );",    // NOLINT
+"#undef MM_DOT_PRODUCT",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"dot00 += (float4)(dot0.s0, dot1.s0, dot2.s0, dot3.s0);",    // NOLINT
+"dot01 += (float4)(dot0.s1, dot1.s1, dot2.s1, dot3.s1);",    // NOLINT
+"dot02 += (float4)(dot0.s2, dot1.s2, dot2.s2, dot3.s2);",    // NOLINT
+"dot03 += (float4)(dot0.s3, dot1.s3, dot2.s3, dot3.s3);",    // NOLINT
+"dot04 += (float4)(dot0.s4, dot1.s4, dot2.s4, dot3.s4);",    // NOLINT
+"dot05 += (float4)(dot0.s5, dot1.s5, dot2.s5, dot3.s5);",    // NOLINT
+"dot06 += (float4)(dot0.s6, dot1.s6, dot2.s6, dot3.s6);",    // NOLINT
+"dot07 += (float4)(dot0.s7, dot1.s7, dot2.s7, dot3.s7);",    // NOLINT
+"",    // NOLINT
+"if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
+"if(mad24(global_x, 4, 3) < N) {",    // NOLINT
+"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy; dst_write0[2] = dot00.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) {",    // NOLINT
+"dst_write[0] = dot01.xy; dst_write0[2] = dot01.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) {",    // NOLINT
+"dst_write[0] = dot02.xy; dst_write0[2] = dot02.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) {",    // NOLINT
+"dst_write[0] = dot03.xy; dst_write0[2] = dot03.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) {",    // NOLINT
+"dst_write[0] = dot04.xy; dst_write0[2] = dot04.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) {",    // NOLINT
+"dst_write[0] = dot05.xy; dst_write0[2] = dot05.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) {",    // NOLINT
+"dst_write[0] = dot06.xy; dst_write0[2] = dot06.z;",    // NOLINT
+"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"} else",    // NOLINT
+"return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) {",    // NOLINT
+"dst_write[0] = dot07.xy; dst_write0[2] = dot07.z;",    // NOLINT
+"}",    // NOLINT
+"} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
+"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"} else {",    // NOLINT
+"dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { dst_write0[0] = dot02.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { dst_write0[0] = dot03.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { dst_write0[0] = dot04.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { dst_write0[0] = dot05.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { dst_write0[0] = dot06.x; dst_write0 += N; }",    // NOLINT
+"else return;",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { dst_write0[0] = dot07.x; }",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef VEC_SIZE",    // NOLINT
+"#undef LWG_HEIGHT",    // NOLINT
+"#undef TILE_M",    // NOLINT
+"#undef TILE_K",    // NOLINT
+"#undef TILE_N",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(im2col,Dtype)(const int_tp n,",    // NOLINT
 "__global const Dtype* data_im,",    // NOLINT
 "const int_tp data_im_off,",    // NOLINT
@@ -3457,6 +4953,341 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"// This kernel is used in LRNOptimizedLayer.",    // NOLINT
+"// It is based on ave_pool_forward kernel with some modifications on the input and output.",    // NOLINT
+"__kernel void TEMPLATE(lrn_within_channel_forward,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w, const Dtype power, const Dtype scale, __global Dtype* top_data) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"{",    // NOLINT
+"const int_tp pw = index % pooled_width;",    // NOLINT
+"const int_tp ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"const int_tp c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"const int_tp n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + kernel_h, height + pad_h);",    // NOLINT
+"int_tp wend = min(wstart + kernel_w, width + pad_w);",    // NOLINT
+"const int_tp pool_size = (hend - hstart) * (wend - wstart);",    // NOLINT
+"hstart = max(hstart, (int_tp)0);",    // NOLINT
+"wstart = max(wstart, (int_tp)0);",    // NOLINT
+"hend = min(hend, height);",    // NOLINT
+"wend = min(wend, width);",    // NOLINT
+"Dtype aveval = 0;",    // NOLINT
+"__global const Dtype* bottom_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"for (int_tp h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int_tp w = wstart; w < wend; ++w) {",    // NOLINT
+"Dtype tmp_val = bottom_slice[h * width + w];",    // NOLINT
+"aveval += (tmp_val * tmp_val);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"Dtype tmp_aveval = aveval / pool_size;",    // NOLINT
+"top_data[index] = bottom_data[index] * pow(tmp_aveval * scale + 1, power);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"// !!!!!!!!",    // NOLINT
+"// The following macros are duplicated in lrn_optimized_layer.cu since we currently",    // NOLINT
+"// don't have a simple solution for sharing between cl and cpp files.",    // NOLINT
+"// You must keep both locations in sync!",    // NOLINT
+"#define SIMD_SIZE 16",    // NOLINT
+"#define TILE_HEIGHT 32",    // NOLINT
+"#define TILE_WIDTH (SIMD_SIZE - 2)",    // NOLINT
+"// !!!!!!!!",    // NOLINT
+"",    // NOLINT
+"#define KERNEL_SIZE 3.0f",    // NOLINT
+"#define POOL_SIZE (KERNEL_SIZE * KERNEL_SIZE)",    // NOLINT
+"#define ONE_OVER_POOL_SIZE (1.0f / POOL_SIZE)",    // NOLINT
+"",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))",    // NOLINT
+"__kernel void TEMPLATE(lrn_within_channel_forward_opt,Dtype)(",    // NOLINT
+"__global const float* const bottom_data,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"const float power,",    // NOLINT
+"const float scale,",    // NOLINT
+"__global float* top_data)",    // NOLINT
+"{",    // NOLINT
+"int local_id = get_local_id(0);",    // NOLINT
+"",    // NOLINT
+"int startx = get_global_id(0);",    // NOLINT
+"int tile_y = get_global_id(1);",    // NOLINT
+"int channel = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"int realx = startx / SIMD_SIZE * TILE_WIDTH + (startx - startx / SIMD_SIZE * SIMD_SIZE) % TILE_WIDTH;",    // NOLINT
+"",    // NOLINT
+"int offset = height * width * channel;",    // NOLINT
+"",    // NOLINT
+"__global const float* const input_image = bottom_data + offset;",    // NOLINT
+"__global float* const output_image = top_data + offset;",    // NOLINT
+"",    // NOLINT
+"float input[3];",    // NOLINT
+"",    // NOLINT
+"int starty = tile_y * TILE_HEIGHT;",    // NOLINT
+"int endy = min(height - 1, starty + TILE_HEIGHT - 1);",    // NOLINT
+"",    // NOLINT
+"// Read 3 lines of 16 floats",    // NOLINT
+"// The 3 lines start one float before the current (to the left) and one line up:",    // NOLINT
+"//",    // NOLINT
+"// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"// 0 X 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"//",    // NOLINT
+"// In the diagram above X represents the current work item",    // NOLINT
+"int base = starty * width + realx;",    // NOLINT
+"__global const float* base_addr = input_image + base - 1;",    // NOLINT
+"",    // NOLINT
+"input[0] = as_float(intel_sub_group_block_read((const __global uint*)(base_addr - width)));",    // NOLINT
+"input[1] = as_float(intel_sub_group_block_read((const __global uint*)(base_addr)));",    // NOLINT
+"",    // NOLINT
+"input[0] = input[0] * input[0];",    // NOLINT
+"input[1] = input[1] * input[1];",    // NOLINT
+"",    // NOLINT
+"float zero = 0;",    // NOLINT
+"",    // NOLINT
+"int first = 0;",    // NOLINT
+"int second = 1;",    // NOLINT
+"int third = 2;",    // NOLINT
+"",    // NOLINT
+"for (int y = starty  ; y <= endy ; y++) {",    // NOLINT
+"base_addr += width;",    // NOLINT
+"input[third] = as_float(intel_sub_group_block_read((const __global uint*)(base_addr)));",    // NOLINT
+"",    // NOLINT
+"input[third] = input[third] * input[third];",    // NOLINT
+"",    // NOLINT
+"float tmp_aveval, sum;",    // NOLINT
+"",    // NOLINT
+"if (y == 0) {",    // NOLINT
+"sum = input[second] + input[third];",    // NOLINT
+"}",    // NOLINT
+"else if (y == height - 1) {",    // NOLINT
+"sum = input[first] + input[second];",    // NOLINT
+"}",    // NOLINT
+"else {",    // NOLINT
+"sum = input[first] + input[second] + input[third];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"float sum1 = intel_sub_group_shuffle_down(sum, zero , 1);",    // NOLINT
+"float sum2 = intel_sub_group_shuffle_down(sum, zero , 2);",    // NOLINT
+"",    // NOLINT
+"if (realx == 0) {",    // NOLINT
+"tmp_aveval = (sum1 + sum2) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"else if (realx == width - 1) {",    // NOLINT
+"tmp_aveval = (sum + sum1) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"else {",    // NOLINT
+"tmp_aveval = (sum + sum1 + sum2) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int idx = y * width + realx;",    // NOLINT
+"",    // NOLINT
+"float res = input_image[idx] * native_powr(tmp_aveval * scale + 1, power);",    // NOLINT
+"",    // NOLINT
+"if (local_id < TILE_WIDTH && realx < width) {",    // NOLINT
+"output_image[idx] = res;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"first = (first + 1) % 3;",    // NOLINT
+"second = (second + 1) % 3;",    // NOLINT
+"third = (third + 1) % 3;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef SIMD_SIZE",    // NOLINT
+"#undef TILE_HEIGHT",    // NOLINT
+"#undef TILE_WIDTH",    // NOLINT
+"#undef KERNEL_SIZE",    // NOLINT
+"#undef POOL_SIZE",    // NOLINT
+"#undef ONE_OVER_POOL_SIZE",    // NOLINT
+"",    // NOLINT
+"// This kernel is used in LRNOptimizedLayer.",    // NOLINT
+"// It is based on ave_pool_backward kernel with some modifications on the input and output.",    // NOLINT
+"__kernel void TEMPLATE(lrn_within_channel_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"__global const Dtype* top_data, __global const Dtype* top_diff,",    // NOLINT
+"const int_tp num, const int_tp channels, const int_tp height,",    // NOLINT
+"const int_tp width, const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp kernel_h, const int_tp kernel_w, const int_tp stride_h,",    // NOLINT
+"const int_tp stride_w, const int_tp pad_h, const int_tp pad_w,",    // NOLINT
+"const Dtype power, const Dtype scale, __global const Dtype* bottom_data,",    // NOLINT
+"__global Dtype* top_bottom_ratio , __global Dtype* bottom_diff){",    // NOLINT
+"",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"// find out the local index",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp w = index % width + pad_w;",    // NOLINT
+"const int_tp h = (index / width) % height + pad_h;",    // NOLINT
+"const int_tp c = (index / width / height) % channels;",    // NOLINT
+"const int_tp n = index / width / height / channels;",    // NOLINT
+"const int_tp phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;",    // NOLINT
+"const int_tp phend = min(h / stride_h + 1, pooled_height);",    // NOLINT
+"const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;",    // NOLINT
+"const int_tp pwend = min(w / stride_w + 1, pooled_width);",    // NOLINT
+"Dtype gradient = 0.0;",    // NOLINT
+"__global const Dtype* top_diff_slice = top_diff",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"",    // NOLINT
+"__global const Dtype* top_data_slice = top_data",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"",    // NOLINT
+"__global const Dtype* bottom_data_slice = bottom_data",    // NOLINT
+"+ (n * channels + c) * height * width;",    // NOLINT
+"__global Dtype* top_bottom_ratio_slice = top_bottom_ratio",    // NOLINT
+"+ (n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"",    // NOLINT
+"if (( h - pad_h) * width +  w - pad_w < pooled_width * pooled_height){",    // NOLINT
+"gradient += top_data_slice[(h - pad_h) * width + w - pad_w] /",    // NOLINT
+"bottom_data_slice[(h - pad_h) * width + w - pad_w] *",    // NOLINT
+"top_diff_slice[(h - pad_h) * width + w - pad_w];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"// figure out the pooling size",    // NOLINT
+"int_tp hstart = ph * stride_h - pad_h;",    // NOLINT
+"int_tp wstart = pw * stride_w - pad_w;",    // NOLINT
+"int_tp hend = min(hstart + kernel_h, height + pad_h);",    // NOLINT
+"int_tp wend = min(wstart + kernel_w, width + pad_w);",    // NOLINT
+"int_tp pool_size = (hend - hstart) * (wend - wstart);",    // NOLINT
+"Dtype tmp_value = 2 * scale * power * bottom_data[index] / pool_size;",    // NOLINT
+"gradient += top_diff_slice[ph * pooled_width + pw] *",    // NOLINT
+"top_bottom_ratio_slice[ph * pooled_width + pw] *",    // NOLINT
+"tmp_value * bottom_data_slice[ph *pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"// compute power of top and bottom ratio",    // NOLINT
+"__kernel void TEMPLATE(lrn_within_channel_backward_ratio,Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data,",    // NOLINT
+"Dtype power, __global const Dtype* top_data,",    // NOLINT
+"__global Dtype* top_bottom_ratio ){",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"top_bottom_ratio[index] = pow(top_data[index] / bottom_data[index],",    // NOLINT
+"(power - 1) / power);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#define SIMD_WIDTH 16",    // NOLINT
+"#define TILE_W SIMD_WIDTH",    // NOLINT
+"#define TILE_H 8",    // NOLINT
+"",    // NOLINT
+"#ifndef BEIGNET",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_WIDTH)))",    // NOLINT
+"#endif",    // NOLINT
+"// Fuse pooling max layer into LRN across channel layer.",    // NOLINT
+"// Currently, only support non-padding, non-dilation mode and pool_w/h == pool_stride_w + 1.",    // NOLINT
+"// This kernel only get better performance on those Intel platforms with edram.",    // NOLINT
+"__kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp tiled_height, int_tp tiled_width,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const Dtype alpha_over_size, const Dtype k,",    // NOLINT
+"__global Dtype* const out,",    // NOLINT
+"const Dtype negative_beta,",    // NOLINT
+"const int_tp pool_h, const int_tp pool_w, const int_tp pool_stride_h, int_tp pool_stride_w,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp tile_pooled_block_h, const int_tp tile_pooled_block_w) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp block_x = get_global_id(0) % tiled_width;",    // NOLINT
+"const int_tp block_y = (get_global_id(0) / tiled_width) % tiled_height;",    // NOLINT
+"const int_tp n = get_global_id(0) / (tiled_width * tiled_height);",    // NOLINT
+"",    // NOLINT
+"const int_tp w = block_x * tile_pooled_block_w * pool_stride_w;",    // NOLINT
+"const int_tp h = block_y * tile_pooled_block_h * pool_stride_h;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp out_h = block_y * tile_pooled_block_h;",    // NOLINT
+"const int_tp out_w = block_x * tile_pooled_block_w;",    // NOLINT
+"const int_tp out_offset = (n * channels * pooled_height + out_h) * pooled_width + out_w + get_local_id(1);",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"const int_tp out_step = pooled_height * pooled_width;",    // NOLINT
+"__global const Dtype* in_off = in + offset + get_local_id(1);",    // NOLINT
+"__global Dtype* out_off = out + out_offset;",    // NOLINT
+"Dtype scale_val;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_scale[TILE_H] = {0};",    // NOLINT
+"if (w + get_local_id(1) >= width)",    // NOLINT
+"return;",    // NOLINT
+"",    // NOLINT
+"while ( head < channels + post_pad ) {",    // NOLINT
+"int ph = 0;",    // NOLINT
+"int cur_out_h = 0;",    // NOLINT
+"Dtype output_val = -FLT_MAX;",    // NOLINT
+"// fill the scale at [n, :, h, w]",    // NOLINT
+"// accumulate values",    // NOLINT
+"for( int lrn_out_h = 0; lrn_out_h < TILE_H && (lrn_out_h + h) < height; lrn_out_h++) {",    // NOLINT
+"Dtype prev_val = accum_scale[lrn_out_h];",    // NOLINT
+"// add",    // NOLINT
+"if (head < channels) {",    // NOLINT
+"prev_val += in_off[head * step + width * lrn_out_h] * in_off[head * step + width * lrn_out_h];",    // NOLINT
+"}",    // NOLINT
+"// subtract",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"prev_val -= in_off[(head - size) * step + width * lrn_out_h] * in_off[(head - size) * step + width * lrn_out_h];",    // NOLINT
+"}",    // NOLINT
+"// compute output.",    // NOLINT
+"if (head >= post_pad) {",    // NOLINT
+"scale_val = k + prev_val * alpha_over_size;",    // NOLINT
+"Dtype tmp = -FLT_MAX;",    // NOLINT
+"//if (w + get_local_id(1) < width)",    // NOLINT
+"tmp = in_off[(head - post_pad) * step + width * lrn_out_h] * native_powr(scale_val, negative_beta);",    // NOLINT
+"",    // NOLINT
+"Dtype h_max_val = -FLT_MAX;",    // NOLINT
+"int index = (get_local_id(1) * pool_stride_w) % SIMD_WIDTH;",    // NOLINT
+"for(int i = 0; i < pool_w; i++) {",    // NOLINT
+"Dtype val = intel_sub_group_shuffle(tmp, index);",    // NOLINT
+"if (h_max_val < val && (index + w < width))",    // NOLINT
+"h_max_val = val;",    // NOLINT
+"",    // NOLINT
+"index = (index + 1) % SIMD_WIDTH;",    // NOLINT
+"}",    // NOLINT
+"// update output value.",    // NOLINT
+"output_val = (output_val > h_max_val) ?",    // NOLINT
+"output_val : h_max_val;",    // NOLINT
+"// time to write previous output and move to next value",    // NOLINT
+"if (lrn_out_h - cur_out_h + 1 == pool_h) {",    // NOLINT
+"if (get_local_id(1) < tile_pooled_block_w && (out_w + get_local_id(1)) < pooled_width) {",    // NOLINT
+"out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;",    // NOLINT
+"",    // NOLINT
+"output_val = h_max_val;",    // NOLINT
+"}",    // NOLINT
+"++ph;",    // NOLINT
+"cur_out_h += pool_stride_h;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"accum_scale[lrn_out_h] = prev_val;",    // NOLINT
+"}",    // NOLINT
+"// Handle the incomplete pool box",    // NOLINT
+"// an incomplete tiling box and we are not hitting the end of the pooled output.",    // NOLINT
+"if (head >= post_pad &&",    // NOLINT
+"ph < tile_pooled_block_h &&",    // NOLINT
+"ph + out_h < pooled_height &&",    // NOLINT
+"get_local_id(1) < tile_pooled_block_w &&",    // NOLINT
+"(out_w + get_local_id(1)) < pooled_width) {",    // NOLINT
+"out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;",    // NOLINT
+"}",    // NOLINT
+"head++;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef TILE_W",    // NOLINT
+"#undef TILE_H",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
 "const int_tp num, const int_tp channels,",    // NOLINT
 "const int_tp height, const int_tp width, const int_tp size,",    // NOLINT
@@ -3765,6 +5596,150 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(matvec_mul4,Dtype)(",    // NOLINT
+"__global const float * A,",    // NOLINT
+"int offA,",    // NOLINT
+"unsigned int A_col_size,",    // NOLINT
+"unsigned int trail_item,",    // NOLINT
+"__global const float * v,",    // NOLINT
+"int offv,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"__global float4 * result,",    // NOLINT
+"int offr,",    // NOLINT
+"__local float4 * work)",    // NOLINT
+"{",    // NOLINT
+"unsigned int row_gid = get_group_id(0);",    // NOLINT
+"unsigned int lid = get_local_id(0);",    // NOLINT
+"const __global float *src0_read = A + row_gid * 4 * A_col_size + offA;",    // NOLINT
+"const __global float *src1_read = v + offv;",    // NOLINT
+"result = (__global float4*)((__global float*)result + offr);",    // NOLINT
+"float4 dot0 = (float4)(0.f);",    // NOLINT
+"float4 dot1 = (float4)(0.f);",    // NOLINT
+"float4 dot2 = (float4)(0.f);",    // NOLINT
+"float4 dot3 = (float4)(0.f);",    // NOLINT
+"",    // NOLINT
+"unsigned int i = lid;",    // NOLINT
+"while( i < A_col_size / 4) {",    // NOLINT
+"const float4 a0 = vload4(i, src0_read);",    // NOLINT
+"const float4 a1 = vload4(i, src0_read + A_col_size);",    // NOLINT
+"const float4 a2 = vload4(i, src0_read + 2 * A_col_size);",    // NOLINT
+"const float4 a3 = vload4(i, src0_read + 3 * A_col_size);",    // NOLINT
+"",    // NOLINT
+"const float4 b0 = vload4(i, src1_read);",    // NOLINT
+"",    // NOLINT
+"dot0 += a0 * b0;",    // NOLINT
+"dot1 += a1 * b0;",    // NOLINT
+"dot2 += a2 * b0;",    // NOLINT
+"dot3 += a3 * b0;",    // NOLINT
+"",    // NOLINT
+"i += get_local_size(0);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"work[lid].s0 = dot0.x + dot0.y + dot0.z + dot0.w;",    // NOLINT
+"work[lid].s1 = dot1.x + dot1.y + dot1.z + dot1.w;",    // NOLINT
+"work[lid].s2 = dot2.x + dot2.y + dot2.z + dot2.w;",    // NOLINT
+"work[lid].s3 = dot3.x + dot3.y + dot3.z + dot3.w;",    // NOLINT
+"",    // NOLINT
+"if(i == A_col_size / 4)",    // NOLINT
+"{",    // NOLINT
+"if(trail_item != 0)",    // NOLINT
+"{",    // NOLINT
+"const __global float *src0_trail = src0_read + i * 4;",    // NOLINT
+"const __global float *src1_trail = src1_read + i * 4;",    // NOLINT
+"for(unsigned int i = 0; i < trail_item; ++i) {",    // NOLINT
+"const float at0 = src0_trail[i];",    // NOLINT
+"const float at1 = src0_trail[i + A_col_size];",    // NOLINT
+"const float at2 = src0_trail[i + 2 * A_col_size];",    // NOLINT
+"const float at3 = src0_trail[i + 3 * A_col_size];",    // NOLINT
+"",    // NOLINT
+"const float bt = src1_trail[i];",    // NOLINT
+"",    // NOLINT
+"work[lid].s0 += at0 * bt;",    // NOLINT
+"work[lid].s1 += at1 * bt;",    // NOLINT
+"work[lid].s2 += at2 * bt;",    // NOLINT
+"work[lid].s3 += at3 * bt;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"for(unsigned int stride=get_local_size(0)/2 ; stride>0 ; stride>>=1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride)",    // NOLINT
+"work[lid] += work[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"if(lid == 0)",    // NOLINT
+"result[row_gid] = alpha * work[0] + beta * result[row_gid];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"/* This kernel used for the trailing rows when row_of_A %4 !=0 */",    // NOLINT
+"__kernel void TEMPLATE(matvec_mul1,Dtype)(",    // NOLINT
+"__global const float * A,",    // NOLINT
+"int offA,",    // NOLINT
+"unsigned int A_col_size,",    // NOLINT
+"unsigned int row_offset,",    // NOLINT
+"unsigned int trail_item,",    // NOLINT
+"__global const float * v,",    // NOLINT
+"int offv,",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"__global float * result,",    // NOLINT
+"int offr,",    // NOLINT
+"__local float * work)",    // NOLINT
+"{",    // NOLINT
+"unsigned int row_gid = get_group_id(0);",    // NOLINT
+"unsigned int lid = get_local_id(0);",    // NOLINT
+"",    // NOLINT
+"const __global float *src0_read = A + (row_offset + row_gid) * A_col_size + offA;",    // NOLINT
+"const __global float *src1_read = v + + offv;",    // NOLINT
+"result = result + offr;",    // NOLINT
+"float4 dot0 = (float4)(0.f);",    // NOLINT
+"",    // NOLINT
+"unsigned int i = lid;",    // NOLINT
+"while( i < A_col_size / 4)",    // NOLINT
+"{",    // NOLINT
+"const float4 a0 = vload4(i, src0_read);",    // NOLINT
+"const float4 b0 = vload4(i, src1_read);",    // NOLINT
+"",    // NOLINT
+"dot0 += a0 * b0;",    // NOLINT
+"i += get_local_size(0);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"work[lid] = dot0.x + dot0.y + dot0.z + dot0.w;",    // NOLINT
+"",    // NOLINT
+"if(i == A_col_size / 4)",    // NOLINT
+"{",    // NOLINT
+"if(trail_item != 0)",    // NOLINT
+"{",    // NOLINT
+"const __global float *src0_trail = src0_read + i * 4;",    // NOLINT
+"const __global float *src1_trail = src1_read + i * 4;",    // NOLINT
+"for(unsigned int i = 0; i < trail_item; ++i) {",    // NOLINT
+"const float at0 = src0_trail[i];",    // NOLINT
+"const float bt = src1_trail[i];",    // NOLINT
+"",    // NOLINT
+"work[lid] += at0 * bt;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"for(unsigned int stride=get_local_size(0)/2 ; stride>0 ; stride>>=1) {",    // NOLINT
+"barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
+"if(lid < stride)",    // NOLINT
+"work[lid] += work[lid+stride];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"result[row_gid+row_offset] *= beta;",    // NOLINT
+"result[row_gid+row_offset] += alpha * work[0];",    // NOLINT
+"//result[row_gid+row_offset] = alpha * work[0] + beta * result[row_gid+row_offset];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(merge_copy_forward_stack, Dtype)(const int_tp nthreads,",    // NOLINT
 "const int_tp dims,",    // NOLINT
 "__global const Dtype* bottom_a,",    // NOLINT
@@ -3977,14 +5952,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(max_pool_forward,Dtype)(",    // NOLINT
+"void TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
 "const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
 "const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
 "const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
 "const int_tp pad_w,",    // NOLINT
 "__global Dtype* top_data,",    // NOLINT
-"const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"const int use_mask, __global int_tp* mask, __global Dtype* top_mask, bool no_mask) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
 "index += get_global_size(0)) {",    // NOLINT
 "const int_tp pw = index % pooled_width;",    // NOLINT
@@ -4010,6 +5985,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "top_data[index] = maxval;",    // NOLINT
+"if (!no_mask) {",    // NOLINT
 "if (use_mask == 1) {",    // NOLINT
 "mask[index] = maxidx;",    // NOLINT
 "} else {",    // NOLINT
@@ -4017,8 +5993,40 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(ave_pool_forward,Dtype)(",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward_no_mask, Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
+"nthreads, bottom_data, num, channels, height, width,",    // NOLINT
+"pooled_height, pooled_width, kernel_h,",    // NOLINT
+"kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, 0, NULL, NULL, true",    // NOLINT
+");",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward, Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
+"nthreads, bottom_data, num, channels, height, width,",    // NOLINT
+"pooled_height, pooled_width, kernel_h,",    // NOLINT
+"kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, use_mask, mask, top_mask, false",    // NOLINT
+");",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_forward, Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,",    // NOLINT
 "const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
 "const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
@@ -4052,6 +6060,127 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"// !!!!!!!!",    // NOLINT
+"// The following macros are duplicated in pooling_layer.cu since we currently",    // NOLINT
+"// don't have a simple solution for sharing between cl and cpp files.",    // NOLINT
+"// You must keep both locations in sync!",    // NOLINT
+"#define SIMD_SIZE 8",    // NOLINT
+"#define TILE_HEIGHT 7",    // NOLINT
+"#define TILE_WIDTH (SIMD_SIZE - 2)",    // NOLINT
+"// !!!!!!!!",    // NOLINT
+"",    // NOLINT
+"#define KERNEL_SIZE 3.0f",    // NOLINT
+"#define POOL_SIZE (KERNEL_SIZE * KERNEL_SIZE)",    // NOLINT
+"#define ONE_OVER_POOL_SIZE (1.0f / POOL_SIZE)",    // NOLINT
+"",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_forward_opt,Dtype)(",    // NOLINT
+"__global const float* const bottom_data,",    // NOLINT
+"const int_tp height,",    // NOLINT
+"const int_tp width,",    // NOLINT
+"__global float* top_data)",    // NOLINT
+"{",    // NOLINT
+"int local_id = get_local_id(0);",    // NOLINT
+"",    // NOLINT
+"int startx = get_global_id(0);",    // NOLINT
+"int tile_y = get_global_id(1);",    // NOLINT
+"int channel = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"int realx = startx / SIMD_SIZE * TILE_WIDTH + (startx - startx / SIMD_SIZE * SIMD_SIZE) % TILE_WIDTH;",    // NOLINT
+"",    // NOLINT
+"int offset = height * width * channel;",    // NOLINT
+"",    // NOLINT
+"__global const float* const input_image = bottom_data + offset;",    // NOLINT
+"__global float* const output_image = top_data + offset;",    // NOLINT
+"",    // NOLINT
+"#ifdef PRINT",    // NOLINT
+"bool print = (realx == 0);",    // NOLINT
+"#endif",    // NOLINT
+"float input[3];",    // NOLINT
+"",    // NOLINT
+"int starty = tile_y * TILE_HEIGHT;",    // NOLINT
+"int endy = min(height - 1, starty + TILE_HEIGHT - 1);",    // NOLINT
+"",    // NOLINT
+"// Read 3 lines of 16 floats",    // NOLINT
+"// The 3 lines start one float before the current (to the left) and one line up:",    // NOLINT
+"//",    // NOLINT
+"// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"// 0 X 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"// 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16",    // NOLINT
+"//",    // NOLINT
+"// In the diagram above X represents the current work item",    // NOLINT
+"int base = starty * width + realx;",    // NOLINT
+"__global const float* base_addr = input_image + base - 1;",    // NOLINT
+"",    // NOLINT
+"input[0] = *(base_addr - width);",    // NOLINT
+"input[1] = *base_addr;",    // NOLINT
+"",    // NOLINT
+"const float zero = 0;",    // NOLINT
+"",    // NOLINT
+"int first = 0;",    // NOLINT
+"int second = 1;",    // NOLINT
+"int third = 2;",    // NOLINT
+"",    // NOLINT
+"for (int y = starty  ; y <= endy ; y++) {",    // NOLINT
+"base_addr += width;",    // NOLINT
+"",    // NOLINT
+"input[third] = *base_addr;",    // NOLINT
+"",    // NOLINT
+"float res, sum;",    // NOLINT
+"if (y == 0) {",    // NOLINT
+"sum = input[second] + input[third];",    // NOLINT
+"}",    // NOLINT
+"else if (y == height - 1) {",    // NOLINT
+"sum = input[first] + input[second];",    // NOLINT
+"}",    // NOLINT
+"else {",    // NOLINT
+"sum = input[first] + input[second] + input[third];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"float sum1 = intel_sub_group_shuffle_down(sum, zero , 1);",    // NOLINT
+"float sum2 = intel_sub_group_shuffle_down(sum, zero , 2);",    // NOLINT
+"",    // NOLINT
+"if (realx == 0) {",    // NOLINT
+"res = (sum1 + sum2) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"else if (realx == width - 1) {",    // NOLINT
+"res = (sum + sum1) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"else {",    // NOLINT
+"res = (sum + sum1 + sum2) * ONE_OVER_POOL_SIZE;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int idx = y * width + realx;",    // NOLINT
+"",    // NOLINT
+"if (local_id < TILE_WIDTH && realx < width) {",    // NOLINT
+"output_image[idx] = res;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if (first == 0) {",    // NOLINT
+"first = 1;",    // NOLINT
+"second = 2;",    // NOLINT
+"third = 0;",    // NOLINT
+"}",    // NOLINT
+"else if (first == 1) {",    // NOLINT
+"first = 2;",    // NOLINT
+"second = 0;",    // NOLINT
+"third = 1;",    // NOLINT
+"}",    // NOLINT
+"else {",    // NOLINT
+"first = 0;",    // NOLINT
+"second = 1;",    // NOLINT
+"third = 2;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef SIMD_SIZE",    // NOLINT
+"#undef TILE_HEIGHT",    // NOLINT
+"#undef TILE_WIDTH",    // NOLINT
+"#undef KERNEL_SIZE",    // NOLINT
+"#undef POOL_SIZE",    // NOLINT
+"#undef ONE_OVER_POOL_SIZE",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(sto_pool_forward_train,Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
@@ -4258,7 +6387,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
 "for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
 "gradient += top_diff_slice[ph * pooled_width + pw]",    // NOLINT
-"* (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);",    // NOLINT
+"* (Dtype)(index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "bottom_diff[index] = gradient;",    // NOLINT
@@ -5078,9 +7207,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype local_rate) {",    // NOLINT
 "for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {",    // NOLINT
 "Dtype gi = g[i];",    // NOLINT
-"Dtype hi = h[i] = momentum * h[i] + (1.0 - momentum) * gi * gi;",    // NOLINT
+"Dtype hi = h[i] = momentum * h[i] + ((Dtype)1.0 - momentum) * gi * gi;",    // NOLINT
 "gi = gi * sqrt((h2[i] + delta) / (hi + delta));",    // NOLINT
-"h2[i] = momentum * h2[i] + (1.0 - momentum) * gi * gi;",    // NOLINT
+"h2[i] = momentum * h2[i] + ((Dtype)1.0 - momentum) * gi * gi;",    // NOLINT
 "g[i] = local_rate * gi;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -5205,11 +7334,13 @@ static std::string cl_kernel_names[] = {
     "embed",   // NOLINT
     "fft",   // NOLINT
     "fillbuffer",   // NOLINT
+    "gemm",   // NOLINT
     "im2col",   // NOLINT
     "im2col_nd",   // NOLINT
     "lrn",   // NOLINT
     "lstm_unit",   // NOLINT
     "math",   // NOLINT
+    "matvec_mul",   // NOLINT
     "mergecrop",   // NOLINT
     "pooling",   // NOLINT
     "pooling_nd",   // NOLINT
@@ -5246,6 +7377,10 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << "#undef Dtype8" << "\n\n";  // NOLINT
   ss << "#undef Dtype16" << "\n\n";  // NOLINT
   ss << "#define Dtype double" << "\n\n";  // NOLINT
+  ss << "#define Dtype2 double2" << "\n\n";  // NOLINT
+  ss << "#define Dtype4 double4" << "\n\n";  // NOLINT
+  ss << "#define Dtype8 double8" << "\n\n";  // NOLINT
+  ss << "#define Dtype16 double16" << "\n\n";  // NOLINT
   ss << "#undef TYPE" << "\n\n";  // NOLINT
   ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
   for (int i = 0; i < cl_kernels.size(); ++i) {
@@ -5258,10 +7393,15 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
   std::string kernel_string = ss.str();
   const char* kernel_program = kernel_string.c_str();
-  // ctx->build_options("-cl-fast-relaxed-math -cl-mad-enable");
+  string options;
 #ifdef USE_FFT
-  ctx->build_options("-DFFT");
+  options = " -DFFT "
 #endif
+  bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
+                    != std::string::npos;
+  if (!is_beignet)
+    options += (" -cl-no-subgroup-ifp ");
+  ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(kernel_program,
       "kernel_program");
   return program;
@@ -5292,6 +7432,10 @@ viennacl::ocl::context *ctx, string name, string options) {
       }
     }
   }
+  bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
+                    != std::string::npos;
+  if (!is_beignet)
+    options += (" -cl-no-subgroup-ifp ");
   ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(ss.str(), name);
   return program;
@@ -5311,10 +7455,18 @@ std::string getKernelBundleSource(int index) {
 #endif
   if (std::is_same<Dtype, float>::value) {
     ss << "#define Dtype float" << "\n\n";  // NOLINT
+    ss << "#define Dtype2 float2" << "\n\n";  // NOLINT
+    ss << "#define Dtype4 float4" << "\n\n";  // NOLINT
+    ss << "#define Dtype8 float8" << "\n\n";  // NOLINT
+    ss << "#define Dtype16 float16" << "\n\n";  // NOLINT
     ss << "#define TYPE TYPE_FLOAT" << "\n\n";  // NOLINT
   } else {
     ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
     ss << "#define Dtype double" << "\n\n";  // NOLINT
+    ss << "#define Dtype2 double2" << "\n\n";  // NOLINT
+    ss << "#define Dtype4 double4" << "\n\n";  // NOLINT
+    ss << "#define Dtype8 double8" << "\n\n";  // NOLINT
+    ss << "#define Dtype16 double16" << "\n\n";  // NOLINT
     ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
   }
   for (int j = 0; j < cl_kernels[index].size(); ++j) {
