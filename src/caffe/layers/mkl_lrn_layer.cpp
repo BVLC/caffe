@@ -233,17 +233,19 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
               (bottom[0]->get_prv_data_descriptor());
       CHECK(mem_descr != NULL);
 
+      fwd_bottom_data = mem_descr;
+
       dnnError_t e;
       dnnLayout_t lrn_buffer_l = NULL;
 
-      e = dnnLRNCreateForward<Dtype>(&lrnFwd, NULL, mem_descr->layout_int,
+      e = dnnLRNCreateForward<Dtype>(&lrnFwd, NULL, fwd_bottom_data->layout_int,
               size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
 
       fwd_top_data->create_internal_layout(lrnFwd, dnnResourceDst);
 
       e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL,
-              mem_descr->layout_int, mem_descr->layout_int,
+              fwd_bottom_data->layout_int, fwd_bottom_data->layout_int,
               size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
 
