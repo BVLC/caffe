@@ -19,7 +19,11 @@ template <typename Dtype>
 class InnerProductLayer : public Layer<Dtype> {
  public:
   explicit InnerProductLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param) {
+#ifdef USE_GREENTEA
+    weight_image_ = NULL;
+#endif
+  }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -28,7 +32,13 @@ class InnerProductLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "InnerProduct"; }
   virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
   virtual inline int_tp ExactNumTopBlobs() const { return 1; }
-
+#ifdef USE_GREENTEA
+  ~InnerProductLayer() {
+    if (weight_image_)
+      clReleaseMemObject(weight_image_);
+    weight_image_ = NULL;
+  }
+#endif
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -45,6 +55,9 @@ class InnerProductLayer : public Layer<Dtype> {
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
   bool transpose_;  ///< if true, assume transposed weights
+#ifdef USE_GREENTEA
+  cl_mem weight_image_;
+#endif
 };
 
 }  // namespace caffe
