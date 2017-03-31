@@ -65,34 +65,6 @@ typedef enum {
   LIBDNN_POOLING_BW_ALGO_ATOMIC             = 1
 } libdnnPoolingBackwardAlgo_t;
 
-struct LibDNNConvConfig {
-  LibDNNConvConfig() :
-    in_shape(3, 1),
-    out_shape(3, 1),
-    kernel(1, 1),
-    pad(0, 0),
-    stride(1, 1),
-    dilation(1, 1)
-  {}
-  device* dev_ptr = nullptr;
-  std::vector<int_tp> in_shape;
-  std::vector<int_tp> out_shape;
-  std::vector<int_tp> kernel;
-  std::vector<int_tp> pad;
-  std::vector<int_tp> stride;
-  std::vector<int_tp> dilation;
-  int_tp group = 1;
-  bool bias_term = false;
-  bool fast_unsafe_math = false;
-  bool weights_backward = true;
-  bool bias_backward = true;
-  libdnnConvolutionWeightAlgo_t wgalgo =
-      LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
-  libdnnConvolutionBackwardAlgo_t bwalgo =
-      LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
-  std::function<void*(void**, const uint_tp, const int_tp)>
-      memory_allocator = nullptr;
-};
 
 template<typename Dtype>
 class LibDNN {
@@ -151,9 +123,39 @@ class LibDNN {
   bool fast_unsafe_math_;
 };
 
+struct LibDNNConvConfig {
+  LibDNNConvConfig() :
+    in_shape(3, 1),
+    out_shape(3, 1),
+    kernel(1, 1),
+    pad(0, 0),
+    stride(1, 1),
+    dilation(1, 1)
+  {}
+  device* dev_ptr = nullptr;
+  std::vector<int_tp> in_shape;
+  std::vector<int_tp> out_shape;
+  std::vector<int_tp> kernel;
+  std::vector<int_tp> pad;
+  std::vector<int_tp> stride;
+  std::vector<int_tp> dilation;
+  int_tp group = 1;
+  bool bias_term = false;
+  bool fast_unsafe_math = false;
+  bool weights_backward = true;
+  bool bias_backward = true;
+  libdnnConvolutionWeightAlgo_t wgalgo =
+      LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
+  libdnnConvolutionBackwardAlgo_t bwalgo =
+      LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
+  std::function<void*(void**, const uint_tp, const int_tp)>
+      memory_allocator = nullptr;
+};
+
 template<typename Dtype>
 class LibDNNConv : public LibDNN<Dtype> {
  public:
+  explicit LibDNNConv();
   explicit LibDNNConv(LibDNNConvConfig config);
   void Forward(const Dtype* bottom_data, const Dtype* weight,
                const Dtype* bias,
@@ -186,9 +188,6 @@ class LibDNNConv : public LibDNN<Dtype> {
   std::string generate_fw_kernels(std::string name);
   std::string generate_bw_kernels(std::string name);
   std::string generate_wg_kernels(std::string name);
-
- private:
-  LibDNNConvConfig config_;
 
   // Autotuners
   std::shared_ptr<LibDNNTuner> fw_tuner_;
@@ -237,6 +236,81 @@ class LibDNNConv : public LibDNN<Dtype> {
   Dtype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
+
+ private:
+  LibDNNConvConfig config_;
+};
+
+struct LibDNNDeconvConfig {
+  LibDNNDeconvConfig() :
+    in_shape(3, 1),
+    out_shape(3, 1),
+    kernel(1, 1),
+    pad(0, 0),
+    stride(1, 1),
+    dilation(1, 1)
+  {}
+  device* dev_ptr = nullptr;
+  std::vector<int_tp> in_shape;
+  std::vector<int_tp> out_shape;
+  std::vector<int_tp> kernel;
+  std::vector<int_tp> pad;
+  std::vector<int_tp> stride;
+  std::vector<int_tp> dilation;
+  int_tp group = 1;
+  bool bias_term = false;
+  bool fast_unsafe_math = false;
+  bool weights_backward = true;
+  bool bias_backward = true;
+  libdnnConvolutionWeightAlgo_t wgalgo =
+      LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
+  libdnnConvolutionBackwardAlgo_t bwalgo =
+      LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
+  std::function<void*(void**, const uint_tp, const int_tp)>
+      memory_allocator = nullptr;
+};
+
+template<typename Dtype>
+class LibDNNDeconv : public LibDNNConv<Dtype> {
+ public:
+  explicit LibDNNDeconv(LibDNNDeconvConfig config);
+  void Forward(const Dtype* bottom_data, const Dtype* weight,
+               const Dtype* bias,
+               Dtype* top_data, int_tp batch_size);
+  void Backward(bool prop_down_data, bool prop_down_weights,
+                const Dtype* top_data, const Dtype* top_diff,
+                const Dtype* weight, Dtype* weight_diff,
+                const Dtype* bias, Dtype* bias_diff,
+                const Dtype* bottom_data, Dtype* bottom_diff,
+                int_tp batch_size);
+
+  void Tune(Dtype* top_data, Dtype* top_diff,
+            Dtype* weight, Dtype* weight_diff,
+            Dtype* bias, Dtype* bias_diff,
+            Dtype* bottom_data, Dtype* bottom_diff,
+            int_tp batch_size);
+
+  const LibDNNDeconvConfig get_config();
+
+ protected:
+  void GenerateKernels();
+  std::string string_identifier();
+  std::string generate_fw_defs();
+  std::string generate_bw_defs();
+  std::string generate_wg_defs();
+  std::string generate_fw_kernels(std::string name);
+  std::string generate_bw_kernels(std::string name);
+  std::string generate_wg_kernels(std::string name);
+
+  // Bias GEMV sizes
+  int_tp M_BG_;
+  int_tp MG_BG_;
+  int_tp N_BG_;
+  int_tp NG_BG_;
+  int_tp K_BG_;
+
+ private:
+  LibDNNDeconvConfig config_;
 };
 
 struct LibDNNPoolConfig {
