@@ -61,6 +61,9 @@ DEFINE_string(sigint_effect, "stop",
 DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
+DEFINE_bool(lt, false,
+    "Optional; enable per layer timings");
+
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -430,16 +433,24 @@ int time() {
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
   double backward_time = 0.0;
+
   for (int_tp j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
     iter_timer.Start();
     forward_timer.Start();
     for (int_tp i = 0; i < layers.size(); ++i) {
-      timer.Start();
+      if (FLAGS_lt) {
+        timer.Start();
+      }
+
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-      Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
-      forward_time_per_layer[i] += timer.MicroSeconds();
+
+      if (FLAGS_lt) {
+        Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
+        forward_time_per_layer[i] += timer.MicroSeconds();
+      }
     }
+    Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
     forward_time += forward_timer.MicroSeconds();
     if (phase == caffe::TRAIN) {
       backward_timer.Start();
@@ -455,15 +466,18 @@ int time() {
     LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
       << iter_timer.MilliSeconds() << " ms.";
   }
-  LOG(INFO) << "Average time per layer: ";
-  for (int_tp i = 0; i < layers.size(); ++i) {
-    const caffe::string& layername = layers[i]->layer_param().name();
-    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
-      "\tforward: " << forward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
-    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
-      "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+
+  if (FLAGS_lt) {
+    LOG(INFO) << "Average time per layer: ";
+    for (int_tp i = 0; i < layers.size(); ++i) {
+      const caffe::string& layername = layers[i]->layer_param().name();
+      LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
+        "\tforward: " << forward_time_per_layer[i] / 1000 /
+        FLAGS_iterations << " ms.";
+      LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+        "\tbackward: " << backward_time_per_layer[i] / 1000 /
+        FLAGS_iterations << " ms.";
+    }
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
