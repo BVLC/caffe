@@ -4959,6 +4959,116 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"#define SIMD_WIDTH 16",    // NOLINT
+"#define TILE_W SIMD_WIDTH",    // NOLINT
+"#define TILE_H 8",    // NOLINT
+"",    // NOLINT
+"#ifndef BEIGNET",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_WIDTH)))",    // NOLINT
+"#endif",    // NOLINT
+"// Fuse pooling max layer into LRN across channel layer.",    // NOLINT
+"// Currently, only support non-padding, non-dilation mode and pool_w/h == pool_stride_w + 1.",    // NOLINT
+"// This kernel only get better performance on those Intel platforms with edram.",    // NOLINT
+"__kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(",    // NOLINT
+"__global const Dtype* in,",    // NOLINT
+"const int_tp channels,",    // NOLINT
+"const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp tiled_height, int_tp tiled_width,",    // NOLINT
+"const int_tp size,",    // NOLINT
+"const Dtype alpha_over_size, const Dtype k,",    // NOLINT
+"__global Dtype* const out,",    // NOLINT
+"const Dtype negative_beta,",    // NOLINT
+"const int_tp pool_h, const int_tp pool_w, const int_tp pool_stride_h, int_tp pool_stride_w,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width,",    // NOLINT
+"const int_tp tile_pooled_block_h, const int_tp tile_pooled_block_w) {",    // NOLINT
+"// find out the local offset",    // NOLINT
+"const int_tp block_x = get_global_id(0) % tiled_width;",    // NOLINT
+"const int_tp block_y = (get_global_id(0) / tiled_width) % tiled_height;",    // NOLINT
+"const int_tp n = get_global_id(0) / (tiled_width * tiled_height);",    // NOLINT
+"",    // NOLINT
+"const int_tp w = block_x * tile_pooled_block_w * pool_stride_w;",    // NOLINT
+"const int_tp h = block_y * tile_pooled_block_h * pool_stride_h;",    // NOLINT
+"const int_tp offset = (n * channels * height + h) * width + w;",    // NOLINT
+"const int_tp out_h = block_y * tile_pooled_block_h;",    // NOLINT
+"const int_tp out_w = block_x * tile_pooled_block_w;",    // NOLINT
+"const int_tp out_offset = (n * channels * pooled_height + out_h) * pooled_width + out_w + get_local_id(1);",    // NOLINT
+"const int_tp step = height * width;",    // NOLINT
+"const int_tp out_step = pooled_height * pooled_width;",    // NOLINT
+"__global const Dtype* in_off = in + offset + get_local_id(1);",    // NOLINT
+"__global Dtype* out_off = out + out_offset;",    // NOLINT
+"Dtype scale_val;",    // NOLINT
+"int_tp head = 0;",    // NOLINT
+"const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
+"const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
+"Dtype accum_scale[TILE_H] = {0};",    // NOLINT
+"if (w + get_local_id(1) >= width)",    // NOLINT
+"return;",    // NOLINT
+"",    // NOLINT
+"while ( head < channels + post_pad ) {",    // NOLINT
+"int ph = 0;",    // NOLINT
+"int cur_out_h = 0;",    // NOLINT
+"Dtype output_val = -FLT_MAX;",    // NOLINT
+"// fill the scale at [n, :, h, w]",    // NOLINT
+"// accumulate values",    // NOLINT
+"for( int lrn_out_h = 0; lrn_out_h < TILE_H && (lrn_out_h + h) < height; lrn_out_h++) {",    // NOLINT
+"Dtype prev_val = accum_scale[lrn_out_h];",    // NOLINT
+"// add",    // NOLINT
+"if (head < channels) {",    // NOLINT
+"prev_val += in_off[head * step + width * lrn_out_h] * in_off[head * step + width * lrn_out_h];",    // NOLINT
+"}",    // NOLINT
+"// subtract",    // NOLINT
+"if (head - size >= 0) {",    // NOLINT
+"prev_val -= in_off[(head - size) * step + width * lrn_out_h] * in_off[(head - size) * step + width * lrn_out_h];",    // NOLINT
+"}",    // NOLINT
+"// compute output.",    // NOLINT
+"if (head >= post_pad) {",    // NOLINT
+"scale_val = k + prev_val * alpha_over_size;",    // NOLINT
+"Dtype tmp = -FLT_MAX;",    // NOLINT
+"//if (w + get_local_id(1) < width)",    // NOLINT
+"tmp = in_off[(head - post_pad) * step + width * lrn_out_h] * native_powr(scale_val, negative_beta);",    // NOLINT
+"",    // NOLINT
+"Dtype h_max_val = -FLT_MAX;",    // NOLINT
+"int index = (get_local_id(1) * pool_stride_w) % SIMD_WIDTH;",    // NOLINT
+"for(int i = 0; i < pool_w; i++) {",    // NOLINT
+"Dtype val = intel_sub_group_shuffle(tmp, index);",    // NOLINT
+"if (h_max_val < val && (index + w < width))",    // NOLINT
+"h_max_val = val;",    // NOLINT
+"",    // NOLINT
+"index = (index + 1) % SIMD_WIDTH;",    // NOLINT
+"}",    // NOLINT
+"// update output value.",    // NOLINT
+"output_val = (output_val > h_max_val) ?",    // NOLINT
+"output_val : h_max_val;",    // NOLINT
+"// time to write previous output and move to next value",    // NOLINT
+"if (lrn_out_h - cur_out_h + 1 == pool_h) {",    // NOLINT
+"if (get_local_id(1) < tile_pooled_block_w && (out_w + get_local_id(1)) < pooled_width) {",    // NOLINT
+"out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;",    // NOLINT
+"",    // NOLINT
+"output_val = h_max_val;",    // NOLINT
+"}",    // NOLINT
+"++ph;",    // NOLINT
+"cur_out_h += pool_stride_h;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"accum_scale[lrn_out_h] = prev_val;",    // NOLINT
+"}",    // NOLINT
+"// Handle the incomplete pool box",    // NOLINT
+"// an incomplete tiling box and we are not hitting the end of the pooled output.",    // NOLINT
+"if (head >= post_pad &&",    // NOLINT
+"ph < tile_pooled_block_h &&",    // NOLINT
+"ph + out_h < pooled_height &&",    // NOLINT
+"get_local_id(1) < tile_pooled_block_w &&",    // NOLINT
+"(out_w + get_local_id(1)) < pooled_width) {",    // NOLINT
+"out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;",    // NOLINT
+"}",    // NOLINT
+"head++;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef TILE_W",    // NOLINT
+"#undef TILE_H",    // NOLINT
+"#undef SIMD_WIDTH",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
 "const int_tp num, const int_tp channels,",    // NOLINT
 "const int_tp height, const int_tp width, const int_tp size,",    // NOLINT
@@ -5631,14 +5741,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(max_pool_forward,Dtype)(",    // NOLINT
+"void TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
 "const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
 "const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
 "const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
 "const int_tp pad_w,",    // NOLINT
 "__global Dtype* top_data,",    // NOLINT
-"const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"const int use_mask, __global int_tp* mask, __global Dtype* top_mask, bool no_mask) {",    // NOLINT
 "for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
 "index += get_global_size(0)) {",    // NOLINT
 "const int_tp pw = index % pooled_width;",    // NOLINT
@@ -5664,6 +5774,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "top_data[index] = maxval;",    // NOLINT
+"if (!no_mask) {",    // NOLINT
 "if (use_mask == 1) {",    // NOLINT
 "mask[index] = maxidx;",    // NOLINT
 "} else {",    // NOLINT
@@ -5671,8 +5782,40 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(ave_pool_forward,Dtype)(",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward_no_mask, Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
+"nthreads, bottom_data, num, channels, height, width,",    // NOLINT
+"pooled_height, pooled_width, kernel_h,",    // NOLINT
+"kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, 0, NULL, NULL, true",    // NOLINT
+");",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(max_pool_forward, Dtype)(",    // NOLINT
+"const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
+"const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
+"const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
+"const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,",    // NOLINT
+"const int_tp pad_w,",    // NOLINT
+"__global Dtype* top_data,",    // NOLINT
+"const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {",    // NOLINT
+"",    // NOLINT
+"TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
+"nthreads, bottom_data, num, channels, height, width,",    // NOLINT
+"pooled_height, pooled_width, kernel_h,",    // NOLINT
+"kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, use_mask, mask, top_mask, false",    // NOLINT
+");",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ave_pool_forward, Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,",    // NOLINT
 "const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
 "const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,",    // NOLINT
@@ -5912,7 +6055,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "for (int_tp ph = phstart; ph < phend; ++ph) {",    // NOLINT
 "for (int_tp pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
 "gradient += top_diff_slice[ph * pooled_width + pw]",    // NOLINT
-"* (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);",    // NOLINT
+"* (Dtype)(index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "bottom_diff[index] = gradient;",    // NOLINT

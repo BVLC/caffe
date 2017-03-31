@@ -33,6 +33,18 @@ class LRNLayer : public Layer<Dtype> {
   virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
   virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
+  bool IsFused() const
+  {
+    return (this->layer_param_.lrn_param().fuse_type() != LRNParameter_FuseType_UNFUSED);
+  }
+
+
+  bool IsFusedWithPoolMax() const
+  {
+    return (this->layer_param_.lrn_param().fuse_type() == LRNParameter_FuseType_FUSED_POOL_MAX);
+  }
+
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -56,6 +68,10 @@ class LRNLayer : public Layer<Dtype> {
   virtual void WithinChannelBackward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  virtual void CrossChannelForward_fuse_pooling_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top,
+      bool use_fuse);
+
   int_tp size_;
   int_tp pre_pad_;
   Dtype alpha_;
@@ -65,6 +81,17 @@ class LRNLayer : public Layer<Dtype> {
   int_tp channels_;
   int_tp height_;
   int_tp width_;
+
+  int_tp pool_w_;
+  int_tp pool_h_;
+  int_tp pool_stride_w_;
+  int_tp pool_stride_h_;
+  int_tp pooled_width_;
+  int_tp pooled_height_;
+  bool fuse_tuned_;
+  bool tuned_use_fuse_;
+  Blob<Dtype> lrn_top_blob_;
+  vector<Blob<Dtype>*> lrn_top_vec_; // for pooling fusing
 
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the int_tpermediate summing results

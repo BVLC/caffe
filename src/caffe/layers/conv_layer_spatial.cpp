@@ -662,31 +662,6 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)height_);
         kernel.arg(argIdx++, (uint16_t)output_w_);
         kernel.arg(argIdx++, (uint16_t)output_h_);
-        int out_pitch_y = output_w_ * output_h_;
-        int out_pitch_z = out_pitch_y * M_;
-        int aligned_input_size = height_ * width_ * channels_ / group_;
-        int slice_pitch = width_ * height_;
-        kernel.arg(argIdx++, (uint32_t)out_pitch_y);
-        kernel.arg(argIdx++, (uint32_t)out_pitch_z);
-        kernel.arg(argIdx++, (uint32_t)aligned_input_size);
-        kernel.arg(argIdx++, (uint32_t)slice_pitch);
-
-        int blockM = config->workItem_output[0];
-        int blockK = config->workItem_output[1];
-        int blockN = config->workItem_output[2];
-        int_tp alignedFilterWidth = ALIGN(M_, blockN);
-        int_tp alignedExpandHeight = ALIGN(output_w_ * output_h_, blockM);
-        int_tp globalWorkSizeDX = blockN;
-        int_tp globalWorkSizeDY = blockM;
-        size_t sgemm_m = alignedExpandHeight;
-        size_t sgemm_n = alignedFilterWidth;
-        size_t gx = (size_t) ceil( (float) sgemm_n /
-                                   (float) globalWorkSizeDX );
-        size_t gy = (size_t) ceil( (float) sgemm_m /
-                                   (float) globalWorkSizeDY );
-        gy = ALIGN(gy, blockK);
-        size_t global_size[3] = { gx, gy, config->global_work_size[2] };
-
         viennacl::ocl::context &ctx =
           viennacl::ocl::get_context(this->device_->id());
         int out_pitch_y = output_w_ * output_h_;
