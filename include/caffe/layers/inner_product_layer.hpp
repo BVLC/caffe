@@ -57,6 +57,8 @@ class InnerProductLayer : public Layer<Dtype> {
   bool transpose_;  ///< if true, assume transposed weights
 #ifdef USE_GREENTEA
   cl_mem weight_image_;
+  const SyncedMemory * copied_weight_data_;
+  bool test_only_;
 #endif
 };
 
