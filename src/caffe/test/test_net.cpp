@@ -2616,6 +2616,7 @@ TYPED_TEST(NetTestCPU, TestForwardReshapeForward) {
     input_blob->Reshape(1, 3, 1280, 720);
     this->net_->Forward();
 }
+#if 0
 TYPED_TEST(NetTest, TestTotalForwardReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
@@ -2799,7 +2800,7 @@ TYPED_TEST(NetTest, TestTotalForwardReshape) {
   EXPECT_FALSE(same_spatial_shape);
 }
 #endif
-
+#endif
 
 
 TYPED_TEST(NetTest, TestSkipPropagateDown) {
