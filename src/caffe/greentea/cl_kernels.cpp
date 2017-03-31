@@ -528,6 +528,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#ifdef MULTI",    // NOLINT
 "__kernel void CFMultiNoPadding(",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"__global Dtype* eltwise_data,",    // NOLINT
+"#endif",    // NOLINT
 "__global Dtype* image_data,",    // NOLINT
 "int_tp image_offset,",    // NOLINT
 "__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
@@ -612,7 +615,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//Begin IDLF kernels below here",    // NOLINT
 "#ifdef IDLF",    // NOLINT
 "",    // NOLINT
-"#define activation_function(x) (x)",    // NOLINT
 "#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
 "",    // NOLINT
 "// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.",    // NOLINT
@@ -621,8 +623,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16/8 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
 "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))",    // NOLINT
-"kernel void",    // NOLINT
+"__kernel void",    // NOLINT
 "convolve_simd(  // __global float *inputs, __global float* weights, __global float* outputs",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"__global Dtype* eltwise_data,",    // NOLINT
+"#endif",    // NOLINT
 "__global float* inputs_base,",    // NOLINT
 "filter_qualifier float* weights_base,",    // NOLINT
 "__global float* biases_base,",    // NOLINT
@@ -630,7 +635,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
 "const ushort output_width,",    // NOLINT
-"const ushort output_height)",    // NOLINT
+"const ushort output_height,",    // NOLINT
+"const ushort last_block_width,",    // NOLINT
+"const ushort last_block_height)",    // NOLINT
 "{",    // NOLINT
 "__global float* outputs = outputs_base;",    // NOLINT
 "__global float* inputs = inputs_base;",    // NOLINT
@@ -658,8 +665,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;",    // NOLINT
 "",    // NOLINT
-"int curr_y = or * STRIDEY + INPUT_START_Y + ( lid / ( TILE_X / 4 ) );",    // NOLINT
-"int curr_x = oc * STRIDEX + INPUT_START_X + ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
+"int curr_local_y = ( lid / ( TILE_X / 4 ) );",    // NOLINT
+"int curr_local_x = ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
+"int curr_y = or * STRIDEY + INPUT_START_Y + curr_local_y;",    // NOLINT
+"int curr_x = oc * STRIDEX + INPUT_START_X + curr_local_x;",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
@@ -677,6 +686,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp reg = 0;",    // NOLINT
 "LOOP(INVEC_SIZE, reg,",    // NOLINT
 "{",    // NOLINT
+"if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE == TILE_Y || reg < INVEC_SIZE - 1) {",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {",    // NOLINT
 "if (curr_x < INPUT_PAD_W) {",    // NOLINT
@@ -706,6 +716,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#else",    // NOLINT
 "in_buf.in_vec[reg] = *(global float4*)(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
 "#endif",    // NOLINT
+"}",    // NOLINT
 "in_offset += input_width * TILE_Y_STRIDE;",    // NOLINT
 "});",    // NOLINT
 "in_addr += input_height * input_width;",    // NOLINT
@@ -784,23 +795,49 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if (ALIGNED_NUM_FILTERS != NUM_FILTERS && fm > 0xfffffffeul) {",    // NOLINT
 "outputs[0] = BLOCK_IN(fm % SIMD_SIZE);",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
 "fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
 "",    // NOLINT
 "if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {",    // NOLINT
-"",    // NOLINT
 "uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
-"float bias = biases[fm];",    // NOLINT
-"",    // NOLINT
+"float bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"#ifndef WRITE_PADDED_VALUES",    // NOLINT
+"if (or + OUT_BLOCK_HEIGHT < output_height &&",    // NOLINT
+"oc + OUT_BLOCK_WIDTH < output_width)",    // NOLINT
+"{",    // NOLINT
+"#endif",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
-"if (r + or >= output_height) break;",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
-"if (c + oc >= output_width) break;",    // NOLINT
 "// this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
-"outputs[out_addr + r * output_width + c] = activation_function(bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+"#ifndef WRITE_PADDED_VALUES",    // NOLINT
+"} else if ( or + OUT_BLOCK_HEIGHT < output_height )",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else if ( oc + OUT_BLOCK_WIDTH < output_width )",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
+"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"#endif //#ifndef WRITE_PADDED_VALUES",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
@@ -1016,12 +1053,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"__global float *out = dst + out_offset;",    // NOLINT
 "float bias[4];",    // NOLINT
 "float4 *bias_vec;",    // NOLINT
 "bias_vec = (float4*)bias;",    // NOLINT
@@ -1031,10 +1068,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out[( 8+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out[(16+i) * out_pitch_y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out[(24+i) * out_pitch_y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1176,12 +1213,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"__global float *out = dst + out_offset;",    // NOLINT
 "float bias[4];",    // NOLINT
 "float4 *bias_vec;",    // NOLINT
 "bias_vec = (float4*)bias;",    // NOLINT
@@ -1191,10 +1228,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out[( 0+i) * out_pitch_y] = blockC[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out[( 8+i) * out_pitch_y] = blockC[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out[(16+i) * out_pitch_y] = blockC[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out[(24+i) * out_pitch_y] = blockC[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1341,42 +1378,43 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global Dtype *out = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                   // batch offset",    // NOLINT
+"int_tp out_offset = global_z * out_pitch_z                                                   // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                       // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
+"__global Dtype *out = dst + out_offset;",    // NOLINT
 "",    // NOLINT
 "Dtype bias[2];",    // NOLINT
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
 "*bias_vec = as_float2(intel_sub_group_block_read2((__global uint *)biases + group_x * TILE_N));",    // NOLINT
 "// Work around a potential compiler bug.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul)",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
 "out[0] = bias[0] + bias[1];",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "#if ( ( OUT_DEPTH % TILE_N ) == 0 )",    // NOLINT
 "for (int i = 0; i < 16; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out[(16+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "#elif ( ( OUT_DEPTH % 16 ) == 0 )",    // NOLINT
 "if ( ( global_x + 1 ) < get_global_size(0) )",    // NOLINT
 "{",    // NOLINT
 "for ( int i = 0; i < 16; i++ )",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
-"out[(16+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "else",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 16; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#else",    // NOLINT
@@ -1384,8 +1422,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for ( int i = 0; i < 16; i++ )",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
-"out[(16+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "else",    // NOLINT
@@ -1394,18 +1432,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "for (int i = 0; i < OUT_DEPTH % 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[(16+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#else",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < OUT_DEPTH % 16 ; i++)",    // NOLINT
 "{",    // NOLINT
-"out[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);;",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
@@ -1556,7 +1594,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "p4BlockB00[KERNEL_WIDTH - 1] = as_float4( intel_sub_group_block_read4( (const __global uint*)src1_read ) );",    // NOLINT
 "src1_read += WIDTH1 * 2;",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
 "// Perform MADs",    // NOLINT
 "kernel_idx = 0;",    // NOLINT
 "interleaved_y = 0;",    // NOLINT
@@ -1608,13 +1645,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out0 = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"int_tp out0_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
-"__global float *out1 = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"int_tp out1_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
@@ -1628,20 +1663,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"out0[( 0+i) * out_pitch_y] = blockC00[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out0[( 8+i) * out_pitch_y] = blockC10[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out0[(16+i) * out_pitch_y] = blockC20[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out0[(24+i) * out_pitch_y] = blockC30[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"out1[( 0+i) * out_pitch_y] = blockC01[i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"out1[( 8+i) * out_pitch_y] = blockC11[i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"out1[(16+i) * out_pitch_y] = blockC21[i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"out1[(24+i) * out_pitch_y] = blockC31[i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1816,13 +1851,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "// Dst resembles a cube of width x height x (output channel * batches).  Each tile writes:",    // NOLINT
 "// (SIMD * TILE_M) x 1 x TILE_N.  Partial writes most likely generated if padding used.",    // NOLINT
-"__global float *out0 = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"int_tp out0_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 0 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
-"__global float *out1 = dst",    // NOLINT
-"+ global_z * out_pitch_z                                                       // batch offset",    // NOLINT
+"int_tp out1_offset = global_z * out_pitch_z                                                       // batch offset",    // NOLINT
 "+ ( group_x * TILE_N ) * out_pitch_y                                           // channel offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
@@ -1835,20 +1868,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out0[( 0+i) * out_pitch_y] = blockC0[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out0[( 8+i) * out_pitch_y] = blockC0[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out0[(16+i) * out_pitch_y] = blockC0[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out0[(24+i) * out_pitch_y] = blockC0[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) out1[( 0+i) * out_pitch_y] = blockC1[0][i] + intel_sub_group_shuffle(bias[0], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) out1[( 8+i) * out_pitch_y] = blockC1[1][i] + intel_sub_group_shuffle(bias[1], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) out1[(16+i) * out_pitch_y] = blockC1[2][i] + intel_sub_group_shuffle(bias[2], i);",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) out1[(24+i) * out_pitch_y] = blockC1[3][i] + intel_sub_group_shuffle(bias[3], i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
