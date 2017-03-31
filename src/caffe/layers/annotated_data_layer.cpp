@@ -204,7 +204,7 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       string* data = reader_.full().pop("Waiting for data");
       timer.Stop();
       read_time += timer.MicroSeconds();
-#pragma omp task firstprivate(item_id) shared(all_anno, expand_data, sampled_bboxes, have_samples)
+#pragma omp task firstprivate(item_id, data) shared(all_anno, expand_data, sampled_bboxes, have_samples)
       {
         std::unique_ptr<AnnotatedDatum> anno_datum(new AnnotatedDatum());
         anno_datum->ParseFromString(*data);
