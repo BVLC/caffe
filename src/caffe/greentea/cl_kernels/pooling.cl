@@ -2,14 +2,14 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(max_pool_forward,Dtype)(
+void TEMPLATE(max_pool_forward_impl, Dtype)(
     const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,
     const int_tp channels, const int_tp height, const int_tp width,
     const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,
     const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,
     const int_tp pad_w,
     __global Dtype* top_data,
-    const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {
+    const int use_mask, __global int_tp* mask, __global Dtype* top_mask, bool no_mask) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
     const int_tp pw = index % pooled_width;
@@ -35,15 +35,48 @@ __kernel void TEMPLATE(max_pool_forward,Dtype)(
       }
     }
     top_data[index] = maxval;
-    if (use_mask == 1) {
-      mask[index] = maxidx;
-    } else {
-      top_mask[index] = maxidx;
+    if (!no_mask) {
+      if (use_mask == 1) {
+        mask[index] = maxidx;
+      } else {
+        top_mask[index] = maxidx;
+      }
     }
   }
 }
 
-__kernel void TEMPLATE(ave_pool_forward,Dtype)(
+__kernel void TEMPLATE(max_pool_forward_no_mask, Dtype)(
+    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,
+    const int_tp channels, const int_tp height, const int_tp width,
+    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,
+    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,
+    const int_tp pad_w,
+    __global Dtype* top_data) {
+
+    TEMPLATE(max_pool_forward_impl, Dtype)(
+      nthreads, bottom_data, num, channels, height, width,
+      pooled_height, pooled_width, kernel_h,
+      kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, 0, NULL, NULL, true
+    );
+}
+
+__kernel void TEMPLATE(max_pool_forward, Dtype)(
+    const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,
+    const int_tp channels, const int_tp height, const int_tp width,
+    const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,
+    const int_tp kernel_w, const int_tp stride_h, const int_tp stride_w, const int_tp pad_h,
+    const int_tp pad_w,
+    __global Dtype* top_data,
+    const int use_mask, __global int_tp* mask, __global Dtype* top_mask) {
+
+    TEMPLATE(max_pool_forward_impl, Dtype)(
+      nthreads, bottom_data, num, channels, height, width,
+      pooled_height, pooled_width, kernel_h,
+      kernel_w, stride_h, stride_w, pad_h, pad_w, top_data, use_mask, mask, top_mask, false
+    );
+}
+
+__kernel void TEMPLATE(ave_pool_forward, Dtype)(
     const int_tp nthreads, __global const Dtype* const bottom_data, const int_tp num,
     const int_tp channels, const int_tp height, const int_tp width,
     const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,
@@ -283,7 +316,7 @@ __kernel void TEMPLATE(sto_pool_backward,Dtype)(
     for (int_tp ph = phstart; ph < phend; ++ph) {
       for (int_tp pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff_slice[ph * pooled_width + pw]
-            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);
+            * (Dtype)(index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);
       }
     }
     bottom_diff[index] = gradient;

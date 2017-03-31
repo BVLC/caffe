@@ -120,6 +120,116 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
   }
 }
 
+#define SIMD_WIDTH 16 
+#define TILE_W SIMD_WIDTH
+#define TILE_H 8
+
+#ifndef BEIGNET
+__attribute__((intel_reqd_sub_group_size(SIMD_WIDTH)))
+#endif
+// Fuse pooling max layer into LRN across channel layer.
+// Currently, only support non-padding, non-dilation mode and pool_w/h == pool_stride_w + 1.
+// This kernel only get better performance on those Intel platforms with edram.
+__kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
+                             __global const Dtype* in,
+                             const int_tp channels,
+                             const int_tp height, const int_tp width,
+                             const int_tp tiled_height, int_tp tiled_width,
+                             const int_tp size,
+                             const Dtype alpha_over_size, const Dtype k,
+                             __global Dtype* const out,
+                             const Dtype negative_beta,
+                             const int_tp pool_h, const int_tp pool_w, const int_tp pool_stride_h, int_tp pool_stride_w,
+                             const int_tp pooled_height, const int_tp pooled_width,
+                             const int_tp tile_pooled_block_h, const int_tp tile_pooled_block_w) {
+  // find out the local offset
+  const int_tp block_x = get_global_id(0) % tiled_width;
+  const int_tp block_y = (get_global_id(0) / tiled_width) % tiled_height;
+  const int_tp n = get_global_id(0) / (tiled_width * tiled_height);
+  
+  const int_tp w = block_x * tile_pooled_block_w * pool_stride_w;
+  const int_tp h = block_y * tile_pooled_block_h * pool_stride_h;
+  const int_tp offset = (n * channels * height + h) * width + w;
+  const int_tp out_h = block_y * tile_pooled_block_h;
+  const int_tp out_w = block_x * tile_pooled_block_w;
+  const int_tp out_offset = (n * channels * pooled_height + out_h) * pooled_width + out_w + get_local_id(1);
+  const int_tp step = height * width;
+  const int_tp out_step = pooled_height * pooled_width;
+  __global const Dtype* in_off = in + offset + get_local_id(1);
+  __global Dtype* out_off = out + out_offset;
+  Dtype scale_val;
+  int_tp head = 0;
+  const int_tp pre_pad = (size - 1) / 2;
+  const int_tp post_pad = size - pre_pad - 1;
+  Dtype accum_scale[TILE_H] = {0};
+  if (w + get_local_id(1) >= width)
+    return;
+
+  while ( head < channels + post_pad ) {
+    int ph = 0;
+    int cur_out_h = 0;
+    Dtype output_val = -FLT_MAX;
+    // fill the scale at [n, :, h, w]
+    // accumulate values
+    for( int lrn_out_h = 0; lrn_out_h < TILE_H && (lrn_out_h + h) < height; lrn_out_h++) {
+      Dtype prev_val = accum_scale[lrn_out_h];
+      // add
+      if (head < channels) {
+        prev_val += in_off[head * step + width * lrn_out_h] * in_off[head * step + width * lrn_out_h];
+      }
+      // subtract
+      if (head - size >= 0) {
+        prev_val -= in_off[(head - size) * step + width * lrn_out_h] * in_off[(head - size) * step + width * lrn_out_h];
+      }
+      // compute output.
+      if (head >= post_pad) {
+        scale_val = k + prev_val * alpha_over_size;
+        Dtype tmp = -FLT_MAX;
+        //if (w + get_local_id(1) < width)
+          tmp = in_off[(head - post_pad) * step + width * lrn_out_h] * native_powr(scale_val, negative_beta);
+
+        Dtype h_max_val = -FLT_MAX;
+        int index = (get_local_id(1) * pool_stride_w) % SIMD_WIDTH;
+        for(int i = 0; i < pool_w; i++) {
+          Dtype val = intel_sub_group_shuffle(tmp, index);
+          if (h_max_val < val && (index + w < width))
+            h_max_val = val;
+
+          index = (index + 1) % SIMD_WIDTH;
+        }
+        // update output value.
+        output_val = (output_val > h_max_val) ?
+                      output_val : h_max_val;
+        // time to write previous output and move to next value
+        if (lrn_out_h - cur_out_h + 1 == pool_h) {
+          if (get_local_id(1) < tile_pooled_block_w && (out_w + get_local_id(1)) < pooled_width) {
+            out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;
+          
+            output_val = h_max_val;
+          }
+          ++ph;
+          cur_out_h += pool_stride_h;
+        }
+      }
+      accum_scale[lrn_out_h] = prev_val;
+    }
+    // Handle the incomplete pool box
+    // an incomplete tiling box and we are not hitting the end of the pooled output.
+    if (head >= post_pad &&
+        ph < tile_pooled_block_h &&
+        ph + out_h < pooled_height &&
+        get_local_id(1) < tile_pooled_block_w &&
+        (out_w + get_local_id(1)) < pooled_width) {
+      out_off[(head - post_pad) * out_step + ph * pooled_width] = output_val;
+    }
+    head++;
+  }
+}
+
+#undef TILE_W
+#undef TILE_H
+#undef SIMD_WIDTH
+
 __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,
                              const int_tp num, const int_tp channels,
                              const int_tp height, const int_tp width, const int_tp size,
