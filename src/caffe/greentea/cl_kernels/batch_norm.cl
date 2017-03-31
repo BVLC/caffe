@@ -2,11 +2,12 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(batch_norm_use_global_stats_in_place,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
-                                         const Dtype scale, const Dtype eps, 
+Dtype TEMPLATE(bn_common,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
+                                         const Dtype scale, const Dtype eps,
                                          __global const Dtype* mean,
                                          __global const Dtype* variance,
-                                         __global Dtype* top) {
+                                         __global const Dtype* data,
+                                         int_tp *out_off) {
    const int_tp idx_num = get_global_id(0);
    const int_tp idx_chans = get_global_id(1);
    const int_tp idx_spatial_dim = get_global_id(2);
@@ -17,26 +18,49 @@ __kernel void TEMPLATE(batch_norm_use_global_stats_in_place,Dtype)(const int_tp 
    m = -scale * m;
    v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);
 
-   const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;
-   top[out_off] = v * (top[out_off] + m);
+   *out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;
+   return (v * (data[*out_off] + m));
 }
 
-__kernel void TEMPLATE(batch_norm_use_global_stats,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
-                                         const Dtype scale, const Dtype eps, 
+
+__kernel void TEMPLATE(bn_use_global_stats_in_place,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
+                                         const Dtype scale, const Dtype eps,
+                                         __global const Dtype* mean,
+                                         __global const Dtype* variance,
+                                         __global Dtype* top) {
+   int_tp out_off;
+   Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, top, &out_off);
+   top[out_off] = val;
+}
+
+__kernel void TEMPLATE(bn_use_global_stats_in_place_fused_relu,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
+                                         const Dtype scale, const Dtype eps,
+                                         __global const Dtype* mean,
+                                         __global const Dtype* variance,
+                                         __global Dtype* top) {
+   int_tp out_off;
+   Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, top, &out_off);
+   top[out_off] = val > 0.0f ? val : 0.0f;
+}
+
+__kernel void TEMPLATE(bn_use_global_stats,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
+                                         const Dtype scale, const Dtype eps,
                                          __global const Dtype* mean,
                                          __global const Dtype* variance,
                                          __global const Dtype* bottom,
                                          __global Dtype* top) {
-   const int_tp idx_num = get_global_id(0);
-   const int_tp idx_chans = get_global_id(1);
-   const int_tp idx_spatial_dim = get_global_id(2);
+   int_tp out_off;
+   Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, bottom, &out_off);
+   top[out_off] = val;
+}
 
-   Dtype m = mean[idx_chans];
-   Dtype v = variance[idx_chans];
-
-   m = -scale * m;
-   v = (Dtype)native_powr((float)mad(scale, v, eps), (float)-0.5);
-
-   const int_tp out_off = (idx_num * channels + idx_chans) * spatial_dim + idx_spatial_dim;
-   top[out_off] = v * (bottom[out_off] + m);
+__kernel void TEMPLATE(bn_use_global_stats_fused_relu,Dtype)(const int_tp num, const int_tp channels, const int_tp spatial_dim,
+                                         const Dtype scale, const Dtype eps,
+                                         __global const Dtype* mean,
+                                         __global const Dtype* variance,
+                                         __global const Dtype* bottom,
+                                         __global Dtype* top) {
+   int_tp out_off;
+   Dtype val = TEMPLATE(bn_common,Dtype)(num, channels, spatial_dim, scale, eps, mean, variance, bottom, &out_off);
+   top[out_off] =  val > 0.0f ? val : 0.0f;
 }
