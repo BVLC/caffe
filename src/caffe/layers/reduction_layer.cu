@@ -19,14 +19,15 @@ void ReductionLayer<Dtype>::Forward_gpu(
                           1, bottom_data, mult_data, 0, top_data);
     break;
   case ReductionParameter_ReductionOp_ASUM:
-    caffe_gpu_abs<Dtype>(num_ * dim_, bottom_data, top_data);
+    caffe_gpu_abs<Dtype>(num_ * dim_, bottom_data, tmp_.mutable_gpu_data());
     caffe_gpu_gemv<Dtype>(CblasNoTrans, num_, dim_,
-                          1, top_data, mult_data, 0, top_data);
+                          1, tmp_.gpu_data(), mult_data, 0, top_data);
     break;
   case ReductionParameter_ReductionOp_SUMSQ:
-    caffe_gpu_mul<Dtype>(num_ * dim_, bottom_data, bottom_data, top_data);
+    caffe_gpu_mul<Dtype>(num_ * dim_, bottom_data, bottom_data,
+                         tmp_.mutable_gpu_data());
     caffe_gpu_gemv<Dtype>(CblasNoTrans, num_, dim_,
-                          1, top_data, mult_data, 0, top_data);
+                          1, tmp_.gpu_data(), mult_data, 0, top_data);
     break;
   default:
     LOG(FATAL) << "Unknown reduction op: "

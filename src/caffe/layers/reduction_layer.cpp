@@ -31,6 +31,13 @@ void ReductionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   sum_multiplier_.Reshape(sum_mult_shape);
   caffe_set(dim_, Dtype(1), sum_multiplier_.mutable_cpu_data());
 
+#ifndef CPU_ONLY
+  if (op_ == ReductionParameter_ReductionOp_ASUM ||
+      op_ == ReductionParameter_ReductionOp_SUMSQ) {
+    tmp_.ReshapeLike(*bottom[0]);
+  }
+#endif
+
   coeff_ = this->layer_param().reduction_param().coeff();
   if (op_ == ReductionParameter_ReductionOp_MEAN) {
     coeff_ /= dim_;

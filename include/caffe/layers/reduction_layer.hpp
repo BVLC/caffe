@@ -52,6 +52,8 @@ class ReductionLayer : public Layer<Dtype> {
   int dim_;
   /// @brief a helper Blob used for summation (op_ == SUM)
   Blob<Dtype> sum_multiplier_;
+  /// @brief a helper Blob for intermediate results for ASUM / SUMSQ (GPU only)
+  Blob<Dtype> tmp_;
 };
 
 }  // namespace caffe
