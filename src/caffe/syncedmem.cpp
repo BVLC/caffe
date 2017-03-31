@@ -9,10 +9,8 @@
 #include "caffe/greentea/greentea_im2col.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 
-#define ZEROCOPY_SUPPORTED(dev, ptr, size) \
-             (dev->is_host_unified() &&\
-             ((uintptr_t)(ptr) % OPENCL_PAGE_ALIGN) == 0 &&\
-             ((size) % OPENCL_CACHE_ALIGN) == 0)
+#define ZEROCOPY_SUPPORTED(device, ptr, size) \
+             (device->is_host_unified())
 #endif
 
 namespace caffe {
@@ -319,9 +317,11 @@ inline void SyncedMemory::to_gpu() {
                 ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 size_, nullptr, &err);
           } else if (ZEROCOPY_SUPPORTED(device_, cpu_ptr_, size_)) {
+              size_t aligned_size = ((size_ - 1)/OPENCL_CACHE_ALIGN + 1) *
+                                    OPENCL_CACHE_ALIGN;
               cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                               size_, cpu_ptr_, &err);
+                               aligned_size, cpu_ptr_, &err);
               void *mapped_ptr = clEnqueueMapBuffer(
                                     ctx.get_queue().handle().get(),
                                     (cl_mem) cl_gpu_mem_,
