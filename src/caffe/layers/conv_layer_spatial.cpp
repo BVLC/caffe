@@ -1221,7 +1221,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
       if (simd_size == 8) {
         width_max = 16;
         height_max = 16;
-        block_size_max = 64;
+        block_size_max = 48;
       } else {
         width_max = 14;
         height_max = 14;
