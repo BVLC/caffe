@@ -25,7 +25,11 @@ CHECK(strcmp(phase_name, 'train') || strcmp(phase_name, 'test'), ...
 
 % construct caffe net from model_file
 hNet = caffe_('get_net', model_file, phase_name);
-net = caffe.Net(hNet);
+if ~isstruct(hNet)
+    error('null returned in get_net');
+else
+    net = caffe.Net(hNet);
+end
 
 % load weights from weights_file
 if nargin == 3

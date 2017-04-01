@@ -123,10 +123,14 @@ classdef Net < handle
     function copy_from(self, weights_file)
       CHECK(ischar(weights_file), 'weights_file must be a string');
       CHECK_FILE_EXIST(weights_file);
-      caffe_('net_copy_from', self.hNet_self, weights_file);
+      if caffe_('net_copy_from', self.hNet_self, weights_file) == -1
+         error('null returned in caffe.Net.copy_from(weights_file)');
+      end
     end
     function reshape(self)
-      caffe_('net_reshape', self.hNet_self);
+      if caffe_('net_reshape', self.hNet_self) == -1
+          error('null returned in caffe.Net.reshape');
+      end
     end
     function save(self, weights_file)
       CHECK(ischar(weights_file), 'weights_file must be a string');

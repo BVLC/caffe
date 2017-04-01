@@ -45,15 +45,21 @@ classdef Solver < handle
     function restore(self, snapshot_filename)
       CHECK(ischar(snapshot_filename), 'snapshot_filename must be a string');
       CHECK_FILE_EXIST(snapshot_filename);
-      caffe_('solver_restore', self.hSolver_self, snapshot_filename);
+      if caffe_('solver_restore', self.hSolver_self, snapshot_filename) == -1
+          error('null returned in caffe.Solver.restore(snapshot_filename)');
+      end
     end
     function solve(self)
-      caffe_('solver_solve', self.hSolver_self);
+      if caffe_('solver_solve', self.hSolver_self) == -1
+          error('null returned in caffe.Solver.solve()');
+      end
     end
     function step(self, iters)
       CHECK(isscalar(iters) && iters > 0, 'iters must be positive integer');
       iters = double(iters);
-      caffe_('solver_step', self.hSolver_self, iters);
+      if caffe_('solver_step', self.hSolver_self, iters) == -1
+          error('null returned in caffe.Solver.step()');
+      end
     end
   end
 end
