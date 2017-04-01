@@ -277,6 +277,54 @@ template void LibDNNTuner::add_set_param(std::string name,
 template void LibDNNTuner::add_set_param(std::string name,
                             int64_t def_value, std::vector<int64_t> values);
 
+template<class T>
+void LibDNNTuner::restrict_param(const char* name, T min_value, T max_value) {
+  std::string str(name);
+  restrict_param<T>(str, min_value, max_value);
+}
+template void LibDNNTuner::restrict_param(const char* name,
+                            float min_value, float max_value);
+template void LibDNNTuner::restrict_param(const char* name,
+                            double min_value, double max_value);
+template void LibDNNTuner::restrict_param(const char* name,
+                            int32_t min_value, int32_t max_value);
+template void LibDNNTuner::restrict_param(const char* name,
+                            int64_t min_value, int64_t max_value);
+
+
+template<class T>
+void LibDNNTuner::restrict_param(std::string name,
+                                          T min_value, T max_value) {
+  std::shared_ptr<LibDNNTunerParam> param = param_map_.at(name);
+
+  std::shared_ptr<LibDNNTunerParamBool> param_bool =
+      std::dynamic_pointer_cast<LibDNNTunerParamBool>(param);
+  if (param_bool.get() != nullptr) {
+    param_bool->restrict_values(min_value, max_value);
+  }
+
+  std::shared_ptr<LibDNNTunerParamInt> param_int =
+      std::dynamic_pointer_cast<LibDNNTunerParamInt>(param);
+  if (param_int.get() != nullptr) {
+    param_int->restrict_values(min_value, max_value);
+  }
+
+  std::shared_ptr<LibDNNTunerParamReal> param_real =
+      std::dynamic_pointer_cast<LibDNNTunerParamReal>(param);
+  if (param_real.get() != nullptr) {
+    param_real->restrict_values(min_value, max_value);
+  }
+}
+template void LibDNNTuner::restrict_param(std::string name,
+                            float min_value, float max_value);
+template void LibDNNTuner::restrict_param(std::string name,
+                            double min_value, double max_value);
+template void LibDNNTuner::restrict_param(std::string name,
+                            int32_t min_value, int32_t max_value);
+template void LibDNNTuner::restrict_param(std::string name,
+                            int64_t min_value, int64_t max_value);
+
+
 template<>
 void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
                     std::vector<std::string> con_adapt,
@@ -598,6 +646,149 @@ std::shared_ptr<LibDNNTunerParam> LibDNNTunerParamBool::clone() {
       (new LibDNNTunerParamBool(*this));
 }
 
+void LibDNNTunerParamInt::restrict_values(
+    int64_t min_value, int64_t max_value) {
+  std::vector<int64_t> new_values;
+  int64_t def_value = values_[def_idx_];
+  int64_t curr_value = values_[curr_idx_];
+  for (int_tp i = 0; i < values_.size(); ++i) {
+    int64_t value = values_[i];
+    if (value >= min_value && value <= max_value) {
+      new_values.push_back(value);
+    }
+  }
+  if (new_values.size() > 0) {
+    values_ = new_values;
+    int_tp min_idx = 0;
+    int64_t min_set_value = values_[0];
+    int_tp max_idx = 0;
+    int64_t max_set_value = values_[0];
+    for (int_tp i = 0; i < values_.size(); ++i) {
+      if (values_[i] < min_set_value) {
+        min_set_value = values_[i];
+        min_idx = i;
+      }
+      if (values_[i] > max_set_value) {
+        max_set_value = values_[i];
+        max_idx = i;
+      }
+      if (def_value == values_[i]) {
+        def_idx_ = i;
+      }
+      if (curr_value == values_[i]) {
+        curr_idx_ = i;
+      }
+    }
+    if (def_value < min_set_value) {
+      def_idx_ = min_idx;
+    }
+    if (def_value > max_set_value) {
+      def_idx_ = max_idx;
+    }
+    if (curr_value < min_set_value) {
+      curr_idx_ = min_idx;
+    }
+    if (curr_value > max_set_value) {
+      curr_idx_ = max_idx;
+    }
+  }
+}
+
+void LibDNNTunerParamReal::restrict_values(
+    double min_value, double max_value) {
+  std::vector<double> new_values;
+  double def_value = values_[def_idx_];
+  double curr_value = values_[curr_idx_];
+  for (int_tp i = 0; i < values_.size(); ++i) {
+    double value = values_[i];
+    if (value >= min_value && value <= max_value) {
+      values_.push_back(value);
+    }
+  }
+  if (new_values.size() > 0) {
+    values_ = new_values;
+    int_tp min_idx = 0;
+    double min_set_value = values_[0];
+    int_tp max_idx = 0;
+    double max_set_value = values_[0];
+    for (int_tp i = 0; i < values_.size(); ++i) {
+      if (values_[i] < min_set_value) {
+        min_set_value = values_[i];
+        min_idx = i;
+      }
+      if (values_[i] > max_set_value) {
+        max_set_value = values_[i];
+        max_idx = i;
+      }
+      if (def_value == values_[i]) {
+        def_idx_ = i;
+      }
+      if (curr_value == values_[i]) {
+        curr_idx_ = i;
+      }
+    }
+    if (def_value < min_set_value) {
+      def_idx_ = min_idx;
+    }
+    if (def_value > max_set_value) {
+      def_idx_ = max_idx;
+    }
+    if (curr_value < min_set_value) {
+      curr_idx_ = min_idx;
+    }
+    if (curr_value > max_set_value) {
+      curr_idx_ = max_idx;
+    }
+  }
+}
+
+void LibDNNTunerParamBool::restrict_values(
+    bool min_value, bool max_value) {
+  std::vector<bool> new_values;
+  bool def_value = values_[def_idx_];
+  bool curr_value = values_[curr_idx_];
+  for (int_tp i = 0; i < values_.size(); ++i) {
+    bool value = values_[i];
+    if (value >= min_value && value <= max_value) {
+      values_.push_back(value);
+    }
+  }
+  if (new_values.size() > 0) {
+    values_ = new_values;
+    int_tp min_idx = 0;
+    bool min_set_value = values_[0];
+    int_tp max_idx = 0;
+    bool max_set_value = values_[0];
+    for (int_tp i = 0; i < values_.size(); ++i) {
+      if (values_[i] < min_set_value) {
+        min_set_value = values_[i];
+        min_idx = i;
+      }
+      if (values_[i] > max_set_value) {
+        max_set_value = values_[i];
+        max_idx = i;
+      }
+      if (def_value == values_[i]) {
+        def_idx_ = i;
+      }
+      if (curr_value == values_[i]) {
+        curr_idx_ = i;
+      }
+    }
+    if (def_value < min_set_value) {
+      def_idx_ = min_idx;
+    }
+    if (def_value > max_set_value) {
+      def_idx_ = max_idx;
+    }
+    if (curr_value < min_set_value) {
+      curr_idx_ = min_idx;
+    }
+    if (curr_value > max_set_value) {
+      curr_idx_ = max_idx;
+    }
+  }
+}
 
 void LibDNNTunerParam::update(std::shared_ptr<LibDNNTunerParam> other) {
   curr_idx_ = other->get_curr_idx();
