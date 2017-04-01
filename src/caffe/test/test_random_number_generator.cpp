@@ -23,13 +23,17 @@ class RandomNumberGeneratorTest : public ::testing::Test {
        sample_size_(10000),
        seed_(1701),
        data_(new SyncedMemory(sample_size_ * sizeof(Dtype),
-                              Caffe::GetDefaultDevice())),
+                              Caffe::GetDefaultDevice(),
+                              dtypeof<Dtype>())),
        data_2_(new SyncedMemory(sample_size_ * sizeof(Dtype),
-                              Caffe::GetDefaultDevice())),
+                              Caffe::GetDefaultDevice(),
+                              dtypeof<Dtype>())),
        int_data_(new SyncedMemory(sample_size_ * sizeof(int_tp),
-                              Caffe::GetDefaultDevice())),
+                              Caffe::GetDefaultDevice(),
+                   std::is_same<int_tp, int32_t>::value ? INT32 : INT64)),
        int_data_2_(new SyncedMemory(sample_size_ * sizeof(int_tp),
-                              Caffe::GetDefaultDevice())) {}
+                              Caffe::GetDefaultDevice(),
+                   std::is_same<int_tp, int32_t>::value ? INT32 : INT64)) {}
 
   virtual void SetUp() {
     Caffe::set_random_seed(this->seed_, Caffe::GetDefaultDevice());

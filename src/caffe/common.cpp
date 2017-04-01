@@ -29,6 +29,60 @@
 
 namespace caffe {
 
+
+size_t dtsizeof(DataType data_type) {
+  switch (data_type) {
+    case INT8:
+    case UINT8:
+      return 1;
+    case FP16:
+    case INT16:
+    case UINT16:
+      return 2;
+    case FP32:
+    case INT32:
+    case UINT32:
+      return 4;
+    case FP64:
+    case INT64:
+    case UINT64:
+      return 8;
+    default:
+      return 1;
+  }
+}
+
+template<> DataType dtypeof<float>() {
+  return FP32;
+}
+template<> DataType dtypeof<double>() {
+  return FP64;
+}
+template<> DataType dtypeof<int8_t>() {
+  return INT8;
+}
+template<> DataType dtypeof<int16_t>() {
+  return INT16;
+}
+template<> DataType dtypeof<int32_t>() {
+  return INT32;
+}
+template<> DataType dtypeof<int64_t>() {
+  return INT64;
+}
+template<> DataType dtypeof<uint8_t>() {
+  return UINT8;
+}
+template<> DataType dtypeof<uint16_t>() {
+  return UINT16;
+}
+template<> DataType dtypeof<uint32_t>() {
+  return UINT32;
+}
+template<> DataType dtypeof<uint64_t>() {
+  return UINT64;
+}
+
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 

@@ -1650,6 +1650,15 @@ void LibDNNDeconv<Dtype>::Forward(const Dtype* bottom_data, const Dtype* weight,
   int fw_div_N = fw_wptn * fw_wgs0;
   int fw_div_M = fw_wptm * fw_wgs1;
 
+  if (this->bwalgo_
+      == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
+    int_tp ims = batch_size * this->fmaps_out_;
+    for (int_tp i = 0; i < this->im_out_shape_.size(); ++i) {
+      ims *= this->im_out_shape_[i];
+    }
+    LibDNN<Dtype>::SetMemory(top_data, ims, 0, (Dtype) 0);
+  }
+
 #ifdef USE_GREENTEA
   if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_OpenCL) {
     viennacl::ocl::kernel &kernel =
@@ -1727,15 +1736,6 @@ void LibDNNDeconv<Dtype>::Backward(bool prop_down_data, bool prop_down_weights,
   int wg_wgs1 = this->wg_tuner_->template get_param<int>("workgroup_size_1");
   int wg_div_N = wg_wptn * wg_wgs0;
   int wg_div_M = wg_wptm * wg_wgs1;
-
-  if (prop_down_data && this->bwalgo_
-      == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
-    int_tp ims = batch_size * this->fmaps_in_;
-    for (int_tp i = 0; i < this->im_in_shape_.size(); ++i) {
-      ims *= this->im_in_shape_[i];
-    }
-    LibDNN<Dtype>::SetMemory(bottom_diff, ims, 0, (Dtype) 0);
-  }
 
 #ifdef USE_GREENTEA
   if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_OpenCL) {

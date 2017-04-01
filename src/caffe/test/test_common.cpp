@@ -32,8 +32,8 @@ TEST_F(CommonTest, TestBrewMode) {
 }
 
 TEST_F(CommonTest, TestRandSeedCPU) {
-  SyncedMemory data_a(10 * sizeof(int), Caffe::GetDefaultDevice());
-  SyncedMemory data_b(10 * sizeof(int), Caffe::GetDefaultDevice());
+  SyncedMemory data_a(10 * sizeof(int), Caffe::GetDefaultDevice(), INT32);
+  SyncedMemory data_b(10 * sizeof(int), Caffe::GetDefaultDevice(), INT32);
   Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   caffe_rng_bernoulli(10, 0.5, static_cast<int*>(data_a.mutable_cpu_data()));
 
@@ -54,9 +54,9 @@ TEST_F(CommonTest, TestRandSeedGPU) {
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     SyncedMemory data_a(10 * sizeof(unsigned int),
-                        Caffe::GetDefaultDevice());
+                        Caffe::GetDefaultDevice(), UINT16);
     SyncedMemory data_b(10 * sizeof(unsigned int),
-                        Caffe::GetDefaultDevice());
+                        Caffe::GetDefaultDevice(), UINT16);
     Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
           static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));

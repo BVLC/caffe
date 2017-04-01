@@ -29,7 +29,8 @@ void CaffeFreeHost(void* ptr, device* device_context);
 class SyncedMemory {
  public:
 #ifdef USE_GREENTEA
-  explicit SyncedMemory(device *device_context)
+  explicit SyncedMemory(device *device_context,
+                        DataType mem_init_type)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(0),
@@ -38,9 +39,11 @@ class SyncedMemory {
         own_gpu_data_(false),
         own_zero_copy_data_(false),
         device_(device_context),
-        cl_gpu_mem_(NULL) {
+        cl_gpu_mem_(NULL),
+        mem_init_type_(mem_init_type) {
   }
-  explicit SyncedMemory(uint_tp size, device *device_context)
+  explicit SyncedMemory(uint_tp size, device *device_context,
+                        DataType mem_init_type)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(size),
@@ -49,10 +52,12 @@ class SyncedMemory {
         own_gpu_data_(false),
         own_zero_copy_data_(false),
         device_(device_context),
-        cl_gpu_mem_(NULL) {
+        cl_gpu_mem_(NULL),
+        mem_init_type_(mem_init_type) {
   }
 #else
-  explicit SyncedMemory(device *device_context)
+  explicit SyncedMemory(device *device_context,
+                        DataType mem_init_type)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(0),
@@ -60,9 +65,11 @@ class SyncedMemory {
         own_cpu_data_(false),
         own_gpu_data_(false),
         own_zero_copy_data_(false),
-        device_(device_context) {
+        device_(device_context),
+        mem_init_type_(mem_init_type) {
   }
-  explicit SyncedMemory(uint_tp size, device *device_context)
+  explicit SyncedMemory(uint_tp size, device *device_context,
+                        DataType mem_init_type)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(size),
@@ -70,7 +77,8 @@ class SyncedMemory {
         own_cpu_data_(false),
         own_gpu_data_(false),
         own_zero_copy_data_(false),
-        device_(device_context) {
+        device_(device_context),
+        mem_init_type_(mem_init_type) {
   }
 #endif
 
@@ -118,6 +126,8 @@ class SyncedMemory {
 #ifdef USE_GREENTEA
   cl_mem cl_gpu_mem_;
 #endif
+
+  DataType mem_init_type_;
 
 DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };

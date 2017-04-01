@@ -22,4 +22,19 @@
 #define uint_tpc unsigned int  // NOLINT
 #endif
 
+enum DataType {
+  FP16,
+  FP32,
+  FP64,
+  INT8,
+  INT16,
+  INT32,
+  INT64,
+  UINT8,
+  UINT16,
+  UINT32,
+  UINT64
+};
+
+
 #endif /* CAFFE_DEFINITIONS_HPP_ */

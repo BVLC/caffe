@@ -86,6 +86,9 @@ namespace cv {class Mat;}
 
 namespace caffe {
 
+size_t dtsizeof(DataType data_type);
+template<typename Itype> DataType dtypeof();
+
 class device;
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly

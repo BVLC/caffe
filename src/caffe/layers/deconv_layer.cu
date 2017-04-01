@@ -20,6 +20,8 @@ void DeconvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int_tp n = 0; n < this->num_; ++n) {
       this->backward_gpu_gemm(bottom_data, n * this->bottom_dim_, weight,
                               top_data, n * this->top_dim_);
+    }
+    for (int_tp n = 0; n < this->num_; ++n) {
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
         this->forward_gpu_bias(top_data, n * this->top_dim_, bias);
