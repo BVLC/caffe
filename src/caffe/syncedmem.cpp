@@ -126,7 +126,20 @@ inline void SyncedMemory::to_cpu() {
   switch (head_) {
     case UNINITIALIZED: {
       CaffeMallocHost(&cpu_ptr_, size_, device_);
-      caffe_memset(size_, 0, cpu_ptr_);
+      switch (mem_init_type_) {
+        case FP32:
+          caffe_set<float>(size_/dtsizeof(mem_init_type_), 0.0,
+                           static_cast<float*>(cpu_ptr_));
+          break;
+        case FP64:
+          caffe_set<double>(size_/dtsizeof(mem_init_type_), 0.0,
+                           static_cast<double*>(cpu_ptr_));
+          break;
+        case INT32:
+        case UINT32:
+        default:
+          caffe_memset(size_, 0, cpu_ptr_);
+      }
       head_ = HEAD_AT_CPU;
       own_cpu_data_ = true;
       break;
@@ -189,7 +202,20 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         device_->IncreaseMemoryUsage(size_);
-        caffe_gpu_memset(size_, 0, gpu_ptr_);
+        switch (mem_init_type_) {
+          case FP32:
+            caffe_gpu_set<float>(size_/dtsizeof(mem_init_type_), 0.0,
+                             static_cast<float*>(gpu_ptr_));
+            break;
+          case FP64:
+            caffe_gpu_set<double>(size_/dtsizeof(mem_init_type_), 0.0,
+                             static_cast<double*>(gpu_ptr_));
+            break;
+          case INT32:
+          case UINT32:
+          default:
+            caffe_gpu_memset(size_, 0, gpu_ptr_);
+        }
         own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
@@ -205,7 +231,20 @@ inline void SyncedMemory::to_gpu() {
             size_t zero_copy_size = (size_ + OPENCL_CACHE_ALIGN - 1)
                                     & ~(OPENCL_CACHE_ALIGN - 1);
             CaffeMallocHost(&cpu_ptr_, zero_copy_size, device_);
-            caffe_memset(size_, 0, cpu_ptr_);
+            switch (mem_init_type_) {
+              case FP32:
+                caffe_set<float>(size_/dtsizeof(mem_init_type_), 0.0,
+                                 static_cast<float*>(cpu_ptr_));
+                break;
+              case FP64:
+                caffe_set<double>(size_/dtsizeof(mem_init_type_), 0.0,
+                                 static_cast<double*>(cpu_ptr_));
+                break;
+              case INT32:
+              case UINT32:
+              default:
+                caffe_memset(size_, 0, cpu_ptr_);
+            }
             own_cpu_data_ = true;
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                               CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
@@ -235,8 +274,22 @@ inline void SyncedMemory::to_gpu() {
 
         device_->IncreaseMemoryUsage(size_);
         if (!own_zero_copy_data_) {
-          int_tp alpha = 0;
-          greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
+          switch (mem_init_type_) {
+            case FP32:
+              greentea_gpu_set<float>(device_->id(),
+                                      size_/dtsizeof(mem_init_type_), 0.0,
+                                      cl_gpu_mem_, 0);
+              break;
+            case FP64:
+              greentea_gpu_set<double>(device_->id(),
+                                       size_/dtsizeof(mem_init_type_), 0.0,
+                                       cl_gpu_mem_, 0);
+              break;
+            case INT32:
+            case UINT32:
+            default:
+              greentea_memset(device_->id(), size_, 0, cl_gpu_mem_, 0);
+          }
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         own_gpu_data_ = true;

@@ -11,6 +11,7 @@
 #include "caffe/layers/conv_fft_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/conv_spatial_layer.hpp"
+#include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
@@ -32,6 +33,7 @@
 
 #ifdef USE_LIBDNN
 #include "caffe/layers/libdnn_conv_layer.hpp"
+#include "caffe/layers/libdnn_deconv_layer.hpp"
 #include "caffe/layers/libdnn_pool_layer.hpp"
 #endif  // USE_LIBDNN
 
@@ -201,6 +203,35 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
+
+
+// Get deconvolution layer according to engine.
+template<typename Dtype>
+shared_ptr<Layer<Dtype> > GetDeconvolutionLayer(const LayerParameter& param) {
+  ConvolutionParameter_Engine engine = param.convolution_param().engine();
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+    engine = ConvolutionParameter_Engine_CAFFE;
+
+#ifdef USE_LIBDNN
+    engine = ConvolutionParameter_Engine_LIBDNN;
+#endif
+  }
+
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new
+                                     DeconvolutionLayer<Dtype>(param));
+#ifdef USE_LIBDNN
+  } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
+    return shared_ptr<Layer<Dtype> >(new
+                                     LibDNNDeconvolutionLayer<Dtype>(param));
+#endif  // USE_LIBDNN
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+
+REGISTER_LAYER_CREATOR(Deconvolution, GetDeconvolutionLayer);
 
 
 // Get pooling layer according to engine.

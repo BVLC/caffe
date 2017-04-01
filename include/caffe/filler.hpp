@@ -91,7 +91,8 @@ class GaussianFiller : public Filler<Dtype> {
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
       rand_vec_.reset(
           new SyncedMemory(blob->count() * sizeof(int_tp),
-                           blob->get_device()));
+                   blob->get_device(),
+                   std::is_same<int_tp, int32_t>::value ? INT32 : INT64));
       int_tp* mask = reinterpret_cast<int_tp*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
       for (int_tp i = 0; i < blob->count(); ++i) {

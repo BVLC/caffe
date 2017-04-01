@@ -164,14 +164,14 @@ __kernel void TEMPLATE(col2im_nd, Dtype)(const int_tp n, const int_tp num_axes,
       if (d_col_start[i] >= d_col_end[i]) {
         // Skip computation if the dimension is 0 at any spatial axis --
         // final val will be 0.
-        data_im[index] = 0;
+        data_im[index] = (Dtype)0.0;
         done = true;
         break;  // for (int_tp i = 0; i < num_axes; ++i)
       }
     }
     if (!done) {
       // Loop over the col to compute the output val.
-      Dtype val = 0;
+      Dtype val = (Dtype)0.0;
       bool incremented = true;
       bool skip = false;
       do {

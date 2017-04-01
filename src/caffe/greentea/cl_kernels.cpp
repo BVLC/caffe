@@ -3283,14 +3283,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if (d_col_start[i] >= d_col_end[i]) {",    // NOLINT
 "// Skip computation if the dimension is 0 at any spatial axis --",    // NOLINT
 "// final val will be 0.",    // NOLINT
-"data_im[index] = 0;",    // NOLINT
+"data_im[index] = (Dtype)0.0;",    // NOLINT
 "done = true;",    // NOLINT
 "break;  // for (int_tp i = 0; i < num_axes; ++i)",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if (!done) {",    // NOLINT
 "// Loop over the col to compute the output val.",    // NOLINT
-"Dtype val = 0;",    // NOLINT
+"Dtype val = (Dtype)0.0;",    // NOLINT
 "bool incremented = true;",    // NOLINT
 "bool skip = false;",    // NOLINT
 "do {",    // NOLINT

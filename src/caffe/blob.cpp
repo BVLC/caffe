@@ -33,7 +33,8 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   shape_.resize(shape.size());
   if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int_tp)) {
     shape_data_.reset(
-        new SyncedMemory(shape.size() * sizeof(int_tp), device_));
+        new SyncedMemory(shape.size() * sizeof(int_tp), device_,
+        std::is_same<int_tp, int32_t>::value ? INT32 : INT64));
   }
   int_tp* shape_data = static_cast<int_tp*>(shape_data_->mutable_cpu_data());
   for (int_tp i = 0; i < shape.size(); ++i) {
@@ -51,8 +52,10 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   }
   if (count_ > capacity_) {
     capacity_ = count_;
-    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_));
-    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_));
+    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_,
+                dtypeof<Dtype>()));
+    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_,
+                dtypeof<Dtype>()));
     return true;
   }
   return false;
@@ -106,8 +109,8 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size, device_));
-    diff_.reset(new SyncedMemory(size, device_));
+    data_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
+    diff_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
   }
   data_->set_cpu_data(data);
 }
@@ -124,8 +127,8 @@ void Blob<Dtype>::set_gpu_data(Dtype* data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size, device_));
-    diff_.reset(new SyncedMemory(size, device_));
+    data_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
+    diff_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
   }
   data_->set_gpu_data(data);
 }
