@@ -127,6 +127,7 @@ class LibDNNTunerParamInt: public LibDNNTunerParam {
   const std::vector<int64_t>& get_values();
   int_tp count_values();
   std::shared_ptr<LibDNNTunerParam> clone();
+  void restrict_values(int64_t min_value, int64_t max_value);
  protected:
   std::vector<int64_t> values_;
 };
@@ -146,6 +147,7 @@ class LibDNNTunerParamBool: public LibDNNTunerParam {
   const std::vector<bool>& get_values();
   int_tp count_values();
   virtual std::shared_ptr<LibDNNTunerParam> clone();
+  void restrict_values(bool min_value, bool max_value);
  protected:
   std::vector<bool> values_;
 };
@@ -165,6 +167,7 @@ class LibDNNTunerParamReal: public LibDNNTunerParam {
   const std::vector<double>& get_values();
   int_tp count_values();
   virtual std::shared_ptr<LibDNNTunerParam> clone();
+  void restrict_values(double min_value, double max_value);
  protected:
   std::vector<double> values_;
 };
@@ -235,6 +238,11 @@ class LibDNNTuner {
   void add_set_param(std::string name, T def_value, std::vector<T> values);
   template<class T>
   void add_set_param(const char* name, T def_value, std::vector<T> values);
+
+  template<class T>
+  void restrict_param(std::string name, T min_value, T max_value);
+  template<class T>
+  void restrict_param(const char* name, T min_value, T max_value);
 
   template<class T>
   void add_constraint(std::vector<std::string> con_params,

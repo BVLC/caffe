@@ -93,6 +93,7 @@ python/caffe/proto/
 cmake_build
 .cmake_build
 *.gen.cmake
+.libdnn_debug
 
 # Generated documentation
 docs/_site

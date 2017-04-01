@@ -46,8 +46,8 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     this->im_out_shape_.push_back(config.out_shape[dims - spatial_dims + i]);
   }
 
-  this->fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
   this->bw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  this->fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
   this->wg_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
 
   // Setup tuning parameters
@@ -55,57 +55,59 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
   // Work groups
   for (int id = 0; id < 2; ++id) {
     std::vector<int_tp> workgroup_sizes;
-    for (int_tp i = 0; i < LibDNN<Dtype>::dev_ptr_->workgroup_size(id);
+    workgroup_sizes.push_back(1);
+    workgroup_sizes.push_back(2);
+    for (int_tp i = 4; i < LibDNN<Dtype>::dev_ptr_->workgroup_size(id);
             i += 4) {
       workgroup_sizes.push_back(i);
     }
-    this->fw_tuner_->template add_set_param<int_tp>
-        ("workgroup_size_" + std::to_string(id), 16, workgroup_sizes);
     this->bw_tuner_->template add_set_param<int_tp>
+        ("workgroup_size_" + std::to_string(id), 16, workgroup_sizes);
+    this->fw_tuner_->template add_set_param<int_tp>
         ("workgroup_size_" + std::to_string(id), 16, workgroup_sizes);
     this->wg_tuner_->template add_set_param<int_tp>
         ("workgroup_size_" + std::to_string(id), 16, workgroup_sizes);
   }
 
   // TSK
-  this->fw_tuner_->template add_range_param<int_tp>("TSK", 8, 1, 32, 1);
   this->bw_tuner_->template add_range_param<int_tp>("TSK", 8, 1, 32, 1);
+  this->fw_tuner_->template add_range_param<int_tp>("TSK", 8, 1, 32, 1);
   this->wg_tuner_->template add_range_param<int_tp>("TSK", 8, 1, 32, 1);
 
-  this->fw_tuner_->template add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
   this->bw_tuner_->template add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
+  this->fw_tuner_->template add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
   this->wg_tuner_->template add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
 
   // WPTM, WPTN
-  this->fw_tuner_->template add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
-  this->bw_tuner_->template add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
-  this->wg_tuner_->template add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  this->bw_tuner_->template add_range_param<int_tp>("WPTM", 4, 2, 16, 2);
+  this->fw_tuner_->template add_range_param<int_tp>("WPTM", 4, 2, 16, 2);
+  this->wg_tuner_->template add_range_param<int_tp>("WPTM", 4, 2, 16, 2);
 
-  this->fw_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
-      {1, 2, 4, 8, 16 }));
   this->bw_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  this->fw_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
       {1, 2, 4, 8, 16 }));
   this->wg_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
       {1, 2, 4, 8, 16 }));
 
-  this->fw_tuner_->template add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
-  this->bw_tuner_->template add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
-  this->wg_tuner_->template add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  this->bw_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
+  this->fw_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
+  this->wg_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
 
-  this->fw_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
-      {1, 2, 4, 8, 16 }));
   this->bw_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+      {1, 2, 4, 8, 16 }));
+  this->fw_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
       {1, 2, 4, 8, 16 }));
   this->wg_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
       {1, 2, 4, 8, 16 }));
 
   // Constraint using TSK, TSM, RTSM and RTSN. Adapt TSK if constraint fails.
-  this->fw_tuner_->template add_constraint<int64_t>(
+  this->bw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
     std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
-  this->bw_tuner_->template add_constraint<int64_t>(
+  this->fw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}), std::vector<
     std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
@@ -116,12 +118,12 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   // Constraint using TSK, TSN, RTSN and RTSM. Adapt TSK if constraint fails.
-  this->fw_tuner_->template add_constraint<int64_t>(
+  this->bw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
     std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
-  this->bw_tuner_->template add_constraint<int64_t>(
+  this->fw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
     std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
@@ -131,13 +133,13 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
-  this->fw_tuner_->template add_constraint<int64_t>(
+  this->bw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "TSK_UNROLL"}),
     std::vector<std::string>({"TSK_UNROLL"}),
     [](std::vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
-  this->bw_tuner_->template add_constraint<int64_t>(
+  this->fw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"TSK", "TSK_UNROLL"}),
     std::vector<std::string>({"TSK_UNROLL"}),
     [](std::vector<int64_t> args) -> bool {
@@ -149,13 +151,13 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     [](std::vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
-  this->fw_tuner_->template add_constraint<int64_t>(
+  this->bw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"WPTM", "VWM"}),
     std::vector<std::string>({"WPTM"}),
     [](std::vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
-  this->bw_tuner_->template add_constraint<int64_t>(
+  this->fw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"WPTM", "VWM"}),
     std::vector<std::string>({"WPTM"}),
     [](std::vector<int64_t> args) -> bool {
@@ -167,13 +169,13 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     [](std::vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
-  this->fw_tuner_->template add_constraint<int64_t>(
+  this->bw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"WPTN", "VWN"}),
     std::vector<std::string>({"WPTN"}),
     [](std::vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
-  this->bw_tuner_->template add_constraint<int64_t>(
+  this->fw_tuner_->template add_constraint<int64_t>(
     std::vector<std::string>({"WPTN", "VWN"}),
     std::vector<std::string>({"WPTN"}),
     [](std::vector<int64_t> args) -> bool {
@@ -187,29 +189,29 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     });
 
   // this->pad_A, this->pad_B
-  this->fw_tuner_->template
-      add_range_param<int_tp>("lmem_this->pad_A", 0, 0, 8, 1);
   this->bw_tuner_->template
+      add_range_param<int_tp>("lmem_this->pad_A", 0, 0, 8, 1);
+  this->fw_tuner_->template
       add_range_param<int_tp>("lmem_this->pad_A", 0, 0, 8, 1);
   this->wg_tuner_->template
       add_range_param<int_tp>("lmem_this->pad_A", 0, 0, 8, 1);
-  this->fw_tuner_->template
-      add_range_param<int_tp>("lmem_this->pad_B", 0, 0, 8, 1);
   this->bw_tuner_->template
+      add_range_param<int_tp>("lmem_this->pad_B", 0, 0, 8, 1);
+  this->fw_tuner_->template
       add_range_param<int_tp>("lmem_this->pad_B", 0, 0, 8, 1);
   this->wg_tuner_->template
       add_range_param<int_tp>("lmem_this->pad_B", 0, 0, 8, 1);
 
   if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_CUDA) {
     // CUDA needs the vector elements unrolled
-    this->fw_tuner_->add_boolean_param("vector_unroll", true, false);
     this->bw_tuner_->add_boolean_param("vector_unroll", true, false);
+    this->fw_tuner_->add_boolean_param("vector_unroll", true, false);
     this->wg_tuner_->add_boolean_param("vector_unroll", true, false);
   } else {
     // OpenCL does not need the vector elements unrolled, and may
     // save registers by not doing it
-    this->fw_tuner_->add_boolean_param("vector_unroll", true, true);
     this->bw_tuner_->add_boolean_param("vector_unroll", true, true);
+    this->fw_tuner_->add_boolean_param("vector_unroll", true, true);
     this->wg_tuner_->add_boolean_param("vector_unroll", true, true);
   }
 
@@ -363,46 +365,46 @@ std::string LibDNNDeconv<Dtype>::generate_bw_defs() {
 
   // Local memory padding
   LibDNN<Dtype>::add_def(ss, "v_pad_A",
-                         this->fw_tuner_->template
+                         this->bw_tuner_->template
                          get_param<int>("lmem_this->pad_A"));
   LibDNN<Dtype>::add_def(ss, "v_pad_B",
-                         this->fw_tuner_->template
+                         this->bw_tuner_->template
                          get_param<int>("lmem_this->pad_B"));
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
   // The tile-size in dimension M
   LibDNN<Dtype>::add_def(
-      ss, "TSM", this->fw_tuner_->template get_param<int>("WPTM")
-          * this->fw_tuner_->template
+      ss, "TSM", this->bw_tuner_->template get_param<int>("WPTM")
+          * this->bw_tuner_->template
           get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
   LibDNN<Dtype>::add_def(
-      ss, "TSN", this->fw_tuner_->template get_param<int>("WPTN")
-          * this->fw_tuner_->template get_param<int>("workgroup_size_0"));
+      ss, "TSN", this->bw_tuner_->template get_param<int>("WPTN")
+          * this->bw_tuner_->template get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
-  LibDNN<Dtype>::add_def(ss, "TSK", this->fw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "TSK", this->bw_tuner_->template
                          get_param<int>("TSK"));
   // TSK unrolling
   LibDNN<Dtype>::add_def(ss, "TSK_UNROLL",
-                         this->fw_tuner_->template
+                         this->bw_tuner_->template
                          get_param<int>("TSK_UNROLL"));
   // The work-per-thread in dimension M
-  LibDNN<Dtype>::add_def(ss, "WPTM", this->fw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "WPTM", this->bw_tuner_->template
                          get_param<int>("WPTM"));
-  LibDNN<Dtype>::add_def(ss, "VWM", this->fw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "VWM", this->bw_tuner_->template
                          get_param<int>("VWM"));
   // The work-per-thread in dimension N
-  LibDNN<Dtype>::add_def(ss, "WPTN", this->fw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "WPTN", this->bw_tuner_->template
                          get_param<int>("WPTN"));
-  LibDNN<Dtype>::add_def(ss, "VWN", this->fw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "VWN", this->bw_tuner_->template
                          get_param<int>("VWN"));
   // The reduced tile-size in dimension M
   LibDNN<Dtype>::add_def(ss, "RTSM",
-                         this->fw_tuner_->template
+                         this->bw_tuner_->template
                          get_param<int>("workgroup_size_1"));
   // The reduced tile-size in dimension N
   LibDNN<Dtype>::add_def(ss, "RTSN",
-                         this->fw_tuner_->template
+                         this->bw_tuner_->template
                          get_param<int>("workgroup_size_0"));
   // Loads-per-thread for A
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
@@ -530,10 +532,10 @@ std::string LibDNNDeconv<Dtype>::generate_fw_defs() {
 
   // Local memory padding
   LibDNN<Dtype>::add_def(ss, "v_pad_A",
-                         this->bw_tuner_->template
+                         this->fw_tuner_->template
                          get_param<int>("lmem_this->pad_A"));
   LibDNN<Dtype>::add_def(ss, "v_pad_B",
-                         this->bw_tuner_->template
+                         this->fw_tuner_->template
                          get_param<int>("lmem_this->pad_B"));
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
@@ -541,38 +543,38 @@ std::string LibDNNDeconv<Dtype>::generate_fw_defs() {
   LibDNN<Dtype>::add_def(
       ss,
       "TSM",
-      this->bw_tuner_->template get_param<int>("WPTM")
-          * this->bw_tuner_->template get_param<int>("workgroup_size_1"));
+      this->fw_tuner_->template get_param<int>("WPTM")
+          * this->fw_tuner_->template get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
   LibDNN<Dtype>::add_def(
       ss,
       "TSN",
-      this->bw_tuner_->template get_param<int>("WPTN")
-          * this->bw_tuner_->template get_param<int>("workgroup_size_0"));
+      this->fw_tuner_->template get_param<int>("WPTN")
+          * this->fw_tuner_->template get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
-  LibDNN<Dtype>::add_def(ss, "TSK", this->bw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "TSK", this->fw_tuner_->template
                          get_param<int>("TSK"));
   // TSK unrolling
   LibDNN<Dtype>::add_def(ss, "TSK_UNROLL",
-                         this->bw_tuner_->template
+                         this->fw_tuner_->template
                          get_param<int>("TSK_UNROLL"));
   // The work-per-thread in dimension M
-  LibDNN<Dtype>::add_def(ss, "WPTM", this->bw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "WPTM", this->fw_tuner_->template
                          get_param<int>("WPTM"));
-  LibDNN<Dtype>::add_def(ss, "VWM", this->bw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "VWM", this->fw_tuner_->template
                          get_param<int>("VWM"));
   // The work-per-thread in dimension N
-  LibDNN<Dtype>::add_def(ss, "WPTN", this->bw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "WPTN", this->fw_tuner_->template
                          get_param<int>("WPTN"));
-  LibDNN<Dtype>::add_def(ss, "VWN", this->bw_tuner_->template
+  LibDNN<Dtype>::add_def(ss, "VWN", this->fw_tuner_->template
                          get_param<int>("VWN"));
   // The reduced tile-size in dimension M
   LibDNN<Dtype>::add_def(ss, "RTSM",
-                         this->bw_tuner_->template
+                         this->fw_tuner_->template
                          get_param<int>("workgroup_size_1"));
   // The reduced tile-size in dimension N
   LibDNN<Dtype>::add_def(ss, "RTSN",
-                         this->bw_tuner_->template
+                         this->fw_tuner_->template
                          get_param<int>("workgroup_size_0"));
   // Loads-per-thread for A
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
@@ -747,15 +749,15 @@ template<typename Dtype>
 std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   std::stringstream ss;
 
-  int wptn = this->fw_tuner_->template get_param<int>("WPTN");
-  int wptm = this->fw_tuner_->template get_param<int>("WPTM");
-  int tsk = this->fw_tuner_->template get_param<int>("TSK");
-  int rtsn = this->fw_tuner_->template get_param<int>("workgroup_size_0");
-  int rtsm = this->fw_tuner_->template get_param<int>("workgroup_size_1");
+  int wptn = this->bw_tuner_->template get_param<int>("WPTN");
+  int wptm = this->bw_tuner_->template get_param<int>("WPTM");
+  int tsk = this->bw_tuner_->template get_param<int>("TSK");
+  int rtsn = this->bw_tuner_->template get_param<int>("workgroup_size_0");
+  int rtsm = this->bw_tuner_->template get_param<int>("workgroup_size_1");
   int tsm = wptm * rtsm;
   int tsn = wptn * rtsn;
-  int vwm = this->fw_tuner_->template get_param<int>("VWM");
-  int vwn = this->fw_tuner_->template get_param<int>("VWN");
+  int vwm = this->bw_tuner_->template get_param<int>("VWM");
+  int vwn = this->bw_tuner_->template get_param<int>("VWN");
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
@@ -814,7 +816,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(this->fw_tuner_, false, false);
+  ss << this->generate_accreg_init(this->bw_tuner_, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -906,7 +908,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
 
-  ss << this->generate_gemm_core(this->fw_tuner_, false) << std::endl;
+  ss << this->generate_gemm_core(this->bw_tuner_, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -1337,15 +1339,15 @@ template<typename Dtype>
 std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   std::stringstream ss;
 
-  int wptn = this->bw_tuner_->template get_param<int>("WPTN");
-  int wptm = this->bw_tuner_->template get_param<int>("WPTM");
-  int tsk = this->bw_tuner_->template get_param<int>("TSK");
-  int rtsn = this->bw_tuner_->template get_param<int>("workgroup_size_0");
-  int rtsm = this->bw_tuner_->template get_param<int>("workgroup_size_1");
+  int wptn = this->fw_tuner_->template get_param<int>("WPTN");
+  int wptm = this->fw_tuner_->template get_param<int>("WPTM");
+  int tsk = this->fw_tuner_->template get_param<int>("TSK");
+  int rtsn = this->fw_tuner_->template get_param<int>("workgroup_size_0");
+  int rtsm = this->fw_tuner_->template get_param<int>("workgroup_size_1");
   int tsm = wptm * rtsm;
   int tsn = wptn * rtsn;
-  int vwm = this->bw_tuner_->template get_param<int>("VWM");
-  int vwn = this->bw_tuner_->template get_param<int>("VWN");
+  int vwm = this->fw_tuner_->template get_param<int>("VWM");
+  int vwn = this->fw_tuner_->template get_param<int>("VWN");
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
@@ -1413,7 +1415,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(this->bw_tuner_, false, false);
+  ss << this->generate_accreg_init(this->fw_tuner_, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -1534,7 +1536,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
 
-  ss << this->generate_gemm_core(this->bw_tuner_, false) << std::endl;
+  ss << this->generate_gemm_core(this->fw_tuner_, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
