@@ -106,7 +106,7 @@ def get_layer_label(layer, rankdir):
                       pooling_types_dict[layer.pooling_param.pool],
                       layer.type,
                       separator,
-                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size._values) else 1,
+                      layer.pooling_param.kernel_size,
                       separator,
                       layer.pooling_param.stride[0] if len(layer.pooling_param.stride._values) > 0 else 1,
                       separator,
