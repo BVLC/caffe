@@ -128,7 +128,7 @@ Layers:
 * [Infogain Loss](layers/infogainloss.html) - a generalization of MultinomialLogisticLossLayer.
 * [Softmax with Loss](layers/softmaxwithloss.html) - computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 * [Sum-of-Squares / Euclidean](layers/euclideanloss.html) - computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
-* [Hinge / Margin](layers/hiddenloss.html) - The hinge loss layer computes a one-vs-all hinge (L1) or squared hinge loss (L2).
+* [Hinge / Margin](layers/hingeloss.html) - The hinge loss layer computes a one-vs-all hinge (L1) or squared hinge loss (L2).
 * [Sigmoid Cross-Entropy Loss](layers/sigmoidcrossentropyloss.html) - computes the cross-entropy (logistic) loss, often used for predicting targets interpreted as probabilities.
 * [Accuracy / Top-k layer](layers/accuracy.html) - scores the output as an accuracy with respect to target -- it is not actually a loss and has no backward step.
 * [Contrastive Loss](layers/contrastiveloss.html)
