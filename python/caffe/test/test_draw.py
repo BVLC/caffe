@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from google import protobuf
+from google.protobuf import text_format
 
 import caffe.draw
 from caffe.proto import caffe_pb2
@@ -29,5 +29,9 @@ class TestDraw(unittest.TestCase):
         for filename in getFilenames():
             net = caffe_pb2.NetParameter()
             with open(filename) as infile:
-                protobuf.text_format.Merge(infile.read(), net)
+                text_format.Merge(infile.read(), net)
             caffe.draw.draw_net(net, 'LR')
+
+
+if __name__ == "__main__":
+    unittest.main()
