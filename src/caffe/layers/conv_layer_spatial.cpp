@@ -589,12 +589,6 @@ cl_int ConvolutionLayerSpatial<float>::convolve(
         kernel.arg(argIdx++, (uint16_t)output_h_);
         const int_tp output_block_w = config->workItem_output[0];
         const int_tp output_block_h = config->workItem_output[1];
-        const int_tp last_block_width = ((output_w_ % output_block_w) == 0) ?
-                                 output_block_w : output_w_ % output_block_w;
-        const int_tp last_block_height =((output_h_ % output_block_h) == 0) ?
-             output_block_h : output_h_ % output_block_h;
-        kernel.arg(argIdx++, (uint16_t)last_block_width);
-        kernel.arg(argIdx++, (uint16_t)last_block_height);
         size_t global_size[3] = { (size_t) (output_w_ + output_block_w - 1)
              / output_block_w, (size_t) (output_h_ + output_block_h - 1)
              / output_block_h, (size_t) config->global_work_size[2]};

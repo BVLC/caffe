@@ -138,9 +138,7 @@ convolve_simd(  // __global float *inputs, __global float* weights, __global flo
     const ushort input_width,
     const ushort input_height,
     const ushort output_width,
-    const ushort output_height,
-    const ushort last_block_width,
-    const ushort last_block_height)
+    const ushort output_height)
 {
   __global float* outputs = outputs_base;
   __global float* inputs = inputs_base;
@@ -305,43 +303,14 @@ convolve_simd(  // __global float *inputs, __global float* weights, __global flo
   uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
   out_addr += or * output_width + oc;
   float bias = biases[(fm % ALIGNED_NUM_FILTERS)];
-#ifndef WRITE_PADDED_VALUES
-  if (or + OUT_BLOCK_HEIGHT < output_height &&
-       oc + OUT_BLOCK_WIDTH < output_width)
-  {
-#endif
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
+      if (r + or >= output_height) break;
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
+        if (c + oc >= output_width) break;
         // this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
           ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);
       }
     }
-#ifndef WRITE_PADDED_VALUES
-  } else if ( or + OUT_BLOCK_HEIGHT < output_height )
-  {
-    for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
-      for(uint_tp c = 0; c < last_block_width; c++) {
-        ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-  else if ( oc + OUT_BLOCK_WIDTH < output_width )
-  {
-    for(uint_tp r = 0; r < last_block_height; r++) {
-      for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
-        ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-  else
-  {
-    for(uint_tp r = 0; r < last_block_height; r++) {
-      for(uint_tp c = 0; c < last_block_width; c++) {
-        ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);
-      }
-    }
-  }
-#endif //#ifndef WRITE_PADDED_VALUES
   }
 }
 #endif

@@ -659,9 +659,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
 "const ushort output_width,",    // NOLINT
-"const ushort output_height,",    // NOLINT
-"const ushort last_block_width,",    // NOLINT
-"const ushort last_block_height)",    // NOLINT
+"const ushort output_height)",    // NOLINT
 "{",    // NOLINT
 "__global float* outputs = outputs_base;",    // NOLINT
 "__global float* inputs = inputs_base;",    // NOLINT
@@ -826,43 +824,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "float bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
-"#ifndef WRITE_PADDED_VALUES",    // NOLINT
-"if (or + OUT_BLOCK_HEIGHT < output_height &&",    // NOLINT
-"oc + OUT_BLOCK_WIDTH < output_width)",    // NOLINT
-"{",    // NOLINT
-"#endif",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
+"if (r + or >= output_height) break;",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
+"if (c + oc >= output_width) break;",    // NOLINT
 "// this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
 "ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"#ifndef WRITE_PADDED_VALUES",    // NOLINT
-"} else if ( or + OUT_BLOCK_HEIGHT < output_height )",    // NOLINT
-"{",    // NOLINT
-"for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
-"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"else if ( oc + OUT_BLOCK_WIDTH < output_width )",    // NOLINT
-"{",    // NOLINT
-"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
-"for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"else",    // NOLINT
-"{",    // NOLINT
-"for(uint_tp r = 0; r < last_block_height; r++) {",    // NOLINT
-"for(uint_tp c = 0; c < last_block_width; c++) {",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
-"#endif //#ifndef WRITE_PADDED_VALUES",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
