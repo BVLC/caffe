@@ -438,6 +438,8 @@ void MKLPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   } else {
     pooling_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
+  caffe_set(bottom[0]->count(), Dtype(0),
+          reinterpret_cast<Dtype *>(pooling_res[dnnResourceDiffSrc]));
 
   PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
