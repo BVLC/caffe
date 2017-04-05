@@ -134,7 +134,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
     bool top_diff_is_prv = top[i]->prv_diff() != NULL;
     if (top_diff_is_prv) {
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, true> > mem_descr
-        = get_mkldnn_prv_descriptor<Dtype, true>(top[0]);
+        = get_mkldnn_prv_descriptor<Dtype, true>(top[i]);
       diff_src_mfmt = static_cast<memory::format>(
           mem_descr->prv_memory_pd()->desc().data.format);
     }
