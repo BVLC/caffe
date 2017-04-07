@@ -98,6 +98,7 @@ def get_layer_label(layer, rankdir):
                       layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
                       separator,
                       layer.convolution_param.dilation[0] if len(layer.convolution_param.dilation) > 0 else 1)
+
     elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
         node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%sdilation: %d"' %\
