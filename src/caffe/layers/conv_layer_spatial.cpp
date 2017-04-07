@@ -1116,13 +1116,17 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
     const Blob<float> &verify_blob) {
   // Initializes unique kernel ID
   kernel_uid_ = 0;
+  std::string viennacl_cache_path = std::getenv("VIENNACL_CACHE_PATH");
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context
+                                    (this->device_->id());
+
+  // Disable viennacl cache mechanism during tuning phase.
+  ctx.cache_path("");
 
   if (this->device_->CheckCapability("cl_intel_subgroups")) {
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
     // Generates static key_
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context
-                                    (this->device_->id());
     int max_compute_units = ctx.current_device().max_compute_units();
     int kernelCnt = 0;
     if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
@@ -1315,6 +1319,7 @@ void ConvolutionLayerSpatial<float>::setup_convolution(
                << 0 << " "  // deprecated
                << bestKernelConfig->use_null_local << " ";
   outputKernel.close();
+  ctx.cache_path(viennacl_cache_path);
 }
 
 template<>
