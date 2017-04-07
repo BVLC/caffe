@@ -17,7 +17,7 @@ updated model, 0\-\>2, and then 0\-\>1, 2\-\>3.
 
 For best performance, P2P DMA access between devices is needed. Without P2P access, for example crossing PCIe root complex, data is copied through host and effective exchange bandwidth is greatly reduced.
 
-Current implementation has a "soft" assumption that the devices being used are homogeneous.  In practice, any devices of the same general class should work together, but performance and total size is limited by the smallest device being used.  e.g. if you combine a TitanX and a GTX980, peformance will be limited by the 980.  Mixing vastly different levels of boards, e.g. Kepler and Fermi, is not supported.
+Current implementation has a "soft" assumption that the devices being used are homogeneous.  In practice, any devices of the same general class should work together, but performance and total size is limited by the smallest device being used.  e.g. if you combine a TitanX and a GTX980, performance will be limited by the 980.  Mixing vastly different levels of boards, e.g. Kepler and Fermi, is not supported.
 
 "nvidia-smi topo -m" will show you the connectivity matrix.  You can do P2P through PCIe bridges, but not across socket level links at this time, e.g. across CPU sockets on a multi-socket motherboard.
 

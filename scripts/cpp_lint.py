@@ -1564,7 +1564,7 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
 caffe_alt_function_list = (
     ('memset', ['caffe_set', 'caffe_memset']),
     ('cudaMemset', ['caffe_gpu_set', 'caffe_gpu_memset']),
-    ('memcpy', ['caffe_copy', 'caffe_memcpy']),
+    ('memcpy', ['caffe_copy']),
     ('cudaMemcpy', ['caffe_copy', 'caffe_gpu_memcpy']),
     )
 
@@ -4460,7 +4460,7 @@ def UpdateIncludeState(filename, include_state, io=codecs):
     io: The io factory to use to read the file. Provided for testability.
 
   Returns:
-    True if a header was succesfully added. False otherwise.
+    True if a header was successfully added. False otherwise.
   """
   headerfile = None
   try:
@@ -4532,7 +4532,7 @@ def CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error,
   # Let's copy the include_state so it is only messed up within this function.
   include_state = include_state.copy()
 
-  # Did we find the header for this file (if any) and succesfully load it?
+  # Did we find the header for this file (if any) and successfully load it?
   header_found = False
 
   # Use the absolute path so that matching works properly.
@@ -4833,7 +4833,7 @@ def ParseArguments(args):
       try:
           _valid_extensions = set(val.split(','))
       except ValueError:
-          PrintUsage('Extensions must be comma seperated list.')
+          PrintUsage('Extensions must be comma separated list.')
 
   if not filenames:
     PrintUsage('No files were specified.')

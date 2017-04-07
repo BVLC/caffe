@@ -1,6 +1,6 @@
 # The train/test net protocol buffer definition
-train_net: "examples/mnist/lenet_auto_train.prototxt"
-test_net: "examples/mnist/lenet_auto_test.prototxt"
+train_net: "mnist/lenet_auto_train.prototxt"
+test_net: "mnist/lenet_auto_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
@@ -21,4 +21,4 @@ display: 100
 max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "examples/mnist/lenet"
+snapshot_prefix: "mnist/lenet"

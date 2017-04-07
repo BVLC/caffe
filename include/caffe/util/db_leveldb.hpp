@@ -14,7 +14,10 @@ namespace caffe { namespace db {
 class LevelDBCursor : public Cursor {
  public:
   explicit LevelDBCursor(leveldb::Iterator* iter)
-    : iter_(iter) { SeekToFirst(); }
+    : iter_(iter) {
+    SeekToFirst();
+    CHECK(iter_->status().ok()) << iter_->status().ToString();
+  }
   ~LevelDBCursor() { delete iter_; }
   virtual void SeekToFirst() { iter_->SeekToFirst(); }
   virtual void Next() { iter_->Next(); }
