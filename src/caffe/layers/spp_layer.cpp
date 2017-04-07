@@ -51,6 +51,11 @@ using std::min;
 using std::max;
 
 template <typename Dtype>
+SPPLayer<Dtype>::~SPPLayer() {
+  std::for_each(split_top_vec_.begin(),split_top_vec_.end(), 
+                                                [](Blob<Dtype>* p){delete p;});
+}
+template <typename Dtype>
 LayerParameter SPPLayer<Dtype>::GetPoolingParam(const int pyramid_level,
       const int bottom_h, const int bottom_w, const SPPParameter spp_param) {
   LayerParameter pooling_param;
@@ -112,6 +117,8 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(bottom_w_, 0) << "Input dimensions cannot be zero.";
 
   pyramid_height_ = spp_param.pyramid_height();
+  std::for_each(split_top_vec_.begin(),split_top_vec_.end(), 
+                                                [](Blob<Dtype>* p){delete p;});
   split_top_vec_.clear();
   pooling_bottom_vecs_.clear();
   pooling_layers_.clear();
@@ -143,13 +150,15 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   for (int i = 0; i < pyramid_height_; i++) {
     // pooling layer input holders setup
-    pooling_bottom_vecs_.push_back(new vector<Blob<Dtype>*>);
+    pooling_bottom_vecs_.push_back(shared_ptr<vector<Blob<Dtype>*> >
+                                                    (new vector<Blob<Dtype>*>));
     pooling_bottom_vecs_[i]->push_back(split_top_vec_[i]);
 
     // pooling layer output holders setup
-    pooling_outputs_.push_back(new Blob<Dtype>());
-    pooling_top_vecs_.push_back(new vector<Blob<Dtype>*>);
-    pooling_top_vecs_[i]->push_back(pooling_outputs_[i]);
+    pooling_outputs_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>()));
+    pooling_top_vecs_.push_back(shared_ptr<vector<Blob<Dtype>*> >(
+                                                    new vector<Blob<Dtype>*>));
+    pooling_top_vecs_[i]->push_back(pooling_outputs_[i].get());
 
     // pooling layer setup
     LayerParameter pooling_param = GetPoolingParam(
@@ -160,17 +169,19 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     pooling_layers_[i]->SetUp(*pooling_bottom_vecs_[i], *pooling_top_vecs_[i]);
 
     // flatten layer output holders setup
-    flatten_outputs_.push_back(new Blob<Dtype>());
-    flatten_top_vecs_.push_back(new vector<Blob<Dtype>*>);
-    flatten_top_vecs_[i]->push_back(flatten_outputs_[i]);
+    flatten_outputs_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>()));
+    flatten_top_vecs_.push_back(shared_ptr<vector<Blob<Dtype>*> >
+                                                    (new vector<Blob<Dtype>*>));
+    flatten_top_vecs_[i]->push_back(flatten_outputs_[i].get());
 
     // flatten layer setup
     LayerParameter flatten_param;
-    flatten_layers_.push_back(new FlattenLayer<Dtype>(flatten_param));
+    flatten_layers_.push_back(shared_ptr<FlattenLayer<Dtype> >
+                                  (new FlattenLayer<Dtype>(flatten_param)));
     flatten_layers_[i]->SetUp(*pooling_top_vecs_[i], *flatten_top_vecs_[i]);
 
     // concat layer input holders setup
-    concat_bottom_vec_.push_back(flatten_outputs_[i]);
+    concat_bottom_vec_.push_back(flatten_outputs_[i].get());
   }
 
   // concat layer setup

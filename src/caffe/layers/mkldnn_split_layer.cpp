@@ -69,7 +69,7 @@ void MKLDNNSplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   this->sizes_src_.resize(dim_src);
   this->strides_src_.resize(dim_src);
   for (size_t d = 0; d < dim_src; ++d) {
-    this->sizes_src_[d] = bottom[0]->shape()[dim_src - d - 1];
+    this->sizes_src_[d] = bottom[0]->shape()[d];
     this->strides_src_[d] = (d == 0) ?
                 1 : this->strides_src_[d-1]*this->sizes_src_[d-1];
   }
@@ -134,7 +134,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
     bool top_diff_is_prv = top[i]->prv_diff() != NULL;
     if (top_diff_is_prv) {
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, true> > mem_descr
-        = get_mkldnn_prv_descriptor<Dtype, true>(top[0]);
+        = get_mkldnn_prv_descriptor<Dtype, true>(top[i]);
       diff_src_mfmt = static_cast<memory::format>(
           mem_descr->prv_memory_pd()->desc().data.format);
     }

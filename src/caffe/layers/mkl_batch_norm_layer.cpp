@@ -401,10 +401,11 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     DLOG(INFO) << "Using cpu_data for top in DnnBatchNorm.";
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(use_global_stats_? batchNormFwdInference : batchNormFwd,
                                                                  BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_MKL("FW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
   CHECK_EQ(e, E_SUCCESS);
 
   if (!use_global_stats_) {
@@ -456,9 +457,10 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
     BatchNorm_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(batchNormBwd, BatchNorm_res);
-  PERFORMANCE_MEASUREMENT_END_MKL("BW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
   CHECK_EQ(e, E_SUCCESS);
 
   if (use_weight_bias_) {

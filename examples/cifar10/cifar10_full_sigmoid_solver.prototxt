@@ -25,4 +25,4 @@ max_iter: 60000
 snapshot: 10000
 snapshot_prefix: "examples/cifar10_full_sigmoid"
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU

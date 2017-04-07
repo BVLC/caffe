@@ -34,6 +34,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+
 PROJECT := caffe
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
@@ -480,17 +481,9 @@ ifeq ($(PERFORMANCE_MONITORING), 1)
 	CXXFLAGS += -DPERFORMANCE_MONITORING
 endif
 
-# MKLDNN configuration
-# detect support for mkl-dnn primitives
-MKLDNN_LDFLAGS=
-MKLDNN_INCLUDE ?= $(MKLDNNROOT)/include
-ifneq ("$(wildcard $(MKLDNN_INCLUDE)/mkldnn.hpp)","")
-	CXXFLAGS += -DMKLDNN_SUPPORTED
-	ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
+include Makefile.mkldnn
+ifeq ($(USE_MKLDNN_AS_DEFAULT_ENGINE), 1)
 	CXXFLAGS += -DUSE_MKLDNN_AS_DEFAULT_ENGINE
-	endif
-	MKLDNN_LDFLAGS+=-lmkldnn
-	MKLDNN_LDFLAGS+=-L$(MKLDNNROOT)/lib -Wl,-rpath,$(MKLDNNROOT)/lib
 endif
 
 # BOOST configuration
@@ -531,7 +524,7 @@ else ifeq ($(BLAS), open)
 	LIBRARIES += openblas
 else
 	# ATLAS
-	ifeq ($(LINUX), 1)
+	ifeq ($(LINUX), 0)
 		ifeq ($(BLAS), atlas)
 			# Linux simply has cblas and atlas
 			LIBRARIES += cblas atlas
@@ -604,7 +597,9 @@ endif
 ##############################
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles warn everything
+	superclean supercleanlist supercleanfiles warn everything mkldnn mkldnn_clean
+
+.DEFAULT_GOAL := all
 
 # Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
 # if no openmp is supported in compiler then openmp compiler flags are not to be updated 
@@ -692,7 +687,7 @@ py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
 $(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX) | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@ $<
-	$(Q)$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
+	$(Q)$(CXX) -std=c++11 -shared -o $@ $(PY$(PROJECT)_SRC) \
 		-o $@ $(LINKFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_SHARED_HARDENING_FLAGS) -l$(LIBRARY_NAME) $(PYTHON_LDFLAGS) \
 		-Wl,-rpath,$(ORIGIN)/../../build/lib
 
@@ -764,7 +759,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
+$(BUILD_DIR)/%.o: %.cpp | mkldnn $(ALL_BUILD_DIRS)
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXX_HARDENING_FLAGS) $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
@@ -833,7 +828,7 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
 
-clean:
+clean: mkldnn_clean
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(OTHER_BUILD_DIR)
 	@- $(RM) -rf $(BUILD_DIR_LINK)

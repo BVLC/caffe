@@ -83,7 +83,13 @@ MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
         bwdb_bias_diff(new MKLDiff<Dtype>()),
         convolutionBwdBias(static_cast<dnnPrimitive_t>(NULL)),
         bwdf_filter_diff_iter(new MKLDiff<Dtype>()),
-        bwdb_bias_diff_iter(new MKLDiff<Dtype>()) {}
+        bwdb_bias_diff_iter(new MKLDiff<Dtype>()) {
+          PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+          PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+          PERFORMANCE_EVENT_ID_RESET(perf_id_bw_prop_);
+          PERFORMANCE_EVENT_ID_RESET(perf_id_bw_diff_);
+          PERFORMANCE_EVENT_ID_RESET(perf_id_bw_bias_);
+        }
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::compute_output_shape() {
@@ -209,29 +215,6 @@ void MKLConvolutionLayer<Dtype>::Init(
       convolutionStrides,
       inputOffset,
       dnnBorderZeros);
-  }
-
-  // ---- Blobs Reshape -----------------------------------
-  // Initialize and fill the weights:
-  // output channels x input channels per-group x kernel height x kernel width
-  vector<int> weight_shape(2);
-  weight_shape[0] = oc;
-  weight_shape[1] = ic / g;
-  
-  for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    weight_shape.push_back(this->kernel_shape_.cpu_data()[i]);
-  }
-  Blob<Dtype> tmpBlob(weight_shape);
-  caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(), tmpBlob.mutable_cpu_data());
-  this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
-  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[0]->mutable_cpu_data());
-  // If necessary, initialize and fill the biases.
-  if (this->bias_term_) {
-    vector<int> bias_shape(this->bias_term_, this->num_output_);
-	tmpBlob.Reshape(bias_shape);
-    caffe_copy(this->blobs_[1]->count(), this->blobs_[1]->cpu_data(), tmpBlob.mutable_cpu_data());
-	  this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
-	  caffe_copy(tmpBlob.count(), tmpBlob.cpu_data(), this->blobs_[1]->mutable_cpu_data());
   }
 
   CHECK_EQ(status, 0)
@@ -395,7 +378,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                        this->channels_ == bottom[0]->channels() &&
                        this->num_ == bottom[0]->num()) ? false : true;
 
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 
   if (reinitialize == true) {
     Init(bottom, top);
@@ -492,9 +475,10 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
   } else {
     res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
   }
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
-  PERFORMANCE_MEASUREMENT_END_MKL("FW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
   CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
 }
@@ -546,9 +530,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       res_convolutionBwdData[dnnResourceDiffSrc] =
               bottom[0]->mutable_cpu_diff();
     }
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_prop_,
+        PERFORMANCE_MKL_NAME_DETAILED("BW", "_prop"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
-    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_prop");
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_prop_);
 
 #ifdef USE_MLSL
     this->on_delinp_ready(propagate_down);
@@ -590,9 +576,10 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
     }
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
-    PERFORMANCE_MEASUREMENT_END_MKL("BW");
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
     CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
 
@@ -625,10 +612,12 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
         }
       }
 
+      PERFORMANCE_EVENT_ID_INIT(perf_id_bw_diff_,
+          PERFORMANCE_MKL_NAME_DETAILED("BW", "_diff"));
       PERFORMANCE_MEASUREMENT_BEGIN();
       status = dnnExecute<Dtype>(bwdf2fwd_filter_diff->convert_from_int,
               convert_resources);
-      PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_diff");
+      PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_diff_);
 
       CHECK_EQ(status, 0) << "Conversion failed with status " << status;
     }
@@ -668,9 +657,11 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
       }
     }
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_bias_,
+        PERFORMANCE_MKL_NAME_DETAILED("BW", "_bias"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
-    PERFORMANCE_MEASUREMENT_END_MKL_DETAILED("BW", "_bias");
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_bias_);
 
     CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
 

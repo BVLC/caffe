@@ -301,9 +301,10 @@ void MKLLRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   lrn_res[dnnResourceWorkspace] = lrn_buffer_;
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnFwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END_MKL("FW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }
@@ -343,9 +344,10 @@ void MKLLRNLayer<Dtype>::CrossChannelBackward_cpu(
     lrn_res[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
   }
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKL_NAME("BW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
   e = dnnExecute<Dtype>(lrnBwd, lrn_res);
-  PERFORMANCE_MEASUREMENT_END_MKL("BW");
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
   CHECK_EQ(e, E_SUCCESS);
 }

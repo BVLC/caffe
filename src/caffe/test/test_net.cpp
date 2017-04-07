@@ -2616,7 +2616,8 @@ TYPED_TEST(NetTestCPU, TestForwardReshapeForward) {
     input_blob->Reshape(1, 3, 1280, 720);
     this->net_->Forward();
 }
-TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
+#if 0
+TYPED_TEST(NetTest, TestTotalForwardReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
   // them, check that forward and backward both run and the results
@@ -2640,7 +2641,7 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
       "   name: 'data'"
       "   type: 'DummyData'"
       "   dummy_data_param {"
-      "     shape: { dim: 2 dim: 3 dim: 12 dim: 10 }"
+      "     shape: { dim: 3 dim: 3 dim: 13 dim: 11 }"
       "     data_filler {"
       "       type: 'constant'"
       "       value: 0.01"
@@ -2675,13 +2676,77 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
       "     }"
       "     bias_term: false"
       "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu1'"
+      "   name: 'relu1'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'conv'"
+      "   top: 'relu2'"
+      "   name: 'relu2'"
+      "   type: 'ReLU'"
+      "   relu_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'relu1'"
+      "   bottom: 'relu2'"
+      "   top: 'concat'"
+      "   name: 'concat'"
+      "   type: 'Concat'"
+      "   concat_param {"
+      "     engine: MKL2017 "
+      "     "
+      "   }"
+      " } "
+      " layer {"
+      "   bottom: 'concat'"
+      "   top: 'lrn'"
+      "   name: 'LRN'"
+      "   type: 'LRN'"
+      "   lrn_param {"
+      "     engine: MKL2017 "
+      "     local_size: 5"
+      "     alpha: 0.0001"
+      "     beta: 0.75"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'lrn'"
+      "   top: 'pooling'"
+      "   name: 'Pooling'"
+      "   type: 'Pooling'"
+      "   pooling_param {"
+      "     engine: MKL2017 "
+      "     kernel_size: 5"
+      "     stride: 2"
+      "     pool: MAX"
+      "   }"
+      " }"
+      " layer {"
+      "   bottom: 'pooling'"
+      "   top: 'bn'"
+      "   name: 'BatchNorm'"
+      "   type: 'BatchNorm'"
+      "   batch_norm_param {"
+      "     engine: MKL2017 "
+      "   }"
       " }";
     this->InitNetFromProtoString(proto);
   shared_ptr<Blob<Dtype> > input_blob = this->net_->blob_by_name("data");
   Blob<Dtype>* output_blob = this->net_->output_blobs()[0];
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
       blob1.width());
-  this->net_->Reshape();
+	  
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->Forward();
   // call backward just to make sure it runs
@@ -2693,7 +2758,7 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
       blob2.width());
-  this->net_->Reshape();
+	  
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->Forward();
   this->net_->Backward();
@@ -2704,7 +2769,7 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
 
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
       blob1.width());
-  this->net_->Reshape();
+	  
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->Forward();
   this->net_->Backward();
@@ -2714,7 +2779,7 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
       blob2.width());
-  this->net_->Reshape();
+	  
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->Forward();
   this->net_->Backward();
@@ -2735,7 +2800,7 @@ TYPED_TEST(NetTest, TestConvolutionForwardReshape) {
   EXPECT_FALSE(same_spatial_shape);
 }
 #endif
-
+#endif
 
 
 TYPED_TEST(NetTest, TestSkipPropagateDown) {

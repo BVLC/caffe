@@ -132,7 +132,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   if (filtered_param.engine() == "")
     filtered_param.set_engine("MKLDNN");
 #endif
-
+  engine_name_ = filtered_param.engine();
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
 
@@ -152,9 +152,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CompileNet(param_with_splits, &param);
 
   // Printing processed model
-  LOG_IF(INFO, Caffe::root_solver())
-      << "Initializing net from parameters: " << std::endl
-      << param.DebugString();
+  if (Caffe::root_solver()) {
+    LOG(INFO) << "Initializing net from parameters: " << std::endl;
+    LOG(INFO).flush();
+    fflush(0);
+    param.PrintDebugString();
+    fflush(0);
+  }
 
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
@@ -178,7 +182,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
-    if (param.engine() != "")
+    if (param.engine() != "" && param.layer(layer_id).engine() == "")
       param.mutable_layer(layer_id)->set_engine(param.engine());
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
@@ -596,6 +600,10 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
                                scale_param().bias_term();
         layer_param->mutable_batch_norm_param()->
         set_bias_term(scale_bias_term);
+        if (consumer_layer_param.blobs_size() == 2) {
+          layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(0));
+          layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(1));
+        }
       }
     }
 
@@ -632,17 +640,30 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
 
     // If current layer is Convolution of MKLDNN engine..
+    /*
+    //Old Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || ((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos)) || ((G == "" && H == 0 && I == string::npos)))))
+    //New tmp Structure:    if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos))) || ((G == "" && H == 0 && I == string::npos)))))
+    //New Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && (E == 0 && F == string::npos)) || (G == "" && H == 0 && I == string::npos))))
+    //Old Structure:
+    //if ((A == TEST) &&
+    //    (B == 0) &&
+    //   ((C == ConvolutionParameter_Engine_MKLDNN)
+    //   || ((D == ConvolutionParameter_Engine_DEFAULT) &&
+    //        ((E == 0
+    //        && F == string::npos)) ||
+    //        ((G == "" &&
+    //          H == 0 &&
+    //          I == string::npos)))))
+    */
     if ((param.state().phase() == TEST) && 
         (layer_param->type().compare("Convolution") == 0) &&
-       ((layer_param->convolution_param().engine() ==
-         ConvolutionParameter_Engine_MKLDNN)
-       || ((layer_param->convolution_param().engine() ==
-           ConvolutionParameter_Engine_DEFAULT) &&
-            ((param.engine().compare(0, 6, "MKLDNN") == 0
+       ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
+       || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0
             && param.engine().find(":DLA", 6) == string::npos)) ||
-            ((param.engine() == "" &&
+            (param.engine() == "" &&
               layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos))))) {
+              layer_param->engine().find(":DLA", 6) == string::npos)))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -652,16 +673,28 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer lauyer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
+      /*
+      //Old Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || ((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos)) || ((F == "" && G == 0 && H == string::npos)))))
+      //New tmp Structure:  if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos))) || ((F == "" && G == 0 && H == string::npos)))))
+      //New Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && (D == 0 && E == string::npos)) || (F == "" && G == 0 && H == string::npos))))
+      //Old Structure:
+      //if ((A == 0) &&
+      //  ((B == ReLUParameter_Engine_MKLDNN)
+      //  || ((C == ReLUParameter_Engine_DEFAULT) &&
+      //      ((D == 0
+      //      && E == string::npos)) ||
+      //      ((F == "" &&
+      //        G == 0 &&
+      //        H == string::npos)))))
+      */
       if ((consumer_layer_param.type().compare("ReLU") == 0) &&
-        ((consumer_layer_param.relu_param().engine() ==
-          ReLUParameter_Engine_MKLDNN)
-        || ((consumer_layer_param.relu_param().engine() ==
-            ReLUParameter_Engine_DEFAULT) &&
-            ((param.engine().compare(0, 6, "MKLDNN") == 0
+        ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
+        || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0
             && param.engine().find(":DLA", 6) == string::npos)) ||
-            ((param.engine() == "" &&
+            (param.engine() == "" &&
               layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos))))) {
+              layer_param->engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
         const string& scale_top_blob_name = consumer_layer_param.top(0);
@@ -1219,7 +1252,12 @@ void Net<Dtype>::Reshape() {
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
+void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
+  NetParameter param_tmp = param_inp;
+  param_tmp.set_engine(engine_name_);
+  NetParameter param;
+  CompileNet(param_tmp, &param);
+
   int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layer(i);
