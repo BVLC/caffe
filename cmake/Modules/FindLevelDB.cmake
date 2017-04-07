@@ -5,14 +5,20 @@
 #  LevelDB_FOUND     - True if LevelDB found.
 
 # Look for the header file.
-find_path(LevelDB_INCLUDE NAMES leveldb/db.h
-                          PATHS $ENV{LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
-                          DOC "Path in which the file leveldb/db.h is located." )
+if(MSVC)
+  find_package(LevelDB NO_MODULE)
+  set(LevelDB_INCLUDE ${LevelDB_INCLUDE_DIRS})
+  set(LevelDB_LIBRARY ${LevelDB_LIBRARIES})
+else()
+  find_path(LevelDB_INCLUDE NAMES leveldb/db.h
+                            PATHS $ENV{LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
+                            DOC "Path in which the file leveldb/db.h is located." )
 
-# Look for the library.
-find_library(LevelDB_LIBRARY NAMES leveldb
-                             PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
-                             DOC "Path to leveldb library." )
+  # Look for the library.
+  find_library(LevelDB_LIBRARY NAMES leveldb
+                              PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
+                              DOC "Path to leveldb library." )
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LevelDB DEFAULT_MSG LevelDB_INCLUDE LevelDB_LIBRARY)
