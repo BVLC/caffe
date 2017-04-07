@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef MKLDNN_SUPPORTED
 #include "caffe/mkldnn_memory.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
@@ -129,7 +130,9 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     CHECK_EQ(this->_cpu_ptr, cpu_ptr);
     create_reorder_to_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
-    this->_reorder_usr2prv.submit();;
+    PERFORMANCE_MEASUREMENT_BEGIN();
+    this->_reorder_usr2prv.submit();
+    PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
 
 template <typename Dtype, bool is_diff>
@@ -159,7 +162,9 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
         return;
     create_reorder_from_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
+    PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_prv2usr.submit();
+    PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
 
 template <typename Dtype, bool is_diff>
@@ -181,7 +186,9 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<prim
         return;
     create_reorder_from_extprv(aprimitive);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
+    PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_extprv2prv.submit();
+    PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
 
 

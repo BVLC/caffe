@@ -296,7 +296,10 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     poolingFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>
@@ -428,7 +431,10 @@ void MKLDNNPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write();
 
-    poolingBwd.submit();  
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
+    poolingBwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 }
 
 #ifdef CPU_ONLY

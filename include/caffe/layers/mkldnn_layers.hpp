@@ -53,6 +53,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/mkldnn_memory.hpp"
 #include "mkldnn.hpp"
 
+#include "caffe/util/performance.hpp"
+
 using namespace mkldnn;
 
 namespace caffe {
@@ -69,7 +71,11 @@ public:
         , mean_memory(), variance_memory()
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
         , output_memory(), bwd_bottom_diff_memory()
-        , input_primitive(), bwd_top_diff_primitive() {}
+        , input_primitive(), bwd_top_diff_primitive() 
+        {
+          PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+          PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+    }
     ~MKLDNNBatchNormLayer() {}
 
 protected:
@@ -103,6 +109,9 @@ private:
     int32_t num_, width_, height_, channels_;
     Dtype eps_, moving_average_fraction_;
     bool use_weight_bias_, bias_term_, use_global_stats_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // =====  MKLDNNConvolutionLayer =======================================
@@ -144,6 +153,10 @@ private:
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_weights_);
 };
 
 // =====  MKLDNNInnerProductLayer =======================================
@@ -182,6 +195,10 @@ private:
                     , bwdd_top_diff_primitive, bwdd_weights_data_primitive
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t w_, h_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_weights_);
 };
 
 
@@ -223,6 +240,9 @@ private:
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     Dtype alpha_, beta_, k_;
     int size_, num_, width_, height_, channels_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // ===== MKLDNNPoolingLayer =======================================
@@ -242,7 +262,10 @@ public:
             , kernel_w_(0), kernel_h_(0), stride_w_(0), stride_h_(0)
             , pad_t_(0),pad_b_(0), pad_l_(0), pad_r_(0)
             , global_pooling_(false)
-            {}
+            {
+              PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+              PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+            }
     ~MKLDNNPoolingLayer() {}
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -283,6 +306,9 @@ private:
     int32_t  pad_t_, pad_b_, pad_l_, pad_r_;
     Blob<uint32_t> max_idx_;
     bool global_pooling_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // =====  MKLDNNReLULayer =======================================
@@ -303,7 +329,10 @@ public:
     , fwd_top_data_memory(), bwd_bottom_diff_memory()
     , fwd_bottom_data_primitive(), bwd_top_diff_primitive()
     , num_(0), width_(0), height_(0), channels_(0)
-  {}
+  {
+    PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+  }
   ~MKLDNNReLULayer() {}
   
 protected:
@@ -329,6 +358,9 @@ private:
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     int32_t num_, width_, height_, channels_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // ===== MKLDNNConcatLayer ======================================
@@ -340,6 +372,8 @@ public:
             concatFwd_pd(), fwd_output_memory(),
             bwd_reorder_input_memory(), bwd_reorder_output_memory(),
             fwd_top_data(), fwd_bottom_data(), split_channels() {
+              PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+              PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -373,6 +407,9 @@ private:
 
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // ===== MKLDNNSplitLayer ======================================
@@ -383,6 +420,7 @@ public:
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
               splitBwd_pd_(), bwd_bottom_diff_memory_()
             {
+              PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
     ~MKLDNNSplitLayer();
 
@@ -410,6 +448,8 @@ private:
     vector<shared_ptr<primitive>> bwd_top_diff_primitives_;
     vector<primitive::at> bwd_top_diffs_primitives_at_;
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_top_diffs_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };
 
 // =====  MKLDNNEltwiseLayer =======================================
@@ -424,7 +464,9 @@ public:
     , fwd_bottom_data_primitives_()
     , num_(0), width_(0), height_(0), channels_(0)
     , num_bottoms_(0)
-  {}
+  {
+    PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+  }
   ~MKLDNNEltwiseLayer() {}
 
 protected:
@@ -459,6 +501,8 @@ private:
     int32_t num_, width_, height_, channels_;
     int32_t num_bottoms_;
     bool stable_prod_grad_;
+
+    PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
 };
 
 
