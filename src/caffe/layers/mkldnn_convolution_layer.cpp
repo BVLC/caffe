@@ -66,6 +66,9 @@ MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& para
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
             , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
 {
+  PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+  PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+  PERFORMANCE_EVENT_ID_RESET(perf_id_bw_weights_);
 }
 
 template <typename Dtype>
@@ -271,7 +274,10 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     convFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 
@@ -444,7 +450,10 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         bwdd_weights_data->sync_before_read();
         bwdd_bottom_diff->sync_before_write();
 
+        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+        PERFORMANCE_MEASUREMENT_BEGIN();
         convBwdData.submit();
+        PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
     }
     if (this->param_propagate_down(0)) {
         // making reorders if needed.
@@ -456,7 +465,11 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
             CHECK(bwdw_bias_diff);
             bwdw_bias_diff->sync_before_write();
         }
+        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_weights_,
+          PERFORMANCE_MKLDNN_NAME_DETAILED("BW", "_weights"));
+        PERFORMANCE_MEASUREMENT_BEGIN();
         convBwdWeights.submit();
+        PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_weights_);
     }
 }
 

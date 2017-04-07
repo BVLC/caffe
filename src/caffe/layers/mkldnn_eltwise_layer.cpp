@@ -221,7 +221,10 @@ void MKLDNNEltwiseLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom, 
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     eltwiseFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>

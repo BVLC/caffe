@@ -86,6 +86,9 @@ MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(
             w_(0),
             h_(0)
 {
+  PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+  PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
+  PERFORMANCE_EVENT_ID_RESET(perf_id_bw_weights_);
 }
 
 template <typename Dtype>
@@ -232,7 +235,10 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     ipFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>
@@ -382,7 +388,10 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
         bwdd_weights_data->sync_before_read();
         bwdd_bottom_diff->sync_before_write();
 
+        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+        PERFORMANCE_MEASUREMENT_BEGIN();
         ipBwdData.submit();
+        PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
     }
     if (this->param_propagate_down(0)) {
         // making reorders if needed.
@@ -394,7 +403,11 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
             CHECK(bwdw_bias_diff);
             bwdw_bias_diff->sync_before_write();
         }
+        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_weights_,
+          PERFORMANCE_MKLDNN_NAME_DETAILED("BW", "_weights"));
+        PERFORMANCE_MEASUREMENT_BEGIN();
         ipBwdWeights.submit();
+        PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_weights_);
     }
 }
 

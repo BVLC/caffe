@@ -100,6 +100,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_MKL_NAME(prefix) \
   (std::string(prefix) + "_mkl_" + this->layer_param_.name()).c_str()
 
+#define PERFORMANCE_MKLDNN_NAME_DETAILED(prefix, suffix)        \
+  (std::string(prefix) + "_mkldnn_" + this->layer_param_.name() \
+    + std::string(suffix)).c_str()
+
+#define PERFORMANCE_MKLDNN_NAME(prefix) \
+  (std::string(prefix) + "_mkldnn_" + this->layer_param_.name()).c_str()
+
 #else
 #define PERFORMANCE_EVENT_ID_DECL(id_name)
 #define PERFORMANCE_EVENT_ID_RESET(id_name)
@@ -112,6 +119,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_INIT_MONITOR()
 #define PERFORMANCE_MEASUREMENT_END_MKL(prefix)
 #define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix)
+#define PERFORMANCE_MKL_NAME_DETAILED(prefix, suffix)
+#define PERFORMANCE_MKL_NAME(prefix)
+#define PERFORMANCE_MKLDNN_NAME_DETAILED(prefix, suffix)
+#define PERFORMANCE_MKLDNN_NAME(prefix)
 #endif
 
 #ifdef PERFORMANCE_MONITORING
@@ -475,11 +486,11 @@ namespace performance {
         GetTimePercentage(total_data_layer_time_));
       Log::Write("Weight update", total_weights_update_time_,
         GetTimePercentage(total_weights_update_time_));
-      Log::Write("Non-MKL events", total_non_mkl_time_,
+      Log::Write("Non-MKL(DNN) events", total_non_mkl_time_,
         GetTimePercentage(total_non_mkl_time_));
-      Log::Write("MKL conversions", total_mkl_conversions_time_,
+      Log::Write("MKL(DNN) conversions", total_mkl_conversions_time_,
         GetTimePercentage(total_mkl_conversions_time_));
-      Log::Write("MKL events", total_mkl_time_,
+      Log::Write("MKL(DNN) events", total_mkl_time_,
         GetTimePercentage(total_mkl_time_));
       Log::Write("Framework", framework_time,
         GetTimePercentage(framework_time));
@@ -525,6 +536,10 @@ namespace performance {
         unsigned mkl_conv_id = event_name_id_map_["mkl_conversion"];
         total_mkl_conversions_time_ =
           events_[mkl_conv_id].GetTotalProcessTime();
+      } else if (event_name_id_map_.count("mkldnn_conversion") > 0) {
+        unsigned mkldnn_conv_id = event_name_id_map_["mkldnn_conversion"];
+        total_mkl_conversions_time_ =
+          events_[mkldnn_conv_id].GetTotalProcessTime();
       } else {
         total_mkl_conversions_time_ = 0;
       }

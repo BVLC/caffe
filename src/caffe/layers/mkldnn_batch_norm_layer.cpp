@@ -280,7 +280,10 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
         }
     }
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     BatchNormFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
     if (this->phase_ == TRAIN && !use_global_stats_) {
         // compute and save moving average
@@ -398,7 +401,10 @@ void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // update bottom that head at prv
     bwd_bottom_diff->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     BatchNormBwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
     /* FIXME: this wouldn't work with lazy stream */
     if (use_weight_bias_) {

@@ -148,7 +148,10 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write(inplace);
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     reluFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>
@@ -240,11 +243,14 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     if (reluBwd_pd == NULL) {
         InitReLUBwd(top, propagate_down, bottom);
     }
-    
+
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write(inplace);
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     reluBwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 }
 
 #ifdef CPU_ONLY

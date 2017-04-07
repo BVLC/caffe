@@ -233,7 +233,10 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // update top that head at prv
   fwd_top_data->sync_before_write();
 
+  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+  PERFORMANCE_MEASUREMENT_BEGIN();
   concatFwd.submit();
+  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>
@@ -247,7 +250,10 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   bwd_top_diff->sync_before_read();
   for (auto i = 0; i < num_concats_; ++i) {
     bwd_bottom_diff[i]->sync_before_write();
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     reorders[i].submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
   }
 
 }
