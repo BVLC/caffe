@@ -46,7 +46,6 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_relu_forward(count, WrapHandle((cl_mem) bottom_data, &ctx),
                           WrapHandle((cl_mem) top_data, &ctx), negative_slope),
         ctx.get_queue());
-    ctx.get_queue().finish();
 #endif  // USE_GREENTEA
   }
   // << " count: " << count << " bottom_data: "
@@ -99,7 +98,6 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                              WrapHandle((cl_mem) bottom_diff, &ctx),
                              negative_slope),
           ctx.get_queue());
-      ctx.get_queue().finish();
 #endif  // USE_GREENTEA
     }
   }

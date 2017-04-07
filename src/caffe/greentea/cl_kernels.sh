@@ -169,6 +169,10 @@ echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype2 double2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype4 double4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype8 double8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype16 double16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
@@ -237,10 +241,18 @@ echo "  ss << definitions_32 << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "  if (std::is_same<Dtype, float>::value) {" >> $SOURCE
 echo "    ss << \"#define Dtype float\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype2 float2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype4 float4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype8 float8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype16 float16\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define TYPE TYPE_FLOAT\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  } else {" >> $SOURCE
 echo "    ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype double\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype2 double2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype4 double4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype8 double8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype16 double16\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define TYPE TYPE_DOUBLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  for (int j = 0; j < cl_kernels[index].size(); ++j) {" >> $SOURCE
