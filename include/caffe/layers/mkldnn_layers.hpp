@@ -71,7 +71,7 @@ public:
         , mean_memory(), variance_memory()
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
         , output_memory(), bwd_bottom_diff_memory()
-        , input_primitive(), bwd_top_diff_primitive() 
+        , input_primitive(), bwd_top_diff_primitive()
         {
           PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
           PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -334,7 +334,7 @@ public:
     PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
   }
   ~MKLDNNReLULayer() {}
-  
+
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -497,7 +497,7 @@ private:
 
     EltwiseParameter_EltwiseOp op_;
     vector<Dtype> coeffs_;
-    Blob<int> max_idx_;    
+    Blob<int> max_idx_;
     int32_t num_, width_, height_, channels_;
     int32_t num_bottoms_;
     bool stable_prod_grad_;

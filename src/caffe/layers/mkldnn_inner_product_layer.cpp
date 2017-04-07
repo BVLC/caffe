@@ -403,7 +403,7 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
             CHECK(bwdw_bias_diff);
             bwdw_bias_diff->sync_before_write();
         }
-        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_weights_, 
+        PERFORMANCE_EVENT_ID_INIT(perf_id_bw_weights_,
           PERFORMANCE_MKLDNN_NAME_DETAILED("BW", "_weights"));
         PERFORMANCE_MEASUREMENT_BEGIN();
         ipBwdWeights.submit();

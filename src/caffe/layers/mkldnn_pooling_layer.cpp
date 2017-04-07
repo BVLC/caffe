@@ -427,7 +427,7 @@ void MKLDNNPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     }
     if (NULL == poolingBwd_pd)
         InitPoolingBwd(top, propagate_down, bottom);
-    
+
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write();
 

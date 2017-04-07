@@ -243,7 +243,7 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     if (reluBwd_pd == NULL) {
         InitReLUBwd(top, propagate_down, bottom);
     }
-    
+
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write(inplace);
 
