@@ -454,7 +454,7 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 
 void SyncedMemory::check_device() {
 #ifndef CPU_ONLY
-#ifdef DEBUG
+#if defined(DEBUG) && defined(USE_CUDA)
   int device;
   cudaGetDevice(&device);
   CHECK(device == device_);
