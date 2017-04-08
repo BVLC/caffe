@@ -82,13 +82,14 @@ If CUDA is not installed Caffe will default to a CPU_ONLY build. If you have CUD
 
 ### Using the Python interface
 
-The recommended Python distribution is Anaconda or Miniconda. To successfully build the python interface you need to install the following packages:
+The recommended Python distribution is Anaconda or Miniconda. To successfully build the python interface you need to add the following conda channels:
 ```
-conda install --yes numpy scipy matplotlib scikit-image pip six
+conda config --add channels conda-forge
+conda config --add channels willyd
 ```
-also you will need a protobuf python package that is compatible with pre-built dependencies. This package can be installed this way:
+and install the following packages:
 ```
-conda install --yes --channel willyd protobuf==3.1.0
+conda install --yes cmake ninja numpy scipy protobuf==3.1.0 six scikit-image pyyaml pydotplus graphviz
 ```
 If Python is installed the default is to build the python interface and python layers. If you wish to disable the python layers or the python build use the CMake options `-DBUILD_python_layer=0` and `-DBUILD_python=0` respectively. In order to use the python interface you need to either add the `C:\Projects\caffe\python` folder to your python path of copy the `C:\Projects\caffe\python\caffe` folder to your `site_packages` folder.
 
