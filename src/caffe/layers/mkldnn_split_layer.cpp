@@ -204,7 +204,10 @@ void MKLDNNSplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     bwd_bottom_diff_->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     splitBwd_.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 }
 
 #ifdef CPU_ONLY

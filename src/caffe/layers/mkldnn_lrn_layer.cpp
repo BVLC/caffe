@@ -56,6 +56,8 @@ MKLDNNLRNLayer<Dtype>::MKLDNNLRNLayer(const LayerParameter& param)
 		, alpha_(0), beta_(0), k_(0)
 		, size_(0), num_(0), width_(0), height_(0), channels_(0)
 {
+  PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
+  PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
 }
 
 template <typename Dtype>
@@ -213,7 +215,10 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     lrnFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>
@@ -318,7 +323,10 @@ void MKLDNNLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write();
 
+    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
     lrnBwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 }
 
 #ifdef CPU_ONLY
