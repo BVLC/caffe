@@ -581,11 +581,9 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
         ((layer_param->type().compare("BatchNorm") == 0) &&
          ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_MKLDNN)
           || (((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
-               (param.engine().compare(0, 6, "MKLDNN") == 0
-                && param.engine().find(":DLA", 6) == string::npos)) ||
+               (param.engine().compare(0, 6, "MKLDNN") == 0)) ||
               (param.engine() == "" &&
-               layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-               layer_param->engine().find(":DLA", 6) == string::npos))))) {
+               layer_param->engine().compare(0, 6, "MKLDNN") == 0))))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,
                        layer_param->top(0),
