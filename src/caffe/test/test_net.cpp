@@ -3220,6 +3220,70 @@ TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution) {
 #endif
 
 #ifdef MKLDNN_SUPPORTED
+// If BatchNorm of engine MKLDNN
+// produce blob consumed by
+// Scale Layer then Scale Layer can be dropped
+TEST_F(CompileNetTest, TestCompileNetBatchNormMKLDNN) {
+    const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'bn' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      " bottom: 'bn' "
+      " top: 'sc' "
+      " name: 'sc' "
+      " type: 'Scale' "
+      " scale_param { "
+      "   bias_term: true "
+      " }"
+      "}"
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'bn' "
+      "  top: 'sc' "
+      "  type: 'BatchNorm' "
+      "  batch_norm_param { "
+      "   engine: MKLDNN "
+      "   bias_term: true "
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'sc' "
+      "  bottom: 'label' "
+      "} ";
+  this->RunCompilerNetTest(input_proto, output_proto);
+}
+
 // If Convolution of engine MKLDNN
 // is followed by ReLU of engine MKLDNN
 TEST_F(CompileNetTest, TestCompileNetConvolution) {
