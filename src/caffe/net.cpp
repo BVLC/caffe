@@ -564,13 +564,26 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
     // then we can remove Scale layer
     // and rename BatchNorm top blob after deleted Scale's top
 
-    // If current layer is BatchNorm of MKL2017 engine..
-    if ((layer_param->type().compare("BatchNorm") == 0) &&
+    // Extension of optimization rule 1:
+    // - If we are having engine MKLDNN and Scale layer within a model
+    // and input bottom comes from  BatchNorm of engine MKLDNN
+    // then we can remove Scale layer
+    // and rename BatchNorm top blob after deleted Scale's top
+
+        // If current layer is BatchNorm of MKL2017 engine..
+    if (((layer_param->type().compare("BatchNorm") == 0) &&
        ((layer_param->batch_norm_param().engine() ==
          BatchNormParameter_Engine_MKL2017)
        || ((layer_param->batch_norm_param().engine() ==
            BatchNormParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKL2017") == 0))) {
+            param.engine().compare("MKL2017") == 0))) ||
+        // If current layer is BatchNorm of MKLDNN engine..
+        ((layer_param->type().compare("BatchNorm") == 0) &&
+         ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_MKLDNN)
+          || (((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
+               (param.engine().compare(0, 6, "MKLDNN") == 0)) ||
+              (param.engine() == "" &&
+               layer_param->engine().compare(0, 6, "MKLDNN") == 0))))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,
                        layer_param->top(0),
@@ -671,7 +684,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
                                     consumer_layer_params.size() > 0 ?
                                     *(consumer_layer_params[0]) : *layer_param;
 
-      // Consumer lauyer of blob produced by Conv
+      // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
       /*
       //Old Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || ((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos)) || ((F == "" && G == 0 && H == string::npos)))))
@@ -701,7 +714,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
         // Mark Consumer layer (its name) as the one marked for dropping
         layers_to_drop.insert(consumer_layer_param.name());
 
-        // Replace BatchNorm top name with Scale top name
+        // Replace Convolution top name with ReLU top name
         convolution_top_blob_name.resize(scale_top_blob_name.size());
         convolution_top_blob_name.replace(0,
                                         scale_top_blob_name.size(),
