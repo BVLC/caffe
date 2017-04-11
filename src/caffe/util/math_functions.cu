@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "caffe/common.hpp"
+#include "caffe/util/device_alternate.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

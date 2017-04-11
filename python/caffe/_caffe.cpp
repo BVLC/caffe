@@ -6,14 +6,17 @@
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
+#include <boost/python/slice.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
 
 // these need to be included after boost on OS X
+#include <algorithm> // NOLINT
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
 #include <fstream>  // NOLINT
 
+#include "caffe/array/array.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
@@ -39,7 +42,34 @@
   } \
 } while (0)
 
+#if PY_MAJOR_VERSION < 3
+#define PyLong_AS_LONG(val) PyInt_AS_LONG(val)
+#define PyLong_AsLong(val) PyInt_AsLong(val)
+#define PyLong_Check(val) PyInt_Check(val)
+#endif
+
 namespace bp = boost::python;
+
+// Define the ellipsis object in boost python
+namespace boost { namespace python {
+struct ellipsis : public object {
+  BOOST_PYTHON_FORWARD_OBJECT_CONSTRUCTORS(ellipsis, object)
+};
+// bp::numeric::array leads to unexplained segfaults at program exit, instead
+// we wrap the numpy array in ndarray
+struct ndarray : public object {
+  BOOST_PYTHON_FORWARD_OBJECT_CONSTRUCTORS(ndarray, object)
+};
+namespace converter {
+template<> struct object_manager_traits<ellipsis>
+  : pytype_object_manager_traits<&PyEllipsis_Type, slice> {};
+template <> struct object_manager_traits<ndarray> {
+  BOOST_STATIC_CONSTANT(bool, is_specialized = true);
+  static bool check(PyObject* x) { return PyArray_Check(x); }
+};
+}  // namespace converter
+}  // namespace python
+}  // namespace boost
 
 namespace caffe {
 
@@ -339,6 +369,123 @@ class NCCL {
 };
 #endif
 
+namespace detail {
+struct ArrayShape_to_tuple {
+  static PyObject *convert(const ArrayShape &p) {
+    PyObject *r = PyTuple_New(p.size());
+    for (size_t i = 0; i < p.size(); i++)
+      PyTuple_SET_ITEM(r, i, PyLong_FromLong(p[i]));
+    return r;
+  }
+  static PyTypeObject const *get_pytype() {
+    return &PyTuple_Type;
+  }
+};
+}  // namespace detail
+struct ArrayShape_to_tuple {
+  ArrayShape_to_tuple() {
+    bp::to_python_converter < ArrayShape, detail::ArrayShape_to_tuple
+#ifdef BOOST_PYTHON_SUPPORTS_PY_SIGNATURES
+    , true
+#endif
+    > ();
+  }
+};
+
+struct ArrayShape_from_tuple {
+  ArrayShape_from_tuple() {
+    bp::converter::registry::push_back(&convertible,
+                                       &construct,
+                                       bp::type_id<ArrayShape>()
+#ifdef BOOST_PYTHON_SUPPORTS_PY_SIGNATURES
+                                       , get_pytype
+#endif
+                                       ); // NOLINT[whitespace/parens]
+  }
+
+  static const PyTypeObject *get_pytype() {
+    return &PyTuple_Type;
+  }
+
+  static void *convertible(PyObject *o) {
+    if (!PyTuple_Check(o)) return 0;
+    for (int i = 0, S = PyTuple_Size(o); i < S; i++)
+      if (!PyLong_Check(PyTuple_GET_ITEM(o, i)))
+        return 0;
+    return o;
+  }
+
+  static void construct(
+    PyObject *o,
+    boost::python::converter::rvalue_from_python_stage1_data *data) {
+    using bp::converter::rvalue_from_python_storage;
+    ArrayShape s(PyTuple_Size(o));
+    for (int i = 0; i < s.size(); i++)
+      s[i] = PyLong_AS_LONG(PyTuple_GET_ITEM(o, i));
+    void *storage =
+      ((rvalue_from_python_storage<ArrayShape> *) data)->storage.bytes;
+    new(storage) ArrayShape(s);
+    data->convertible = storage;
+  }
+};
+/**** Python array interface ****/
+template<typename T> Array<T> Blob_data_array( Blob<T> & b ) { // NOLINT[runtime/references]
+  return Array<T>(b.data(), b.shape());
+}
+template<typename T> Array<T> Blob_diff_array( Blob<T> & b ) { // NOLINT[runtime/references]
+  return Array<T>(b.diff(), b.shape());
+}
+template<typename T> struct TS {};
+template<> struct TS<float> { static const char * value(){ return "f4"; } };
+template<> struct TS<double> { static const char * value(){ return "f8"; } };
+
+template<typename T>
+bp::dict Array_interface(Array<T> &a) { // NOLINT[runtime/references]
+  bp::dict r;
+  r["shape"] = bp::tuple(a.shape());
+  r["typestr"] = TS<T>::value();
+  r["version"] = 3;
+  r["data"] = bp::make_tuple((size_t)a.mutable_cpu_data(), 0);
+  return r;
+}
+template<typename T, typename V>
+void Array_setitem(Array<T> &a, const bp::ellipsis &, const V &v) { // NOLINT[runtime/references]
+  a = v;
+}
+template<typename T> struct TPE {};
+template<> struct TPE<float>{ static int T() { return NPY_FLOAT32; } };
+template<> struct TPE<double>{ static int T() { return NPY_FLOAT64; } };
+template<typename T>
+void Array_setnumpy(Array<T> *a, const bp::ndarray &v, bool resize) {
+  // Get the numpy array
+  CHECK(PyArray_Check(v.ptr())) << "Wrong type: python array expected";
+  PyArrayObject * na = reinterpret_cast<PyArrayObject*>(v.ptr());
+  // Resize if needed
+  const int D = PyArray_NDIM(na);
+  ArrayShape new_shape(D);
+  std::copy(PyArray_DIMS(na), PyArray_DIMS(na)+D, new_shape.begin());
+  // Create the array
+  if (resize && (!a || new_shape != a->shape()))
+    *a = Array<T>(new_shape, a->mode());
+  else
+    CHECK_EQ(new_shape, a->shape()) << "Shape cannot change";
+  // Copy the data (create a numpy array and let numpy deal with the convertion)
+  PyObject * tmp = PyArray_SimpleNewFromData(D, PyArray_DIMS(na), TPE<T>::T(),
+                                             a->mutable_cpu_data());
+  PyArray_CopyInto(reinterpret_cast<PyArrayObject*>(tmp), na);
+  Py_DECREF(tmp);
+}
+template<typename T>
+void Array_setnumeric(Array<T> &a, const bp::ellipsis &, const bp::ndarray &v) { // NOLINT[runtime/references]
+  Array_setnumpy(&a, v, false);
+}
+template<typename T>
+shared_ptr<Array<T> > Array_from_numpy(const bp::ndarray &v) {
+  shared_ptr<Array<T> > a(new Array<T>());
+  Array_setnumpy(a.get(), v, true);
+  return a;
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -425,6 +572,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
     .def("reshape",           bp::raw_function(&Blob_Reshape))
+    .add_property("data_array", &Blob_data_array<Dtype>)
+    .add_property("diff_array", &Blob_diff_array<Dtype>)
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
@@ -495,8 +644,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
     .def(bp::vector_indexing_suite<vector<string> >());
-  bp::class_<vector<int> >("IntVec")
-    .def(bp::vector_indexing_suite<vector<int> >());
+//   bp::class_<vector<int> >("IntVec")
+//     .def(bp::vector_indexing_suite<vector<int> >());
   bp::class_<vector<Dtype> >("DtypeVec")
     .def(bp::vector_indexing_suite<vector<Dtype> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")
@@ -521,6 +670,79 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
+
+  // Caffe Array
+  ArrayShape_to_tuple();
+  ArrayShape_from_tuple();
+
+  bp::enum_<ArrayMode>("ArrayMode")
+  .value("DEFAULT", AR_DEFAULT)
+  .value("CPU", AR_CPU)
+  .value("GPU", AR_GPU);
+
+  typedef Expression<Dtype>(ArrayBase<Dtype>::*Binary1)(Dtype) const;
+  typedef Expression<Dtype>(ArrayBase<Dtype>::*Binary2)(const ArrayBase<Dtype>&)
+    const;
+  bp::class_<ArrayBase<Dtype>, boost::noncopyable>("ArrayBase", bp::no_init)
+  // Binary operators
+  .def(bp::self + bp::self)
+  .def(bp::self - bp::self)
+  .def(bp::self * bp::self)
+  .def(bp::self / bp::self)
+  .def(bp::self + float())
+  .def(bp::self - float())
+  .def(bp::self * float())
+  .def(bp::self / float())
+  .def(float() + bp::self)
+  .def(float() - bp::self)
+  .def(float() * bp::self)
+  .def(float() / bp::self)
+  // Unary operators
+  .def(- bp::self)
+  // Define all unary and reduction functions
+#define DEF_UNARY(F, f) .def(#f, &ArrayBase<Dtype>::f)
+  LIST_UNARY(DEF_UNARY)
+  LIST_REDUCTION(DEF_UNARY)
+  .def("mean", &ArrayBase<Dtype>::mean)
+#undef DEF_UNARY
+  // Define all binary functions
+#define DEF_BINARY(F, f) \
+  .def(#f, static_cast<Binary1>(&ArrayBase<Dtype>::f))\
+  .def(#f, static_cast<Binary2>(&ArrayBase<Dtype>::f))
+  LIST_BINARY(DEF_BINARY)
+#undef DEF_BINARY
+  // Other functions
+  .def("eval", &ArrayBase<Dtype>::eval)
+  .add_property("mode", &Array<Dtype>::mode)
+  .add_property("effective_mode", &Array<Dtype>::effectiveMode)
+  .add_property("shape", bp::make_function(&Array<Dtype>::shape,
+    bp::return_value_policy<bp::copy_const_reference>()) );
+
+  bp::class_<Array<Dtype>, bp::bases<ArrayBase<Dtype> > >("Array")
+  .def(bp::init<ArrayMode>())
+  .def(bp::init<ArrayShape>())
+  .def(bp::init<ArrayShape, ArrayMode>())
+  .def("__init__", bp::make_constructor(&Array_from_numpy<Dtype>))
+  .def("reshape", &Array<Dtype>::reshape)
+  .def(bp::self += bp::self)
+  .def(bp::self -= bp::self)
+  .def(bp::self *= bp::self)
+  .def(bp::self /= bp::self)
+  .def(bp::self += float())
+  .def(bp::self -= float())
+  .def(bp::self *= float())
+  .def(bp::self /= float())
+  .def("__setitem__", &Array_setitem<Dtype, Dtype>)
+  .def("__setitem__", &Array_setitem<Dtype, Expression<Dtype> >)
+  .def("__setitem__", &Array_setitem<Dtype, Array<Dtype> >)
+  .def("__setitem__", &Array_setnumeric<Dtype>)
+  .def("__getitem__", static_cast<Array<Dtype> (Array<Dtype>::*)(size_t)>(
+    &Array<Dtype>::operator[]))
+  .add_property("mode", &Array<Dtype>::mode, &Array<Dtype>::setMode)
+  .add_property("__array_interface__", &Array_interface<Dtype>);
+
+  bp::class_ < Expression<Dtype>, bp::bases<ArrayBase<Dtype> > > ("Expression",
+                                                                  bp::no_init);
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
