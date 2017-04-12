@@ -4,16 +4,6 @@
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
-/* NVIDA Cuda */
-#cmakedefine HAVE_CUDA
-
-/* NVIDA cuDNN */
-#cmakedefine HAVE_CUDNN
-#cmakedefine USE_CUDNN
-
-/* NVIDA cuDNN */
-#cmakedefine CPU_ONLY
-
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
 
@@ -27,12 +17,3 @@
   #define EXAMPLES_SOURCE_DIR "examples/"
   #define CMAKE_EXT ""
 #endif
-
-/* Matlab */
-#cmakedefine HAVE_MATLAB
-
-/* IO libraries */
-#cmakedefine USE_OPENCV
-#cmakedefine USE_LEVELDB
-#cmakedefine USE_LMDB
-#cmakedefine ALLOW_LMDB_NOLOCK

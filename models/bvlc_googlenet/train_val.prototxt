@@ -1692,7 +1692,7 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "loss2/classifier"
   bottom: "label"
-  top: "loss2/loss1"
+  top: "loss2/loss2"
   loss_weight: 0.3
 }
 layer {

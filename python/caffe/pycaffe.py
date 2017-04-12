@@ -11,7 +11,7 @@ except:
 import numpy as np
 
 from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
-        RMSPropSolver, AdaDeltaSolver, AdamSolver
+        RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
 import caffe.io
 
 import six
@@ -42,6 +42,16 @@ def _Net_blob_loss_weights(self):
         self._blob_loss_weights_dict = OrderedDict(zip(self._blob_names,
                                                        self._blob_loss_weights))
     return self._blob_loss_weights_dict
+
+@property
+def _Net_layer_dict(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    layers indexed by name
+    """
+    if not hasattr(self, '_layer_dict'):
+        self._layer_dict = OrderedDict(zip(self._layer_names, self.layers))
+    return self._layer_dict
 
 
 @property
@@ -321,6 +331,7 @@ def _Net_get_id_name(func, field):
 # Attach methods to Net.
 Net.blobs = _Net_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
+Net.layer_dict = _Net_layer_dict
 Net.params = _Net_params
 Net.forward = _Net_forward
 Net.backward = _Net_backward
