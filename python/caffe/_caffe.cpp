@@ -7,6 +7,7 @@
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <google/protobuf/text_format.h>
 #include <numpy/arrayobject.h>
 
 // these need to be included after boost on OS X
@@ -196,6 +197,25 @@ Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
   return SolverRegistry<Dtype>::CreateSolver(param);
+}
+
+Solver<Dtype>* GetSolverFromString(const string& proto_txt) {
+  using google::protobuf::TextFormat;
+  SolverParameter param;
+  bool success = TextFormat::ParseFromString(proto_txt, &param);
+  if (!success)
+    LOG(FATAL) << "Malformatted proto_txt string";
+  return SolverRegistry<Dtype>::CreateSolver(param);
+}
+
+Net<Dtype>* GetNetFromString(const string& proto_txt, int phase) {
+  using google::protobuf::TextFormat;
+  NetParameter param;
+  bool success = TextFormat::ParseFromString(proto_txt, &param);
+  param.mutable_state()->set_phase(static_cast<Phase>(phase));
+  if (!success)
+    LOG(FATAL) << "Malformatted proto_txt string";
+  return new Net<Dtype>(param);
 }
 
 struct NdarrayConverterGenerator {
@@ -488,6 +508,10 @@ BOOST_PYTHON_MODULE(_caffe) {
         "AdamSolver", bp::init<string>());
 
   bp::def("get_solver", &GetSolverFromFile,
+      bp::return_value_policy<bp::manage_new_object>());
+  bp::def("get_solver_from_string", &GetSolverFromString,
+      bp::return_value_policy<bp::manage_new_object>());
+  bp::def("get_net_from_string", &GetNetFromString,
       bp::return_value_policy<bp::manage_new_object>());
 
   // vector wrappers for all the vector types we use
