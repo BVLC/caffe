@@ -52,7 +52,13 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   // Scaffolding code
   InitTrainNet();
   if (Caffe::root_solver()) {
-    InitTestNets();
+    // Extract stages to pass to test net
+    std::vector<std::string> stages;
+    for (int i = 0; i < param.train_state().stage_size(); i++) {
+        stages.push_back(param.train_state().stage(i));
+    }
+    LOG(INFO) << "Extracted " << stages.size() << " stage(s) from train state";
+    InitTestNets(&stages);
     LOG(INFO) << "Solver scaffolding done.";
   }
   iter_ = 0;
@@ -101,7 +107,7 @@ void Solver<Dtype>::InitTrainNet() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::InitTestNets() {
+void Solver<Dtype>::InitTestNets(const std::vector<std::string>* stages) {
   CHECK(Caffe::root_solver());
   const bool has_net_param = param_.has_net_param();
   const bool has_net_file = param_.has_net();
@@ -168,6 +174,11 @@ void Solver<Dtype>::InitTestNets() {
     net_state.MergeFrom(net_params[i].state());
     if (param_.test_state_size()) {
       net_state.MergeFrom(param_.test_state(i));
+    }
+    if (stages) {
+        for (int j = 0; j < stages->size(); j++) {
+            net_state.add_stage((*stages)[j]);
+        }
     }
     net_params[i].mutable_state()->CopyFrom(net_state);
     LOG(INFO)

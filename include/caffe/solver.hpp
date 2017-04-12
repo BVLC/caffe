@@ -45,7 +45,7 @@ class Solver {
   explicit Solver(const string& param_file);
   void Init(const SolverParameter& param);
   void InitTrainNet();
-  void InitTestNets();
+  void InitTestNets(const std::vector<std::string>* stages = NULL);
 
   // Client of the Solver optionally may call this in order to set the function
   // that the solver uses to see what action it should take (e.g. snapshot or
