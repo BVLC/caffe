@@ -93,6 +93,18 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
     this->pad_h_ = this->pad_.cpu_data()[1];
     this->kernel_w_ = this->kernel_shape_.cpu_data()[0];
     this->kernel_h_  = this->kernel_shape_.cpu_data()[1];
+
+#ifdef USE_MLSL
+    if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
+      mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
+      reg_info.set_name(this->layer_param_.name());
+      reg_info.add_parameter_set<Dtype>(this->channels_ * this->num_output_ / std::max(this->group_, 1), this->kernel_w_ * this->kernel_h_);
+      if (this->bias_term_) {
+        reg_info.add_parameter_set<Dtype>(this->num_output_, 1);
+      }
+      this->layerOp = mn::train::add_operation(reg_info);
+    }
+#endif /* USE_MLSL */
 }
 
 template <typename Dtype>
