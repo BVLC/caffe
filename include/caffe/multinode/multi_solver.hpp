@@ -70,11 +70,6 @@ class MultiSolver {
     }
     virtual void on_iter_finished(int layer_id) = 0;
 
-    virtual void on_forward_start(int layer_id) = 0;
-    virtual void on_forward_finished(int layer_id) = 0;
-
-    virtual void on_backward_start(int layer_id) = 0;
-
     virtual void on_delwt_wait(int layer_id) = 0;
     virtual void apply_updates(int layer_id) = 0;
 
@@ -112,7 +107,6 @@ class MultiSolver {
   boost::shared_ptr<Solver<Dtype>> root_solver_;
   int iter_size;
   vector<Callback*> callbacks_;
-  bool multi_node;
 };
 
 }  // namespace caffe

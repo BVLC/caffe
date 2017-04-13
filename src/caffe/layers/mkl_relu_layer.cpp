@@ -89,56 +89,10 @@ void MKLReLULayer<Dtype>::Init(
 #ifdef USE_MLSL
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_ACT };
   reg_info.set_name(this->layer_param().name());
-  reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-  reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
   this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 
 }
-
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void MKLReLULayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
-  for (int i = 0; i < activation->GetPackBlockCount(); i++) {
-    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    const Dtype *src{ from };
-    Dtype *dst{ to + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; mb++) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); s++) {
-          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] = src[s * bFMLen * bMBLen + (bFMStart + fm) * bMBLen + (bMBStart + mb)];
-        }
-      }
-    }
-  }
-}
-
-template <typename Dtype>
-void MKLReLULayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
-  for (int i = 0; i < activation->GetUnpackBlockCount(); i++) {
-    MLSL::CommBlockInfo *bi{ activation->GetUnpackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    Dtype *dst{ to };
-    const Dtype *src{ from + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); ++s) {
-          dst[s * bFMLen * bMBLen + (bFMStart + fm) * bMBLen + (bMBStart + mb)] = src[(fm * bMBLen + mb) * bi->GetFmSize() + s];
-        }
-      }
-    }
-  }
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,

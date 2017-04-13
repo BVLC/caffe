@@ -109,32 +109,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
 #ifdef USE_MLSL
-
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      bottom[0]->height() + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      bottom[0]->height() + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
-  if (pad_h_ || pad_w_) {
-    // If we have padding, ensure that the last pooling starts strictly
-    // inside the image (instead of at the padding); otherwise clip the last.
-    if ((pooled_height_ - 1) * stride_h_ >= bottom[0]->height() + pad_h_) {
-      --pooled_height_;
-    }
-    if ((pooled_width_ - 1) * stride_w_ >= bottom[0]->height() + pad_w_) {
-      --pooled_width_;
-    }
-    CHECK_LT((pooled_height_ - 1) * stride_h_, bottom[0]->height() + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->height() + pad_w_);
-  }
-
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_POOL };
   reg_info.set_name(this->layer_param().name());
-  for (int i = 0; i < bottom.size(); ++i) {
-    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    reg_info.add_output<Dtype>(bottom[0]->channels(), pooled_width_ * pooled_height_);
-  }
   this->layerOp = mn::train::add_operation(reg_info);
 #endif
 

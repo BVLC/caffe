@@ -209,15 +209,8 @@ void MKLPoolingLayer<Dtype>::Init(
   dnnDelete<Dtype>(poolingBwd);
 
 #ifdef USE_MLSL
-
   mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_POOL};
   reg_info.set_name(this->layer_param().name());
-  for (int i = 0; i < bottom.size(); ++i) {
-    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    reg_info.add_output<Dtype>(bottom[0]->channels(), pooled_width_ * pooled_height_);
-  }
   this->layerOp = mn::train::add_operation(reg_info);
 #endif
 
@@ -244,50 +237,6 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   Init(bottom, top);
 }
-
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void MKLPoolingLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
-  for (int i = 0; i < activation->GetPackBlockCount(); i++) {
-    MLSL::CommBlockInfo * bi{ activation->GetPackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    const Dtype *src{ from };
-    Dtype *dst{ to + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0 ; s < bi->GetFmSize(); ++s) {
-          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] = src[s * bFMLen * bMBLen + (bFMStart + fm) * bMBLen + (bMBStart + mb)];
-        }
-      }
-    }
-  }
-}
-
-template <typename Dtype>
-void MKLPoolingLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
-  for (int i = 0; i < activation->GetUnpackBlockCount(); i++) {
-    MLSL::CommBlockInfo * bi{ activation->GetUnpackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    Dtype *dst{ to };
-    const Dtype *src{ from + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0 ; s < bi->GetFmCount(); ++s) {
-          dst[s * bFMLen * bMBLen + (bFMStart + fm) * bMBLen + (bMBStart + mb)] = src[(fm * bMBLen + mb) * bi->GetFmCount() + s];
-        }
-      }
-    }
-  }
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

@@ -297,8 +297,6 @@ void BaseConvolutionLayer<Dtype>::DoReshape(const vector<Blob<Dtype>*>& bottom,
   if (this->layerOp == nullptr) {
     mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
     reg_info.set_name(this->layer_param().name());
-    reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-    reg_info.add_output<Dtype>(top[0]->channels(), top[0]->width() * top[0]->height());
     reg_info.add_parameter_set<Dtype>(bottom[0]->channels() * top[0]->channels() / group_,
                                       this->kernel_shape_.cpu_data()[0] * this->kernel_shape_.cpu_data()[1]);
     if (bias_term_) {

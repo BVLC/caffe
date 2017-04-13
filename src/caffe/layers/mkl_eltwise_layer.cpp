@@ -99,12 +99,6 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_MLSL
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
   reg_info.set_name(this->layer_param().name());
-  for (int i = 0; i < bottom.size(); ++i) {
-    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-  }
   this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 }

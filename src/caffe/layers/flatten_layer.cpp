@@ -46,20 +46,12 @@ namespace caffe {
 template <typename Dtype>
 void FlattenLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
-  int c = bottom[0]->channels();
-  int w = bottom[0]->width();
-  int h = bottom[0]->height();
-
   mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_ACT};
   reg_info.set_name(this->layer_param().name());
-  reg_info.add_input<Dtype>(c, w * h);
-  reg_info.add_output<Dtype>(c, w * h);
-
   this->layerOp = mn::train::add_operation(reg_info);
 }
 
-#endif
+#endif /* USE_MLSL */
 
 template <typename Dtype>
 void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,

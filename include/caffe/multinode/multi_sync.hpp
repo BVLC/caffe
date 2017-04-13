@@ -65,6 +65,10 @@ namespace caffe {
 
 #define CAN_USE_PRV(param) false //(param->prv_diff() && (param->prv_diff_count() == param->count()))
 
+  inline bool is_root() {
+    return mn::get_node_id() == 0;
+  }
+
   template <typename Dtype>
   class MultiSync : public MultiSolver<Dtype>::Callback {
 
@@ -76,13 +80,6 @@ namespace caffe {
     const vector<Blob<Dtype> *> &net_params;
     vector<vector<int>> layer_param_ids;
 
-    vector<vector<int>> bottom_pack_block_nums;
-    vector<vector<int>> bottom_unpack_block_nums;
-    vector<vector<int>> top_pack_block_nums;
-    vector<vector<int>> top_unpack_block_nums;
-
-    bool is_root; // MLSL::GetNodeId() == 0
-
   public:
 
     MultiSync(shared_ptr<Solver<Dtype> >);
@@ -90,10 +87,7 @@ namespace caffe {
     ~MultiSync();
 
     void snapshot() {
-      if (is_root) {
-        for (int layer_id = 0; layer_id < layers.size(); ++layer_id) {
-          //apply_updates(layer_id);
-        }
+      if (is_root()) {
         solver->root_solver()->Snapshot();
       }
     }
@@ -126,13 +120,10 @@ namespace caffe {
       mn::train::commit();
       solver->add_callback(this);
       solver->Solve();
-      if (is_root) {
-        //solver->root_solver()->Snapshot();
-      }
     }
 
     void check_snapshot() {
-      if (is_root) {
+      if (is_root()) {
         if ((snapshot_per_iters != 0) && (solver->root_solver()->iter() % snapshot_per_iters == 0)) {
           solver->root_solver()->Snapshot();
         }
@@ -149,50 +140,6 @@ namespace caffe {
     void on_start() {
       check_snapshot();
       DLOG(INFO) << "started iteration " << solver->root_solver()->iter();
-    }
-
-    // main callback for MultiSolver loop
-    void on_forward_start(int layer_id) {
-      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      int bottom_size{layer->layer_param().bottom_size()};
-      for (int i = 0; i < bottom_size; ++i) {
-        if (bottom_unpack_block_nums[layer_id][i] != 0) {
-          MLSL::Activation *activation{layer->layerOp->GetInput(i)};
-          Dtype *comms_buf{(Dtype *) activation->WaitComm()};
-          if (comms_buf != nullptr) {
-            layer->unpack_buffer(activation, comms_buf, layer->bottom_vec[i]->mutable_cpu_data());
-          }
-        }
-      }
-    }
-
-    void on_forward_finished(int layer_id) {
-      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      int top_size{layer->layer_param().top_size()};
-      for (int i = 0; i < top_size; ++i) {
-        if (top_pack_block_nums[layer_id][i] != 0) {
-          MLSL::Activation *activation{layer->layerOp->GetOutput(i)};
-          Dtype *comms_buf{(Dtype *) activation->GetCommBuf()};
-          if (comms_buf) {
-            layer->pack_buffer(activation, comms_buf, layer->top_vec[i]->cpu_data());
-            activation->StartComm(comms_buf);
-          }
-        }
-      }
-    }
-
-    void on_backward_start(int layer_id) {
-      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      int top_size{layer->layer_param().top_size()};
-      for (int i = 0; i < top_size; ++i) {
-        if (top_unpack_block_nums[layer_id][i] != 0) {
-          MLSL::Activation *activation{layer->layerOp->GetOutput(i)};
-          Dtype *comms_buf{(Dtype *) activation->WaitComm()};
-          if (comms_buf) {
-            layer->unpack_buffer(activation, comms_buf, layer->top_vec[i]->mutable_cpu_diff());
-          }
-        }
-      }
     }
 
     void on_iter_finished(int layer_id) {

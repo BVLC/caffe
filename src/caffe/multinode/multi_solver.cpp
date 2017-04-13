@@ -54,7 +54,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
 
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
   Timer& timer = root_solver_->timer;
   std::vector<double>& forward_time_per_layer = root_solver_->forward_time_per_layer;
@@ -64,67 +63,37 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   net.ClearParamDiffs();
   for (int i = 0; i < layers.size(); ++i) {
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
     timer.Start();
 #endif
 
-    if (multi_node && layers[i]->layerOp->GetInputCount()) {
-        for (int j = 0; j < callbacks_.size(); ++j) {
-            callbacks_[j]->on_forward_start(i); // wait input
-        }
-    }
-
-    boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
-
     loss += net.ForwardFromTo(i, i);
-
-    if (multi_node && layers[i]->layerOp->GetOutputCount()) {
-        for (int j = 0; j < callbacks_.size(); ++j) {
-          callbacks_[j]->on_forward_finished(i); // start ouput
-        }
-    }
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
     forward_time_per_layer[i] += timer.MicroSeconds();
 #endif
-
   }
 
-
   for (int i = layers.size() - 1; i >= 0; --i) {
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
     timer.Start();
 #endif
 
     if (!layer_need_backward[i]) {
-      DLOG(INFO) << "ForwardBackwardImpl: no need for backprop for layer # " << i << ", skip on_bprop_start, bprop, on_delinp_ready";
       continue;
     }
-
-    if (multi_node && layers[i]->layerOp->GetOutputCount()) {
-        for (int j = 0; j < callbacks_.size(); ++j) {
-            callbacks_[j]->on_backward_start(i); // wait delout
-        }
-    }
     
-    boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
-    net.BackwardFromTo(i, i); // start delinp in the middle of bprop if layer has weights (for overlapping with delwt calculation)
+    net.BackwardFromTo(i, i);
 
-    if (multi_node && !layers[i]->layerOp->HasParameterSets() && layers[i]->layerOp->GetInputCount()) { // otherwise start delinp here
-      layers[i]->on_delinp_ready(net.bottom_need_backward()[i]);
-    }
-    if (multi_node && last && layers[i]->layerOp->HasParameterSets()) {
+    if ((mn::get_nodes_count() > 1) && last && layers[i]->layerOp->HasParameterSets()) {
       for (int j = 0; j < callbacks_.size(); ++j) {
-          callbacks_[j]->on_iter_finished(i); // start delwt
+          callbacks_[j]->on_iter_finished(i);
       }
     }
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
     backward_time_per_layer[i] += timer.MicroSeconds();
 #endif
-
   }
 
   if (last) {
@@ -140,7 +109,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
         continue;
       }
 
-      if (multi_node) {
+      if (mn::get_nodes_count() > 1) {
           for (int j = 0; j < callbacks_.size(); ++j) {
               callbacks_[j]->on_delwt_wait(i);
           }

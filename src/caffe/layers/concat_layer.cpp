@@ -54,32 +54,9 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "Either axis or concat_dim should be specified; not both.";
 
 #ifdef USE_MLSL
-
-  int num_concats = bottom.size();
-  int channels = 0;
-
-  for (size_t i = 1; i < num_concats; ++i) {
-    CHECK_EQ(bottom[0]->num(), bottom[i]->num());
-    CHECK_EQ(bottom[0]->height(), bottom[i]->height());
-    CHECK_EQ(bottom[0]->width(), bottom[i]->width());
-  }
-
-  size_t *split_channels = new size_t[num_concats];
-  for (size_t i = 0; i < num_concats; ++i) {
-    split_channels[i] = bottom[i]->channels();
-    channels += split_channels[i];
-  }
-
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
   reg_info.set_name(this->layer_param().name());
-  for (int i = 0; i < bottom.size(); ++i) {
-    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    reg_info.add_output<Dtype>(channels, bottom[0]->width() * bottom[0]->height());
-  }
   this->layerOp = mn::train::add_operation(reg_info);
-
 #endif /* USE_MLSL */
 }
 

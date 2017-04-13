@@ -47,8 +47,7 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
           snapshot_per_iters(root_solver->param().snapshot()),
           layers(root_solver->net()->layers()),
           net(root_solver->net()),
-          net_params(root_solver->net()->learnable_params()),
-          is_root(mn::get_node_id() == 0) {
+          net_params(root_solver->net()->learnable_params()) {
   root_solver->param().set_disabled_update(true);
   if (!is_root) root_solver->param().clear_snapshot();
   if (!is_root) root_solver->param().set_snapshot_after_train(false);
@@ -56,50 +55,13 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
   if (root_solver->iter() == 0)
     root_solver->set_iter(1);
 
-  for (int idx = 0; idx < layers.size(); idx++) {
-    layers[idx]->bottom_vec = root_solver->net()->bottom_vecs()[idx];
-    layers[idx]->top_vec = root_solver->net()->top_vecs()[idx];
-  }
-
   layer_param_ids.resize(layers.size());
-
-  bottom_pack_block_nums.resize(layers.size());
-  bottom_unpack_block_nums.resize(layers.size());
-  top_pack_block_nums.resize(layers.size());
-  top_unpack_block_nums.resize(layers.size());
 
   for (int layer_id = 0; layer_id < layers.size(); layer_id++) {
     shared_ptr<Layer<Dtype> > layer = layers[layer_id];
 
     /* cache param ids */
     layer_param_ids[layer_id] = net->get_layer_learnable_param_ids(layer_id);
-
-    /* cache bottom/top pack/unpack blocks nums */
-    int bottom_size = layer->layer_param().bottom_size();
-    int top_size = layer->layer_param().top_size();
-
-    bottom_pack_block_nums[layer_id].resize(bottom_size, 0);
-    bottom_unpack_block_nums[layer_id].resize(bottom_size, 0);
-
-    top_pack_block_nums[layer_id].resize(top_size, 0);
-    top_unpack_block_nums[layer_id].resize(top_size, 0);
-
-    if (layer->layerOp->GetInputCount()) {
-      for (int bottom_id = 0; bottom_id < bottom_size; ++bottom_id) {
-        MLSL::Activation *activation = layer->layerOp->GetInput(bottom_id);
-        bottom_pack_block_nums[layer_id][bottom_id] = activation->GetPackBlockCount();
-        bottom_unpack_block_nums[layer_id][bottom_id] = activation->GetUnpackBlockCount();
-      }
-    }
-
-    if (layer->layerOp->GetOutputCount()) {
-      for (int top_id = 0; top_id < top_size; ++top_id) {
-        MLSL::Activation *activation = layer->layerOp->GetOutput(top_id);
-        top_pack_block_nums[layer_id][top_id] = activation->GetPackBlockCount();
-        top_unpack_block_nums[layer_id][top_id] = activation->GetUnpackBlockCount();
-      }
-    }
-
   }
 }
 

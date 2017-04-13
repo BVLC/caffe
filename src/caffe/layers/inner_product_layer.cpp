@@ -67,9 +67,6 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // Initialize the weights
     vector<int> weight_shape(2);
-#ifdef MLSL_MODEL_PARALLELISM
-  K_/=caffe::mn::model_parallelism->GetFMGroupSize();
-#endif    
     if (transpose_) {
       weight_shape[0] = K_;
       weight_shape[1] = N_;
@@ -96,8 +93,6 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_MLSL
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
   reg_info.set_name(this->layer_param().name());
-  reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-  reg_info.add_output<Dtype>(N_, top[0]->width() * top[0]->height());
   reg_info.add_parameter_set<Dtype>(bottom[0]->count(axis) * N_, 1);
   if (bias_term_) {
     reg_info.add_parameter_set<Dtype>(1 * N_, 1);
@@ -113,29 +108,18 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Figure out the dimensions
   const int axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
-#ifdef MLSL_MODEL_PARALLELISM
-  const int new_K = bottom[0]->count(axis)/caffe::mn::model_parallelism->GetFMGroupSize();
-#else    
   const int new_K = bottom[0]->count(axis);
-#endif  
   CHECK_EQ(K_, new_K)
       << "Input size incompatible with inner product parameters.";
   // The first "axis" dimensions are independent inner products; the total
   // number of these is M_, the product over these dimensions.
 //  M_ = bottom[0]->count(0, axis);
-#ifdef MLSL_MODEL_PARALLELISM
-  M_ = bottom[0]->count(0, axis)/caffe::mn::model_parallelism->GetFMGroupSize();
-#else
   M_ = bottom[0]->count(0, axis);
-#endif
 
   // The top shape will be the bottom shape with the flattened axes dropped,
   // and replaced by a single axis with dimension num_output (N_).
   vector<int> top_shape = bottom[0]->shape();
   top_shape.resize(axis + 1);
-#ifdef MLSL_MODEL_PARALLELISM
-  top_shape[0]*=caffe::mn::model_parallelism->GetFMGroupSize();
-#endif
   top_shape[axis] = N_;
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
@@ -203,10 +187,6 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)1., top_diff, this->blobs_[0]->cpu_data(),
           (Dtype)0., bottom[0]->mutable_cpu_diff());
     }
-
-#ifdef USE_MLSL
-      this->on_delinp_ready(propagate_down);
-#endif
   }
 }
 

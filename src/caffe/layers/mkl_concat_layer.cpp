@@ -113,12 +113,6 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_MLSL
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
   reg_info.set_name(this->layer_param().name());
-  for (int i = 0; i < bottom.size(); ++i) {
-    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-  }
-  for (int i = 0; i < top.size(); ++i) {
-    reg_info.add_output<Dtype>(channels_, bottom[0]->width() * bottom[0]->height());
-  }
   this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 
@@ -149,49 +143,6 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(num_, channels_, height_, width_);
   Init(bottom, top);
 }
-
-#ifdef USE_MLSL
-template <typename Dtype>
-void MKLConcatLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *comms_buf, const Dtype *local_buf) {
-  for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
-    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    const Dtype *src{ local_buf };
-    Dtype *dst{ comms_buf + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); s++) {
-          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] = src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s];
-        }
-      }
-    }
-  }
-}
-
-template <typename Dtype>
-void MKLConcatLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *comms_buf, Dtype *local_buf) {
-  for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
-    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    Dtype *dst{ local_buf };
-    const Dtype *src{ comms_buf + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); ++s) {
-          dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s] = src[(fm * bMBLen + mb) * bi->GetFmSize() + s];
-        }
-      }
-    }
-  }
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Forward_cpu(const vector <Blob<Dtype>*>& bottom,

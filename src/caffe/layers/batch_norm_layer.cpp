@@ -74,15 +74,11 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
 #ifdef USE_MLSL
-
   if (this->layerOp == nullptr) {
     mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_ACT };
     reg_info.set_name(this->layer_param().name());
-    reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-    reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
     this->layerOp = mn::train::add_operation(reg_info);
   }
-
 #endif /* USE_MLSL */
 }
 

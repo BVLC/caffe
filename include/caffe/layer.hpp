@@ -118,98 +118,7 @@ class Layer {
 #ifdef USE_MLSL
 
 public:
-
 	MLSL::Operation *layerOp{ nullptr };
-	vector<MLSL::Operation*> prevLayerOps;
-	vector<Layer<Dtype>*> prevLayers;
-
-	vector<int> ifm2ofm_map;
-  std::vector<uint32_t> bottom_sizes;
-
-  vector<Blob<Dtype>* > bottom_vec;
-  vector<Blob<Dtype>* > top_vec;
-
-  void on_delinp_ready(const vector<bool>& propagate_down) {
-
-      LOG_LAYER(this) << "bprop: on_delinp_ready: enter";
-      if (layerOp->GetInputCount() == 0) {
-          LOG_LAYER(this) << "bprop: on_delinp_ready: there is no any input FMs, exit";
-          return;
-      }
-
-      int bottom_size = this->layer_param().bottom_size();
-      LOG_LAYER(this) << "bprop: on_delinp_ready: bottom size " << bottom_size;
-
-      for (int bottom_id = 0; bottom_id < bottom_size; ++bottom_id) {
-
-          if (!propagate_down[bottom_id]/* || !fm->NumPackBlocks()*/) {
-              LOG_LAYER(this) << "bprop: on_delinp_ready: skip CommsStart for bottom_id " << bottom_id;
-              continue;
-          }
-
-          MLSL::Activation *fm{ layerOp->GetInput(bottom_id) };
-          Dtype *comms_buf{ (Dtype *)fm->GetCommBuf() };
-
-          if (comms_buf) {
-              this->pack_buffer(fm, comms_buf, this->bottom_vec[bottom_id]->cpu_diff());
-              LOG_BLOB(this, this->bottom_vec[bottom_id], diff, bottom_id, "bprop: on_delinp_ready: bottom_diff:");
-              LOG_BUFFER(this, comms_buf, bottom_id, "bprop: on_delinp_ready: comms_buf:");
-              LOG_LAYER(this) << "bprop: on_delinp_ready: send delinp for bottom # " << bottom_id;
-              fm->StartComm(comms_buf);
-          }
-      }
-  }
-
-  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
-    for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
-      MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
-      size_t bMBLen{ bi->GetMbCount() };
-      size_t bMBStart{ bi->GetMbOffset() };
-      size_t bFMLen{ bi->GetFmCount() };
-      size_t bFMStart{ bi->GetFmOffset() };
-      const Dtype *src{ from };
-      Dtype *dst{ to + bi->GetBufOffset() };
-      for (int mb = 0; mb < bMBLen; ++mb) {
-        for (int fm = 0; fm < bFMLen; ++fm) {
-          for (int fs = 0; fs < bi->GetFmSize(); ++fs) {
-            dst[(mb * bMBLen + fm) * bi->GetFmSize() + fs] = src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + fs];
-          }
-        }
-      }
-    }
-  }
-
-  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
-    for (int i = 0; i < activation->GetUnpackBlockCount(); ++i) {
-      MLSL::CommBlockInfo *bi{ activation->GetUnpackBlock(i) };
-      size_t bMBLen{ bi->GetMbCount() };
-      size_t bMBStart{ bi->GetMbOffset() };
-      size_t bFMLen{ bi->GetFmCount() };
-      size_t bFMStart{ bi->GetFmOffset() };
-      const Dtype *src{ from };
-      Dtype *dst{ to + bi->GetBufOffset() };
-      for (int mb = 0; mb < bMBLen; ++mb) {
-        for (int fm = 0; fm < bFMLen; ++fm) {
-          for (int fs = 0; fs < bi->GetFmSize(); ++fs) {
-            dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + fs] = src[(mb * bFMLen + fm) * bi->GetFmSize() + fs];
-          }
-        }
-      }
-    }
-  }
-
-  void SetPrevLayer(int index, Layer<Dtype> *prevLayer) {
-      this->prevLayers[index] = prevLayer;
-      this->prevLayerOps[index] = prevLayer->layerOp;
-  }
-
-  void ConfigureMLSL() {
-    bottom_sizes.clear();
-    bottom_sizes.resize(this->prevLayerOps.size());
-    for (int i = 0; i < prevLayerOps.size(); ++i) {
-      bottom_sizes[i] = layerOp->GetInput(i)->GetLocalFmCount() * layerOp->GetLocalMinibatchSize() * layerOp->GetInput(i)->GetFmSize() * sizeof(Dtype);
-    }
-  }
 
 #endif /* USE_MLSL */
 
@@ -254,10 +163,6 @@ public:
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
-#ifdef USE_MLSL
-    this->prevLayers.resize(bottom.size());
-    this->prevLayerOps.resize(bottom.size());
-#endif /* USE_MLSL */
   }
 
   /**
@@ -310,12 +215,6 @@ public:
     {
       mn::OpRegInfo reg_info{ mn::train::get_session(), get_op_type(layer_param().type()) };
       reg_info.set_name(layer_param().name());
-      for (int i = 0; i < bottom.size(); ++i) {
-        reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
-      }
-      for (int i = 0; i < top.size(); ++i) {
-        reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-      }
       layerOp = mn::train::add_operation(reg_info);
     }
 #endif /* USE_MLSL */

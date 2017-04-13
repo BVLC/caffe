@@ -72,14 +72,9 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   }
 
 #ifdef USE_MLSL
-
   mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_EVAL};
   reg_info.set_name(this->layer_param().name());
-  reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
-  reg_info.add_input<Dtype>(bottom[1]->channels(), bottom[1]->width() * bottom[1]->height());
-
   this->layerOp = mn::train::add_operation(reg_info);
-    
 #endif /* USE_MLSL */
 
 }

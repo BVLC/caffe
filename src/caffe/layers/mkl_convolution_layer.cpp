@@ -326,19 +326,15 @@ void MKLConvolutionLayer<Dtype>::Init(
   }
 
 #ifdef USE_MLSL
-
   if (this->layerOp == nullptr) {
     mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_CC};
     reg_info.set_name(this->layer_param_.name());
-    reg_info.add_input<Dtype>(ic, iw * ih);
-    reg_info.add_output<Dtype>(oc, ow * oh);
     reg_info.add_parameter_set<Dtype>(ic * oc / g, kw * kh);
     if (this->bias_term_) {
       reg_info.add_parameter_set<Dtype>(oc, 1);
     }
     this->layerOp = mn::train::add_operation(reg_info);
   }
-
 #endif /* USE_MLSL */
 
 }
@@ -366,50 +362,6 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     Init(bottom, top);
   }
 }
-
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
-  for (int i = 0; i < activation->GetPackBlockCount(); i++) {
-    MLSL::CommBlockInfo *bi{activation->GetPackBlock(i)};
-    size_t bMBLen = bi->GetMbCount();
-    size_t bMBStart = bi->GetMbOffset();
-    size_t bFMLen = bi->GetFmCount();
-    size_t bFMStart = bi->GetFmOffset();
-    Dtype *dst{to};
-    const Dtype *src{from + bi->GetBufOffset()};
-    for (int mb = 0; mb < bMBLen; mb++) {
-      for (int fm = 0; fm < bFMLen; fm++) {
-        for (int s = 0; s < bi->GetFmCount(); ++s) {
-          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] = src[s * bFMLen * bMBLen + (bFMStart + fm) * bMBLen + (bMBStart + mb)];
-        }
-      }
-    }
-  }
-}
-
-template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
-      for (int i = 0; i < activation->GetUnpackBlockCount(); i++) {
-          MLSL::CommBlockInfo * bi = activation->GetUnpackBlock(i);
-          size_t bMBLen{bi->GetMbCount()};
-          size_t bMBStart{bi->GetMbOffset()};
-          size_t bFMLen{bi->GetFmCount()};
-          size_t bFMStart{bi->GetFmOffset()};
-          Dtype *dst{to};
-          const Dtype *src{from + bi->GetBufOffset()};
-          for (int mb = 0; mb < bMBLen; mb++) {
-              for (int fm = 0; fm < bFMLen; fm++) {
-                  for (int s = 0 ; s < bi->GetFmSize(); s++) {
-                    dst[s*bFMLen*bMBLen + (bFMStart+fm)*bMBLen + (bMBStart+mb)] = src[(fm*bMBLen + mb)*bi->GetFmSize() + s];
-                  }
-              }
-          }
-      }
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Forward_cpu(
@@ -517,10 +469,6 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
     PERFORMANCE_MEASUREMENT_BEGIN();
     status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_prop_);
-
-#ifdef USE_MLSL
-    this->on_delinp_ready(propagate_down);
-#endif /* USE_MLSL */
 
     CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }

@@ -72,56 +72,9 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_MLSL
   mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_DATA };
   reg_info.set_name(this->layer_param().name());
-  reg_info.add_output<Dtype>(top[0]->channels(), top[0]->width() * top[0]->height());
-  reg_info.add_output<Dtype>(top[1]->channels(), top[1]->width() * top[1]->height());
   this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 }
-
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void BaseDataLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
-  for (int i = 0; i < activation->GetPackBlockCount(); i++) {
-    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    const Dtype *src{ from };
-    Dtype *dst{ to + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); ++s) {
-          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] =
-            src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s];
-        }
-      }
-    }
-  }
-}
-
-template <typename Dtype>
-void BaseDataLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
-  for (int i = 0; i < activation->GetUnpackBlockCount(); i++) {
-    MLSL::CommBlockInfo *bi{ activation->GetUnpackBlock(i) };
-    size_t bMBLen{ bi->GetMbCount() };
-    size_t bMBStart{ bi->GetMbOffset() };
-    size_t bFMLen{ bi->GetFmCount() };
-    size_t bFMStart{ bi->GetFmOffset() };
-    Dtype *dst{ to };
-    const Dtype *src{ from + bi->GetBufOffset() };
-    for (int mb = 0; mb < bMBLen; ++mb) {
-      for (int fm = 0; fm < bFMLen; ++fm) {
-        for (int s = 0; s < bi->GetFmSize(); ++s) {
-          dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s] = src[(fm * bMBLen + mb) * bi->GetFmSize() + s];
-        }
-      }
-    }
-  }
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
