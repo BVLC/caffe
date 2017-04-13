@@ -84,28 +84,15 @@ void MKLSplitLayer<Dtype>::Init(
 
 #ifdef USE_MLSL
 
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BCAST);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for(int i=0; i<bottom.size(); i++)
-  {
-      int ic = bottom[i]->channels();
-      int iw = bottom[i]->width();
-      int ih = bottom[i]->height();
-      myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_BCAST };
+  reg_info.set_name(this->layer_param().name());
+  for(int i = 0; i < bottom.size(); ++i) {
+    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
   }
-  for(int i=0; i<top.size(); i++)
-  {
-      int oc = bottom[0]->channels();
-      int ow = bottom[0]->width();
-      int oh = bottom[0]->height();
-      myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  for(int i = 0; i < top.size(); ++i) {
+    reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[i]->height());
   }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
+  this->layerOp = mn::train::add_operation(reg_info);
 
 #endif
 

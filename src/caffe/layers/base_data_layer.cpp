@@ -46,10 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/blocking_queue.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
 
 template <typename Dtype>
@@ -74,64 +70,56 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 
 #ifdef USE_MLSL
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_DATA);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  myRegInfo->AddOutputFeatureMap(top[0]->channels(), top[0]->width()*top[0]->height(), dt);
-  myRegInfo->AddOutputFeatureMap(top[1]->channels(), top[1]->width()*top[1]->height(), dt);
-  
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-
+  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_DATA };
+  reg_info.set_name(this->layer_param().name());
+  reg_info.add_output<Dtype>(top[0]->channels(), top[0]->width() * top[0]->height());
+  reg_info.add_output<Dtype>(top[1]->channels(), top[1]->width() * top[1]->height());
+  this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
-
 }
 
 #ifdef USE_MLSL
 
 template <typename Dtype>
-void BaseDataLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *to, const Dtype *from) {
-      for (int i = 0; i < fm->NumPackBlocks(); i++) {
-          BlockInfo * bi = fm->GetPackBlock(i);
-          int bMBLen = bi->MBLen();
-          int bMBStart = bi->MBStart();
-          int bFMLen = bi->FMLen();
-          int bFMStart = bi->FMStart();
-          Dtype *src = (Dtype*) from;
-          Dtype *dst = (Dtype*) (to + bi->BufOffset());
-          for (int mb = 0; mb < bMBLen; mb++) {
-              for (int fm = 0; fm < bFMLen; fm++) {
-                  for (int s = 0 ; s < bi->FMSize(); s++) {
-                      dst[(fm*bMBLen + mb)*bi->FMSize() + s] =
-                          src[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s];
-                  }
-              }
-          }
+void BaseDataLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
+  for (int i = 0; i < activation->GetPackBlockCount(); i++) {
+    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
+    size_t bMBLen{ bi->GetMbCount() };
+    size_t bMBStart{ bi->GetMbOffset() };
+    size_t bFMLen{ bi->GetFmCount() };
+    size_t bFMStart{ bi->GetFmOffset() };
+    const Dtype *src{ from };
+    Dtype *dst{ to + bi->GetBufOffset() };
+    for (int mb = 0; mb < bMBLen; ++mb) {
+      for (int fm = 0; fm < bFMLen; ++fm) {
+        for (int s = 0; s < bi->GetFmSize(); ++s) {
+          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] =
+            src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s];
+        }
       }
+    }
   }
+}
 
-  template <typename Dtype>
-  void BaseDataLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *from, Dtype *to) {
-      for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
-          BlockInfo * bi = fm->GetUnpackBlock(i);
-          int bMBLen = bi->MBLen();
-          int bMBStart = bi->MBStart();
-          int bFMLen = bi->FMLen();
-          int bFMStart = bi->FMStart();
-          Dtype *dst = (Dtype*) to;
-          Dtype *src = (Dtype*) (from + bi->BufOffset());
-          for (int mb = 0; mb < bMBLen; mb++) {
-              for (int fm = 0; fm < bFMLen; fm++) {
-                  for (int s = 0 ; s < bi->FMSize(); s++) {
-                    dst[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s] = src[(fm*bMBLen + mb)*bi->FMSize() + s];
-                  }
-              }
-          }
+template <typename Dtype>
+void BaseDataLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
+  for (int i = 0; i < activation->GetUnpackBlockCount(); i++) {
+    MLSL::CommBlockInfo *bi{ activation->GetUnpackBlock(i) };
+    size_t bMBLen{ bi->GetMbCount() };
+    size_t bMBStart{ bi->GetMbOffset() };
+    size_t bFMLen{ bi->GetFmCount() };
+    size_t bFMStart{ bi->GetFmOffset() };
+    Dtype *dst{ to };
+    const Dtype *src{ from + bi->GetBufOffset() };
+    for (int mb = 0; mb < bMBLen; ++mb) {
+      for (int fm = 0; fm < bFMLen; ++fm) {
+        for (int s = 0; s < bi->GetFmSize(); ++s) {
+          dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s] = src[(fm * bMBLen + mb) * bi->GetFmSize() + s];
+        }
       }
+    }
   }
+}
 
 #endif /* USE_MLSL */
 

@@ -48,12 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_MLSL
-
 #include "caffe/multinode/mlsl.hpp"
-using namespace MLSL;
-
-#endif /* USE_MLSL */
 
 #define MAX_ELEMS_TO_LOG 16
 #define LOG_LAYER(layer) DLOG(INFO) << layer->type() << ": "
@@ -124,10 +119,8 @@ class Layer {
 
 public:
 
-  /*************** MLSL ***************/
-
-	MLSL::ComputeOp *layerOp;
-	vector<MLSL::ComputeOp*> prevLayerOps;
+	MLSL::Operation *layerOp{ nullptr };
+	vector<MLSL::Operation*> prevLayerOps;
 	vector<Layer<Dtype>*> prevLayers;
 
 	vector<int> ifm2ofm_map;
@@ -139,7 +132,7 @@ public:
   void on_delinp_ready(const vector<bool>& propagate_down) {
 
       LOG_LAYER(this) << "bprop: on_delinp_ready: enter";
-      if (!this->layerOp->NumInputFeatureMaps()) {
+      if (layerOp->GetInputCount() == 0) {
           LOG_LAYER(this) << "bprop: on_delinp_ready: there is no any input FMs, exit";
           return;
       }
@@ -154,54 +147,54 @@ public:
               continue;
           }
 
-          FeatureMap* fm = this->layerOp->InputFeatureMap(bottom_id);
-          Dtype* comms_buf = (Dtype *)fm->CBuf()->GetPtr();
+          MLSL::Activation *fm{ layerOp->GetInput(bottom_id) };
+          Dtype *comms_buf{ (Dtype *)fm->GetCommBuf() };
 
           if (comms_buf) {
               this->pack_buffer(fm, comms_buf, this->bottom_vec[bottom_id]->cpu_diff());
               LOG_BLOB(this, this->bottom_vec[bottom_id], diff, bottom_id, "bprop: on_delinp_ready: bottom_diff:");
               LOG_BUFFER(this, comms_buf, bottom_id, "bprop: on_delinp_ready: comms_buf:");
               LOG_LAYER(this) << "bprop: on_delinp_ready: send delinp for bottom # " << bottom_id;
-              fm->CommsStart(comms_buf);
+              fm->StartComm(comms_buf);
           }
       }
   }
 
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from) {
-    	for (int i = 0; i < fm->NumPackBlocks(); i++) {
-      		BlockInfo * bi = fm->GetPackBlock(i);
-      		int bMBLen = bi->MBLen();
-      		int bMBStart = bi->MBStart();
-      		int bFMLen = bi->FMLen();
-      		int bFMStart = bi->FMStart();
-      		Dtype *src = (Dtype*) from;
-      		Dtype *dst = (Dtype*) (to + bi->BufOffset());
-      		for (int mb = 0; mb < bMBLen; mb++) {
-        			for (int fm = 0; fm < bFMLen; fm++) {
-          				for (int s = 0 ; s < bi->FMSize(); s++) {
-                          dst[(mb*bFMLen + fm)*bi->FMSize() + s] = src[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s];
-          				}
-        			}
-      		}
-    	}
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from) {
+    for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
+      MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
+      size_t bMBLen{ bi->GetMbCount() };
+      size_t bMBStart{ bi->GetMbOffset() };
+      size_t bFMLen{ bi->GetFmCount() };
+      size_t bFMStart{ bi->GetFmOffset() };
+      const Dtype *src{ from };
+      Dtype *dst{ to + bi->GetBufOffset() };
+      for (int mb = 0; mb < bMBLen; ++mb) {
+        for (int fm = 0; fm < bFMLen; ++fm) {
+          for (int fs = 0; fs < bi->GetFmSize(); ++fs) {
+            dst[(mb * bMBLen + fm) * bi->GetFmSize() + fs] = src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + fs];
+          }
+        }
+      }
+    }
   }
 
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to) {
-    for (int i = 0; i < fm->NumUnpackBlocks(); i++) {
-        BlockInfo * bi = fm->GetUnpackBlock(i);
-        int bMBLen = bi->MBLen();
-        int bMBStart = bi->MBStart();
-        int bFMLen = bi->FMLen();
-        int bFMStart = bi->FMStart();
-        Dtype *dst = (Dtype*) to;
-        Dtype *src = (Dtype*) (from + bi->BufOffset());
-        for (int mb = 0; mb < bMBLen; mb++) {
-            for (int fm = 0; fm < bFMLen; fm++) {
-                for (int s = 0 ; s < bi->FMSize(); s++) {
-                  dst[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s] = src[(mb*bFMLen + fm)*bi->FMSize() + s];
-                }
-            }
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to) {
+    for (int i = 0; i < activation->GetUnpackBlockCount(); ++i) {
+      MLSL::CommBlockInfo *bi{ activation->GetUnpackBlock(i) };
+      size_t bMBLen{ bi->GetMbCount() };
+      size_t bMBStart{ bi->GetMbOffset() };
+      size_t bFMLen{ bi->GetFmCount() };
+      size_t bFMStart{ bi->GetFmOffset() };
+      const Dtype *src{ from };
+      Dtype *dst{ to + bi->GetBufOffset() };
+      for (int mb = 0; mb < bMBLen; ++mb) {
+        for (int fm = 0; fm < bFMLen; ++fm) {
+          for (int fs = 0; fs < bi->GetFmSize(); ++fs) {
+            dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + fs] = src[(mb * bFMLen + fm) * bi->GetFmSize() + fs];
+          }
         }
+      }
     }
   }
 
@@ -211,27 +204,13 @@ public:
   }
 
   void ConfigureMLSL() {
-
-      uint32_t in_size;
-      this->layerOp->Finalize();
-      this->layerOp->AllocCommsBufs();
-      this->bottom_sizes.resize(this->prevLayerOps.size());
-
-      for (int i = 0; i < this->prevLayerOps.size(); i++)
-      {
-          in_size = this->layerOp->InputFeatureMap(i)->LocalLen() * this->layerOp->LocalMinibatchLen() * this->layerOp->InputFeatureMap(i)->FMSize() * sizeof(Dtype);
-
-          this->bottom_sizes[i] = in_size;
-
-          LOG_LAYER(this) << "ConfigureMLSL: bottom_id " << i << ", in_size " << in_size
-          << ", ifm ll " << this->layerOp->InputFeatureMap(i)->LocalLen() 
-          << ", local mblen " << this->layerOp->LocalMinibatchLen()
-          << ", ifm fmsize " << this->layerOp->InputFeatureMap(i)->FMSize()
-          << ", sizeof Dtype " << sizeof(Dtype);
-      }
+    bottom_sizes.clear();
+    bottom_sizes.resize(this->prevLayerOps.size());
+    for (int i = 0; i < prevLayerOps.size(); ++i) {
+      bottom_sizes[i] = layerOp->GetInput(i)->GetLocalFmCount() * layerOp->GetLocalMinibatchSize() * layerOp->GetInput(i)->GetFmSize() * sizeof(Dtype);
+    }
   }
 
-  /*************** MLSL ***************/
 #endif /* USE_MLSL */
 
  public:
@@ -251,24 +230,9 @@ public:
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
-
-#ifdef USE_MLSL
-      this->layerOp = 0;
-#endif
     }
 
-#ifdef USE_MLSL
-  virtual ~Layer() {
-      if (this->layerOp) {
-          this->layerOp->FreeCommsBufs();
-          //DLOG(INFO) << "~Layer: delete layerOp " << this->layerOp;
-          delete this->layerOp;
-          this->layerOp = 0;
-      }
-  }
-#else
   virtual ~Layer() {}
-#endif
 
   /**
    * @brief Implements common layer setup functionality.
@@ -290,12 +254,10 @@ public:
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
-
 #ifdef USE_MLSL
     this->prevLayers.resize(bottom.size());
     this->prevLayerOps.resize(bottom.size());
 #endif /* USE_MLSL */
-
   }
 
   /**
@@ -318,50 +280,45 @@ public:
       const vector<Blob<Dtype>*>& top) {}
 
 #ifdef USE_MLSL
+    virtual MLSL::OpType get_op_type(std::string const& layerType) {
+      if (layerType == "Data") {
+        return MLSL::OT_DATA;
+      }
+      if ((layerType == "Dropout") ||
+          (layerType == "ReLU") ||
+          (layerType == "Flatten")) {
+        return MLSL::OT_ACT;
+      }
+      if ((layerType == "Pooling") ||
+          (layerType == "LRN")) {
+        return MLSL::OT_POOL;
+      }
+      if ((layerType == "Accuracy") ||
+          (layerType == "SoftmaxWithLoss")) {
+        return MLSL::OT_EVAL;
+      }
+      if (layerType == "Split") {
+        return MLSL::OT_BCAST;
+      }
+      if (layerType == "Concat") {
+        return MLSL::OT_CONCAT;
+      }
+      return MLSL::OT_CC;
+    }
 
-  virtual MLSL::OpType getLayerTypeId(std::string const& layerType) {
-	  if(layerType == "Convolution") return COMP_OP_TYPE_CC;
-	  if(layerType == "InnerProduct") return COMP_OP_TYPE_CC;
-	  if(layerType == "Data") return COMP_OP_TYPE_DATA;
-	  if(layerType == "ReLU") return COMP_OP_TYPE_ACT;
-	  if(layerType == "Dropout") return COMP_OP_TYPE_ACT;
-	  if(layerType == "Pooling") return COMP_OP_TYPE_POOL;
-	  if(layerType == "LRN") return COMP_OP_TYPE_POOL;
-	  if(layerType == "Accuracy") return COMP_OP_TYPE_EVAL;
-	  if(layerType == "SoftmaxWithLoss") return COMP_OP_TYPE_EVAL;
-	  if(layerType == "Split") return COMP_OP_TYPE_BCAST;
-	  if(layerType == "Concat") return COMP_OP_TYPE_CONCAT;
-	  if(layerType == "Flatten") return COMP_OP_TYPE_ACT;
-	  return COMP_OP_TYPE_CC;
-  }
-
-  virtual void SetUpMLSL(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-	  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-	  ComputeOpRegInfo *myRegInfo;
-	  myRegInfo = new ComputeOpRegInfo(getLayerTypeId(this->layer_param_.type()));
-	  //myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BCAST);
-	  myRegInfo->SetName(this->layer_param_.name().c_str());
-	  for(int i=0; i<bottom.size(); i++)
-	  {
-		int ic = bottom[i]->channels();
-		int iw = bottom[i]->width();
-		int ih = bottom[i]->height();
-		myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-	  }
-	  for(int i=0; i<top.size(); i++)
-	  {
-		int oc = bottom[0]->channels();
-		int ow = bottom[0]->width();
-		int oh = bottom[0]->height();
-		myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-	  }
-
-	  myRegInfo->Validate();
-	  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-	  delete myRegInfo;
-  }
-#endif
+    virtual void setup(const std::vector<Blob<Dtype>*>& bottom, const std::vector<Blob<Dtype>*>& top)
+    {
+      mn::OpRegInfo reg_info{ mn::train::get_session(), get_op_type(layer_param().type()) };
+      reg_info.set_name(layer_param().name());
+      for (int i = 0; i < bottom.size(); ++i) {
+        reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
+      }
+      for (int i = 0; i < top.size(); ++i) {
+        reg_info.add_output<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
+      }
+      layerOp = mn::train::add_operation(reg_info);
+    }
+#endif /* USE_MLSL */
 
   /**
    * @brief Whether a layer should be shared by multiple nets during data

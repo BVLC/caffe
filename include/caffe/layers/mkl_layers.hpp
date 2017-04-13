@@ -91,8 +91,8 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
 
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif /* USE_MLSL */
 
 
@@ -172,8 +172,8 @@ class MKLLRNLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif
 
  protected:
@@ -256,8 +256,8 @@ class MKLPoolingLayer : public Layer<Dtype> {
   }
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif /* USE_MLSL */
 
  protected:
@@ -330,12 +330,12 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   virtual inline const char* type() const { return "ReLU"; }
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 
 #ifdef CAFFE_MLSL_OWN_BUFFERS
-  virtual void out_layout(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void in_layout(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void out_layout(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void in_layout(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif
 #endif /* USE_MLSL */
 
@@ -386,8 +386,8 @@ class MKLConcatLayer : public Layer<Dtype> {
   ~MKLConcatLayer();
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif
 
  protected:

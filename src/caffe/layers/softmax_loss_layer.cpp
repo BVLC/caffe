@@ -42,10 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/softmax_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
 
 template <typename Dtype>
@@ -77,21 +73,13 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 
 #ifdef USE_MLSL
 
-    int ic = bottom[0]->channels();
-    int iw = bottom[0]->width();
-    int ih = bottom[0]->height();
+  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_EVAL};
+  reg_info.set_name(this->layer_param().name());
+  reg_info.add_input<Dtype>(bottom[0]->channels(), bottom[0]->width() * bottom[0]->height());
+  reg_info.add_input<Dtype>(bottom[1]->channels(), bottom[1]->width() * bottom[1]->height());
 
-    DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  	ComputeOpRegInfo *myRegInfo;
-  	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_EVAL);
-  	myRegInfo->SetName(this->layer_param_.name().c_str());
-  	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-  	myRegInfo->AddInputFeatureMap(bottom[1]->channels(), bottom[1]->width()*bottom[1]->height(), dt);
-
-    myRegInfo->Validate();
-  	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-    delete myRegInfo;
-
+  this->layerOp = mn::train::add_operation(reg_info);
+    
 #endif /* USE_MLSL */
 
 }

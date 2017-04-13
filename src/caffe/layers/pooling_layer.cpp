@@ -127,29 +127,15 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->height() + pad_w_);
   }
 
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_POOL);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  int channels_ = bottom[0]->channels();
-  for(int i=0; i<bottom.size(); i++)
-  {
-    int ic = bottom[i]->channels();
-    int iw = bottom[i]->width();
-    int ih = bottom[i]->height();
-    myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_POOL };
+  reg_info.set_name(this->layer_param().name());
+  for (int i = 0; i < bottom.size(); ++i) {
+    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
   }
-  for(int i=0; i<top.size(); i++)
-  {
-    int oc = channels_;
-    int ow = pooled_width_;
-    int oh = pooled_height_;
-    myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  for (int i = 0; i < top.size(); ++i) {
+    reg_info.add_output<Dtype>(bottom[0]->channels(), pooled_width_ * pooled_height_);
   }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
+  this->layerOp = mn::train::add_operation(reg_info);
 #endif
 
 }

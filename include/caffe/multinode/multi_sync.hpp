@@ -35,11 +35,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef CAFFE_MULTISYNC_HPP_
+#define CAFFE_MULTISYNC_HPP_
+
 #ifdef USE_MLSL
-
-
-#ifndef CAFFE_MLSLSYNC_HPP_
-#define CAFFE_MLSLSYNC_HPP_
 
 #include <string>
 #include "caffe/solver.hpp"
@@ -59,296 +58,184 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "caffe/caffe.hpp"
-#include "caffe/multinode/multi_sync.hpp"
+#include "caffe/multinode/mlsl.hpp"
 #include "caffe/multinode/multi_solver.hpp"
-
-#include "mlsl.h"
-
-using namespace MLSL;
 
 namespace caffe {
 
-#define CAN_USE_PRV(param) (0) //(param->prv_diff() && (param->prv_diff_count() == param->count()))
+#define CAN_USE_PRV(param) false //(param->prv_diff() && (param->prv_diff_count() == param->count()))
 
-template <typename Dtype>
-class MlslSync : public MlslSolver<Dtype>::Callback {
+  template <typename Dtype>
+  class MultiSync : public MultiSolver<Dtype>::Callback {
 
-    shared_ptr<MlslSolver<Dtype> > solver;
-    bool initialized;
-    boost::thread::id solver_thread_id;
+    boost::shared_ptr<MultiSolver<Dtype>> solver;
     int snapshot_per_iters;
 
-    vector<shared_ptr<Layer<Dtype> > > layers;
-    shared_ptr<Net<Dtype> > net;
-    const vector<Blob<Dtype>*>& net_params;
-    vector<vector<int> > layer_param_ids;
+    vector<shared_ptr<Layer<Dtype>>> layers;
+    shared_ptr<Net<Dtype>> net;
+    const vector<Blob<Dtype> *> &net_params;
+    vector<vector<int>> layer_param_ids;
 
-    vector<vector<int> > bottom_pack_block_nums;
-    vector<vector<int> > bottom_unpack_block_nums;
-    vector<vector<int> > top_pack_block_nums;
-    vector<vector<int> > top_unpack_block_nums;
+    vector<vector<int>> bottom_pack_block_nums;
+    vector<vector<int>> bottom_unpack_block_nums;
+    vector<vector<int>> top_pack_block_nums;
+    vector<vector<int>> top_unpack_block_nums;
 
     bool is_root; // MLSL::GetNodeId() == 0
 
-public:
+  public:
 
-    MlslSync(shared_ptr<Solver<Dtype> >);
-    ~MlslSync();
+    MultiSync(shared_ptr<Solver<Dtype> >);
+
+    ~MultiSync();
 
     void snapshot() {
-        if (is_root) {
-            for (int layer_id = 0; layer_id < layers.size(); ++layer_id) {
-                //apply_updates(layer_id);
-            }
-            solver->root_solver()->Snapshot();
+      if (is_root) {
+        for (int layer_id = 0; layer_id < layers.size(); ++layer_id) {
+          //apply_updates(layer_id);
         }
+        solver->root_solver()->Snapshot();
+      }
     }
-    
-    void synchronize_params() {
-        // FIXME: use MLSL API to bcast initial weights values
-        LOG(WARNING) << "synchronize_params: bcast";
-        for (int idx = 0; idx < net_params.size(); ++idx) {
-            MPI_Bcast(net_params[idx]->mutable_cpu_data(),
-                      net_params[idx]->count(),
-                      (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE,
-                      0,
-                      MPI_COMM_WORLD);
-        }
+
+    void synchronize_parameters() {
+      LOG(WARNING) << "synchronize_params: bcast";
+      for (int idx = 0; idx < net_params.size(); ++idx) {
+        mn::bcast(net_params[idx]->mutable_cpu_data(), net_params[idx]->count());
+      }
+
     }
 
     void run() {
-        LOG(WARNING) << "RUN: "
-                     << "PER LAYER TIMINGS ARE"
-#ifdef CAFFE_PER_LAYER_TIMINGS
-                     << " ENABLED"
-#else
-                     << " DISABLED"
+      LOG(WARNING) << "RUN: "
+                   << "PER LAYER TIMINGS ARE"
+                   #ifdef CAFFE_PER_LAYER_TIMINGS
+                   << " ENABLED"
+                   #else
+                   << " DISABLED"
+                   #endif
+                   << ", SINGLE DB SPLITTING IS"
+                   #ifdef CAFFE_MLSL_SHUFFLE
+                   << " ENABLED"
+                   #else
+                   << " DISABLED"
 #endif
-                     << ", SINGLE DB SPLITTING IS"
-#ifdef CAFFE_MLSL_SHUFFLE
-                     << " ENABLED"
-#else
-                     << " DISABLED"
-#endif
-                     ;
+        ;
 
+      synchronize_parameters();
+      mn::train::commit();
+      solver->add_callback(this);
+      solver->Solve();
+      if (is_root) {
+        //solver->root_solver()->Snapshot();
+      }
+    }
 
-        synchronize_params();
-                                                                                                                                    
-        solver->add_callback(this);
-        solver->Solve();
-        if (is_root) {
-            //solver->root_solver()->Snapshot();
-        }
-  }
-
-  void set_solver_thread() {
-      solver_thread_id = boost::this_thread::get_id();
-  }
-
-  void check_snapshot() {
-      CHECK(boost::this_thread::get_id() == solver_thread_id);
-      if (!is_root) return;
-
-      if ((snapshot_per_iters != 0)
-          && (solver->root_solver()->iter() % snapshot_per_iters == 0)) {
+    void check_snapshot() {
+      if (is_root) {
+        if ((snapshot_per_iters != 0) && (solver->root_solver()->iter() % snapshot_per_iters == 0)) {
           solver->root_solver()->Snapshot();
+        }
       }
-  }
+    }
 
-  void apply_updates(int layer_id) {
-
-      CHECK(boost::this_thread::get_id() == solver_thread_id);
-
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      vector<int>& param_ids = layer_param_ids[layer_id];
-      LOG_LAYER(layer) << "bprop: apply_updates: layer_id " << layer_id << ", param_ids size " << param_ids.size();
-
+    void apply_updates(int layer_id) {
+      std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: apply_updates: delwt for sgd:");
-          solver->root_solver()->ApplyUpdate(param_ids[i]);
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: apply_updates: wtinc after sgd:");
+        solver->root_solver()->ApplyUpdate(param_ids[i]);
       }
-  }
+    }
 
-  void on_start() {
-      if (!initialized) {
-          set_solver_thread();
-          initialized = true;
-      }
+    void on_start() {
       check_snapshot();
       DLOG(INFO) << "started iteration " << solver->root_solver()->iter();
-  }
+    }
 
-
-
-  // main callback for MlslSolver loop
-  void on_forward_start(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      int bottom_size = layer->layer_param().bottom_size();
-      LOG_LAYER(layer) << "fprop: on_forward_start: layer_id " << layer_id << ", bottom_size " << bottom_size;
-
-      for (int bottom_id = 0; bottom_id < bottom_size; ++bottom_id) {
-
-          if (!bottom_unpack_block_nums[layer_id][bottom_id]) {
-              LOG_LAYER(layer) << "fprop: on_forward_start: skip CommsWait for bottom_id " << bottom_id;
-              continue;
+    // main callback for MultiSolver loop
+    void on_forward_start(int layer_id) {
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      int bottom_size{layer->layer_param().bottom_size()};
+      for (int i = 0; i < bottom_size; ++i) {
+        if (bottom_unpack_block_nums[layer_id][i] != 0) {
+          MLSL::Activation *activation{layer->layerOp->GetInput(i)};
+          Dtype *comms_buf{(Dtype *) activation->WaitComm()};
+          if (comms_buf != nullptr) {
+            layer->unpack_buffer(activation, comms_buf, layer->bottom_vec[i]->mutable_cpu_data());
           }
-          
-          FeatureMap *fm = layer->layerOp->InputFeatureMap(bottom_id);
-          LOG_LAYER(layer) << "fprop: on_forward_start: wait data from bottom_id " << bottom_id;
-          Dtype *comms_buf = (Dtype *)fm->CommsWait();
-          LOG_LAYER(layer) << "fprop: on_forward_start: got data from bottom_id " << bottom_id;
+        }
+      }
+    }
 
+    void on_forward_finished(int layer_id) {
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      int top_size{layer->layer_param().top_size()};
+      for (int i = 0; i < top_size; ++i) {
+        if (top_pack_block_nums[layer_id][i] != 0) {
+          MLSL::Activation *activation{layer->layerOp->GetOutput(i)};
+          Dtype *comms_buf{(Dtype *) activation->GetCommBuf()};
           if (comms_buf) {
-              layer->unpack_buffer(fm, comms_buf, layer->bottom_vec[bottom_id]->mutable_cpu_data());
-              LOG_BLOB(layer, layer->bottom_vec[bottom_id], data, bottom_id, "fprop: on_forward_start: bottom_data:");
-              LOG_BUFFER(layer, comms_buf, bottom_id, "fprop: on_forward_start: comms_buf:");
+            layer->pack_buffer(activation, comms_buf, layer->top_vec[i]->cpu_data());
+            activation->StartComm(comms_buf);
           }
+        }
       }
+    }
 
-#ifdef DEBUG
-      if (layer->layerOp->HasWeights()) {
-          vector<int>& param_ids = layer_param_ids[layer_id];
-          LOG_LAYER(layer) << "fprop: on_forward_start: param_ids size " << param_ids.size();
-
-          for (int i = 0; i < param_ids.size(); ++i) {
-              LOG_BLOB(layer, net_params[param_ids[i]], data, param_ids[i], "fprop: on_forward_start: weigths_data:");
-          }
-      }
-#endif
-
-  }
-
-  void on_forward_finished(int layer_id) {
-
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      int top_size = layer->layer_param().top_size();
-      LOG_LAYER(layer) << "fprop: on_forward_finished: layer_id " << layer_id << ", top_size " << top_size;
-
-      for (int top_id = 0; top_id < top_size; ++top_id) {
-
-          if (!top_pack_block_nums[layer_id][top_id]) {
-              LOG_LAYER(layer) << "fprop: on_forward_finished: skip CommsStart for top_id " << top_id;
-              continue;
-          }
-          
-          FeatureMap *fm = layer->layerOp->OutputFeatureMap(top_id);
-          Dtype* comms_buf = (Dtype *)fm->CBuf()->GetPtr();
-
+    void on_backward_start(int layer_id) {
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      int top_size{layer->layer_param().top_size()};
+      for (int i = 0; i < top_size; ++i) {
+        if (top_unpack_block_nums[layer_id][i] != 0) {
+          MLSL::Activation *activation{layer->layerOp->GetOutput(i)};
+          Dtype *comms_buf{(Dtype *) activation->WaitComm()};
           if (comms_buf) {
-              layer->pack_buffer(fm, comms_buf, layer->top_vec[top_id]->cpu_data());
-              LOG_BLOB(layer, layer->top_vec[top_id], data, top_id, "fprop: on_forward_finished: top_data:");
-              LOG_BUFFER(layer, comms_buf, top_id, "fprop: on_forward_finished: comms_buf:");
-              LOG_LAYER(layer) << "fprop: on_forward_finished: send data to top_id " << top_id;
-              fm->CommsStart(comms_buf);
+            layer->unpack_buffer(activation, comms_buf, layer->top_vec[i]->mutable_cpu_diff());
           }
+        }
       }
+    }
 
-#ifdef DEBUG
-      if (layer->layerOp->HasWeights()) {
-          vector<int>& param_ids = layer_param_ids[layer_id];
-          LOG_LAYER(layer) << "fprop: on_forward_finished: param_ids size " << param_ids.size();
-
-          for (int i = 0; i < param_ids.size(); ++i) {
-              LOG_BLOB(layer, net_params[param_ids[i]], data, param_ids[i], "fprop: on_forward_finished: weigths_data:");
-          }
+    void on_iter_finished(int layer_id) {
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      std::vector<int> &param_ids = layer_param_ids[layer_id];
+      for (int i = 0; i < param_ids.size(); ++i) {
+        if (CAN_USE_PRV(net_params[param_ids[i]])) {
+          layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_prv_diff());
+        } else {
+          layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_cpu_diff());
+        }
       }
-#endif
+    }
 
-  }
-
-  void on_backward_start(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      int top_size = layer->layer_param().top_size();
-      LOG_LAYER(layer) << "bprop: on_backward_start: layer_id " << layer_id << ", top size " << top_size;
-
-      for (int top_id = 0; top_id < top_size; ++top_id) {
-
-          if (!top_unpack_block_nums[layer_id][top_id]) {
-              LOG_LAYER(layer) << "bprop: on_backward_start: skip CommsWait for top_id " << top_id;
-              continue;
-          }
-
-          FeatureMap *fm = layer->layerOp->OutputFeatureMap(top_id);
-          Dtype *comms_buf = (Dtype *)fm->CommsWait();
-          LOG_LAYER(layer) << "bprop: on_backward_start: got delout from top_id " << top_id;
-
-          if (comms_buf) {
-              layer->unpack_buffer(fm, comms_buf, layer->top_vec[top_id]->mutable_cpu_diff());
-              LOG_BLOB(layer, layer->top_vec[top_id], diff, top_id, "bprop: on_backward_start: top_diff:");
-              LOG_BUFFER(layer, comms_buf, top_id, "bprop: on_backward_start: comms_buf:");
-          }
-      }
-  }
-
-  void on_iter_finished(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      LOG_LAYER(layer) << "bprop: on_iter_finished: iter " << solver->root_solver()->iter() << ", layer id " << layer_id;
-
-      vector<int>& param_ids = layer_param_ids[layer_id];
-      LOG_LAYER(layer) << "bprop: on_iter_finished: param_ids size " << param_ids.size();
+    void on_delwt_wait(int layer_id) {
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      std::vector<int> &param_ids = layer_param_ids[layer_id];
 
       for (int i = 0; i < param_ids.size(); ++i) {
+        Dtype *delwt_buf{(Dtype *) layer->layerOp->GetParameterSet(i)->WaitGradientComm()};
+        if (delwt_buf) {
+          if (CAN_USE_PRV(net_params[param_ids[i]])) {
+            if (delwt_buf != net_params[param_ids[i]]->prv_diff())
+              caffe_copy(net_params[param_ids[i]]->count(),
+                         delwt_buf,
+                         net_params[param_ids[i]]->mutable_prv_diff());
+          } else if (delwt_buf != net_params[param_ids[i]]->cpu_diff())
+            caffe_copy(net_params[param_ids[i]]->count(),
+                       delwt_buf,
+                       net_params[param_ids[i]]->mutable_cpu_diff());
 
-          LOG_LAYER(layer) << "bprop: on_iter_finished: start delwt for param_id " << param_ids[i];
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_iter_finished: delwt:");
-          
-          if (CAN_USE_PRV(net_params[param_ids[i]]))
-              layer->layerOp->GetWeights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_prv_diff());
-          else
-              layer->layerOp->GetWeights(i)->CommsStartDelWt((void*)net_params[param_ids[i]]->mutable_cpu_diff());
-
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_iter_finished:  delwt before comms:");
+        }
       }
-  }
+    }
 
-  void on_delwt_wait(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      LOG_LAYER(layer) << "bprop: on_delwt_wait: iter " << solver->root_solver()->iter() << ", layer id " << layer_id;
-
-      vector<int>& param_ids = layer_param_ids[layer_id];
-      LOG_LAYER(layer) << "bprop: on_delwt_wait: param_ids size " << param_ids.size();
-
-      for (int i = 0; i < param_ids.size(); ++i) {
-
-          LOG_LAYER(layer) << "bprop: on_delwt_wait: wait delwt for param_id " << param_ids[i];
-          Dtype* delwt_buf = (Dtype*)layer->layerOp->GetWeights(i)->CommsWaitDelWt();
-          LOG_LAYER(layer) << "bprop: on_delwt_wait: got delwt for param_id " << param_ids[i];
-
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_delwt_wait: delwt after comms:");
-          LOG_BUFFER(layer, delwt_buf, param_ids[i], "bprop: on_delwt_wait: comms buffer:");
-
-          if (delwt_buf)
-          {
-              if (CAN_USE_PRV(net_params[param_ids[i]])) {
-                  if (delwt_buf != net_params[param_ids[i]]->prv_diff())
-                      caffe_copy(net_params[param_ids[i]]->count(),
-                                 delwt_buf,
-                                 net_params[param_ids[i]]->mutable_prv_diff());
-              }
-              else if (delwt_buf != net_params[param_ids[i]]->cpu_diff())
-                  caffe_copy(net_params[param_ids[i]]->count(),
-                             delwt_buf,
-                             net_params[param_ids[i]]->mutable_cpu_diff());
-
-          }
-
-          LOG_LAYER(layer) << "bprop: on_delwt_wait: got delwt for param_id " << param_ids[i];
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_delwt_wait: delwt:");
-      }
-  }
-
-  void on_gradients_ready() {
+    void on_gradients_ready() {
       DLOG(INFO) << "finished iteration " << solver->root_solver()->iter();
-  }
-  
-};
+    }
+
+  };
 
 } // namespace caffe
 
-
-#endif  // CAFFE_MLSLSYNC_HPP_
-
 #endif /* USE_MLSL */
 
+#endif  // CAFFE_MULTISYNC_HPP_

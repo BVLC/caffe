@@ -77,8 +77,8 @@ class BaseDataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
 #ifdef USE_MLSL
-  virtual void pack_buffer(MLSL::FeatureMap *fm, Dtype *to, const Dtype *from);
-  virtual void unpack_buffer(MLSL::FeatureMap *fm, const Dtype *from, Dtype *to);
+  virtual void pack_buffer(MLSL::Activation *activation, Dtype *to, const Dtype *from);
+  virtual void unpack_buffer(MLSL::Activation *activation, const Dtype *from, Dtype *to);
 #endif /* USE_MLSL */
 
  protected:

@@ -37,30 +37,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
 #include <vector>
+
+#include <boost/make_shared.hpp>
+#include <boost/bind.hpp>
+
 #include "caffe/multinode/multi_solver.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-MlslSolver<Dtype>::MlslSolver(shared_ptr<Solver<Dtype> > root_solver)
-  : root_solver_(root_solver)
-  , iter_size(root_solver->param().iter_size())
-  , multi_node(MLSL::GetNumNodes() > 1) {
-
-  root_solver->set_forward_backward(
-    boost::bind(&MlslSolver<Dtype>::ForwardBackward, this));
-}
-
-template <typename Dtype>
-Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
+Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
-  const vector<shared_ptr<Layer<Dtype> > >& layers = net.layers();
-  const vector<bool>& layer_need_backward = net.layer_need_backward();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+  const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
 
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
@@ -77,35 +69,17 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     timer.Start();
 #endif
 
-    if (multi_node && layers[i]->layerOp->NumInputFeatureMaps()) {
+    if (multi_node && layers[i]->layerOp->GetInputCount()) {
         for (int j = 0; j < callbacks_.size(); ++j) {
             callbacks_[j]->on_forward_start(i); // wait input
         }
     }
 
-    shared_ptr<Layer<Dtype> > layer = net.layers()[i];
+    boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
 
-    for (int bottom_idx = 0; bottom_idx < net.bottom_vecs()[i].size(); bottom_idx++)
-        LOG_BLOB(layer, net.bottom_vecs()[i][bottom_idx], data, bottom_idx, "fprop: input data values:");
+    loss += net.ForwardFromTo(i, i);
 
-    for (int param_idx = 0; param_idx < layer->blobs().size(); param_idx++) {
-          LOG_BLOB(layer, layer->blobs()[param_idx], data, param_idx, "fprop: weights:");
-    }
-
-    Dtype layer_loss = net.ForwardFromTo(i, i);
-
-    for (int top_idx = 0; top_idx < net.top_vecs()[i].size(); top_idx++)
-        LOG_BLOB(layer, net.top_vecs()[i][top_idx], data, top_idx, "fprop: output data values:");
-
-
-    loss += layer_loss;
-
-    DLOG(WARNING) << "iter " << root_solver_->iter() 
-                  << ", layer_id " << i
-                  << ", layer_type " << layers[i]->type()
-                  << ", layer_loss " << layer_loss;
-
-    if (multi_node && layers[i]->layerOp->NumOutputFeatureMaps()) {
+    if (multi_node && layers[i]->layerOp->GetOutputCount()) {
         for (int j = 0; j < callbacks_.size(); ++j) {
           callbacks_[j]->on_forward_finished(i); // start ouput
         }
@@ -129,28 +103,19 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
       continue;
     }
 
-    if (multi_node && layers[i]->layerOp->NumOutputFeatureMaps()) {
+    if (multi_node && layers[i]->layerOp->GetOutputCount()) {
         for (int j = 0; j < callbacks_.size(); ++j) {
             callbacks_[j]->on_backward_start(i); // wait delout
         }
     }
     
-    shared_ptr<Layer<Dtype> > layer = net.layers()[i];
-
-    for (int top_idx = 0; top_idx < net.top_vecs()[i].size(); top_idx++)
-        LOG_BLOB(layer, net.top_vecs()[i][top_idx], diff, top_idx, "bprop: input diff values:");
-
-
+    boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
     net.BackwardFromTo(i, i); // start delinp in the middle of bprop if layer has weights (for overlapping with delwt calculation)
 
-
-    for (int bottom_idx = 0; bottom_idx < net.bottom_vecs()[i].size(); bottom_idx++)
-        LOG_BLOB(layer, net.bottom_vecs()[i][bottom_idx], diff, bottom_idx, "bprop: output diff values:");
-
-    if (multi_node && !layers[i]->layerOp->HasWeights() && layers[i]->layerOp->NumInputFeatureMaps()) // otherwise start delinp here
-        layers[i]->on_delinp_ready(net.bottom_need_backward()[i]);
-
-    if (multi_node && last && layers[i]->layerOp->HasWeights()) {
+    if (multi_node && !layers[i]->layerOp->HasParameterSets() && layers[i]->layerOp->GetInputCount()) { // otherwise start delinp here
+      layers[i]->on_delinp_ready(net.bottom_need_backward()[i]);
+    }
+    if (multi_node && last && layers[i]->layerOp->HasParameterSets()) {
       for (int j = 0; j < callbacks_.size(); ++j) {
           callbacks_[j]->on_iter_finished(i); // start delwt
       }
@@ -162,7 +127,6 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   }
 
-
   if (last) {
     for (int i = 0; i < layers.size(); ++i) {
 
@@ -170,7 +134,7 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
       timer.Start();
 #endif
 
-      if (!layer_need_backward[i] || !layers[i]->layerOp->HasWeights()) {
+      if (!layer_need_backward[i] || !layers[i]->layerOp->HasParameterSets()) {
         DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # " << i
                    << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
         continue;
@@ -182,11 +146,7 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
           }
       }
 
-      shared_ptr<Layer<Dtype> > layer = net.layers()[i];
-
-      for (int param_idx = 0; param_idx < layer->blobs().size(); param_idx++) {
-          LOG_BLOB(layer, layer->blobs()[param_idx], diff, param_idx, "bprop: delwt:");
-      }
+      boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
 
       for (int j = 0; j < callbacks_.size(); ++j) {
           callbacks_[j]->apply_updates(i);
@@ -204,7 +164,7 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 }
 
 template <typename Dtype>
-Dtype MlslSolver<Dtype>::ForwardBackward() {
+Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
   for (int i = 0; i < iter_size; ++i) {
     loss += ForwardBackwardImpl(
@@ -213,12 +173,7 @@ Dtype MlslSolver<Dtype>::ForwardBackward() {
   return loss / iter_size;
 }
 
-template <typename Dtype>
-void MlslSolver<Dtype>::Solve() {
-  root_solver_->Solve();
-}
-
-INSTANTIATE_CLASS(MlslSolver);
+INSTANTIATE_CLASS(MultiSolver);
 
 }  // namespace caffe
 

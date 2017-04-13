@@ -42,10 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/dropout_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
 
 template <typename Dtype>
@@ -59,23 +55,16 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
 
 #ifdef USE_MLSL
-  int ic = bottom[0]->channels();
-  int iw = bottom[0]->width();
-  int ih = bottom[0]->height();
-  int oc = ic; //top[0]->channels();
-  int ow = iw; //top[0]->width();
-  int oh = ih; //top[0]->height();
+  int c = bottom[0]->channels();
+  int w = bottom[0]->width();
+  int h = bottom[0]->height();
 
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-	ComputeOpRegInfo *myRegInfo;
-	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_ACT);
-        myRegInfo->SetName(this->layer_param_.name().c_str());
-	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-	myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_ACT};
+  reg_info.set_name(this->layer_param().name());
+  reg_info.add_input<Dtype>(c, w * h);
+  reg_info.add_output<Dtype>(c, w * h);
 
-  myRegInfo->Validate();
-	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
+  this->layerOp = mn::train::add_operation(reg_info);
 #endif
   
 }

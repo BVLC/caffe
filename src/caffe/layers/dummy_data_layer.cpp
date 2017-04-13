@@ -40,10 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layers/dummy_data_layer.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
 
 template <typename Dtype>
@@ -139,17 +135,12 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_MLSL
 
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_DATA);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for(int i = 0; i< num_top; i++) {
-	myRegInfo->AddOutputFeatureMap(top[i]->channels(), top[i]->width()*top[i]->height(), dt);
+  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_DATA };
+  reg_info.set_name(this->layer_param().name());
+  for (int i = 0; i < num_top; ++i) {
+    reg_info.add_output<Dtype>(top[i]->channels(), top[i]->width() * top[i]->height());
   }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
+  this->layerOp = mn::train::add_operation(reg_info);
 
 #endif /* USE_MLSL */
 

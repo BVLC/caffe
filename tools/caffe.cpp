@@ -314,9 +314,9 @@ int train() {
   }
 
 #ifdef USE_MLSL
-  if (MLSL::GetNumNodes() > 1) {
+  if (caffe::mn::is_multinode()) {
     LOG(INFO) << "Configuring multinode setup";
-    caffe::MlslSync<float> sync(solver);
+    caffe::MultiSync<float> sync(solver);
     LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
     sync.run();
   } else

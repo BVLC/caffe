@@ -111,31 +111,15 @@ void MKLConcatLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnDelete<Dtype>(concatBwd_);
 
 #ifdef USE_MLSL
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_CONCAT);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for (int i=0; i<bottom.size(); i++)
-  {
-      int ic = bottom[i]->channels();
-      int iw = bottom[i]->width();
-      int ih = bottom[i]->height();
-      myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
+  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
+  reg_info.set_name(this->layer_param().name());
+  for (int i = 0; i < bottom.size(); ++i) {
+    reg_info.add_input<Dtype>(bottom[i]->channels(), bottom[i]->width() * bottom[i]->height());
   }
-
-  for(int i=0; i<top.size(); i++)
-  {
-      int oc = channels_;
-      int ow = bottom[0]->width();
-      int oh = bottom[0]->height();
-      myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
+  for (int i = 0; i < top.size(); ++i) {
+    reg_info.add_output<Dtype>(channels_, bottom[0]->width() * bottom[0]->height());
   }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-
+  this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 
 }
@@ -168,46 +152,44 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_MLSL
 template <typename Dtype>
-void MKLConcatLayer<Dtype>::pack_buffer(FeatureMap *fm, Dtype *comms_buf, const Dtype *local_buf) {
-    for (int i = 0; i < fm->NumPackBlocks(); i++) {
-        BlockInfo * bi = fm->GetPackBlock(i);
-        int bMBLen = bi->MBLen();
-        int bMBStart = bi->MBStart();
-        int bFMLen = bi->FMLen();
-        int bFMStart = bi->FMStart();
-        Dtype *src = (Dtype*) local_buf;
-        Dtype *dst = (Dtype*) (comms_buf + bi->BufOffset());
-        for (int mb = 0; mb < bMBLen; mb++) {
-            for (int fm = 0; fm < bFMLen; fm++) {
-                for (int s = 0 ; s < bi->FMSize(); s++) {
-                    //dst[fm][mb][s] = src[bMBStart+mb][bFMStart+fm][s];
-                    dst[(fm*bMBLen + mb)*bi->FMSize() + s] =
-                        src[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s];
-                }
-            }
+void MKLConcatLayer<Dtype>::pack_buffer(MLSL::Activation *activation, Dtype *comms_buf, const Dtype *local_buf) {
+  for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
+    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
+    size_t bMBLen{ bi->GetMbCount() };
+    size_t bMBStart{ bi->GetMbOffset() };
+    size_t bFMLen{ bi->GetFmCount() };
+    size_t bFMStart{ bi->GetFmOffset() };
+    const Dtype *src{ local_buf };
+    Dtype *dst{ comms_buf + bi->GetBufOffset() };
+    for (int mb = 0; mb < bMBLen; ++mb) {
+      for (int fm = 0; fm < bFMLen; ++fm) {
+        for (int s = 0; s < bi->GetFmSize(); s++) {
+          dst[(fm * bMBLen + mb) * bi->GetFmSize() + s] = src[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s];
         }
+      }
     }
   }
+}
 
-  template <typename Dtype>
-  void MKLConcatLayer<Dtype>::unpack_buffer(FeatureMap *fm, const Dtype *comms_buf, Dtype *local_buf) {
-      for (int i = 0; i < fm->NumPackBlocks(); i++) {
-          BlockInfo * bi = fm->GetPackBlock(i);
-          int bMBLen = bi->MBLen();
-          int bMBStart = bi->MBStart();
-          int bFMLen = bi->FMLen();
-          int bFMStart = bi->FMStart();
-          Dtype *dst = (Dtype*) local_buf;
-          Dtype *src = (Dtype*) (comms_buf + bi->BufOffset());
-          for (int mb = 0; mb < bMBLen; mb++) {
-              for (int fm = 0; fm < bFMLen; fm++) {
-                  for (int s = 0 ; s < bi->FMSize(); s++) {
-                    dst[((bMBStart+mb)*bFMLen + bFMStart+fm)*bi->FMSize() + s] = src[(fm*bMBLen + mb)*bi->FMSize() + s];
-                  }
-              }
-          }
+template <typename Dtype>
+void MKLConcatLayer<Dtype>::unpack_buffer(MLSL::Activation *activation, const Dtype *comms_buf, Dtype *local_buf) {
+  for (int i = 0; i < activation->GetPackBlockCount(); ++i) {
+    MLSL::CommBlockInfo *bi{ activation->GetPackBlock(i) };
+    size_t bMBLen{ bi->GetMbCount() };
+    size_t bMBStart{ bi->GetMbOffset() };
+    size_t bFMLen{ bi->GetFmCount() };
+    size_t bFMStart{ bi->GetFmOffset() };
+    Dtype *dst{ local_buf };
+    const Dtype *src{ comms_buf + bi->GetBufOffset() };
+    for (int mb = 0; mb < bMBLen; ++mb) {
+      for (int fm = 0; fm < bFMLen; ++fm) {
+        for (int s = 0; s < bi->GetFmSize(); ++s) {
+          dst[((bMBStart + mb) * bFMLen + bFMStart + fm) * bi->GetFmSize() + s] = src[(fm * bMBLen + mb) * bi->GetFmSize() + s];
+        }
       }
+    }
   }
+}
 
 #endif /* USE_MLSL */
 

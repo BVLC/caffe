@@ -263,9 +263,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
-            SetMinibatchSize(batch_size * GetNumNodes());
+            mn::train::set_global_minibatch_size(batch_size * mn::get_nodes_count());
         }
-        caffe::internode::mlsl_init_distributions();
     }
 #endif /* USE_MLSL */
 
@@ -462,7 +461,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
 
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
-          shared_ptr<Layer<Dtype> > layer = layers_[layer_id];
+        boost::shared_ptr<Layer<Dtype>> layer{ layers_[layer_id] };
           layer->ConfigureMLSL();
 
           /* All sanity check are below */
@@ -477,11 +476,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
                              << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
           }
 
-          if (layer->layerOp->HasWeights()) {
+          if (layer->layerOp->HasParameterSets()) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
               for (int i = 0; i < param_ids.size(); i++) {
-                  int mlsl_weight_size = layer->layerOp->GetWeights(i)->LocalLen()
-                                        * layer->layerOp->GetWeights(i)->WTSize()
+                  int mlsl_weight_size = layer->layerOp->GetParameterSet(i)->GetLocalKernelCount()
+                                        * layer->layerOp->GetParameterSet(i)->GetKernelSize()
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
                   if (mlsl_weight_size < caffe_weight_size)

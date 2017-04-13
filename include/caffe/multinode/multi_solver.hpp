@@ -35,12 +35,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef USE_MLSL
-
 #ifndef CAFFE_MLSLSOLVER_HPP_
 #define CAFFE_MLSLSOLVER_HPP_
 
+#ifdef USE_MLSL
+
 #include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <string>
 #include <vector>
@@ -52,16 +53,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 
 template <typename Dtype>
-class MlslSolver {
+class MultiSolver {
  public:
-  explicit MlslSolver(shared_ptr<Solver<Dtype> > root_solver);
+  explicit MultiSolver(boost::shared_ptr<Solver<Dtype>> root_solver)
+    : root_solver_(root_solver),
+      iter_size(root_solver_->param().iter_size()) {
+    root_solver_->set_forward_backward(
+      boost::bind(&MultiSolver<Dtype>::ForwardBackward, this));
+  }
+
 
   // Invoked at specific points during an iteration
   class Callback : public Solver<Dtype>::Callback {
-   protected:
-
-    virtual void on_start() = 0;  // from Solver<Dtype>::Callback
-    
+  protected:
+    virtual ~Callback() {
+    }
     virtual void on_iter_finished(int layer_id) = 0;
 
     virtual void on_forward_start(int layer_id) = 0;
@@ -72,12 +78,8 @@ class MlslSolver {
     virtual void on_delwt_wait(int layer_id) = 0;
     virtual void apply_updates(int layer_id) = 0;
 
-    virtual void on_gradients_ready() = 0;  // from Solver<Dtype>::Callback, empty function, weigths update will be in MlslSolver loop
-
-    virtual void synchronize_params() = 0;
-
     template <typename T>
-    friend class MlslSolver;
+    friend class MultiSolver;
   };
 
   void add_callback(Callback* value) {
@@ -85,9 +87,11 @@ class MlslSolver {
     callbacks_.push_back(value);
   }
 
-  virtual Dtype ForwardBackward();
+  Dtype ForwardBackward();
 
-  virtual void Solve();
+  void Solve() {
+    root_solver_->Solve();
+  }
 
   Net<Dtype>& net() {
     return *root_solver_->net();
@@ -97,7 +101,7 @@ class MlslSolver {
     return root_solver_->param();
   }
 
-  shared_ptr<Solver<Dtype> > root_solver() {
+  boost::shared_ptr<Solver<Dtype>> root_solver() {
     return root_solver_;
   }
 
@@ -105,7 +109,7 @@ class MlslSolver {
   virtual Dtype ForwardBackwardImpl(bool first, bool last);
 
  protected:
-  shared_ptr<Solver<Dtype> > root_solver_;
+  boost::shared_ptr<Solver<Dtype>> root_solver_;
   int iter_size;
   vector<Callback*> callbacks_;
   bool multi_node;
@@ -113,6 +117,6 @@ class MlslSolver {
 
 }  // namespace caffe
 
-#endif  // CAFFE_MLSLSOLVER_HPP_
-
 #endif // USE_MLSL
+
+#endif  // CAFFE_MLSLSOLVER_HPP_
