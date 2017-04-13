@@ -52,12 +52,6 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
       << "Either axis or concat_dim should be specified; not both.";
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

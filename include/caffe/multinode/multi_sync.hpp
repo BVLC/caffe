@@ -84,7 +84,8 @@ namespace caffe {
 
     MultiSync(shared_ptr<Solver<Dtype> >);
 
-    ~MultiSync();
+    virtual ~MultiSync() {
+    }
 
     void snapshot() {
       if (is_root()) {
@@ -143,6 +144,9 @@ namespace caffe {
 
     void on_iter_finished(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      if (layer->layerOp == nullptr) {
+        return;
+      }
       std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
         if (CAN_USE_PRV(net_params[param_ids[i]])) {
@@ -155,6 +159,9 @@ namespace caffe {
 
     void on_delwt_wait(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      if (layer->layerOp == nullptr) {
+        return;
+      }
       std::vector<int> &param_ids = layer_param_ids[layer_id];
 
       for (int i = 0; i < param_ids.size(); ++i) {

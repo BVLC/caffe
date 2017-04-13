@@ -54,13 +54,6 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   if (has_ignore_label_) {
     ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
   }
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_EVAL };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
-
 }
 
 template <typename Dtype>

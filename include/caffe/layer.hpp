@@ -184,41 +184,6 @@ public:
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
-#ifdef USE_MLSL
-    virtual MLSL::OpType get_op_type(std::string const& layerType) {
-      if (layerType == "Data") {
-        return MLSL::OT_DATA;
-      }
-      if ((layerType == "Dropout") ||
-          (layerType == "ReLU") ||
-          (layerType == "Flatten")) {
-        return MLSL::OT_ACT;
-      }
-      if ((layerType == "Pooling") ||
-          (layerType == "LRN")) {
-        return MLSL::OT_POOL;
-      }
-      if ((layerType == "Accuracy") ||
-          (layerType == "SoftmaxWithLoss")) {
-        return MLSL::OT_EVAL;
-      }
-      if (layerType == "Split") {
-        return MLSL::OT_BCAST;
-      }
-      if (layerType == "Concat") {
-        return MLSL::OT_CONCAT;
-      }
-      return MLSL::OT_CC;
-    }
-
-    virtual void setup(const std::vector<Blob<Dtype>*>& bottom, const std::vector<Blob<Dtype>*>& top)
-    {
-      mn::OpRegInfo reg_info{ mn::train::get_session(), get_op_type(layer_param().type()) };
-      reg_info.set_name(layer_param().name());
-      layerOp = mn::train::add_operation(reg_info);
-    }
-#endif /* USE_MLSL */
-
   /**
    * @brief Whether a layer should be shared by multiple nets during data
    *        parallelism. By default, all layers except for data layers should

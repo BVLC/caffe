@@ -53,12 +53,6 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_ACT};
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

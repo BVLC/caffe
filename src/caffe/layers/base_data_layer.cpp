@@ -67,13 +67,6 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   data_transformer_->InitRand();
   // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
-
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_DATA };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

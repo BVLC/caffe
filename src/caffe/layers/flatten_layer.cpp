@@ -41,18 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void FlattenLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_ACT};
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-}
-
-#endif /* USE_MLSL */
-
 template <typename Dtype>
 void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {

@@ -96,13 +96,6 @@ void MKLLRNLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnDelete<Dtype>(lrnBwd);
   dnnReleaseBuffer<Dtype>(lrn_buffer_);
   lrn_buffer_ = NULL;
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_POOL };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
-
 }
 
 template <typename Dtype>

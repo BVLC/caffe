@@ -85,7 +85,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     
     net.BackwardFromTo(i, i);
 
-    if ((mn::get_nodes_count() > 1) && last && layers[i]->layerOp->HasParameterSets()) {
+    if (last && (layers[i]->layerOp != nullptr) && layers[i]->layerOp->HasParameterSets()) {
       for (int j = 0; j < callbacks_.size(); ++j) {
           callbacks_[j]->on_iter_finished(i);
       }
@@ -103,16 +103,14 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
       timer.Start();
 #endif
 
-      if (!layer_need_backward[i] || !layers[i]->layerOp->HasParameterSets()) {
+      if (!layer_need_backward[i] || ((layers[i]->layerOp != nullptr) && !layers[i]->layerOp->HasParameterSets())) {
         DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # " << i
                    << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
         continue;
       }
 
-      if (mn::get_nodes_count() > 1) {
-          for (int j = 0; j < callbacks_.size(); ++j) {
-              callbacks_[j]->on_delwt_wait(i);
-          }
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_delwt_wait(i);
       }
 
       boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };

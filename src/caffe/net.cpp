@@ -402,7 +402,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 #ifdef USE_MLSL
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
         boost::shared_ptr<Layer<Dtype>> layer{ layers_[layer_id] };
-          if (layer->layerOp->HasParameterSets()) {
+        if ((layer->layerOp != nullptr) && layer->layerOp->HasParameterSets()) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
               for (int i = 0; i < param_ids.size(); i++) {
                   int mlsl_weight_size = layer->layerOp->GetParameterSet(i)->GetLocalKernelCount()

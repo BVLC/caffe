@@ -107,13 +107,6 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(pad_h_, kernel_h_);
     CHECK_LT(pad_w_, kernel_w_);
   }
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_POOL };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif
-
 }
 
 template <typename Dtype>

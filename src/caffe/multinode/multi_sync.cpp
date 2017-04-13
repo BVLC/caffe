@@ -65,11 +65,6 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
   }
 }
 
-template<typename Dtype>
-MultiSync<Dtype>::~MultiSync()
-{
-}
-
   INSTANTIATE_CLASS(MultiSync);
 } // namespace caffe
 

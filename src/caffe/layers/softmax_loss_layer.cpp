@@ -70,13 +70,6 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
   }
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_EVAL};
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
-
 }
 
 template <typename Dtype>

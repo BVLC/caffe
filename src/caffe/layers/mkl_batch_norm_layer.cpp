@@ -178,14 +178,6 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
           << "parameters.";
     }
   }
-
-#ifdef USE_MLSL
-  if (this->layerOp == nullptr) {
-    mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_ACT};
-    reg_info.set_name(this->layer_param_.name());
-    this->layerOp = mn::train::add_operation(reg_info);
-  }
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

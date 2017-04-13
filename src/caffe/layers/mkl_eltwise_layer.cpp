@@ -95,12 +95,6 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src, false);
 
   dnnDelete<Dtype>(sumPrimitive);
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CONCAT };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
 }
 
 

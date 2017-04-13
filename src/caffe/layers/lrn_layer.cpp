@@ -103,11 +103,6 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
     product_layer_->SetUp(product_bottom_vec_, top);
   }
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_POOL };
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

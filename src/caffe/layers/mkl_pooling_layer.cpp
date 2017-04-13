@@ -207,13 +207,6 @@ void MKLPoolingLayer<Dtype>::Init(
   // Primitives will be allocated during the first fwd pass
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
-
-#ifdef USE_MLSL
-  mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_POOL};
-  reg_info.set_name(this->layer_param().name());
-  this->layerOp = mn::train::add_operation(reg_info);
-#endif
-
 }
 
 template <typename Dtype>
