@@ -400,6 +400,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   debug_info_ = param.debug_info();
 
 #ifdef USE_MLSL
+  if (this->phase_ == TRAIN) {
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
         boost::shared_ptr<Layer<Dtype>> layer{ layers_[layer_id] };
         if ((layer->layerOp != nullptr) && layer->layerOp->HasParameterSets()) {
@@ -417,6 +418,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
               }
           }
       }
+  }
 #endif /* USE_MLSL */
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";

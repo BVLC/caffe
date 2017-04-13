@@ -326,7 +326,7 @@ void MKLConvolutionLayer<Dtype>::Init(
   }
 
 #ifdef USE_MLSL
-  if (this->layerOp == nullptr) {
+  if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
     mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_CC};
     reg_info.set_name(this->layer_param_.name());
     reg_info.add_parameter_set<Dtype>(ic * oc / g, kw * kh);

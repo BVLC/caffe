@@ -91,13 +91,15 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
 #ifdef USE_MLSL
-  mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
-  reg_info.set_name(this->layer_param().name());
-  reg_info.add_parameter_set<Dtype>(bottom[0]->count(axis) * N_, 1);
-  if (bias_term_) {
-    reg_info.add_parameter_set<Dtype>(1 * N_, 1);
+  if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
+    mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
+    reg_info.set_name(this->layer_param().name());
+    reg_info.add_parameter_set<Dtype>(bottom[0]->count(axis) * N_, 1);
+    if (bias_term_) {
+      reg_info.add_parameter_set<Dtype>(1 * N_, 1);
+    }
+    this->layerOp = mn::train::add_operation(reg_info);
   }
-  this->layerOp = mn::train::add_operation(reg_info);
 #endif /* USE_MLSL */
 
 }
