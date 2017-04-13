@@ -56,7 +56,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 #include <mlsl.h>
-#include <mpi.h>
 #endif /* USE_MLSL */
 
 namespace caffe {

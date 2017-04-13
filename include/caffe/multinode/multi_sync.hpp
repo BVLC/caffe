@@ -64,9 +64,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mlsl.h"
 
-// FIXME: for MPI_Bcast
-#include "mpi.h"
-
 using namespace MLSL;
 
 namespace caffe {
