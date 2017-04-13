@@ -59,8 +59,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "caffe/caffe.hpp"
-#include "caffe/multinode/MlslSync.hpp"
-#include "caffe/MlslSolver.hpp"
+#include "caffe/multinode/multi_sync.hpp"
+#include "caffe/multinode/multi_solver.hpp"
 
 #include "mlsl.h"
 

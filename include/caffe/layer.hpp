@@ -50,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 
-#include "caffe/internode/mlsl_util.hpp"
+#include "caffe/multinode/mlsl.hpp"
 using namespace MLSL;
 
 #ifdef DISTR_WEIGHT_UPDATE

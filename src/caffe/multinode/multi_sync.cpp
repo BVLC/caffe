@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 
-#include "caffe/multinode/MlslSync.hpp"
+#include "caffe/multinode/multi_sync.hpp"
 
 namespace caffe {
 

@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <stdexcept>
 #include <string>
-#include "caffe/internode/mlsl_util.hpp"
+#include "caffe/multinode/mlsl.hpp"
 
 namespace caffe {
 namespace internode {

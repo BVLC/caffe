@@ -59,7 +59,7 @@ namespace bp = boost::python;
 #include "caffe/util/bbox_util.hpp"
 
 #ifdef USE_MLSL
-#include "caffe/multinode/MlslSync.hpp"
+#include "caffe/multinode/multi_sync.hpp"
 #endif /* USE_MLSL */
 
 using caffe::Blob;
