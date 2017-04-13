@@ -61,10 +61,7 @@ class MlslSolver {
    protected:
 
     virtual void on_start() = 0;  // from Solver<Dtype>::Callback
-
-#ifdef DISTR_WEIGHT_UPDATE
-    virtual void on_iter_start(int layer_id) = 0;
-#endif
+    
     virtual void on_iter_finished(int layer_id) = 0;
 
     virtual void on_forward_start(int layer_id) = 0;
@@ -74,9 +71,6 @@ class MlslSolver {
 
     virtual void on_delwt_wait(int layer_id) = 0;
     virtual void apply_updates(int layer_id) = 0;
-#ifdef DISTR_WEIGHT_UPDATE
-    virtual void on_wtinc_ready(int layer_id) = 0;
-#endif
 
     virtual void on_gradients_ready() = 0;  // from Solver<Dtype>::Callback, empty function, weigths update will be in MlslSolver loop
 

@@ -312,7 +312,7 @@ void BaseConvolutionLayer<Dtype>::DoReshape(const vector<Blob<Dtype>*>& bottom,
   	myRegInfo->SetName(this->layer_param_.name().c_str());
   	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
   	myRegInfo->AddOutputFeatureMap(oc, ofmSize, dt);
-  	myRegInfo->AddWeights(ic*oc/group_, this->kernel_shape_.cpu_data()[0]*this->kernel_shape_.cpu_data()[1], dt, DISTRIBUTED_WEIGHT_UPDATE);
+  	myRegInfo->AddWeights(ic*oc/group_, this->kernel_shape_.cpu_data()[0]*this->kernel_shape_.cpu_data()[1], dt, false);
 
     if (bias_term_) {
         myRegInfo->AddWeights(oc, 1, dt, false /* no make sense to do distributed update for bias */);

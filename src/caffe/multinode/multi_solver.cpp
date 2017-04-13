@@ -70,22 +70,11 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   std::vector<double>& update_time_per_layer = root_solver_->update_time_per_layer;
 #endif /* CAFFE_PER_LAYER_TIMINGS */
 
-#ifndef DISTR_WEIGHT_UPDATE
   net.ClearParamDiffs();
-#endif
-
   for (int i = 0; i < layers.size(); ++i) {
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
     timer.Start();
-#endif
-
-#ifdef DISTR_WEIGHT_UPDATE
-    if (first && layers[i]->layerOp->HasWeights()) {
-      for (int j = 0; j < callbacks_.size(); ++j) {
-        callbacks_[j]->on_iter_start(i); // wait wtinc
-      }
-    }
 #endif
 
     if (multi_node && layers[i]->layerOp->NumInputFeatureMaps()) {
@@ -203,34 +192,12 @@ Dtype MlslSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
           callbacks_[j]->apply_updates(i);
       }
 
-#ifdef DISTR_WEIGHT_UPDATE
-      for (int j = 0; j < callbacks_.size(); ++j) {
-          callbacks_[j]->on_wtinc_ready(i);
-      }
-      
-      if (root_solver_->iter() == (root_solver_->param().max_iter() - 1)) // it is the last iter at all, apply updates before exiting
-      {
-          for (int j = 0; j < callbacks_.size(); ++j) {
-              callbacks_[j]->on_iter_start(i); // wait wtinc
-          }
-      }
-
-#endif
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
       update_time_per_layer[i] += timer.MicroSeconds();
 #endif
 
     }
   }
-
-#ifndef DISTR_WEIGHT_UPDATE
-  // FIXME: we should sync params about once in epoch, currently 830 for 1536 batchsize
-  /*for (int j = 0; j < callbacks_.size(); ++j) {
-      if (root_solver_->iter() % 830 == 0)
-          callbacks_[j]->synchronize_params();
-  }*/
-#endif
 
   DLOG(WARNING) << "iter " << root_solver_->iter() << ", loss " << loss;
   return loss;

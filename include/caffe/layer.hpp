@@ -53,12 +53,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/multinode/mlsl.hpp"
 using namespace MLSL;
 
-#ifdef DISTR_WEIGHT_UPDATE
-#define DISTRIBUTED_WEIGHT_UPDATE true
-#else
-#define DISTRIBUTED_WEIGHT_UPDATE false
-#endif
-
 #endif /* USE_MLSL */
 
 #define MAX_ELEMS_TO_LOG 16
@@ -103,15 +97,6 @@ using namespace MLSL;
                            << ", idx "       << idx          \
                            << ", value "     << buffer[idx]; \
       }                                                      \
-  } while (0)
-
-#define CHECK_NUM_WEIGHTS(layer, params_ids)                    \
-  do                                                            \
-  {                                                             \
-      DCHECK_EQ(param_ids.size(), layer->layerOp->NumWeights()) \
-        << "check failed for layer " << layer->type()           \
-        << ", param_ids.size() " << param_ids.size()            \
-        << ", NumWeights " << layer->layerOp->NumWeights();     \
   } while (0)
 
 /**

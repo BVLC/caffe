@@ -106,39 +106,6 @@ MlslSync<Dtype>::MlslSync(shared_ptr<Solver<Dtype> > root_solver)
                     top_unpack_block_nums[layer_id][top_id] = fm->NumUnpackBlocks();
                 }
             }
-
-            /* set owned_count and owned_offset for distributed weight update */
-#ifdef DISTR_WEIGHT_UPDATE
-            if (layer->layerOp->HasWeights()) {
-
-                vector<int>& param_ids = layer_param_ids[layer_id];
-                CHECK_NUM_WEIGHTS(layer, param_ids);
-
-                for (int i = 0; i < param_ids.size(); ++i) {
-                    int owned_count = layer->layerOp->Weights(i)->OwnedLen() * layer->layerOp->Weights(i)->WTSize();
-                    int owned_offset = layer->layerOp->Weights(i)->OwnedStart() * layer->layerOp->Weights(i)->WTSize();
-
-                    if (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() != net_params[param_ids[i]]->count()) {
-                        LOG(FATAL) << "different local weigth count in CAFFE (" << net_params[param_ids[i]]->count() << ") "
-                                   << "and MLSL (" << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() << ")";
-                    }
-                    /*if (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() > net_params[param_ids[i]]->count()) {
-                        owned_count -= (layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize() - net_params[param_ids[i]]->count());
-                    }*/
-
-                    net_params[param_ids[i]]->set_owned_count(owned_count);
-                    net_params[param_ids[i]]->set_owned_offset(owned_offset);
-
-                    LOG(INFO) << "layer " << layer->type()
-                                 << ", weigth_idx " << i
-                                 << ", MLSL owned_cout " << layer->layerOp->Weights(i)->OwnedLen() * layer->layerOp->Weights(i)->WTSize()
-                                 << ", CAFFE owned_count " << owned_count
-                                 << ", CAFFE owned_offset " << owned_offset
-                                 << ", MLSL local_count " << layer->layerOp->Weights(i)->LocalLen() * layer->layerOp->Weights(i)->WTSize()
-                                 << ", CAFFE local_count " << net_params[param_ids[i]]->count();
-                }
-            }
-#endif /* DISTR_WEIGHT_UPDATE */
         }
     }
 

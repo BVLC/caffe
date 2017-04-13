@@ -479,7 +479,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
           if (layer->layerOp->HasWeights()) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
-              CHECK_NUM_WEIGHTS(layer, param_ids);
               for (int i = 0; i < param_ids.size(); i++) {
                   int mlsl_weight_size = layer->layerOp->GetWeights(i)->LocalLen()
                                         * layer->layerOp->GetWeights(i)->WTSize()

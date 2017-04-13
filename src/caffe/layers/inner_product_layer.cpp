@@ -112,7 +112,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   myRegInfo->SetName(this->layer_param_.name().c_str());
   myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
   myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-  myRegInfo->AddWeights(bottom[0]->count(axis)*N_, 1, dt, DISTRIBUTED_WEIGHT_UPDATE);
+  myRegInfo->AddWeights(bottom[0]->count(axis)*N_, 1, dt, false);
 
   if (bias_term_) {
       myRegInfo->AddWeights(1 * N_, 1, dt, false /* no make sense to do distributed update for bias */);

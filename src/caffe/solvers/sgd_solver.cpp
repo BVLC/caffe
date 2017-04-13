@@ -204,15 +204,11 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   ComputeUpdateValue(param_id, rate);
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: wtinc:");
 
-#ifndef DISTR_WEIGHT_UPDATE
-
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight before update:");
 
   this->net_->learnable_params()[param_id]->Update();
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight after update:");
-
-#endif /* !DISTR_WEIGHT_UPDATE */
 }
 
 template <typename Dtype>
@@ -240,25 +236,12 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
         && (net_params[param_id]->prv_diff_count()
             == net_params[param_id]->count())) {
 
-//#ifdef DISTR_WEIGHT_UPDATE
-//        caffe_scal(net_params[param_id]->owned_count(), accum_normalization,
-//            net_params[param_id]->mutable_prv_diff() + net_params[param_id]->owned_offset());
-//#else
         caffe_scal(net_params[param_id]->count(), accum_normalization,
             net_params[param_id]->mutable_prv_diff());
-//#endif /* DISTR_WEIGHT_UPDATE */
-
     }
     else {
-
-//#ifdef DISTR_WEIGHT_UPDATE
-//        caffe_scal(net_params[param_id]->owned_count(), accum_normalization,
-//            net_params[param_id]->mutable_cpu_diff() + net_params[param_id]->owned_offset());
-//#else
         caffe_scal(net_params[param_id]->count(), accum_normalization,
             net_params[param_id]->mutable_cpu_diff());
-//#endif /* DISTR_WEIGHT_UPDATE */
-
     }
 
     break;
@@ -297,44 +280,17 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
             net_params[param_id]->get_prv_data_descriptor()->layout_compare(
             net_params[param_id]->get_prv_diff_descriptor()));
 
-//#ifdef DISTR_WEIGHT_UPDATE
-//          caffe_axpy(net_params[param_id]->owned_count(),
-//                     local_decay,
-//                     net_params[param_id]->prv_data() + net_params[param_id]->owned_offset(),
-//                     net_params[param_id]->mutable_prv_diff() + net_params[param_id]->owned_offset());
-//#else
           caffe_axpy(net_params[param_id]->count(),
                      local_decay,
                      net_params[param_id]->prv_data(),
                      net_params[param_id]->mutable_prv_diff());
-//#endif /* DISTR_WEIGHT_UPDATE */
-
         } else {
-
-//#ifdef DISTR_WEIGHT_UPDATE
-//          caffe_axpy(net_params[param_id]->owned_count(),
-//              local_decay,
-//              net_params[param_id]->cpu_data() + net_params[param_id]->owned_offset(),
-//              net_params[param_id]->mutable_cpu_diff() + net_params[param_id]->owned_offset());
-//#else
           caffe_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->cpu_data(),
               net_params[param_id]->mutable_cpu_diff());
-//#endif /* DISTR_WEIGHT_UPDATE */
-
         }
       } else if (regularization_type == "L1") {
-
-//#ifdef DISTR_WEIGHT_UPDATE
-//        caffe_cpu_sign(net_params[param_id]->owned_count(),
-//            net_params[param_id]->cpu_data() + net_params[param_id]->owned_offset(),
-//            temp_[param_id]->mutable_cpu_data() + net_params[param_id]->owned_offset());
-//        caffe_axpy(net_params[param_id]->owned_count(),
-//            local_decay,
-//            temp_[param_id]->cpu_data() + net_params[param_id]->owned_offset(),
-//            net_params[param_id]->mutable_cpu_diff() + net_params[param_id]->owned_offset());
-//#else
         caffe_cpu_sign(net_params[param_id]->count(),
             net_params[param_id]->cpu_data(),
             temp_[param_id]->mutable_cpu_data());
@@ -342,8 +298,6 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
             local_decay,
             temp_[param_id]->cpu_data(),
             net_params[param_id]->mutable_cpu_diff());
-//#endif /* DISTR_WEIGHT_UPDATE */
-
       } else {
         LOG(FATAL) << "Unknown regularization type: " << regularization_type;
       }
@@ -400,18 +354,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         && (net_params[param_id]->prv_diff_count()
             == net_params[param_id]->count())) {
 
-//#ifdef DISTR_WEIGHT_UPDATE
-//
-//      caffe_cpu_axpby(net_params[param_id]->owned_count(), local_rate,
-//                      net_params[param_id]->prv_diff() + net_params[param_id]->owned_offset(), momentum,
-//                      history_[param_id]->mutable_cpu_data() + net_params[param_id]->owned_offset());
-//
-//      caffe_copy(net_params[param_id]->owned_count(),
-//                 history_[param_id]->cpu_data() + net_params[param_id]->owned_offset(),
-//                 net_params[param_id]->mutable_prv_diff() + net_params[param_id]->owned_offset());
-
-//#else /* DISTR_WEIGHT_UPDATE */
-
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                       net_params[param_id]->prv_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
@@ -419,23 +361,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_prv_diff());
-
-//#endif /* DISTR_WEIGHT_UPDATE */
-
     } else {
-
-//#ifdef DISTR_WEIGHT_UPDATE
-//
-//      caffe_cpu_axpby(net_params[param_id]->owned_count(), local_rate,
-//                      net_params[param_id]->cpu_diff() + net_params[param_id]->owned_offset(), momentum,
-//                      history_[param_id]->mutable_cpu_data() + net_params[param_id]->owned_offset());
-//
-//      caffe_copy(net_params[param_id]->owned_count(),
-//                 history_[param_id]->cpu_data() + net_params[param_id]->owned_offset(),
-//                 net_params[param_id]->mutable_cpu_diff() + net_params[param_id]->owned_offset());
-
-//#else /* DISTR_WEIGHT_UPDATE */
-
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                      net_params[param_id]->cpu_diff(), momentum,
                      history_[param_id]->mutable_cpu_data());
@@ -443,9 +369,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_cpu_diff());
-
-//#endif /* DISTR_WEIGHT_UPDATE */
-
     }
     break;
   }

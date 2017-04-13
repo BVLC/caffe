@@ -106,76 +106,19 @@ public:
     
     void synchronize_params() {
         // FIXME: use MLSL API to bcast initial weights values
-
-        if (solver->root_solver()->iter() < 2) {
-            LOG(WARNING) << "synchronize_params: bcast";
-            for (int idx = 0; idx < net_params.size(); ++idx) {
-                MPI_Bcast(net_params[idx]->mutable_cpu_data(),
-                          net_params[idx]->count(),
-                          (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE,
-                          0,
-                          MPI_COMM_WORLD);
-            }
-            return;
-        }
-        
-        if (is_root)
-            LOG(WARNING) << "synchronize_params: gather and compare";
-
+        LOG(WARNING) << "synchronize_params: bcast";
         for (int idx = 0; idx < net_params.size(); ++idx) {
-            size_t size_to_alloc = net_params[idx]->count() * sizeof(Dtype) * MLSL::GetNumNodes();
-            //LOG(WARNING) << "size_to_alloc " << size_to_alloc;
-            Dtype* buf = (is_root) ? (Dtype*)(Dtype*)MLSL::Alloc(size_to_alloc, 64) : NULL;
-            MPI_Gather(net_params[idx]->cpu_data(),                   // sendbuf
-                       net_params[idx]->count(),                      // sendcount from each process
-                       (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE, // sendtype
-                       buf,                                           // recvbuf
-                       net_params[idx]->count(),                      // recvcount from each process
-                       (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE, // recvtype
-                       0,                                             // root
-                       MPI_COMM_WORLD);
-
-            if (is_root) {
-                bool has_diff = false;
-                Dtype max_diff = 0;
-                for (int node_idx = 0; node_idx < MLSL::GetNumNodes(); node_idx++) {
-                    // 1.e-4
-                    for (int elem_idx = 0; elem_idx < net_params[idx]->count(); elem_idx++) {
-                          Dtype root_value = net_params[idx]->cpu_data()[elem_idx];
-                          Dtype other_value = buf[node_idx * net_params[idx]->count() + elem_idx];
-                          Dtype diff = abs((root_value - other_value));
-
-                          if (diff != 0 && !isnan(root_value)) {
-                              has_diff = true;
-                              max_diff = (diff > max_diff) ? diff : max_diff;
-                              LOG(INFO) << "different weight values "
-                                           << ", elem_idx "              << elem_idx
-                                           << ", root_value "            << root_value
-                                           << ", other_value "           << other_value
-                                           << ", diff "                  << diff
-                                           << ", node_idx "              << node_idx;
-                          }
-                    }
-                }
-
-                MLSL::Free(buf);
-
-                if (has_diff)
-                    LOG(FATAL) << "different weight values for param_id " << idx
-                               << ", max_diff " << max_diff;
-            }
+            MPI_Bcast(net_params[idx]->mutable_cpu_data(),
+                      net_params[idx]->count(),
+                      (sizeof(Dtype) == 4) ? MPI_FLOAT : MPI_DOUBLE,
+                      0,
+                      MPI_COMM_WORLD);
         }
     }
 
     void run() {
         LOG(WARNING) << "RUN: "
-                     << "DITRIBUTED WEIGHT UPDATE IS"
-#ifdef DISTR_WEIGHT_UPDATE
-                     << " ENABLED"
-#else
-                     << " DISABLED"
-#endif
-                     << ", PER LAYER TIMINGS ARE"
+                     << "PER LAYER TIMINGS ARE"
 #ifdef CAFFE_PER_LAYER_TIMINGS
                      << " ENABLED"
 #else
@@ -221,8 +164,6 @@ public:
       vector<int>& param_ids = layer_param_ids[layer_id];
       LOG_LAYER(layer) << "bprop: apply_updates: layer_id " << layer_id << ", param_ids size " << param_ids.size();
 
-      CHECK_NUM_WEIGHTS(layer, param_ids);
-
       for (int i = 0; i < param_ids.size(); ++i) {
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: apply_updates: delwt for sgd:");
           solver->root_solver()->ApplyUpdate(param_ids[i]);
@@ -242,46 +183,6 @@ public:
 
 
   // main callback for MlslSolver loop
-
-#ifdef DISTR_WEIGHT_UPDATE
-  void on_iter_start(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      LOG_LAYER(layer) << "fprop: on_iter_start: iter " << solver->root_solver()->iter() << ", layer id " << layer_id;
-
-      vector<int>& param_ids = layer_param_ids[layer_id];
-      LOG_LAYER(layer) << "fprop: on_iter_start: param_ids size " << param_ids.size();
-
-      CHECK_NUM_WEIGHTS(layer, param_ids);
-
-      for (int i = 0; i < param_ids.size(); ++i) {
-
-          LOG_LAYER(layer) << "fprop: on_iter_start: wait wtinc for param_id " << param_ids[i];
-          Dtype* wtinc_buf = (Dtype*)layer->layerOp->Weights(i)->CommsWaitWtInc();
-          LOG_LAYER(layer) << "fprop: on_iter_start: got wtinc for param_id " << param_ids[i];
-          
-          if (wtinc_buf) {
-              if (CAN_USE_PRV(net_params[param_ids[i]])) {
-                  if (wtinc_buf != net_params[param_ids[i]]->prv_diff())
-                      LOG(FATAL) << "incorrect wtinc_buf wrt prv_diff";
-              }
-              else if (wtinc_buf != net_params[param_ids[i]]->cpu_diff())
-                  LOG(FATAL) << "incorrect wtinc_buf wrt cpu_diff";
-          }
-
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "fprop: on_iter_start: got weigth_diff:");
-          LOG_LAYER(layer) << "fprop: on_iter_start: apply weigth_diff";
-
-          LOG_PARAM_BLOB(net_params[param_ids[i]], data, param_ids[i], "ApplyUpdate: weight before update:");
-
-          net_params[param_ids[i]]->Update();
-          
-          LOG_PARAM_BLOB(net_params[param_ids[i]], data, param_ids[i], "ApplyUpdate: weight after update:");
-
-          net->ClearParamDiffs(param_ids[i]);
-      }
-  }
-#endif /* DISTR_WEIGHT_UPDATE */
-
   void on_forward_start(int layer_id) {
       shared_ptr<Layer<Dtype> > layer = layers[layer_id];
       int bottom_size = layer->layer_param().bottom_size();
@@ -310,8 +211,6 @@ public:
       if (layer->layerOp->HasWeights()) {
           vector<int>& param_ids = layer_param_ids[layer_id];
           LOG_LAYER(layer) << "fprop: on_forward_start: param_ids size " << param_ids.size();
-
-          CHECK_NUM_WEIGHTS(layer, param_ids);
 
           for (int i = 0; i < param_ids.size(); ++i) {
               LOG_BLOB(layer, net_params[param_ids[i]], data, param_ids[i], "fprop: on_forward_start: weigths_data:");
@@ -350,8 +249,6 @@ public:
       if (layer->layerOp->HasWeights()) {
           vector<int>& param_ids = layer_param_ids[layer_id];
           LOG_LAYER(layer) << "fprop: on_forward_finished: param_ids size " << param_ids.size();
-
-          CHECK_NUM_WEIGHTS(layer, param_ids);
 
           for (int i = 0; i < param_ids.size(); ++i) {
               LOG_BLOB(layer, net_params[param_ids[i]], data, param_ids[i], "fprop: on_forward_finished: weigths_data:");
@@ -392,8 +289,6 @@ public:
       vector<int>& param_ids = layer_param_ids[layer_id];
       LOG_LAYER(layer) << "bprop: on_iter_finished: param_ids size " << param_ids.size();
 
-      CHECK_NUM_WEIGHTS(layer, param_ids);
-
       for (int i = 0; i < param_ids.size(); ++i) {
 
           LOG_LAYER(layer) << "bprop: on_iter_finished: start delwt for param_id " << param_ids[i];
@@ -415,8 +310,6 @@ public:
       vector<int>& param_ids = layer_param_ids[layer_id];
       LOG_LAYER(layer) << "bprop: on_delwt_wait: param_ids size " << param_ids.size();
 
-      CHECK_NUM_WEIGHTS(layer, param_ids);
-
       for (int i = 0; i < param_ids.size(); ++i) {
 
           LOG_LAYER(layer) << "bprop: on_delwt_wait: wait delwt for param_id " << param_ids[i];
@@ -426,23 +319,6 @@ public:
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_delwt_wait: delwt after comms:");
           LOG_BUFFER(layer, delwt_buf, param_ids[i], "bprop: on_delwt_wait: comms buffer:");
 
-#ifdef DISTR_WEIGHT_UPDATE
-
-          if (delwt_buf) {
-              if (CAN_USE_PRV(net_params[param_ids[i]])) {
-                  if (delwt_buf != net_params[param_ids[i]]->prv_diff() || (layer->layerOp->GetDistribution()->GetMBGroupId() > 0 &&
-                      layer->layerOp->Weights(i)->OwnedLen() != layer->layerOp->Weights(i)->LocalLen()))
-                      caffe_copy(net_params[param_ids[i]]->owned_count(),
-                                 delwt_buf,
-                                 net_params[param_ids[i]]->mutable_prv_diff() + net_params[param_ids[i]]->owned_offset());
-              }
-              else if (delwt_buf != net_params[param_ids[i]]->cpu_diff() || (layer->layerOp->GetDistribution()->GetMBGroupId() > 0 &&
-                       layer->layerOp->Weights(i)->OwnedLen() != layer->layerOp->Weights(i)->LocalLen()))
-                  caffe_copy(net_params[param_ids[i]]->owned_count(),
-                             delwt_buf,
-                             net_params[param_ids[i]]->mutable_cpu_diff() + net_params[param_ids[i]]->owned_offset());
-          }
-#else /* DISTR_WEIGHT_UPDATE */
           if (delwt_buf)
           {
               if (CAN_USE_PRV(net_params[param_ids[i]])) {
@@ -457,35 +333,11 @@ public:
                              net_params[param_ids[i]]->mutable_cpu_diff());
 
           }
-#endif /* DISTR_WEIGHT_UPDATE */
 
           LOG_LAYER(layer) << "bprop: on_delwt_wait: got delwt for param_id " << param_ids[i];
           LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_delwt_wait: delwt:");
       }
   }
-
-#ifdef DISTR_WEIGHT_UPDATE
-  void on_wtinc_ready(int layer_id) {
-      shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-      LOG_LAYER(layer) << "bprop: on_wtinc_ready: iter " << solver->root_solver()->iter() << ", layer id " << layer_id;
-
-      vector<int>& param_ids = layer_param_ids[layer_id];
-      LOG_LAYER(layer) << "bprop: on_wtinc_ready: param_ids size " << param_ids.size();
-
-      CHECK_NUM_WEIGHTS(layer, param_ids);
-
-      for (int i = 0; i < param_ids.size(); ++i) {
-
-          LOG_LAYER(layer) << "bprop: on_wtinc_ready: send wtinc for param_id " << param_ids[i];
-          LOG_BLOB(layer, net_params[param_ids[i]], diff, param_ids[i], "bprop: on_wtinc_ready: wtinc:");
-          
-          if (CAN_USE_PRV(net_params[param_ids[i]]))
-              layer->layerOp->Weights(i)->CommsStartWtInc((void*)net_params[param_ids[i]]->mutable_prv_diff());
-          else
-              layer->layerOp->Weights(i)->CommsStartWtInc((void*)net_params[param_ids[i]]->mutable_cpu_diff());
-      }
-  }
-#endif /* DISTR_WEIGHT_UPDATE */
 
   void on_gradients_ready() {
       DLOG(INFO) << "finished iteration " << solver->root_solver()->iter();

@@ -338,7 +338,7 @@ void MKLConvolutionLayer<Dtype>::Init(
     myRegInfo->SetName(this->layer_param_.name().c_str());
     myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
     myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-    myRegInfo->AddWeights(ic*oc/g, kw*kh, dt, DISTRIBUTED_WEIGHT_UPDATE);
+    myRegInfo->AddWeights(ic*oc/g, kw*kh, dt, false);
 
     if (this->bias_term_) {
       myRegInfo->AddWeights(oc, 1, dt, false /* no make sense to do distributed update for bias */);
