@@ -30,6 +30,10 @@ void caffe_axpy(const int N, const Dtype alpha, const Dtype* X,
     Dtype* Y);
 
 template <typename Dtype>
+void caffe_cpu_strided_axpby(const int N, const Dtype alpha, const Dtype* X,
+    const int incx, const Dtype beta, Dtype* Y, const int incy);
+
+template <typename Dtype>
 void caffe_cpu_axpby(const int N, const Dtype alpha, const Dtype* X,
     const Dtype beta, Dtype* Y);
 
@@ -142,6 +146,12 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]))
 template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
+template <typename Dtype>
+Dtype caffe_cpu_strided_nrm2(const int n, const Dtype* x, const int inc);
+
+template <typename Dtype>
+Dtype caffe_cpu_nrm2(const int n, const Dtype* x);
+
 #ifndef CPU_ONLY  // GPU
 
 // Decaf gpu gemm provides an interface that is almost the same as the cpu
@@ -159,8 +169,18 @@ void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
     Dtype* y);
 
 template <typename Dtype>
+void caffe_gpu_strided_axpy(const int N,
+                            const Dtype alpha, const Dtype* X, const int incx,
+                            Dtype* Y, const int incy);
+
+template <typename Dtype>
 void caffe_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
     Dtype* Y);
+
+template <typename Dtype>
+void caffe_gpu_strided_axpby(const int N,
+                        const Dtype alpha, const Dtype* X, const int incx,
+                        const Dtype beta, Dtype* Y, const int incy);
 
 template <typename Dtype>
 void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
@@ -181,6 +201,10 @@ inline void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
 
 template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
+void caffe_gpu_strided_scal(const int N,
+                            const Dtype alpha, Dtype *X, const int incx);
 
 template <typename Dtype>
 void caffe_gpu_scal(const int N, const Dtype alpha, Dtype *X);
@@ -214,6 +238,11 @@ void caffe_gpu_log(const int n, const Dtype* a, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
+template <typename Dtype>
+void caffe_gpu_strided_nrm2(const int n,
+                            const Dtype* x, const int incx,
+                            Dtype* out);
+
 // caffe_gpu_rng_uniform with two arguments generates integers in the range
 // [0, UINT_MAX].
 void caffe_gpu_rng_uniform(const int n, unsigned int* r);
@@ -232,6 +261,12 @@ void caffe_gpu_rng_gaussian(const int n, const Dtype mu, const Dtype sigma,
 
 template <typename Dtype>
 void caffe_gpu_rng_bernoulli(const int n, const Dtype p, int* r);
+
+template <typename Dtype>
+void caffe_gpu_strided_dot(const int n,
+                           const Dtype* x, const int incx,
+                           const Dtype* y, const int incy,
+                           Dtype* out);
 
 template <typename Dtype>
 void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);

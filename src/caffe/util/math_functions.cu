@@ -63,16 +63,35 @@ void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
 }
 
 template <>
-void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X,
-    float* Y) {
-  CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+void caffe_gpu_strided_axpy<float>(const int N,
+    const float alpha, const float* X, const int incx,
+    float* Y, const int incy) {
+  CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, incx,
+      Y, incy));
 }
 
 template <>
-void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
-    double* Y) {
-  CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+void caffe_gpu_strided_axpy<double>(const int N,
+    const double alpha, const double* X, const int incx,
+    double* Y, const int incy) {
+  CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, incx,
+      Y, incy));
 }
+
+template <typename Dtype>
+void caffe_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
+    Dtype* Y) {
+  caffe_gpu_strided_axpy(N, alpha, X, Dtype(1), Y, Dtype(1));
+}
+
+template
+void caffe_gpu_axpy<float>(const int N,
+                           const float alpha, const float* X,
+                           float* Y);
+template
+void caffe_gpu_axpy<double>(const int N,
+                            const double alpha, const double* X,
+                            double* Y);
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
@@ -81,14 +100,24 @@ void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
 }
 
 template <>
-void caffe_gpu_scal<float>(const int N, const float alpha, float *X) {
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+void caffe_gpu_strided_scal<float>(const int N,
+    const float alpha, float *X, const int incx) {
+  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, incx));
 }
 
 template <>
-void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+void caffe_gpu_strided_scal<double>(const int N,
+    const double alpha, double *X, const int incx) {
+  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, incx));
 }
+
+template <typename Dtype>
+void caffe_gpu_scal(const int N, const Dtype alpha, Dtype* X) {
+  caffe_gpu_strided_scal(N, alpha, X, 1);
+}
+template void caffe_gpu_scal<float>(const int N, const float alpha, float* X);
+template void caffe_gpu_scal<double>(const int N,
+                                     const double alpha, double* X);
 
 template <>
 void caffe_gpu_scal<float>(const int N, const float alpha, float* X,
@@ -110,31 +139,69 @@ void caffe_gpu_scal<double>(const int N, const double alpha, double* X,
   CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
 }
 
+template <typename Dtype>
+void caffe_gpu_strided_axpby(const int N,
+    const Dtype alpha, const Dtype* X, const int incx,
+    const Dtype beta, Dtype* Y, const int incy) {
+  caffe_gpu_strided_scal(N, beta, Y, incy);
+  caffe_gpu_strided_axpy(N, alpha, X, incx, Y, incy);
+}
+
+template
+void caffe_gpu_strided_axpby<float>(const int N,
+    const float alpha, const float* X, const int incx,
+    const float beta, float* Y, const int incy);
+
+template
+void caffe_gpu_strided_axpby<double>(const int N,
+    const double alpha, const double* X, const int incx,
+    const double beta, double* Y, const int incy);
+
+template <typename Dtype>
+void caffe_gpu_axpby(const int N,
+                     const Dtype alpha, const Dtype* X,
+                     const Dtype beta, Dtype* Y) {
+  caffe_gpu_strided_axpby(N, alpha, X, Dtype(1), beta, Y, Dtype(1));
+}
+
+template
+void caffe_gpu_axpby<float>(const int N,
+                            const float alpha, const float* X,
+                            const float beta, float* Y);
+template
+void caffe_gpu_axpby<double>(const int N,
+                             const double alpha, const double* X,
+                             const double beta, double* Y);
+
 template <>
-void caffe_gpu_axpby<float>(const int N, const float alpha, const float* X,
-    const float beta, float* Y) {
-  caffe_gpu_scal<float>(N, beta, Y);
-  caffe_gpu_axpy<float>(N, alpha, X, Y);
+void caffe_gpu_strided_dot<float>(const int n,
+                                  const float* x, const int incx,
+                                  const float* y, const int incy,
+                                  float* out) {
+  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, incx, y, incy, out));
 }
 
 template <>
-void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
-    const double beta, double* Y) {
-  caffe_gpu_scal<double>(N, beta, Y);
-  caffe_gpu_axpy<double>(N, alpha, X, Y);
+void caffe_gpu_strided_dot<double>(const int n,
+                                   const double* x, const int incx,
+                                   const double* y, const int incy,
+                                   double * out) {
+  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, incx, y, incy, out));
 }
 
-template <>
-void caffe_gpu_dot<float>(const int n, const float* x, const float* y,
-    float* out) {
-  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+template <typename Dtype>
+void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out) {
+  caffe_gpu_strided_dot(n, x, 1, y, 1, out);
 }
 
-template <>
-void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
-    double * out) {
-  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
-}
+template
+void caffe_gpu_dot<float>(const int n,
+                          const float* x, const float* y,
+                          float* out);
+template
+void caffe_gpu_dot<double>(const int n,
+                           const double* x, const double* y,
+                           double* out);
 
 template <>
 void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
@@ -158,6 +225,20 @@ void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
   CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+}
+
+template <>
+void caffe_gpu_strided_nrm2<float>(const int n,
+                                   const float* x, const int incx,
+                                   float* out) {
+  CUBLAS_CHECK(cublasSnrm2(Caffe::cublas_handle(), n, x, incx, out));
+}
+
+template <>
+void caffe_gpu_strided_nrm2<double>(const int n,
+                                    const double* x, const int incx,
+                                    double* out) {
+  CUBLAS_CHECK(cublasDnrm2(Caffe::cublas_handle(), n, x, incx, out));
 }
 
 template <typename Dtype>

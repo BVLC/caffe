@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: cosine_loss_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -367,6 +367,7 @@ message LayerParameter {
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
+  optional CosineLossParameter cosine_loss_param = 147;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
   optional DropoutParameter dropout_param = 108;
@@ -618,6 +619,13 @@ message ConvolutionParameter {
   // implementation; for input blobs with num_axes != 2, this option is
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
+}
+
+message CosineLossParameter {
+  // The axis which to take as vector -- may be negative to index
+  // from the end (e.g., -1 for the last axis).
+  // Any other axes will be evaluated as independent vectors.
+  optional int32 axis = 2 [default = 1];
 }
 
 message CropParameter {
