@@ -521,6 +521,9 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+  //if false,mean and variance will be calculated across instances. If true ,mean and variance will be 
+  //calculated in single instance
+  optional bool use_instance_norm = 4 [default = false];
 }
 
 message BiasParameter {
