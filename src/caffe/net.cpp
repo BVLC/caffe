@@ -57,15 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-#ifdef MLSL_MODEL_PARALLELISM
-#include "caffe/util/insert_bias_layer.hpp"
-#endif
-
-#ifdef USE_MLSL
-#include "mlsl.h"
-using namespace MLSL;
-#endif /* USE_MLSL */
+#include "caffe/multinode/mlsl.hpp"
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -102,7 +94,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";
 
-  #ifdef _OPENMP
+#ifdef _OPENMP
   static bool executed = false;
   if (!executed) {
     if (Caffe::mode() == Caffe::GPU) {
@@ -135,17 +127,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   engine_name_ = filtered_param.engine();
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
-
-#ifdef MLSL_MODEL_PARALLELISM
-  NetParameter param_tmp;
-  InsertSplits(filtered_param, &param_tmp);
-  SeparateBias(param_tmp, &param_with_splits);
-  LOG_IF(INFO, Caffe::root_solver())
-      << "Net after transformation: " << std::endl
-      << param_with_splits.DebugString();
-#else
   InsertSplits(filtered_param, &param_with_splits);
-#endif /* MLSL_MODEL_PARALLELISM */
 
   // Transform Net (merge layers etc.) improve computational performance
   NetParameter param;
@@ -263,9 +245,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
-            SetMinibatchSize(batch_size * GetNumNodes());
+            mn::train::set_global_minibatch_size(batch_size * mn::get_nodes_count());
         }
-        caffe::internode::mlsl_init_distributions();
     }
 #endif /* USE_MLSL */
 
@@ -419,70 +400,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   debug_info_ = param.debug_info();
 
 #ifdef USE_MLSL
-
-  if (caffe::TRAIN == param.state().phase()) { // TODO: create ComputeOps only for train net
-
-      /*
-       * MLSL setup: linking the layer's Ops with each other
-       * TBD: Should be possible to avoid that many loops
-       * */
+  if (this->phase_ == TRAIN) {
       for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
-          const LayerParameter& layer_param = param.layer(layer_id);
-          layers_[layer_id]->ifm2ofm_map.resize(layer_param.bottom_size(), -1);
-      }
-
-      for (int layer_id = 0; layer_id < param.layer_size(); layer_id++) {
-          if (!layers_[layer_id]->layerOp) {
-              LOG(FATAL) << "layerOp is NULL for layer_id " << layer_id
-                         << ", type " << layers_[layer_id]->type();
-          }
-
-          const LayerParameter& layer_param = param.layer(layer_id);
-          for (int top_id = 0; top_id < layer_param.top_size(); top_id++) {
-              const string& top_blob_name = layer_param.top(top_id);
-              bool pair_found = false;
-
-              for (int next_layer_id = layer_id + 1/*0*/; next_layer_id < param.layer_size(); next_layer_id++) {
-                  if (pair_found) break;
-                  const LayerParameter& next_layer_param = param.layer(next_layer_id);
-
-                  for (int bottom_id = 0; bottom_id < next_layer_param.bottom_size(); ++bottom_id) {
-                      const string& bottom_blob_name = next_layer_param.bottom(bottom_id);
-                      if (pair_found) break;
-
-                      if (top_blob_name.compare(bottom_blob_name) == 0) {
-                          layers_[next_layer_id]->ifm2ofm_map[bottom_id] = top_id;
-                          layers_[next_layer_id]->SetPrevLayer(bottom_id, layers_[layer_id].get());
-                          layers_[next_layer_id]->layerOp->SetPrev(layers_[layer_id]->layerOp, bottom_id, top_id);
-                          pair_found = true;
-                      }
-                  }
-              }
-          }
-      }
-
-      for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
-          shared_ptr<Layer<Dtype> > layer = layers_[layer_id];
-          layer->ConfigureMLSL();
-
-          /* All sanity check are below */
-          for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); bottom_id++) {
-              LOG(INFO) << "InitNet: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
-                        << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
-                        << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
-
-              if (layer->bottom_sizes[bottom_id] != bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype))
-                  LOG(FATAL) << "InitNet: ERROR: check bottom sizes for layer " << layer->type() << ", layer_id " << layer_id << ", bottom_id " << bottom_id
-                             << ", calculated bottom_size " << layer->bottom_sizes[bottom_id]
-                             << ", real bottom_size " << bottom_vecs_[layer_id][bottom_id]->count() * sizeof(Dtype);
-          }
-
-          if (layer->layerOp->HasWeights()) {
+        boost::shared_ptr<Layer<Dtype>> layer{ layers_[layer_id] };
+        if ((layer->layerOp != nullptr) && layer->layerOp->HasParameterSets()) {
               vector<int> param_ids = get_layer_learnable_param_ids(layer_id);
-              CHECK_NUM_WEIGHTS(layer, param_ids);
               for (int i = 0; i < param_ids.size(); i++) {
-                  int mlsl_weight_size = layer->layerOp->GetWeights(i)->LocalLen()
-                                        * layer->layerOp->GetWeights(i)->WTSize()
+                  int mlsl_weight_size = layer->layerOp->GetParameterSet(i)->GetLocalKernelCount()
+                                        * layer->layerOp->GetParameterSet(i)->GetKernelSize()
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
                   if (mlsl_weight_size < caffe_weight_size)
@@ -494,7 +419,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           }
       }
   }
-
 #endif /* USE_MLSL */
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";

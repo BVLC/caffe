@@ -35,10 +35,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef USE_MLSL
-#include <mpi.h>
-#endif
-
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -76,37 +72,6 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                 this->blobs_[i]->mutable_cpu_data());
     }
   }
-
-#ifdef USE_MLSL
-
-  if (!this->layerOp) {
-
-	int ic = bottom[0]->channels();
-	int iw = bottom[0]->width();
-	int ih = bottom[0]->height();
-
-	int oc = ic; //top[0]->channels();
-	int ow = iw; //top[0]->width();
-	int oh = ih; //top[0]->height();
-
-    DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-    ComputeOpRegInfo *myRegInfo;
-    myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_ACT);
-    myRegInfo->SetName(this->layer_param_.name().c_str());
-    myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-    myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-
-    /*for(int i = 0; i<this->blobs_.size(); i++)
-    {
-    	myRegInfo->AddWeights(1, this->blobs_[i].count(), dt, DISTRIBUTED_WEIGHT_UPDATE);
-    }*/
-
-    myRegInfo->Validate();
-    this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-    delete myRegInfo;
-  }
-
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

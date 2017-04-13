@@ -64,23 +64,10 @@ endif
 #################### MLSL ####################
 
 ifeq ($(USE_MLSL), 1)
-ifdef I_MPI_ROOT
-	MPI_H_EXIST := $(shell test -f $(I_MPI_ROOT)/intel64/include/mpi.h; echo $$?)
-ifeq ($(MPI_H_EXIST),0)
-	COMMON_FLAGS += -DUSE_MLSL=1 -I$(I_MPI_ROOT)/intel64/include
-else
-	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
-endif
-else
-	COMMON_FLAGS += -DUSE_MLSL=1 $(shell pkg-config --cflags mpich)
-endif
-	LIBRARIES += mlsl mpi
+	COMMON_FLAGS += -DUSE_MLSL=1
+	LIBRARIES += mlsl
 	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
 	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
-
-ifeq ($(DISTR_WEIGHT_UPDATE), 1)
-	COMMON_FLAGS += -DDISTR_WEIGHT_UPDATE
-endif
 
 ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
 	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
@@ -783,7 +770,7 @@ $(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJS) \
 		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo CXX/LD -o $@ $<
-	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJS) \
+	$(Q)$(CXX) -std=c++11 $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJS) \
 		-o $@ $(BOOST_LDFLAGS) $(LINKFLAGS) $(MKL_LDFLAGS) $(MKLDNN_LDFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
 
 $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
@@ -795,7 +782,7 @@ $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 	$(GTEST_OBJS) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo LD $<
-	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJS) \
+	$(Q)$(CXX) -std=c++11 $(TEST_MAIN_SRC) $< $(GTEST_OBJS) \
 		-o $@ $(BOOST_LDFLAGS) $(LINKFLAGS) $(MKL_LDFLAGS) $(MKLDNN_LDFLAGS) $(CXX_HARDENING_FLAGS) $(LINKER_EXEC_HARDENING_FLAGS) $(LDFLAGS) -l$(LIBRARY_NAME) -Wl,-rpath,$(ORIGIN)/../lib
 
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.

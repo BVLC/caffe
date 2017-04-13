@@ -52,49 +52,6 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
       << "Either axis or concat_dim should be specified; not both.";
-
-#ifdef USE_MLSL
-
-  int num_concats = bottom.size();
-  int channels = 0;
-
-  for (size_t i = 1; i < num_concats; ++i) {
-    CHECK_EQ(bottom[0]->num(), bottom[i]->num());
-    CHECK_EQ(bottom[0]->height(), bottom[i]->height());
-    CHECK_EQ(bottom[0]->width(), bottom[i]->width());
-  }
-
-  size_t *split_channels = new size_t[num_concats];
-  for (size_t i = 0; i < num_concats; ++i) {
-    split_channels[i] = bottom[i]->channels();
-    channels += split_channels[i];
-  }
-
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_CONCAT);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for(int i=0; i<bottom.size(); i++)
-  {
-    int ic = bottom[i]->channels();
-    int iw = bottom[i]->width();
-    int ih = bottom[i]->height();
-    myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-  }
-  for(int i=0; i<top.size(); i++)
-  {
-    int oc = channels;
-    int ow = bottom[0]->width();
-    int oh = bottom[0]->height();
-    myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-  }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

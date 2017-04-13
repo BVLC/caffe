@@ -73,26 +73,13 @@ void BiasLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
 #ifdef USE_MLSL
-  int ic = bottom[0]->channels();
-  int iw = bottom[0]->width();
-  int ih = bottom[0]->height();
-
-  int oc = ic; //top[0]->channels();
-  int ow = iw; //top[0]->width();
-  int oh = ih; //top[0]->height();
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BIAS);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-  myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-  myRegInfo->AddWeights(oc, 1, dt, false);
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-#endif
+  if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
+    mn::OpRegInfo reg_info(mn::train::get_session(), MLSL::OT_BIAS);
+    reg_info.set_name(this->layer_param_.name());
+    reg_info.add_parameter_set<Dtype>(bottom[0]->channels(), 1, false);
+    this->layerOp = mn::train::add_operation(reg_info);
+  }
+#endif /* USE_MLSL */
 }
 
 template <typename Dtype>
@@ -152,11 +139,6 @@ void BiasLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     caffe_copy(bottom[0]->count(), top_diff, bottom_diff);
-
-#ifdef USE_MLSL
-      this->on_delinp_ready(propagate_down);
-#endif
-
   }
   // in-place, we don't need to do anything with the data diff
   const bool bias_param = (bottom.size() == 1);

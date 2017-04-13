@@ -233,9 +233,7 @@ bool compareDataWithFileData(const char *referenceFileName,
 
         float diff = caffe::floatDiff(a, b, epsilon);
         if (diff != FP_ZERO) {
-            fprintf(file, format, i,
-                *reinterpret_cast<CastType *> (&a),
-                *reinterpret_cast<CastType *> (&b), diff, a, b);
+            fprintf(file, format, i,(CastType)a, (CastType)b, diff, a, b);
             (*diffCounter)++;
         }
 

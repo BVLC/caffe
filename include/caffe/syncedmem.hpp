@@ -45,12 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   #include <mkl_service.h>
 #endif
 
-#ifdef USE_MLSL
-#include "mlsl.h"
-#endif /* USE_MLSL */
-
 #include "boost/thread/mutex.hpp"
 #include "caffe/common.hpp"
+
+#include "caffe/multinode/mlsl.hpp"
 
 namespace caffe {
 
@@ -69,15 +67,19 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 #endif
 
 #ifdef USE_MLSL
-  *ptr = MLSL::Alloc(size ? size : 1, 64);
-#else /* !USE_MLSL */
+  if (mn::is_multinode()) {
+    *ptr = mn::alloc(size ? size : 1, 64);
+  } else {
+#endif /* !USE_MLSL */
 
 #ifdef USE_MKL
-  *ptr = mkl_malloc(size ? size : 1, 64);
+    *ptr = mkl_malloc(size ? size : 1, 64);
 #else
-  *ptr = malloc(size);
+   *ptr = malloc(size);
 #endif
 
+#ifdef USE_MLSL
+  }
 #endif /* USE_MLSL */
 
   *use_cuda = false;
@@ -93,15 +95,19 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #endif
 
 #ifdef USE_MLSL
-  MLSL::Free(ptr);
-#else /* !USE_MLSL */
+  if (mn::is_multinode()) {
+    mn::free(ptr);
+  } else {
+#endif /* !USE_MLSL */
 
 #ifdef USE_MKL
-  mkl_free(ptr);
+    mkl_free(ptr);
 #else
-  free(ptr);
+    free(ptr);
 #endif
 
+#ifdef USE_MLSL
+  }
 #endif /* USE_MLSL */
 
 }

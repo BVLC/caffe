@@ -59,7 +59,7 @@ namespace bp = boost::python;
 #include "caffe/util/bbox_util.hpp"
 
 #ifdef USE_MLSL
-#include "caffe/multinode/MlslSync.hpp"
+#include "caffe/multinode/multi_sync.hpp"
 #endif /* USE_MLSL */
 
 using caffe::Blob;
@@ -314,9 +314,9 @@ int train() {
   }
 
 #ifdef USE_MLSL
-  if (MLSL::GetNumNodes() > 1) {
+  if (caffe::mn::is_multinode()) {
     LOG(INFO) << "Configuring multinode setup";
-    caffe::MlslSync<float> sync(solver);
+    caffe::MultiSync<float> sync(solver);
     LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
     sync.run();
   } else

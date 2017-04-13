@@ -37,19 +37,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 
-#ifndef _CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
-#define _CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
-
-#include <string>
-
-#include "caffe/proto/caffe.pb.h"
+#include "caffe/multinode/multi_sync.hpp"
 
 namespace caffe {
 
-void SeparateBias(const NetParameter& param, NetParameter* param_split); 
+template<typename Dtype>
+MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
+        : solver(boost::make_shared<MultiSolver<Dtype> >(root_solver)),
+          snapshot_per_iters(root_solver->param().snapshot()),
+          layers(root_solver->net()->layers()),
+          net(root_solver->net()),
+          net_params(root_solver->net()->learnable_params()) {
+  root_solver->param().set_disabled_update(true);
+  if (!is_root) root_solver->param().clear_snapshot();
+  if (!is_root) root_solver->param().set_snapshot_after_train(false);
 
-}  // namespace caffe
+  if (root_solver->iter() == 0)
+    root_solver->set_iter(1);
 
-#endif  // CAFFE_UTIL_INSERT_BIAS_LAYER_HPP_
+  layer_param_ids.resize(layers.size());
+
+  for (int layer_id = 0; layer_id < layers.size(); layer_id++) {
+    shared_ptr<Layer<Dtype> > layer = layers[layer_id];
+
+    /* cache param ids */
+    layer_param_ids[layer_id] = net->get_layer_learnable_param_ids(layer_id);
+  }
+}
+
+  INSTANTIATE_CLASS(MultiSync);
+} // namespace caffe
 
 #endif /* USE_MLSL */

@@ -95,35 +95,6 @@ void MKLEltwiseLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   fwd_top_data->create_user_layout(dim_src, sizes_src, strides_src, false);
 
   dnnDelete<Dtype>(sumPrimitive);
-
-#ifdef USE_MLSL
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_CONCAT);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for(int i=0; i<bottom.size(); i++)
-  {
-      int ic = bottom[i]->channels();
-      int iw = bottom[i]->width();
-      int ih = bottom[i]->height();
-      myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-  }
-
-  for(int i=0; i<top.size(); i++)
-  {
-      int oc = bottom[0]->channels();
-      int ow = bottom[0]->width();
-      int oh = bottom[0]->height();
-      myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-  }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-
-#endif /* USE_MLSL */
-
 }
 
 
