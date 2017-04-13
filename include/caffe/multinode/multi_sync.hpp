@@ -80,6 +80,25 @@ namespace caffe {
     const vector<Blob<Dtype> *> &net_params;
     vector<vector<int>> layer_param_ids;
 
+#ifdef PERFORMANCE_MONITORING
+    #define STATS_OUTPUT_FILE "mlsl_stats.txt"
+
+    struct StatsIterResult {
+        unsigned long long isolationCommTime;
+        unsigned long long commTime;
+        unsigned long long computeTime;
+        size_t commSize;
+    };
+
+    // Operations[Iteration]
+    vector<vector<StatsIterResult>> statsIterResult;
+
+    unsigned long long totalIsolationCommTime;
+    unsigned long long totalCommTime;
+    unsigned long long totalComputeTime;
+    size_t totalCommSize;
+#endif
+
   public:
 
     MultiSync(shared_ptr<Solver<Dtype> >);
@@ -118,8 +137,18 @@ namespace caffe {
 
       synchronize_parameters();
       mn::train::commit();
+
+#ifdef PERFORMANCE_MONITORING
+  statsIterResult.resize(caffe::mn::train::get_session().get_operation_count());
+  caffe::mn::train::stats::start();
+#endif
+
       solver->add_callback(this);
       solver->Solve();
+
+#ifdef PERFORMANCE_MONITORING
+    dump_stats_to_file();
+#endif
     }
 
     void check_snapshot() {
@@ -183,8 +212,75 @@ namespace caffe {
 
     void on_gradients_ready() {
       DLOG(INFO) << "finished iteration " << solver->root_solver()->iter();
+      
+#ifdef PERFORMANCE_MONITORING
+      caffe::mn::train::stats::stop();
+
+      size_t opCount = caffe::mn::train::get_session().get_operation_count();
+
+      for (size_t opIdx = 0; opIdx < opCount; ++opIdx) {
+          StatsIterResult iterResult;
+
+          iterResult.isolationCommTime = caffe::mn::train::stats::get_isolation_comm_time(opIdx);
+          iterResult.commTime = caffe::mn::train::stats::get_comm_time(opIdx);
+          iterResult.computeTime = caffe::mn::train::stats::get_compute_time(opIdx);
+          iterResult.commSize = caffe::mn::train::stats::get_comm_size(opIdx);
+
+          statsIterResult[opIdx].push_back(iterResult);
+
+          // Save total values before reset statistics
+          totalIsolationCommTime = caffe::mn::train::stats::get_total_isolation_comm_time();
+          totalCommTime = caffe::mn::train::stats::get_total_comm_time();
+          totalComputeTime = caffe::mn::train::stats::get_total_compute_time();
+          totalCommSize = caffe::mn::train::stats::get_total_comm_size();
+      }
+
+      caffe::mn::train::stats::reset();
+      caffe::mn::train::stats::start();
+#endif //PERFORMANCE_MONITORING
     }
 
+#ifdef PERFORMANCE_MONITORING
+    void dump_stats_to_file() {
+      FILE* outputFile = fopen(STATS_OUTPUT_FILE, "w");
+      if(outputFile == NULL) {
+        LOG(ERROR) << "unable to create file " << STATS_OUTPUT_FILE;
+        return;
+      }
+
+      size_t opCount = caffe::mn::train::get_session().get_operation_count();
+
+      // Write file header
+      fprintf(outputFile, "    MLSL common communication statistics\n\n");
+
+      fprintf(outputFile, "Total IsolationCommTime: %12llu\n",  totalIsolationCommTime);
+      fprintf(outputFile, "Total CommTime:          %12llu\n",  totalCommTime);
+      fprintf(outputFile, "Total ComputeTime:       %12llu\n",  totalComputeTime);
+      fprintf(outputFile, "Total CommSize:          %12zu\n",   totalCommSize);
+      fprintf(outputFile, "Num operations:          %12zu\n\n", opCount);
+
+      fprintf(outputFile, "    MLSL detailed communication statistics\n\n");
+
+      fprintf(outputFile, "Format:\n");
+      fprintf(outputFile, "  OperationName\n");
+      fprintf(outputFile, "  Iteration, IsolationCommTime (kCycles), CommTime (kCycles), ComputeTime (kCycles), CommSize (KB)\n");
+
+      // Write all iteratons for each layer
+      for (size_t opIdx = 0; opIdx < opCount; ++opIdx) {
+        fprintf(outputFile, "\n%s\n\n", caffe::mn::train::get_session().get_operation_name(opIdx));
+        for (size_t iter = 0; iter < statsIterResult[opIdx].size(); ++iter) {
+          fprintf(outputFile, "%6zu %11llu %11llu %11llu %8zu\n",
+                  iter+1,
+                  statsIterResult[opIdx][iter].isolationCommTime,
+                  statsIterResult[opIdx][iter].commTime,
+                  statsIterResult[opIdx][iter].computeTime,
+                  statsIterResult[opIdx][iter].commSize);
+        }
+      }
+
+      fclose(outputFile);
+    }
+#endif //PERFORMANCE_MONITORING
   };
 
 } // namespace caffe

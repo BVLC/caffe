@@ -198,6 +198,15 @@ namespace caffe {
       MLSL::OperationRegInfo * create_operation_reg_info(MLSL::OpType opType) {
         return session_->CreateOperationRegInfo(opType);
       }
+      size_t get_operation_count() {
+          return session_->GetOperationCount();
+      }
+      const char* get_operation_name(size_t idx) {
+          return session_->GetOperation(idx)->GetName();
+      }
+      MLSL::Statistics * get_stats() {
+          return session_->GetStats();
+      }
     private:
       MLSL::Session *session_{ nullptr };
     };
@@ -223,6 +232,49 @@ namespace caffe {
 
       inline void commit() {
         get_session().commit();
+      }
+
+      namespace stats {
+        inline void stop() {
+          get_session().get_stats()->Stop();
+        }
+        inline void print() {
+          get_session().get_stats()->Print();
+        }
+        inline void reset() {
+          get_session().get_stats()->Reset();
+        }
+        inline void start() {
+          get_session().get_stats()->Start();
+        }
+        inline bool is_started() {
+          return get_session().get_stats()->IsStarted();
+        }
+        inline unsigned long long get_isolation_comm_time(size_t idx) {
+          return get_session().get_stats()->GetIsolationCommCycles(idx);
+        }
+        inline size_t get_comm_size(size_t idx) {
+          return get_session().get_stats()->GetCommSize(idx);
+        }
+        inline unsigned long long get_comm_time(size_t idx) {
+          return get_session().get_stats()->GetCommCycles(idx);
+        }
+        inline unsigned long long get_compute_time(size_t idx) {
+          return get_session().get_stats()->GetComputeCycles(idx);
+        }
+        inline unsigned long long get_total_isolation_comm_time() {
+          return get_session().get_stats()->GetTotalIsolationCommCycles();
+        }
+        inline size_t get_total_comm_size() {
+          return get_session().get_stats()->GetTotalCommSize();
+        }
+        inline unsigned long long get_total_comm_time() {
+          return get_session().get_stats()->GetTotalCommCycles();
+        }
+        inline unsigned long long get_total_compute_time() {
+          return get_session().get_stats()->GetTotalComputeCycles();
+        }
+
       }
     }
 
