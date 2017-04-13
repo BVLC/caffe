@@ -103,18 +103,17 @@ namespace caffe {
     void run() {
       LOG(WARNING) << "RUN: "
                    << "PER LAYER TIMINGS ARE"
-                   #ifdef CAFFE_PER_LAYER_TIMINGS
+#ifdef CAFFE_PER_LAYER_TIMINGS
                    << " ENABLED"
-                   #else
-                   << " DISABLED"
-                   #endif
-                   << ", SINGLE DB SPLITTING IS"
-                   #ifdef CAFFE_MLSL_SHUFFLE
-                   << " ENABLED"
-                   #else
+#else
                    << " DISABLED"
 #endif
-        ;
+                   << ", SINGLE DB SPLITTING IS"
+#ifdef CAFFE_MLSL_SHUFFLE
+                   << " ENABLED";
+#else
+                   << " DISABLED";
+#endif
 
       synchronize_parameters();
       mn::train::commit();
