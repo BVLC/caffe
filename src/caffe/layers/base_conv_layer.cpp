@@ -19,7 +19,6 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int num_axes = bottom[0]->num_axes();
   num_spatial_axes_ = num_axes - first_spatial_axis;
   CHECK_GE(num_spatial_axes_, 0);
-  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
   // Setup filter kernel dimensions (kernel_shape_).
   kernel_shape_.Reshape(spatial_dim_blob_shape);
