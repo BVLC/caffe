@@ -124,8 +124,8 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   if (!use_global_stats_) {
     // compute variance using var(X) = E((X-EX)^2)
-    caffe_powx(top[0]->count(), top_data, Dtype(2),
-        temp_.mutable_cpu_data());  // (X-EX)^2
+    caffe_sqr<Dtype>(top[0]->count(), top_data,
+                     temp_.mutable_cpu_data());  // (X-EX)^2
     caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         1. / (num * spatial_dim), temp_.cpu_data(),
         spatial_sum_multiplier_.cpu_data(), 0.,
@@ -148,7 +148,7 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // normalize variance
   caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
-  caffe_powx(variance_.count(), variance_.cpu_data(), Dtype(0.5),
+  caffe_sqrt(variance_.count(), variance_.cpu_data(),
              variance_.mutable_cpu_data());
 
   // replicate variance to input size
