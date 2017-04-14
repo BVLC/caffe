@@ -96,7 +96,7 @@ The core Caffe developers offer [consulting services](mailto:caffe-coldpress@goo
 The BAIR Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BAIR PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
 
 The BAIR members who have contributed to Caffe are (alphabetical by first name):
-[Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/), and [Yangqing Jia](http://daggerfs.com/).
+[Carl Doersch](http://www.carldoersch.com/), [Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Philipp Krähenbühl](http://www.philkr.net/), [Ronghang Hu](http://ronghanghu.com/), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/), [Takuya Narihira](https://github.com/tnarihi), and [Yangqing Jia](http://daggerfs.com/).
 
 The open-source community plays an important and growing role in Caffe's development.
 Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for the full list.
