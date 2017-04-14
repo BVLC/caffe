@@ -52,18 +52,18 @@ Developer documentation automagically generated from code comments.
 * [Benchmarking](https://docs.google.com/spreadsheets/d/1Yp4rqHpT7mKxOPbpzYeUfEFLnELDAgxSSBQKp5uKDGQ/edit#gid=0)<br>
 Comparison of inference and learning for different networks and GPUs.
 
-### Examples
-
-{% assign examples = site.pages | where:'category','example' | sort: 'priority' %}
-{% for page in examples %}
-- <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
-{% endfor %}
-
 ### Notebook Examples
 
 {% assign notebooks = site.pages | where:'category','notebook' | sort: 'priority' %}
 {% for page in notebooks %}
 - <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br>{{page.description}}</div>
+{% endfor %}
+
+### Command Line Examples
+
+{% assign examples = site.pages | where:'category','example' | sort: 'priority' %}
+{% for page in examples %}
+- <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
 ## Citing Caffe
