@@ -23,15 +23,14 @@ Thanks to these contributors the framework tracks the state-of-the-art in both c
 
 **Speed** makes Caffe perfect for research experiments and industry deployment.
 Caffe can process **over 60M images per day** with a single NVIDIA K40 GPU\*.
-That's 1 ms/image for inference and 4 ms/image for learning.
-We believe that Caffe is the fastest convnet implementation available.
+That's 1 ms/image for inference and 4 ms/image for learning and more recent library versions and hardware are faster still.
+We believe that Caffe is among the fastest convnet implementations available.
 
 **Community**: Caffe already powers academic research projects, startup prototypes, and even large-scale industrial applications in vision, speech, and multimedia.
 Join our community of brewers on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) and [Github](https://github.com/BVLC/caffe/).
 
 <p class="footnote" markdown="1">
-\* With the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model and caching IO.
-Consult performance [details](/performance_hardware.html).
+\* With the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model and prefetching IO.
 </p>
 
 ## Documentation
@@ -50,6 +49,8 @@ BAIR suggests a standard distribution format for Caffe models, and provides trai
 Guidelines for development and contributing to Caffe.
 * [API Documentation](/doxygen/annotated.html)<br>
 Developer documentation automagically generated from code comments.
+* [Benchmarking](https://docs.google.com/spreadsheets/d/1Yp4rqHpT7mKxOPbpzYeUfEFLnELDAgxSSBQKp5uKDGQ/edit#gid=0)<br>
+Comparison of inference and learning for different networks and GPUs.
 
 ### Examples
 
