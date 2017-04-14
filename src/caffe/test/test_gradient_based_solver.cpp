@@ -558,9 +558,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const vector<Blob<Dtype>*>& params = solver_->net()->learnable_params();
     for (int i = 0; i < params.size(); ++i) {
       for (int j = 0; j < params[i]->count(); ++j) {
-        EXPECT_EQ(param_copies[i]->cpu_data()[j], params[i]->cpu_data()[j])
+        EXPECT_FLOAT_EQ(param_copies[i]->cpu_data()[j], params[i]->cpu_data()[j])
             << "param " << i << " data differed at dim " << j;
-        EXPECT_EQ(param_copies[i]->cpu_diff()[j], params[i]->cpu_diff()[j])
+        EXPECT_FLOAT_EQ(param_copies[i]->cpu_diff()[j], params[i]->cpu_diff()[j])
             << "param " << i << " diff differed at dim " << j;
       }
     }
@@ -569,9 +569,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
     for (int i = 0; i < history.size(); ++i) {
       for (int j = 0; j < history[i]->count(); ++j) {
-        EXPECT_EQ(history_copies[i]->cpu_data()[j], history[i]->cpu_data()[j])
+        EXPECT_FLOAT_EQ(history_copies[i]->cpu_data()[j], history[i]->cpu_data()[j])
             << "history blob " << i << " data differed at dim " << j;
-        EXPECT_EQ(history_copies[i]->cpu_diff()[j], history[i]->cpu_diff()[j])
+        EXPECT_FLOAT_EQ(history_copies[i]->cpu_diff()[j], history[i]->cpu_diff()[j])
             << "history blob " << i << " diff differed at dim " << j;
       }
     }
