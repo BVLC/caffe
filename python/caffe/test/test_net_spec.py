@@ -48,6 +48,17 @@ def silent_net():
     n.silence_data2 = L.Silence(n.data2, ntop=0)
     return n.to_proto()
 
+def reshape_net(shape0, shape1):
+    from caffe.proto import caffe_pb2
+    n = caffe.NetSpec()
+    n.data = L.DummyData(shape=dict(dim=shape0), ntop=1)
+
+    shape = caffe_pb2.BlobShape()
+    shape.dim.extend(shape1)
+
+    n.reshaped = L.Reshape(n.data, shape=shape)
+    return n.to_proto()
+
 class TestNetSpec(unittest.TestCase):
     def load_net(self, net_proto):
         f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
@@ -79,3 +90,15 @@ class TestNetSpec(unittest.TestCase):
         net_proto = silent_net()
         net = self.load_net(net_proto)
         self.assertEqual(len(net.forward()), 0)
+
+    def test_reshape(self):
+        """Test net construction for reshape layer"""
+        shape0 = [2,3]
+        shape1 = [3,2]
+
+        net_proto = reshape_net(shape0, shape1)
+        net = self.load_net(net_proto)
+        output = net.forward()
+        output_shape = output['reshaped'].shape
+        for idx, shape in enumerate(shape1):
+            self.assertEqual(output_shape[idx], shape)
