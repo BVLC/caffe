@@ -3,7 +3,7 @@ title: Model Zoo
 ---
 # Caffe Model Zoo
 
-Lots of researchers and engineers have made Caffe models for different tasks with all kinds of architectures and data.
+Lots of researchers and engineers have made Caffe models for different tasks with all kinds of architectures and data: check out the [model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)!
 These models are learned and applied for problems ranging from simple regression, to large-scale visual classification, to Siamese networks for image similarity, to speech and robotics applications.
 
 To help share these models, we introduce the model zoo framework:
@@ -24,7 +24,7 @@ Each one of these can be downloaded by running `scripts/download_model_binary.py
 - **BAIR Reference R-CNN ILSVRC-2013** in `models/bvlc_reference_rcnn_ilsvrc13`: pure Caffe implementation of [R-CNN](https://github.com/rbgirshick/rcnn) as described by Girshick et al. in CVPR 2014. (Trained by Ross Girshick @rbgirshick)
 - **BAIR GoogLeNet** in `models/bvlc_googlenet`: GoogLeNet trained on ILSVRC 2012, almost exactly as described in [Going Deeper with Convolutions](http://arxiv.org/abs/1409.4842) by Szegedy et al. in ILSVRC 2014. (Trained by Sergio Guadarrama @sguada)
 
-**Community models** made by Caffe users are posted to a publicly editable [wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
+**Community models** made by Caffe users are posted to a publicly editable [model zoo wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
 These models are subject to conditions of their respective authors such as citation and license.
 Thank you for sharing your models!
 
@@ -41,6 +41,8 @@ A caffe model is distributed as a directory containing:
     - Information about what data the model was trained on, modeling choices, etc.
     - License information.
 - [optional] Other helpful scripts.
+
+This simple format can be handled through bundled scripts or manually if need be.
 
 ### Hosting model info
 
