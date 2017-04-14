@@ -1,5 +1,5 @@
 ---
-name: BVLC GoogleNet Model
+name: BAIR/BVLC GoogleNet Model
 caffemodel: bvlc_googlenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel
 license: unrestricted
