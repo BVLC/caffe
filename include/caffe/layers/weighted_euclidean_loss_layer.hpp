@@ -56,6 +56,8 @@ class WeightedEuclideanLossLayer : public LossLayer<Dtype> {
     return true;
   }
 
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+
  protected:
   /// @copydoc EuclideanLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

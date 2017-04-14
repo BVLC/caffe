@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "caffe/layers/euclidean_loss_layer.hpp"
+#include "caffe/layers/weighted_euclidean_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -23,8 +23,14 @@ void WeightedEuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& 
       bottom[0]->cpu_data(),
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
-  Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
-  Dtype loss = dot / bottom[0]->num() / Dtype(2);
+
+  Dtype wdot(0.0);
+  for (int i = 0; i < count; ++i)
+  {
+    wdot += bottom[2]->cpu_data()[i] * diff_.cpu_data()[i] * diff_.cpu_data()[i];
+  }
+
+  Dtype loss = wdot / bottom[0]->num() / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
@@ -45,6 +51,10 @@ void WeightedEuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>&
           diff_.cpu_data(),                   // a
           Dtype(0),                           // beta
           bottom[i]->mutable_cpu_diff());  // b
+      for (int j = 0; j < bottom[i]->count(); ++j)
+      {
+        bottom[i]->mutable_cpu_diff()[j] *= bottom[2]->cpu_data()[j];  
+      }
     }
   }
 }
