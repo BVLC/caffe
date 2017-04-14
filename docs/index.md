@@ -35,8 +35,8 @@ Join our community of brewers on the [caffe-users group](https://groups.google.c
 
 ## Documentation
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
-Tutorial presentation.
+- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p) and [Caffe in a Day](https://docs.google.com/presentation/d/1HxGdeq8MPktHaPb-rlmYYQ723iWzq9ur6Gjo71YiG0Y/edit#slide=id.gc2fcdcce7_216_0)<br>
+Tutorial presentation of the framework and a full-day crash course.
 - [Tutorial Documentation](/tutorial)<br>
 Practical guide and framework reference.
 - [arXiv / ACM MM '14 paper](http://arxiv.org/abs/1408.5093)<br>
