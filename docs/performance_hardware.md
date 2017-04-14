@@ -8,7 +8,7 @@ To measure performance on different NVIDIA GPUs we use CaffeNet, the Caffe refer
 
 For training, each time point is 20 iterations/minibatches of 256 images for 5,120 images total. For testing, a 50,000 image validation set is classified.
 
-**Acknowledgements**: BVLC members are very grateful to NVIDIA for providing several GPUs to conduct this research.
+**Acknowledgements**: BAIR members are very grateful to NVIDIA for providing several GPUs to conduct this research.
 
 ## NVIDIA K40
 
