@@ -14,7 +14,7 @@ The NVIDIA package tends to follow more recent library and driver versions, but 
 If installing from packages, install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
 This can be skipped for CPU-only installation.
 
-**BLAS**: install ATLAS by `sudo apt-get install libatlas-base-dev` or install OpenBLAS or MKL for better CPU performance.
+**BLAS**: install ATLAS by `sudo apt-get install libatlas-base-dev` or install OpenBLAS by `sudo apt-get install libopenblas-dev` or MKL for better CPU performance.
 
 **Python** (optional): if you use the default Python you will need to `sudo apt-get install` the `python-dev` package to have the Python headers for building the pycaffe interface.
 
