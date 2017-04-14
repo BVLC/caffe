@@ -77,8 +77,7 @@ Please cite Caffe in your publications if it helps your research:
       Year = {2014}
     }
 
-If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).
-Citations are also tracked automatically by [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
+If you do publish a paper where Caffe helped your research, we encourage you to cite the framework for tracking by [Google Scholar](https://scholar.google.com/citations?view_op=view_citation&hl=en&citation_for_view=-ltRSM0AAAAJ:u5HHmVD_uO8C).
 
 ## Contacting Us
 
