@@ -5,7 +5,7 @@ title: Deep Learning Framework
 # Caffe
 
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
+It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu)) and by community contributors.
 [Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
@@ -45,7 +45,7 @@ A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v
 - [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br>
-BVLC suggests a standard distribution format for Caffe models, and provides trained models.
+BAIR suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
 * [API Documentation](/doxygen/annotated.html)<br>
@@ -92,9 +92,9 @@ The core Caffe developers offer [consulting services](mailto:caffe-coldpress@goo
 
 ## Acknowledgements
 
-The BVLC Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
+The BAIR Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BAIR PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
 
-The BVLC members who have contributed to Caffe are (alphabetical by first name):
+The BAIR members who have contributed to Caffe are (alphabetical by first name):
 [Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/), and [Yangqing Jia](http://daggerfs.com/).
 
 The open-source community plays an important and growing role in Caffe's development.
@@ -103,4 +103,4 @@ Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for re
 We sincerely appreciate your interest and contributions!
 If you'd like to contribute, please read the [developing & contributing](development.html) guide.
 
-Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for discussions along the journey, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for advice.
+Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for discussions along the journey, and BAIR PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for advice.

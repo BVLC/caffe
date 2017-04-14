@@ -9,7 +9,7 @@ priority: 5
 # Fine-tuning CaffeNet for Style Recognition on "Flickr Style" Data
 
 Fine-tuning takes an already learned model, adapts the architecture, and resumes training from the already learned model weights.
-Let's fine-tune the BVLC-distributed CaffeNet model on a different dataset, [Flickr Style](http://sergeykarayev.com/files/1311.3715v3.pdf), to predict image style instead of object category.
+Let's fine-tune the BAIR-distributed CaffeNet model on a different dataset, [Flickr Style](http://sergeykarayev.com/files/1311.3715v3.pdf), to predict image style instead of object category.
 
 ## Explanation
 
