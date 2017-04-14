@@ -86,11 +86,6 @@ Join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users
 
 Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
 
-Contact [caffe-dev](mailto:caffe-dev@googlegroups.com) if you have a confidential proposal for the framework *and the ability to act on it*.
-Requests for features, explanations, or personal help will be ignored; post to [caffe-users](https://groups.google.com/forum/#!forum/caffe-users) instead.
-
-The core Caffe developers offer [consulting services](mailto:caffe-coldpress@googlegroups.com) for appropriate projects.
-
 ## Acknowledgements
 
 The BAIR Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BAIR PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
