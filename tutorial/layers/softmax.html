@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,20 +71,20 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
-message SoftmaxParameter {
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 1 [default = DEFAULT];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
+</span><span class="kd">message</span> <span class="nc">SoftmaxParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
 
-  // The axis along which to perform the softmax -- may be negative to index
-  // from the end (e.g., -1 for the last axis).
-  // Any other axes will be evaluated as independent softmaxes.
-  optional int32 axis = 2 [default = 1];
-}</code></pre></figure>
+  <span class="c1">// The axis along which to perform the softmax -- may be negative to index
+</span>  <span class="c1">// from the end (e.g., -1 for the last axis).
+</span>  <span class="c1">// Any other axes will be evaluated as independent softmaxes.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="see-also">See also</h2>
 

@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,15 +71,15 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by ExpLayer
-message ExpParameter {
-  // ExpLayer computes outputs y = base ^ (shift + scale * x), for base &gt; 0.
-  // Or if base is set to the default (-1), base is set to e,
-  // so y = exp(shift + scale * x).
-  optional float base = 1 [default = -1.0];
-  optional float scale = 2 [default = 1.0];
-  optional float shift = 3 [default = 0.0];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by ExpLayer
+</span><span class="kd">message</span> <span class="nc">ExpParameter</span> <span class="p">{</span>
+  <span class="c1">// ExpLayer computes outputs y = base ^ (shift + scale * x), for base &gt; 0.
+</span>  <span class="c1">// Or if base is set to the default (-1), base is set to e,
+</span>  <span class="c1">// so y = exp(shift + scale * x).
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">base</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">shift</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="see-also">See also</h2>
 

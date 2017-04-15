@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -70,24 +70,24 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by RecurrentLayer
-message RecurrentParameter {
-  // The dimension of the output (and usually hidden state) representation --
-  // must be explicitly set to non-zero.
-  optional uint32 num_output = 1 [default = 0];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by RecurrentLayer
+</span><span class="kd">message</span> <span class="nc">RecurrentParameter</span> <span class="p">{</span>
+  <span class="c1">// The dimension of the output (and usually hidden state) representation --
+</span>  <span class="c1">// must be explicitly set to non-zero.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">num_output</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
 
-  optional FillerParameter weight_filler = 2; // The filler for the weight
-  optional FillerParameter bias_filler = 3; // The filler for the bias
+  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">weight_filler</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// The filler for the weight
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">bias_filler</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// The filler for the bias
+</span>
+  <span class="c1">// Whether to enable displaying debug_info in the unrolled recurrent net.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">debug_info</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
 
-  // Whether to enable displaying debug_info in the unrolled recurrent net.
-  optional bool debug_info = 4 [default = false];
-
-  // Whether to add as additional inputs (bottoms) the initial hidden state
-  // blobs, and add as additional outputs (tops) the final timestep hidden state
-  // blobs.  The number of additional bottom/top blobs required depends on the
-  // recurrent architecture -- e.g., 1 for RNNs, 2 for LSTMs.
-  optional bool expose_hidden = 5 [default = false];
-}</code></pre></figure>
+  <span class="c1">// Whether to add as additional inputs (bottoms) the initial hidden state
+</span>  <span class="c1">// blobs, and add as additional outputs (tops) the final timestep hidden state
+</span>  <span class="c1">// blobs.  The number of additional bottom/top blobs required depends on the
+</span>  <span class="c1">// recurrent architecture -- e.g., 1 for RNNs, 2 for LSTMs.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">expose_hidden</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

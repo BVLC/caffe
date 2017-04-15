@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -78,13 +78,13 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by ELULayer
-message ELUParameter {
-  // Described in:
-  // Clevert, D.-A., Unterthiner, T., &amp; Hochreiter, S. (2015). Fast and Accurate
-  // Deep Network Learning by Exponential Linear Units (ELUs). arXiv
-  optional float alpha = 1 [default = 1];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by ELULayer
+</span><span class="kd">message</span> <span class="nc">ELUParameter</span> <span class="p">{</span>
+  <span class="c1">// Described in:
+</span>  <span class="c1">// Clevert, D.-A., Unterthiner, T., &amp; Hochreiter, S. (2015). Fast and Accurate
+</span>  <span class="c1">// Deep Network Learning by Exponential Linear Units (ELUs). arXiv
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

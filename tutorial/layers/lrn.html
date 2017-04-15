@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -81,21 +81,28 @@
 <h2 id="parameters">Parameters</h2>
 
 <ul>
-  <li>Parameters (<code class="highlighter-rouge">Parameter lrn_param</code>)</li>
+  <li>Parameters (<code class="highlighter-rouge">LRNParameter lrn_param</code>)</li>
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message BatchNormParameter {
-  // If false, accumulate global mean/variance values via a moving average. If
-  // true, use those accumulated values instead of computing mean/variance
-  // across the batch.
-  optional bool use_global_stats = 1;
-  // How much does the moving average decay each iteration?
-  optional float moving_average_fraction = 2 [default = .999];
-  // Small value to add to the variance estimate so that we don't divide by
-  // zero.
-  optional float eps = 3 [default = 1e-5];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by LRNLayer
+</span><span class="kd">message</span> <span class="nc">LRNParameter</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">local_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">5</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">];</span>
+  <span class="kd">enum</span> <span class="n">NormRegion</span> <span class="p">{</span>
+    <span class="na">ACROSS_CHANNELS</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">WITHIN_CHANNEL</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">NormRegion</span> <span class="na">norm_region</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">ACROSS_CHANNELS</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">k</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">];</span>
+  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

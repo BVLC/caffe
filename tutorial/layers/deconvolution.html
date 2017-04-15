@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -73,58 +73,58 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message ConvolutionParameter {
-  optional uint32 num_output = 1; // The number of outputs for the layer
-  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">ConvolutionParameter</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">num_output</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// The number of outputs for the layer
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">bias_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span> <span class="c1">// whether to have bias terms
+</span>
+  <span class="c1">// Pad, kernel size, and stride are all given as a single value for equal
+</span>  <span class="c1">// dimensions in all spatial dimensions, or once per spatial dimension.
+</span>  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">pad</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// The padding size; defaults to 0
+</span>  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">kernel_size</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// The kernel size
+</span>  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">stride</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span> <span class="c1">// The stride; defaults to 1
+</span>  <span class="c1">// Factor used to dilate the kernel, (implicitly) zero-filling the resulting
+</span>  <span class="c1">// holes. (Kernel dilation is sometimes referred to by its use in the
+</span>  <span class="c1">// algorithme à trous from Holschneider et al. 1987.)
+</span>  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">dilation</span> <span class="o">=</span> <span class="mi">18</span><span class="p">;</span> <span class="c1">// The dilation; defaults to 1
+</span>
+  <span class="c1">// For 2D convolution only, the *_h and *_w versions may also be used to
+</span>  <span class="c1">// specify both spatial dimensions.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pad_h</span> <span class="o">=</span> <span class="mi">9</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span> <span class="c1">// The padding height (2D only)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pad_w</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span> <span class="c1">// The padding width (2D only)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">kernel_h</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span> <span class="c1">// The kernel height (2D only)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">kernel_w</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span> <span class="c1">// The kernel width (2D only)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">stride_h</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span> <span class="c1">// The stride height (2D only)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">stride_w</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span> <span class="c1">// The stride width (2D only)
+</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="kd">group</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span> <span class="c1">// The group size for group conv
+</span>
+  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">weight_filler</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span> <span class="c1">// The filler for the weight
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">bias_filler</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">// The filler for the bias
+</span>  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">15</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
 
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in all spatial dimensions, or once per spatial dimension.
-  repeated uint32 pad = 3; // The padding size; defaults to 0
-  repeated uint32 kernel_size = 4; // The kernel size
-  repeated uint32 stride = 6; // The stride; defaults to 1
-  // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
-  // holes. (Kernel dilation is sometimes referred to by its use in the
-  // algorithme à trous from Holschneider et al. 1987.)
-  repeated uint32 dilation = 18; // The dilation; defaults to 1
+  <span class="c1">// The axis to interpret as "channels" when performing convolution.
+</span>  <span class="c1">// Preceding dimensions are treated as independent inputs;
+</span>  <span class="c1">// succeeding dimensions are treated as "spatial".
+</span>  <span class="c1">// With (N, C, H, W) inputs, and axis == 1 (the default), we perform
+</span>  <span class="c1">// N independent 2D convolutions, sliding C-channel (or (C/g)-channels, for
+</span>  <span class="c1">// groups g&gt;1) filters across the spatial axes (H, W) of the input.
+</span>  <span class="c1">// With (N, C, D, H, W) inputs, and axis == 1, we perform
+</span>  <span class="c1">// N independent 3D convolutions, sliding (C/g)-channels
+</span>  <span class="c1">// filters across the spatial axes (D, H, W) of the input.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">16</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // For 2D convolution only, the *_h and *_w versions may also be used to
-  // specify both spatial dimensions.
-  optional uint32 pad_h = 9 [default = 0]; // The padding height (2D only)
-  optional uint32 pad_w = 10 [default = 0]; // The padding width (2D only)
-  optional uint32 kernel_h = 11; // The kernel height (2D only)
-  optional uint32 kernel_w = 12; // The kernel width (2D only)
-  optional uint32 stride_h = 13; // The stride height (2D only)
-  optional uint32 stride_w = 14; // The stride width (2D only)
-
-  optional uint32 group = 5 [default = 1]; // The group size for group conv
-
-  optional FillerParameter weight_filler = 7; // The filler for the weight
-  optional FillerParameter bias_filler = 8; // The filler for the bias
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 15 [default = DEFAULT];
-
-  // The axis to interpret as "channels" when performing convolution.
-  // Preceding dimensions are treated as independent inputs;
-  // succeeding dimensions are treated as "spatial".
-  // With (N, C, H, W) inputs, and axis == 1 (the default), we perform
-  // N independent 2D convolutions, sliding C-channel (or (C/g)-channels, for
-  // groups g&gt;1) filters across the spatial axes (H, W) of the input.
-  // With (N, C, D, H, W) inputs, and axis == 1, we perform
-  // N independent 3D convolutions, sliding (C/g)-channels
-  // filters across the spatial axes (D, H, W) of the input.
-  optional int32 axis = 16 [default = 1];
-
-  // Whether to force use of the general ND convolution, even if a specific
-  // implementation for blobs of the appropriate number of spatial dimensions
-  // is available. (Currently, there is only a 2D-specific convolution
-  // implementation; for input blobs with num_axes != 2, this option is
-  // ignored and the ND implementation will be used.)
-  optional bool force_nd_im2col = 17 [default = false];
-}</code></pre></figure>
+  <span class="c1">// Whether to force use of the general ND convolution, even if a specific
+</span>  <span class="c1">// implementation for blobs of the appropriate number of spatial dimensions
+</span>  <span class="c1">// is available. (Currently, there is only a 2D-specific convolution
+</span>  <span class="c1">// implementation; for input blobs with num_axes != 2, this option is
+</span>  <span class="c1">// ignored and the ND implementation will be used.)
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">force_nd_im2col</span> <span class="o">=</span> <span class="mi">17</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

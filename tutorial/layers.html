@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -207,7 +207,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
   <li><a href="layers/infogainloss.html">Infogain Loss</a> - a generalization of MultinomialLogisticLossLayer.</li>
   <li><a href="layers/softmaxwithloss.html">Softmax with Loss</a> - computes the multinomial logistic loss of the softmax of its inputs. It’s conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.</li>
   <li><a href="layers/euclideanloss.html">Sum-of-Squares / Euclidean</a> - computes the sum of squares of differences of its two inputs, <script type="math/tex">\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2</script>.</li>
-  <li><a href="layers/hiddenloss.html">Hinge / Margin</a> - The hinge loss layer computes a one-vs-all hinge (L1) or squared hinge loss (L2).</li>
+  <li><a href="layers/hingeloss.html">Hinge / Margin</a> - The hinge loss layer computes a one-vs-all hinge (L1) or squared hinge loss (L2).</li>
   <li><a href="layers/sigmoidcrossentropyloss.html">Sigmoid Cross-Entropy Loss</a> - computes the cross-entropy (logistic) loss, often used for predicting targets interpreted as probabilities.</li>
   <li><a href="layers/accuracy.html">Accuracy / Top-k layer</a> - scores the output as an accuracy with respect to target – it is not actually a loss and has no backward step.</li>
   <li><a href="layers/contrastiveloss.html">Contrastive Loss</a></li>

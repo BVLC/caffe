@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -70,21 +70,21 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message SPPParameter {
-  enum PoolMethod {
-    MAX = 0;
-    AVE = 1;
-    STOCHASTIC = 2;
-  }
-  optional uint32 pyramid_height = 1;
-  optional PoolMethod pool = 2 [default = MAX]; // The pooling method
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 6 [default = DEFAULT];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">SPPParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">PoolMethod</span> <span class="p">{</span>
+    <span class="na">MAX</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">AVE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">STOCHASTIC</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pyramid_height</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">optional</span> <span class="n">PoolMethod</span> <span class="na">pool</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">];</span> <span class="c1">// The pooling method
+</span>  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

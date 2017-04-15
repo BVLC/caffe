@@ -15,6 +15,7 @@ var searchData=
   ['startinternalthread',['StartInternalThread',['../classcaffe_1_1InternalThread.html#acffc1d9bc9e78f4146ba2d16f593fca7',1,'caffe::InternalThread']]],
   ['statemeetsrule',['StateMeetsRule',['../classcaffe_1_1Net.html#a54e8c43fe3a0cd9bbbcfdefd2b1603d2',1,'caffe::Net']]],
   ['stopinternalthread',['StopInternalThread',['../classcaffe_1_1InternalThread.html#ac72d8e2a23dbbe5203d5003dd67af73e',1,'caffe::InternalThread']]],
+  ['sum_5frows_5fof_5fh',['sum_rows_of_H',['../classcaffe_1_1InfogainLossLayer.html#a030296e6af30acd17a3cfe4463456147',1,'caffe::InfogainLossLayer']]],
   ['sumsq_5fdata',['sumsq_data',['../classcaffe_1_1Blob.html#a2ea640466fc339a02dabba4e8a1f0de2',1,'caffe::Blob']]],
   ['sumsq_5fdiff',['sumsq_diff',['../classcaffe_1_1Blob.html#a2df1894f11323235f9d7c7a1f0fe010f',1,'caffe::Blob']]]
 ];

@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -83,34 +83,34 @@ in your build directory.</p>
 
 <p>To use the pre-trained CaffeNet model with the classification example,
 you need to download it from the “Model Zoo” using the following
-script:
-<code class="highlighter-rouge">
-./scripts/download_model_binary.py models/bvlc_reference_caffenet
-</code>
-The ImageNet labels file (also called the <em>synset file</em>) is also
-required in order to map a prediction to the name of the class:
-<code class="highlighter-rouge">
-./data/ilsvrc12/get_ilsvrc_aux.sh
-</code>
-Using the files that were downloaded, we can classify the provided cat
-image (<code class="highlighter-rouge">examples/images/cat.jpg</code>) using this command:
-<code class="highlighter-rouge">
-./build/examples/cpp_classification/classification.bin \
+script:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>./scripts/download_model_binary.py models/bvlc_reference_caffenet
+</code></pre>
+</div>
+<p>The ImageNet labels file (also called the <em>synset file</em>) is also
+required in order to map a prediction to the name of the class:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>./data/ilsvrc12/get_ilsvrc_aux.sh
+</code></pre>
+</div>
+<p>Using the files that were downloaded, we can classify the provided cat
+image (<code class="highlighter-rouge">examples/images/cat.jpg</code>) using this command:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>./build/examples/cpp_classification/classification.bin \
   models/bvlc_reference_caffenet/deploy.prototxt \
   models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel \
   data/ilsvrc12/imagenet_mean.binaryproto \
   data/ilsvrc12/synset_words.txt \
   examples/images/cat.jpg
-</code>
-The output should look like this:
-<code class="highlighter-rouge">
----------- Prediction for examples/images/cat.jpg ----------
+</code></pre>
+</div>
+<p>The output should look like this:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>---------- Prediction for examples/images/cat.jpg ----------
 0.3134 - "n02123045 tabby, tabby cat"
 0.2380 - "n02123159 tiger cat"
 0.1235 - "n02124075 Egyptian cat"
 0.1003 - "n02119022 red fox, Vulpes vulpes"
 0.0715 - "n02127052 lynx, catamount"
-</code></p>
+</code></pre>
+</div>
 
 <h2 id="improving-performance">Improving Performance</h2>
 

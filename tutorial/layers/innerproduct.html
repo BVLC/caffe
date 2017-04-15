@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -131,22 +131,22 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message InnerProductParameter {
-  optional uint32 num_output = 1; // The number of outputs for the layer
-  optional bool bias_term = 2 [default = true]; // whether to have bias terms
-  optional FillerParameter weight_filler = 3; // The filler for the weight
-  optional FillerParameter bias_filler = 4; // The filler for the bias
-
-  // The first axis to be lumped into a single inner product computation;
-  // all preceding axes are retained in the output.
-  // May be negative to index from the end (e.g., -1 for the last axis).
-  optional int32 axis = 5 [default = 1];
-  // Specify whether to transpose the weight matrix or not.
-  // If transpose == true, any operations will be performed on the transpose
-  // of the weight matrix. The weight matrix itself is not going to be transposed
-  // but rather the transfer flag of operations will be toggled accordingly.
-  optional bool transpose = 6 [default = false];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">InnerProductParameter</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">num_output</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// The number of outputs for the layer
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">bias_term</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span> <span class="c1">// whether to have bias terms
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">weight_filler</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// The filler for the weight
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">bias_filler</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// The filler for the bias
+</span>
+  <span class="c1">// The first axis to be lumped into a single inner product computation;
+</span>  <span class="c1">// all preceding axes are retained in the output.
+</span>  <span class="c1">// May be negative to index from the end (e.g., -1 for the last axis).
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="c1">// Specify whether to transpose the weight matrix or not.
+</span>  <span class="c1">// If transpose == true, any operations will be performed on the transpose
+</span>  <span class="c1">// of the weight matrix. The weight matrix itself is not going to be transposed
+</span>  <span class="c1">// but rather the transfer flag of operations will be toggled accordingly.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">transpose</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

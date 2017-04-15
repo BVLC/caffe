@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,14 +71,14 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by TileLayer
-message TileParameter {
-  // The index of the axis to tile.
-  optional int32 axis = 1 [default = 1];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by TileLayer
+</span><span class="kd">message</span> <span class="nc">TileParameter</span> <span class="p">{</span>
+  <span class="c1">// The index of the axis to tile.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // The number of copies (tiles) of the blob to output.
-  optional int32 tiles = 2;
-}</code></pre></figure>
+  <span class="c1">// The number of copies (tiles) of the blob to output.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">tiles</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

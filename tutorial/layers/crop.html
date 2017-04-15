@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,23 +71,23 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message CropParameter {
-  // To crop, elements of the first bottom are selected to fit the dimensions
-  // of the second, reference bottom. The crop is configured by
-  // - the crop `axis` to pick the dimensions for cropping
-  // - the crop `offset` to set the shift for all/each dimension
-  // to align the cropped bottom with the reference bottom.
-  // All dimensions up to but excluding `axis` are preserved, while
-  // the dimensions including and trailing `axis` are cropped.
-  // If only one `offset` is set, then all dimensions are offset by this amount.
-  // Otherwise, the number of offsets must equal the number of cropped axes to
-  // shift the crop in each dimension accordingly.
-  // Note: standard dimensions are N,C,H,W so the default is a spatial crop,
-  // and `axis` may be negative to index from the end (e.g., -1 for the last
-  // axis).
-  optional int32 axis = 1 [default = 2];
-  repeated uint32 offset = 2;
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">CropParameter</span> <span class="p">{</span>
+  <span class="c1">// To crop, elements of the first bottom are selected to fit the dimensions
+</span>  <span class="c1">// of the second, reference bottom. The crop is configured by
+</span>  <span class="c1">// - the crop `axis` to pick the dimensions for cropping
+</span>  <span class="c1">// - the crop `offset` to set the shift for all/each dimension
+</span>  <span class="c1">// to align the cropped bottom with the reference bottom.
+</span>  <span class="c1">// All dimensions up to but excluding `axis` are preserved, while
+</span>  <span class="c1">// the dimensions including and trailing `axis` are cropped.
+</span>  <span class="c1">// If only one `offset` is set, then all dimensions are offset by this amount.
+</span>  <span class="c1">// Otherwise, the number of offsets must equal the number of cropped axes to
+</span>  <span class="c1">// shift the crop in each dimension accordingly.
+</span>  <span class="c1">// Note: standard dimensions are N,C,H,W so the default is a spatial crop,
+</span>  <span class="c1">// and `axis` may be negative to index from the end (e.g., -1 for the last
+</span>  <span class="c1">// axis).
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">2</span><span class="p">];</span>
+  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">offset</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

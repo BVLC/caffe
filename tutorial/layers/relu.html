@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -93,21 +93,21 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by ReLULayer
-message ReLUParameter {
-  // Allow non-zero slope for negative inputs to speed up optimization
-  // Described in:
-  // Maas, A. L., Hannun, A. Y., &amp; Ng, A. Y. (2013). Rectifier nonlinearities
-  // improve neural network acoustic models. In ICML Workshop on Deep Learning
-  // for Audio, Speech, and Language Processing.
-  optional float negative_slope = 1 [default = 0];
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 2 [default = DEFAULT];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by ReLULayer
+</span><span class="kd">message</span> <span class="nc">ReLUParameter</span> <span class="p">{</span>
+  <span class="c1">// Allow non-zero slope for negative inputs to speed up optimization
+</span>  <span class="c1">// Described in:
+</span>  <span class="c1">// Maas, A. L., Hannun, A. Y., &amp; Ng, A. Y. (2013). Rectifier nonlinearities
+</span>  <span class="c1">// improve neural network acoustic models. In ICML Workshop on Deep Learning
+</span>  <span class="c1">// for Audio, Speech, and Language Processing.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">negative_slope</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
+  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

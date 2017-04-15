@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -68,23 +68,7 @@
 
 <h2 id="parameters">Parameters</h2>
 
-<ul>
-  <li>Parameters (<code class="highlighter-rouge">SilenceParameter silence_param</code>)</li>
-  <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
-</ul>
-
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message BatchNormParameter {
-  // If false, accumulate global mean/variance values via a moving average. If
-  // true, use those accumulated values instead of computing mean/variance
-  // across the batch.
-  optional bool use_global_stats = 1;
-  // How much does the moving average decay each iteration?
-  optional float moving_average_fraction = 2 [default = .999];
-  // Small value to add to the variance estimate so that we don't divide by
-  // zero.
-  optional float eps = 3 [default = 1e-5];
-}</code></pre></figure>
-
+<p>No parameters.</p>
 
 
       </section>

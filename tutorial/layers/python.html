@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,19 +71,17 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message PythonParameter {
-  optional string module = 1;
-  optional string layer = 2;
-  // This value is set to the attribute `param_str` of the `PythonLayer` object
-  // in Python before calling the `setup()` method. This could be a number,
-  // string, dictionary in Python dict format, JSON, etc. You may parse this
-  // string in `setup` method and use it in `forward` and `backward`.
-  optional string param_str = 3 [default = ''];
-  // Whether this PythonLayer is shared among worker solvers during data parallelism.
-  // If true, each worker solver sequentially run forward from this layer.
-  // This value should be set true if you are using it as a data layer.
-  optional bool share_in_parallel = 4 [default = false];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">PythonParameter</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">module</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">layer</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="c1">// This value is set to the attribute `param_str` of the `PythonLayer` object
+</span>  <span class="c1">// in Python before calling the `setup()` method. This could be a number,
+</span>  <span class="c1">// string, dictionary in Python dict format, JSON, etc. You may parse this
+</span>  <span class="c1">// string in `setup` method and use it in `forward` and `backward`.
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">param_str</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="s">''</span><span class="p">];</span>
+  <span class="c1">// DEPRECATED
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">share_in_parallel</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="examples-and-tutorials">Examples and tutorials</h2>
 

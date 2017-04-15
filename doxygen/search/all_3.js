@@ -8,7 +8,6 @@ var searchData=
   ['diff_5fscale_5f',['diff_scale_',['../classcaffe_1_1PowerLayer.html#aa83169eaa1b573137aa6ed2b526879f0',1,'caffe::PowerLayer']]],
   ['dilation_5f',['dilation_',['../classcaffe_1_1BaseConvolutionLayer.html#a91f929109b5c05ba6086d4c2a741ad4a',1,'caffe::BaseConvolutionLayer::dilation_()'],['../classcaffe_1_1Im2colLayer.html#a3420f6068a4befb3b0ed1ffe5ff0e84c',1,'caffe::Im2colLayer::dilation_()']]],
   ['dim_5f',['dim_',['../classcaffe_1_1ReductionLayer.html#a5d0cdd8ca00e6bbd425a51bef2214a7e',1,'caffe::ReductionLayer']]],
-  ['dropoutlayer',['DropoutLayer',['../classcaffe_1_1DropoutLayer.html#a24cbddd4699b102a9555d3b8013c16d0',1,'caffe::DropoutLayer']]],
-  ['dropoutlayer',['DropoutLayer',['../classcaffe_1_1DropoutLayer.html',1,'caffe']]],
+  ['dropoutlayer',['DropoutLayer',['../classcaffe_1_1DropoutLayer.html',1,'caffe::DropoutLayer&lt; Dtype &gt;'],['../classcaffe_1_1DropoutLayer.html#a24cbddd4699b102a9555d3b8013c16d0',1,'caffe::DropoutLayer::DropoutLayer()']]],
   ['dummydatalayer',['DummyDataLayer',['../classcaffe_1_1DummyDataLayer.html',1,'caffe']]]
 ];

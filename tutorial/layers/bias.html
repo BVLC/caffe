@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -70,37 +70,37 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message BiasParameter {
-  // The first axis of bottom[0] (the first input Blob) along which to apply
-  // bottom[1] (the second input Blob).  May be negative to index from the end
-  // (e.g., -1 for the last axis).
-  //
-  // For example, if bottom[0] is 4D with shape 100x3x40x60, the output
-  // top[0] will have the same shape, and bottom[1] may have any of the
-  // following shapes (for the given value of axis):
-  //    (axis == 0 == -4) 100; 100x3; 100x3x40; 100x3x40x60
-  //    (axis == 1 == -3)          3;     3x40;     3x40x60
-  //    (axis == 2 == -2)                   40;       40x60
-  //    (axis == 3 == -1)                                60
-  // Furthermore, bottom[1] may have the empty shape (regardless of the value of
-  // "axis") -- a scalar bias.
-  optional int32 axis = 1 [default = 1];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">BiasParameter</span> <span class="p">{</span>
+  <span class="c1">// The first axis of bottom[0] (the first input Blob) along which to apply
+</span>  <span class="c1">// bottom[1] (the second input Blob).  May be negative to index from the end
+</span>  <span class="c1">// (e.g., -1 for the last axis).
+</span>  <span class="c1">//
+</span>  <span class="c1">// For example, if bottom[0] is 4D with shape 100x3x40x60, the output
+</span>  <span class="c1">// top[0] will have the same shape, and bottom[1] may have any of the
+</span>  <span class="c1">// following shapes (for the given value of axis):
+</span>  <span class="c1">//    (axis == 0 == -4) 100; 100x3; 100x3x40; 100x3x40x60
+</span>  <span class="c1">//    (axis == 1 == -3)          3;     3x40;     3x40x60
+</span>  <span class="c1">//    (axis == 2 == -2)                   40;       40x60
+</span>  <span class="c1">//    (axis == 3 == -1)                                60
+</span>  <span class="c1">// Furthermore, bottom[1] may have the empty shape (regardless of the value of
+</span>  <span class="c1">// "axis") -- a scalar bias.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // (num_axes is ignored unless just one bottom is given and the bias is
-  // a learned parameter of the layer.  Otherwise, num_axes is determined by the
-  // number of axes by the second bottom.)
-  // The number of axes of the input (bottom[0]) covered by the bias
-  // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
-  // Set num_axes := 0, to add a zero-axis Blob: a scalar.
-  optional int32 num_axes = 2 [default = 1];
+  <span class="c1">// (num_axes is ignored unless just one bottom is given and the bias is
+</span>  <span class="c1">// a learned parameter of the layer.  Otherwise, num_axes is determined by the
+</span>  <span class="c1">// number of axes by the second bottom.)
+</span>  <span class="c1">// The number of axes of the input (bottom[0]) covered by the bias
+</span>  <span class="c1">// parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
+</span>  <span class="c1">// Set num_axes := 0, to add a zero-axis Blob: a scalar.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">num_axes</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // (filler is ignored unless just one bottom is given and the bias is
-  // a learned parameter of the layer.)
-  // The initialization for the learned bias parameter.
-  // Default is the zero (0) initialization, resulting in the BiasLayer
-  // initially performing the identity operation.
-  optional FillerParameter filler = 3;
-}</code></pre></figure>
+  <span class="c1">// (filler is ignored unless just one bottom is given and the bias is
+</span>  <span class="c1">// a learned parameter of the layer.)
+</span>  <span class="c1">// The initialization for the learned bias parameter.
+</span>  <span class="c1">// Default is the zero (0) initialization, resulting in the BiasLayer
+</span>  <span class="c1">// initially performing the identity operation.
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">filler</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

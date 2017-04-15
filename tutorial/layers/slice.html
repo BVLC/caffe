@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -98,16 +98,16 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message SliceParameter {
-  // The axis along which to slice -- may be negative to index from the end
-  // (e.g., -1 for the last axis).
-  // By default, SliceLayer concatenates blobs along the "channels" axis (1).
-  optional int32 axis = 3 [default = 1];
-  repeated uint32 slice_point = 2;
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">SliceParameter</span> <span class="p">{</span>
+  <span class="c1">// The axis along which to slice -- may be negative to index from the end
+</span>  <span class="c1">// (e.g., -1 for the last axis).
+</span>  <span class="c1">// By default, SliceLayer concatenates blobs along the "channels" axis (1).
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="k">repeated</span> <span class="kt">uint32</span> <span class="na">slice_point</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 
-  // DEPRECATED: alias for "axis" -- does not support negative indexing.
-  optional uint32 slice_dim = 1 [default = 1];
-}</code></pre></figure>
+  <span class="c1">// DEPRECATED: alias for "axis" -- does not support negative indexing.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">slice_dim</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

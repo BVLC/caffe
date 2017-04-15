@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['ignore_5flabel_5f',['ignore_label_',['../classcaffe_1_1AccuracyLayer.html#a2b8c2d647f43ffd6aa14e81f1c5b2bde',1,'caffe::AccuracyLayer::ignore_label_()'],['../classcaffe_1_1SigmoidCrossEntropyLossLayer.html#ab99d98ce823df6c90cd4c3cf8b0a793f',1,'caffe::SigmoidCrossEntropyLossLayer::ignore_label_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#a117d31c7ac538dd7851fb493bfc75d95',1,'caffe::SoftmaxWithLossLayer::ignore_label_()']]],
+  ['ignore_5flabel_5f',['ignore_label_',['../classcaffe_1_1AccuracyLayer.html#a2b8c2d647f43ffd6aa14e81f1c5b2bde',1,'caffe::AccuracyLayer::ignore_label_()'],['../classcaffe_1_1InfogainLossLayer.html#ad3f7c2efdf32f99510186495ba7c5cff',1,'caffe::InfogainLossLayer::ignore_label_()'],['../classcaffe_1_1SigmoidCrossEntropyLossLayer.html#ab99d98ce823df6c90cd4c3cf8b0a793f',1,'caffe::SigmoidCrossEntropyLossLayer::ignore_label_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#a117d31c7ac538dd7851fb493bfc75d95',1,'caffe::SoftmaxWithLossLayer::ignore_label_()']]],
   ['im2collayer',['Im2colLayer',['../classcaffe_1_1Im2colLayer.html',1,'caffe']]],
   ['imagedatalayer',['ImageDataLayer',['../classcaffe_1_1ImageDataLayer.html',1,'caffe']]],
   ['inferblobshape',['InferBlobShape',['../classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf',1,'caffe::DataTransformer::InferBlobShape(const Datum &amp;datum)'],['../classcaffe_1_1DataTransformer.html#ac829dd6448dcce67acb1e22a2554db4b',1,'caffe::DataTransformer::InferBlobShape(const vector&lt; Datum &gt; &amp;datum_vector)']]],

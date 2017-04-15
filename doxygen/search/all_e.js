@@ -19,10 +19,8 @@ var searchData=
   ['poolinglayer',['PoolingLayer',['../classcaffe_1_1PoolingLayer.html',1,'caffe']]],
   ['positiveunitballfiller',['PositiveUnitballFiller',['../classcaffe_1_1PositiveUnitballFiller.html',1,'caffe']]],
   ['power_5f',['power_',['../classcaffe_1_1PowerLayer.html#a882ce133988e4dd72a10d87fec4c04c3',1,'caffe::PowerLayer']]],
-  ['powerlayer',['PowerLayer',['../classcaffe_1_1PowerLayer.html',1,'caffe']]],
-  ['powerlayer',['PowerLayer',['../classcaffe_1_1PowerLayer.html#ab008c03c36436e1a0dac0fe1faa53c6d',1,'caffe::PowerLayer']]],
-  ['prelulayer',['PReLULayer',['../classcaffe_1_1PReLULayer.html',1,'caffe']]],
-  ['prelulayer',['PReLULayer',['../classcaffe_1_1PReLULayer.html#a9d164a537a2f77b4143d2491f4809732',1,'caffe::PReLULayer']]],
-  ['prob_5f',['prob_',['../classcaffe_1_1SoftmaxWithLossLayer.html#a02669f20097006452d877ea05e98b775',1,'caffe::SoftmaxWithLossLayer']]],
+  ['powerlayer',['PowerLayer',['../classcaffe_1_1PowerLayer.html',1,'caffe::PowerLayer&lt; Dtype &gt;'],['../classcaffe_1_1PowerLayer.html#ab008c03c36436e1a0dac0fe1faa53c6d',1,'caffe::PowerLayer::PowerLayer()']]],
+  ['prelulayer',['PReLULayer',['../classcaffe_1_1PReLULayer.html',1,'caffe::PReLULayer&lt; Dtype &gt;'],['../classcaffe_1_1PReLULayer.html#a9d164a537a2f77b4143d2491f4809732',1,'caffe::PReLULayer::PReLULayer()']]],
+  ['prob_5f',['prob_',['../classcaffe_1_1InfogainLossLayer.html#a4ae881c2950ca84a50b0f964797defd6',1,'caffe::InfogainLossLayer::prob_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#a02669f20097006452d877ea05e98b775',1,'caffe::SoftmaxWithLossLayer::prob_()']]],
   ['pythonlayer',['PythonLayer',['../classcaffe_1_1PythonLayer.html',1,'caffe']]]
 ];

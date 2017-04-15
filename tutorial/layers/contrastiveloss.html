@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,17 +71,17 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message ContrastiveLossParameter {
-  // margin for dissimilar pair
-  optional float margin = 1 [default = 1.0];
-  // The first implementation of this cost did not exactly match the cost of
-  // Hadsell et al 2006 -- using (margin - d^2) instead of (margin - d)^2.
-  // legacy_version = false (the default) uses (margin - d)^2 as proposed in the
-  // Hadsell paper. New models should probably use this version.
-  // legacy_version = true uses (margin - d^2). This is kept to support /
-  // reproduce existing models and results
-  optional bool legacy_version = 2 [default = false];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">ContrastiveLossParameter</span> <span class="p">{</span>
+  <span class="c1">// margin for dissimilar pair
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">margin</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">];</span>
+  <span class="c1">// The first implementation of this cost did not exactly match the cost of
+</span>  <span class="c1">// Hadsell et al 2006 -- using (margin - d^2) instead of (margin - d)^2.
+</span>  <span class="c1">// legacy_version = false (the default) uses (margin - d)^2 as proposed in the
+</span>  <span class="c1">// Hadsell paper. New models should probably use this version.
+</span>  <span class="c1">// legacy_version = true uses (margin - d^2). This is kept to support /
+</span>  <span class="c1">// reproduce existing models and results
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">legacy_version</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

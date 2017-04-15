@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -73,54 +73,54 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
-message SoftmaxParameter {
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 1 [default = DEFAULT];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
+</span><span class="kd">message</span> <span class="nc">SoftmaxParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
 
-  // The axis along which to perform the softmax -- may be negative to index
-  // from the end (e.g., -1 for the last axis).
-  // Any other axes will be evaluated as independent softmaxes.
-  optional int32 axis = 2 [default = 1];
-}</code></pre></figure>
+  <span class="c1">// The axis along which to perform the softmax -- may be negative to index
+</span>  <span class="c1">// from the end (e.g., -1 for the last axis).
+</span>  <span class="c1">// Any other axes will be evaluated as independent softmaxes.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <ul>
   <li>Parameters (<code class="highlighter-rouge">LossParameter loss_param</code>)</li>
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters shared by loss layers
-message LossParameter {
-  // If specified, ignore instances with the given label.
-  optional int32 ignore_label = 1;
-  // How to normalize the loss for loss layers that aggregate across batches,
-  // spatial dimensions, or other dimensions.  Currently only implemented in
-  // SoftmaxWithLoss and SigmoidCrossEntropyLoss layers.
-  enum NormalizationMode {
-    // Divide by the number of examples in the batch times spatial dimensions.
-    // Outputs that receive the ignore label will NOT be ignored in computing
-    // the normalization factor.
-    FULL = 0;
-    // Divide by the total number of output locations that do not take the
-    // ignore_label.  If ignore_label is not set, this behaves like FULL.
-    VALID = 1;
-    // Divide by the batch size.
-    BATCH_SIZE = 2;
-    // Do not normalize the loss.
-    NONE = 3;
-  }
-  // For historical reasons, the default normalization for
-  // SigmoidCrossEntropyLoss is BATCH_SIZE and *not* VALID.
-  optional NormalizationMode normalization = 3 [default = VALID];
-  // Deprecated.  Ignored if normalization is specified.  If normalization
-  // is not specified, then setting this to false will be equivalent to
-  // normalization = BATCH_SIZE to be consistent with previous behavior.
-  optional bool normalize = 2;
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters shared by loss layers
+</span><span class="kd">message</span> <span class="nc">LossParameter</span> <span class="p">{</span>
+  <span class="c1">// If specified, ignore instances with the given label.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">ignore_label</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="c1">// How to normalize the loss for loss layers that aggregate across batches,
+</span>  <span class="c1">// spatial dimensions, or other dimensions.  Currently only implemented in
+</span>  <span class="c1">// SoftmaxWithLoss and SigmoidCrossEntropyLoss layers.
+</span>  <span class="kd">enum</span> <span class="n">NormalizationMode</span> <span class="p">{</span>
+    <span class="c1">// Divide by the number of examples in the batch times spatial dimensions.
+</span>    <span class="c1">// Outputs that receive the ignore label will NOT be ignored in computing
+</span>    <span class="c1">// the normalization factor.
+</span>    <span class="na">FULL</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="c1">// Divide by the total number of output locations that do not take the
+</span>    <span class="c1">// ignore_label.  If ignore_label is not set, this behaves like FULL.
+</span>    <span class="na">VALID</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="c1">// Divide by the batch size.
+</span>    <span class="na">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="c1">// Do not normalize the loss.
+</span>    <span class="na">NONE</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// For historical reasons, the default normalization for
+</span>  <span class="c1">// SigmoidCrossEntropyLoss is BATCH_SIZE and *not* VALID.
+</span>  <span class="k">optional</span> <span class="n">NormalizationMode</span> <span class="na">normalization</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">VALID</span><span class="p">];</span>
+  <span class="c1">// Deprecated.  Ignored if normalization is specified.  If normalization
+</span>  <span class="c1">// is not specified, then setting this to false will be equivalent to
+</span>  <span class="c1">// normalization = BATCH_SIZE to be consistent with previous behavior.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">normalize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="see-also">See also</h2>
 

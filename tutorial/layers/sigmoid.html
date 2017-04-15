@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -62,7 +62,21 @@
   <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/sigmoid_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/sigmoid_layer.hpp</code></a></li>
   <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/sigmoid_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/sigmoid_layer.cpp</code></a></li>
   <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/sigmoid_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/sigmoid_layer.cu</code></a></li>
+  <li>
+    <p>Example (from <a href="https://github.com/BVLC/caffe/blob/master/examples/mnist/mnist_autoencoder.prototxt"><code class="highlighter-rouge">./examples/mnist/mnist_autoencoder.prototxt</code></a>):</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>layer {
+  name: "encode1neuron"
+  bottom: "encode1"
+  top: "encode1neuron"
+  type: "Sigmoid"
+}
+</code></pre>
+    </div>
+  </li>
 </ul>
+
+<p>The <code class="highlighter-rouge">Sigmoid</code> layer computes <code class="highlighter-rouge">sigmoid(x)</code> for each element <code class="highlighter-rouge">x</code> in the bottom blob.</p>
 
 <h2 id="parameters">Parameters</h2>
 
@@ -71,14 +85,14 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message SigmoidParameter {
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 1 [default = DEFAULT];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">SigmoidParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

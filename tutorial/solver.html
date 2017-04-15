@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -128,7 +128,7 @@ If you’re not sure where to start, take a look at the “Rules of thumb” bel
     <a href="http://research.microsoft.com/pubs/192769/tricks-2012.pdf">Stochastic Gradient Descent Tricks</a>.
     <em>Neural Networks: Tricks of the Trade</em>: Springer, 2012.</p>
 
-<h4 id="rules-of-thumb-for-setting-the-learning-rate--alpha--and-momentum--mu-">Rules of thumb for setting the learning rate <script type="math/tex">\alpha</script> and momentum <script type="math/tex">\mu</script></h4>
+<h4 id="rules-of-thumb-for-setting-the-learning-rate-alpha-and-momentum-mu">Rules of thumb for setting the learning rate <script type="math/tex">\alpha</script> and momentum <script type="math/tex">\mu</script></h4>
 
 <p>A good strategy for deep learning with SGD is to initialize the learning rate <script type="math/tex">\alpha</script> to a value around <script type="math/tex">\alpha \approx 0.01 = 10^{-2}</script>, and dropping it by a constant factor (e.g., 10) throughout training when the loss begins to reach an apparent “plateau”, repeating this several times.
 Generally, you probably want to use a momentum <script type="math/tex">\mu = 0.9</script> or similar value.

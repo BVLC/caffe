@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -98,34 +98,34 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message PoolingParameter {
-  enum PoolMethod {
-    MAX = 0;
-    AVE = 1;
-    STOCHASTIC = 2;
-  }
-  optional PoolMethod pool = 1 [default = MAX]; // The pooling method
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
-  optional uint32 pad_h = 9 [default = 0]; // The padding height
-  optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 kernel_size = 2; // The kernel size (square)
-  optional uint32 kernel_h = 5; // The kernel height
-  optional uint32 kernel_w = 6; // The kernel width
-  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
-  optional uint32 stride_h = 7; // The stride height
-  optional uint32 stride_w = 8; // The stride width
-  enum Engine {
-    DEFAULT = 0;
-    CAFFE = 1;
-    CUDNN = 2;
-  }
-  optional Engine engine = 11 [default = DEFAULT];
-  // If global_pooling then it will pool over the size of the bottom by doing
-  // kernel_h = bottom-&gt;height and kernel_w = bottom-&gt;width
-  optional bool global_pooling = 12 [default = false];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">PoolingParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">PoolMethod</span> <span class="p">{</span>
+    <span class="na">MAX</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">AVE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">STOCHASTIC</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">PoolMethod</span> <span class="na">pool</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">];</span> <span class="c1">// The pooling method
+</span>  <span class="c1">// Pad, kernel size, and stride are all given as a single value for equal
+</span>  <span class="c1">// dimensions in height and width or as Y, X pairs.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pad</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span> <span class="c1">// The padding size (equal in Y, X)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pad_h</span> <span class="o">=</span> <span class="mi">9</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span> <span class="c1">// The padding height
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">pad_w</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span> <span class="c1">// The padding width
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">kernel_size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// The kernel size (square)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">kernel_h</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="c1">// The kernel height
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">kernel_w</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span> <span class="c1">// The kernel width
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">stride</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span> <span class="c1">// The stride (equal in Y, X)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">stride_h</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span> <span class="c1">// The stride height
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">stride_w</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">// The stride width
+</span>  <span class="kd">enum</span> <span class="n">Engine</span> <span class="p">{</span>
+    <span class="na">DEFAULT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CAFFE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">CUDNN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">Engine</span> <span class="na">engine</span> <span class="o">=</span> <span class="mi">11</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">DEFAULT</span><span class="p">];</span>
+  <span class="c1">// If global_pooling then it will pool over the size of the bottom by doing
+</span>  <span class="c1">// kernel_h = bottom-&gt;height and kernel_w = bottom-&gt;width
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">global_pooling</span> <span class="o">=</span> <span class="mi">12</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="sample">Sample</h2>
 <ul>

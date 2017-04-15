@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,34 +71,34 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by ReductionLayer
-message ReductionParameter {
-  enum ReductionOp {
-    SUM = 1;
-    ASUM = 2;
-    SUMSQ = 3;
-    MEAN = 4;
-  }
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by ReductionLayer
+</span><span class="kd">message</span> <span class="nc">ReductionParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">ReductionOp</span> <span class="p">{</span>
+    <span class="na">SUM</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">ASUM</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="na">SUMSQ</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="na">MEAN</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="p">}</span>
 
-  optional ReductionOp operation = 1 [default = SUM]; // reduction operation
+  <span class="k">optional</span> <span class="n">ReductionOp</span> <span class="na">operation</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">SUM</span><span class="p">];</span> <span class="c1">// reduction operation
+</span>
+  <span class="c1">// The first axis to reduce to a scalar -- may be negative to index from the
+</span>  <span class="c1">// end (e.g., -1 for the last axis).
+</span>  <span class="c1">// (Currently, only reduction along ALL "tail" axes is supported; reduction
+</span>  <span class="c1">// of axis M through N, where N &lt; num_axes - 1, is unsupported.)
+</span>  <span class="c1">// Suppose we have an n-axis bottom Blob with shape:
+</span>  <span class="c1">//     (d0, d1, d2, ..., d(m-1), dm, d(m+1), ..., d(n-1)).
+</span>  <span class="c1">// If axis == m, the output Blob will have shape
+</span>  <span class="c1">//     (d0, d1, d2, ..., d(m-1)),
+</span>  <span class="c1">// and the ReductionOp operation is performed (d0 * d1 * d2 * ... * d(m-1))
+</span>  <span class="c1">// times, each including (dm * d(m+1) * ... * d(n-1)) individual data.
+</span>  <span class="c1">// If axis == 0 (the default), the output Blob always has the empty shape
+</span>  <span class="c1">// (count 1), performing reduction across the entire input --
+</span>  <span class="c1">// often useful for creating new loss functions.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
 
-  // The first axis to reduce to a scalar -- may be negative to index from the
-  // end (e.g., -1 for the last axis).
-  // (Currently, only reduction along ALL "tail" axes is supported; reduction
-  // of axis M through N, where N &lt; num_axes - 1, is unsupported.)
-  // Suppose we have an n-axis bottom Blob with shape:
-  //     (d0, d1, d2, ..., d(m-1), dm, d(m+1), ..., d(n-1)).
-  // If axis == m, the output Blob will have shape
-  //     (d0, d1, d2, ..., d(m-1)),
-  // and the ReductionOp operation is performed (d0 * d1 * d2 * ... * d(m-1))
-  // times, each including (dm * d(m+1) * ... * d(n-1)) individual data.
-  // If axis == 0 (the default), the output Blob always has the empty shape
-  // (count 1), performing reduction across the entire input --
-  // often useful for creating new loss functions.
-  optional int32 axis = 2 [default = 0];
-
-  optional float coeff = 3 [default = 1.0]; // coefficient for output
-}</code></pre></figure>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">coeff</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">];</span> <span class="c1">// coefficient for output
+</span><span class="p">}</span></code></pre></figure>
 
 
 

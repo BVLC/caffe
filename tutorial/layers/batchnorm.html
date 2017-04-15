@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,17 +71,27 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message BatchNormParameter {
-  // If false, accumulate global mean/variance values via a moving average. If
-  // true, use those accumulated values instead of computing mean/variance
-  // across the batch.
-  optional bool use_global_stats = 1;
-  // How much does the moving average decay each iteration?
-  optional float moving_average_fraction = 2 [default = .999];
-  // Small value to add to the variance estimate so that we don't divide by
-  // zero.
-  optional float eps = 3 [default = 1e-5];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">BatchNormParameter</span> <span class="p">{</span>
+  <span class="c1">// If false, normalization is performed over the current mini-batch
+</span>  <span class="c1">// and global statistics are accumulated (but not yet used) by a moving
+</span>  <span class="c1">// average.
+</span>  <span class="c1">// If true, those accumulated mean and variance values are used for the
+</span>  <span class="c1">// normalization.
+</span>  <span class="c1">// By default, it is set to false when the network is in the training
+</span>  <span class="c1">// phase and true when the network is in the testing phase.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">use_global_stats</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="c1">// What fraction of the moving average remains each iteration?
+</span>  <span class="c1">// Smaller values make the moving average decay faster, giving more
+</span>  <span class="c1">// weight to the recent values.
+</span>  <span class="c1">// Each iteration updates the moving average @f$S_{t-1}@f$ with the
+</span>  <span class="c1">// current mean @f$ Y_t @f$ by
+</span>  <span class="c1">// @f$ S_t = (1-\beta)Y_t + \beta \cdot S_{t-1} @f$, where @f$ \beta @f$
+</span>  <span class="c1">// is the moving_average_fraction parameter.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">moving_average_fraction</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">.999</span><span class="p">];</span>
+  <span class="c1">// Small value to add to the variance estimate so that we don't divide by
+</span>  <span class="c1">// zero.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">eps</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

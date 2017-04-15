@@ -1,9 +1,7 @@
 var searchData=
 [
-  ['caffe',['Caffe',['../classcaffe_1_1Caffe.html',1,'caffe']]],
-  ['caffe',['caffe',['../namespacecaffe.html',1,'']]],
-  ['callback',['Callback',['../classcaffe_1_1Net_1_1Callback.html',1,'caffe::Net']]],
-  ['callback',['Callback',['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver']]],
+  ['caffe',['Caffe',['../classcaffe_1_1Caffe.html',1,'caffe::Caffe'],['../namespacecaffe.html',1,'caffe']]],
+  ['callback',['Callback',['../classcaffe_1_1Net_1_1Callback.html',1,'caffe::Net&lt; Dtype &gt;::Callback'],['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver&lt; Dtype &gt;::Callback']]],
   ['canonicalaxisindex',['CanonicalAxisIndex',['../classcaffe_1_1Blob.html#ad686f5ed9994046f2c741bfa81118509',1,'caffe::Blob']]],
   ['channels',['channels',['../classcaffe_1_1Blob.html#ae48c8e9f0a0b66b041e47bf37ed04471',1,'caffe::Blob']]],
   ['checkblobcounts',['CheckBlobCounts',['../classcaffe_1_1Layer.html#a55c8036130225fbc874a986bdf4b27e2',1,'caffe::Layer']]],
@@ -17,8 +15,7 @@ var searchData=
   ['constantfiller',['ConstantFiller',['../classcaffe_1_1ConstantFiller.html',1,'caffe']]],
   ['contrastivelosslayer',['ContrastiveLossLayer',['../classcaffe_1_1ContrastiveLossLayer.html',1,'caffe']]],
   ['conv_5finput_5fshape_5f',['conv_input_shape_',['../classcaffe_1_1BaseConvolutionLayer.html#a63756d6ef00f6491939e539094c21397',1,'caffe::BaseConvolutionLayer']]],
-  ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html',1,'caffe']]],
-  ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html#ad27360afd7729001b9e4f1d8c8401866',1,'caffe::ConvolutionLayer']]],
+  ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html',1,'caffe::ConvolutionLayer&lt; Dtype &gt;'],['../classcaffe_1_1ConvolutionLayer.html#ad27360afd7729001b9e4f1d8c8401866',1,'caffe::ConvolutionLayer::ConvolutionLayer()']]],
   ['copy_5faxes_5f',['copy_axes_',['../classcaffe_1_1ReshapeLayer.html#ace08e8747c8d4562fbc26ca789681a4a',1,'caffe::ReshapeLayer']]],
   ['copyfrom',['CopyFrom',['../classcaffe_1_1Blob.html#a64ad51f99e88233f43a21a85ebe10284',1,'caffe::Blob']]],
   ['copytrainedlayersfrom',['CopyTrainedLayersFrom',['../classcaffe_1_1Net.html#a4ac2b69748470f54d530bc5dfa05b9c3',1,'caffe::Net']]],

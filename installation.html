@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -104,7 +104,7 @@ The official Makefile and <code class="highlighter-rouge">Makefile.config</code>
 <ul>
   <li><a href="http://opencv.org/">OpenCV</a> &gt;= 2.4 including 3.0</li>
   <li>IO libraries: <code class="highlighter-rouge">lmdb</code>, <code class="highlighter-rouge">leveldb</code> (note: leveldb requires <code class="highlighter-rouge">snappy</code>)</li>
-  <li>cuDNN for GPU acceleration (v5)</li>
+  <li>cuDNN for GPU acceleration (v6)</li>
 </ul>
 
 <p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
@@ -114,7 +114,7 @@ The official Makefile and <code class="highlighter-rouge">Makefile.config</code>
   <li>For MATLAB Caffe: MATLAB with the <code class="highlighter-rouge">mex</code> compiler.</li>
 </ul>
 
-<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v5; older versions are supported in older Caffe.</p>
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v6; older versions are supported in older Caffe.</p>
 
 <p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code class="highlighter-rouge">CPU_ONLY := 1</code> flag in <code class="highlighter-rouge">Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 
@@ -130,7 +130,7 @@ There are several implementations of this library. The choice is yours:</p>
 
 <ul>
   <li><a href="http://math-atlas.sourceforge.net/">ATLAS</a>: free, open source, and so the default for Caffe.</li>
-  <li><a href="http://software.intel.com/en-us/intel-mkl">Intel MKL</a>: commercial and optimized for Intel CPUs, with a free trial and <a href="http://software.intel.com/en-us/intel-education-offerings">student</a> licenses.
+  <li><a href="http://software.intel.com/en-us/intel-mkl">Intel MKL</a>: commercial and optimized for Intel CPUs, with <a href="https://registrationcenter.intel.com/en/forms/?productid=2558">free</a> licenses.
     <ol>
       <li>Install MKL.</li>
       <li>Set up MKL environment (Details: <a href="https://software.intel.com/en-us/node/528499">Linux</a>, <a href="https://software.intel.com/en-us/node/528659">OS X</a>). Example: <em>source /opt/intel/mkl/bin/mklvars.sh intel64</em></li>

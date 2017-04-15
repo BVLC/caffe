@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -57,12 +57,12 @@
       <h1 id="debian-installation">Debian Installation</h1>
 
 <p>Caffe packages are available for several Debian versions, as shown in the
-following chart</p>
+following chart:</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>Your Distro     |  CPU_ONLY  |  CUDA  |     Alias
 ----------------+------------+--------+-------------------
 Debian/stable   |     ✘      |   ✘    | Debian Jessie
-Debian/testing  |     ✔      |   ☐    | Debian Stretch/Sid
+Debian/testing  |     ✔      |   ✔    | Debian Stretch/Sid
 Debian/unstable |     ✔      |   ✔    | Debian Sid
 </code></pre>
 </div>
@@ -74,33 +74,34 @@ Debian/unstable |     ✔      |   ✔    | Debian Sid
   <li>
     <p><code class="highlighter-rouge">✔ </code> You can install caffe with a single command line following this guide.</p>
   </li>
-  <li>
-    <p><code class="highlighter-rouge">☐ </code> The same with <code class="highlighter-rouge">✔ </code>. However it will not work any more when Debian/Stretch becomes the stable branch.</p>
-  </li>
 </ul>
 
-<p>Last update: 2017-01-05</p>
+<p>Last update: 2017-02-01</p>
 
 <h2 id="binary-installation-with-apt">Binary installation with APT</h2>
 
 <p>Apart from the installation methods based on source, Debian/unstable
-and Debian/testing users can install pre-compiled Caffe packages via the official archive.</p>
+and Debian/testing users can install pre-compiled Caffe packages from
+the official archive.</p>
 
-<p>Make sure that there is something like the follows in your <code class="highlighter-rouge">/etc/apt/sources.list</code>:
-<code class="highlighter-rouge">
-deb http://MIRROR/debian CODENAME main contrib non-free
-</code>
-where <code class="highlighter-rouge">MIRROR</code> is your favorate Debian mirror, and <code class="highlighter-rouge">CODENAME ∈ {testing,stretch,sid}</code>.</p>
+<p>Make sure that your <code class="highlighter-rouge">/etc/apt/sources.list</code> contains <code class="highlighter-rouge">contrib</code> and <code class="highlighter-rouge">non-free</code>
+sections if you want to install the CUDA version, for instance:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deb http://ftp2.cn.debian.org/debian sid main contrib non-free
+</code></pre>
+</div>
 
 <p>Then we update APT cache and directly install Caffe. Note, the cpu version and
-the cuda version cannot be installed at the same time.
-<code class="highlighter-rouge">
-# apt update
-# apt install [ caffe-cpu | caffe-cuda ]
-# caffe                                              # command line interface working
-# python3 -c 'import caffe; print(caffe.__path__)'   # python3 interface working
-</code>
-It should work out of box.</p>
+the cuda version cannot coexist.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt update
+$ sudo apt install [ caffe-cpu | caffe-cuda ]
+$ caffe                                              # command line interface working
+$ python3 -c 'import caffe; print(caffe.__path__)'   # python3 interface working
+</code></pre>
+</div>
+
+<p>These Caffe packages should work for you out of box.</p>
 
 <h4 id="customizing-caffe-packages">Customizing caffe packages</h4>
 
@@ -108,48 +109,50 @@ It should work out of box.</p>
 the package is beyond this guide. Here is only a brief guide of producing
 the customized <code class="highlighter-rouge">.deb</code> packages.</p>
 
-<p>Make sure that there is something like this in your <code class="highlighter-rouge">/etc/apt/sources.list</code>:
-<code class="highlighter-rouge">
-deb http://ftp2.cn.debian.org/debian sid main contrib non-free
+<p>Make sure that there is a <code class="highlighter-rouge">dec-src</code> source in your <code class="highlighter-rouge">/etc/apt/sources.list</code>,
+for instance:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deb http://ftp2.cn.debian.org/debian sid main contrib non-free
 deb-src http://ftp2.cn.debian.org/debian sid main contrib non-free
-</code></p>
+</code></pre>
+</div>
 
-<p>Then we build caffe deb files with the following commands:
-<code class="highlighter-rouge">
-$ sudo apt update
-$ sudo apt install build-essential debhelper devscripts    # standard package building tools
-$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]            # the most elegant way to pull caffe build dependencies
-$ apt source [ caffe-cpu | caffe-cuda ]               # download the source tarball and extract
+<p>Then we build caffe deb files with the following commands:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt update
+$ sudo apt install build-essential debhelper devscripts  # standard package building tools
+$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]          # the most elegant way to pull caffe build dependencies
+$ apt source [ caffe-cpu | caffe-cuda ]                  # download the source tarball and extract
 $ cd caffe-XXXX
-[ ... optional, customize caffe code/build ... ]
-$ dch -llocal "Modified XXX in order to XXX"          # write your one-line changelog
-$ debuild -B -j4                                      # build caffe with 4 parallel jobs (similar to make -j4)
+[ ... optional, customizing caffe code/build ... ]
+$ dch --local "Modified XXX"                             # bump package version and write changelog
+$ debuild -B -j4                                         # build caffe with 4 parallel jobs (similar to make -j4)
 [ ... building ...]
-$ debc                                                # optional, if you want to check the package contents
-$ sudo debi                                           # optional, install the generated packages
-</code>
-The resulting deb packages can be found under the parent directory of the source tree.</p>
+$ debc                                                   # optional, if you want to check the package contents
+$ sudo debi                                              # optional, install the generated packages
+$ ls ../                                                 # optional, you will see the resulting packages
+</code></pre>
+</div>
 
-<p>Note, the <code class="highlighter-rouge">dch ...</code> command line above is for bumping the package version number
-and adding an entry to the package changelog. If you would like to write
-more than one changelog entry, use subsequent <code class="highlighter-rouge">dch</code> command (see <code class="highlighter-rouge">man 1 dch</code>)
-instead of manually modifing <code class="highlighter-rouge">debian/changelog</code> unless you know how to keep its format correct.
+<p>It is a BUG if the package failed to build without any change.
 The changelog will be installed at e.g. <code class="highlighter-rouge">/usr/share/doc/caffe-cpu/changelog.Debian.gz</code>.</p>
 
 <h2 id="source-installation">Source installation</h2>
 
-<p>Source installation under Debian/unstable is similar to that of Ubuntu, but
-here is a more elegant way to pull caffe build dependencies:
-<code class="highlighter-rouge">
-$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]
-</code>
-Note, this requires a <code class="highlighter-rouge">deb-src</code> entry in your <code class="highlighter-rouge">/etc/apt/sources.list</code>.</p>
+<p>Source installation under Debian/unstable and Debian/testing is similar to that of Ubuntu, but
+here is a more elegant way to pull caffe build dependencies:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt build-dep [ caffe-cpu | caffe-cuda ]
+</code></pre>
+</div>
+
+<p>Note, this requires a <code class="highlighter-rouge">deb-src</code> entry in your <code class="highlighter-rouge">/etc/apt/sources.list</code>.</p>
 
 <h4 id="compiler-combinations">Compiler Combinations</h4>
 
-<p>Some users may find their favorate compiler doesn’t work well with CUDA.
-<code class="highlighter-rouge">
-CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
+<p>Some users may find their favorate compiler doesn’t work with CUDA.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
 -------------+------------+------------+-
 GCC-7        |     ?      |     ?      |
 GCC-6        |     ✘      |     ✘      |
@@ -157,7 +160,8 @@ GCC-5        |     ✔ [1]  |     ✔      |
 CLANG-4.0    |     ?      |     ?      |
 CLANG-3.9    |     ✘      |     ✘      |
 CLANG-3.8    |     ?      |     ✔      |
-</code></p>
+</code></pre>
+</div>
 
 <p><code class="highlighter-rouge">[1]</code> CUDA 7.5 ‘s <code class="highlighter-rouge">host_config.h</code> must be patched before working with GCC-5.</p>
 
@@ -215,8 +219,8 @@ and hack the packaging scripts, then build your customized package.</p>
   <li>Where are the examples, the models and other documentation stuff?</li>
 </ul>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt install caffe-doc
-dpkg -L caffe-doc
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt install caffe-doc
+$ dpkg -L caffe-doc
 </code></pre>
 </div>
 
@@ -224,9 +228,10 @@ dpkg -L caffe-doc
   <li>Where can I find the Debian package status?</li>
 </ul>
 
-<p>https://tracker.debian.org/pkg/caffe  (for the CPU_ONLY version)</p>
-
-<p>https://tracker.debian.org/pkg/caffe-contrib  (for the CUDA version)</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>https://tracker.debian.org/pkg/caffe          (for the CPU_ONLY version)
+https://tracker.debian.org/pkg/caffe-contrib  (for the CUDA version)
+</code></pre>
+</div>
 
 
       </section>

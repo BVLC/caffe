@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -70,39 +70,39 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message DataParameter {
-  enum DB {
-    LEVELDB = 0;
-    LMDB = 1;
-  }
-  // Specify the data source.
-  optional string source = 1;
-  // Specify the batch size.
-  optional uint32 batch_size = 4;
-  // The rand_skip variable is for the data layer to skip a few data points
-  // to avoid all asynchronous sgd clients to start at the same point. The skip
-  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
-  // be larger than the number of keys in the database.
-  // DEPRECATED. Each solver accesses a different subset of the database.
-  optional uint32 rand_skip = 7 [default = 0];
-  optional DB backend = 8 [default = LEVELDB];
-  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
-  // simple scaling and subtracting the data mean, if provided. Note that the
-  // mean subtraction is always carried out before scaling.
-  optional float scale = 2 [default = 1];
-  optional string mean_file = 3;
-  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
-  // crop an image.
-  optional uint32 crop_size = 5 [default = 0];
-  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
-  // data.
-  optional bool mirror = 6 [default = false];
-  // Force the encoded image to have 3 color channels
-  optional bool force_encoded_color = 9 [default = false];
-  // Prefetch queue (Increase if data feeding bandwidth varies, within the
-  // limit of device memory for GPU training)
-  optional uint32 prefetch = 10 [default = 4];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">DataParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">DB</span> <span class="p">{</span>
+    <span class="na">LEVELDB</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">LMDB</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// Specify the data source.
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">source</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="c1">// Specify the batch size.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">batch_size</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="c1">// The rand_skip variable is for the data layer to skip a few data points
+</span>  <span class="c1">// to avoid all asynchronous sgd clients to start at the same point. The skip
+</span>  <span class="c1">// point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+</span>  <span class="c1">// be larger than the number of keys in the database.
+</span>  <span class="c1">// DEPRECATED. Each solver accesses a different subset of the database.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">rand_skip</span> <span class="o">=</span> <span class="mi">7</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="n">DB</span> <span class="na">backend</span> <span class="o">=</span> <span class="mi">8</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">LEVELDB</span><span class="p">];</span>
+  <span class="c1">// DEPRECATED. See TransformationParameter. For data pre-processing, we can do
+</span>  <span class="c1">// simple scaling and subtracting the data mean, if provided. Note that the
+</span>  <span class="c1">// mean subtraction is always carried out before scaling.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">mean_file</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="c1">// DEPRECATED. See TransformationParameter. Specify if we would like to randomly
+</span>  <span class="c1">// crop an image.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">crop_size</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
+  <span class="c1">// DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
+</span>  <span class="c1">// data.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">mirror</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+  <span class="c1">// Force the encoded image to have 3 color channels
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">force_encoded_color</span> <span class="o">=</span> <span class="mi">9</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+  <span class="c1">// Prefetch queue (Increase if data feeding bandwidth varies, within the
+</span>  <span class="c1">// limit of device memory for GPU training)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">prefetch</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">4</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <ul>
   <li>Parameters

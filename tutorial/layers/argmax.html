@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -61,7 +61,6 @@
   <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1ArgMaxLayer.html">Doxygen Documentation</a></li>
   <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/argmax_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/argmax_layer.hpp</code></a></li>
   <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/argmax_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/argmax_layer.cpp</code></a></li>
-  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/argmax_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/argmax_layer.cu</code></a></li>
 </ul>
 
 <h2 id="parameters">Parameters</h2>
@@ -70,16 +69,17 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message ArgMaxParameter {
-  // If true produce pairs (argmax, maxval)
-  optional bool out_max_val = 1 [default = false];
-  optional uint32 top_k = 2 [default = 1];
-  // The axis along which to maximise -- may be negative to index from the
-  // end (e.g., -1 for the last axis).
-  // By default ArgMaxLayer maximizes over the flattened trailing dimensions
-  // for each index of the first / num dimension.
-  optional int32 axis = 3;
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">ArgMaxParameter</span> <span class="p">{</span>
+  <span class="c1">// If true produce pairs (argmax, maxval)
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">out_max_val</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">top_k</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="c1">// The axis along which to maximise -- may be negative to index from the
+</span>  <span class="c1">// end (e.g., -1 for the last axis).
+</span>  <span class="c1">// By default ArgMaxLayer maximizes over the flattened trailing dimensions
+</span>  <span class="c1">// for each index of the first / num dimension.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
 
 
       </section>

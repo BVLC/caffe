@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,19 +71,19 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message EltwiseParameter {
-  enum EltwiseOp {
-    PROD = 0;
-    SUM = 1;
-    MAX = 2;
-  }
-  optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
-  repeated float coeff = 2; // blob-wise coefficient for SUM operation
-
-  // Whether to use an asymptotically slower (for &gt;2 inputs) but stabler method
-  // of computing the gradient for the PROD operation. (No effect for SUM op.)
-  optional bool stable_prod_grad = 3 [default = true];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">EltwiseParameter</span> <span class="p">{</span>
+  <span class="kd">enum</span> <span class="n">EltwiseOp</span> <span class="p">{</span>
+    <span class="na">PROD</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">SUM</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">MAX</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">optional</span> <span class="n">EltwiseOp</span> <span class="na">operation</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="n">SUM</span><span class="p">];</span> <span class="c1">// element-wise operation
+</span>  <span class="k">repeated</span> <span class="kt">float</span> <span class="na">coeff</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// blob-wise coefficient for SUM operation
+</span>
+  <span class="c1">// Whether to use an asymptotically slower (for &gt;2 inputs) but stabler method
+</span>  <span class="c1">// of computing the gradient for the PROD operation. (No effect for SUM op.)
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">stable_prod_grad</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

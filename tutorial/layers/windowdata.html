@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -70,38 +70,38 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message WindowDataParameter {
-  // Specify the data source.
-  optional string source = 1;
-  // For data pre-processing, we can do simple scaling and subtracting the
-  // data mean, if provided. Note that the mean subtraction is always carried
-  // out before scaling.
-  optional float scale = 2 [default = 1];
-  optional string mean_file = 3;
-  // Specify the batch size.
-  optional uint32 batch_size = 4;
-  // Specify if we would like to randomly crop an image.
-  optional uint32 crop_size = 5 [default = 0];
-  // Specify if we want to randomly mirror data.
-  optional bool mirror = 6 [default = false];
-  // Foreground (object) overlap threshold
-  optional float fg_threshold = 7 [default = 0.5];
-  // Background (non-object) overlap threshold
-  optional float bg_threshold = 8 [default = 0.5];
-  // Fraction of batch that should be foreground objects
-  optional float fg_fraction = 9 [default = 0.25];
-  // Amount of contextual padding to add around a window
-  // (used only by the window_data_layer)
-  optional uint32 context_pad = 10 [default = 0];
-  // Mode for cropping out a detection window
-  // warp: cropped window is warped to a fixed size and aspect ratio
-  // square: the tightest square around the window is cropped
-  optional string crop_mode = 11 [default = "warp"];
-  // cache_images: will load all images in memory for faster access
-  optional bool cache_images = 12 [default = false];
-  // append root_folder to locate images
-  optional string root_folder = 13 [default = ""];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">WindowDataParameter</span> <span class="p">{</span>
+  <span class="c1">// Specify the data source.
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">source</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="c1">// For data pre-processing, we can do simple scaling and subtracting the
+</span>  <span class="c1">// data mean, if provided. Note that the mean subtraction is always carried
+</span>  <span class="c1">// out before scaling.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">string</span> <span class="na">mean_file</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="c1">// Specify the batch size.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">batch_size</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="c1">// Specify if we would like to randomly crop an image.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">crop_size</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
+  <span class="c1">// Specify if we want to randomly mirror data.
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">mirror</span> <span class="o">=</span> <span class="mi">6</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+  <span class="c1">// Foreground (object) overlap threshold
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">fg_threshold</span> <span class="o">=</span> <span class="mi">7</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">];</span>
+  <span class="c1">// Background (non-object) overlap threshold
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">bg_threshold</span> <span class="o">=</span> <span class="mi">8</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">];</span>
+  <span class="c1">// Fraction of batch that should be foreground objects
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">fg_fraction</span> <span class="o">=</span> <span class="mi">9</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">];</span>
+  <span class="c1">// Amount of contextual padding to add around a window
+</span>  <span class="c1">// (used only by the window_data_layer)
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">context_pad</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">0</span><span class="p">];</span>
+  <span class="c1">// Mode for cropping out a detection window
+</span>  <span class="c1">// warp: cropped window is warped to a fixed size and aspect ratio
+</span>  <span class="c1">// square: the tightest square around the window is cropped
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">crop_mode</span> <span class="o">=</span> <span class="mi">11</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="s">"warp"</span><span class="p">];</span>
+  <span class="c1">// cache_images: will load all images in memory for faster access
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">cache_images</span> <span class="o">=</span> <span class="mi">12</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
+  <span class="c1">// append root_folder to locate images
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">root_folder</span> <span class="o">=</span> <span class="mi">13</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="s">""</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

@@ -1,180 +1,175 @@
-\form#0:$ K $
-\form#1:$ (C \times H \times W) $
-\form#2:$ (N \times C \times H \times W) $
-\form#3:$ x $
-\form#4:$ (N \times 1 \times K \times 1) $
-\form#5:$ (N \times 2 \times K \times 1) $
-\form#6:$ y_n = \arg\max\limits_i x_{ni} $
-\form#7:$ K = 1 $
-\form#8:$ x_1 $
-\form#9:$ x_2 $
-\form#10:$ x_K $
-\form#11:$ (KN \times C \times H \times W) $
-\form#12:$ (N \times KC \times H \times W) $
-\form#13:$ y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}] $
-\form#14:$ \frac{\partial E}{\partial y} $
-\form#15:$ y $
-\form#16:$ \left[ \begin{array}{cccc} \frac{\partial E}{\partial x_1} & \frac{\partial E}{\partial x_2} & ... & \frac{\partial E}{\partial x_K} \end{array} \right] = \frac{\partial E}{\partial y} $
-\form#17:$ (N \times CHW \times 1 \times 1) $
-\form#18:$ x = 0 $
-\form#19:$ x\sim U(a, b) $
-\form#20:$ x = a $
-\form#21:$ x \in [0, 1] $
-\form#22:$ \forall i \sum_j x_{ij} = 1 $
-\form#23:$ x \sim U(-a, +a) $
-\form#24:$ a $
-\form#25:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right) $
-\form#26:$ d = \left| \left| a_n - b_n \right| \right|_2^2 $
-\form#27:$ (N \times C \times 1 \times 1) $
-\form#28:$ a \in [-\infty, +\infty]$
-\form#29:$ b \in [-\infty, +\infty]$
-\form#30:$ (N \times 1 \times 1 \times 1) $
-\form#31:$ s \in [0, 1]$
-\form#32:$ (1 \times 1 \times 1 \times 1) $
-\form#33:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n \right| \right|_2^2 $
-\form#34:$ \hat{y} \in [-\infty, +\infty]$
-\form#35:$ y \in [-\infty, +\infty]$
-\form#36:$ E = \frac{1}{2n} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n \right| \right|_2^2 $
-\form#37:$ t $
-\form#38:$ [-\infty, +\infty] $
-\form#39:$ K = CHW $
-\form#40:$ X^T W $
-\form#41:$ X \in \mathcal{R}^{D \times N} $
-\form#42:$ W \in \mathcal{R}^{D \times K} $
-\form#43:$ l $
-\form#44:$ l_n \in [0, 1, 2, ..., K - 1] $
-\form#45:$ E = \frac{1}{N} \sum\limits_{n=1}^N \sum\limits_{k=1}^K [\max(0, 1 - \delta\{l_n = k\} t_{nk})] ^ p $
-\form#46:$ L^p $
-\form#47:$ p = 1 $
-\form#48:$ \delta\{\mathrm{condition}\} = \left\{ \begin{array}{lr} 1 & \mbox{if condition} \\ -1 & \mbox{otherwise} \end{array} \right. $
-\form#49:$ t \in \mathcal{R}^{N \times K} $
-\form#50:$k$
-\form#51:$ \hat{p} $
-\form#52:$ [0, 1] $
-\form#53:$ \hat{p}_n $
-\form#54:$ \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 $
-\form#55:$ (1 \times 1 \times K \times K) $
-\form#56:$ H $
-\form#57:$ H = I $
-\form#58:$ E = \frac{-1}{N} \sum\limits_{n=1}^N H_{l_n} \log(\hat{p}_n) = \frac{-1}{N} \sum\limits_{n=1}^N \sum\limits_{k=1}^{K} H_{l_n,k} \log(\hat{p}_{n,k}) $
-\form#59:$ H_{l_n} $
-\form#60:$l_n$
-\form#61:$H$
-\form#62:$ E = \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n}) $
-\form#63:$ E = \frac{-1}{n} \sum\limits_{n=1}^N \left[ p_n \log \hat{p}_n + (1 - p_n) \log(1 - \hat{p}_n) \right] $
-\form#64:$ x \in [-\infty, +\infty]$
-\form#65:$ \hat{p}_n = \sigma(x_n) \in [0, 1] $
-\form#66:$ \sigma(.) $
-\form#67:$ y \in [0, 1] $
-\form#68:$ \hat{p}_{nk} = \exp(x_{nk}) / \left[\sum_{k'} \exp(x_{nk'})\right] $
-\form#69:$ k $
-\form#70:$ k = 5 $
-\form#71:$ x_n $
-\form#72:$ \hat{l}_n $
-\form#73:$ \hat{l}_n = \arg\max\limits_k x_{nk} $
-\form#74:$ \frac{1}{N} \sum\limits_{n=1}^N \delta\{ \hat{l}_n = l_n \} $
-\form#75:$ \delta\{\mathrm{condition}\} = \left\{ \begin{array}{lr} 1 & \mbox{if condition} \\ 0 & \mbox{otherwise} \end{array} \right. $
-\form#76:$ \lambda $
-\form#77:$\ell_i$
-\form#78:$ E = \lambda_i \ell_i + \mbox{other loss terms}$
-\form#79:$ \frac{\partial E}{\partial \ell_i} = \lambda_i $
-\form#80:$a$
-\form#81:$b$
-\form#82:$\hat{y}$
-\form#83:$ \frac{\partial E}{\partial \hat{y}} = \frac{1}{n} \sum\limits_{n=1}^N (\hat{y}_n - y_n) $
-\form#84:$y$
-\form#85:$ \frac{\partial E}{\partial y} = \frac{1}{n} \sum\limits_{n=1}^N (y_n - \hat{y}_n) $
-\form#86:$t$
-\form#87:$ \frac{\partial E}{\partial t} $
-\form#88:$ \frac{\partial E}{\partial \hat{p}} $
-\form#89:$x$
-\form#90:$ \frac{\partial E}{\partial x} = \frac{1}{n} \sum\limits_{n=1}^N (\hat{p}_n - p_n) $
-\form#91:$ \frac{\partial E}{\partial x} $
-\form#92:$ y = |x| $
-\form#93:$ y = x + \log(1 + \exp(-x)) $
-\form#94:$ x > 0 $
-\form#95:$ y = \log(1 + \exp(x)) $
-\form#96:$ y = \left\{ \begin{array}{ll} x + \log(1 + \exp(-x)) & \mbox{if } x > 0 \\ \log(1 + \exp(x)) & \mbox{otherwise} \end{array} \right. $
-\form#97:$ y = \gamma ^ {\alpha x + \beta} $
-\form#98:$ \alpha $
-\form#99:$ \beta $
-\form#100:$ \gamma $
-\form#101:$ y = (\alpha x + \beta) ^ \gamma $
-\form#102:$ y = \max(0, x) $
-\form#103:$ y = (1 + \exp(-x))^{-1} $
-\form#104:$ y = \frac{\exp(2x) - 1}{\exp(2x) + 1} $
-\form#105:$ \frac{\partial E}{\partial x} = \mathrm{sign}(x) \frac{\partial E}{\partial y} $
-\form#106:$ p $
-\form#107:$ y_{\mbox{train}} = \left\{ \begin{array}{ll} \frac{x}{1 - p} & \mbox{if } u > p \\ 0 & \mbox{otherwise} \end{array} \right. $
-\form#108:$ u \sim U(0, 1)$
-\form#109:$ y_{\mbox{test}} = \mathbb{E}[y_{\mbox{train}}] = x $
-\form#110:$u\sim U(0,1)$
-\form#111:$ 1 / (1 - p) $
-\form#112:$ e \approx 2.718 $
-\form#113:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $
-\form#114:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} \alpha \gamma (\alpha x + \beta) ^ {\gamma - 1} = \frac{\partial E}{\partial y} \frac{\alpha \gamma y}{\alpha x + \beta} $
-\form#115:$ \alpha \gamma $
-\form#116:$ \nu $
-\form#117:$ y = \max(0, x) + \nu \min(0, x) $
-\form#118:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 0 & \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0 \end{array} \right. $
-\form#119:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} \nu \frac{\partial E}{\partial y} & \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0 \end{array} \right. $
-\form#120:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y (1 - y) $
-\form#121:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} \left(1 - \left[\frac{\exp(2x) - 1}{exp(2x) + 1} \right]^2 \right) = \frac{\partial E}{\partial y} (1 - y^2) $
-\form#122:$ y = \left\{ \begin{array}{lr} 0 & \mathrm{if} \; x \le t \\ 1 & \mathrm{if} \; x > t \end{array} \right. $
-\form#123:$ \geq 1 $
-\form#124:$ x \sim N(0, \sigma^2) $
-\form#125:$ \sigma^2 $
-\form#126:$ y_i = \max(0, x_i) + a_i \min(0, x_i) $
-\form#127:$ (N \times C \times ...) $
-\form#128:$i$
-\form#129:$ \frac{\partial E}{\partial x_i} = \left\{ \begin{array}{lr} a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0 \end{array} \right. $
-\form#130:$ \frac{\partial E}{\partial a_i} = \left\{ \begin{array}{lr} \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ 0 & \mathrm{if} \; x_i > 0 \end{array} \right. $
-\form#131:$ (S \times C \times H \times W) $
-\form#132:$ y = log_{\gamma}(\alpha x + \beta) $
-\form#133:$ (N \times K \times H \times W) $
-\form#134:$ (N \times ...) $
-\form#135:$ (M) $
-\form#136:$ (M \times ...) $
-\form#137:$ y = x_1[x_2] $
-\form#138:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
-\form#139:$ d = \left| \left| a_n - b_n \right| \right|_2 $
-\form#140:$ (N \times 1 \times K) $
-\form#141:$ (N \times 2 \times K) $
-\form#142:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
-\form#143:$ y = \left\{ \begin{array}{lr} x & \mathrm{if} \; x > 0 \\ \alpha (\exp(x)-1) & \mathrm{if} \; x \le 0 \end{array} \right. $
-\form#144:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 1 & \mathrm{if} \; x > 0 \\ y + \alpha & \mathrm{if} \; x \le 0 \end{array} \right. $
-\form#145:$ i $
-\form#146:$ (d_0 \times ... \times d_i \times ... \times d_j \times ... \times d_n) $
-\form#147:$ (d_i \times ... \times d_j) $
-\form#148:$ z = x y $
-\form#149:$ (1 \times N \times D) $
-\form#150:$ c_{t-1} $
-\form#151:$ (1 \times N \times 4D) $
-\form#152:$ [i_t', f_t', o_t', g_t'] $
-\form#153:$ (1 \times N) $
-\form#154:$ \delta_t $
-\form#155:$ c_t $
-\form#156:$ h_t $
-\form#157:$ \frac{\partial E}{\partial c_t} $
-\form#158:$ \frac{\partial E}{\partial h_t} $
-\form#159:$ [ \frac{\partial E}{\partial i_t} \frac{\partial E}{\partial f_t} \frac{\partial E}{\partial o_t} \frac{\partial E}{\partial g_t} ] $
-\form#160:$ (1 \times 1 \times N) $
-\form#161:$ (T \times N \times ...) $
-\form#162:$ T $
-\form#163:$ N $
-\form#164:$ (N \times T \times ...) $
-\form#165:$ (T \times N) $
-\form#166:$ \delta $
-\form#167:$ \delta_{t,n} = 0 $
-\form#168:$ n $
-\form#169:$ h_{t-1} $
-\form#170:$ \delta_t = 0 $
-\form#171:$ \delta_{t,n} = 1 $
-\form#172:$ t-1 $
-\form#173:$ x_{static} $
-\form#174:$ x'_t = [x_t; x_{static}] $
-\form#175:$ (T \times N \times D) $
-\form#176:$ D $
-\form#177:$ x_t $
-\form#178:$ h_t := \tanh[ W_{hh} h_{t_1} + W_{xh} x_t + b_h ] $
-\form#179:$ o_t := \tanh[ W_{ho} h_t + b_o ] $
+\form#0:$ x = 0 $
+\form#1:$ x\sim U(a, b) $
+\form#2:$ x = a $
+\form#3:$ x \in [0, 1] $
+\form#4:$ \forall i \sum_j x_{ij} = 1 $
+\form#5:$ x \sim U(-a, +a) $
+\form#6:$ a $
+\form#7:$ x \sim N(0, \sigma^2) $
+\form#8:$ \sigma^2 $
+\form#9:$ y = |x| $
+\form#10:$ (N \times C \times H \times W) $
+\form#11:$ x $
+\form#12:$ \frac{\partial E}{\partial y} $
+\form#13:$ y $
+\form#14:$ \frac{\partial E}{\partial x} = \mathrm{sign}(x) \frac{\partial E}{\partial y} $
+\form#15:$ k $
+\form#16:$ k = 5 $
+\form#17:$ [-\infty, +\infty] $
+\form#18:$ K = CHW $
+\form#19:$ x_n $
+\form#20:$ \hat{l}_n $
+\form#21:$ \hat{l}_n = \arg\max\limits_k x_{nk} $
+\form#22:$ (N \times 1 \times 1 \times 1) $
+\form#23:$ l $
+\form#24:$ l_n \in [0, 1, 2, ..., K - 1] $
+\form#25:$ K $
+\form#26:$ (1 \times 1 \times 1 \times 1) $
+\form#27:$ \frac{1}{N} \sum\limits_{n=1}^N \delta\{ \hat{l}_n = l_n \} $
+\form#28:$ \delta\{\mathrm{condition}\} = \left\{ \begin{array}{lr} 1 & \mbox{if condition} \\ 0 & \mbox{otherwise} \end{array} \right. $
+\form#29:$ (C \times H \times W) $
+\form#30:$ (N \times 1 \times K) $
+\form#31:$ (N \times 2 \times K) $
+\form#32:$ (N \times K \times H \times W) $
+\form#33:$ y_n = \arg\max\limits_i x_{ni} $
+\form#34:$ K = 1 $
+\form#35:$ (N \times ...) $
+\form#36:$ x_1 $
+\form#37:$ (M) $
+\form#38:$ x_2 $
+\form#39:$ (M \times ...) $
+\form#40:$ y = x_1[x_2] $
+\form#41:$ y = x + \log(1 + \exp(-x)) $
+\form#42:$ x > 0 $
+\form#43:$ y = \log(1 + \exp(x)) $
+\form#44:$ y = \left\{ \begin{array}{ll} x + \log(1 + \exp(-x)) & \mbox{if } x > 0 \\ \log(1 + \exp(x)) & \mbox{otherwise} \end{array} \right. $
+\form#45:$ \frac{\partial E}{\partial x} $
+\form#46:$ x_K $
+\form#47:$ (KN \times C \times H \times W) $
+\form#48:$ (N \times KC \times H \times W) $
+\form#49:$ y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}] $
+\form#50:$ \left[ \begin{array}{cccc} \frac{\partial E}{\partial x_1} & \frac{\partial E}{\partial x_2} & ... & \frac{\partial E}{\partial x_K} \end{array} \right] = \frac{\partial E}{\partial y} $
+\form#51:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
+\form#52:$ d = \left| \left| a_n - b_n \right| \right|_2 $
+\form#53:$ (N \times C \times 1 \times 1) $
+\form#54:$ a \in [-\infty, +\infty]$
+\form#55:$ b \in [-\infty, +\infty]$
+\form#56:$ s \in [0, 1]$
+\form#57:$ \lambda $
+\form#58:$\ell_i$
+\form#59:$ E = \lambda_i \ell_i + \mbox{other loss terms}$
+\form#60:$ \frac{\partial E}{\partial \ell_i} = \lambda_i $
+\form#61:$a$
+\form#62:$b$
+\form#63:$ \geq 1 $
+\form#64:$x$
+\form#65:$ p $
+\form#66:$ y_{\mbox{train}} = \left\{ \begin{array}{ll} \frac{x}{1 - p} & \mbox{if } u > p \\ 0 & \mbox{otherwise} \end{array} \right. $
+\form#67:$ u \sim U(0, 1)$
+\form#68:$ y_{\mbox{test}} = \mathbb{E}[y_{\mbox{train}}] = x $
+\form#69:$u\sim U(0,1)$
+\form#70:$ 1 / (1 - p) $
+\form#71:$ y = \left\{ \begin{array}{lr} x & \mathrm{if} \; x > 0 \\ \alpha (\exp(x)-1) & \mathrm{if} \; x \le 0 \end{array} \right. $
+\form#72:$ \alpha $
+\form#73:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 1 & \mathrm{if} \; x > 0 \\ y + \alpha & \mathrm{if} \; x \le 0 \end{array} \right. $
+\form#74:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n \right| \right|_2^2 $
+\form#75:$ \hat{y} \in [-\infty, +\infty]$
+\form#76:$ y \in [-\infty, +\infty]$
+\form#77:$ E = \frac{1}{2n} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n \right| \right|_2^2 $
+\form#78:$\hat{y}$
+\form#79:$ \frac{\partial E}{\partial \hat{y}} = \frac{1}{n} \sum\limits_{n=1}^N (\hat{y}_n - y_n) $
+\form#80:$y$
+\form#81:$ \frac{\partial E}{\partial y} = \frac{1}{n} \sum\limits_{n=1}^N (y_n - \hat{y}_n) $
+\form#82:$ y = \gamma ^ {\alpha x + \beta} $
+\form#83:$ \beta $
+\form#84:$ \gamma $
+\form#85:$ e \approx 2.718 $
+\form#86:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $
+\form#87:$ (S \times C \times H \times W) $
+\form#88:$ (N \times CHW \times 1 \times 1) $
+\form#89:$ t $
+\form#90:$ X^T W $
+\form#91:$ X \in \mathcal{R}^{D \times N} $
+\form#92:$ W \in \mathcal{R}^{D \times K} $
+\form#93:$ E = \frac{1}{N} \sum\limits_{n=1}^N \sum\limits_{k=1}^K [\max(0, 1 - \delta\{l_n = k\} t_{nk})] ^ p $
+\form#94:$ L^p $
+\form#95:$ p = 1 $
+\form#96:$ \delta\{\mathrm{condition}\} = \left\{ \begin{array}{lr} 1 & \mbox{if condition} \\ -1 & \mbox{otherwise} \end{array} \right. $
+\form#97:$ t \in \mathcal{R}^{N \times K} $
+\form#98:$k$
+\form#99:$t$
+\form#100:$ \frac{\partial E}{\partial t} $
+\form#101:$ \hat{p} $
+\form#102:$ [0, 1] $
+\form#103:$ \hat{p}_n $
+\form#104:$ \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 $
+\form#105:$ (1 \times 1 \times K \times K) $
+\form#106:$ H $
+\form#107:$ H = I $
+\form#108:$ E = \frac{-1}{N} \sum\limits_{n=1}^N H_{l_n} \log(\hat{p}_n) = \frac{-1}{N} \sum\limits_{n=1}^N \sum\limits_{k=1}^{K} H_{l_n,k} \log(\hat{p}_{n,k}) $
+\form#109:$ H_{l_n} $
+\form#110:$l_n$
+\form#111:$H$
+\form#112:$ \frac{\partial E}{\partial \hat{p}} $
+\form#113:$ y = log_{\gamma}(\alpha x + \beta) $
+\form#114:$ (1 \times N \times D) $
+\form#115:$ c_{t-1} $
+\form#116:$ (1 \times N \times 4D) $
+\form#117:$ [i_t', f_t', o_t', g_t'] $
+\form#118:$ (1 \times N) $
+\form#119:$ \delta_t $
+\form#120:$ c_t $
+\form#121:$ h_t $
+\form#122:$ \frac{\partial E}{\partial c_t} $
+\form#123:$ \frac{\partial E}{\partial h_t} $
+\form#124:$ [ \frac{\partial E}{\partial i_t} \frac{\partial E}{\partial f_t} \frac{\partial E}{\partial o_t} \frac{\partial E}{\partial g_t} ] $
+\form#125:$ (1 \times 1 \times N) $
+\form#126:$ E = \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n}) $
+\form#127:$ y = (\alpha x + \beta) ^ \gamma $
+\form#128:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} \alpha \gamma (\alpha x + \beta) ^ {\gamma - 1} = \frac{\partial E}{\partial y} \frac{\alpha \gamma y}{\alpha x + \beta} $
+\form#129:$ \alpha \gamma $
+\form#130:$ y_i = \max(0, x_i) + a_i \min(0, x_i) $
+\form#131:$ (N \times C \times ...) $
+\form#132:$i$
+\form#133:$ \frac{\partial E}{\partial x_i} = \left\{ \begin{array}{lr} a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0 \end{array} \right. $
+\form#134:$ \frac{\partial E}{\partial a_i} = \left\{ \begin{array}{lr} \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ 0 & \mathrm{if} \; x_i > 0 \end{array} \right. $
+\form#135:$ (T \times N \times ...) $
+\form#136:$ T $
+\form#137:$ N $
+\form#138:$ (N \times T \times ...) $
+\form#139:$ (T \times N) $
+\form#140:$ \delta $
+\form#141:$ \delta_{t,n} = 0 $
+\form#142:$ n $
+\form#143:$ h_{t-1} $
+\form#144:$ \delta_t = 0 $
+\form#145:$ \delta_{t,n} = 1 $
+\form#146:$ t-1 $
+\form#147:$ x_{static} $
+\form#148:$ x'_t = [x_t; x_{static}] $
+\form#149:$ (T \times N \times D) $
+\form#150:$ D $
+\form#151:$ y = \max(0, x) $
+\form#152:$ \nu $
+\form#153:$ y = \max(0, x) + \nu \min(0, x) $
+\form#154:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 0 & \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0 \end{array} \right. $
+\form#155:$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} \nu \frac{\partial E}{\partial y} & \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0 \end{array} \right. $
+\form#156:$ x_t $
+\form#157:$ h_t := \tanh[ W_{hh} h_{t_1} + W_{xh} x_t + b_h ] $
+\form#158:$ o_t := \tanh[ W_{ho} h_t + b_o ] $
+\form#159:$ i $
+\form#160:$ (d_0 \times ... \times d_i \times ... \times d_j \times ... \times d_n) $
+\form#161:$ (d_i \times ... \times d_j) $
+\form#162:$ z = x y $
+\form#163:$ E = \frac{-1}{n} \sum\limits_{n=1}^N \left[ p_n \log \hat{p}_n + (1 - p_n) \log(1 - \hat{p}_n) \right] $
+\form#164:$ x \in [-\infty, +\infty]$
+\form#165:$ \hat{p}_n = \sigma(x_n) \in [0, 1] $
+\form#166:$ \sigma(.) $
+\form#167:$ y \in [0, 1] $
+\form#168:$ \frac{\partial E}{\partial x} = \frac{1}{n} \sum\limits_{n=1}^N (\hat{p}_n - p_n) $
+\form#169:$ y = (1 + \exp(-x))^{-1} $
+\form#170:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y (1 - y) $
+\form#171:$ \hat{p}_{nk} = \exp(x_{nk}) / \left[\sum_{k'} \exp(x_{nk'})\right] $
+\form#172:$ y = \frac{\exp(2x) - 1}{\exp(2x) + 1} $
+\form#173:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} \left(1 - \left[\frac{\exp(2x) - 1}{exp(2x) + 1} \right]^2 \right) = \frac{\partial E}{\partial y} (1 - y^2) $
+\form#174:$ y = \left\{ \begin{array}{lr} 0 & \mathrm{if} \; x \le t \\ 1 & \mathrm{if} \; x > t \end{array} \right. $

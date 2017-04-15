@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -61,12 +61,11 @@
   <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1InfogainLossLayer.html">Doxygen Documentation</a></li>
   <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/infogain_loss_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/infogain_loss_layer.hpp</code></a></li>
   <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/infogain_loss_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/infogain_loss_layer.cpp</code></a></li>
-  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/infogain_loss_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/infogain_loss_layer.cu</code></a></li>
 </ul>
 
-<p>A generalization of <a href="layers/multinomiallogisticloss.md">MultinomialLogisticLossLayer</a> that takes an “information gain” (infogain) matrix specifying the “value” of all label pairs.</p>
+<p>A generalization of <a href="multinomiallogisticloss.html">MultinomialLogisticLossLayer</a> that takes an “information gain” (infogain) matrix specifying the “value” of all label pairs.</p>
 
-<p>Equivalent to the <a href="layers/multinomiallogisticloss.md">MultinomialLogisticLossLayer</a> if the infogain matrix is the identity.</p>
+<p>Equivalent to the <a href="multinomiallogisticloss.html">MultinomialLogisticLossLayer</a> if the infogain matrix is the identity.</p>
 
 <h2 id="parameters">Parameters</h2>
 
@@ -75,10 +74,11 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message InfogainLossParameter {
-  // Specify the infogain matrix source.
-  optional string source = 1;
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">InfogainLossParameter</span> <span class="p">{</span>
+  <span class="c1">// Specify the infogain matrix source.
+</span>  <span class="k">optional</span> <span class="kt">string</span> <span class="na">source</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span> <span class="c1">// axis of prob
+</span><span class="p">}</span></code></pre></figure>
 
 
 

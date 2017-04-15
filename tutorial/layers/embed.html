@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,19 +71,19 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">// Message that stores parameters used by EmbedLayer
-message EmbedParameter {
-  optional uint32 num_output = 1; // The number of outputs for the layer
-  // The input is given as integers to be interpreted as one-hot
-  // vector indices with dimension num_input.  Hence num_input should be
-  // 1 greater than the maximum possible input value.
-  optional uint32 input_dim = 2;
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="c1">// Message that stores parameters used by EmbedLayer
+</span><span class="kd">message</span> <span class="nc">EmbedParameter</span> <span class="p">{</span>
+  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">num_output</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// The number of outputs for the layer
+</span>  <span class="c1">// The input is given as integers to be interpreted as one-hot
+</span>  <span class="c1">// vector indices with dimension num_input.  Hence num_input should be
+</span>  <span class="c1">// 1 greater than the maximum possible input value.
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">input_dim</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 
-  optional bool bias_term = 3 [default = true]; // Whether to use a bias term
-  optional FillerParameter weight_filler = 4; // The filler for the weight
-  optional FillerParameter bias_filler = 5; // The filler for the bias
-
-}</code></pre></figure>
+  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">bias_term</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span> <span class="c1">// Whether to use a bias term
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">weight_filler</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// The filler for the weight
+</span>  <span class="k">optional</span> <span class="n">FillerParameter</span> <span class="na">bias_filler</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="c1">// The filler for the bias
+</span>
+<span class="p">}</span></code></pre></figure>
 
 
 

@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -63,7 +63,6 @@
   <li><a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1AccuracyLayer.html">Doxygen Documentation</a></li>
   <li>Header: <a href="https://github.com/BVLC/caffe/blob/master/include/caffe/layers/accuracy_layer.hpp"><code class="highlighter-rouge">./include/caffe/layers/accuracy_layer.hpp</code></a></li>
   <li>CPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/accuracy_layer.cpp"><code class="highlighter-rouge">./src/caffe/layers/accuracy_layer.cpp</code></a></li>
-  <li>CUDA GPU implementation: <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/layers/accuracy_layer.cu"><code class="highlighter-rouge">./src/caffe/layers/accuracy_layer.cu</code></a></li>
 </ul>
 
 <h2 id="parameters">Parameters</h2>
@@ -72,22 +71,23 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>):</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message AccuracyParameter {
-  // When computing accuracy, count as correct by comparing the true label to
-  // the top k scoring classes.  By default, only compare to the top scoring
-  // class (i.e. argmax).
-  optional uint32 top_k = 1 [default = 1];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">AccuracyParameter</span> <span class="p">{</span>
+  <span class="c1">// When computing accuracy, count as correct by comparing the true label to
+</span>  <span class="c1">// the top k scoring classes.  By default, only compare to the top scoring
+</span>  <span class="c1">// class (i.e. argmax).
+</span>  <span class="k">optional</span> <span class="kt">uint32</span> <span class="na">top_k</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // The "label" axis of the prediction blob, whose argmax corresponds to the
-  // predicted label -- may be negative to index from the end (e.g., -1 for the
-  // last axis).  For example, if axis == 1 and the predictions are
-  // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
-  // labels with integer values in {0, 1, ..., C-1}.
-  optional int32 axis = 2 [default = 1];
+  <span class="c1">// The "label" axis of the prediction blob, whose argmax corresponds to the
+</span>  <span class="c1">// predicted label -- may be negative to index from the end (e.g., -1 for the
+</span>  <span class="c1">// last axis).  For example, if axis == 1 and the predictions are
+</span>  <span class="c1">// (N x C x H x W), the label blob is expected to contain N*H*W ground truth
+</span>  <span class="c1">// labels with integer values in {0, 1, ..., C-1}.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mi">1</span><span class="p">];</span>
 
-  // If specified, ignore instances with the given label.
-  optional int32 ignore_label = 3;
-}</code></pre></figure>
+  <span class="c1">// If specified, ignore instances with the given label.
+</span>  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">ignore_label</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
 
 
       </section>

@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -68,7 +68,7 @@ The NVIDIA package tends to follow more recent library and driver versions, but 
 If installing from packages, install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
 This can be skipped for CPU-only installation.</p>
 
-<p><strong>BLAS</strong>: install ATLAS by <code class="highlighter-rouge">sudo apt-get install libatlas-base-dev</code> or install OpenBLAS or MKL for better CPU performance.</p>
+<p><strong>BLAS</strong>: install ATLAS by <code class="highlighter-rouge">sudo apt-get install libatlas-base-dev</code> or install OpenBLAS by <code class="highlighter-rouge">sudo apt-get install libopenblas-dev</code> or MKL for better CPU performance.</p>
 
 <p><strong>Python</strong> (optional): if you use the default Python you will need to <code class="highlighter-rouge">sudo apt-get install</code> the <code class="highlighter-rouge">python-dev</code> package to have the Python headers for building the pycaffe interface.</p>
 
@@ -89,8 +89,8 @@ This can be skipped for CPU-only installation.</p>
 <p>These dependencies need manual installation in 12.04.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code># glog
-wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
-tar zxvf glog-0.3.3.tar.gz
+wget https://github.com/google/glog/archive/v0.3.3.tar.gz
+tar zxvf v0.3.3.tar.gz
 cd glog-0.3.3
 ./configure
 make &amp;&amp; make install

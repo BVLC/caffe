@@ -1,8 +1,7 @@
 var searchData=
 [
   ['caffe',['Caffe',['../classcaffe_1_1Caffe.html',1,'caffe']]],
-  ['callback',['Callback',['../classcaffe_1_1Net_1_1Callback.html',1,'caffe::Net']]],
-  ['callback',['Callback',['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver']]],
+  ['callback',['Callback',['../classcaffe_1_1Net_1_1Callback.html',1,'caffe::Net&lt; Dtype &gt;::Callback'],['../classcaffe_1_1Solver_1_1Callback.html',1,'caffe::Solver&lt; Dtype &gt;::Callback']]],
   ['concatlayer',['ConcatLayer',['../classcaffe_1_1ConcatLayer.html',1,'caffe']]],
   ['constantfiller',['ConstantFiller',['../classcaffe_1_1ConstantFiller.html',1,'caffe']]],
   ['contrastivelosslayer',['ContrastiveLossLayer',['../classcaffe_1_1ContrastiveLossLayer.html',1,'caffe']]],

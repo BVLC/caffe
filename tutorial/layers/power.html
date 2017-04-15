@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -82,12 +82,12 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message PowerParameter {
-  // PowerLayer computes outputs y = (shift + scale * x) ^ power.
-  optional float power = 1 [default = 1.0];
-  optional float scale = 2 [default = 1.0];
-  optional float shift = 3 [default = 0.0];
-}</code></pre></figure>
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">PowerParameter</span> <span class="p">{</span>
+  <span class="c1">// PowerLayer computes outputs y = (shift + scale * x) ^ power.
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">power</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">];</span>
+  <span class="k">optional</span> <span class="kt">float</span> <span class="na">shift</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 <h2 id="sample">Sample</h2>
 

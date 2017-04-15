@@ -36,7 +36,7 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
         </p>
         <p class="header">
           Created by
@@ -71,16 +71,16 @@
   <li>From <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto"><code class="highlighter-rouge">./src/caffe/proto/caffe.proto</code></a>:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf">message MVNParameter {
-  // This parameter can be set to false to normalize mean only
-  optional bool normalize_variance = 1 [default = true];
+<figure class="highlight"><pre><code class="language-protobuf" data-lang="protobuf"><span class="kd">message</span> <span class="nc">MVNParameter</span> <span class="p">{</span>
+  <span class="c1">// This parameter can be set to false to normalize mean only
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">normalize_variance</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">true</span><span class="p">];</span>
 
-  // This parameter can be set to true to perform DNN-like MVN
-  optional bool across_channels = 2 [default = false];
+  <span class="c1">// This parameter can be set to true to perform DNN-like MVN
+</span>  <span class="k">optional</span> <span class="kt">bool</span> <span class="na">across_channels</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="kc">false</span><span class="p">];</span>
 
-  // Epsilon for not dividing by zero while normalizing variance
-  optional float eps = 3 [default = 1e-9];
-}</code></pre></figure>
+  <span class="c1">// Epsilon for not dividing by zero while normalizing variance
+</span>  <span class="k">optional</span> <span class="kt">float</span> <span class="na">eps</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">[</span><span class="k">default</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">];</span>
+<span class="p">}</span></code></pre></figure>
 
 
 
