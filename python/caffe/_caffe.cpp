@@ -371,7 +371,7 @@ bp::object NCCL_New_Uid() {
   return bp::object(bp::handle<>(py_uid));
 #else
   // automatic conversion is correct for python 2.
-  return uid;
+  return bp::object(uid);
 #endif
 }
 #endif
