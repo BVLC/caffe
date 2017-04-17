@@ -1,5 +1,5 @@
 ---
-name: BVLC AlexNet Model
+name: BAIR/BVLC AlexNet Model
 caffemodel: bvlc_alexnet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
 license: unrestricted
