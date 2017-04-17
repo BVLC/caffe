@@ -41,7 +41,9 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int count = 0;
   if (slice_point_.size() != 0) {
     CHECK_EQ(slice_point_.size(), top.size() - 1);
-    CHECK_LE(top.size(), bottom_slice_axis);
+    CHECK_LE(top.size(), bottom_slice_axis)
+        << "slice axis: " << slice_axis_
+        << ", bottom[0] shape: " << bottom[0]->shape_string();
     int prev = 0;
     vector<int> slices;
     for (int i = 0; i < slice_point_.size(); ++i) {
