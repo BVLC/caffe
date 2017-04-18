@@ -131,6 +131,11 @@ void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
                        const int_tp offa, const Dtype alpha, cl_mem y,
                        const int_tp offy);
 
+template <typename Dtype>
+void greentea_gpu_sqrt(const int_tp ctx_id, const int_tp n,
+                       const cl_mem a, const int_tp offa,
+                       cl_mem y, const int_tp offy);
+
 template<typename Dtype>
 void greentea_gpu_log(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy);

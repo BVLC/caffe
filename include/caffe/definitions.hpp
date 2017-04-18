@@ -23,17 +23,17 @@
 #endif
 
 enum DataType {
-  FP16,
-  FP32,
-  FP64,
-  INT8,
-  INT16,
-  INT32,
-  INT64,
-  UINT8,
-  UINT16,
-  UINT32,
-  UINT64
+  DFP16,
+  DFP32,
+  DFP64,
+  DINT8,
+  DINT16,
+  DINT32,
+  DINT64,
+  DUINT8,
+  DUINT16,
+  DUINT32,
+  DUINT64
 };
 
 

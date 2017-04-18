@@ -34,7 +34,7 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
   if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int_tp)) {
     shape_data_.reset(
         new SyncedMemory(shape.size() * sizeof(int_tp), device_,
-        std::is_same<int_tp, int32_t>::value ? INT32 : INT64));
+        std::is_same<int_tp, int32_t>::value ? DINT32 : DINT64));
   }
   int_tp* shape_data = static_cast<int_tp*>(shape_data_->mutable_cpu_data());
   for (int_tp i = 0; i < shape.size(); ++i) {

@@ -16,7 +16,8 @@ namespace caffe {
 
 /**
  * @brief Provides data to the Net from windows of images files, specified
- *        by a window data file.
+ *        by a window data file. This layer is *DEPRECATED* and only kept for
+ *        archival purposes for use by the original R-CNN.
  *
  * TODO(dox): thorough documentation for Forward and proto params.
  */

@@ -72,6 +72,14 @@ __kernel void TEMPLATE(log,Dtype)(const int_tp n, __global const Dtype* a,
   }
 }
 
+__kernel void TEMPLATE(sqrt,Dtype)(const int_tp n, __global const Dtype* a,
+                                   const int_tp offa,
+                                   __global Dtype* y, const int_tp offy) {
+  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
+    y[offy + index] = sqrt((Dtype)a[offa + index]);
+  }
+}
+
 __kernel void TEMPLATE(powx,Dtype)(const int_tp n, __global const Dtype* a,
                                    const int_tp offa, Dtype alpha,
                                    __global Dtype* y,

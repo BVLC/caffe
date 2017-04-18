@@ -224,7 +224,17 @@ void caffe_sqr<double>(const int_tp n, const double* a, double* y) {
   vdSqr(n, a, y);
 }
 
-template<>
+template <>
+void caffe_sqrt<float>(const int_tp n, const float* a, float* y) {
+  vsSqrt(n, a, y);
+}
+
+template <>
+void caffe_sqrt<double>(const int_tp n, const double* a, double* y) {
+  vdSqrt(n, a, y);
+}
+
+template <>
 void caffe_exp<float>(const int_tp n, const float* a, float* y) {
   vsExp(n, a, y);
 }

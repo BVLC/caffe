@@ -160,7 +160,7 @@ __global__ void StoPoolForwardTest(const int_tp nthreads,
     const int_tp wstart = pw * stride_w;
     const int_tp wend = min((int_tpc) (wstart + kernel_w), (int_tpc) width);
     // We set cumsum to be 0 to avoid divide-by-zero problems
-    Dtype cumsum = FLT_MIN;
+    Dtype cumsum = 0.;
     Dtype cumvalues = 0.;
     const Dtype* const bottom_slice = bottom_data
         + (n * channels + c) * height * width;
@@ -171,7 +171,7 @@ __global__ void StoPoolForwardTest(const int_tp nthreads,
         cumvalues += bottom_slice[h * width + w] * bottom_slice[h * width + w];
       }
     }
-    top_data[index] = cumvalues / cumsum;
+    top_data[index] = (cumsum > 0.) ? cumvalues / cumsum : 0.;
   }
 }
 

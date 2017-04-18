@@ -122,7 +122,7 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
 
     if end is not None:
         end_ind = list(self._layer_names).index(end)
-        outputs = set([end] + blobs)
+        outputs = set(self.top_names[end] + blobs)
     else:
         end_ind = len(self.layers) - 1
         outputs = set(self.outputs + blobs)
@@ -170,7 +170,7 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
 
     if end is not None:
         end_ind = list(self._layer_names).index(end)
-        outputs = set([end] + diffs)
+        outputs = set(self.bottom_names[end] + diffs)
     else:
         end_ind = 0
         outputs = set(self.inputs + diffs)

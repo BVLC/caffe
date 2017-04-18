@@ -30,10 +30,10 @@ class RandomNumberGeneratorTest : public ::testing::Test {
                               dtypeof<Dtype>())),
        int_data_(new SyncedMemory(sample_size_ * sizeof(int_tp),
                               Caffe::GetDefaultDevice(),
-                   std::is_same<int_tp, int32_t>::value ? INT32 : INT64)),
+                   std::is_same<int_tp, int32_t>::value ? DINT32 : DINT64)),
        int_data_2_(new SyncedMemory(sample_size_ * sizeof(int_tp),
                               Caffe::GetDefaultDevice(),
-                   std::is_same<int_tp, int32_t>::value ? INT32 : INT64)) {}
+                   std::is_same<int_tp, int32_t>::value ? DINT32 : DINT64)) {}
 
   virtual void SetUp() {
     Caffe::set_random_seed(this->seed_, Caffe::GetDefaultDevice());
