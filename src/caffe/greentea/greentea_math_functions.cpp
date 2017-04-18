@@ -1150,6 +1150,28 @@ template void greentea_gpu_exp<double>(const int_tp ctx_id, const int_tp N,
                                        cl_mem y, const int_tp offy);
 
 template<typename Dtype>
+void greentea_gpu_sqrt(const int_tp ctx_id, const int_tp n,
+                       const cl_mem a, const int_tp offa,
+                       cl_mem y, const int_tp offy) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
+
+  viennacl::ocl::kernel &oclk_sqrt = program.get_kernel(
+      CL_KERNEL_SELECT("sqrt"));
+  viennacl::ocl::enqueue(
+      oclk_sqrt(n, WrapHandle(a, &ctx), offa, WrapHandle(y, &ctx), offy),
+      ctx.get_queue());
+}
+
+template void greentea_gpu_sqrt<float>(const int_tp ctx_id, const int_tp n,
+                                       const cl_mem a, const int_tp offa,
+                                       cl_mem y, const int_tp offy);
+template void greentea_gpu_sqrt<double>(const int_tp ctx_id, const int_tp n,
+                                        const cl_mem a, const int_tp offa,
+                                        cl_mem y, const int_tp offy);
+
+template<typename Dtype>
 void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
                        const int_tp offa, const Dtype alpha, cl_mem y,
                        const int_tp offy) {

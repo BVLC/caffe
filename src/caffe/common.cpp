@@ -32,20 +32,20 @@ namespace caffe {
 
 size_t dtsizeof(DataType data_type) {
   switch (data_type) {
-    case INT8:
-    case UINT8:
+    case DINT8:
+    case DUINT8:
       return 1;
-    case FP16:
-    case INT16:
-    case UINT16:
+    case DFP16:
+    case DINT16:
+    case DUINT16:
       return 2;
-    case FP32:
-    case INT32:
-    case UINT32:
+    case DFP32:
+    case DINT32:
+    case DUINT32:
       return 4;
-    case FP64:
-    case INT64:
-    case UINT64:
+    case DFP64:
+    case DINT64:
+    case DUINT64:
       return 8;
     default:
       return 1;
@@ -53,34 +53,34 @@ size_t dtsizeof(DataType data_type) {
 }
 
 template<> DataType dtypeof<float>() {
-  return FP32;
+  return DFP32;
 }
 template<> DataType dtypeof<double>() {
-  return FP64;
+  return DFP64;
 }
 template<> DataType dtypeof<int8_t>() {
-  return INT8;
+  return DINT8;
 }
 template<> DataType dtypeof<int16_t>() {
-  return INT16;
+  return DINT16;
 }
 template<> DataType dtypeof<int32_t>() {
-  return INT32;
+  return DINT32;
 }
 template<> DataType dtypeof<int64_t>() {
-  return INT64;
+  return DINT64;
 }
 template<> DataType dtypeof<uint8_t>() {
-  return UINT8;
+  return DUINT8;
 }
 template<> DataType dtypeof<uint16_t>() {
-  return UINT16;
+  return DUINT16;
 }
 template<> DataType dtypeof<uint32_t>() {
-  return UINT32;
+  return DUINT32;
 }
 template<> DataType dtypeof<uint64_t>() {
-  return UINT64;
+  return DUINT64;
 }
 
 // Make sure each thread can have different values.

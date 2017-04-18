@@ -23,7 +23,8 @@ foreach(source_file ${examples_srcs})
   caffe_set_solution_folder(${name} examples)
 
   # install
-  install(TARGETS ${name} DESTINATION bin)
+  install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 
   if(MSVC AND INSTALL_PREREQUISITES)
     caffe_install_prerequisites(${name} DESTINATION bin)

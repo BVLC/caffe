@@ -60,8 +60,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   }
   // Scaffolding code
   InitTrainNet();
+  InitTestNets();
   if (Caffe::root_solver()) {
-    InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
   }
   iter_ = 0;
@@ -122,7 +122,6 @@ void Solver<Dtype>::InitTrainNet() {
 
 template<typename Dtype>
 void Solver<Dtype>::InitTestNets() {
-  CHECK(Caffe::root_solver());
   const bool has_net_param = param_.has_net_param();
   const bool has_net_file = param_.has_net();
   const int_tp num_generic_nets = has_net_param + has_net_file;

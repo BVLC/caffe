@@ -3684,6 +3684,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(sqrt,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
+"const int_tp offa,",    // NOLINT
+"__global Dtype* y, const int_tp offy) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"y[offy + index] = sqrt((Dtype)a[offa + index]);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(powx,Dtype)(const int_tp n, __global const Dtype* a,",    // NOLINT
 "const int_tp offa, Dtype alpha,",    // NOLINT
 "__global Dtype* y,",    // NOLINT
