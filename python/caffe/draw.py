@@ -9,6 +9,7 @@ Caffe network visualization: draw the NetParameter protobuffer.
     Caffe.
 """
 
+import os
 from caffe.proto import caffe_pb2
 
 """
@@ -20,6 +21,35 @@ try:
     import pydotplus as pydot
 except ImportError:
     import pydot
+
+
+if os.name == 'nt':
+    # Workaround to find graphviz executables
+    # with graphviz conda package under windows
+
+    # Monkeypatch the pydot package
+    pydot_find_graphviz = pydot.graphviz.find_graphviz
+
+    def resolve_graphviz_executables():
+        """
+        Resolve the graphviz executables by adding a `graphviz` suffix
+        to folders located on path
+        """
+        # first check if we can find the executables the normal way
+        progs = pydot_find_graphviz()
+        if not progs:
+            directories = os.environ['PATH'].split(';')
+            suffix = 'graphviz'
+            progs = {}
+            for directory in directories:
+                for exe in ['dot', 'twopi', 'neato', 'circo', 'fdp']:
+                    full_path = os.path.join(directory, suffix,
+                                             '{}.exe'.format(exe))
+                    if os.path.exists(full_path):
+                        progs[exe] = full_path
+        return progs
+
+    pydot.graphviz.find_graphviz = resolve_graphviz_executables
 
 # Internal layer and blob styles.
 LAYER_STYLE_DEFAULT = {'shape': 'record',
