@@ -59,11 +59,15 @@ void InitLogLevel(int level) {
   FLAGS_minloglevel = level;
   InitLog();
 }
+
+#ifndef _MSC_VER
 void InitLogLevelPipe(int level, bool stderr) {
   FLAGS_minloglevel = level;
   FLAGS_logtostderr = stderr;
   InitLog();
 }
+#endif  // _MSC_VER
+
 void Log(const string& s) {
   LOG(INFO) << s;
 }
@@ -434,7 +438,9 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("init_log", &InitLog);
   bp::def("init_log", &InitLogLevel);
+  #ifndef _MSC_VER
   bp::def("init_log", &InitLogLevelPipe);
+  #endif  // _MSC_VER
   bp::def("log", &Log);
   bp::def("has_nccl", &HasNCCL);
   bp::def("set_mode_cpu", &set_mode_cpu);
