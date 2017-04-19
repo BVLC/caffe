@@ -110,11 +110,13 @@ void InitLogLevel(int level) {
   FLAGS_minloglevel = level;
   InitLog();
 }
+
 void InitLogLevelPipe(int level, bool stderr) {
   FLAGS_minloglevel = level;
   FLAGS_logtostderr = stderr;
   InitLog();
 }
+
 void Log(const string& s) {
   LOG(INFO) << s;
 }
