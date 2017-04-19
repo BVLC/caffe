@@ -14,3 +14,4 @@
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
 
+#endif  // CAFFE_CONFIG_HPP_
