@@ -19,7 +19,9 @@
 #include "caffe/util/device_alternate.hpp"
 
 // Convert macro to string
+#undef STRINGIFY
 #define STRINGIFY(m) #m
+#undef AS_STRING
 #define AS_STRING(m) STRINGIFY(m)
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.

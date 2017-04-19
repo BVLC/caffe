@@ -64,6 +64,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
+  learning_rate_ = 0;
   // Initialize the history
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   history_.clear();
@@ -101,6 +102,7 @@ void SGDSolver<Dtype>::ClipGradients() {
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   Dtype rate = GetLearningRate();
+  learning_rate_ = rate;
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << this->iter_
         << ", lr = " << rate;

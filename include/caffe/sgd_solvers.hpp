@@ -21,7 +21,8 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param_file) { PreSolve(); }
   virtual inline const char* type() const { return "SGD"; }
 
-  const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+  const vector<shared_ptr<Blob<Dtype> > >& history() const { return history_; }
+  Dtype learning_rate() const { return learning_rate_; }
 
  protected:
   void PreSolve();
@@ -41,6 +42,7 @@ class SGDSolver : public Solver<Dtype> {
   // temp maintains other information that might be needed in computation
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
+  Dtype learning_rate_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };

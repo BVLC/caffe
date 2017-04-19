@@ -68,11 +68,13 @@ class Solver {
   void Snapshot();
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
-  inline shared_ptr<Net<Dtype> > net() { return net_; }
-  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
+  inline shared_ptr<Net<Dtype> > net() const { return net_; }
+  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() const {
     return test_nets_;
   }
   int iter() const { return iter_; }
+  const vector<Dtype>& mean_scores() const { return mean_scores_; }
+  Dtype smoothed_loss() const { return smoothed_loss_; }
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -115,6 +117,7 @@ class Solver {
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
+  vector<Dtype> mean_scores_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
 

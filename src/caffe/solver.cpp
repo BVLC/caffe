@@ -174,6 +174,7 @@ void Solver<Dtype>::InitTestNets() {
     test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
+  mean_scores_.resize(num_test_net_instances);
 }
 
 template <typename Dtype>
@@ -182,6 +183,7 @@ void Solver<Dtype>::Step(int iters) {
   const int stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
   losses_.clear();
+  mean_scores_.assign(mean_scores_.size(), 0);
   smoothed_loss_ = 0;
   iteration_timer_.Start();
 
@@ -390,6 +392,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
+    mean_scores_[i] = mean_score;
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
