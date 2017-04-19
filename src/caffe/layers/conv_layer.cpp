@@ -141,11 +141,6 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
     }
   }
-
-#ifdef USE_MLSL
-  this->on_delinp_ready(propagate_down);
-#endif /* USE_MLSL */
-
 }
 
 #ifdef CPU_ONLY

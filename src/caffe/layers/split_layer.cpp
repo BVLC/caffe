@@ -40,43 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/split_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
-
-#ifdef USE_MLSL
-
-template <typename Dtype>
-void SplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-	ComputeOpRegInfo *myRegInfo;
-	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_BCAST);
-	myRegInfo->SetName(this->layer_param_.name().c_str());
-	for(int i=0; i<bottom.size(); i++)
-	{
-		int ic = bottom[i]->channels();
-		int iw = bottom[i]->width();
-		int ih = bottom[i]->height();
-		myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-	}
-	for(int i=0; i<top.size(); i++)
-	{
-		int oc = bottom[0]->channels();
-		int ow = bottom[0]->width();
-		int oh = bottom[0]->height();
-		myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-	}
-
-  myRegInfo->Validate();
-	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-}
-
-#endif /* USE_MLSL */
 
 template <typename Dtype>
 void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,

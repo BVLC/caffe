@@ -40,10 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layers/dummy_data_layer.hpp"
 
-#ifdef USE_MLSL
-using namespace MLSL;
-#endif /* USE_MLSL */
-
 namespace caffe {
 
 template <typename Dtype>
@@ -136,23 +132,6 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < refill_.size(); ++i) {
     refill_[i] = !refill_[i];
   }
-
-#ifdef USE_MLSL
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-  ComputeOpRegInfo *myRegInfo;
-  myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_DATA);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-  for(int i = 0; i< num_top; i++) {
-	myRegInfo->AddOutputFeatureMap(top[i]->channels(), top[i]->width()*top[i]->height(), dt);
-  }
-
-  myRegInfo->Validate();
-  this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-
-#endif /* USE_MLSL */
-
 }
 
 template <typename Dtype>

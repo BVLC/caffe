@@ -103,26 +103,6 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
     product_layer_->SetUp(product_bottom_vec_, top);
   }
-#ifdef USE_MLSL
-  int ic = bottom[0]->channels();
-  int iw = bottom[0]->width();
-  int ih = bottom[0]->height();
-
-  int oc = ic;
-  int ow = iw;
-  int oh = ih;
-
-  DataType dt = (sizeof(Dtype) == 4)? DT_FLOAT : DT_DOUBLE;
-	ComputeOpRegInfo *myRegInfo;
-	myRegInfo = new ComputeOpRegInfo(COMP_OP_TYPE_POOL);
-  myRegInfo->SetName(this->layer_param_.name().c_str());
-	myRegInfo->AddInputFeatureMap(ic, iw*ih, dt);
-	myRegInfo->AddOutputFeatureMap(oc, ow*oh, dt);
-
-  myRegInfo->Validate();
-	this->layerOp = new ComputeOp(myRegInfo, caffe::internode::data_parallelism);
-  delete myRegInfo;
-#endif
 }
 
 template <typename Dtype>
