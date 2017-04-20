@@ -372,13 +372,16 @@ int collectAndCheckLayerData(bool collect_step,
         }
 
         if (bottom_need_backward[i].size() > 0 && bottom_need_backward[i][0]) {
-            getFileName(file_name, false, "FwrdBtmDat", i);
-            checkData(file_name, bottom_vecs[i][0]->cpu_data(),
-                layers[i]->type(), output_dir,
-                &erronous_layers);
-            checkAllNans(bottom_vecs[i][0]->cpu_diff(),
-                bottom_vecs[i][0]->count(), "bottom.diff",
-                layers[i]->type(), &erronous_layers);
+          // We check data only for out-of-place computations
+          if (bottom_vecs[i][0] != top_vecs[i][0]) {
+              getFileName(file_name, false, "FwrdBtmDat", i);
+              checkData(file_name, bottom_vecs[i][0]->cpu_data(),
+                  layers[i]->type(), output_dir,
+                  &erronous_layers);
+          }
+          checkAllNans(bottom_vecs[i][0]->cpu_diff(),
+              bottom_vecs[i][0]->count(), "bottom.diff",
+              layers[i]->type(), &erronous_layers);
         }
 
         checkAllNans(top_vecs[i][0]->cpu_diff(),
