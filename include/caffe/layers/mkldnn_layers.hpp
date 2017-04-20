@@ -120,6 +120,14 @@ class MKLDNNConvolutionLayer : public MKLDNNLayer<Dtype> , public ConvolutionLay
 public:
     explicit MKLDNNConvolutionLayer(const LayerParameter& param);
     virtual ~MKLDNNConvolutionLayer() {}
+
+    //For test the parameters of kernel/stride/pad
+    int GetKernelWidth()  { return kernel_w_; }
+    int GetKernelHeight() { return kernel_h_; }
+    int GetStrideWidth()  { return stride_w_; }
+    int GetStrideHeight() { return stride_h_; }
+    int GetPadWidth()     { return pad_w_; }
+    int GetPadHeight()    { return pad_h_; }
 protected:
     virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
