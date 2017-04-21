@@ -7,6 +7,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
     if NOT DEFINED WITH_NINJA set WITH_NINJA=1
     if NOT DEFINED CPU_ONLY set CPU_ONLY=1
+    if NOT DEFINED CUDA_ARCH_NAME set CUDA_ARCH_NAME=Auto
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
     if NOT DEFINED USE_NCCL set USE_NCCL=0
     if NOT DEFINED CMAKE_BUILD_SHARED_LIBS set CMAKE_BUILD_SHARED_LIBS=0
@@ -73,6 +74,9 @@ if DEFINED APPVEYOR (
     if NOT DEFINED WITH_NINJA set WITH_NINJA=1
     :: Change to 1 to build caffe without CUDA support
     if NOT DEFINED CPU_ONLY set CPU_ONLY=0
+    :: Change to generate CUDA code for one of the following GPU architectures
+    :: [Fermi  Kepler  Maxwell  Pascal  All]
+    if NOT DEFINED CUDA_ARCH_NAME set CUDA_ARCH_NAME=Auto
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
     :: Set to 1 to use NCCL
@@ -120,6 +124,7 @@ echo INFO: MSVC_VERSION               = !MSVC_VERSION!
 echo INFO: WITH_NINJA                 = !WITH_NINJA!
 echo INFO: CMAKE_GENERATOR            = "!CMAKE_GENERATOR!"
 echo INFO: CPU_ONLY                   = !CPU_ONLY!
+echo INFO: CUDA_ARCH_NAME             = !CUDA_ARCH_NAME!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: USE_NCCL                   = !USE_NCCL!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
@@ -163,6 +168,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
       -DCOPY_PREREQUISITES:BOOL=1 ^
       -DINSTALL_PREREQUISITES:BOOL=1 ^
       -DUSE_NCCL:BOOL=!USE_NCCL! ^
+      -DCUDA_ARCH_NAME:STRING=%CUDA_ARCH_NAME% ^
       "%~dp0\.."
 
 if ERRORLEVEL 1 (
