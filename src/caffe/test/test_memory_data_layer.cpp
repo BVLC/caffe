@@ -115,6 +115,30 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   }
 }
 
+TYPED_TEST(MemoryDataLayerTest, TestForwardTransform) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  LayerParameter layer_param;
+  MemoryDataParameter* md_param = layer_param.mutable_memory_data_param();
+  md_param->set_batch_size(this->batch_size_);
+  md_param->set_channels(this->channels_);
+  md_param->set_height(this->height_);
+  md_param->set_width(this->width_);
+  TransformationParameter* tr_param = layer_param.mutable_transform_param();
+  tr_param->set_crop_size(1);
+  shared_ptr<MemoryDataLayer<Dtype> > layer(
+      new MemoryDataLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->batch_size_*this->channels_, this->blob_top_vec_[0]->count());
+  layer->Reset(this->data_->mutable_cpu_data(),
+      this->labels_->mutable_cpu_data(), this->data_->num());
+  for (int i = 0; i < this->batches_ * 6; ++i) {
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->batch_size_*this->channels_,
+        this->blob_top_vec_[0]->count());
+  }
+}
+
 #ifdef USE_OPENCV
 TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   typedef typename TypeParam::Dtype Dtype;
