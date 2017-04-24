@@ -79,7 +79,7 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_);
   }
   virtual ~SPPLayerTest() {
-    delete blob_bottom_; 
+    delete blob_bottom_;
     delete blob_top_;
     delete blob_bottom_2_;
     delete blob_bottom_3_;
