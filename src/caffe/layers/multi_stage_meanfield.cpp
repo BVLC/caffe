@@ -237,8 +237,8 @@ void MultiStageMeanfieldLayer<Dtype>::init_param_blobs(const MultiStageMeanfield
   this->blobs_[1].reset(new Blob<Dtype>(1, 1, channels_, channels_));
 
   // Initialize the kernels weights.
-  tvg::CommonUtils::read_into_the_diagonal(meanfield_param.spatial_filter_weights_str(), *(this->blobs_[0]));
-  tvg::CommonUtils::read_into_the_diagonal(meanfield_param.bilateral_filter_weights_str(), *(this->blobs_[1]));
+  caffe::CommonUtils::read_into_the_diagonal(meanfield_param.spatial_filter_weights_str(), *(this->blobs_[0]));
+  caffe::CommonUtils::read_into_the_diagonal(meanfield_param.bilateral_filter_weights_str(), *(this->blobs_[1]));
 
   // Initialize the compatibility matrix.
   this->blobs_[2].reset(new Blob<Dtype>(1, 1, channels_, channels_));

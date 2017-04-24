@@ -4,8 +4,8 @@
 
 #include <string>
 #include "caffe/blob.hpp"
-
-namespace tvg {
+#include "caffe/util/math_functions.hpp"
+namespace caffe {
 
   namespace CommonUtils {
 
