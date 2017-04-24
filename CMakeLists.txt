@@ -10,14 +10,15 @@ endif()
 project(Caffe C CXX)
 
 # ---[ Caffe version
-set(CAFFE_TARGET_VERSION "1.0.0-rc5" CACHE STRING "Caffe logical version")
-set(CAFFE_TARGET_SOVERSION "1.0.0-rc5" CACHE STRING "Caffe soname version")
+set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")
+set(CAFFE_TARGET_SOVERSION "1.0.0" CACHE STRING "Caffe soname version")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 include(ExternalProject)
+include(GNUInstallDirs)
 
 include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
@@ -103,8 +104,19 @@ if(BUILD_python)
   add_dependencies(pytest pycaffe)
 endif()
 
+# ---[ uninstall target
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Uninstall.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/Uninstall.cmake
+    IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/Uninstall.cmake)
+
 # ---[ Configuration summary
 caffe_print_configuration_summary()
 
 # ---[ Export configs generation
 caffe_generate_export_configs()
+

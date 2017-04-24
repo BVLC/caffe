@@ -13,7 +13,7 @@ The GPUs to be used for training can be set with the "-gpu" flag on the command 
 # Hardware Configuration Assumptions
 
 The current implementation uses a tree reduction strategy.  e.g. if there are 4 GPUs in the system, 0:1, 2:3 will exchange gradients, then 0:2 (top of the tree) will exchange gradients, 0 will calculate
-updated model, 0\-\>2, and then 0\-\>1, 2\-\>3. 
+updated model, 0\-\>2, and then 0\-\>1, 2\-\>3.
 
 For best performance, P2P DMA access between devices is needed. Without P2P access, for example crossing PCIe root complex, data is copied through host and effective exchange bandwidth is greatly reduced.
 

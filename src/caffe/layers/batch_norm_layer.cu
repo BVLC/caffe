@@ -48,14 +48,14 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   if (!use_global_stats_) {
     // compute variance using var(X) = E((X-EX)^2)
-    caffe_gpu_powx(top[0]->count(), top_data, Dtype(2),
+    caffe_gpu_mul(top[0]->count(), top[0]->gpu_data(), top[0]->gpu_data(),
         temp_.mutable_gpu_data());  // (X-EX)^2
     caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         1. / (num * spatial_dim), temp_.gpu_data(),
         spatial_sum_multiplier_.gpu_data(), 0.,
         num_by_chans_.mutable_gpu_data());
-    caffe_gpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
-        num_by_chans_.gpu_data(), batch_sum_multiplier_.gpu_data(), 0.,
+    caffe_gpu_gemv<Dtype>(CblasTrans, num, channels_, Dtype(1.),
+        num_by_chans_.gpu_data(), batch_sum_multiplier_.gpu_data(), Dtype(0.),
         variance_.mutable_gpu_data());  // E((X_EX)^2)
 
     // compute and save moving average
@@ -72,7 +72,7 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   // normalize variance
   caffe_gpu_add_scalar(variance_.count(), eps_, variance_.mutable_gpu_data());
-  caffe_gpu_powx(variance_.count(), variance_.gpu_data(), Dtype(0.5),
+  caffe_gpu_sqrt(variance_.count(), variance_.gpu_data(),
       variance_.mutable_gpu_data());
 
   // replicate variance to input size
