@@ -4,7 +4,7 @@ title: Developing and Contributing
 # Development and Contributing
 
 Caffe is developed with active participation of the community.<br>
-The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
+The [BAIR](http://bair.berkeley.edu/)/BVLC brewers welcome all contributions!
 
 The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
 This method is impartial and always up-to-date.
@@ -37,7 +37,7 @@ We absolutely appreciate any contribution to this effort!
 
 The `master` branch receives all new development including community contributions.
 We try to keep it in a reliable state, but it is the bleeding edge, and things do get broken every now and then.
-BVLC maintainers will periodically make releases by marking stable checkpoints as tags and maintenance branches. [Past releases](https://github.com/BVLC/caffe/releases) are catalogued online.
+BAIR maintainers will periodically make releases by marking stable checkpoints as tags and maintenance branches. [Past releases](https://github.com/BVLC/caffe/releases) are catalogued online.
 
 #### Issues & Pull Request Protocol
 
