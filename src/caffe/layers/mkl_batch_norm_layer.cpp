@@ -191,12 +191,11 @@ void MKLBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  bool reshaping = true;
-  if ((num_ == bottom[0]->num()) &&
-      channels_ == bottom[0]->channels() &&
+  bool re_init = true;
+  if (channels_ == bottom[0]->channels() &&
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width()) {
-    reshaping = false;
+    re_init = false;
   }
 
   if (bottom[0] == top[0]) {  // in-place computation
@@ -209,8 +208,28 @@ void MKLBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[0]->Reshape(num_, channels_, height_, width_);
   }
 
-  if (reshaping == true) {
+  if (re_init == true) {
     Init(bottom, top);
+  } else if (num_ != bottom[0]->num()) { //recreate layout only when batch size changes
+    size_t dim = 4, sizes[4], strides[4];
+    sizes[0] = width_;
+    sizes[1] = height_;
+    sizes[2] = channels_;
+    sizes[3] = num_;
+
+    strides[0] = 1;
+    strides[1] = sizes[0];
+    strides[2] = sizes[0]*sizes[1];
+    strides[3] = sizes[0]*sizes[1]*sizes[2];
+
+    dnnError_t e;
+    dnnLayoutDelete<Dtype>(layout_usr_);
+    e = dnnLayoutCreate<Dtype>(&layout_usr_, dim, sizes, strides);
+    CHECK_EQ(e, E_SUCCESS);
+    fwd_bottom_data->create_user_layout(dim, sizes, strides, false);
+    fwd_top_data   ->create_user_layout(dim, sizes, strides, false);
+    bwd_bottom_diff->create_user_layout(dim, sizes, strides, false);
+    bwd_top_diff   ->create_user_layout(dim, sizes, strides, false);
   }
 }
 
