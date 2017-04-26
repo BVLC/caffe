@@ -34,9 +34,9 @@ foreach(source ${srcs})
   endif()
 
   # Install
-  install(TARGETS ${name} DESTINATION bin)
+  install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   if(MSVC AND INSTALL_PREREQUISITES)
-    caffe_install_prerequisites(${name} DESTINATION bin)
+    caffe_install_prerequisites(${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
   endif()
 endforeach(source)
