@@ -383,6 +383,35 @@ class NCCL {
 };
 #endif
 
+bool HasNCCL() {
+#ifdef USE_NCCL
+  return true;
+#else
+  return false;
+#endif
+}
+
+#ifdef USE_NCCL
+bp::object NCCL_New_Uid() {
+  std::string uid = NCCL<Dtype>::new_uid();
+#if PY_MAJOR_VERSION >= 3
+  // Convert std::string to bytes so that Python does not
+  // try to decode the string using the current locale.
+
+  // Since boost 1.53 boost.python will convert str and bytes
+  // to std::string but will convert std::string to str. Here we
+  // force a bytes object to be returned. When this object
+  // is passed back to the NCCL constructor boost.python will
+  // correctly convert the bytes to std::string automatically
+  PyObject* py_uid = PyBytes_FromString(uid.c_str());
+  return bp::object(bp::handle<>(py_uid));
+#else
+  // automatic conversion is correct for python 2.
+  return bp::object(uid);
+#endif
+}
+#endif
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -396,6 +425,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("init_log", &InitLogLevel);
   bp::def("init_log", &InitLogLevelPipe);
   bp::def("log", &Log);
+  bp::def("has_nccl", &HasNCCL);
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_random_seed", &set_random_seed);
@@ -554,7 +584,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     boost::noncopyable>("NCCL",
                         bp::init<shared_ptr<Solver<Dtype> >, const string&>())
 #ifdef USE_NCCL
-    .def("new_uid", &NCCL<Dtype>::new_uid).staticmethod("new_uid")
+    .def("new_uid", NCCL_New_Uid).staticmethod("new_uid")
     .def("bcast", &NCCL<Dtype>::Broadcast)
 #endif
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
