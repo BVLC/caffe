@@ -53,33 +53,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
-
-  if (this->device_->backend() == BACKEND_OpenCL && this->phase_ == TEST) {
-    viennacl::ocl::context &ctx =
-      viennacl::ocl::get_context(this->device_->id());
-    size_t max_image_size = std::min(ctx.devices()[0].image2d_max_width(),
-                                     ctx.devices()[0].image2d_max_height());
-    // For inference only, we can load the weights data to image on Intel platform.
-    // As image based GEMM is much faster than the buffer based GEMM for most cases.
-    if (N_ <= max_image_size &&
-        K_ <= max_image_size &&
-        std::is_same<Dtype, float>::value &&
-        this->device_->CheckCapability("cl_intel_subgroups")) {
-        const Dtype* weight = this->blobs_[0]->gpu_data();
-        int height = !transpose_ ? N_ : K_;
-        int width = !transpose_ ? K_ : N_;
-        int padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
-        int padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
-        greentea_gpu_gemm_copy_buffer_to_image(this->device_->id(),
-                                  &weight_image_, (cl_mem) weight, 0,
-                                  false, !transpose_,
-                                  true, padded_height, padded_width,
-                                  height, width, (int)0, NULL, NULL);
-        copied_weight_data_ = this->blobs_[0]->data().get();
-    }
-  } else {
-    copied_weight_data_ = NULL;
-  }
+  copied_weight_data_ = NULL;
 
   test_only_ = this->phase_ == TEST;
 }

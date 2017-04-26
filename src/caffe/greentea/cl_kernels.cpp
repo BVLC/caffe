@@ -3018,35 +3018,67 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#if TYPE != TYPE_DOUBLE",    // NOLINT
+"",    // NOLINT
 "#define TILE_M          32",    // NOLINT
 "#define TILE_K          8",    // NOLINT
-"#define TILE_N          8",    // NOLINT
 "",    // NOLINT
 "// common block to calculate (alpha * AxB + beta * C) and output to destination image.",    // NOLINT
 "",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define SUBGROUP_BLOCK_READ8( __image, __coord ) intel_sub_group_block_read_us8( __image, __coord )",    // NOLINT
+"#define SHUFFLE_TYPE2(val) as_ushort2(val)",    // NOLINT
+"#define SHUFFLE_TYPE8(val) as_ushort8(val)",    // NOLINT
+"#define READ_IMAGE(__image, __coord) read_imageh(__image, sampler, __coord)",    // NOLINT
+"#define SIZE_OF_ELEMENT sizeof(ushort)",    // NOLINT
+"#define SIMD_SIZE_GEMM 16",    // NOLINT
+"#define TILE_N 16",    // NOLINT
+"#else",    // NOLINT
+"#define SUBGROUP_BLOCK_READ8( __image, __coord ) intel_sub_group_block_read8( __image, __coord )",    // NOLINT
+"#define SHUFFLE_TYPE2(val) val",    // NOLINT
+"#define SHUFFLE_TYPE8(val) val",    // NOLINT
+"#define READ_IMAGE(__image, __coord) read_imagef(__image, sampler, __coord)",    // NOLINT
+"#define SIZE_OF_ELEMENT sizeof(uint)",    // NOLINT
+"#define SIMD_SIZE_GEMM 8",    // NOLINT
+"#define TILE_N 8",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "//#define USE_IMAGE_C",    // NOLINT
 "#ifdef USE_IMAGE_C",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define BLOCKC_READ8( _C, _coordC ) as_float8( intel_sub_group_block_read_us8( _C, _coordC ) )",    // NOLINT
+"#define BLOCKC_WRITE8( _C, _coordC, _val ) intel_sub_group_block_write_us8( _C, _coordC, as_ushort8( _val ) )",    // NOLINT
+"#else",    // NOLINT
 "#define BLOCKC_READ8( _C, _coordC ) as_float8( intel_sub_group_block_read8( _C, _coordC ) )",    // NOLINT
 "#define BLOCKC_WRITE8( _C, _coordC, _val ) intel_sub_group_block_write8( _C, _coordC, as_uint8( _val ) )",    // NOLINT
+"#endif",    // NOLINT
 "#define MATC_PARAMETER __read_only image2d_t C, __write_only image2d_t dst",    // NOLINT
 "#define GEMM_OUTPUT(ALPHA1, BETA_NOT0) GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, C, dst, sizeof(uint))",    // NOLINT
 "#else",    // NOLINT
-"#define BLOCKC_READ8( _C, _coordC )           (float8) ( (_coordC.x + get_local_id(0) < N && _coordC.y < M) ? _C[ _coordC.y * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 1 < M) ? _C[ ( _coordC.y + 1 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 2 < M) ? _C[ ( _coordC.y + 2 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 3 < M) ? _C[ ( _coordC.y + 3 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 4 < M) ? _C[ ( _coordC.y + 4 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 5 < M) ? _C[ ( _coordC.y + 5 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 6 < M) ? _C[ ( _coordC.y + 6 ) * N + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 7 < M) ? _C[ ( _coordC.y + 7 ) * N + _coordC.x + get_local_id(0) ] : 0)",    // NOLINT
+"#define BLOCKC_READ8( _C, _coordC )           (float8) ( (_coordC.x + get_local_id(0) < N && _coordC.y < M) ? _C[ _coordC.y * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 1 < M) ? _C[ ( _coordC.y + 1 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 2 < M) ? _C[ ( _coordC.y + 2 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 3 < M) ? _C[ ( _coordC.y + 3 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 4 < M) ? _C[ ( _coordC.y + 4 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 5 < M) ? _C[ ( _coordC.y + 5 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 6 < M) ? _C[ ( _coordC.y + 6 ) * ldc + _coordC.x + get_local_id(0) ] : 0,                      (_coordC.x + get_local_id(0) < N && _coordC.y + 7 < M) ? _C[ ( _coordC.y + 7 ) * ldc + _coordC.x + get_local_id(0) ] : 0)",    // NOLINT
 "",    // NOLINT
-"#define BLOCKC_WRITE8( _C, _coordC, _val) do {                     if (_coordC.x + get_local_id(0) < N) {                        if (_coordC.y < M)                          _C[ _coordC.y * N + _coordC.x + get_local_id(0) ] = _val.s0;                        if (_coordC.y + 1 < M)                          _C[ ( _coordC.y + 1 )* N + _coordC.x + get_local_id(0) ] = _val.s1;                        if (_coordC.y + 2 < M)                          _C[ ( _coordC.y + 2 )* N + _coordC.x + get_local_id(0) ] = _val.s2;                        if (_coordC.y + 3 < M)                          _C[ ( _coordC.y + 3 )* N + _coordC.x + get_local_id(0) ] = _val.s3;                        if (_coordC.y + 4 < M)                          _C[ ( _coordC.y + 4 )* N + _coordC.x + get_local_id(0) ] = _val.s4;                        if (_coordC.y + 5 < M)                          _C[ ( _coordC.y + 5 )* N + _coordC.x + get_local_id(0) ] = _val.s5;                        if (_coordC.y + 6 < M)                          _C[ ( _coordC.y + 6 )* N + _coordC.x + get_local_id(0) ] = _val.s6;                        if (_coordC.y + 7 < M)                          _C[ ( _coordC.y + 7 )* N + _coordC.x + get_local_id(0) ] = _val.s7;                      }} while(0)",    // NOLINT
-"#define MATC_PARAMETER __global Dtype * C, const int offC, const int M, const int N",    // NOLINT
+"#define BLOCKC_WRITE8( _C, _coordC, _val) do {                     if (_coordC.x + get_local_id(0) < N) {                        if (_coordC.y < M)                          _C[ _coordC.y * ldc + _coordC.x + get_local_id(0) ] = _val.s0;                        if (_coordC.y + 1 < M)                          _C[ ( _coordC.y + 1 )* ldc + _coordC.x + get_local_id(0) ] = _val.s1;                        if (_coordC.y + 2 < M)                          _C[ ( _coordC.y + 2 )* ldc + _coordC.x + get_local_id(0) ] = _val.s2;                        if (_coordC.y + 3 < M)                          _C[ ( _coordC.y + 3 )* ldc + _coordC.x + get_local_id(0) ] = _val.s3;                        if (_coordC.y + 4 < M)                          _C[ ( _coordC.y + 4 )* ldc + _coordC.x + get_local_id(0) ] = _val.s4;                        if (_coordC.y + 5 < M)                          _C[ ( _coordC.y + 5 )* ldc + _coordC.x + get_local_id(0) ] = _val.s5;                        if (_coordC.y + 6 < M)                          _C[ ( _coordC.y + 6 )* ldc + _coordC.x + get_local_id(0) ] = _val.s6;                        if (_coordC.y + 7 < M)                          _C[ ( _coordC.y + 7 )* ldc + _coordC.x + get_local_id(0) ] = _val.s7;                      }} while(0)",    // NOLINT
+"#define MATC_PARAMETER __global float * C, const int offC, const int M, const int N, const int ldc",    // NOLINT
 "#define GEMM_OUTPUT(ALPHA1, BETA_NOT0) GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, (C + offC), (C + offC), 1)",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"#define GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, _C, _dst, _C_step)     int2    coordDst = (int2)( ( group_x * TILE_N ) * _C_step, ( group_y * TILE_M ) );     int2    coordC = coordDst;     float8 blockC00;     float8 blockC01;     float8 blockC02;     float8 blockC03;     if (BETA_NOT0) {         blockC00 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC01 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC02 = BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC03 = BLOCKC_READ8( _C, coordC );         if (!ALPHA1) {             blockC00 *= beta;             blockC01 *= beta;             blockC02 *= beta;             blockC03 *= beta;             blockC00 = mad(blockAxB00, (float8)alpha, blockC00);             blockC01 = mad(blockAxB01, (float8)alpha, blockC01);             blockC02 = mad(blockAxB02, (float8)alpha, blockC02);             blockC03 = mad(blockAxB03, (float8)alpha, blockC03);         } else {             blockC00 = mad(blockC00, (float8)beta, blockAxB00);             blockC01 = mad(blockC01, (float8)beta, blockAxB01);             blockC02 = mad(blockC02, (float8)beta, blockAxB02);             blockC03 = mad(blockC03, (float8)beta, blockAxB03);         }     } else {         if (!ALPHA1) {           blockC00 = blockAxB00 * alpha;           blockC01 = blockAxB01 * alpha;           blockC02 = blockAxB02 * alpha;           blockC03 = blockAxB03 * alpha;         } else {           blockC00 = blockAxB00;           blockC01 = blockAxB01;           blockC02 = blockAxB02;           blockC03 = blockAxB03;         }     }     BLOCKC_WRITE8( _dst, coordDst, blockC00 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC01 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC02 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC03 );",    // NOLINT
+"#define GEMM_OUTPUT_EXT(ALPHA1, BETA_NOT0, _C, _dst, _C_step)     int2    coordDst = (int2)( ( group_x * TILE_N ) * _C_step, ( group_y * TILE_M ) );     int2    coordC = coordDst;     float8 blockC00;     float8 blockC01;     float8 blockC02;     float8 blockC03;     if (BETA_NOT0) {         blockC00 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC01 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC02 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC03 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );         if (!ALPHA1) {             blockC00 = mad(blockAxB00, (float8)alpha, blockC00);             blockC01 = mad(blockAxB01, (float8)alpha, blockC01);             blockC02 = mad(blockAxB02, (float8)alpha, blockC02);             blockC03 = mad(blockAxB03, (float8)alpha, blockC03);         } else {             blockC00 += blockAxB00;             blockC01 += blockAxB01;             blockC02 += blockAxB02;             blockC03 += blockAxB03;         }     } else {         blockC00 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC01 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC02 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8;         blockC03 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );         if (!ALPHA1) {           blockC00 = mad(blockAxB00, (float8)alpha, blockC00);           blockC01 = mad(blockAxB01, (float8)alpha, blockC01);           blockC02 = mad(blockAxB02, (float8)alpha, blockC02);           blockC03 = mad(blockAxB03, (float8)alpha, blockC03);         } else {           blockC00 += blockAxB00;           blockC01 += blockAxB01;           blockC02 += blockAxB02;           blockC03 += blockAxB03;         }     }     BLOCKC_WRITE8( _dst, coordDst, blockC00 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC01 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC02 );    coordDst.y += 8;     BLOCKC_WRITE8( _dst, coordDst, blockC03 );",    // NOLINT
 "",    // NOLINT
 "// Get the specified column of the block of the block",    // NOLINT
 "#define TRANSPOSE_BLOCK_8( _block, _col )           (float8)( intel_sub_group_shuffle( _block.s0, _col ),                     intel_sub_group_shuffle( _block.s1, _col ),                     intel_sub_group_shuffle( _block.s2, _col ),                     intel_sub_group_shuffle( _block.s3, _col ),                     intel_sub_group_shuffle( _block.s4, _col ),                     intel_sub_group_shuffle( _block.s5, _col ),                     intel_sub_group_shuffle( _block.s6, _col ),                     intel_sub_group_shuffle( _block.s7, _col ) );",    // NOLINT
 "",    // NOLINT
 "// A's column block multiply B 's row block.",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB00, _blockB01 )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                const float8    acol8 = TRANSPOSE_BLOCK_8( _blockA, 8 );                const float8    acol9 = TRANSPOSE_BLOCK_8( _blockA, 9 );                const float8    acola = TRANSPOSE_BLOCK_8( _blockA, 10 );                const float8    acolb = TRANSPOSE_BLOCK_8( _blockA, 11 );                const float8    acolc = TRANSPOSE_BLOCK_8( _blockA, 12 );                const float8    acold = TRANSPOSE_BLOCK_8( _blockA, 13 );                const float8    acole = TRANSPOSE_BLOCK_8( _blockA, 14 );                const float8    acolf = TRANSPOSE_BLOCK_8( _blockA, 15 );                _result = mad( (float8)(_blockB00.s0), acol0, _result );                  _result = mad( (float8)(_blockB00.s1), acol1, _result );                  _result = mad( (float8)(_blockB00.s2), acol2, _result );                  _result = mad( (float8)(_blockB00.s3), acol3, _result );                  _result = mad( (float8)(_blockB00.s4), acol4, _result );                  _result = mad( (float8)(_blockB00.s5), acol5, _result );                  _result = mad( (float8)(_blockB00.s6), acol6, _result );                  _result = mad( (float8)(_blockB00.s7), acol7, _result );                  _result = mad( (float8)(_blockB01.s0), acol8, _result );                  _result = mad( (float8)(_blockB01.s1), acol9, _result );                  _result = mad( (float8)(_blockB01.s2), acola, _result );                  _result = mad( (float8)(_blockB01.s3), acolb, _result );                  _result = mad( (float8)(_blockB01.s4), acolc, _result );                  _result = mad( (float8)(_blockB01.s5), acold, _result );                  _result = mad( (float8)(_blockB01.s6), acole, _result );                  _result = mad( (float8)(_blockB01.s7), acolf, _result );              }",    // NOLINT
+"#else",    // NOLINT
 "#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                _result = mad( (float8)(_blockB.s0), acol0, _result );                  _result = mad( (float8)(_blockB.s1), acol1, _result );                  _result = mad( (float8)(_blockB.s2), acol2, _result );                  _result = mad( (float8)(_blockB.s3), acol3, _result );                  _result = mad( (float8)(_blockB.s4), acol4, _result );                  _result = mad( (float8)(_blockB.s5), acol5, _result );                  _result = mad( (float8)(_blockB.s6), acol6, _result );                  _result = mad( (float8)(_blockB.s7), acol7, _result );              }",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"#define GEMM_NN(ALPHA1, BETA_NOT0) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha,     float beta,     int width0) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( ( group_x * TILE_N ) * sizeof(uint), 0 );     do     {          int2    coordBTemp = coordB;         float8  blockB00 = as_float8( intel_sub_group_block_read8( B, coordBTemp ) );    coordB.y += TILE_K;         int2    coordATemp = coordA;         float8  blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.x += TILE_K * sizeof(uint);         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define GEMM_NN(ALPHA1, BETA_NOT0) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NN_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int width0,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0;     float8 blockAxB01 = 0;     float8 blockAxB02 = 0;     float8 blockAxB03 = 0;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( ( group_x * TILE_N ) * SIZE_OF_ELEMENT, 0 );     do     {          int2    coordBTemp = coordB;         float8  blockB00 = as_float8( SUBGROUP_BLOCK_READ8( B, coordBTemp ) );    coordB.y += TILE_K;         float8  blockB01 = as_float8( SUBGROUP_BLOCK_READ8( B, coordBTemp ) );    coordB.y += TILE_K;         int2    coordATemp = coordA;         float8  blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.x += TILE_K * SIZE_OF_ELEMENT * 2;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00, blockB01 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00, blockB01 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00, blockB01 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00, blockB01 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0);  }",    // NOLINT
+"#else",    // NOLINT
+"#define GEMM_NN(ALPHA1, BETA_NOT0) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NN_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int width0,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( ( group_x * TILE_N ) * SIZE_OF_ELEMENT, 0 );     do     {          int2    coordBTemp = coordB;         float8  blockB00 = as_float8( SUBGROUP_BLOCK_READ8( B, coordBTemp ) );    coordB.y += TILE_K;         int2    coordATemp = coordA;         float8  blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8  blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.x += TILE_K * SIZE_OF_ELEMENT;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "GEMM_NN(1, 0) // ALPHA == 1, BETA == 0",    // NOLINT
 "GEMM_NN(1, 1) // ALPHA == 1, BETA != 0",    // NOLINT
@@ -3057,11 +3089,15 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef MULTIPLY_BLOCKS_8x8",    // NOLINT
 "",    // NOLINT
 "// replicate the first row to column block.",    // NOLINT
-"#define TRANSPOSE_BLOCK_8(_vec)         (float8)( intel_sub_group_shuffle(_vec, 0),                   intel_sub_group_shuffle(_vec, 1),                   intel_sub_group_shuffle(_vec, 2),                   intel_sub_group_shuffle(_vec, 3),                   intel_sub_group_shuffle(_vec, 4),                   intel_sub_group_shuffle(_vec, 5),                   intel_sub_group_shuffle(_vec, 6),                   intel_sub_group_shuffle(_vec, 7) )",    // NOLINT
+"#define TRANSPOSE_BLOCK_8(_vec, _col)         (float8)( intel_sub_group_shuffle(_vec, _col + 0),                   intel_sub_group_shuffle(_vec, _col + 1),                   intel_sub_group_shuffle(_vec, _col + 2),                   intel_sub_group_shuffle(_vec, _col + 3),                   intel_sub_group_shuffle(_vec, _col + 4),                   intel_sub_group_shuffle(_vec, _col + 5),                   intel_sub_group_shuffle(_vec, _col + 6),                   intel_sub_group_shuffle(_vec, _col + 7) )",    // NOLINT
 "",    // NOLINT
-"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               _result = mad( (float8)(_blockB.s0), TRANSPOSE_BLOCK_8(_blockA.s0), _result );                  _result = mad( (float8)(_blockB.s1), TRANSPOSE_BLOCK_8(_blockA.s1), _result );                  _result = mad( (float8)(_blockB.s2), TRANSPOSE_BLOCK_8(_blockA.s2), _result );                  _result = mad( (float8)(_blockB.s3), TRANSPOSE_BLOCK_8(_blockA.s3), _result );                  _result = mad( (float8)(_blockB.s4), TRANSPOSE_BLOCK_8(_blockA.s4), _result );                  _result = mad( (float8)(_blockB.s5), TRANSPOSE_BLOCK_8(_blockA.s5), _result );                  _result = mad( (float8)(_blockB.s6), TRANSPOSE_BLOCK_8(_blockA.s6), _result );                  _result = mad( (float8)(_blockB.s7), TRANSPOSE_BLOCK_8(_blockA.s7), _result );              }",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB, _col )            {               _result = mad( (float8)(_blockB.s0), TRANSPOSE_BLOCK_8(_blockA.s0, _col), _result );                  _result = mad( (float8)(_blockB.s1), TRANSPOSE_BLOCK_8(_blockA.s1, _col), _result );                  _result = mad( (float8)(_blockB.s2), TRANSPOSE_BLOCK_8(_blockA.s2, _col), _result );                  _result = mad( (float8)(_blockB.s3), TRANSPOSE_BLOCK_8(_blockA.s3, _col), _result );                  _result = mad( (float8)(_blockB.s4), TRANSPOSE_BLOCK_8(_blockA.s4, _col), _result );                  _result = mad( (float8)(_blockB.s5), TRANSPOSE_BLOCK_8(_blockA.s5, _col), _result );                  _result = mad( (float8)(_blockB.s6), TRANSPOSE_BLOCK_8(_blockA.s6, _col), _result );                  _result = mad( (float8)(_blockB.s7), TRANSPOSE_BLOCK_8(_blockA.s7, _col), _result );              }",    // NOLINT
 "",    // NOLINT
-"#define GEMM_TN(ALPHA1, BETA_NOT0) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha,     float beta,     int width0) {     const int group_x = get_group_id(0);    const int group_y = get_group_id(1);    float8 blockAxB00 = 0.0f;    float8 blockAxB01 = 0.0f;    float8 blockAxB02 = 0.0f;    float8 blockAxB03 = 0.0f;    int2    coordA = (int2)( group_y * TILE_M * sizeof(uint), 0 );    int2    coordB = (int2)( ( group_x * TILE_N ) * sizeof(uint), 0 );    do    {        int2    coordBTemp = coordB;        float8 blockB00 = as_float8( intel_sub_group_block_read8( B, coordBTemp ) );    coordB.y += TILE_K;        int2    coordATemp = coordA;        float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);        float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.y += TILE_K;        MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define GEMM_TN(ALPHA1, BETA_NOT0) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int width0,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);    const int group_y = get_group_id(1);    float8 blockAxB00 = 0;    float8 blockAxB01 = 0;    float8 blockAxB02 = 0;    float8 blockAxB03 = 0;    int2    coordA = (int2)( group_y * TILE_M * SIZE_OF_ELEMENT, 0 );    int2    coordB = (int2)( ( group_x * TILE_N ) * SIZE_OF_ELEMENT, 0 );    do    {        int2    coordBTemp = coordB;        float8 blockB00 = as_float8( SUBGROUP_BLOCK_READ8( B, coordBTemp ) );    coordB.y += TILE_K;        int2    coordATemp = coordA;        float8 blockA00 = as_half8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 16 * SIZE_OF_ELEMENT;        float8 blockA01 = as_half8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.y += TILE_K;        MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00, 0);         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA00, blockB00, 8);         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA01, blockB00, 0);         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA01, blockB00, 8);     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#else",    // NOLINT
+"#define GEMM_TN(ALPHA1, BETA_NOT0) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TN_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     __read_only image2d_t B,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int width0,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);    const int group_y = get_group_id(1);    float8 blockAxB00 = 0.0f;    float8 blockAxB01 = 0.0f;    float8 blockAxB02 = 0.0f;    float8 blockAxB03 = 0.0f;    int2    coordA = (int2)( group_y * TILE_M * SIZE_OF_ELEMENT, 0 );    int2    coordB = (int2)( ( group_x * TILE_N ) * SIZE_OF_ELEMENT, 0 );    do    {        int2    coordBTemp = coordB;        float8 blockB00 = as_float8( SUBGROUP_BLOCK_READ8( B, coordBTemp ) );    coordB.y += TILE_K;        int2    coordATemp = coordA;        float8 blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;        float8 blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;        float8 blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;        float8 blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.y += TILE_K;        MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00, 0 );     }     while( coordB.y < width0 );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "GEMM_TN(1, 0) // ALPHA == 1, BETA == 0",    // NOLINT
 "GEMM_TN(1, 1) // ALPHA == 1, BETA != 0",    // NOLINT
@@ -3074,14 +3110,23 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// The same as GEMM_NN",    // NOLINT
 "#define TRANSPOSE_BLOCK_8( _block, _col )           (float8)( intel_sub_group_shuffle( _block.s0, _col),                     intel_sub_group_shuffle( _block.s1, _col),                     intel_sub_group_shuffle( _block.s2, _col),                     intel_sub_group_shuffle( _block.s3, _col),                     intel_sub_group_shuffle( _block.s4, _col),                     intel_sub_group_shuffle( _block.s5, _col),                     intel_sub_group_shuffle( _block.s6, _col),                     intel_sub_group_shuffle( _block.s7, _col) )",    // NOLINT
 "",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                const float8    acol8 = TRANSPOSE_BLOCK_8( _blockA, 8 );                const float8    acol9 = TRANSPOSE_BLOCK_8( _blockA, 9 );                const float8    acola = TRANSPOSE_BLOCK_8( _blockA, 10 );                const float8    acolb = TRANSPOSE_BLOCK_8( _blockA, 11 );                const float8    acolc = TRANSPOSE_BLOCK_8( _blockA, 12 );                const float8    acold = TRANSPOSE_BLOCK_8( _blockA, 13 );                const float8    acole = TRANSPOSE_BLOCK_8( _blockA, 14 );                const float8    acolf = TRANSPOSE_BLOCK_8( _blockA, 15 );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );                  _result = mad( (float8)_blockB.s8, acol8, _result );                  _result = mad( (float8)_blockB.s9, acol9, _result );                  _result = mad( (float8)_blockB.sa, acola, _result );                  _result = mad( (float8)_blockB.sb, acolb, _result );                  _result = mad( (float8)_blockB.sc, acolc, _result );                  _result = mad( (float8)_blockB.sd, acold, _result );                  _result = mad( (float8)_blockB.se, acole, _result );                  _result = mad( (float8)_blockB.sf, acolf, _result );              }",    // NOLINT
+"#else",    // NOLINT
 "#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA, 0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA, 1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA, 2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA, 3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA, 4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA, 5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA, 6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA, 7 );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );              }",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define GEMM_NT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int padded_k,     int k,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0;     float8 blockAxB01 = 0;     float8 blockAxB02 = 0;     float8 blockAxB03 = 0;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float16 blockB00;         BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.x += TILE_K * SIZE_OF_ELEMENT * 2;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#else",    // NOLINT
+"#define GEMM_NT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int padded_k,     int k,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;          BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.x += TILE_K * SIZE_OF_ELEMENT;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"",    // NOLINT
-"#define GEMM_NT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_NT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0,Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha,     float beta,     int padded_k,     int k) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( 0, group_y * TILE_M );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.y += 8;         float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.x += TILE_K * sizeof(uint);         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02, blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03, blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0); }",    // NOLINT
-"",    // NOLINT
-"",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb.s0123 = read_imagef(_B, sampler, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4567 = read_imagef(_B, sampler, _coordBTemp); _coordB.x += 2;",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb.s0123 = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4567 = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s89ab = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.scdef = READ_IMAGE(_B, _coordBTemp); _coordB.x += 4;",    // NOLINT
+"#else",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb.s0123 = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4567 = READ_IMAGE(_B, _coordBTemp); _coordB.x += 2;",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
 "",    // NOLINT
@@ -3092,9 +3137,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef BLOCKB_READ8",    // NOLINT
 "#undef MATB_PARAMETER",    // NOLINT
 "",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb = *(__global float8*)&_B[_coordBTemp.y * k + _coordBTemp.x + offB];        _coordB.x += TILE_K;",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         const __global float *B_read = (__global float *)(_B + (_coordBTemp.y * ldb) + _coordBTemp.x + offB);         _blockb = as_half16(as_ushort16(vload8(0, B_read)));         _coordB.x += TILE_K * 2;",    // NOLINT
+"#else",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         const __global float *B_read = (__global float *)(_B + (_coordBTemp.y * ldb) + _coordBTemp.x + offB);         _blockb = vload8(0, B_read);         _coordB.x += TILE_K;",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"#define MATB_PARAMETER __global float *B, int offB",    // NOLINT
+"#define MATB_PARAMETER __global float *B, int offB, int ldb",    // NOLINT
 "",    // NOLINT
 "GEMM_NT(1, 0, BUFFER, 1) // ALPHA == 1, BETA == 0",    // NOLINT
 "GEMM_NT(1, 1, BUFFER, 1) // ALPHA == 1, BETA != 0",    // NOLINT
@@ -3103,8 +3152,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef BLOCKB_READ8",    // NOLINT
 "#undef MATB_PARAMETER",    // NOLINT
 "",    // NOLINT
-"",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = read_imagef(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s8 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s9 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.sa = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.sb = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;          _blockb.sc = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.sd = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.se = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.sf = temp.s0;         _coordB.x += 16;",    // NOLINT
+"#else",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
 "",    // NOLINT
@@ -3119,13 +3171,17 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef TRANSPOSE_BLOCK_8",    // NOLINT
 "",    // NOLINT
 "//The same as GEMM_TN.",    // NOLINT
-"#define TRANSPOSE_BLOCK_8(_vec)         (float8)( intel_sub_group_shuffle(_vec, 0),                   intel_sub_group_shuffle(_vec, 1),                   intel_sub_group_shuffle(_vec, 2),                   intel_sub_group_shuffle(_vec, 3),                   intel_sub_group_shuffle(_vec, 4),                   intel_sub_group_shuffle(_vec, 5),                   intel_sub_group_shuffle(_vec, 6),                   intel_sub_group_shuffle(_vec, 7) );",    // NOLINT
+"#define TRANSPOSE_BLOCK_8(_vec, _col)         (float8)( intel_sub_group_shuffle(_vec, _col + 0),                   intel_sub_group_shuffle(_vec, _col + 1),                   intel_sub_group_shuffle(_vec, _col + 2),                   intel_sub_group_shuffle(_vec, _col + 3),                   intel_sub_group_shuffle(_vec, _col + 4),                   intel_sub_group_shuffle(_vec, _col + 5),                   intel_sub_group_shuffle(_vec, _col + 6),                   intel_sub_group_shuffle(_vec, _col + 7) );",    // NOLINT
 "",    // NOLINT
-"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA.s0 );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA.s1 );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA.s2 );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA.s3 );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA.s4 );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA.s5 );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA.s6 );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA.s7 );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );              }",    // NOLINT
+"#define MULTIPLY_BLOCKS_8x8( _result, _blockA, _blockB, _col )            {               const float8    acol0 = TRANSPOSE_BLOCK_8( _blockA.s0, _col );                const float8    acol1 = TRANSPOSE_BLOCK_8( _blockA.s1, _col );                const float8    acol2 = TRANSPOSE_BLOCK_8( _blockA.s2, _col );                const float8    acol3 = TRANSPOSE_BLOCK_8( _blockA.s3, _col );                const float8    acol4 = TRANSPOSE_BLOCK_8( _blockA.s4, _col );                const float8    acol5 = TRANSPOSE_BLOCK_8( _blockA.s5, _col );                const float8    acol6 = TRANSPOSE_BLOCK_8( _blockA.s6, _col );                const float8    acol7 = TRANSPOSE_BLOCK_8( _blockA.s7, _col );                _result = mad( (float8)_blockB.s0, acol0, _result );                  _result = mad( (float8)_blockB.s1, acol1, _result );                  _result = mad( (float8)_blockB.s2, acol2, _result );                  _result = mad( (float8)_blockB.s3, acol3, _result );                  _result = mad( (float8)_blockB.s4, acol4, _result );                  _result = mad( (float8)_blockB.s5, acol5, _result );                  _result = mad( (float8)_blockB.s6, acol6, _result );                  _result = mad( (float8)_blockB.s7, acol7, _result );              }",    // NOLINT
 "",    // NOLINT
-"#define GEMM_TT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((reqd_work_group_size(8, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha,     float beta,     int padded_k,     int k) {     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( group_y * TILE_M * sizeof(uint), 0 );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA01 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA02 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordATemp.x += 8 * sizeof(uint);         float8 blockA03 = as_float8( intel_sub_group_block_read8( A, coordATemp ) );    coordA.y += TILE_K;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02 , blockB00 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03 , blockB00 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0);}",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define GEMM_TT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int padded_k,     int k,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0;     float8 blockAxB01 = 0;     float8 blockAxB02 = 0;     float8 blockAxB03 = 0;     int2    coordA = (int2)( group_y * TILE_M * SIZE_OF_ELEMENT, 0 );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 16 * SIZE_OF_ELEMENT;        float8 blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.y += TILE_K;        MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00, blockB00, 0);         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA00, blockB00, 8);         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA01, blockB00, 0);         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA01, blockB00, 8);     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0);}",    // NOLINT
+"#else",    // NOLINT
+"#define GEMM_TT(ALPHA1, BETA_NOT0, VECSCALAR, VECSIZE) __attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM))) __attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, 1, 1))) __kernel void TEMPLATE(gemm_32_1_TT_ ##VECSCALAR ##_ ##ALPHA1 ##_ ##BETA_NOT0, Dtype)(     __read_only image2d_t A,     MATB_PARAMETER,     MATC_PARAMETER,     float alpha_in,     float beta_in,     int padded_k,     int k,     int isFirstColBlock) {     const float alpha = (float)alpha_in;     const float beta = (float)beta_in;     const int group_x = get_group_id(0);     const int group_y = get_group_id(1);     float8 blockAxB00 = 0.0f;     float8 blockAxB01 = 0.0f;     float8 blockAxB02 = 0.0f;     float8 blockAxB03 = 0.0f;     int2    coordA = (int2)( group_y * TILE_M * SIZE_OF_ELEMENT, 0 );     int2    coordB = (int2)( 0, ( group_x * TILE_N ));     const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;     do     {         float8 blockB00;                     BLOCKB_READ8(blockB00, B, coordB);         int2    coordATemp = coordA;         float8 blockA00 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;         float8 blockA01 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;         float8 blockA02 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordATemp.x += 8 * SIZE_OF_ELEMENT;         float8 blockA03 = as_float8( SUBGROUP_BLOCK_READ8( A, coordATemp ) );    coordA.y += TILE_K;         MULTIPLY_BLOCKS_8x8( blockAxB00, blockA00 , blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB01, blockA01 , blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB02, blockA02 , blockB00, 0 );         MULTIPLY_BLOCKS_8x8( blockAxB03, blockA03 , blockB00, 0 );     }     while( coordB.x < padded_k / VECSIZE );     GEMM_OUTPUT(ALPHA1, BETA_NOT0);}",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         blockB00.s0123 = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         blockB00.s4567 = read_imagef(B, _coordBTemp); _coordB.x += 2;",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb.s0123 = READ_IMAGE(_B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4567 = READ_IMAGE(_B, _coordBTemp); _coordB.x += 2;",    // NOLINT
 "",    // NOLINT
 "#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
 "",    // NOLINT
@@ -3136,9 +3192,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef BLOCKB_READ8",    // NOLINT
 "#undef MATB_PARAMETER",    // NOLINT
 "",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         _blockb = *(__global float8*)&_B[_coordBTemp.y * k + _coordBTemp.x + offB];        _coordB.x += TILE_K;",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         const __global float *B_read = (__global float *)(_B + (_coordBTemp.y * k) + _coordBTemp.x + offB);         _blockb = as_half8(as_ushort8(vload4(0, B_read)));         _coordB.x += TILE_K;",    // NOLINT
+"#else",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         const __global float *B_read = (__global float *)(_B + (_coordBTemp.y * k) + _coordBTemp.x + offB);         _blockb = vload8(0, B_read);         _coordB.x += TILE_K;",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"#define MATB_PARAMETER __global float *B, int offB",    // NOLINT
+"#define MATB_PARAMETER __global float *B, int offB, int ldb",    // NOLINT
 "",    // NOLINT
 "GEMM_TT(1, 0, BUFFER, 1) // ALPHA == 1, BETA == 0",    // NOLINT
 "GEMM_TT(1, 1, BUFFER, 1) // ALPHA == 1, BETA != 0",    // NOLINT
@@ -3147,7 +3207,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef BLOCKB_READ8",    // NOLINT
 "#undef MATB_PARAMETER",    // NOLINT
 "",    // NOLINT
-"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = read_imagef(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
+"#define BLOCKB_READ8(_blockb, _B, _coordB)         int2 _coordBTemp = _coordB;         _coordBTemp.y += get_local_id(0);         float4 temp;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s0 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s1 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s2 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s3 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s4 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s5 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s6 = temp.s0;         temp = READ_IMAGE(B, _coordBTemp); _coordBTemp.x += 1;         _blockb.s7 = temp.s0;         _coordB.x += 8;",    // NOLINT
 "",    // NOLINT
 "#define MATB_PARAMETER __read_only image2d_t B",    // NOLINT
 "",    // NOLINT
@@ -3165,32 +3225,69 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef TILE_K",    // NOLINT
 "#undef TILE_N",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(gemm_buffer_copy_image,Dtype)(",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_copy_image_transpose, Dtype)(",    // NOLINT
 "__global float* A,",    // NOLINT
 "__write_only image2d_t ImA,",    // NOLINT
 "int offA,",    // NOLINT
 "int width,",    // NOLINT
-"int height)",    // NOLINT
+"int height,",    // NOLINT
+"int ldA)",    // NOLINT
 "{",    // NOLINT
 "const int gidx = get_global_id(0);",    // NOLINT
 "const int gidy = get_global_id(1);",    // NOLINT
 "int2 coord_dst = (int2)(gidx, gidy);",    // NOLINT
+"__global float* A_off = A + offA;",    // NOLINT
+"float srcA = A_off[gidy * ldA + gidx];",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"write_imageh(ImA, coord_dst, (float4)srcA);",    // NOLINT
+"#else",    // NOLINT
+"write_imagef(ImA, coord_dst, (float4)srcA);",    // NOLINT
+"#endif",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(gemm_buffer_copy_image_no_transpose, Dtype)(",    // NOLINT
+"__global float* A,",    // NOLINT
+"__write_only image2d_t ImA,",    // NOLINT
+"int offA,",    // NOLINT
+"int width,",    // NOLINT
+"int height,",    // NOLINT
+"int ldA)",    // NOLINT
+"{",    // NOLINT
+"const int gidx = get_global_id(0);",    // NOLINT
+"const int gidy = get_global_id(1);",    // NOLINT
+"int2 coord_dst = (int2)(gidx, gidy);",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"if (gidx >= width || gidy >= height) {",    // NOLINT
+"write_imageh(ImA, coord_dst, 0);",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"__global float* A_off = A + offA;",    // NOLINT
+"write_imageh(ImA, coord_dst, A_off[gidy * ldA + gidx]);",    // NOLINT
+"#else",    // NOLINT
 "if (gidx >= width || gidy >= height) {",    // NOLINT
 "write_imageui(ImA, coord_dst, (uint4)0);",    // NOLINT
 "return;",    // NOLINT
 "}",    // NOLINT
 "__global float* A_off = A + offA;",    // NOLINT
-"uint4 srcA = convert_uint4(as_uchar4(A_off[gidy * width + gidx]));",    // NOLINT
+"uint4 srcA = convert_uint4(as_uchar4(A_off[gidy * ldA + gidx]));",    // NOLINT
 "write_imageui(ImA, coord_dst, srcA);",    // NOLINT
+"#endif",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
 "",    // NOLINT
 "#define VEC_SIZE        4",    // NOLINT
 "#define LWG_HEIGHT      4",    // NOLINT
 "#define TILE_M          8",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define TILE_K          32",    // NOLINT
+"#define TILE_N          64",    // NOLINT
+"#else",    // NOLINT
 "#define TILE_K          16",    // NOLINT
 "#define TILE_N          32",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM)))",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_NN, Dtype)(",    // NOLINT
 "const __global float *src0, int off0,",    // NOLINT
 "const __global float *src1, int off1,",    // NOLINT
@@ -3198,10 +3295,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int M,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
-"float alpha,",    // NOLINT
-"float beta,",    // NOLINT
+"float alpha_in,",    // NOLINT
+"float beta_in,",    // NOLINT
 "int start_index)",    // NOLINT
 "{",    // NOLINT
+"const float alpha = (float)alpha_in;",    // NOLINT
+"const float beta = (float)beta_in;",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
 "const int local_x = get_local_id(0);",    // NOLINT
@@ -3212,11 +3311,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float4 brow;",    // NOLINT
 "float2 arow0, arow1, arow2, arow3, arow4, arow5, arow6, arow7;",    // NOLINT
 "",    // NOLINT
-"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + (group_x * TILE_N) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
 "",    // NOLINT
-"const __global float *src0_read = src0 + local_x * ( TILE_K / 8 ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M ) * K + start_index + off0;",    // NOLINT
+"const __global float *src0_read = src0 + local_x * (TILE_K / SIMD_SIZE_GEMM) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * K + start_index + off0;",    // NOLINT
 "",    // NOLINT
-"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + ( group_x * TILE_N ) + start_index * N + off1;",    // NOLINT
+"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + (group_x * TILE_N) + start_index * N + off1;",    // NOLINT
 "",    // NOLINT
 "int border = -(group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M);",    // NOLINT
 "",    // NOLINT
@@ -3229,28 +3328,28 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int row6 = mad24(global_y, TILE_M, 6) < M ? 6 : border;",    // NOLINT
 "int row7 = mad24(global_y, TILE_M, 7) < M ? 7 : border;",    // NOLINT
 "",    // NOLINT
-"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : beta * ((__global float4 *)dst_write0)[0];",    // NOLINT
-"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 1 * N))[0] : beta * ((__global float4 *)(dst_write0 + 1 * N))[0];",    // NOLINT
-"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : beta * ((__global float4 *)(dst_write0 + 2 * N))[0];",    // NOLINT
-"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : beta * ((__global float4 *)(dst_write0 + 3 * N))[0];",    // NOLINT
-"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : beta * ((__global float4 *)(dst_write0 + 4 * N))[0];",    // NOLINT
-"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : beta * ((__global float4 *)(dst_write0 + 5 * N))[0];",    // NOLINT
-"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : beta * ((__global float4 *)(dst_write0 + 6 * N))[0];",    // NOLINT
-"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : beta * ((__global float4 *)(dst_write0 + 7 * N))[0];",    // NOLINT
+"float4 dot00 = (start_index != 0) ? vload4(0, dst_write0) : beta * vload4(0, dst_write0);",    // NOLINT
+"float4 dot01 = (start_index != 0) ? vload4(0, dst_write0 + 1 * N) : beta * vload4(0, dst_write0 + 1 * N);",    // NOLINT
+"float4 dot02 = (start_index != 0) ? vload4(0, dst_write0 + 2 * N) : beta * vload4(0, dst_write0 + 2 * N);",    // NOLINT
+"float4 dot03 = (start_index != 0) ? vload4(0, dst_write0 + 3 * N) : beta * vload4(0, dst_write0 + 3 * N);",    // NOLINT
+"float4 dot04 = (start_index != 0) ? vload4(0, dst_write0 + 4 * N) : beta * vload4(0, dst_write0 + 4 * N);",    // NOLINT
+"float4 dot05 = (start_index != 0) ? vload4(0, dst_write0 + 5 * N) : beta * vload4(0, dst_write0 + 5 * N);",    // NOLINT
+"float4 dot06 = (start_index != 0) ? vload4(0, dst_write0 + 6 * N) : beta * vload4(0, dst_write0 + 6 * N);",    // NOLINT
+"float4 dot07 = (start_index != 0) ? vload4(0, dst_write0 + 7 * N) : beta * vload4(0, dst_write0 + 7 * N);",    // NOLINT
 "",    // NOLINT
 "int end_index = min(start_index + 256, K);",    // NOLINT
 "int w = start_index;",    // NOLINT
 "while( w + TILE_K <= end_index ) {",    // NOLINT
-"arow0 = alpha * ((__global float2 *)(src0_read + row0 * K))[0];",    // NOLINT
-"arow1 = alpha * ((__global float2 *)(src0_read + row1 * K))[0];",    // NOLINT
-"arow2 = alpha * ((__global float2 *)(src0_read + row2 * K))[0];",    // NOLINT
-"arow3 = alpha * ((__global float2 *)(src0_read + row3 * K))[0];",    // NOLINT
-"arow4 = alpha * ((__global float2 *)(src0_read + row4 * K))[0];",    // NOLINT
-"arow5 = alpha * ((__global float2 *)(src0_read + row5 * K))[0];",    // NOLINT
-"arow6 = alpha * ((__global float2 *)(src0_read + row6 * K))[0];",    // NOLINT
-"arow7 = alpha * ((__global float2 *)(src0_read + row7 * K))[0];",    // NOLINT
+"arow0 = alpha * vload2(0, src0_read + row0 * K);",    // NOLINT
+"arow1 = alpha * vload2(0, src0_read + row1 * K);",    // NOLINT
+"arow2 = alpha * vload2(0, src0_read + row2 * K);",    // NOLINT
+"arow3 = alpha * vload2(0, src0_read + row3 * K);",    // NOLINT
+"arow4 = alpha * vload2(0, src0_read + row4 * K);",    // NOLINT
+"arow5 = alpha * vload2(0, src0_read + row5 * K);",    // NOLINT
+"arow6 = alpha * vload2(0, src0_read + row6 * K);",    // NOLINT
+"arow7 = alpha * vload2(0, src0_read + row7 * K);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( index, suffix )           brow = ((__global float4 *)src1_read0)[0];  src1_read0 += N;         dot00 = mad( (float4)(intel_sub_group_shuffle( arow0, index ).s##suffix), brow, dot00 );         dot01 = mad( (float4)(intel_sub_group_shuffle( arow1, index ).s##suffix), brow, dot01 );         dot02 = mad( (float4)(intel_sub_group_shuffle( arow2, index ).s##suffix), brow, dot02 );         dot03 = mad( (float4)(intel_sub_group_shuffle( arow3, index ).s##suffix), brow, dot03 );         dot04 = mad( (float4)(intel_sub_group_shuffle( arow4, index ).s##suffix), brow, dot04 );         dot05 = mad( (float4)(intel_sub_group_shuffle( arow5, index ).s##suffix), brow, dot05 );         dot06 = mad( (float4)(intel_sub_group_shuffle( arow6, index ).s##suffix), brow, dot06 );         dot07 = mad( (float4)(intel_sub_group_shuffle( arow7, index ).s##suffix), brow, dot07 );",    // NOLINT
+"#define MM_DOT_PRODUCT( index, suffix )           brow = vload4(0, src1_read0);  src1_read0 += N;         dot00 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow0), index )).s##suffix), brow, dot00 );         dot01 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow1), index )).s##suffix), brow, dot01 );         dot02 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow2), index )).s##suffix), brow, dot02 );         dot03 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow3), index )).s##suffix), brow, dot03 );         dot04 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow4), index )).s##suffix), brow, dot04 );         dot05 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow5), index )).s##suffix), brow, dot05 );         dot06 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow6), index )).s##suffix), brow, dot06 );         dot07 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow7), index )).s##suffix), brow, dot07 );",    // NOLINT
 "MM_DOT_PRODUCT(0, 0);",    // NOLINT
 "MM_DOT_PRODUCT(0, 1);",    // NOLINT
 "MM_DOT_PRODUCT(1, 0);",    // NOLINT
@@ -3267,6 +3366,24 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "MM_DOT_PRODUCT(6, 1);",    // NOLINT
 "MM_DOT_PRODUCT(7, 0);",    // NOLINT
 "MM_DOT_PRODUCT(7, 1);",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"MM_DOT_PRODUCT(8, 0);",    // NOLINT
+"MM_DOT_PRODUCT(8, 1);",    // NOLINT
+"MM_DOT_PRODUCT(9, 0);",    // NOLINT
+"MM_DOT_PRODUCT(9, 1);",    // NOLINT
+"MM_DOT_PRODUCT(10, 0);",    // NOLINT
+"MM_DOT_PRODUCT(10, 1);",    // NOLINT
+"MM_DOT_PRODUCT(11, 0);",    // NOLINT
+"MM_DOT_PRODUCT(11, 1);",    // NOLINT
+"MM_DOT_PRODUCT(12, 0);",    // NOLINT
+"MM_DOT_PRODUCT(12, 1);",    // NOLINT
+"MM_DOT_PRODUCT(13, 0);",    // NOLINT
+"MM_DOT_PRODUCT(13, 1);",    // NOLINT
+"MM_DOT_PRODUCT(14, 0);",    // NOLINT
+"MM_DOT_PRODUCT(14, 1);",    // NOLINT
+"MM_DOT_PRODUCT(15, 0);",    // NOLINT
+"MM_DOT_PRODUCT(15, 1);",    // NOLINT
+"#endif",    // NOLINT
 "#undef MM_DOT_PRODUCT",    // NOLINT
 "",    // NOLINT
 "src0_read += TILE_K;",    // NOLINT
@@ -3291,7 +3408,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "arow7.x = ((w + local_x * 2) < K) ? alpha * (src0_read + row7 * K)[0] : 0.0f;",    // NOLINT
 "arow7.y = ((w + local_x * 2 + 1) < K) ? alpha * (src0_read + row7 * K)[1] : 0.0f;",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( index, suffix )           brow = (w < K) ? ((__global float4 *)src1_read0)[0] : 0.0f;  src1_read0 += N; w++;         dot00 = mad( (float4)(intel_sub_group_shuffle( arow0, index ).s##suffix), brow, dot00 );         dot01 = mad( (float4)(intel_sub_group_shuffle( arow1, index ).s##suffix), brow, dot01 );         dot02 = mad( (float4)(intel_sub_group_shuffle( arow2, index ).s##suffix), brow, dot02 );         dot03 = mad( (float4)(intel_sub_group_shuffle( arow3, index ).s##suffix), brow, dot03 );         dot04 = mad( (float4)(intel_sub_group_shuffle( arow4, index ).s##suffix), brow, dot04 );         dot05 = mad( (float4)(intel_sub_group_shuffle( arow5, index ).s##suffix), brow, dot05 );         dot06 = mad( (float4)(intel_sub_group_shuffle( arow6, index ).s##suffix), brow, dot06 );         dot07 = mad( (float4)(intel_sub_group_shuffle( arow7, index ).s##suffix), brow, dot07 );",    // NOLINT
+"#define MM_DOT_PRODUCT( index, suffix )           brow = (w < K) ? vload4(0, src1_read0) : (float4)0.0f;  src1_read0 += N; w++;         dot00 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow0), index )).s##suffix), brow, dot00 );         dot01 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow1), index )).s##suffix), brow, dot01 );         dot02 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow2), index )).s##suffix), brow, dot02 );         dot03 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow3), index )).s##suffix), brow, dot03 );         dot04 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow4), index )).s##suffix), brow, dot04 );         dot05 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow5), index )).s##suffix), brow, dot05 );         dot06 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow6), index )).s##suffix), brow, dot06 );         dot07 = mad( (float4)(as_float2(intel_sub_group_shuffle( SHUFFLE_TYPE2(arow7), index )).s##suffix), brow, dot07 );",    // NOLINT
 "MM_DOT_PRODUCT(0, 0);",    // NOLINT
 "MM_DOT_PRODUCT(0, 1);",    // NOLINT
 "MM_DOT_PRODUCT(1, 0);",    // NOLINT
@@ -3308,87 +3425,102 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "MM_DOT_PRODUCT(6, 1);",    // NOLINT
 "MM_DOT_PRODUCT(7, 0);",    // NOLINT
 "MM_DOT_PRODUCT(7, 1);",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"MM_DOT_PRODUCT(8, 0);",    // NOLINT
+"MM_DOT_PRODUCT(8, 1);",    // NOLINT
+"MM_DOT_PRODUCT(9, 0);",    // NOLINT
+"MM_DOT_PRODUCT(9, 1);",    // NOLINT
+"MM_DOT_PRODUCT(10, 0);",    // NOLINT
+"MM_DOT_PRODUCT(10, 1);",    // NOLINT
+"MM_DOT_PRODUCT(11, 0);",    // NOLINT
+"MM_DOT_PRODUCT(11, 1);",    // NOLINT
+"MM_DOT_PRODUCT(12, 0);",    // NOLINT
+"MM_DOT_PRODUCT(12, 1);",    // NOLINT
+"MM_DOT_PRODUCT(13, 0);",    // NOLINT
+"MM_DOT_PRODUCT(13, 1);",    // NOLINT
+"MM_DOT_PRODUCT(14, 0);",    // NOLINT
+"MM_DOT_PRODUCT(14, 1);",    // NOLINT
+"MM_DOT_PRODUCT(15, 0);",    // NOLINT
+"MM_DOT_PRODUCT(15, 1);",    // NOLINT
+"#endif",    // NOLINT
 "#undef MM_DOT_PRODUCT",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
 "if(mad24(global_x, 4, 3) < N) {",    // NOLINT
-"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"vstore4(dot00, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore4(dot01, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore4(dot02, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore4(dot03, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore4(dot04, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore4(dot05, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore4(dot06, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore4(dot07, 0, dst_write0); }",    // NOLINT
 "} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy;",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot00.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) {",    // NOLINT
-"dst_write[0] = dot01.xy;",    // NOLINT
+"vstore2(dot01.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot01.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 2) < M) {",    // NOLINT
-"dst_write[0] = dot02.xy;",    // NOLINT
+"vstore2(dot02.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot02.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 3) < M) {",    // NOLINT
-"dst_write[0] = dot03.xy;",    // NOLINT
+"vstore2(dot03.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot03.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 4) < M) {",    // NOLINT
-"dst_write[0] = dot04.xy;",    // NOLINT
+"vstore2(dot04.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot04.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 5) < M) {",    // NOLINT
-"dst_write[0] = dot05.xy;",    // NOLINT
+"vstore2(dot05.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot05.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 6) < M) {",    // NOLINT
-"dst_write[0] = dot06.xy;",    // NOLINT
+"vstore2(dot06.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot06.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 7) < M) {",    // NOLINT
-"dst_write[0] = dot07.xy;",    // NOLINT
+"vstore2(dot07.xy, 0, dst_write0);",    // NOLINT
 "dst_write0[2] = dot07.z;",    // NOLINT
 "}",    // NOLINT
 "} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore2(dot01.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore2(dot02.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore2(dot03.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore2(dot04.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore2(dot05.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore2(dot06.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore2(dot07.xy, 0, dst_write0); }",    // NOLINT
 "} else {",    // NOLINT
 "dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
@@ -3414,6 +3546,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef TILE_K",    // NOLINT
 "#undef TILE_N",    // NOLINT
 "",    // NOLINT
+"",    // NOLINT
 "#define VEC_SIZE        1",    // NOLINT
 "#define LWG_HEIGHT      16",    // NOLINT
 "#define TILE_M          8",    // NOLINT
@@ -3422,6 +3555,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define SLM_BLOCK       512",    // NOLINT
 "",    // NOLINT
 "__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_NT, Dtype)(",    // NOLINT
 "const __global float *src0, int off0,",    // NOLINT
 "const __global float *src1, int off1,",    // NOLINT
@@ -3429,9 +3563,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int M,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
-"float alpha,",    // NOLINT
-"float beta)",    // NOLINT
+"float alpha_in,",    // NOLINT
+"float beta_in)",    // NOLINT
 "{",    // NOLINT
+"const float alpha = (float)alpha_in;",    // NOLINT
+"const float beta = (float)beta_in;",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
 "const int local_x = get_local_id(0);",    // NOLINT
@@ -3457,11 +3593,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float4 brow6;",    // NOLINT
 "float4 brow7;",    // NOLINT
 "",    // NOLINT
-"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + (group_x * TILE_N) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
 "",    // NOLINT
-"const __global float *src0_read = src0 + local_x * ( TILE_K / 8 ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M ) * K + off0;",    // NOLINT
+"const __global float *src0_read = src0 + local_x * (TILE_K / 8) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * K + off0;",    // NOLINT
 "",    // NOLINT
-"const __global float *src1_read0 = src1 + ( group_x * TILE_N ) * K + off1;",    // NOLINT
+"const __global float *src1_read0 = src1 + (group_x * TILE_N) * K + off1;",    // NOLINT
 "",    // NOLINT
 "__local float slm_brow[8 * SLM_BLOCK];",    // NOLINT
 "__local float* slm_brow0;",    // NOLINT
@@ -3470,14 +3606,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int w;",    // NOLINT
 "for(int b_tile = 0; b_tile < K; b_tile += SLM_BLOCK) {",    // NOLINT
 "barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(0, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(0, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(1, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(1, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(2, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(2, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(3, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(3, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(4, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(4, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(5, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(5, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(6, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(6, K, local_index)))[0];",    // NOLINT
-"((__local float4 *)(slm_brow + mad24(7, SLM_BLOCK, local_index)))[0] = ((__global float4 *)(src1_read0 + mad24(7, K, local_index)))[0];",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(0, K, local_index)), 0, slm_brow + mad24(0, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(1, K, local_index)), 0, slm_brow + mad24(1, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(2, K, local_index)), 0, slm_brow + mad24(2, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(3, K, local_index)), 0, slm_brow + mad24(3, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(4, K, local_index)), 0, slm_brow + mad24(4, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(5, K, local_index)), 0, slm_brow + mad24(5, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(6, K, local_index)), 0, slm_brow + mad24(6, SLM_BLOCK, local_index));",    // NOLINT
+"vstore4(vload4(0, src1_read0 + mad24(7, K, local_index)), 0, slm_brow + mad24(7, SLM_BLOCK, local_index));",    // NOLINT
 "barrier(CLK_LOCAL_MEM_FENCE);",    // NOLINT
 "",    // NOLINT
 "slm_brow0 = slm_brow + local_x * (TILE_K / 8);",    // NOLINT
@@ -3486,16 +3622,16 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "while( w + TILE_K <= end_w ) {",    // NOLINT
 "float4 arow;",    // NOLINT
 "",    // NOLINT
-"brow0 = ((__local float4 *)(slm_brow0 + 0 * SLM_BLOCK))[0];",    // NOLINT
-"brow1 = ((__local float4 *)(slm_brow0 + 1 * SLM_BLOCK))[0];",    // NOLINT
-"brow2 = ((__local float4 *)(slm_brow0 + 2 * SLM_BLOCK))[0];",    // NOLINT
-"brow3 = ((__local float4 *)(slm_brow0 + 3 * SLM_BLOCK))[0];",    // NOLINT
-"brow4 = ((__local float4 *)(slm_brow0 + 4 * SLM_BLOCK))[0];",    // NOLINT
-"brow5 = ((__local float4 *)(slm_brow0 + 5 * SLM_BLOCK))[0];",    // NOLINT
-"brow6 = ((__local float4 *)(slm_brow0 + 6 * SLM_BLOCK))[0];",    // NOLINT
-"brow7 = ((__local float4 *)(slm_brow0 + 7 * SLM_BLOCK))[0];",    // NOLINT
+"brow0 = vload4(0, slm_brow0 + 0 * SLM_BLOCK);",    // NOLINT
+"brow1 = vload4(0, slm_brow0 + 1 * SLM_BLOCK);",    // NOLINT
+"brow2 = vload4(0, slm_brow0 + 2 * SLM_BLOCK);",    // NOLINT
+"brow3 = vload4(0, slm_brow0 + 3 * SLM_BLOCK);",    // NOLINT
+"brow4 = vload4(0, slm_brow0 + 4 * SLM_BLOCK);",    // NOLINT
+"brow5 = vload4(0, slm_brow0 + 5 * SLM_BLOCK);",    // NOLINT
+"brow6 = vload4(0, slm_brow0 + 6 * SLM_BLOCK);",    // NOLINT
+"brow7 = vload4(0, slm_brow0 + 7 * SLM_BLOCK);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _row, _dot )               arow = ((__global float4 *)(src0_read + _row * K))[0];                                       _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );             _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );             _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );             _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
+"#define MM_DOT_PRODUCT( _row, _dot )               arow = vload4(0, src0_read + _row * K);                                       _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );             _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );             _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );             _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
 "MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
 "MM_DOT_PRODUCT( 1, dot01 );",    // NOLINT
 "MM_DOT_PRODUCT( 2, dot02 );",    // NOLINT
@@ -3516,7 +3652,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if(w < K) {",    // NOLINT
 "float4 arow;",    // NOLINT
 "",    // NOLINT
-"#define READ_BROW(_brow, _row)         _brow = ((__local float4 *)(slm_brow0 + _row * SLM_BLOCK))[0];         _brow.x = (mad24(local_x, 4, w) < K) ? _brow.x : 0.0f;         _brow.y = (mad24(local_x, 4, w + 1) < K) ? _brow.y : 0.0f;         _brow.z = (mad24(local_x, 4, w + 2) < K) ? _brow.z : 0.0f;         _brow.w = (mad24(local_x, 4, w + 3) < K) ? _brow.w : 0.0f;",    // NOLINT
+"#define READ_BROW(_brow, _row)         _brow = vload4(0, slm_brow0 + _row * SLM_BLOCK);         _brow.x = (mad24(local_x, 4, w) < K) ? _brow.x : 0.0f;         _brow.y = (mad24(local_x, 4, w + 1) < K) ? _brow.y : 0.0f;         _brow.z = (mad24(local_x, 4, w + 2) < K) ? _brow.z : 0.0f;         _brow.w = (mad24(local_x, 4, w + 3) < K) ? _brow.w : 0.0f;",    // NOLINT
 "READ_BROW(brow0, 0);",    // NOLINT
 "READ_BROW(brow1, 1);",    // NOLINT
 "READ_BROW(brow2, 2);",    // NOLINT
@@ -3526,7 +3662,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "READ_BROW(brow6, 6);",    // NOLINT
 "READ_BROW(brow7, 7);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _row, _dot )           arow = ((__global float4 *)(src0_read + _row * K))[0];                                   arow.x = (mad24(local_x, 4, w) < K) ? arow.x : 0.0f;         arow.y = (mad24(local_x, 4, w + 1) < K) ? arow.y : 0.0f;         arow.z = (mad24(local_x, 4, w + 2) < K) ? arow.z : 0.0f;         arow.w = (mad24(local_x, 4, w + 3) < K) ? arow.w : 0.0f;         _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );         _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );         _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );         _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
+"#define MM_DOT_PRODUCT( _row, _dot )           arow = vload4(0, src0_read + _row * K);                                   arow.x = (mad24(local_x, 4, w) < K) ? arow.x : 0.0f;         arow.y = (mad24(local_x, 4, w + 1) < K) ? arow.y : 0.0f;         arow.z = (mad24(local_x, 4, w + 2) < K) ? arow.z : 0.0f;         arow.w = (mad24(local_x, 4, w + 3) < K) ? arow.w : 0.0f;         _dot = mad( (float8)(arow.x), (float8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );         _dot = mad( (float8)(arow.y), (float8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );         _dot = mad( (float8)(arow.z), (float8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );         _dot = mad( (float8)(arow.w), (float8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
 "MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
 "MM_DOT_PRODUCT( 1, dot01 );",    // NOLINT
 "MM_DOT_PRODUCT( 2, dot02 );",    // NOLINT
@@ -3538,7 +3674,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef MM_DOT_PRODUCT",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"#define REDUCE(_dot)     _dot = intel_sub_group_shuffle(_dot, 0) + intel_sub_group_shuffle(_dot, 1) + intel_sub_group_shuffle(_dot, 2) + intel_sub_group_shuffle(_dot, 3) +             intel_sub_group_shuffle(_dot, 4) + intel_sub_group_shuffle(_dot, 5) + intel_sub_group_shuffle(_dot, 6) + intel_sub_group_shuffle(_dot, 7);",    // NOLINT
+"#define REDUCE(_dot)     _dot = as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 0)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 1)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 2)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 3)) +             as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 4)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 5)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 6)) + as_float8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 7));",    // NOLINT
 "REDUCE(dot00);",    // NOLINT
 "REDUCE(dot01);",    // NOLINT
 "REDUCE(dot02);",    // NOLINT
@@ -3574,32 +3710,32 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#define SLM_SIZE 64",    // NOLINT
 "void TEMPLATE(gemm_buffer_NT_M_2_edgerows,Dtype)(",    // NOLINT
-"const __global Dtype* srca_read0,",    // NOLINT
-"const __global Dtype* srca_read1,",    // NOLINT
-"const __global Dtype* srcb_read,",    // NOLINT
-"__local Dtype4* work0,",    // NOLINT
-"__local Dtype4* work1,",    // NOLINT
+"const __global float* srca_read0,",    // NOLINT
+"const __global float* srca_read1,",    // NOLINT
+"const __global float* srcb_read,",    // NOLINT
+"__local float4* work0,",    // NOLINT
+"__local float4* work1,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
 "int x_gid,",    // NOLINT
 "int lid,",    // NOLINT
-"Dtype alpha,",    // NOLINT
-"Dtype beta,",    // NOLINT
-"__global Dtype* dstc0,",    // NOLINT
-"__global Dtype* dstc1)",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"__global float* dstc0,",    // NOLINT
+"__global float* dstc1)",    // NOLINT
 "{",    // NOLINT
-"__local Dtype* work_each0 = (__local Dtype*)work0;",    // NOLINT
-"__local Dtype* work_each1 = (__local Dtype*)work1;",    // NOLINT
+"__local float* work_each0 = (__local float*)work0;",    // NOLINT
+"__local float* work_each1 = (__local float*)work1;",    // NOLINT
 "",    // NOLINT
 "int rows = N - x_gid * 4;",    // NOLINT
 "",    // NOLINT
-"Dtype4 dot0[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot1[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"float4 dot0[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot1[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
 "",    // NOLINT
 "int i = lid;",    // NOLINT
 "while( i < K / 4) {",    // NOLINT
-"const Dtype4 b0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
-"const Dtype4 b1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
+"const float4 b0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
+"const float4 b1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < rows; ++j) {",    // NOLINT
 "dot0[j] += b0 * vload4(i, srcb_read + j * K);",    // NOLINT
@@ -3618,13 +3754,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "short tail_items = K % 4;",    // NOLINT
 "",    // NOLINT
 "if(tail_items != 0) {",    // NOLINT
-"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"const __global float *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"const __global float *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global float *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(short i = 0; i < tail_items; ++i) {",    // NOLINT
-"const Dtype at0 = srca_tail0[i];",    // NOLINT
-"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"const float at0 = srca_tail0[i];",    // NOLINT
+"const float at1 = srca_tail1[i];",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < rows; ++j) {",    // NOLINT
 "work_each0[lid * 4 + j] += at0 * srcb_tail[i + j * K];",    // NOLINT
@@ -3652,11 +3788,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_NT_M_2,Dtype)(",    // NOLINT
-"__global const Dtype * A,",    // NOLINT
+"__global const float * A,",    // NOLINT
 "int offA,",    // NOLINT
-"__global const Dtype * B,",    // NOLINT
+"__global const float * B,",    // NOLINT
 "int offB,",    // NOLINT
-"__global Dtype * C,",    // NOLINT
+"__global float * C,",    // NOLINT
 "int offC,",    // NOLINT
 "int M,",    // NOLINT
 "int N,",    // NOLINT
@@ -3664,36 +3800,36 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float alpha_f,",    // NOLINT
 "float beta_f)",    // NOLINT
 "{",    // NOLINT
-"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
-"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"float alpha = (float)alpha_f;",    // NOLINT
+"float beta = (float)beta_f;",    // NOLINT
 "int x_gid = get_group_id(0);",    // NOLINT
 "int lid = get_local_id(0);",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
-"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
+"const __global float *srca_read0 = A + offA;",    // NOLINT
+"const __global float *srca_read1 = srca_read0 + K;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
+"const __global float *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
 "",    // NOLINT
-"__global Dtype4 *dstc0 = (__global Dtype4*)(C + offC);",    // NOLINT
-"__global Dtype4 *dstc1 = (__global Dtype4*)((__global Dtype*)(dstc0) + N);",    // NOLINT
+"__global float4 *dstc0 = (__global float4*)(C + offC);",    // NOLINT
+"__global float4 *dstc1 = (__global float4*)((__global float*)(dstc0) + N);",    // NOLINT
 "",    // NOLINT
-"__local Dtype4 work0[SLM_SIZE];",    // NOLINT
-"__local Dtype4 work1[SLM_SIZE];",    // NOLINT
-"__local Dtype* work_each0 = (__local Dtype*)work0;",    // NOLINT
-"__local Dtype* work_each1 = (__local Dtype*)work1;",    // NOLINT
+"__local float4 work0[SLM_SIZE];",    // NOLINT
+"__local float4 work1[SLM_SIZE];",    // NOLINT
+"__local float* work_each0 = (__local float*)work0;",    // NOLINT
+"__local float* work_each1 = (__local float*)work1;",    // NOLINT
 "",    // NOLINT
 "if(x_gid == N / 4) {",    // NOLINT
-"TEMPLATE(gemm_buffer_NT_M_2_edgerows,Dtype)          (srca_read0, srca_read1, srcb_read, work0, work1, N, K, x_gid, lid, alpha, beta, (__global Dtype*)dstc0, (__global Dtype*)dstc1);",    // NOLINT
+"TEMPLATE(gemm_buffer_NT_M_2_edgerows,Dtype)          (srca_read0, srca_read1, srcb_read, work0, work1, N, K, x_gid, lid, alpha, beta, (__global float*)dstc0, (__global float*)dstc1);",    // NOLINT
 "} else {",    // NOLINT
-"Dtype4 dot0[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot1[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"float4 dot0[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot1[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
 "int i = lid;",    // NOLINT
 "while( i < K / 4) {",    // NOLINT
-"const Dtype4 b0 = vload4(i, srca_read0);",    // NOLINT
-"const Dtype4 b1 = vload4(i, srca_read1);",    // NOLINT
+"const float4 b0 = vload4(i, srca_read0);",    // NOLINT
+"const float4 b1 = vload4(i, srca_read1);",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < 4; ++j) {",    // NOLINT
-"Dtype4 a = vload4(i, srcb_read + j * K);",    // NOLINT
+"float4 a = vload4(i, srcb_read + j * K);",    // NOLINT
 "dot0[j] += b0 * a;",    // NOLINT
 "dot1[j] += b1 * a;",    // NOLINT
 "}",    // NOLINT
@@ -3709,14 +3845,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if(i == K / 4) {",    // NOLINT
 "short tail_items = K % 4;",    // NOLINT
 "if(tail_items != 0) {",    // NOLINT
-"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"const __global float *srcb_tail = srcb_read + i * 4;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"const __global float *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global float *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(short i = 0; i < tail_items; ++i) {",    // NOLINT
-"const Dtype at0 = srca_tail0[i];",    // NOLINT
-"const Dtype at1 = srca_tail1[i];",    // NOLINT
+"const float at0 = srca_tail0[i];",    // NOLINT
+"const float at1 = srca_tail1[i];",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < 4; ++j) {",    // NOLINT
 "work_each0[lid * 4 + j] += at0 * srcb_tail[i + j * K];",    // NOLINT
@@ -3744,44 +3880,44 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#define SLM_SIZE 32",    // NOLINT
 "void TEMPLATE(gemm_buffer_NT_M_4_edgerows,Dtype)(",    // NOLINT
-"const __global Dtype* srca_read0,",    // NOLINT
-"const __global Dtype* srca_read1,",    // NOLINT
-"const __global Dtype* srca_read2,",    // NOLINT
-"const __global Dtype* srca_read3,",    // NOLINT
-"const __global Dtype* srcb_read,",    // NOLINT
-"__local Dtype4* work0,",    // NOLINT
-"__local Dtype4* work1,",    // NOLINT
-"__local Dtype4* work2,",    // NOLINT
-"__local Dtype4* work3,",    // NOLINT
+"const __global float* srca_read0,",    // NOLINT
+"const __global float* srca_read1,",    // NOLINT
+"const __global float* srca_read2,",    // NOLINT
+"const __global float* srca_read3,",    // NOLINT
+"const __global float* srcb_read,",    // NOLINT
+"__local float4* work0,",    // NOLINT
+"__local float4* work1,",    // NOLINT
+"__local float4* work2,",    // NOLINT
+"__local float4* work3,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
 "int x_gid,",    // NOLINT
 "int lid,",    // NOLINT
-"Dtype alpha,",    // NOLINT
-"Dtype beta,",    // NOLINT
-"__global Dtype* dstc0,",    // NOLINT
-"__global Dtype* dstc1,",    // NOLINT
-"__global Dtype* dstc2,",    // NOLINT
-"__global Dtype* dstc3)",    // NOLINT
+"float alpha,",    // NOLINT
+"float beta,",    // NOLINT
+"__global float* dstc0,",    // NOLINT
+"__global float* dstc1,",    // NOLINT
+"__global float* dstc2,",    // NOLINT
+"__global float* dstc3)",    // NOLINT
 "{",    // NOLINT
-"__local Dtype* work_each0 = (__local Dtype*)(work0 + lid);",    // NOLINT
-"__local Dtype* work_each1 = (__local Dtype*)(work1 + lid);",    // NOLINT
-"__local Dtype* work_each2 = (__local Dtype*)(work2 + lid);",    // NOLINT
-"__local Dtype* work_each3 = (__local Dtype*)(work3 + lid);",    // NOLINT
+"__local float* work_each0 = (__local float*)(work0 + lid);",    // NOLINT
+"__local float* work_each1 = (__local float*)(work1 + lid);",    // NOLINT
+"__local float* work_each2 = (__local float*)(work2 + lid);",    // NOLINT
+"__local float* work_each3 = (__local float*)(work3 + lid);",    // NOLINT
 "",    // NOLINT
 "int rows = N - x_gid * 4;",    // NOLINT
 "",    // NOLINT
-"Dtype4 dot0[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot1[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot2[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot3[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"float4 dot0[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot1[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot2[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot3[3] = {(float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
 "",    // NOLINT
 "int i = lid;",    // NOLINT
 "while( i < K / 4) {",    // NOLINT
-"const Dtype4 a0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
-"const Dtype4 a1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
-"const Dtype4 a2 = {srca_read2[i*4], srca_read2[(i*4+1)], srca_read2[(i*4+2)], srca_read2[(i*4+3)]};",    // NOLINT
-"const Dtype4 a3 = {srca_read3[i*4], srca_read3[(i*4+1)], srca_read3[(i*4+2)], srca_read3[(i*4+3)]};",    // NOLINT
+"const float4 a0 = {srca_read0[i*4], srca_read0[(i*4+1)], srca_read0[(i*4+2)], srca_read0[(i*4+3)]};",    // NOLINT
+"const float4 a1 = {srca_read1[i*4], srca_read1[(i*4+1)], srca_read1[(i*4+2)], srca_read1[(i*4+3)]};",    // NOLINT
+"const float4 a2 = {srca_read2[i*4], srca_read2[(i*4+1)], srca_read2[(i*4+2)], srca_read2[(i*4+3)]};",    // NOLINT
+"const float4 a3 = {srca_read3[i*4], srca_read3[(i*4+1)], srca_read3[(i*4+2)], srca_read3[(i*4+3)]};",    // NOLINT
 "#pragma unrol",    // NOLINT
 "for(int j = 0; j < rows; ++j) {",    // NOLINT
 "dot0[j] += a0 * vload4(i, srcb_read + j * K);",    // NOLINT
@@ -3804,18 +3940,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "short tail_items = K % 4;",    // NOLINT
 "",    // NOLINT
 "if(tail_items != 0) {",    // NOLINT
-"const __global Dtype *srcb_tail = srcb_read + i * 4;",    // NOLINT
+"const __global float *srcb_tail = srcb_read + i * 4;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail2 = srca_read2 + i * 4;",    // NOLINT
-"const __global Dtype *srca_tail3 = srca_read3 + i * 4;",    // NOLINT
+"const __global float *srca_tail0 = srca_read0 + i * 4;",    // NOLINT
+"const __global float *srca_tail1 = srca_read1 + i * 4;",    // NOLINT
+"const __global float *srca_tail2 = srca_read2 + i * 4;",    // NOLINT
+"const __global float *srca_tail3 = srca_read3 + i * 4;",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(short i = 0; i < tail_items; ++i) {",    // NOLINT
-"const Dtype at0 = srca_tail0[i];",    // NOLINT
-"const Dtype at1 = srca_tail1[i];",    // NOLINT
-"const Dtype at2 = srca_tail2[i];",    // NOLINT
-"const Dtype at3 = srca_tail3[i];",    // NOLINT
+"const float at0 = srca_tail0[i];",    // NOLINT
+"const float at1 = srca_tail1[i];",    // NOLINT
+"const float at2 = srca_tail2[i];",    // NOLINT
+"const float at3 = srca_tail3[i];",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < rows; ++j) {",    // NOLINT
 "work_each0[j] += at0 * srcb_tail[i + j * K];",    // NOLINT
@@ -3849,11 +3985,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_NT_M_4,Dtype)(",    // NOLINT
-"__global const Dtype * A,",    // NOLINT
+"__global const float * A,",    // NOLINT
 "int offA,",    // NOLINT
-"__global const Dtype * B,",    // NOLINT
+"__global const float * B,",    // NOLINT
 "int offB,",    // NOLINT
-"__global Dtype * C,",    // NOLINT
+"__global float * C,",    // NOLINT
 "int offC,",    // NOLINT
 "int M,",    // NOLINT
 "int N,",    // NOLINT
@@ -3861,50 +3997,50 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float alpha_f,",    // NOLINT
 "float beta_f)",    // NOLINT
 "{",    // NOLINT
-"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
-"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"float alpha = (float)alpha_f;",    // NOLINT
+"float beta = (float)beta_f;",    // NOLINT
 "int x_gid = get_group_id(0);",    // NOLINT
 "int lid = get_local_id(0);",    // NOLINT
 "int lsize = get_local_size(0);",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
-"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
-"const __global Dtype *srca_read2 = srca_read1 + K;",    // NOLINT
-"const __global Dtype *srca_read3 = srca_read2 + K;",    // NOLINT
+"const __global float *srca_read0 = A + offA;",    // NOLINT
+"const __global float *srca_read1 = srca_read0 + K;",    // NOLINT
+"const __global float *srca_read2 = srca_read1 + K;",    // NOLINT
+"const __global float *srca_read3 = srca_read2 + K;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
+"const __global float *srcb_read = B + x_gid * 4 * K + offB;",    // NOLINT
 "",    // NOLINT
-"__global Dtype4 *dstc0 = (__global Dtype4*)(C + offC);",    // NOLINT
-"__global Dtype4 *dstc1 = (__global Dtype4*)((__global Dtype*)(dstc0) + N);",    // NOLINT
-"__global Dtype4 *dstc2 = (__global Dtype4*)((__global Dtype*)(dstc1) + N);",    // NOLINT
-"__global Dtype4 *dstc3 = (__global Dtype4*)((__global Dtype*)(dstc2) + N);",    // NOLINT
+"__global float4 *dstc0 = (__global float4*)(C + offC);",    // NOLINT
+"__global float4 *dstc1 = (__global float4*)((__global float*)(dstc0) + N);",    // NOLINT
+"__global float4 *dstc2 = (__global float4*)((__global float*)(dstc1) + N);",    // NOLINT
+"__global float4 *dstc3 = (__global float4*)((__global float*)(dstc2) + N);",    // NOLINT
 "",    // NOLINT
-"__local Dtype4 work0[SLM_SIZE];",    // NOLINT
-"__local Dtype4 work1[SLM_SIZE];",    // NOLINT
-"__local Dtype4 work2[SLM_SIZE];",    // NOLINT
-"__local Dtype4 work3[SLM_SIZE];",    // NOLINT
-"__local Dtype* work_each0 = (__local Dtype*)(work0 + lid);",    // NOLINT
-"__local Dtype* work_each1 = (__local Dtype*)(work1 + lid);",    // NOLINT
-"__local Dtype* work_each2 = (__local Dtype*)(work2 + lid);",    // NOLINT
-"__local Dtype* work_each3 = (__local Dtype*)(work3 + lid);",    // NOLINT
+"__local float4 work0[SLM_SIZE];",    // NOLINT
+"__local float4 work1[SLM_SIZE];",    // NOLINT
+"__local float4 work2[SLM_SIZE];",    // NOLINT
+"__local float4 work3[SLM_SIZE];",    // NOLINT
+"__local float* work_each0 = (__local float*)(work0 + lid);",    // NOLINT
+"__local float* work_each1 = (__local float*)(work1 + lid);",    // NOLINT
+"__local float* work_each2 = (__local float*)(work2 + lid);",    // NOLINT
+"__local float* work_each3 = (__local float*)(work3 + lid);",    // NOLINT
 "",    // NOLINT
 "if(x_gid == N / 4) {",    // NOLINT
-"TEMPLATE(gemm_buffer_NT_M_4_edgerows,Dtype)          (srca_read0, srca_read1, srca_read2, srca_read3, srcb_read,          work0, work1, work2, work3, N, K, x_gid, lid, alpha, beta,          (__global Dtype*)dstc0, (__global Dtype*)dstc1, (__global Dtype*)dstc2, (__global Dtype*)dstc3);",    // NOLINT
+"TEMPLATE(gemm_buffer_NT_M_4_edgerows,Dtype)          (srca_read0, srca_read1, srca_read2, srca_read3, srcb_read,          work0, work1, work2, work3, N, K, x_gid, lid, alpha, beta,          (__global float*)dstc0, (__global float*)dstc1, (__global float*)dstc2, (__global float*)dstc3);",    // NOLINT
 "} else {",    // NOLINT
-"Dtype4 dot0[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot1[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot2[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
-"Dtype4 dot3[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};",    // NOLINT
+"float4 dot0[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot1[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot2[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
+"float4 dot3[4] = {(float4)(0.), (float4)(0.), (float4)(0.), (float4)(0.)};",    // NOLINT
 "",    // NOLINT
 "int kid = lid;",    // NOLINT
 "while( kid < K / 4) {",    // NOLINT
-"const Dtype4 b0 = vload4(kid, srca_read0);",    // NOLINT
-"const Dtype4 b1 = vload4(kid, srca_read1);",    // NOLINT
-"const Dtype4 b2 = vload4(kid, srca_read2);",    // NOLINT
-"const Dtype4 b3 = vload4(kid, srca_read3);",    // NOLINT
+"const float4 b0 = vload4(kid, srca_read0);",    // NOLINT
+"const float4 b1 = vload4(kid, srca_read1);",    // NOLINT
+"const float4 b2 = vload4(kid, srca_read2);",    // NOLINT
+"const float4 b3 = vload4(kid, srca_read3);",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < 4; ++j) {",    // NOLINT
-"Dtype4 a = vload4(kid, srcb_read + j * K);",    // NOLINT
+"float4 a = vload4(kid, srcb_read + j * K);",    // NOLINT
 "dot0[j] += b0 * a;",    // NOLINT
 "dot1[j] += b1 * a;",    // NOLINT
 "dot2[j] += b2 * a;",    // NOLINT
@@ -3924,18 +4060,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "short tail_items = K % 4;",    // NOLINT
 "if(tail_items != 0) {",    // NOLINT
 "int offset = kid << 2;",    // NOLINT
-"const __global Dtype *srcb_tail = srcb_read + offset;",    // NOLINT
+"const __global float *srcb_tail = srcb_read + offset;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_tail0 = srca_read0 + offset;",    // NOLINT
-"const __global Dtype *srca_tail1 = srca_read1 + offset;",    // NOLINT
-"const __global Dtype *srca_tail2 = srca_read2 + offset;",    // NOLINT
-"const __global Dtype *srca_tail3 = srca_read3 + offset;",    // NOLINT
+"const __global float *srca_tail0 = srca_read0 + offset;",    // NOLINT
+"const __global float *srca_tail1 = srca_read1 + offset;",    // NOLINT
+"const __global float *srca_tail2 = srca_read2 + offset;",    // NOLINT
+"const __global float *srca_tail3 = srca_read3 + offset;",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(short i = 0; i < tail_items; ++i) {",    // NOLINT
-"const Dtype at0 = srca_tail0[i];",    // NOLINT
-"const Dtype at1 = srca_tail1[i];",    // NOLINT
-"const Dtype at2 = srca_tail2[i];",    // NOLINT
-"const Dtype at3 = srca_tail3[i];",    // NOLINT
+"const float at0 = srca_tail0[i];",    // NOLINT
+"const float at1 = srca_tail1[i];",    // NOLINT
+"const float at2 = srca_tail2[i];",    // NOLINT
+"const float at3 = srca_tail3[i];",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(int j = 0; j < 4; ++j) {",    // NOLINT
 "work_each0[j] += at0 * srcb_tail[i + j * K];",    // NOLINT
@@ -3969,11 +4105,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#define SLM_SIZE 16",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_NT_M_8,Dtype)(",    // NOLINT
-"__global const Dtype * A,",    // NOLINT
+"__global const float * A,",    // NOLINT
 "int offA,",    // NOLINT
-"__global const Dtype * B,",    // NOLINT
+"__global const float * B,",    // NOLINT
 "int offB,",    // NOLINT
-"__global Dtype * C,",    // NOLINT
+"__global float * C,",    // NOLINT
 "int offC,",    // NOLINT
 "int M,",    // NOLINT
 "int N,",    // NOLINT
@@ -3981,61 +4117,61 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float alpha_f,",    // NOLINT
 "float beta_f)",    // NOLINT
 "{",    // NOLINT
-"Dtype alpha = (Dtype)alpha_f;",    // NOLINT
-"Dtype beta = (Dtype)beta_f;",    // NOLINT
+"float alpha = (float)alpha_f;",    // NOLINT
+"float beta = (float)beta_f;",    // NOLINT
 "int x_gid = get_group_id(0);",    // NOLINT
 "int lid = get_local_id(0);",    // NOLINT
 "int lsize = get_local_size(0);",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_read0 = A + offA;",    // NOLINT
-"const __global Dtype *srca_read1 = srca_read0 + K;",    // NOLINT
-"const __global Dtype *srca_read2 = srca_read1 + K;",    // NOLINT
-"const __global Dtype *srca_read3 = srca_read2 + K;",    // NOLINT
-"const __global Dtype *srca_read4 = srca_read3 + K;",    // NOLINT
-"const __global Dtype *srca_read5 = srca_read4 + K;",    // NOLINT
-"const __global Dtype *srca_read6 = srca_read5 + K;",    // NOLINT
-"const __global Dtype *srca_read7 = srca_read6 + K;",    // NOLINT
+"const __global float *srca_read0 = A + offA;",    // NOLINT
+"const __global float *srca_read1 = srca_read0 + K;",    // NOLINT
+"const __global float *srca_read2 = srca_read1 + K;",    // NOLINT
+"const __global float *srca_read3 = srca_read2 + K;",    // NOLINT
+"const __global float *srca_read4 = srca_read3 + K;",    // NOLINT
+"const __global float *srca_read5 = srca_read4 + K;",    // NOLINT
+"const __global float *srca_read6 = srca_read5 + K;",    // NOLINT
+"const __global float *srca_read7 = srca_read6 + K;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srcb_read = B + x_gid * K + offB;",    // NOLINT
+"const __global float *srcb_read = B + x_gid * K + offB;",    // NOLINT
 "",    // NOLINT
-"__global Dtype *dstc0 = C + offC;",    // NOLINT
-"__global Dtype *dstc1 = dstc0 + N;",    // NOLINT
-"__global Dtype *dstc2 = dstc1 + N;",    // NOLINT
-"__global Dtype *dstc3 = dstc2 + N;",    // NOLINT
-"__global Dtype *dstc4 = dstc3 + N;",    // NOLINT
-"__global Dtype *dstc5 = dstc4 + N;",    // NOLINT
-"__global Dtype *dstc6 = dstc5 + N;",    // NOLINT
-"__global Dtype *dstc7 = dstc6 + N;",    // NOLINT
+"__global float *dstc0 = C + offC;",    // NOLINT
+"__global float *dstc1 = dstc0 + N;",    // NOLINT
+"__global float *dstc2 = dstc1 + N;",    // NOLINT
+"__global float *dstc3 = dstc2 + N;",    // NOLINT
+"__global float *dstc4 = dstc3 + N;",    // NOLINT
+"__global float *dstc5 = dstc4 + N;",    // NOLINT
+"__global float *dstc6 = dstc5 + N;",    // NOLINT
+"__global float *dstc7 = dstc6 + N;",    // NOLINT
 "",    // NOLINT
-"__local Dtype work0[SLM_SIZE];",    // NOLINT
-"__local Dtype work1[SLM_SIZE];",    // NOLINT
-"__local Dtype work2[SLM_SIZE];",    // NOLINT
-"__local Dtype work3[SLM_SIZE];",    // NOLINT
-"__local Dtype work4[SLM_SIZE];",    // NOLINT
-"__local Dtype work5[SLM_SIZE];",    // NOLINT
-"__local Dtype work6[SLM_SIZE];",    // NOLINT
-"__local Dtype work7[SLM_SIZE];",    // NOLINT
+"__local float work0[SLM_SIZE];",    // NOLINT
+"__local float work1[SLM_SIZE];",    // NOLINT
+"__local float work2[SLM_SIZE];",    // NOLINT
+"__local float work3[SLM_SIZE];",    // NOLINT
+"__local float work4[SLM_SIZE];",    // NOLINT
+"__local float work5[SLM_SIZE];",    // NOLINT
+"__local float work6[SLM_SIZE];",    // NOLINT
+"__local float work7[SLM_SIZE];",    // NOLINT
 "",    // NOLINT
-"Dtype4 dot0 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot1 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot2 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot3 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot4 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot5 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot6 = (Dtype4)(0.);",    // NOLINT
-"Dtype4 dot7 = (Dtype4)(0.);",    // NOLINT
+"float4 dot0 = (float4)(0.);",    // NOLINT
+"float4 dot1 = (float4)(0.);",    // NOLINT
+"float4 dot2 = (float4)(0.);",    // NOLINT
+"float4 dot3 = (float4)(0.);",    // NOLINT
+"float4 dot4 = (float4)(0.);",    // NOLINT
+"float4 dot5 = (float4)(0.);",    // NOLINT
+"float4 dot6 = (float4)(0.);",    // NOLINT
+"float4 dot7 = (float4)(0.);",    // NOLINT
 "",    // NOLINT
 "int kid = lid;",    // NOLINT
 "while( kid < K / 4) {",    // NOLINT
-"const Dtype4 a0 = vload4(kid, srca_read0);",    // NOLINT
-"const Dtype4 a1 = vload4(kid, srca_read1);",    // NOLINT
-"const Dtype4 a2 = vload4(kid, srca_read2);",    // NOLINT
-"const Dtype4 a3 = vload4(kid, srca_read3);",    // NOLINT
-"const Dtype4 a4 = vload4(kid, srca_read4);",    // NOLINT
-"const Dtype4 a5 = vload4(kid, srca_read5);",    // NOLINT
-"const Dtype4 a6 = vload4(kid, srca_read6);",    // NOLINT
-"const Dtype4 a7 = vload4(kid, srca_read7);",    // NOLINT
-"Dtype4 b = vload4(kid, srcb_read);",    // NOLINT
+"const float4 a0 = vload4(kid, srca_read0);",    // NOLINT
+"const float4 a1 = vload4(kid, srca_read1);",    // NOLINT
+"const float4 a2 = vload4(kid, srca_read2);",    // NOLINT
+"const float4 a3 = vload4(kid, srca_read3);",    // NOLINT
+"const float4 a4 = vload4(kid, srca_read4);",    // NOLINT
+"const float4 a5 = vload4(kid, srca_read5);",    // NOLINT
+"const float4 a6 = vload4(kid, srca_read6);",    // NOLINT
+"const float4 a7 = vload4(kid, srca_read7);",    // NOLINT
+"float4 b = vload4(kid, srcb_read);",    // NOLINT
 "dot0 += a0 * b;",    // NOLINT
 "dot1 += a1 * b;",    // NOLINT
 "dot2 += a2 * b;",    // NOLINT
@@ -4060,16 +4196,16 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "short tail_items = K % 4;",    // NOLINT
 "if(tail_items != 0) {",    // NOLINT
 "int offset = kid << 2;",    // NOLINT
-"const __global Dtype *srcb_tail = srcb_read + offset;",    // NOLINT
+"const __global float *srcb_tail = srcb_read + offset;",    // NOLINT
 "",    // NOLINT
-"const __global Dtype *srca_tail0 = srca_read0 + offset;",    // NOLINT
-"const __global Dtype *srca_tail1 = srca_read1 + offset;",    // NOLINT
-"const __global Dtype *srca_tail2 = srca_read2 + offset;",    // NOLINT
-"const __global Dtype *srca_tail3 = srca_read3 + offset;",    // NOLINT
-"const __global Dtype *srca_tail4 = srca_read4 + offset;",    // NOLINT
-"const __global Dtype *srca_tail5 = srca_read5 + offset;",    // NOLINT
-"const __global Dtype *srca_tail6 = srca_read6 + offset;",    // NOLINT
-"const __global Dtype *srca_tail7 = srca_read7 + offset;",    // NOLINT
+"const __global float *srca_tail0 = srca_read0 + offset;",    // NOLINT
+"const __global float *srca_tail1 = srca_read1 + offset;",    // NOLINT
+"const __global float *srca_tail2 = srca_read2 + offset;",    // NOLINT
+"const __global float *srca_tail3 = srca_read3 + offset;",    // NOLINT
+"const __global float *srca_tail4 = srca_read4 + offset;",    // NOLINT
+"const __global float *srca_tail5 = srca_read5 + offset;",    // NOLINT
+"const __global float *srca_tail6 = srca_read6 + offset;",    // NOLINT
+"const __global float *srca_tail7 = srca_read7 + offset;",    // NOLINT
 "#pragma unroll",    // NOLINT
 "for(short item = 0; item < tail_items; ++item) {",    // NOLINT
 "work0[lid] += srca_tail0[item] * srcb_tail[item];",    // NOLINT
@@ -4114,10 +4250,16 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define VEC_SIZE        4",    // NOLINT
 "#define LWG_HEIGHT      4",    // NOLINT
 "#define TILE_M          8",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define TILE_K          32",    // NOLINT
+"#define TILE_N          64",    // NOLINT
+"#else",    // NOLINT
 "#define TILE_K          16",    // NOLINT
 "#define TILE_N          32",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((reqd_work_group_size(SIMD_SIZE_GEMM, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE_GEMM)))",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_TN, Dtype)(",    // NOLINT
 "const __global float *src0, int off0,",    // NOLINT
 "const __global float *src1, int off1,",    // NOLINT
@@ -4125,11 +4267,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int M,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
-"float alpha,",    // NOLINT
-"float beta,",    // NOLINT
+"float alpha_in,",    // NOLINT
+"float beta_in,",    // NOLINT
 "int start_index)",    // NOLINT
 "",    // NOLINT
 "{",    // NOLINT
+"const float alpha = (float)alpha_in;",    // NOLINT
+"const float beta = (float)beta_in;",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
 "const int local_x = get_local_id(0);",    // NOLINT
@@ -4139,43 +4283,61 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "float4 brow;",    // NOLINT
 "",    // NOLINT
-"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + (group_x * TILE_N) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
 "",    // NOLINT
-"const __global float *src0_read = src0 + (local_x * ( TILE_K / 8 ) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
+"const __global float *src0_read = src0 + (local_x * (TILE_K / SIMD_SIZE_GEMM) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
 "",    // NOLINT
-"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + ( group_x * TILE_N ) + start_index * N + off1;",    // NOLINT
+"const __global float *src1_read0 = src1 + local_x * VEC_SIZE + (group_x * TILE_N) + start_index * N + off1;",    // NOLINT
 "",    // NOLINT
-"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : (beta * ((__global float4 *)dst_write0)[0]);",    // NOLINT
-"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + N))[0] : (beta * ((__global float4 *)(dst_write0 + N))[0]);",    // NOLINT
-"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 2 * N))[0]);",    // NOLINT
-"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 3 * N))[0]);",    // NOLINT
-"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 4 * N))[0]);",    // NOLINT
-"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 5 * N))[0]);",    // NOLINT
-"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 6 * N))[0]);",    // NOLINT
-"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 7 * N))[0]);",    // NOLINT
+"float4 dot00 = (start_index != 0) ? vload4(0, dst_write0) : beta * vload4(0, dst_write0);",    // NOLINT
+"float4 dot01 = (start_index != 0) ? vload4(0, dst_write0 + N) : beta * vload4(0, dst_write0 + N);",    // NOLINT
+"float4 dot02 = (start_index != 0) ? vload4(0, dst_write0 + 2 * N) : beta * vload4(0, dst_write0 + 2 * N);",    // NOLINT
+"float4 dot03 = (start_index != 0) ? vload4(0, dst_write0 + 3 * N) : beta * vload4(0, dst_write0 + 3 * N);",    // NOLINT
+"float4 dot04 = (start_index != 0) ? vload4(0, dst_write0 + 4 * N) : beta * vload4(0, dst_write0 + 4 * N);",    // NOLINT
+"float4 dot05 = (start_index != 0) ? vload4(0, dst_write0 + 5 * N) : beta * vload4(0, dst_write0 + 5 * N);",    // NOLINT
+"float4 dot06 = (start_index != 0) ? vload4(0, dst_write0 + 6 * N) : beta * vload4(0, dst_write0 + 6 * N);",    // NOLINT
+"float4 dot07 = (start_index != 0) ? vload4(0, dst_write0 + 7 * N) : beta * vload4(0, dst_write0 + 7 * N);",    // NOLINT
 "",    // NOLINT
 "int end_index = min(start_index + 256, K);",    // NOLINT
 "while( start_index + TILE_K <= end_index ) {",    // NOLINT
-"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
-"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"float8 arow0 = alpha * vload8(0, src0_read);",    // NOLINT
+"float8 arow1 = alpha * vload8(0, src0_read + M);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _arow )         brow = ((__global float4 *)src1_read0)[0];  src1_read0 += N;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 0 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 0 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 1 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 1 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 2 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 2 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 3 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 3 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 4 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 4 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 5 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 5 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 6 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 6 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 7 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 7 ) );",    // NOLINT
+"#define MM_DOT_PRODUCT( _arow )         brow = vload4(0, src1_read0);  src1_read0 += N;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 0 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 0 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 1 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 1 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 2 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 2 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 3 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 3 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 4 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 4 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 5 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 5 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 6 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 6 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 7 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 7 )) );",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 8 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 8 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 9 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 9 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 10 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 10 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 11 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 11 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 12 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 12 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 13 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 13 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 14 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 14 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 15 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 15 )) );",    // NOLINT
+"#endif",    // NOLINT
 "#undef MM_DOT_PRODUCT",    // NOLINT
 "",    // NOLINT
 "src0_read += TILE_K * M;",    // NOLINT
@@ -4183,99 +4345,114 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "if(start_index < end_index) {",    // NOLINT
-"float8 arow0 = ((start_index + local_x * 2) < K) ? (alpha * ((__global float8 *)src0_read)[0]) : 0.0f;",    // NOLINT
-"float8 arow1 = ((start_index + local_x * 2 + 1) < K) ? (alpha * ((__global float8 *)(src0_read + M))[0]) : 0.0f;",    // NOLINT
+"float8 arow0 = ((start_index + local_x * 2) < K) ? alpha * vload8(0, src0_read) : (float8)0.0f;",    // NOLINT
+"float8 arow1 = ((start_index + local_x * 2 + 1) < K) ? alpha * vload8(0, src0_read + M) : (float8)0.0f;",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _arow )         brow = (start_index < K) ? ((__global float4 *)src1_read0)[0] : 0.0f;  src1_read0 += N; start_index++;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 0 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 0 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 1 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 1 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 2 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 2 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 3 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 3 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 4 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 4 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 5 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 5 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 6 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 6 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow0, 7 ) );",    // NOLINT
-"MM_DOT_PRODUCT( intel_sub_group_shuffle( arow1, 7 ) );",    // NOLINT
+"#define MM_DOT_PRODUCT( _arow )         brow = (start_index < K) ? vload4(0, src1_read0) : (float4)0.0f;  src1_read0 += N; start_index++;         dot00 = mad( (float4)(_arow.s0), brow, dot00 );         dot01 = mad( (float4)(_arow.s1), brow, dot01 );         dot02 = mad( (float4)(_arow.s2), brow, dot02 );         dot03 = mad( (float4)(_arow.s3), brow, dot03 );         dot04 = mad( (float4)(_arow.s4), brow, dot04 );         dot05 = mad( (float4)(_arow.s5), brow, dot05 );         dot06 = mad( (float4)(_arow.s6), brow, dot06 );         dot07 = mad( (float4)(_arow.s7), brow, dot07 );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 0 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 0 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 1 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 1 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 2 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 2 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 3 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 3 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 4 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 4 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 5 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 5 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 6 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 6 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 7 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 7 )) );",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 8 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 8 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 9 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 9 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 10 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 10 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 11 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 11 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 12 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 12 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 13 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 13 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 14 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 14 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 15 )) );",    // NOLINT
+"MM_DOT_PRODUCT( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 15 )) );",    // NOLINT
+"#endif",    // NOLINT
 "#undef MM_DOT_PRODUCT",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
 "if(mad24(global_x, 4, 3) < N) {",    // NOLINT
-"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"vstore4(dot00, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore4(dot01, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore4(dot02, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore4(dot03, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore4(dot04, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore4(dot05, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore4(dot06, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore4(dot07, 0, dst_write0); }",    // NOLINT
 "} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy; dst_write0[2] = dot00.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0); dst_write0[2] = dot00.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) {",    // NOLINT
-"dst_write[0] = dot01.xy; dst_write0[2] = dot01.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot01.xy, 0, dst_write0); dst_write0[2] = dot01.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 2) < M) {",    // NOLINT
-"dst_write[0] = dot02.xy; dst_write0[2] = dot02.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot02.xy, 0, dst_write0); dst_write0[2] = dot02.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 3) < M) {",    // NOLINT
-"dst_write[0] = dot03.xy; dst_write0[2] = dot03.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot03.xy, 0, dst_write0); dst_write0[2] = dot03.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 4) < M) {",    // NOLINT
-"dst_write[0] = dot04.xy; dst_write0[2] = dot04.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot04.xy, 0, dst_write0); dst_write0[2] = dot04.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 5) < M) {",    // NOLINT
-"dst_write[0] = dot05.xy; dst_write0[2] = dot05.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot05.xy, 0, dst_write0); dst_write0[2] = dot05.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 6) < M) {",    // NOLINT
-"dst_write[0] = dot06.xy; dst_write0[2] = dot06.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot06.xy, 0, dst_write0); dst_write0[2] = dot06.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 7) < M) {",    // NOLINT
-"dst_write[0] = dot07.xy; dst_write0[2] = dot07.z;",    // NOLINT
+"vstore2(dot07.xy, 0, dst_write0); dst_write0[2] = dot07.z;",    // NOLINT
 "}",    // NOLINT
 "} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore2(dot01.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore2(dot02.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore2(dot03.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore2(dot04.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore2(dot05.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore2(dot06.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore2(dot07.xy, 0, dst_write0); }",    // NOLINT
 "} else {",    // NOLINT
 "dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
@@ -4308,6 +4485,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
 "__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
 "__kernel void TEMPLATE(gemm_buffer_TT, Dtype)(",    // NOLINT
 "const __global float *src0, int off0,",    // NOLINT
 "const __global float *src1, int off1,",    // NOLINT
@@ -4315,11 +4493,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int M,",    // NOLINT
 "int N,",    // NOLINT
 "int K,",    // NOLINT
-"float alpha,",    // NOLINT
-"float beta,",    // NOLINT
+"float alpha_in,",    // NOLINT
+"float beta_in,",    // NOLINT
 "int start_index)",    // NOLINT
 "",    // NOLINT
 "{",    // NOLINT
+"const float alpha = (float)alpha_in;",    // NOLINT
+"const float beta = (float)beta_in;",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
 "const int group_y = get_group_id(1);",    // NOLINT
 "const int local_x = get_local_id(0);",    // NOLINT
@@ -4337,32 +4517,32 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "float16 brow2;",    // NOLINT
 "float16 brow3;",    // NOLINT
 "",    // NOLINT
-"__global float *dst_write0 = dst + local_x * VEC_SIZE + ( group_x * TILE_N ) + ( group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
+"__global float *dst_write0 = dst + local_x * VEC_SIZE + (group_x * TILE_N) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;",    // NOLINT
 "",    // NOLINT
-"const __global float *src0_read = src0 + (local_x * ( TILE_K / 8 ) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
+"const __global float *src0_read = src0 + (local_x * (TILE_K / 8) + start_index) * M + group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M + off0;",    // NOLINT
 "",    // NOLINT
-"const __global float *src1_read0 = src1 + (local_x * VEC_SIZE + ( group_x * TILE_N )) * K + start_index + off1;",    // NOLINT
+"const __global float *src1_read0 = src1 + (local_x * VEC_SIZE + (group_x * TILE_N)) * K + start_index + off1;",    // NOLINT
 "",    // NOLINT
-"float4 dot00 = (start_index != 0) ? ((__global float4 *)dst_write0)[0] : (beta * ((__global float4 *)dst_write0)[0]);",    // NOLINT
-"float4 dot01 = (start_index != 0) ? ((__global float4 *)(dst_write0 + N))[0] : (beta * ((__global float4 *)(dst_write0 + N))[0]);",    // NOLINT
-"float4 dot02 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 2 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 2 * N))[0]);",    // NOLINT
-"float4 dot03 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 3 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 3 * N))[0]);",    // NOLINT
-"float4 dot04 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 4 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 4 * N))[0]);",    // NOLINT
-"float4 dot05 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 5 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 5 * N))[0]);",    // NOLINT
-"float4 dot06 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 6 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 6 * N))[0]);",    // NOLINT
-"float4 dot07 = (start_index != 0) ? ((__global float4 *)(dst_write0 + 7 * N))[0] : (beta * ((__global float4 *)(dst_write0 + 7 * N))[0]);",    // NOLINT
+"float4 dot00 = (start_index != 0) ? vload4(0, dst_write0) : beta * vload4(0, dst_write0);",    // NOLINT
+"float4 dot01 = (start_index != 0) ? vload4(0, dst_write0 + N) : beta * vload4(0, dst_write0 + N);",    // NOLINT
+"float4 dot02 = (start_index != 0) ? vload4(0, dst_write0 + 2 * N) : beta * vload4(0, dst_write0 + 2 * N);",    // NOLINT
+"float4 dot03 = (start_index != 0) ? vload4(0, dst_write0 + 3 * N) : beta * vload4(0, dst_write0 + 3 * N);",    // NOLINT
+"float4 dot04 = (start_index != 0) ? vload4(0, dst_write0 + 4 * N) : beta * vload4(0, dst_write0 + 4 * N);",    // NOLINT
+"float4 dot05 = (start_index != 0) ? vload4(0, dst_write0 + 5 * N) : beta * vload4(0, dst_write0 + 5 * N);",    // NOLINT
+"float4 dot06 = (start_index != 0) ? vload4(0, dst_write0 + 6 * N) : beta * vload4(0, dst_write0 + 6 * N);",    // NOLINT
+"float4 dot07 = (start_index != 0) ? vload4(0, dst_write0 + 7 * N) : beta * vload4(0, dst_write0 + 7 * N);",    // NOLINT
 "",    // NOLINT
 "int end_index = min(start_index + 256, K);",    // NOLINT
 "while( start_index + TILE_K <= end_index ) {",    // NOLINT
-"brow0 = ((__global float16 *)src1_read0)[0];",    // NOLINT
-"brow1 = ((__global float16 *)(src1_read0 + K))[0];",    // NOLINT
-"brow2 = ((__global float16 *)(src1_read0 + 2 * K))[0];",    // NOLINT
-"brow3 = ((__global float16 *)(src1_read0 + 3 * K))[0];",    // NOLINT
+"brow0 = vload16(0, src1_read0);",    // NOLINT
+"brow1 = vload16(0, src1_read0 + K);",    // NOLINT
+"brow2 = vload16(0, src1_read0 + 2 * K);",    // NOLINT
+"brow3 = vload16(0, src1_read0 + 3 * K);",    // NOLINT
 "",    // NOLINT
-"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
-"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"float8 arow0 = alpha * vload8(0, src0_read);",    // NOLINT
+"float8 arow1 = alpha * vload8(0, src0_read + M);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = mad( intel_sub_group_shuffle( arow0, 0 ), (float8)_brow.s0, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 0 ), (float8)_brow.s1, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 1 ), (float8)_brow.s2, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 1 ), (float8)_brow.s3, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 2 ), (float8)_brow.s4, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 2 ), (float8)_brow.s5, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 3 ), (float8)_brow.s6, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 3 ), (float8)_brow.s7, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 4 ), (float8)_brow.s8, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 4 ), (float8)_brow.s9, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 5 ), (float8)_brow.sa, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 5 ), (float8)_brow.sb, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 6 ), (float8)_brow.sc, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 6 ), (float8)_brow.sd, _dot );         _dot = mad( intel_sub_group_shuffle( arow0, 7 ), (float8)_brow.se, _dot );         _dot = mad( intel_sub_group_shuffle( arow1, 7 ), (float8)_brow.sf, _dot );",    // NOLINT
+"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 0 )), (float8)_brow.s0, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 0 )), (float8)_brow.s1, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 1 )), (float8)_brow.s2, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 1 )), (float8)_brow.s3, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 2 )), (float8)_brow.s4, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 2 )), (float8)_brow.s5, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 3 )), (float8)_brow.s6, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 3 )), (float8)_brow.s7, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 4 )), (float8)_brow.s8, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 4 )), (float8)_brow.s9, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 5 )), (float8)_brow.sa, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 5 )), (float8)_brow.sb, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 6 )), (float8)_brow.sc, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 6 )), (float8)_brow.sd, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 7 )), (float8)_brow.se, _dot );         _dot = mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 7 )), (float8)_brow.sf, _dot );",    // NOLINT
 "MM_DOT_PRODUCT( brow0, dot0 );",    // NOLINT
 "MM_DOT_PRODUCT( brow1, dot1 );",    // NOLINT
 "MM_DOT_PRODUCT( brow2, dot2 );",    // NOLINT
@@ -4375,15 +4555,15 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "if(start_index < end_index) {",    // NOLINT
-"brow0 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
-"brow1 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
-"brow2 = ((__global float16 *)src1_read0)[0];  src1_read0 += K;",    // NOLINT
-"brow3 = ((__global float16 *)src1_read0)[0];",    // NOLINT
+"brow0 = vload16(0, src1_read0);  src1_read0 += K;",    // NOLINT
+"brow1 = vload16(0, src1_read0);  src1_read0 += K;",    // NOLINT
+"brow2 = vload16(0, src1_read0);  src1_read0 += K;",    // NOLINT
+"brow3 = vload16(0, src1_read0);",    // NOLINT
 "",    // NOLINT
-"float8 arow0 = alpha * ((__global float8 *)src0_read)[0];",    // NOLINT
-"float8 arow1 = alpha * ((__global float8 *)(src0_read + M))[0];",    // NOLINT
+"float8 arow0 = alpha * vload8(0, src0_read);",    // NOLINT
+"float8 arow1 = alpha * vload8(0, src0_read + M);",    // NOLINT
 "",    // NOLINT
-"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 0 ), (float8)_brow.s0, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 0 ), (float8)_brow.s1, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 1 ), (float8)_brow.s2, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 1 ), (float8)_brow.s3, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 2 ), (float8)_brow.s4, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 2 ), (float8)_brow.s5, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 3 ), (float8)_brow.s6, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 3 ), (float8)_brow.s7, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 4 ), (float8)_brow.s8, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 4 ), (float8)_brow.s9, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 5 ), (float8)_brow.sa, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 5 ), (float8)_brow.sb, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 6 ), (float8)_brow.sc, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 6 ), (float8)_brow.sd, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow0, 7 ), (float8)_brow.se, _dot ) : _dot;         _dot = (w++ < K) ? mad( intel_sub_group_shuffle( arow1, 7 ), (float8)_brow.sf, _dot ) : _dot;",    // NOLINT
+"#define MM_DOT_PRODUCT( _brow, _dot)         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 0 )), (float8)_brow.s0, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 0 )), (float8)_brow.s1, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 1 )), (float8)_brow.s2, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 1 )), (float8)_brow.s3, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 2 )), (float8)_brow.s4, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 2 )), (float8)_brow.s5, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 3 )), (float8)_brow.s6, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 3 )), (float8)_brow.s7, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 4 )), (float8)_brow.s8, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 4 )), (float8)_brow.s9, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 5 )), (float8)_brow.sa, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 5 )), (float8)_brow.sb, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 6 )), (float8)_brow.sc, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 6 )), (float8)_brow.sd, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow0), 7 )), (float8)_brow.se, _dot ) : _dot;         _dot = (w++ < K) ? mad( as_float8(intel_sub_group_shuffle( SHUFFLE_TYPE8(arow1), 7 )), (float8)_brow.sf, _dot ) : _dot;",    // NOLINT
 "int w = start_index;",    // NOLINT
 "MM_DOT_PRODUCT( brow0, dot0 );",    // NOLINT
 "w = start_index;",    // NOLINT
@@ -4406,74 +4586,71 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "if(global_x * 4 < N && global_y * 8 < M) {",    // NOLINT
 "if(mad24(global_x, 4, 3) < N) {",    // NOLINT
-"__global float4 *dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00; dst_write0 += N; dst_write = (__global float4 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"vstore4(dot00, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore4(dot01, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore4(dot02, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore4(dot03, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore4(dot04, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore4(dot05, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06; dst_write0 += N; dst_write = (__global float4 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore4(dot06, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore4(dot07, 0, dst_write0); }",    // NOLINT
 "} else if(mad24(global_x, 4, 2) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy; dst_write0[2] = dot00.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0); dst_write0[2] = dot00.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) {",    // NOLINT
-"dst_write[0] = dot01.xy; dst_write0[2] = dot01.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot01.xy, 0, dst_write0); dst_write0[2] = dot01.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 2) < M) {",    // NOLINT
-"dst_write[0] = dot02.xy; dst_write0[2] = dot02.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot02.xy, 0, dst_write0); dst_write0[2] = dot02.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 3) < M) {",    // NOLINT
-"dst_write[0] = dot03.xy; dst_write0[2] = dot03.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot03.xy, 0, dst_write0); dst_write0[2] = dot03.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 4) < M) {",    // NOLINT
-"dst_write[0] = dot04.xy; dst_write0[2] = dot04.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot04.xy, 0, dst_write0); dst_write0[2] = dot04.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 5) < M) {",    // NOLINT
-"dst_write[0] = dot05.xy; dst_write0[2] = dot05.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot05.xy, 0, dst_write0); dst_write0[2] = dot05.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 6) < M) {",    // NOLINT
-"dst_write[0] = dot06.xy; dst_write0[2] = dot06.z;",    // NOLINT
-"dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
+"vstore2(dot06.xy, 0, dst_write0); dst_write0[2] = dot06.z;",    // NOLINT
+"dst_write0 += N;",    // NOLINT
 "} else",    // NOLINT
 "return;",    // NOLINT
 "if(mad24(global_y, 8, 7) < M) {",    // NOLINT
-"dst_write[0] = dot07.xy; dst_write0[2] = dot07.z;",    // NOLINT
+"vstore2(dot07.xy, 0, dst_write0); dst_write0[2] = dot07.z;",    // NOLINT
 "}",    // NOLINT
 "} else if(mad24(global_x, 4, 1) < N) {",    // NOLINT
-"__global float2 *dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"dst_write[0] = dot00.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0;",    // NOLINT
-"if(mad24(global_y, 8, 1) < M) { dst_write[0] = dot01.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"vstore2(dot00.xy, 0, dst_write0); dst_write0 += N;",    // NOLINT
+"if(mad24(global_y, 8, 1) < M) { vstore2(dot01.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 2) < M) { dst_write[0] = dot02.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 2) < M) { vstore2(dot02.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 3) < M) { dst_write[0] = dot03.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 3) < M) { vstore2(dot03.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 4) < M) { dst_write[0] = dot04.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 4) < M) { vstore2(dot04.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 5) < M) { dst_write[0] = dot05.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 5) < M) { vstore2(dot05.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 6) < M) { dst_write[0] = dot06.xy; dst_write0 += N; dst_write = (__global float2 *)dst_write0; }",    // NOLINT
+"if(mad24(global_y, 8, 6) < M) { vstore2(dot06.xy, 0, dst_write0); dst_write0 += N; }",    // NOLINT
 "else return;",    // NOLINT
-"if(mad24(global_y, 8, 7) < M) { dst_write[0] = dot07.xy; }",    // NOLINT
+"if(mad24(global_y, 8, 7) < M) { vstore2(dot07.xy, 0, dst_write0); }",    // NOLINT
 "} else {",    // NOLINT
 "dst_write0[0] = dot00.x; dst_write0 += N;",    // NOLINT
 "if(mad24(global_y, 8, 1) < M) { dst_write0[0] = dot01.x; dst_write0 += N; }",    // NOLINT
@@ -4498,6 +4675,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef TILE_M",    // NOLINT
 "#undef TILE_K",    // NOLINT
 "#undef TILE_N",    // NOLINT
+"",    // NOLINT
+"#endif",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
