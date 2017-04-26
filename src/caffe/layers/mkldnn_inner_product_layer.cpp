@@ -127,7 +127,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     int32_t h = this->h_;
     int32_t oc = this->N_;
     int32_t ic = this->K_/h_/w_;
-    bool has_spatial = h > 1 || w > 1;
+    bool has_spatial = (bottom[0]->shape().size() != 2);
 
     // Initialize memory descriptors (fromat = any) to create inner_product descriptor
     memory::data_type mpcsn = memory::data_type::f32;
@@ -137,6 +137,20 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     memory::dims top_tz = {n, oc};
     memory::dims weights_tz = (has_spatial) ? memory::dims {oc, ic, h, w} : memory::dims{oc, ic};
     memory::dims bias_tz = {oc};
+
+#ifdef DEBUG
+    LOG(INFO) << "has_spatial flag value: " << has_spatial;
+    if (has_spatial)
+    {
+        LOG(INFO) << "Dimension of bottom for MKLDNN: " << n << " " << ic << " " << h << " " << w;
+        LOG(INFO) << "Dimension of weights for MKLDNN: " << oc << " " << ic << " " << h << " " << w;
+    }
+    else
+    {
+        LOG(INFO) << "Dimension of bottom for MKLDNN: " << n << " " << ic;
+        LOG(INFO) << "Dimension of weights for MKLDNN: " << oc << " " << ic;
+    }
+#endif
 
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt);
     memory::desc init_top_md({top_tz}, mpcsn, mfmt);
@@ -179,8 +193,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     shared_ptr<MemPD> prv_fwd_bottom_data_memory_pd(new MemPD(ipFwd_pd->src_primitive_desc()));
     shared_ptr<MemPD> prv_fwd_top_data_memory_pd(new MemPD(ipFwd_pd->dst_primitive_desc()));
     shared_ptr<MemPD> prv_fwd_weights_data_memory_pd(new MemPD(ipFwd_pd->weights_primitive_desc()));
-    shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
-
+ 
     // Create usr memory primitive descriptors stored as class members
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
@@ -189,6 +202,10 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, memory::format::nc}, cpu_engine));
     memory::format weights_mfmt = has_spatial ? memory::format::oihw : memory::format::oi;
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+#ifdef DEBUG
+    LOG(INFO) << "Memory format of usr_bottom_data_memory_pd: " << input_mfmt;
+    LOG(INFO) << "Memory format of usr_weights_data_memory_pd: " << weights_mfmt;
+#endif
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
@@ -204,6 +221,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     fwd_weights_data_primitive = fwd_weights_data->create_input(true);
 
     if (this->bias_term_) {
+        shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
         fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
         fwd_bias_data_primitive = fwd_bias_data->create_input(true);
@@ -218,7 +236,8 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     fwd_bottom_data->set_mkldnn_primitive(ipFwd);
     fwd_top_data->set_mkldnn_primitive(ipFwd);
     fwd_weights_data->set_mkldnn_primitive(ipFwd);
-    fwd_bias_data->set_mkldnn_primitive(ipFwd);
+    if (this->bias_term_) 
+      fwd_bias_data->set_mkldnn_primitive(ipFwd);
 }
 
 template <typename Dtype>
@@ -226,12 +245,17 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
+
     if( ipFwd_pd == NULL)
         InitInnerProductFwd(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
     fwd_weights_data->sync_before_read();
-    fwd_bias_data->sync_before_read();
+    if (this->bias_term_) 
+      fwd_bias_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
@@ -253,7 +277,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     int32_t h = this->h_;
     int32_t oc = this->N_;
     int32_t ic = this->K_/h_/w_;
-    bool has_spatial = h > 1 || w > 1;
+    bool has_spatial = (bottom[0]->shape().size() != 2);
 
     // Initialize memory descriptors (format = any) to create inner_product descriptor
     memory::data_type mpcsn = memory::data_type::f32;
@@ -264,6 +288,20 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     memory::dims weights_tz = (has_spatial) ? memory::dims {oc, ic, h, w} : memory::dims{oc, ic};
     memory::dims bias_tz = {oc};
 
+#ifdef DEBUG
+    LOG(INFO) << "has_spatial flag value: " << has_spatial;
+    if (has_spatial)
+    {
+        LOG(INFO) << "Dimension of bottom for MKLDNN: " << n << " " << ic << " " << h << " " << w;
+        LOG(INFO) << "Dimension of weights for MKLDNN: " << oc << " " << ic << " " << h << " " << w;
+    }
+    else
+    {
+        LOG(INFO) << "Dimension of bottom for MKLDNN: " << n << " " << ic;
+        LOG(INFO) << "Dimension of weights for MKLDNN: " << oc << " " << ic;
+    }
+#endif
+
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt);
     memory::desc init_top_md({top_tz}, mpcsn, mfmt);
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt);
@@ -272,9 +310,13 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     // Initialize inner_product primitive descriptor
     shared_ptr<inner_product_backward_data::desc> ipBwdData_desc;
     shared_ptr<inner_product_backward_weights::desc> ipBwdWeights_desc;
- 
+ if (this->bias_term_)
     ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
                         , init_bias_md, init_top_md));
+ else
+    ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
+                        , init_top_md));
+    
     ipBwdData_desc.reset(new inner_product_backward_data::desc(init_bottom_md, init_weights_md, init_top_md));
 
     // ---- Determining engine to use -----------------------
@@ -310,16 +352,19 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     shared_ptr<MemPD> prv_bwdw_bottom_data_memory_pd(new MemPD(ipBwdWeights_pd->src_primitive_desc()));
     shared_ptr<MemPD> prv_bwdw_top_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_dst_primitive_desc()));
     shared_ptr<MemPD> prv_bwdw_weights_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_weights_primitive_desc()));
-    shared_ptr<MemPD> prv_bwdw_bias_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_bias_primitive_desc()));
 
     // Create usr memory primitive descriptors stored as class members
     engine cpu_engine = CpuEngine::Instance().get_engine();
-    memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;
+    memory::format input_mfmt = has_spatial ? memory::format::nchw : memory::format::nc;    
     shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, input_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
     shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, memory::format::nc}, cpu_engine));
     memory::format weights_mfmt = has_spatial ? memory::format::oihw : memory::format::oi;
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
+#ifdef DEBUG
+    LOG(INFO) << "Memory format of usr_bottom_data_memory_pd: " << input_mfmt;
+    LOG(INFO) << "Memory format of usr_weights_data_memory_pd: " << weights_mfmt;
+#endif
 
     // ---  init primitive and prv_memory descriptors ----------------------
     bwdd_bottom_diff.reset(new MKLDNNDiff<Dtype>(usr_bottom_data_memory_pd, prv_bwdd_bottom_diff_memory_pd, bottom[0], this));
@@ -343,8 +388,8 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     bwdw_weights_diff->name = "bwdw_weights_diff  @ " + this->layer_param_.name();
     bwdw_weights_diff_memory = bwdw_weights_diff->create_output_memory();
 
-
     if (this->bias_term_) {
+        shared_ptr<MemPD> prv_bwdw_bias_diff_memory_pd(new MemPD(ipBwdWeights_pd->diff_bias_primitive_desc()));
         bwdw_bias_diff.reset(new MKLDNNDiff<Dtype>(usr_bias_data_memory_pd, prv_bwdw_bias_diff_memory_pd, this->blobs_[1].get(), this));
         bwdw_bias_diff   ->name = "bwdw_bias_diff     @ " + this->layer_param_.name();
         bwdw_bias_diff_memory = bwdw_bias_diff->create_output_memory();
@@ -369,6 +414,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);
     bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);
     bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);
+    if (this->bias_term_)
     bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
 }
 
@@ -380,6 +426,10 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
                                                 , const vector<Blob<Dtype>*>& bottom)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNInnerProductLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
+
     if( ipBwdData_pd == NULL)
         InitInnerProductBwd(top, propagate_down, bottom);
     if (propagate_down[0]) {
