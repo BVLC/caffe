@@ -78,7 +78,12 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_3_.push_back(blob_bottom_3_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~SPPLayerTest() { delete blob_bottom_; delete blob_top_; }
+  virtual ~SPPLayerTest() {
+    delete blob_bottom_;
+    delete blob_top_;
+    delete blob_bottom_2_;
+    delete blob_bottom_3_;
+  }
 
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_bottom_2_;
