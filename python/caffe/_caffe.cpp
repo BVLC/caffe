@@ -84,18 +84,21 @@ const int NPY_DTYPE = NPY_FLOAT32;
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
 
-void InitLog(int level) {
-  FLAGS_logtostderr = 1;
-  FLAGS_minloglevel = level;
+void InitLog() {
   ::google::InitGoogleLogging("");
 #ifndef _MSC_VER
   // this symbol is undefined on windows
   ::google::InstallFailureSignalHandler();
 #endif  // _MSC_VER
 }
-void InitLogInfo() {
-  // Windows disables abbreviated severities
-  InitLog(google::GLOG_INFO);
+void InitLogLevel(int level) {
+  FLAGS_minloglevel = level;
+  InitLog();
+}
+void InitLogLevelPipe(int level, bool std_err) {
+  FLAGS_minloglevel = level;
+  FLAGS_logtostderr = std_err;
+  InitLog();
 }
 void Log(const string& s) {
   LOG(INFO) << s;
@@ -335,6 +338,10 @@ void Solver_add_nccl(Solver<Dtype>* solver
 #endif
 }
 
+void share_weights(Solver<Dtype>* solver, Net<Dtype>* net) {
+  net->ShareTrainedLayersWith(solver->net().get());
+}
+
 template<typename Dtype>
 class NetCallback: public Net<Dtype>::Callback {
  public:
@@ -386,7 +393,8 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   // Caffe utility functions
   bp::def("init_log", &InitLog);
-  bp::def("init_log", &InitLogInfo);
+  bp::def("init_log", &InitLogLevel);
+  bp::def("init_log", &InitLogLevelPipe);
   bp::def("log", &Log);
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
@@ -496,6 +504,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("step", &Solver<Dtype>::Step)
     .def("restore", &Solver<Dtype>::Restore)
     .def("snapshot", &Solver<Dtype>::Snapshot)
+    .def("share_weights", &share_weights)
     .add_property("param", bp::make_function(&Solver<Dtype>::param,
               bp::return_value_policy<bp::copy_const_reference>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
