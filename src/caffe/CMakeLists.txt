@@ -90,6 +90,9 @@ if(MSVC)
   # Disable Boost autolinking for consuming projects
   target_compile_definitions(caffe PUBLIC -DBOOST_ALL_NO_LIB)
 endif()
+if(MSVC AND USE_NCCL)
+  add_dependencies(caffe nccl)
+endif()
 
 configure_file(${caffe_export_hdr_in} ${caffe_export_hdr})
 
