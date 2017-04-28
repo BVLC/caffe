@@ -140,6 +140,10 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
+
     bool inplace = (bottom[0] == top[0]);
     if( reluFwd_pd == NULL)
         InitReLUFwd(bottom, top);
@@ -236,6 +240,10 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                           , const vector<Blob<Dtype>*>& bottom)
 {
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNReLULayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
+
     bool inplace = (bottom[0] == top[0]);
     if (!propagate_down[0]) {
         return;

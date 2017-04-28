@@ -289,6 +289,10 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                             ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
+
     if (NULL == poolingFwd_pd)
         InitPoolingFwd(bottom, top);
     // making reorders if needed.
@@ -422,6 +426,10 @@ void MKLDNNPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                             , const vector<Blob<Dtype>*>& bottom)
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
+
     if (!propagate_down[0]) {
         return;
     }
