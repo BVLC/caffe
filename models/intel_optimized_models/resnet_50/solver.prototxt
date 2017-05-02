@@ -14,3 +14,4 @@ snapshot: 30000
 snapshot_prefix: "models/intel_optimized_models/resnet_50/caffe-resnet50"
 test_initialization: false
 solver_mode: CPU
+
