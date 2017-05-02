@@ -26,7 +26,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
-
+#if defined(USE_CUDA) || defined(CPU_ONLY)
 using boost::scoped_ptr;
 namespace caffe {
 
@@ -454,3 +454,4 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
 }
 
 }  // namespace caffe
+#endif

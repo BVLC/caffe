@@ -3,13 +3,13 @@
 #include <map>
 #include <vector>
 
+#ifdef USE_CUDA
 #include "thrust/functional.h"
 #include "thrust/sort.h"
 
 #include "caffe/common.hpp"
 #include "caffe/util/bbox_util.hpp"
 
-#ifdef USE_CUDA
 namespace caffe {
 
 template <typename Dtype>

@@ -2,13 +2,13 @@
 #include <cfloat>
 #include <vector>
 
+#ifdef USE_CUDA
 #include "thrust/device_vector.h"
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/normalize_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_CUDA
 namespace caffe {
 
 // divid a matrix with vector
