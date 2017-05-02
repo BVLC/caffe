@@ -53,15 +53,36 @@ class Detector {
   cv::Mat mean_;
 };
 
+// Get all available GPU devices
+static void get_gpus(vector<int>* gpus) {
+    int count = 0;
+#ifndef CPU_ONLY
+    count = Caffe::EnumerateDevices(true);
+#else
+    NO_GPU;
+#endif
+    for (int i = 0; i < count; ++i) {
+      gpus->push_back(i);
+    }
+}
 Detector::Detector(const string& model_file,
                    const string& weights_file,
                    const string& mean_file,
                    const string& mean_value) {
-#ifdef CPU_ONLY
-  Caffe::set_mode(Caffe::CPU);
-#else
-  Caffe::set_mode(Caffe::GPU);
-#endif
+  // Set device id and mode
+  vector<int> gpus;
+  get_gpus(&gpus);
+  if (gpus.size() != 0) {
+#ifndef CPU_ONLY
+    std::cout << "Use GPU with device ID " << gpus[0] << std::endl;
+    Caffe::SetDevices(gpus);
+    Caffe::set_mode(Caffe::GPU);
+    Caffe::SetDevice(gpus[0]);
+#endif  // !CPU_ONLY
+  } else {
+    std::cout << "Use CPU" << std::endl;
+    Caffe::set_mode(Caffe::CPU);
+  }
 
   /* Load the network. */
   net_.reset(new Net<float>(model_file, TEST, Caffe::GetDefaultDevice()));
