@@ -222,7 +222,10 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  //VLOG(1) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+  VLOG(1) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+  LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
 
   if (NULL == concatFwd_pd)
     InitConcatFwd(bottom, top);
@@ -244,7 +247,11 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                            ,const vector<bool>& propagate_down
                                            ,const vector<Blob<Dtype>*>& bottom)
 {
-  //VLOG(1) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+  VLOG(1) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+  LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
+
   if (reorders.size() == 0)
     InitConcatBwd(top, propagate_down, bottom);
   bwd_top_diff->sync_before_read();
@@ -255,7 +262,6 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     reorders[i].submit();
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
   }
-
 }
 
 #ifdef CPU_ONLY

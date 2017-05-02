@@ -85,14 +85,14 @@ template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& bottom
                                                 , const vector<Blob<Dtype>*>& top)
 {
-    this->stride_w_ = this->stride_.cpu_data()[0];
-    this->stride_h_ = this->stride_.cpu_data()[1];
+    this->stride_w_ = this->stride_.cpu_data()[1];
+    this->stride_h_ = this->stride_.cpu_data()[0];
     this->width_ = bottom[0]->width();
     this->height_ = bottom[0]->height();
-    this->pad_w_ = this->pad_.cpu_data()[0];
-    this->pad_h_ = this->pad_.cpu_data()[1];
-    this->kernel_w_ = this->kernel_shape_.cpu_data()[0];
-    this->kernel_h_  = this->kernel_shape_.cpu_data()[1];
+    this->pad_w_ = this->pad_.cpu_data()[1];
+    this->pad_h_ = this->pad_.cpu_data()[0];
+    this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
+    this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
 
 #ifdef USE_MLSL
     if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {

@@ -243,6 +243,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
     for (int i = 0; i < count; ++i) {
       EXPECT_FLOAT_EQ(data[i], data_t[i]);
     }
+    delete top;
+    delete top_t;
   } else {
     LOG(ERROR) << "Skipping test due to old architecture.";
   }
@@ -425,6 +427,10 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
       EXPECT_NE(Dtype(0.), data[i]);
       EXPECT_FLOAT_EQ(data[i], data_t[i]);
     }
+    delete bottom_diff;
+    delete diff;
+    delete w;
+    delete top;
   } else {
     LOG(ERROR) << "Skipping test due to old architecture.";
   }

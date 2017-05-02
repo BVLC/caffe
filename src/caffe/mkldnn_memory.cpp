@@ -98,9 +98,17 @@ template <typename Dtype, bool is_diff>
         : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer)
 {
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
+
     if (prv_ptr != NULL) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
+#ifdef DEBUG        
+        LOG(INFO) << "Format of blob-prv-memory-pd: " << blob_prv_mkldnn_mem_descr->prv_memory_pd()->desc().data.format;
+        LOG(INFO) << "Format of this-prv-memory-pd: " << this->prv_memory_pd()->desc().data.format;
+#endif
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd()) {
+#ifdef DEBUG
+            LOG(INFO) << "Formats of blob-prv-memory-pd and this-prv-memory-pd are not equal !";
+#endif
             this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd());
         }
     }
