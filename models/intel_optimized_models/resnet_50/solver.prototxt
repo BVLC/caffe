@@ -1,5 +1,5 @@
 #This solver is described by Computer Vision Group Jena (CVGJ) in [ImageNet pre-trained models with batch normalization] (https://arxiv.org/pdf/1612.01452.pdf)
-net: "train_val.prototxt"
+net: "models/intel_optimized_models/resnet_50/train_val.prototxt"
 test_iter: 5000
 test_interval: 15000
 base_lr: 0.1
@@ -11,6 +11,7 @@ power: 1
 momentum: 0.9
 weight_decay: 0.0001
 snapshot: 30000
-snapshot_prefix: "caffe-resnet50"
+snapshot_prefix: "models/intel_optimized_models/resnet_50/caffe-resnet50"
 test_initialization: false
 solver_mode: CPU
+
