@@ -412,20 +412,6 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
 
     bwd_top_diff->set_mkldnn_primitive(BatchNormBwd);
     bwd_bottom_diff->set_mkldnn_primitive(BatchNormBwd);
-    
-    //Fix: MKLDNN batch norm only support 4D memory descriptor! Use 4D for calculation and reshape to 2D for output!
-    bool has_spatial = (bottom[0]->shape().size() != 2);
-    if (has_spatial == false)
-    {
-#ifdef DEBUG
-        LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
-        LOG(INFO) << "MKLDNN batch norm only support 4D memory descriptor! Use 4D for calculation and reshape to 2D for output!";
-#endif
-        vector<int> top_shape;
-        top_shape.push_back(bottom[0]->num());
-        top_shape.push_back(bottom[0]->channels());
-        top[0]->Reshape(top_shape);
-    }
 }
 
 template <typename Dtype>

@@ -90,6 +90,31 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
 
+  //Fix: MKLDNN concat layer should use 4D blob as input! Reshape the 2D input blob into 4D for calculation!
+  bool has_spatial = (bottom[0]->shape().size() != 2);
+#ifdef DEBUG
+  LOG(INFO) << "has_spatial flag value: " << has_spatial;
+#endif
+  if (has_spatial == false)
+  {
+#ifdef DEBUG
+      LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
+      LOG(INFO) << "size of top blob: " << top[0]->shape().size();
+      LOG(INFO) << "MKLDNN concat layer only support 4D blob as input! Reshape the 2D input blob into 4D for calculation!";
+#endif
+      vector<int> bottom_4D_shape;
+      int bottom_4D_height = 1;
+      int bottom_4D_width = 1;
+      bottom_4D_shape.push_back(bottom[0]->num());
+      bottom_4D_shape.push_back(bottom[0]->channels());
+      bottom_4D_shape.push_back(bottom_4D_height);
+      bottom_4D_shape.push_back(bottom_4D_width);
+      for (auto i = 0; i < num_concats_; i++)
+      {
+          bottom[i]->Reshape(bottom_4D_shape);
+      }      
+  }
+
   engine cpu_engine = CpuEngine::Instance().get_engine();
   memory::data_type data_type = memory::data_type::f32;
   // memory::format mfmt_any = memory::format::any;
