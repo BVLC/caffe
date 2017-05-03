@@ -124,6 +124,7 @@ TYPED_TEST(RNNLayerTest, TestForward) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = t > 0;
     }
     LOG(INFO) << "Calling forward for RNN timestep " << t;
+    layer->Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     for (int i = 0; i < top_count; ++i) {
       ASSERT_LT(t * top_count + i, top_copy.count());
@@ -145,6 +146,7 @@ TYPED_TEST(RNNLayerTest, TestForward) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = 0;
     }
     LOG(INFO) << "Calling forward for RNN timestep " << t;
+    layer->Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     for (int i = 0; i < top_count; ++i) {
       if (t == 0) {
