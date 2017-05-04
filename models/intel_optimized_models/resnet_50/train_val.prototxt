@@ -22,7 +22,7 @@ transform_param {
    mean_value: 123
 }
   data_param {
-    source: "/data/compressed_lmdb/ilsvrc12_train_lmdb"
+    source: "examples/imagenet/ilsvrc12_train_lmdb"
     batch_size: 128
     backend: LMDB
     shuffle: true
@@ -46,7 +46,7 @@ transform_param {
    mean_value: 123
 }
   data_param {
-    source: "/data/compressed_lmdb/ilsvrc12_val_lmdb/"
+    source: "examples/imagenet/ilsvrc12_val_lmdb/"
     batch_size: 10
     backend: LMDB
   }
