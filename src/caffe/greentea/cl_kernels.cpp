@@ -527,7 +527,17 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype out = arg;",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = (_data_);} while(0)",    // NOLINT
+"#ifdef FUSED_CONV_RELU",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x) max((Dtype)(x), (Dtype)0.0f)",    // NOLINT
+"#else",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x) (x)",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
+"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)",    // NOLINT
+"#else",    // NOLINT
+"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "#define __CAT(x, y) x##y",    // NOLINT
 "#define CAT(x, y) __CAT(x, y)",    // NOLINT
