@@ -6,7 +6,17 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(Dtype arg) {
   Dtype out = arg;
 }
 
-#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = (_data_);} while(0)
+#ifdef FUSED_CONV_RELU
+#define ACTIVATION_RELU_FUNCTION(x) max((Dtype)(x), (Dtype)0.0f)
+#else
+#define ACTIVATION_RELU_FUNCTION(x) (x)
+#endif
+
+#ifdef FUSED_CONV_ELTWISE
+#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)
+#else
+#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)
+#endif
 
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
