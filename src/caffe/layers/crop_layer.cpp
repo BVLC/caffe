@@ -40,8 +40,10 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
 
   // Initialize offsets to 0 and the new shape to the current shape of the data.
-  offsets = vector<int>(input_dim, 0);
   vector<int> new_shape(bottom[0]->shape());
+  vector<int> offsets_shape(1, input_dim);
+  offsets.Reshape(offsets_shape);
+  int* offset_data = offsets.mutable_cpu_data();
 
   // Determine crop offsets and the new shape post-crop.
   for (int i = 0; i < input_dim; ++i) {
@@ -63,15 +65,22 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
           << "size " << bottom[1]->shape(i) << " and offset " << crop_offset;
     }
     new_shape[i] = new_size;
-    offsets[i] = crop_offset;
+    offset_data[i] = crop_offset;
   }
   top[0]->Reshape(new_shape);
+  // Compute strides
+  src_strides_.Reshape(offsets_shape);
+  dest_strides_.Reshape(offsets_shape);
+  for (int i = 0; i < input_dim; ++i) {
+    src_strides_.mutable_cpu_data()[i] = bottom[0]->count(i + 1, input_dim);
+    dest_strides_.mutable_cpu_data()[i] = top[0]->count(i + 1, input_dim);
+  }
 }
 
 template <typename Dtype>
 void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top,
-             const vector<int>& offsets,
+             const int* offsets,
              vector<int> indices,
              int cur_dim,
              const Dtype* src_data,
@@ -115,7 +124,8 @@ void CropLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   std::vector<int> indices(top[0]->num_axes(), 0);
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  crop_copy(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
+  crop_copy(bottom, top, offsets.cpu_data(), indices, 0, bottom_data, top_data,
+      true);
 }
 
 template <typename Dtype>
@@ -127,7 +137,8 @@ void CropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
     std::vector<int> indices(top[0]->num_axes(), 0);
-    crop_copy(bottom, top, offsets, indices, 0, top_diff, bottom_diff, false);
+    crop_copy(bottom, top, offsets.cpu_data(), indices, 0, top_diff,
+        bottom_diff, false);
   }
 }
 
