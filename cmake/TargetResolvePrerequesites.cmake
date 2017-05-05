@@ -1,4 +1,5 @@
 set(THIS_FILE ${CMAKE_CURRENT_LIST_FILE})
+set(THIS_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 include(CMakeParseArguments)
 
@@ -171,7 +172,7 @@ endfunction()
 
 
 if(CMAKE_SCRIPT_MODE_FILE)
-  include(GetPrerequisites)
+  include(${THIS_DIR}/CaffeGetPrerequisites.cmake)
   # Recreate a list by replacing the @@ with ;
   string(REPLACE "@@" ";" DIRECTORIES "${DIRECTORIES}")
   string(REPLACE "@@" ";" PLUGINS "${PLUGINS}")

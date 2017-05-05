@@ -111,13 +111,11 @@ void InitLogLevel(int level) {
   InitLog();
 }
 
-#ifndef _MSC_VER
-void InitLogLevelPipe(int level, bool stderr) {
+void InitLogLevelPipe(int level, bool std_err) {
   FLAGS_minloglevel = level;
-  FLAGS_logtostderr = stderr;
+  FLAGS_logtostderr = std_err;
   InitLog();
 }
-#endif  // _MSC_VER
 
 void Log(const string& s) {
   LOG(INFO) << s;

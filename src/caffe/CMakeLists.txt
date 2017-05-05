@@ -91,6 +91,9 @@ if(MSVC)
   # Disable Boost autolinking for consuming projects
   target_compile_definitions(caffe PUBLIC -DBOOST_ALL_NO_LIB)
 endif()
+if(MSVC AND USE_NCCL)
+  add_dependencies(caffe nccl)
+endif()
 
 configure_file(${caffe_export_hdr_in} ${caffe_export_hdr})
 
@@ -104,7 +107,6 @@ install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION ${CMAKE_INSTALL_LIBD
 if(MSVC AND NOT BUILD_SHARED_LIBS)
   install(FILES ${caffe_export_hdr} ${caffe_symbols_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/caffe)
 endif()
-
 
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
 list(APPEND proto_python ${PROJECT_BINARY_DIR}/__init__.py)
