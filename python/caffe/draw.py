@@ -156,8 +156,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
             if len(layer.include) == 0:
                 included = True
             if len(layer.include) > 0 and len(layer.exclude) > 0:
-                raise ValueError('layer ' + layer.name + ' has both include '
-                                                         'and exclude specified.')
+                raise ValueError('layer ' + layer.name + ' has both include and exclude specified.')
             for layer_phase in layer.include:
                 included = included or layer_phase.phase == phase
             for layer_phase in layer.exclude:
