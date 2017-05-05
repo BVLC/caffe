@@ -366,7 +366,7 @@ def implement_usknet(bottom, netconf, unetconf, return_blobs_only=True):
     else:
         return blobs[-1], fmaps[-1]
     
-def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=None, stage=None):
+def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=None, stage=None, verbose=False):
     """
     This function takes as input:
     net - The network
@@ -419,6 +419,14 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                         test_max_shape = test_max_shape + max_shapes[i]
                     dims = max(dims, len(test_max_shape) - 2)
                     test_max_shapes = test_max_shapes + [test_max_shape]
+            elif('input_param' in source.fn.params):
+                if (source.fn == source_layer):
+                    test_sources = test_sources + [source]
+                    test_max_shape = source.fn.params['input_param']['shape']['dim']
+                    if (len(max_shapes) > i):
+                        test_max_shape = test_max_shape + max_shapes[i]
+                    dims = max(dims, len(test_max_shape) - 2)
+                    test_max_shapes = test_max_shapes + [test_max_shape]
 
     test_current_shapes = [[] for i in range(0,len(test_sources))]
     
@@ -450,8 +458,9 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                     error = error or graph.has_error(curr_src_idx)
 
                 # Test the shape
-                print test_current_shapes
-                print "Valid shape: " + str(not error)
+                if (verbose or not error):
+                    print test_current_shapes
+                    print "Valid shape: " + str(not error)
                 
                 if (error and ((len(test_current_shapes[curr_src_idx]) - 2 <= dim_idx) or (test_current_shapes[curr_src_idx][2 + dim_idx] == 1))):
                     # Reached minimum shape, reset source and go to previous source
@@ -477,8 +486,11 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                                     
     # Set the shapes
     for src_idx in range(0, len(test_sources)):
-        test_sources[src_idx].fn.params['dim'] = test_current_shapes[src_idx]
-        
+        if ('dim' in source.fn.params):
+            test_sources[src_idx].fn.params['dim'] = test_current_shapes[src_idx]
+        elif('input_param' in source.fn.params):
+            test_sources[src_idx].fn.params['input_param']['shape']['dim'] = test_current_shapes[src_idx]
+
     # Successful return
     return True
         
