@@ -57,10 +57,13 @@ if(build_using MATCHES "Matlab")
                    OUTPUT_NAME caffe_ # change the output name to _caffe.mexw64
                    LINK_TO caffe # cmake will take care of forwarding the correct transitive library dependencies to your mex file
                    )
-    # output the target in the source tree as in the original version. 
-    set_target_properties(matlab PROPERTIES 
+    # output the target in the source tree as in the original version.
+    set_target_properties(matlab PROPERTIES
                           RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/matlab/+caffe/private
                           )
+    if(COPY_PREREQUISITES)
+      caffe_copy_prerequisites(matlab DESTINATION ${PROJECT_SOURCE_DIR}/matlab/+caffe/private USE_HARD_LINKS)
+    endif()
   else()
     set(libflags -lcaffe${Caffe_POSTFIX} ${libflags}) # Matlab R2014a complans for -Wl,--whole-archive
 
@@ -86,6 +89,16 @@ elseif(build_using MATCHES "Octave")
 endif()
 
 # ---[ Install
-file(GLOB mfiles caffe/*.m)
-install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
+if(MSVC)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/matlab DESTINATION .
+          PATTERN CMakeLists.txt EXCLUDE
+          PATTERN .gitignore EXCLUDE)
+else()
+  file(GLOB mfiles caffe/*.m)
+  install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
+endif()
+
+if(MSVC AND INSTALL_PREREQUISITES)
+  caffe_install_prerequisites(matlab DESTINATION matlab/+caffe/private)
+endif()
 
