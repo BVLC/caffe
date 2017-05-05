@@ -1926,22 +1926,53 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"__kernel void TEMPLATE(crop_copy, Dtype)(const int_tp n,",    // NOLINT
-"const int_tp height,",    // NOLINT
-"const int_tp width,",    // NOLINT
-"const int_tp src_inner_stride,",    // NOLINT
-"const int_tp dest_inner_stride,",    // NOLINT
+"inline int_tp TEMPLATE(compute_uncropped_index,Dtype)(",    // NOLINT
+"int_tp index,",    // NOLINT
+"const int_tp ndims,",    // NOLINT
+"__global const int_tp*  src_strides,",    // NOLINT
+"__global const int_tp*  dst_strides,",    // NOLINT
+"__global const int_tp*  offsets) {",    // NOLINT
+"int_tp dest_index = index;",    // NOLINT
+"int_tp src_index = 0;",    // NOLINT
+"for (int_tp i = 0; i < ndims; ++i) {",    // NOLINT
+"int_tp coord = dest_index / dst_strides[i];",    // NOLINT
+"dest_index -= coord * dst_strides[i];",    // NOLINT
+"src_index += src_strides[i] * (coord + offsets[i]);",    // NOLINT
+"}",    // NOLINT
+"return src_index;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(crop_forward,Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp ndims,",    // NOLINT
+"__global const int_tp*  src_strides,",    // NOLINT
+"__global const int_tp*  dst_strides,",    // NOLINT
+"__global const int_tp*  offsets,",    // NOLINT
 "__global const Dtype* src,",    // NOLINT
 "const int_tp src_off,",    // NOLINT
-"__global Dtype* dest,",    // NOLINT
-"const int_tp dest_off) {",    // NOLINT
-"for (int_tp index = get_global_id(0); index < n;",    // NOLINT
+"__global Dtype*  dst,",    // NOLINT
+"const int_tp dst_off) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
 "index += get_global_size(0)) {",    // NOLINT
-"int_tp src_start = index * src_inner_stride + src_off;",    // NOLINT
-"int_tp dest_start = index * dest_inner_stride + dest_off;",    // NOLINT
-"for (int_tp i = 0; i < width; ++i) {",    // NOLINT
-"dest[dest_start + i] = src[src_start + i];",    // NOLINT
+"int_tp src_index = TEMPLATE(compute_uncropped_index,Dtype)(",    // NOLINT
+"index, ndims, src_strides, dst_strides, offsets);",    // NOLINT
+"dst[dst_off + index] = src[src_off + src_index];",    // NOLINT
 "}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(crop_backward,Dtype)(const int_tp nthreads,",    // NOLINT
+"const int_tp ndims,",    // NOLINT
+"__global const int_tp*  src_strides,",    // NOLINT
+"__global const int_tp*  dst_strides,",    // NOLINT
+"__global const int_tp*  offsets,",    // NOLINT
+"__global Dtype*  src,",    // NOLINT
+"const int_tp src_off,",    // NOLINT
+"__global const Dtype* dst,",    // NOLINT
+"const int_tp dst_off) {",    // NOLINT
+"for (int_tp index = get_global_id(0); index < nthreads;",    // NOLINT
+"index += get_global_size(0)) {",    // NOLINT
+"int_tp src_index = TEMPLATE(compute_uncropped_index,Dtype)(",    // NOLINT
+"index, ndims, src_strides, dst_strides, offsets);",    // NOLINT
+"src[src_off + src_index] = dst[dst_off + index];",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 ""},   // NOLINT

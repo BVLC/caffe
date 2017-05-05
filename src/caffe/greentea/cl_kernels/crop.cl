@@ -2,21 +2,52 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(crop_copy, Dtype)(const int_tp n,
-                                         const int_tp height,
-                                         const int_tp width,
-                                         const int_tp src_inner_stride,
-                                         const int_tp dest_inner_stride,
-                                         __global const Dtype* src,
-                                         const int_tp src_off,
-                                         __global Dtype* dest,
-                                         const int_tp dest_off) {
-  for (int_tp index = get_global_id(0); index < n;
-      index += get_global_size(0)) {
-    int_tp src_start = index * src_inner_stride + src_off;
-    int_tp dest_start = index * dest_inner_stride + dest_off;
-    for (int_tp i = 0; i < width; ++i) {
-      dest[dest_start + i] = src[src_start + i];
-    }
+inline int_tp TEMPLATE(compute_uncropped_index,Dtype)(
+    int_tp index,
+    const int_tp ndims,
+    __global const int_tp*  src_strides,
+    __global const int_tp*  dst_strides,
+    __global const int_tp*  offsets) {
+  int_tp dest_index = index;
+  int_tp src_index = 0;
+  for (int_tp i = 0; i < ndims; ++i) {
+      int_tp coord = dest_index / dst_strides[i];
+      dest_index -= coord * dst_strides[i];
+      src_index += src_strides[i] * (coord + offsets[i]);
+  }
+  return src_index;
+}
+
+__kernel void TEMPLATE(crop_forward,Dtype)(const int_tp nthreads,
+    const int_tp ndims,
+    __global const int_tp*  src_strides,
+    __global const int_tp*  dst_strides,
+    __global const int_tp*  offsets,
+    __global const Dtype* src,
+    const int_tp src_off,
+    __global Dtype*  dst,
+    const int_tp dst_off) {
+  for (int_tp index = get_global_id(0); index < nthreads;
+        index += get_global_size(0)) {
+    int_tp src_index = TEMPLATE(compute_uncropped_index,Dtype)(
+        index, ndims, src_strides, dst_strides, offsets);
+    dst[dst_off + index] = src[src_off + src_index];
+  }
+}
+
+__kernel void TEMPLATE(crop_backward,Dtype)(const int_tp nthreads,
+    const int_tp ndims,
+    __global const int_tp*  src_strides,
+    __global const int_tp*  dst_strides,
+    __global const int_tp*  offsets,
+    __global Dtype*  src,
+    const int_tp src_off,
+    __global const Dtype* dst,
+    const int_tp dst_off) {
+  for (int_tp index = get_global_id(0); index < nthreads;
+        index += get_global_size(0)) {
+    int_tp src_index = TEMPLATE(compute_uncropped_index,Dtype)(
+        index, ndims, src_strides, dst_strides, offsets);
+    src[src_off + src_index] = dst[dst_off + index];
   }
 }
