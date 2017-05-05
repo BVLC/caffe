@@ -25,6 +25,8 @@ template<>
 std::hash<std::thread::id> DataReader<Datum>::idhasher_ = std::hash<std::thread::id>();
 template<>
 std::hash<std::thread::id> DataReader<SparseDatum>::idhasher_ = std::hash<std::thread::id>();
+template<>
+std::hash<std::thread::id> DataReader<AnnotatedDatum>::idhasher_ = std::hash<std::thread::id>();
 template<class TDatum>
 DataReader<TDatum>::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
