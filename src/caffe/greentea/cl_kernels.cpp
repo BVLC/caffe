@@ -6143,6 +6143,37 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(DivBsx, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* A, const int A_off, __global const Dtype* v, const int v_off, const int rows, const int cols,",    // NOLINT
+"__global Dtype* B, const int B_off) {",    // NOLINT
+"",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"int c = index % cols;",    // NOLINT
+"B[index+B_off] = A[index+A_off] / v[c+v_off];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(MulBsx, Dtype)(const int nthreads, __global Dtype* A, const int A_off,",    // NOLINT
+"__global Dtype* v, const int rows, const int cols, int trans,",    // NOLINT
+"__global Dtype* B, const int B_off) {",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"int c = index % cols;",    // NOLINT
+"int r = (index / cols) % rows;",    // NOLINT
+"if (trans == 0) {",    // NOLINT
+"B[index+B_off] = A[index+A_off] * v[c];",    // NOLINT
+"} else {",    // NOLINT
+"B[index+B_off] = A[index+A_off] * v[r];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "#define OCL_KERNEL_LOOP(i, n)  for (int i = get_global_id(0); i < (n); i += get_global_size(0))",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(PermuteKernel, Dtype)(const int nthreads,",    // NOLINT
@@ -7441,6 +7472,7 @@ static std::string cl_kernel_names[] = {
     "math",   // NOLINT
     "matvec_mul",   // NOLINT
     "mergecrop",   // NOLINT
+    "normalize_layer",   // NOLINT
     "permute_layer",   // NOLINT
     "pooling",   // NOLINT
     "pooling_nd",   // NOLINT
