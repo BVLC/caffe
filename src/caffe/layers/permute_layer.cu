@@ -4,9 +4,8 @@
 
 #include "caffe/layers/permute_layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#ifdef USE_CUDA
 namespace caffe {
-
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void PermuteKernel(const int nthreads,
     Dtype* const bottom_data, const bool forward, const int* permute_order,
@@ -27,7 +26,7 @@ __global__ void PermuteKernel(const int nthreads,
     }
   }
 }
-
+#endif
 template <typename Dtype>
 void PermuteLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -38,22 +37,43 @@ void PermuteLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const int* permute_order = permute_order_.gpu_data();
     const int* new_steps = new_steps_.gpu_data();
     const int* old_steps = old_steps_.gpu_data();
-    bool foward = true;
+    bool forward = true;
+    if (this->device_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
     PermuteKernel<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, foward, permute_order, old_steps, new_steps,
+        count, bottom_data, forward, permute_order, old_steps, new_steps,
         num_axes_, top_data);
     CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
+    } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+
+    viennacl::ocl::program &program = this->device_->program();
+
+    viennacl::ocl::kernel &oclk_permute = program.get_kernel(
+        CL_KERNEL_SELECT("PermuteKernel"));
+    viennacl::ocl::enqueue(
+        oclk_permute(count, WrapHandle((cl_mem) bottom_data, &ctx), (const int)forward,
+        WrapHandle((cl_mem)permute_order, &ctx),
+        WrapHandle((cl_mem)old_steps, &ctx),
+        WrapHandle((cl_mem)new_steps, &ctx),
+        num_axes_, WrapHandle((cl_mem) top_data, &ctx)),
+        ctx.get_queue());
+#endif  // USE_GREENTEA
+    }
   } else {
     // If there is no need to permute, we share data to save memory.
     top[0]->ShareData(*bottom[0]);
   }
 }
 
-
 template <typename Dtype>
 void PermuteLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+#ifdef USE_CUDA
   if (need_permute_) {
     Dtype* top_diff = top[0]->mutable_gpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
@@ -71,9 +91,12 @@ void PermuteLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // If there is no need to permute, we share diff to save memory.
     bottom[0]->ShareDiff(*top[0]);
   }
+#else
+  this->Backward_cpu(top, propagate_down, bottom);
+  // NOT_IMPLEMENTED;
+#endif // USE_CUDA
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(PermuteLayer);
 
 }  // namespace caffe
-#endif

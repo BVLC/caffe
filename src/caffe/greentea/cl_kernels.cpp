@@ -6143,6 +6143,35 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#define OCL_KERNEL_LOOP(i, n)  for (int i = get_global_id(0); i < (n); i += get_global_size(0))",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(PermuteKernel, Dtype)(const int nthreads,",    // NOLINT
+"__global Dtype* bottom_data, const int forward, global int* permute_order,",    // NOLINT
+"global int* old_steps, global int* new_steps, const int num_axes,",    // NOLINT
+"__global Dtype* top_data) {",    // NOLINT
+"OCL_KERNEL_LOOP(index, nthreads) {",    // NOLINT
+"int temp_idx = index;",    // NOLINT
+"int old_idx = 0;",    // NOLINT
+"for (int i = 0; i < num_axes; ++i) {",    // NOLINT
+"int order = permute_order[i];",    // NOLINT
+"old_idx += (temp_idx / new_steps[i]) * old_steps[order];",    // NOLINT
+"temp_idx %= new_steps[i];",    // NOLINT
+"}",    // NOLINT
+"if (forward != 0) {",    // NOLINT
+"top_data[index] = bottom_data[old_idx];",    // NOLINT
+"} else {",    // NOLINT
+"bottom_data[old_idx] = top_data[index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "void TEMPLATE(max_pool_forward_impl, Dtype)(",    // NOLINT
 "const int_tp nthreads, __global const Dtype* bottom_data, const int_tp num,",    // NOLINT
 "const int_tp channels, const int_tp height, const int_tp width,",    // NOLINT
@@ -7412,6 +7441,7 @@ static std::string cl_kernel_names[] = {
     "math",   // NOLINT
     "matvec_mul",   // NOLINT
     "mergecrop",   // NOLINT
+    "permute_layer",   // NOLINT
     "pooling",   // NOLINT
     "pooling_nd",   // NOLINT
     "pooling_sk",   // NOLINT
