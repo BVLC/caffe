@@ -141,6 +141,6 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capability >= 3.0.
 
-Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
+Once installed, check your times against our [reference performance numbers](performance_hardware.md) to make sure everything is configured properly.
 
 Ask hardware questions on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users).
