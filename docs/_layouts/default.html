@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe {% if page contains 'title' %}| {{ page.title }}{% endif %}
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by <a class="header name" href="http://bair.berkeley.edu/">BAIR</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      {{ content }}
+
+      </section>
+  </div>
+  </body>
+</html>
