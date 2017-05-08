@@ -165,6 +165,26 @@ TYPED_TEST(MKLDNNInnerProductLayerTest, TestForward) {
   }
 }
 
+TYPED_TEST(MKLDNNInnerProductLayerTest, TestForwardNoBias) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_);
+  LayerParameter layer_param;
+  InnerProductParameter* inner_product_param =
+      layer_param.mutable_inner_product_param();
+  inner_product_param->set_num_output(10);
+  inner_product_param->mutable_weight_filler()->set_type("uniform");
+  inner_product_param->set_bias_term(false);
+  shared_ptr<InnerProductLayer<Dtype> > layer(
+      new MKLDNNInnerProductLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_GE(data[i], 1.);
+  }
+}
+
 // TODO: add support for transposed weights in MKLDNNInnerProduct 
 // layer and then enable following test (check if it was ported properly)
 #if 0
@@ -266,6 +286,22 @@ TYPED_TEST(MKLDNNInnerProductLayerTest, TestGradient) {
     inner_product_param->mutable_bias_filler()->set_type("gaussian");
     inner_product_param->mutable_bias_filler()->set_min(1);
     inner_product_param->mutable_bias_filler()->set_max(2);
+    shared_ptr<InnerProductLayer<Dtype> > layer(
+      new MKLDNNInnerProductLayer<Dtype>(layer_param));
+    GradientChecker<Dtype> checker(1e-2, 1e-3);
+    checker.CheckGradientExhaustive(layer.get(), this->blob_bottom_vec_,
+        this->blob_top_vec_);
+}
+
+TYPED_TEST(MKLDNNInnerProductLayerTest, TestGradientNoBias) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_);
+    LayerParameter layer_param;
+    InnerProductParameter* inner_product_param =
+        layer_param.mutable_inner_product_param();
+    inner_product_param->set_num_output(10);
+    inner_product_param->mutable_weight_filler()->set_type("gaussian");
+    inner_product_param->set_bias_term(false);
     shared_ptr<InnerProductLayer<Dtype> > layer(
       new MKLDNNInnerProductLayer<Dtype>(layer_param));
     GradientChecker<Dtype> checker(1e-2, 1e-3);

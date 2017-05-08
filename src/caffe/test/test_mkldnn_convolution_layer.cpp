@@ -348,7 +348,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNNWithRectangeKernelStridePa
   EXPECT_EQ(layer->GetPadWidth(), 1);
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionMKLDNN) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -388,7 +388,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionMKLDNN) {
 #endif
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionReLUMKLDNN) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -607,7 +607,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestDilated3DConvolution) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Convolution) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Convolution) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -634,7 +634,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Convolution) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1ConvolutionReLU) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1ConvolutionReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -662,7 +662,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1ConvolutionReLU) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -691,7 +691,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionGroup) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionReLUGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -935,7 +935,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestNDAgainst2D) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestGradient) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -1012,7 +1012,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradient3D) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Gradient) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Gradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -1030,7 +1030,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Gradient) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestGradientGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradientGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
