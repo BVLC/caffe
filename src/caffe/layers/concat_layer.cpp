@@ -132,7 +132,7 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
 #ifdef _OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for if(num_concats_ > 1)
 #endif
       for (int n = 0; n < num_concats_; ++n) {
         caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +

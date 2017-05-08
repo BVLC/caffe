@@ -66,6 +66,7 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   eps_ = this->layer_param_.batch_norm_param().eps();
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
   bias_term_ = this->layer_param_.batch_norm_param().bias_term();
+  use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
 
   CHECK(use_weight_bias_) << "BatchNorm without scaling have not supported yet";
 
@@ -111,6 +112,7 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   dnnReleaseBuffer<Dtype>(variance_buffer_);
   dnnReleaseBuffer<Dtype>(scaleShift_buffer_);
   dnnReleaseBuffer<Dtype>(diffScaleShift_buffer_);
+
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
 
@@ -252,9 +254,15 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
       bwd_top_diff   ->create_internal_layout(batchNormFwd, dnnResourceDst);
       bwd_bottom_diff->create_internal_layout(batchNormFwd, dnnResourceSrc);
 
-       e = dnnBatchNormalizationCreateBackward<Dtype>(
-        &batchNormBwd, NULL, mem_descr->layout_int, eps_, dnnUseScaleShift);
-      CHECK_EQ(e, E_SUCCESS);
+       if (!use_global_stats_) {
+         e = dnnBatchNormalizationCreateBackward<Dtype>(
+            &batchNormBwd, NULL, mem_descr->layout_int, eps_, dnnUseScaleShift);
+         CHECK_EQ(e, E_SUCCESS);
+       } else {
+         e = dnnBatchNormalizationCreateBackward<Dtype>(
+            &batchNormBwd, NULL, mem_descr->layout_int, eps_, dnnUseScaleShift | dnnUseInputMeanVariance);
+         CHECK_EQ(e, E_SUCCESS);
+       }
     }
   } else {
     DLOG(INFO) << "Using cpu_data in MKLBatchNormLayer.";
@@ -271,9 +279,15 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
                                     dnnUseScaleShift | dnnUseInputMeanVariance);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnBatchNormalizationCreateBackward<Dtype>(
-        &batchNormBwd, NULL, layout_usr_, eps_, dnnUseScaleShift);
-      CHECK_EQ(e, E_SUCCESS);
+      if (!use_global_stats_) {
+        e = dnnBatchNormalizationCreateBackward<Dtype>(
+          &batchNormBwd, NULL, layout_usr_, eps_, dnnUseScaleShift);
+        CHECK_EQ(e, E_SUCCESS);
+      } else {
+        e = dnnBatchNormalizationCreateBackward<Dtype>(
+          &batchNormBwd, NULL, layout_usr_, eps_, dnnUseScaleShift | dnnUseInputMeanVariance);
+        CHECK_EQ(e, E_SUCCESS);
+      }
     }
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
@@ -341,13 +355,13 @@ void MKLBatchNormLayer<Dtype>::Forward_cpu(
     // doing Backward
     // TODO: make a caffe_coppy working on blobs
     caffe_copy(amount_to_copy, static_cast<Dtype*>(bottom_data),
-                                                      temp_.mutable_cpu_data());
+               temp_.mutable_cpu_data());
   }
 
   if (use_global_stats_) {
     // use the stored mean/variance estimates.
     const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
-        0 : 1 / this->blobs_[2]->cpu_data()[0];
+                               0 : 1 / this->blobs_[2]->cpu_data()[0];
     caffe_cpu_scale(this->blobs_[0]->count(), scale_factor,
                     this->blobs_[0]->cpu_data(), mean_buffer_);
     caffe_cpu_scale(this->blobs_[1]->count(), scale_factor,

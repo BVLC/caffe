@@ -153,6 +153,13 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+    } else if (!force_nd_im2col_ && num_spatial_axes_ == 3) {
+      im3d2col_cpu(data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2], conv_input_shape_.cpu_data()[3],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1], kernel_shape_.cpu_data()[2],
+          pad_.cpu_data()[0], pad_.cpu_data()[1], pad_.cpu_data()[2],
+          stride_.cpu_data()[0], stride_.cpu_data()[1], stride_.cpu_data()[2],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], dilation_.cpu_data()[2], col_buff);
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
           col_buffer_shape_.data(), kernel_shape_.cpu_data(),
@@ -167,6 +174,13 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
+    } else if (!force_nd_im2col_ && num_spatial_axes_ == 3) {
+      col2im3d_cpu(col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2], conv_input_shape_.cpu_data()[3],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1], kernel_shape_.cpu_data()[2],
+          pad_.cpu_data()[0], pad_.cpu_data()[1], pad_.cpu_data()[2],
+          stride_.cpu_data()[0], stride_.cpu_data()[1], stride_.cpu_data()[2],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], dilation_.cpu_data()[2], data);
     } else {
       col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
           col_buffer_shape_.data(), kernel_shape_.cpu_data(),
