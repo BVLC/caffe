@@ -61,21 +61,17 @@ class DetectionOutputLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-#ifdef USE_CUDA
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-#endif
   /// @brief Not implemented
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
-#ifdef USE_CUDA
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
-#endif
 
   int num_classes_;
   bool share_location_;
@@ -91,6 +87,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
 
   float nms_threshold_;
   int top_k_;
+  float eta_;
 
   bool need_save_;
   string output_directory_;

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <csignal>
 #include <ctime>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -571,7 +572,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
     const int num, const bool share_location,
     const int num_loc_classes, const int background_label_id,
     const CodeType code_type, const bool variance_encoded_in_target,
-    vector<LabelBBox>* all_decode_bboxes) {
+    const bool clip, vector<LabelBBox>* all_decode_bboxes) {
   CHECK_EQ(all_loc_preds.size(), num);
   all_decode_bboxes->clear();
   all_decode_bboxes->resize(num);
@@ -591,7 +592,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
       const vector<NormalizedBBox>& label_loc_preds =
           all_loc_preds[i].find(label)->second;
       DecodeBBoxes(prior_bboxes, prior_variances,
-                   code_type, variance_encoded_in_target, false,
+                   code_type, variance_encoded_in_target, clip,
                    label_loc_preds, &(decode_bboxes[label]));
     }
   }
@@ -852,7 +853,7 @@ int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
 }
 
 inline bool IsEligibleMining(const MiningType mining_type, const int match_idx,
-                             const float match_overlap, const float neg_overlap) {
+    const float match_overlap, const float neg_overlap) {
   if (mining_type == MultiBoxLossParameter_MiningType_MAX_NEGATIVE) {
     return match_idx == -1 && match_overlap < neg_overlap;
   } else if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
@@ -908,14 +909,20 @@ void MineHardExamples(const Blob<Dtype>& conf_blob,
   const int sample_size = multibox_loss_param.sample_size();
   // Compute confidence losses based on matching results.
   vector<vector<float> > all_conf_loss;
-#ifndef USE_CUDA
+#ifdef CPU_ONLY
   ComputeConfLoss(conf_blob.cpu_data(), num, num_priors, num_classes,
       background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
       &all_conf_loss);
 #else
+#ifdef USE_CUDA
   ComputeConfLossGPU(conf_blob, num, num_priors, num_classes,
       background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
       &all_conf_loss);
+#else
+  ComputeConfLoss(conf_blob.cpu_data(), num, num_priors, num_classes,
+      background_label_id, conf_loss_type, *all_match_indices, all_gt_bboxes,
+      &all_conf_loss);
+#endif
 #endif
   vector<vector<float> > all_loc_loss;
   if (mining_type == MultiBoxLossParameter_MiningType_HARD_EXAMPLE) {
@@ -1406,55 +1413,6 @@ template void GetConfidenceScores(const float* conf_data, const int num,
 template void GetConfidenceScores(const double* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       const bool class_major, vector<map<int, vector<float> > >* conf_preds);
-
-template <typename Dtype>
-void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const ConfLossType loss_type,
-      vector<vector<float> >* all_conf_loss) {
-  all_conf_loss->clear();
-  for (int i = 0; i < num; ++i) {
-    vector<float> conf_loss;
-    for (int p = 0; p < num_preds_per_class; ++p) {
-      int start_idx = p * num_classes;
-      int label = background_label_id;
-      Dtype loss = 0;
-      if (loss_type == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
-        CHECK_GE(label, 0);
-        CHECK_LT(label, num_classes);
-        // Compute softmax probability.
-        // We need to subtract the max to avoid numerical issues.
-        Dtype maxval = -FLT_MAX;
-        for (int c = 0; c < num_classes; ++c) {
-          maxval = std::max<Dtype>(conf_data[start_idx + c], maxval);
-        }
-        Dtype sum = 0.;
-        for (int c = 0; c < num_classes; ++c) {
-          sum += std::exp(conf_data[start_idx + c] - maxval);
-        }
-        Dtype prob = std::exp(conf_data[start_idx + label] - maxval) / sum;
-        loss = -log(std::max(prob, Dtype(FLT_MIN)));
-      } else if (loss_type == MultiBoxLossParameter_ConfLossType_LOGISTIC) {
-        int target = 0;
-        for (int c = 0; c < num_classes; ++c) {
-          if (c == label) {
-            target = 1;
-          } else {
-            target = 0;
-          }
-          Dtype input = conf_data[start_idx + c];
-          loss -= input * (target - (input >= 0)) -
-              log(1 + exp(input - 2 * input * (input >= 0)));
-        }
-      } else {
-        LOG(FATAL) << "Unknown conf loss type.";
-      }
-      conf_loss.push_back(loss);
-    }
-    conf_data += num_preds_per_class * num_classes;
-    all_conf_loss->push_back(conf_loss);
-  }
-}
 
 template <typename Dtype>
 void ComputeConfLoss(const Dtype* conf_data, const int num,
@@ -1959,9 +1917,14 @@ void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
   }
 }
 
+inline int clamp(const int v, const int a, const int b) {
+  return v < a ? a : v > b ? b : v;
+}
+
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const vector<float>& scores, const float score_threshold,
-      const float nms_threshold, const int top_k, vector<int>* indices) {
+      const float nms_threshold, const float eta, const int top_k,
+      vector<int>* indices) {
   // Sanity check.
   CHECK_EQ(bboxes.size(), scores.size())
       << "bboxes and scores have different size.";
@@ -1971,6 +1934,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
 
   // Do nms.
+  float adaptive_threshold = nms_threshold;
   indices->clear();
   while (score_index_vec.size() != 0) {
     const int idx = score_index_vec.front().second;
@@ -1979,7 +1943,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       if (keep) {
         const int kept_idx = (*indices)[k];
         float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
-        keep = overlap <= nms_threshold;
+        keep = overlap <= adaptive_threshold;
       } else {
         break;
       }
@@ -1988,6 +1952,9 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       indices->push_back(idx);
     }
     score_index_vec.erase(score_index_vec.begin());
+    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+      adaptive_threshold *= eta;
+    }
   }
 }
 
@@ -2185,6 +2152,7 @@ vector<cv::Scalar> GetColors(const int n) {
   }
   return colors;
 }
+
 static clock_t start_clock = clock();
 static cv::VideoWriter cap_out;
 

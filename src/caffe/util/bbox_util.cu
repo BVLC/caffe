@@ -369,6 +369,7 @@ __global__ void kernel_channel_div(const int count,
     data[index] /= channel_sum[n * spatial_dim + s];
   }
 }
+#endif //USE_CUDA
 
 template <typename Dtype>
 void SoftMaxGPU(const Dtype* data, const int outer_num,
@@ -411,6 +412,7 @@ void SoftMaxGPU(const Dtype* data, const int outer_num,
 #endif //USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    NOT_IMPLEMENTED;
 #endif //USE_GREENTEA
   }
 }
@@ -419,7 +421,7 @@ template void SoftMaxGPU(const float* data, const int outer_num,
     const int channels, const int inner_num, float* prob);
 template void SoftMaxGPU(const double* data, const int outer_num,
     const int channels, const int inner_num, double* prob);
-#endif //USE_CUDA
+
 #ifdef USE_CUDA
 template <typename Dtype>
 __global__ void ComputeOverlappedKernel(const int nthreads,
@@ -445,7 +447,6 @@ __global__ void ComputeOverlappedKernel(const int nthreads,
   }
 }
 #endif //USE_CUDA
-#ifdef USE_CUDA
 template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
@@ -460,6 +461,7 @@ void ComputeOverlappedGPU(const int nthreads,
 #endif //USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    NOT_IMPLEMENTED;
 #endif //USE_GREENTEA
   }
 }
@@ -470,7 +472,7 @@ template void ComputeOverlappedGPU(const int nthreads,
 template void ComputeOverlappedGPU(const int nthreads,
           const double* bbox_data, const int num_bboxes, const int num_classes,
           const double overlap_threshold, bool* overlapped_data);
-#endif //USE_CUDA
+
 #ifdef USE_CUDA
 template <typename Dtype>
 __global__ void ComputeOverlappedByIdxKernel(const int nthreads,
@@ -494,7 +496,7 @@ __global__ void ComputeOverlappedByIdxKernel(const int nthreads,
   }
 }
 #endif //USE_CUDA
-#ifdef USE_CUDA
+
 template <typename Dtype>
 void ComputeOverlappedByIdxGPU(const int nthreads,
           const Dtype* bbox_data, const Dtype overlap_threshold,
@@ -509,6 +511,7 @@ void ComputeOverlappedByIdxGPU(const int nthreads,
 #endif //USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    NOT_IMPLEMENTED;
 #endif //USE_GREENTEA
   }
 }
@@ -519,7 +522,7 @@ template void ComputeOverlappedByIdxGPU(const int nthreads,
 template void ComputeOverlappedByIdxGPU(const int nthreads,
           const double* bbox_data, const double overlap_threshold,
           const int* idx, const int num_idx, bool* overlapped_data);
-#endif //USE_CUDA
+
 #ifdef USE_CUDA
 template <typename Dtype>
 void ApplyNMSGPU(const Dtype* bbox_data, const Dtype* conf_data,

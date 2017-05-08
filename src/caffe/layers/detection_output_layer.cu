@@ -13,7 +13,6 @@
 #include "boost/foreach.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
-#ifdef USE_CUDA
 namespace caffe {
 
 template <typename Dtype>
@@ -302,4 +301,3 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
 INSTANTIATE_LAYER_GPU_FUNCS(DetectionOutputLayer);
 
 }  // namespace caffe
-#endif //USE_CUDA
