@@ -657,7 +657,7 @@ __host__ __device__ Dtype BBoxSizeGPU(const Dtype* bbox,
 template <typename Dtype>
 __host__ __device__ Dtype JaccardOverlapGPU(const Dtype* bbox1,
                                             const Dtype* bbox2);
-
+#endif //USE_CUDA
 template <typename Dtype>
 void DecodeBBoxesGPU(const int nthreads,
           const Dtype* loc_data, const Dtype* prior_data,
@@ -671,6 +671,7 @@ void PermuteDataGPU(const int nthreads,
           const Dtype* data, const int num_classes, const int num_data,
           const int num_dim, Dtype* new_data);
 
+#ifdef USE_CUDA
 template <typename Dtype>
 void SoftMaxGPU(const Dtype* data, const int outer_num, const int channels,
     const int inner_num, Dtype* prob);
@@ -694,7 +695,7 @@ template <typename Dtype>
 void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
           const int image_id, const int label, const vector<int>& indices,
           const bool clip_bbox, Blob<Dtype>* detection_blob);
-#endif // USE_CUDA
+#endif //USE_CUDA
 #endif  // !CPU_ONLY
 
 #ifdef USE_OPENCV

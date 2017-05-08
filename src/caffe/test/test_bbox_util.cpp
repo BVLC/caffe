@@ -1487,17 +1487,17 @@ TEST_F(CPUBBoxUtilTest, TestComputeAP) {
 }
 
 #ifndef CPU_ONLY
-#ifdef USE_CUDA
 template <typename Dtype>
 void FillBBoxes(Dtype* gt_bboxes, Dtype* pred_bboxes) {
 }
 
-template <typename Dtype>
-class GPUBBoxUtilTest : public BBoxUtilTest<GPUDevice<Dtype> > {
+template <typename TypeParam>
+class GPUBBoxUtilTest : public GPUDeviceTest<TypeParam> {
+    typedef typename TypeParam::Dtype Dtype;
 };
 
-TYPED_TEST_CASE(GPUBBoxUtilTest, TestDtypes);
-
+TYPED_TEST_CASE(GPUBBoxUtilTest, TestGPUDtypesAndDevices);
+#ifdef USE_CUDA
 TYPED_TEST(GPUBBoxUtilTest, TestBBoxSize) {
   float size;
   Blob<TypeParam> bbox(1, 1, 1, 4);
@@ -1558,37 +1558,40 @@ TYPED_TEST(GPUBBoxUtilTest, TestJaccardOverlap) {
   overlap = JaccardOverlapGPU(bbox1_data, bbox2_data);
   EXPECT_NEAR(overlap, 0., eps);
 }
-
+#endif // USE_CUDA
 TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
+  typedef typename TypeParam::Dtype Dtype;
   int num = 4;
-  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
-  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
-  Blob<TypeParam> loc_preds(1, num * 4, 1, 1);
-  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  Blob<Dtype> prior_bboxes(1, 2, num * 4, 1);
+  Dtype* prior_cpu_data = prior_bboxes.mutable_cpu_data();
+  Blob<Dtype> loc_preds(1, num * 4, 1, 1);
+  Dtype* loc_cpu_data = loc_preds.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
-    prior_data[(i - 1) * 4] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
-    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
     for (int j = 0; j < 4; ++j) {
-      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+      prior_cpu_data[num * 4 + (i - 1) * 4 + j] = 0.1;
     }
 
-    loc_data[(i - 1) * 4] = -1 * (i % 2);
-    loc_data[(i - 1) * 4 + 1] = ((i + 1) % 2);
-    loc_data[(i - 1) * 4 + 2] = ((i + 1) % 2);
-    loc_data[(i - 1) * 4 + 3] = i % 2;
+    loc_cpu_data[(i - 1) * 4] = -1 * (i % 2);
+    loc_cpu_data[(i - 1) * 4 + 1] = ((i + 1) % 2);
+    loc_cpu_data[(i - 1) * 4 + 2] = ((i + 1) % 2);
+    loc_cpu_data[(i - 1) * 4 + 3] = i % 2;
   }
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
-  Blob<TypeParam> bboxes(1, num * 4, 1, 1);
-  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  Blob<Dtype> bboxes(1, num * 4, 1, 1);
+  Dtype* bbox_data = bboxes.mutable_gpu_data();
 
   bool variance_encoded_in_target = false;
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+  const Dtype* prior_gpu_data = prior_bboxes.gpu_data();
+  const Dtype* loc_gpu_data = loc_preds.gpu_data();
+  DecodeBBoxesGPU(num * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, 1, -1, false,
                   bbox_data);
-  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
+  Dtype* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -0.1, eps);
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.1*i + (i+1)%2 * 0.1, eps);
@@ -1599,7 +1602,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   variance_encoded_in_target = true;
   bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, 1, -1, false,
                   bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
@@ -1612,38 +1615,40 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 }
 
 TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
+  typedef typename TypeParam::Dtype Dtype;
   int num = 4;
   int num_loc_classes = 2;
-  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
-  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
-  Blob<TypeParam> loc_preds(1, num * num_loc_classes * 4, 1, 1);
-  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  Blob<Dtype> prior_bboxes(1, 2, num * 4, 1);
+  Dtype* prior_cpu_data = prior_bboxes.mutable_cpu_data();
+  Blob<Dtype> loc_preds(1, num * num_loc_classes * 4, 1, 1);
+  Dtype* loc_cpu_data = loc_preds.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
-    prior_data[(i - 1) * 4] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
-    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
     for (int j = 0; j < 4; ++j) {
-      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+      prior_cpu_data[num * 4 + (i - 1) * 4 + j] = 0.1;
     }
 
     for (int j = 0; j < num_loc_classes; ++j) {
-      loc_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
     }
   }
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
-  Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
-  TypeParam* bbox_data = bboxes.mutable_gpu_data();
-
+  Blob<Dtype> bboxes(1, num * num_loc_classes * 4, 1, 1);
+  Dtype* bbox_data = bboxes.mutable_gpu_data();
+  const Dtype* prior_gpu_data = prior_bboxes.gpu_data();
+  const Dtype* loc_gpu_data = loc_preds.gpu_data();
   bool variance_encoded_in_target = false;
-  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
                   false, bbox_data);
-  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
+  Dtype* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
       EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
@@ -1659,7 +1664,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
 
   variance_encoded_in_target = true;
   bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, -1,
                   false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
@@ -1678,38 +1683,40 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
 }
 
 TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
+  typedef typename TypeParam::Dtype Dtype;
   int num = 4;
   int num_loc_classes = 2;
-  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
-  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
-  Blob<TypeParam> loc_preds(1, num * num_loc_classes * 4, 1, 1);
-  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  Blob<Dtype> prior_bboxes(1, 2, num * 4, 1);
+  Dtype* prior_cpu_data = prior_bboxes.mutable_cpu_data();
+  Blob<Dtype> loc_preds(1, num * num_loc_classes * 4, 1, 1);
+  Dtype* loc_cpu_data = loc_preds.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
-    prior_data[(i - 1) * 4] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
-    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
     for (int j = 0; j < 4; ++j) {
-      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+      prior_cpu_data[num * 4 + (i - 1) * 4 + j] = 0.1;
     }
 
     for (int j = 0; j < num_loc_classes; ++j) {
-      loc_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
-      loc_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
+      loc_cpu_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
     }
   }
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
-  Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
-  TypeParam* bbox_data = bboxes.mutable_gpu_data();
-
+  Blob<Dtype> bboxes(1, num * num_loc_classes * 4, 1, 1);
+  Dtype* bbox_data = bboxes.mutable_gpu_data();
+  const Dtype* prior_gpu_data = prior_bboxes.gpu_data();
+  const Dtype* loc_gpu_data = loc_preds.gpu_data();
   bool variance_encoded_in_target = false;
-  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
                   false, bbox_data);
-  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
+  Dtype* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
       if (j == 0) {
@@ -1731,7 +1738,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
 
   variance_encoded_in_target = true;
   bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, num_loc_classes, 0,
                   false, bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
@@ -1756,36 +1763,39 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
 }
 
 TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
+  typedef typename TypeParam::Dtype Dtype;
   int num = 2;
-  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
-  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
-  Blob<TypeParam> loc_preds(1, num * 4, 1, 1);
-  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  Blob<Dtype> prior_bboxes(1, 2, num * 4, 1);
+  Dtype* prior_cpu_data = prior_bboxes.mutable_cpu_data();
+  Blob<Dtype> loc_preds(1, num * 4, 1, 1);
+  Dtype* loc_cpu_data = loc_preds.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
-    prior_data[(i - 1) * 4] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
-    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
-    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
-    prior_data[num * 4 + (i - 1) * 4] = 0.1;
-    prior_data[num * 4 + (i - 1) * 4 + 1] = 0.1;
-    prior_data[num * 4 + (i - 1) * 4 + 2] = 0.2;
-    prior_data[num * 4 + (i - 1) * 4 + 3] = 0.2;
+    prior_cpu_data[(i - 1) * 4] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_cpu_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_cpu_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    prior_cpu_data[num * 4 + (i - 1) * 4] = 0.1;
+    prior_cpu_data[num * 4 + (i - 1) * 4 + 1] = 0.1;
+    prior_cpu_data[num * 4 + (i - 1) * 4 + 2] = 0.2;
+    prior_cpu_data[num * 4 + (i - 1) * 4 + 3] = 0.2;
 
-    loc_data[(i - 1) * 4] = 0;
-    loc_data[(i - 1) * 4 + 1] = 0.75;
-    loc_data[(i - 1) * 4 + 2] = log(2.);
-    loc_data[(i - 1) * 4 + 3] = log(3./2);
+    loc_cpu_data[(i - 1) * 4] = 0;
+    loc_cpu_data[(i - 1) * 4 + 1] = 0.75;
+    loc_cpu_data[(i - 1) * 4 + 2] = log(2.);
+    loc_cpu_data[(i - 1) * 4 + 3] = log(3./2);
   }
 
   CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
-  Blob<TypeParam> bboxes(1, num * 4, 1, 1);
-  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  Blob<Dtype> bboxes(1, num * 4, 1, 1);
+  Dtype* bbox_data = bboxes.mutable_gpu_data();
+  const Dtype* prior_gpu_data = prior_bboxes.gpu_data();
+  const Dtype* loc_gpu_data = loc_preds.gpu_data();
 
   bool variance_encoded_in_target = true;
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, 1, -1, false,
                   bbox_data);
-  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
+  Dtype* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.2 + (i-1) * 0.1, eps);
@@ -1795,13 +1805,14 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   variance_encoded_in_target = false;
   for (int i = 1; i <= num; ++i) {
-    loc_data[(i - 1) * 4] = 0;
-    loc_data[(i - 1) * 4 + 1] = 7.5;
-    loc_data[(i - 1) * 4 + 2] = log(2.) * 5;
-    loc_data[(i - 1) * 4 + 3] = log(3./2) * 5;
+    loc_cpu_data[(i - 1) * 4] = 0;
+    loc_cpu_data[(i - 1) * 4 + 1] = 7.5;
+    loc_cpu_data[(i - 1) * 4 + 2] = log(2.) * 5;
+    loc_cpu_data[(i - 1) * 4 + 3] = log(3./2) * 5;
   }
+  loc_gpu_data = loc_preds.gpu_data();
   bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+  DecodeBBoxesGPU(num * 4, loc_gpu_data, prior_gpu_data, code_type,
                   variance_encoded_in_target, num, false, 1, -1, false,
                   bbox_data);
   bbox_cpu_data = bboxes.mutable_cpu_data();
@@ -1813,6 +1824,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
   }
 }
 
+#ifdef USE_CUDA
 TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlapped) {
   const int num = 2;
   const int num_bboxes = 2;

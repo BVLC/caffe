@@ -2,16 +2,16 @@
 #include <functional>
 #include <map>
 #include <vector>
-
 #ifdef USE_CUDA
 #include "thrust/functional.h"
 #include "thrust/sort.h"
-
+#endif //USE_CUDA
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
-
+#ifdef USE_CUDA
 template <typename Dtype>
 __host__ __device__ Dtype BBoxSizeGPU(const Dtype* bbox,
     const bool normalized) {
@@ -190,7 +190,7 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
     }
   }
 }
-
+#endif //USE_CUDA
 template <typename Dtype>
 void DecodeBBoxesGPU(const int nthreads,
           const Dtype* loc_data, const Dtype* prior_data,
@@ -198,12 +198,50 @@ void DecodeBBoxesGPU(const int nthreads,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
           const bool clip_bbox, Dtype* bbox_data) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  DecodeBBoxesKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-      CAFFE_CUDA_NUM_THREADS>>>(nthreads, loc_data, prior_data, code_type,
-      variance_encoded_in_target, num_priors, share_location, num_loc_classes,
-      background_label_id, clip_bbox, bbox_data);
-  CUDA_POST_KERNEL_CHECK;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    DecodeBBoxesKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS>>>(nthreads, loc_data, prior_data, code_type,
+        variance_encoded_in_target, num_priors, share_location, num_loc_classes,
+        background_label_id, clip_bbox, bbox_data);
+    CUDA_POST_KERNEL_CHECK;
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        Caffe::GetDefaultDevice()->id());
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    std::string kernel_name{};
+    switch(code_type) {
+    case PriorBoxParameter_CodeType_CORNER:
+      kernel_name = CL_KERNEL_SELECT("DecodeBBoxesCORNER");
+      break;
+    case PriorBoxParameter_CodeType_CENTER_SIZE:
+      kernel_name = CL_KERNEL_SELECT("DecodeBBoxesCENTER_SIZE");
+      break;
+    case PriorBoxParameter_CodeType_CORNER_SIZE:
+      kernel_name = CL_KERNEL_SELECT("DecodeBBoxesCORNER_SIZE");
+      break;
+    default:
+      break;
+    }
+    viennacl::ocl::kernel &oclk_debbox = program.get_kernel(kernel_name);
+    viennacl::ocl::enqueue(
+        oclk_debbox(nthreads,
+        WrapHandle((cl_mem)loc_data, &ctx),
+        WrapHandle((cl_mem)prior_data, &ctx),
+        (int)variance_encoded_in_target,
+        num_priors,
+        (int)share_location,
+        num_loc_classes,
+        background_label_id,
+        (int)clip_bbox,
+        WrapHandle((cl_mem)bbox_data, &ctx)),
+        ctx.get_queue());
+
+#endif //USE_GREENTEA
+  }
 }
 
 template void DecodeBBoxesGPU(const int nthreads,
@@ -219,6 +257,7 @@ template void DecodeBBoxesGPU(const int nthreads,
           const int num_loc_classes, const int background_label_id,
           const bool clip_bbox, double* bbox_data);
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void PermuteDataKernel(const int nthreads,
           const Dtype* data, const int num_classes, const int num_data,
@@ -232,16 +271,24 @@ __global__ void PermuteDataKernel(const int nthreads,
     new_data[new_index] = data[index];
   }
 }
+#endif //USE_CUDA
 
 template <typename Dtype>
 void PermuteDataGPU(const int nthreads,
           const Dtype* data, const int num_classes, const int num_data,
           const int num_dim, Dtype* new_data) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  PermuteDataKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-      CAFFE_CUDA_NUM_THREADS>>>(nthreads, data, num_classes, num_data,
-      num_dim, new_data);
-  CUDA_POST_KERNEL_CHECK;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PermuteDataKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS>>>(nthreads, data, num_classes, num_data,
+        num_dim, new_data);
+    CUDA_POST_KERNEL_CHECK;
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+#endif //USE_GREENTEA
+  }
 }
 
 template void PermuteDataGPU(const int nthreads,
@@ -251,6 +298,7 @@ template void PermuteDataGPU(const int nthreads,
           const double* data, const int num_classes, const int num_data,
           const int num_dim, double* new_data);
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void kernel_channel_max(const int num, const int channels,
     const int spatial_dim, const Dtype* data, Dtype* out) {
@@ -319,39 +367,47 @@ void SoftMaxGPU(const Dtype* data, const int outer_num,
   Blob<Dtype> scale(shape);
   Dtype* scale_data = scale.mutable_gpu_data();
   int count = outer_num * channels * inner_num;
-  // We need to subtract the max to avoid numerical issues, compute the exp,
-  // and then normalize.
-  // compute max
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num * inner_num),
-      CAFFE_CUDA_NUM_THREADS>>>(outer_num, channels, inner_num, data,
-      scale_data);
-  // subtract
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num, channels, inner_num,
-      data, scale_data, prob);
-  // exponentiate
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, prob, prob);
-  // sum after exp
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num * inner_num),
-      CAFFE_CUDA_NUM_THREADS>>>(outer_num, channels, inner_num, prob,
-      scale_data);
-  // divide
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num, channels, inner_num,
-      scale_data, prob);
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // We need to subtract the max to avoid numerical issues, compute the exp,
+    // and then normalize.
+    // compute max
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num * inner_num),
+        CAFFE_CUDA_NUM_THREADS>>>(outer_num, channels, inner_num, data,
+        scale_data);
+    // subtract
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(count, outer_num, channels, inner_num,
+        data, scale_data, prob);
+    // exponentiate
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, prob, prob);
+    // sum after exp
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num * inner_num),
+        CAFFE_CUDA_NUM_THREADS>>>(outer_num, channels, inner_num, prob,
+        scale_data);
+    // divide
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(count, outer_num, channels, inner_num,
+        scale_data, prob);
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+#endif //USE_GREENTEA
+  }
 }
 
 template void SoftMaxGPU(const float* data, const int outer_num,
     const int channels, const int inner_num, float* prob);
 template void SoftMaxGPU(const double* data, const int outer_num,
     const int channels, const int inner_num, double* prob);
-
+#endif //USE_CUDA
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void ComputeOverlappedKernel(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
@@ -375,16 +431,24 @@ __global__ void ComputeOverlappedKernel(const int nthreads,
     }
   }
 }
-
+#endif //USE_CUDA
+#ifdef USE_CUDA
 template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
           const Dtype overlap_threshold, bool* overlapped_data) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  ComputeOverlappedKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-      CAFFE_CUDA_NUM_THREADS>>>(nthreads, bbox_data, num_bboxes, num_classes,
-      overlap_threshold, overlapped_data);
-  CUDA_POST_KERNEL_CHECK;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    ComputeOverlappedKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS>>>(nthreads, bbox_data, num_bboxes, num_classes,
+        overlap_threshold, overlapped_data);
+    CUDA_POST_KERNEL_CHECK;
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+#endif //USE_GREENTEA
+  }
 }
 
 template void ComputeOverlappedGPU(const int nthreads,
@@ -393,7 +457,8 @@ template void ComputeOverlappedGPU(const int nthreads,
 template void ComputeOverlappedGPU(const int nthreads,
           const double* bbox_data, const int num_bboxes, const int num_classes,
           const double overlap_threshold, bool* overlapped_data);
-
+#endif //USE_CUDA
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void ComputeOverlappedByIdxKernel(const int nthreads,
           const Dtype* bbox_data, const Dtype overlap_threshold,
@@ -415,16 +480,24 @@ __global__ void ComputeOverlappedByIdxKernel(const int nthreads,
     }
   }
 }
-
+#endif //USE_CUDA
+#ifdef USE_CUDA
 template <typename Dtype>
 void ComputeOverlappedByIdxGPU(const int nthreads,
           const Dtype* bbox_data, const Dtype overlap_threshold,
           const int* idx, const int num_idx, bool* overlapped_data) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  ComputeOverlappedByIdxKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-      CAFFE_CUDA_NUM_THREADS>>>(nthreads, bbox_data, overlap_threshold,
-      idx, num_idx, overlapped_data);
-  CUDA_POST_KERNEL_CHECK;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    ComputeOverlappedByIdxKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS>>>(nthreads, bbox_data, overlap_threshold,
+        idx, num_idx, overlapped_data);
+    CUDA_POST_KERNEL_CHECK;
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+#endif //USE_GREENTEA
+  }
 }
 
 template void ComputeOverlappedByIdxGPU(const int nthreads,
@@ -433,7 +506,8 @@ template void ComputeOverlappedByIdxGPU(const int nthreads,
 template void ComputeOverlappedByIdxGPU(const int nthreads,
           const double* bbox_data, const double overlap_threshold,
           const int* idx, const int num_idx, bool* overlapped_data);
-
+#endif //USE_CUDA
+#ifdef USE_CUDA
 template <typename Dtype>
 void ApplyNMSGPU(const Dtype* bbox_data, const Dtype* conf_data,
           const int num_bboxes, const float confidence_threshold,
@@ -488,7 +562,8 @@ template
 void ApplyNMSGPU(const double* bbox_data, const double* conf_data,
           const int num_bboxes, const float confidence_threshold,
           const int top_k, const float nms_threshold, vector<int>* indices);
-
+#endif
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void GetDetectionsKernel(const int nthreads,
           const Dtype* bbox_data, const Dtype* conf_data, const int image_id,
@@ -537,7 +612,8 @@ template void GetDetectionsGPU(const float* bbox_data, const float* conf_data,
 template void GetDetectionsGPU(const double* bbox_data, const double* conf_data,
           const int image_id, const int label, const vector<int>& indices,
           const bool clip_bbox, Blob<double>* detection_blob);
-
+#endif
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void ComputeConfLossKernel(const int nthreads,
     const Dtype* conf_data, const int num_preds_per_class,
@@ -646,6 +722,5 @@ template void ComputeConfLossGPU(const Blob<double>& conf_data, const int num,
       const vector<map<int, vector<int> > >& all_match_indices,
       const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
       vector<vector<float> >* all_conf_loss);
-
+#endif //USE_CUDA
 }  // namespace caffe
-#endif

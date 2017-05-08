@@ -279,6 +279,162 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(DecodeBBoxesCORNER, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* loc_data, __global const Dtype* prior_data,",    // NOLINT
+"const int variance_encoded_in_target,",    // NOLINT
+"const int num_priors, const int share_location,",    // NOLINT
+"const int num_loc_classes, const int background_label_id,",    // NOLINT
+"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"const int i = index % 4;",    // NOLINT
+"const int c = (index / 4) % num_loc_classes;",    // NOLINT
+"const int d = (index / 4 / num_loc_classes) % num_priors;",    // NOLINT
+"if (!share_location && c == background_label_id) {",    // NOLINT
+"// Ignore background class if not share_location.",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"const int pi = d * 4;",    // NOLINT
+"const int vi = pi + num_priors * 4;",    // NOLINT
+"if (variance_encoded_in_target) {",    // NOLINT
+"// variance is encoded in target, we simply need to add the offset",    // NOLINT
+"// predictions.",    // NOLINT
+"bbox_data[index] = prior_data[pi + i] + loc_data[index];",    // NOLINT
+"} else {",    // NOLINT
+"// variance is encoded in bbox, we need to scale the offset accordingly.",    // NOLINT
+"bbox_data[index] =",    // NOLINT
+"prior_data[pi + i] + loc_data[index] * prior_data[vi + i];",    // NOLINT
+"}",    // NOLINT
+"if (clip_bbox) {",    // NOLINT
+"bbox_data[index] = max(min(bbox_data[index], (Dtype)1.), (Dtype)0.);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(DecodeBBoxesCENTER_SIZE, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* loc_data, __global const Dtype* prior_data,",    // NOLINT
+"const int variance_encoded_in_target,",    // NOLINT
+"const int num_priors, const int share_location,",    // NOLINT
+"const int num_loc_classes, const int background_label_id,",    // NOLINT
+"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"const int i = index % 4;",    // NOLINT
+"const int c = (index / 4) % num_loc_classes;",    // NOLINT
+"const int d = (index / 4 / num_loc_classes) % num_priors;",    // NOLINT
+"if (!share_location && c == background_label_id) {",    // NOLINT
+"// Ignore background class if not share_location.",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"const int pi = d * 4;",    // NOLINT
+"const int vi = pi + num_priors * 4;",    // NOLINT
+"const Dtype p_xmin = prior_data[pi];",    // NOLINT
+"const Dtype p_ymin = prior_data[pi + 1];",    // NOLINT
+"const Dtype p_xmax = prior_data[pi + 2];",    // NOLINT
+"const Dtype p_ymax = prior_data[pi + 3];",    // NOLINT
+"const Dtype prior_width = p_xmax - p_xmin;",    // NOLINT
+"const Dtype prior_height = p_ymax - p_ymin;",    // NOLINT
+"const Dtype prior_center_x = (p_xmin + p_xmax) / 2.;",    // NOLINT
+"const Dtype prior_center_y = (p_ymin + p_ymax) / 2.;",    // NOLINT
+"",    // NOLINT
+"const Dtype xmin = loc_data[index - i];",    // NOLINT
+"const Dtype ymin = loc_data[index - i + 1];",    // NOLINT
+"const Dtype xmax = loc_data[index - i + 2];",    // NOLINT
+"const Dtype ymax = loc_data[index - i + 3];",    // NOLINT
+"",    // NOLINT
+"Dtype decode_bbox_center_x, decode_bbox_center_y;",    // NOLINT
+"Dtype decode_bbox_width, decode_bbox_height;",    // NOLINT
+"if (variance_encoded_in_target) {",    // NOLINT
+"// variance is encoded in target, we simply need to retore the offset",    // NOLINT
+"// predictions.",    // NOLINT
+"decode_bbox_center_x = xmin * prior_width + prior_center_x;",    // NOLINT
+"decode_bbox_center_y = ymin * prior_height + prior_center_y;",    // NOLINT
+"decode_bbox_width = exp(xmax) * prior_width;",    // NOLINT
+"decode_bbox_height = exp(ymax) * prior_height;",    // NOLINT
+"} else {",    // NOLINT
+"// variance is encoded in bbox, we need to scale the offset accordingly.",    // NOLINT
+"decode_bbox_center_x =",    // NOLINT
+"prior_data[vi] * xmin * prior_width + prior_center_x;",    // NOLINT
+"decode_bbox_center_y =",    // NOLINT
+"prior_data[vi + 1] * ymin * prior_height + prior_center_y;",    // NOLINT
+"decode_bbox_width =",    // NOLINT
+"exp(prior_data[vi + 2] * xmax) * prior_width;",    // NOLINT
+"decode_bbox_height =",    // NOLINT
+"exp(prior_data[vi + 3] * ymax) * prior_height;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"switch (i) {",    // NOLINT
+"case 0:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_x - decode_bbox_width / 2.;",    // NOLINT
+"break;",    // NOLINT
+"case 1:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_y - decode_bbox_height / 2.;",    // NOLINT
+"break;",    // NOLINT
+"case 2:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_x + decode_bbox_width / 2.;",    // NOLINT
+"break;",    // NOLINT
+"case 3:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_y + decode_bbox_height / 2.;",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"if (clip_bbox) {",    // NOLINT
+"bbox_data[index] = max(min(bbox_data[index], (Dtype)1.), (Dtype)0.);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(DecodeBBoxesCORNER_SIZE, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* loc_data, __global const Dtype* prior_data,",    // NOLINT
+"const int variance_encoded_in_target,",    // NOLINT
+"const int num_priors, const int share_location,",    // NOLINT
+"const int num_loc_classes, const int background_label_id,",    // NOLINT
+"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"const int i = index % 4;",    // NOLINT
+"const int c = (index / 4) % num_loc_classes;",    // NOLINT
+"const int d = (index / 4 / num_loc_classes) % num_priors;",    // NOLINT
+"if (!share_location && c == background_label_id) {",    // NOLINT
+"// Ignore background class if not share_location.",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"const int pi = d * 4;",    // NOLINT
+"const int vi = pi + num_priors * 4;",    // NOLINT
+"const Dtype p_xmin = prior_data[pi];",    // NOLINT
+"const Dtype p_ymin = prior_data[pi + 1];",    // NOLINT
+"const Dtype p_xmax = prior_data[pi + 2];",    // NOLINT
+"const Dtype p_ymax = prior_data[pi + 3];",    // NOLINT
+"const Dtype prior_width = p_xmax - p_xmin;",    // NOLINT
+"const Dtype prior_height = p_ymax - p_ymin;",    // NOLINT
+"Dtype p_size;",    // NOLINT
+"if (i == 0 || i == 2) {",    // NOLINT
+"p_size = prior_width;",    // NOLINT
+"} else {",    // NOLINT
+"p_size = prior_height;",    // NOLINT
+"}",    // NOLINT
+"if (variance_encoded_in_target) {",    // NOLINT
+"// variance is encoded in target, we simply need to add the offset",    // NOLINT
+"// predictions.",    // NOLINT
+"bbox_data[index] = prior_data[pi + i] + loc_data[index] * p_size;",    // NOLINT
+"} else {",    // NOLINT
+"// variance is encoded in bbox, we need to scale the offset accordingly.",    // NOLINT
+"bbox_data[index] =",    // NOLINT
+"prior_data[pi + i] + loc_data[index] * prior_data[vi + i] * p_size;",    // NOLINT
+"}",    // NOLINT
+"if (clip_bbox) {",    // NOLINT
+"bbox_data[index] = max(min(bbox_data[index], (Dtype)1.), (Dtype)0.);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(null_kernel,Dtype)(KERNEL_ARG_DTYPE arg) {",    // NOLINT
 "Dtype out = arg;",    // NOLINT
 "}",    // NOLINT
@@ -7449,6 +7605,7 @@ static std::string cl_kernel_names[] = {
     "auxiliary",   // NOLINT
     "batch_norm",   // NOLINT
     "batch_reindex",   // NOLINT
+    "bbox_util",   // NOLINT
     "benchmark",   // NOLINT
     "bias",   // NOLINT
     "bnll",   // NOLINT
