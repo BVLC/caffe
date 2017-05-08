@@ -287,6 +287,19 @@ void PermuteDataGPU(const int nthreads,
 #endif //USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        Caffe::GetDefaultDevice()->id());
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    viennacl::ocl::kernel &oclk_permute_data =
+        program.get_kernel(CL_KERNEL_SELECT("PermuteData"));
+    viennacl::ocl::enqueue(
+        oclk_permute_data(nthreads,
+        WrapHandle((cl_mem)data, &ctx),
+        num_classes,
+        num_data,
+        num_dim,
+        WrapHandle((cl_mem)new_data, &ctx)),
+        ctx.get_queue());
 #endif //USE_GREENTEA
   }
 }

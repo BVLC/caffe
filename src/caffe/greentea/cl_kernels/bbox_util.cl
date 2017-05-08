@@ -150,6 +150,20 @@ __kernel void TEMPLATE(DecodeBBoxesCORNER_SIZE, Dtype)(const int nthreads,
   }
 }
 
+__kernel void TEMPLATE(PermuteData, Dtype)(const int nthreads,
+          __global const Dtype* data, const int num_classes, const int num_data,
+          const int num_dim, __global Dtype* new_data) {
+  for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
+    const int i = index % num_dim;
+    const int c = (index / num_dim) % num_classes;
+    const int d = (index / num_dim / num_classes) % num_data;
+    const int n = index / num_dim / num_classes / num_data;
+    const int new_index = ((n * num_classes + c) * num_data + d) * num_dim + i;
+    new_data[new_index] = data[index];
+  }
+}
+
+
 
 
 
