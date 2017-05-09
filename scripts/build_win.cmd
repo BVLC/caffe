@@ -70,7 +70,7 @@ if DEFINED APPVEYOR (
     :: Change MSVC_VERSION to 12 to use VS 2013
     if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
-    if NOT DEFINED WITH_NINJA set WITH_NINJA=1
+    if NOT DEFINED WITH_NINJA set WITH_NINJA=0
     :: Change to 1 to build caffe without CUDA support
     if NOT DEFINED CPU_ONLY set CPU_ONLY=0
     :: Change to generate CUDA code for one of the following GPU architectures
@@ -91,7 +91,7 @@ if DEFINED APPVEYOR (
     :: If python is on your path leave this alone
     if NOT DEFINED PYTHON_EXE set PYTHON_EXE=python
     :: Run the tests
-    if NOT DEFINED RUN_TESTS set RUN_TESTS=0
+    if NOT DEFINED RUN_TESTS set RUN_TESTS=1
     :: Run lint
     if NOT DEFINED RUN_LINT set RUN_LINT=0
     :: Build the install target
@@ -111,6 +111,8 @@ if DEFINED APPVEYOR (
     if NOT DEFINED USE_INDEX64 set USE_INDEX64=0
     :: Use Intel spatial kernels acceleration for forward convolution on Intel iGPUs
     if NOT DEFINED USE_INTEL_SPATIAL set USE_INTEL_SPATIAL=0
+    :: Disable host/device shared memory
+    if NOT DEFINED DISABLE_DEVICE_HOST_UNIFIED_MEMORY=0
 )
 
 :: Set the appropriate CMake generator
@@ -146,6 +148,7 @@ echo INFO: USE_LIBDNN                 = !USE_LIBDNN!
 echo INFO: USE_OPENMP                 = !USE_OPENMP!
 echo INFO: USE_INDEX64                = !USE_INDEX_64!
 echo INFO: USE_INTEL_SPATIAL          = !USE_INTEL_SPATIAL!
+echo INFO: DISABLE_DEVICE_HOST_UNIFIED_MEMORY = !DISABLE_DEVICE_HOST_UNIFIED_MEMORY!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: USE_NCCL                   = !USE_NCCL!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
@@ -193,6 +196,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
       -DUSE_INDEX64:BOOL=%USE_INDEX64% ^
       -DUSE_INTEL_SPATIAL:BOOL=%USE_INTEL_SPATIAL% ^
+      -DDISABLE_DEVICE_HOST_UNIFIED_MEMORY=%DISABLE_DEVICE_HOST_UNIFIED_MEMORY% ^
       -DCOPY_PREREQUISITES:BOOL=1 ^
       -DINSTALL_PREREQUISITES:BOOL=1 ^
       -DUSE_NCCL:BOOL=!USE_NCCL! ^
