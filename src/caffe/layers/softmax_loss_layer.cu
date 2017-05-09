@@ -72,7 +72,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
         normalization_, outer_num_, inner_num_, valid_count);
     top[0]->mutable_cpu_data()[0] = loss / normalizer;
-    if (top.size() == 2) {
+    if (top.size() == 2)
       top[1]->ShareData(prob_);
 #endif  // USE_CUDA
   } else {
@@ -206,10 +206,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       }
       const Dtype loss_weight = top[0]->cpu_diff()[0] /
       get_normalizer(normalization_, valid_count);
-      caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
-      Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-          normalization_, outer_num_, inner_num_, valid_count);
-      const Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer;
       caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
 #endif  // USE_CUDA
     } else {
