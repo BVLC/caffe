@@ -35,6 +35,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(eta_, 0.);
   CHECK_LE(eta_, 1.);
   top_k_ = -1;
+  eta_ = 0.9996;
   if (detection_output_param.nms_param().has_top_k()) {
     top_k_ = detection_output_param.nms_param().top_k();
   }
