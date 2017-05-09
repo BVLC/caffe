@@ -707,7 +707,7 @@ void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
           const bool clip_bbox, Blob<Dtype>* detection_blob);
 
 template <typename Dtype>
-  void ComputeConfLossGPU(const Blob<Dtype>& conf_blob, const int num,
+void ComputeConfLossGPU(const Blob<Dtype>& conf_blob, const int num,
       const int num_preds_per_class, const int num_classes,
       const int background_label_id, const ConfLossType loss_type,
       const vector<map<int, vector<int> > >& all_match_indices,
