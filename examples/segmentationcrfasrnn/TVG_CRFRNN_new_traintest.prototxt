@@ -524,6 +524,10 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+      std: 0.010
+    }
   }
 }
 layer {
@@ -558,6 +562,10 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+      std: 0.010
+    }
   }
 }
 layer { type: 'Crop' name: 'crop' bottom: 'score-pool4' bottom: 'score2'
@@ -586,6 +594,7 @@ layer {
     bias_term: false
     kernel_size: 4
     stride: 2
+    weight_filler: { type: "bilinear" }
   }
 }
 layer {
@@ -605,6 +614,10 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+      std: 0.010
+    }
   }
 }
 layer { type: 'Crop' name: 'crop' bottom: 'score-pool3' bottom: 'score4'
