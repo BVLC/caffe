@@ -546,6 +546,7 @@ layer {
     bias_term: false
     kernel_size: 4
     stride: 2
+    weight_filler: { type: "bilinear" }
   }
 }
 layer {
@@ -592,6 +593,7 @@ layer {
     bias_term: false
     kernel_size: 16
     stride: 8
+    weight_filler: { type: "bilinear" }
   }
 }
 layer { type: 'Crop' name: 'crop' bottom: 'bigscore' bottom: 'data' top: 'coarse' }
