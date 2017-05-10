@@ -46,9 +46,16 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
   }
 #endif
 #ifdef USE_MKL
+#ifndef USE_GREENTEA
   *ptr = mkl_malloc(size ? size:1, 64);
 #else
-  *ptr = malloc(size);
+  *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
+#endif
+#else
+  CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
+           ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
+              << "Host memory allocation error of size: "
+              << size << " B";
 #endif  // USE_MKL
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
