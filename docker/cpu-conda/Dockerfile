@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM ubuntu:16.04
 LABEL maintainer caffe-maint@googlegroups.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,7 +42,7 @@ RUN $CONDA install -n condacaffe -c menpo -y opencv3
 RUN /bin/bash -c "git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
     git clone https://github.com/NVIDIA/nccl.git && cd nccl && make -j install && cd .. && rm -rf nccl && \
     source /opt/conda/bin/activate condacaffe && mkdir build && cd build && \
-    cmake -DUSE_CUDNN=1 -DUSE_NCCL=1 -Dpython_version=3 .. && \
+    cmake -DCPU_ONLY=1 -Dpython_version=3 .. && \
     make -j$(nproc) && \
     $CONDA install -y cython scikit-image ipython h5py nose pandas protobuf pyyaml jupyter && \
     cd ../python && sed -i -e 's/python-dateutil>=1.4,<2/python-dateutil>=2.0/g' requirements.txt && \
