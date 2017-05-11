@@ -40,7 +40,6 @@ RUN $CONDA create -n condacaffe -y python=3.5
 RUN $CONDA install -n condacaffe -c menpo -y opencv3
 
 RUN /bin/bash -c "git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
-    git clone https://github.com/NVIDIA/nccl.git && cd nccl && make -j install && cd .. && rm -rf nccl && \
     source /opt/conda/bin/activate condacaffe && mkdir build && cd build && \
     cmake -DCPU_ONLY=1 -Dpython_version=3 .. && \
     make -j$(nproc) && \
