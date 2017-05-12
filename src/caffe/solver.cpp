@@ -439,7 +439,7 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 }
 
 template <typename Dtype>
-string Solver<Dtype>::SnapshotFilename(const string extension) {
+string Solver<Dtype>::SnapshotFilename(const string& extension) const {
   return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
     + extension;
 }
