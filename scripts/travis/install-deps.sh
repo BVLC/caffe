@@ -9,10 +9,10 @@ apt-get -y update
 apt-get install -y --no-install-recommends \
   build-essential \
   graphviz \
-  libboost-filesystem1.55-dev \
-  libboost-python1.55-dev \
-  libboost-system1.55-dev \
-  libboost-thread1.55-dev \
+  libboost-filesystem-dev \
+  libboost-python-dev \
+  libboost-system-dev \
+  libboost-thread-dev \
   libgflags-dev \
   libgoogle-glog-dev \
   libhdf5-serial-dev \
