@@ -346,10 +346,11 @@ function(caffe_parse_linker_libs Caffe_LINKER_LIBS_variable folders_var flags_va
     elseif(lib MATCHES "^-l.*")
       list(APPEND libflags ${lib})
     elseif(IS_ABSOLUTE ${lib})
-      get_filename_component(name_we ${lib} NAME_WE)
       get_filename_component(folder  ${lib} PATH)
+      get_filename_component(filename ${lib} NAME)
+      string(REGEX REPLACE "\\.[^.]*$" "" filename_without_shortest_ext ${filename})
 
-      string(REGEX MATCH "^lib(.*)" __match ${name_we})
+      string(REGEX MATCH "^lib(.*)" __match ${filename_without_shortest_ext})
       list(APPEND libflags -l${CMAKE_MATCH_1})
       list(APPEND folders    ${folder})
     else()

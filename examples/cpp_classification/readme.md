@@ -10,7 +10,7 @@ priority: 10
 
 Caffe, at its core, is written in C++. It is possible to use the C++
 API of Caffe to implement an image classification application similar
-to the Python code presented in one of the Notebook example. To look
+to the Python code presented in one of the Notebook examples. To look
 at a more general-purpose example of the Caffe C++ API, you should
 study the source code of the command line tool `caffe` in `tools/caffe.cpp`.
 
@@ -19,7 +19,7 @@ study the source code of the command line tool `caffe` in `tools/caffe.cpp`.
 A simple C++ code is proposed in
 `examples/cpp_classification/classification.cpp`. For the sake of
 simplicity, this example does not support oversampling of a single
-sample nor batching of multiple independant samples. This example is
+sample nor batching of multiple independent samples. This example is
 not trying to reach the maximum possible classification throughput on
 a system, but special care was given to avoid unnecessary
 pessimization while keeping the code readable.
@@ -42,7 +42,7 @@ script:
 The ImageNet labels file (also called the *synset file*) is also
 required in order to map a prediction to the name of the class:
 ```
-./data/ilsvrc12/get_ilsvrc_aux.sh.
+./data/ilsvrc12/get_ilsvrc_aux.sh
 ```
 Using the files that were downloaded, we can classify the provided cat
 image (`examples/images/cat.jpg`) using this command:

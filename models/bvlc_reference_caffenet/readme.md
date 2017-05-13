@@ -1,5 +1,5 @@
 ---
-name: BVLC CaffeNet Model
+name: BAIR/BVLC CaffeNet Model
 caffemodel: bvlc_reference_caffenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffemodel
 license: unrestricted

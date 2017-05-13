@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 #
 # Copyright (c) 2009 Google Inc. All rights reserved.
 #
@@ -52,6 +52,10 @@ import string
 import sys
 import unicodedata
 
+import six
+
+from six import iteritems, itervalues
+from six.moves import xrange
 
 _USAGE = """
 Syntax: cpp_lint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
@@ -756,7 +760,7 @@ class _CppLintState(object):
 
   def PrintErrorCounts(self):
     """Print a summary of errors by category, and the total."""
-    for category, count in self.errors_by_category.iteritems():
+    for category, count in iteritems(self.errors_by_category):
       sys.stderr.write('Category \'%s\' errors found: %d\n' %
                        (category, count))
     sys.stderr.write('Total errors found: %d\n' % self.error_count)
@@ -1564,7 +1568,7 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
 caffe_alt_function_list = (
     ('memset', ['caffe_set', 'caffe_memset']),
     ('cudaMemset', ['caffe_gpu_set', 'caffe_gpu_memset']),
-    ('memcpy', ['caffe_copy', 'caffe_memcpy']),
+    ('memcpy', ['caffe_copy']),
     ('cudaMemcpy', ['caffe_copy', 'caffe_gpu_memcpy']),
     )
 
@@ -3444,16 +3448,16 @@ def GetLineWidth(line):
     The width of the line in column positions, accounting for Unicode
     combining characters and wide characters.
   """
-  if isinstance(line, unicode):
-    width = 0
-    for uc in unicodedata.normalize('NFC', line):
-      if unicodedata.east_asian_width(uc) in ('W', 'F'):
-        width += 2
-      elif not unicodedata.combining(uc):
-        width += 1
-    return width
-  else:
-    return len(line)
+  if six.PY2:
+    if isinstance(line, unicode):
+      width = 0
+      for uc in unicodedata.normalize('NFC', line):
+        if unicodedata.east_asian_width(uc) in ('W', 'F'):
+          width += 2
+        elif not unicodedata.combining(uc):
+          width += 1
+      return width
+  return len(line)
 
 
 def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
@@ -3774,7 +3778,7 @@ def _GetTextInside(text, start_pattern):
 
   # Give opening punctuations to get the matching close-punctuations.
   matching_punctuation = {'(': ')', '{': '}', '[': ']'}
-  closing_punctuation = set(matching_punctuation.itervalues())
+  closing_punctuation = set(itervalues(matching_punctuation))
 
   # Find the position to start extracting text.
   match = re.search(start_pattern, text, re.M)
@@ -4460,7 +4464,7 @@ def UpdateIncludeState(filename, include_state, io=codecs):
     io: The io factory to use to read the file. Provided for testability.
 
   Returns:
-    True if a header was succesfully added. False otherwise.
+    True if a header was successfully added. False otherwise.
   """
   headerfile = None
   try:
@@ -4532,7 +4536,7 @@ def CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error,
   # Let's copy the include_state so it is only messed up within this function.
   include_state = include_state.copy()
 
-  # Did we find the header for this file (if any) and succesfully load it?
+  # Did we find the header for this file (if any) and successfully load it?
   header_found = False
 
   # Use the absolute path so that matching works properly.
@@ -4833,7 +4837,7 @@ def ParseArguments(args):
       try:
           _valid_extensions = set(val.split(','))
       except ValueError:
-          PrintUsage('Extensions must be comma seperated list.')
+          PrintUsage('Extensions must be comma separated list.')
 
   if not filenames:
     PrintUsage('No files were specified.')
@@ -4851,10 +4855,11 @@ def main():
 
   # Change stderr to write with replacement characters so we don't die
   # if we try to print something containing non-ASCII characters.
-  sys.stderr = codecs.StreamReaderWriter(sys.stderr,
-                                         codecs.getreader('utf8'),
-                                         codecs.getwriter('utf8'),
-                                         'replace')
+  if six.PY2:
+    sys.stderr = codecs.StreamReaderWriter(sys.stderr,
+                                          codecs.getreader('utf8'),
+                                          codecs.getwriter('utf8'),
+                                          'replace')
 
   _cpplint_state.ResetErrorCounts()
   for filename in filenames:

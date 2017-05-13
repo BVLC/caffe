@@ -1,5 +1,5 @@
 ---
-name: BVLC Reference RCNN ILSVRC13 Model
+name: BAIR/BVLC Reference RCNN ILSVRC13 Model
 caffemodel: bvlc_reference_rcnn_ilsvrc13.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.caffemodel
 license: unrestricted

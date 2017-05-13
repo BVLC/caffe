@@ -5,13 +5,25 @@ title: Installation
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
-The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
+We install and run Caffe on Ubuntu 16.04–12.04, OS X 10.11–10.8, and through Docker and AWS.
+The official Makefile and `Makefile.config` build are complemented by a [community CMake build](#cmake-build).
+
+**Step-by-step Instructions**:
+
+- [Docker setup](https://github.com/BVLC/caffe/tree/master/docker) *out-of-the-box brewing*
+- [Ubuntu installation](install_apt.html) *the standard platform*
+- [Debian installation](install_apt_debian.html) *install caffe with a single command*
+- [OS X installation](install_osx.html)
+- [RHEL / CentOS / Fedora installation](install_yum.html)
+- [Windows](https://github.com/BVLC/caffe/tree/windows) *see the Windows branch led by Guillaume Dumont*
+- [OpenCL](https://github.com/BVLC/caffe/tree/opencl) *see the OpenCL branch led by Fabian Tschopp*
+- [AWS AMI](https://github.com/bitfusionio/amis/tree/master/awsmrkt-bfboost-ubuntu14-cuda75-caffe) *pre-configured for AWS*
+
+**Overview**:
 
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
 - [Hardware](#hardware)
-- Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
@@ -20,7 +32,7 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 Caffe has several dependencies:
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
-    * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
+    * library version 7+ and the latest driver version are recommended, but 6.* is fine too
     * 5.5, and 5.0 are compatible but considered legacy
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
 * [Boost](http://www.boost.org/) >= 1.55
@@ -30,14 +42,14 @@ Optional dependencies:
 
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
-* cuDNN for GPU acceleration (v3)
+* cuDNN for GPU acceleration (v6)
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
-**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v6; older versions are supported in older Caffe.
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -52,9 +64,10 @@ Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library. The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
-* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
+* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with [free](https://registrationcenter.intel.com/en/forms/?productid=2558) licenses.
     1. Install MKL.
-    2. Set `BLAS := mkl` in `Makefile.config`
+    2. Set up MKL environment (Details: [Linux](https://software.intel.com/en-us/node/528499), [OS X](https://software.intel.com/en-us/node/528659)). Example: *source /opt/intel/mkl/bin/mklvars.sh intel64*
+    3. Set `BLAS := mkl` in `Makefile.config`
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
@@ -80,10 +93,6 @@ To import the `caffe` Python module after completing the installation, add the m
 Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
-
-#### Windows
-
-There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 ## Compilation
 
@@ -112,7 +121,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation with CMake
+### CMake Build
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:
@@ -128,9 +137,9 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 ## Hardware
 
-**Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
+**Laboratory Tested Hardware**: Berkeley Vision runs Caffe with Titan Xs, K80s, GTX 980s, K40s, K20s, Titans, and GTX 770s including models at ImageNet/ILSVRC scale. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
-**CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
+**CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capability >= 3.0.
 
 Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
 
