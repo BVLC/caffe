@@ -960,7 +960,10 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
 }
 
 bool NetNeedsInputUpgrade(const NetParameter& net_param) {
-  return net_param.input_size() > 0;
+  // Check that for input field and shape/dim field combination to identify
+  // the definition/prototxt. The weights/caffemodel has input alone.
+  return net_param.input_size() > 0 &&
+      (net_param.input_shape_size() > 0 || net_param.input_dim_size() > 0);
 }
 
 void UpgradeNetInput(NetParameter* net_param) {
