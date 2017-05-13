@@ -405,6 +405,19 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional TransformerParameter transformer_param = 150;
+  optional TransformerConvParameter trans_conv_param = 151;
+}
+
+
+message TransformerParameter{
+  optional uint32 rotate_angle = 1 [default = 0];
+}
+
+
+// Message that stores parameters used to apply filter trans
+message TransformerConvParameter{
+  optional uint32 action = 1 [default = 0];//0 for rotations, 1 for flip
 }
 
 // Message that stores parameters used to apply transformation
@@ -1262,6 +1275,7 @@ message V1LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+    TRANSFORMERCONVOLUTION = 40;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;

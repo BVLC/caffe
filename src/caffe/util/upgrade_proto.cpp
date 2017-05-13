@@ -889,6 +889,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "ContrastiveLoss";
   case V1LayerParameter_LayerType_CONVOLUTION:
     return "Convolution";
+  case V1LayerParameter_LayerType_TRANSFORMERCONVOLUTION:
+    return "TransformerConvolution";
   case V1LayerParameter_LayerType_DECONVOLUTION:
     return "Deconvolution";
   case V1LayerParameter_LayerType_DATA:
