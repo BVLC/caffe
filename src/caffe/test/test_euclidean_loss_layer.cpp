@@ -7,6 +7,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layers/euclidean_loss_layer.hpp"
+#include "google/protobuf/text_format.h"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -37,10 +38,15 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_loss_;
   }
 
-  void TestForward() {
+  void TestForward(bool square_root = false) {
     // Get the loss without a specified objective weight -- should be
     // equivalent to explicitly specifying a weight of 1.
     LayerParameter layer_param;
+    if (square_root) {
+      CHECK(google::protobuf::TextFormat::ParseFromString(
+          "loss_param{square_root: true}", &layer_param));
+    }
+
     EuclideanLossLayer<Dtype> layer_weight_1(layer_param);
     layer_weight_1.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_1 =
@@ -61,6 +67,22 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_GE(fabs(loss_weight_1), kNonTrivialAbsThresh);
   }
 
+  void TestBackward(bool square_root = false) {
+    typedef typename TypeParam::Dtype Dtype;
+    LayerParameter layer_param;
+    if (square_root) {
+      CHECK(google::protobuf::TextFormat::ParseFromString(
+          "loss_param{square_root: true}", &layer_param));
+    }
+    const Dtype kLossWeight = 3.7;
+    layer_param.add_loss_weight(kLossWeight);
+    EuclideanLossLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
+
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_label_;
   Blob<Dtype>* const blob_top_loss_;
@@ -75,15 +97,15 @@ TYPED_TEST(EuclideanLossLayerTest, TestForward) {
 }
 
 TYPED_TEST(EuclideanLossLayerTest, TestGradient) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  const Dtype kLossWeight = 3.7;
-  layer_param.add_loss_weight(kLossWeight);
-  EuclideanLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  this->TestBackward();
+}
+
+TYPED_TEST(EuclideanLossLayerTest, TestForward_SquareRoot) {
+  this->TestForward(true);
+}
+
+TYPED_TEST(EuclideanLossLayerTest, TestGradient_SquareRoot) {
+  this->TestBackward(true);
 }
 
 }  // namespace caffe

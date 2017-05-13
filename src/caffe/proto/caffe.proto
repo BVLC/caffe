@@ -457,6 +457,15 @@ message LossParameter {
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+
+  // Only used by EuclideanLossLayer.
+  // If false (default behaviour), l2 loss is computed as sum of the square of
+  // the errors. If true, the loss is the square root of the sum of the
+  // squared errors.
+  //
+  // Rationale from http://arxiv.org/abs/1502.02761, section 4.3
+  // "square root loss", and equation 8.
+  optional bool square_root = 4 [default = false];
 }
 
 // Messages that store parameters used by individual layer types follow, in
