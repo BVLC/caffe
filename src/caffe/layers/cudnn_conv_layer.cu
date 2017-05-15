@@ -42,6 +42,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
+    cudaStreamSynchronize(cudaStreamDefault);
   }
 }
 
@@ -109,6 +110,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
+    cudaStreamSynchronize(cudaStreamDefault);
   }
 }
 
