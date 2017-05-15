@@ -139,6 +139,8 @@ TYPED_TEST(ScaleLayerTest, TestBackwardEltwiseInPlace) {
   // Rerun forward + backward with in-place computation;
   // check that resulting bottom diffs are the same.
   this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+
+  layer->Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
@@ -276,6 +278,7 @@ TYPED_TEST(ScaleLayerTest, TestBackwardBroadcastMiddleInPlace) {
   // Rerun forward + backward with in-place computation;
   // check that resulting bottom diffs are the same.
   this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+  layer->Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());

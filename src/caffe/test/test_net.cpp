@@ -2397,6 +2397,7 @@ TYPED_TEST(NetTest, TestReshape) {
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
       blob1.width());
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
+  this->net_->Reshape();
   this->net_->Forward();
   // call backward just to make sure it runs
   this->net_->Backward();
@@ -2408,6 +2409,7 @@ TYPED_TEST(NetTest, TestReshape) {
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
       blob2.width());
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
+  this->net_->Reshape();
   this->net_->Forward();
   this->net_->Backward();
   Blob<Dtype> output2(output_blob->num(), output_blob->channels(),
@@ -2418,6 +2420,7 @@ TYPED_TEST(NetTest, TestReshape) {
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
       blob1.width());
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
+  this->net_->Reshape();
   this->net_->Forward();
   this->net_->Backward();
   for (int i = 0; i < output1.count(); ++i) {
@@ -2427,6 +2430,7 @@ TYPED_TEST(NetTest, TestReshape) {
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
       blob2.width());
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
+  this->net_->Reshape();
   this->net_->Forward();
   this->net_->Backward();
   for (int i = 0; i < output2.count(); ++i) {
