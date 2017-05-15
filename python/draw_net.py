@@ -43,7 +43,7 @@ def main():
     net = caffe_pb2.NetParameter()
     text_format.Merge(open(args.input_net_proto_file).read(), net)
     print('Drawing net to %s' % args.output_image_file)
-    phase=None;
+    phase = None
     if args.phase == "TRAIN":
         phase = caffe.TRAIN
     elif args.phase == "TEST":
