@@ -477,6 +477,9 @@ message AccuracyParameter {
 
   // If specified, ignore instances with the given label.
   optional int32 ignore_label = 3;
+
+  // return the count as well as the accuracy (second data element of first blob)
+  optional bool return_count = 4[default = false];
 }
 
 message ArgMaxParameter {
