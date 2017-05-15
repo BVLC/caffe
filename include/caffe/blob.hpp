@@ -137,12 +137,10 @@ class Blob {
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
   inline int width() const { return LegacyShape(3); }
   inline int LegacyShape(int index) const {
-    CHECK_LE(num_axes(), 4)
-        << "Cannot use legacy accessors on Blobs with > 4 axes.";
-    CHECK_LT(index, 4);
-    CHECK_GE(index, -4);
     if (index >= num_axes() || index < -num_axes()) {
-      // Axis is out of range, but still in [0, 3] (or [-4, -1] for reverse
+      // Assuming num_axes is the blob dimension (generaly 4),
+      // axis is out of range, but still in [0, num_axes[
+      // (or [-num_axes, -1] for reverse
       // indexing) -- this special case simulates the one-padding used to fill
       // extraneous axes of legacy blobs.
       return 1;
