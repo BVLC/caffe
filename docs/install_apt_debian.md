@@ -96,17 +96,21 @@ Note, this requires a `deb-src` entry in your `/etc/apt/sources.list`.
 Some users may find their favorate compiler doesn't work with CUDA.
 
 ```
-CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
--------------+------------+------------+-
-GCC-7        |     ?      |     ?      |
-GCC-6        |     ✘      |     ✘      |
-GCC-5        |     ✔ [1]  |     ✔      |
-CLANG-4.0    |     ?      |     ?      |
-CLANG-3.9    |     ✘      |     ✘      |
-CLANG-3.8    |     ?      |     ✔      |
+CXX compiler |  CUDA 7.5  |  CUDA 8.0  |  CUDA 9.0  |
+-------------+------------+------------+------------+
+GCC-8        |     ?      |     ?      |     ?      |
+GCC-7        |     ?      |     ?      |     ?      |
+GCC-6        |     ✘      |     ✘      |     ✔      |
+GCC-5        |     ✔ [1]  |     ✔      |     ✔      |
+-------------+------------+------------+------------+
+CLANG-4.0    |     ?      |     ?      |     ?      |
+CLANG-3.9    |     ✘      |     ✘      |     ✔      |
+CLANG-3.8    |     ?      |     ✔      |     ✔      |
 ```
 
 `[1]` CUDA 7.5 's `host_config.h` must be patched before working with GCC-5.
+
+`[2]` CUDA 9.0: https://devblogs.nvidia.com/parallelforall/cuda-9-features-revealed/
 
 BTW, please forget the GCC-4.X series, since its `libstdc++` ABI is not compatible with GCC-5's.
 You may encounter failure linking GCC-4.X object files against GCC-5 libraries.
