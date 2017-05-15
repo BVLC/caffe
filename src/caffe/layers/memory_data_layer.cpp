@@ -24,8 +24,6 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[1]->Reshape(label_shape);
   added_data_.Reshape(batch_size_, channels_, height_, width_);
   added_label_.Reshape(label_shape);
-  data_ = NULL;
-  labels_ = NULL;
   added_data_.cpu_data();
   added_label_.cpu_data();
 }
@@ -89,8 +87,18 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   if (this->layer_param_.has_transform_param()) {
     LOG(WARNING) << this->type() << " does not transform array data on Reset()";
   }
-  data_ = data;
-  labels_ = labels;
+  std::vector<int> shape(4);
+  shape[0] = n;
+  shape[1] = channels();
+  shape[2] = height();
+  shape[3] = width();
+  data_.Reshape(shape);
+  caffe_copy(data_.count(), data, data_.mutable_cpu_data());
+  shape[1] = 1;
+  shape[2] = 1;
+  shape[3] = 1;
+  labels_.Reshape(shape);
+  caffe_copy(labels_.count(), labels, labels_.mutable_cpu_data());
   n_ = n;
   pos_ = 0;
 }
@@ -107,11 +115,13 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK(data_) << "MemoryDataLayer needs to be initialized by calling Reset";
+  const Dtype* pdata = data_.cpu_data();
+  const Dtype* plabels = labels_.cpu_data();
+  CHECK(pdata) << "MemoryDataLayer needs to be initalized by calling Reset";
   top[0]->Reshape(batch_size_, channels_, height_, width_);
   top[1]->Reshape(batch_size_, 1, 1, 1);
-  top[0]->set_cpu_data(data_ + pos_ * size_);
-  top[1]->set_cpu_data(labels_ + pos_);
+  caffe_copy(top[0]->count(), pdata + pos_ * size_, top[0]->mutable_cpu_data());
+  caffe_copy(top[1]->count(), plabels + pos_, top[1]->mutable_cpu_data());
   pos_ = (pos_ + batch_size_) % n_;
   if (pos_ == 0)
     has_new_data_ = false;
