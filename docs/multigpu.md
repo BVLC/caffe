@@ -6,7 +6,7 @@ title: Multi-GPU Usage, Hardware Configuration Assumptions, and Performance
 
 Currently Multi-GPU is only supported via the C/C++ paths and only for training.
 
-The GPUs to be used for training can be set with the "-gpu" flag on the command line to the 'caffe' tool.  e.g. "build/tools/caffe train --solver=models/bvlc_alexnet/solver.prototxt --gpu=0,1" will train on GPUs 0 and 1.
+The GPUs to be used for training can be set with the "--gpu" flag on the command line to the 'caffe' tool.  e.g. "build/tools/caffe train --solver=models/bvlc_alexnet/solver.prototxt --gpu=0,1" will train on GPUs 0 and 1.
 
 **NOTE**: each GPU runs the batchsize specified in your train_val.prototxt.  So if you go from 1 GPU to 2 GPU, your effective batchsize will double.  e.g. if your train_val.prototxt specified a batchsize of 256, if you run 2 GPUs your effective batch size is now 512.  So you need to adjust the batchsize when running multiple GPUs and/or adjust your solver params, specifically learning rate.
 
