@@ -1,0 +1,94 @@
+
+syntax = "proto2";
+
+package caffe;
+
+enum NodeRole {
+  INVALID_ROLE = 0;
+  CONV_CLIENT = 1;
+  PARAM_SERVER = 2;
+  FC_NODE = 3;      // nodes that runs a part of FC models
+}
+
+message NodeInfo {
+  optional string ip = 1 [default = "127.0.0.1"];
+  
+  //port # less or equal than 0 means it is invalid & un-initialized
+  required int32 router_port = 2 [default = 0];
+  required int32 pub_port = 3 [default = 0];
+  
+  //which part of the layer it has
+  optional int32 position = 4 [default = 0];
+  //used by zmq to identify node
+  optional int32 node_id = 5 [default = 0];
+  
+  optional NodeRole role = 6 [default = INVALID_ROLE];
+}
+
+
+message RouteInfo {
+  //upstream and downstream nodes in the network
+  repeated NodeInfo prev_nodes = 1;
+  repeated NodeInfo next_nodes = 2;
+
+  //usually the loss layer in the network
+  repeated NodeInfo bottom_nodes = 3;
+
+  //
+  optional int32 train_batch_size = 4 [default = 0];
+}
+
+
+message ModelRequest {
+  required string start_layer = 1;
+  required string end_layer = 2;
+  optional int32 num_splits = 3 [default = 1];
+
+  required NodeInfo node_info = 4;
+}
+
+
+enum MsgType {
+  PING = 0;
+  PONG = 1;
+  GET_TRAIN_MODEL = 2;
+  GET_FULL_MODEL = 3;
+  GET_PARAM = 4;
+  PUT_PARAM = 5;
+  PUT_GRADIENT = 6;
+  FORWARD = 7;
+  BACKWARD = 8;
+  INVALID_MSG = 9;
+}
+
+message BlobInfo {
+  optional string blob_name = 1;
+
+  //total number of fragments (logically)
+  optional int32 num_fragments = 2 [default = 1];
+  
+  //the logical position of the fragment in the blob
+  repeated int32 fragment_offset = 3;
+
+  //the message index of fragment in the vector
+  repeated int32 msg_index = 4;
+}
+
+
+message MsgHeader {
+  //the source node which generates these series of packet
+  optional int32 src = 1 [default = 0];
+
+  //dst is used as next hop in routing
+  optional int32 dst = 2 [default = 0];
+  optional int64 msg_id = 3 [default = 0];
+  required MsgType type = 4 [default = INVALID_MSG];
+
+  repeated BlobInfo blobs = 5;
+  
+  //the id of the convolution thread
+  optional int64 conv_id = 6 [default = 0];
+}
+
+
+

@@ -1,0 +1,14 @@
+
+# fcnode
+
+start_layer : "ip1"
+end_layer : "loss"
+num_splits : 1
+
+node_info {
+    router_port : 1002
+    pub_port : 1003
+    position : 0
+}
+
+

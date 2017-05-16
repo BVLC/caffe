@@ -420,6 +420,7 @@ LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
 	PKG_CONFIG := $(shell pkg-config opencv --libs)
+  PKG_CONFIG += $(shell pkg-config libzmq --libs)
 else
 	PKG_CONFIG :=
 endif

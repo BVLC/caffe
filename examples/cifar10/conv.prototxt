@@ -1,0 +1,14 @@
+
+# conv clients
+
+start_layer : "cifar"
+end_layer : "pool3"
+num_splits : 1
+
+node_info {
+    router_port : 1000
+    pub_port : 1001
+    position : 0
+}
+
+
