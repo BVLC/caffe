@@ -204,9 +204,9 @@ int train() {
           FLAGS_gpu = "" + boost::lexical_cast<string>(0);
       }
   }
-
   vector<int> gpus;
   get_gpus(&gpus);
+#ifndef CPU_ONLY
   if (gpus.size() == 0) {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
@@ -216,19 +216,20 @@ int train() {
       s << (i ? ", " : "") << gpus[i];
     }
     LOG(INFO) << "Using GPUs " << s.str();
-#ifndef CPU_ONLY
     cudaDeviceProp device_prop;
     for (int i = 0; i < gpus.size(); ++i) {
       cudaGetDeviceProperties(&device_prop, gpus[i]);
       LOG(INFO) << "GPU " << gpus[i] << ": " << device_prop.name;
     }
-#endif
     solver_param.set_device_id(gpus[0]);
     Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
   }
-
+#else
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+#endif
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
