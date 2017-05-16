@@ -8,6 +8,10 @@ MKLDNN_COMMIT := `cat ${CAFFE_ROOTDIR}/mkldnn.commit`
 MKLDNN_CXX := $(CXX)
 MKLDNN_CC := $(CC)
 
+RETURN_STRING=$(shell ./external/mkl/prepare_mkl.sh)
+MKLROOT=$(firstword $(RETURN_STRING))
+MKL_ROOTDIR := $(MKLROOT)
+
 # We do this because earlier versions of CMake have problems with ccache
 ifneq (,$(findstring ccache,$(CXX)))
 	MKLDNN_CXX := $(lastword $(CXX))
@@ -18,7 +22,7 @@ ifneq (,$(findstring ccache,$(CC)))
 endif
 
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
-MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
+MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -DMKLROOT=${MKL_ROOTDIR} -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
 
 ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
 mkldnn_download:
