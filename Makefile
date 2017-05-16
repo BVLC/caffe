@@ -256,6 +256,11 @@ endif
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
+	# pg is use for generate extra code to write profile information suitable for the
+	# analysis program gprof.
+	ifeq ($(DEBUG), 1)
+		COMMON_FLAGS += -pg
+	endif
 	# older versions of gcc are too dumb to build boost with -Wuninitalized
 	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
