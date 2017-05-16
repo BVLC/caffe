@@ -278,7 +278,7 @@ template <> int Blob<int>::sumsq_data() const {
 
 template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
-  Dtype sumsq;
+  Dtype sumsq = 0;
   const Dtype* data;
   if (!data_) { return 0; }
   switch (data_->head()) {
