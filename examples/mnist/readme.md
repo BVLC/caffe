@@ -274,7 +274,7 @@ The final model, stored as a binary protobuf file, is stored at
 
 which you can deploy as a trained model in your application, if you are training on a real-world application dataset.
 
-### Um... How about GPU training?
+### Um... How about CPU training?
 
 You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
 
