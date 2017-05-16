@@ -158,7 +158,7 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, 1., num_by_chans_.cpu_data(),
       spatial_sum_multiplier_.cpu_data(), 0., temp_.mutable_cpu_data());
-  caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
+  caffe_div_in_place(temp_.count(), top_data, temp_.cpu_data());
   // TODO(cdoersch): The caching is only needed because later in-place layers
   //                 might clobber the data.  Can we skip this if they won't?
   caffe_copy(x_norm_.count(), top_data,
@@ -214,7 +214,7 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       spatial_sum_multiplier_.cpu_data(), 0., bottom_diff);
 
   // sum(dE/dY \cdot Y) \cdot Y
-  caffe_mul(temp_.count(), top_data, bottom_diff, bottom_diff);
+  caffe_mul_in_place(temp_.count(), bottom_diff, top_data);
 
   // sum(dE/dY)-sum(dE/dY \cdot Y) \cdot Y
   caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim, 1.,
@@ -238,7 +238,7 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   // note: temp_ still contains sqrt(var(X)+eps), computed during the forward
   // pass.
-  caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
+  caffe_div_in_place(temp_.count(), bottom_diff, temp_.cpu_data());
 }
 
 

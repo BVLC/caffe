@@ -83,6 +83,28 @@ DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i])
 DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i])
 DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i])
 
+
+// A simple way to define the vsl binary functions. The operation should
+// be in the form e.g. a[i] = a[i] + b[i]
+#define DEFINE_VSL_BINARY_TO_FUNC(name, operation) \
+  template<typename Dtype> \
+  void v##name(const int n, Dtype* a, const Dtype* b) { \
+    CHECK_GT(n, 0); CHECK(a); CHECK(b); \
+    for (int i = 0; i < n; ++i) { operation; } \
+  } \
+  inline void vs##name( \
+    const int n, float* a, const float* b) { \
+    v##name<float>(n, a, b); \
+  } \
+  inline void vd##name( \
+      const int n, double* a, const double* b) { \
+    v##name<double>(n, a, b); \
+  }
+
+DEFINE_VSL_BINARY_TO_FUNC(Add_in_place, a[i] = a[i] + b[i]);
+DEFINE_VSL_BINARY_TO_FUNC(Mul_in_place, a[i] = a[i] * b[i]);
+DEFINE_VSL_BINARY_TO_FUNC(Div_in_place, a[i] = a[i] / b[i]);
+
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.

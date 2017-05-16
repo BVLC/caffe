@@ -72,7 +72,7 @@ void LogLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (backward_num_scale_ != Dtype(1)) {
     caffe_scal(count, backward_num_scale_, bottom_diff);
   }
-  caffe_mul(count, top_diff, bottom_diff, bottom_diff);
+  caffe_mul_in_place(count, bottom_diff, top_diff);
 }
 
 #ifdef CPU_ONLY

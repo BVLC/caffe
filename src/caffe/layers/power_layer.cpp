@@ -87,7 +87,7 @@ void PowerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     if (diff_scale_ != Dtype(0)) {
-      caffe_mul(count, top_diff, bottom_diff, bottom_diff);
+      caffe_mul_in_place(count, bottom_diff, top_diff);
     }
   }
 }

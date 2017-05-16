@@ -138,6 +138,17 @@ void caffe_add<double>(const int n, const double* a, const double* b,
   vdAdd(n, a, b, y);
 }
 
+
+template <>
+void caffe_add_in_place<float>(const int n, float* a, const float* b) {
+  vsAdd_in_place(n, a, b);
+}
+
+template <>
+void caffe_add_in_place<double>(const int n, double* a, const double* b) {
+  vdAdd_in_place(n, a, b);
+}
+
 template <>
 void caffe_sub<float>(const int n, const float* a, const float* b,
     float* y) {
@@ -162,6 +173,17 @@ void caffe_mul<double>(const int n, const double* a, const double* b,
   vdMul(n, a, b, y);
 }
 
+
+template <>
+void caffe_mul_in_place<float>(const int n, float* a, const float* b) {
+  vsMul_in_place(n, a, b);
+}
+
+template <>
+void caffe_mul_in_place<double>(const int n, double* a, const double* b) {
+  vdMul_in_place(n, a, b);
+}
+
 template <>
 void caffe_div<float>(const int n, const float* a, const float* b,
     float* y) {
@@ -172,6 +194,16 @@ template <>
 void caffe_div<double>(const int n, const double* a, const double* b,
     double* y) {
   vdDiv(n, a, b, y);
+}
+
+template <>
+void caffe_div_in_place<float>(const int n, float* a, const float* b) {
+  vsDiv_in_place(n, a, b);
+}
+
+template <>
+void caffe_div_in_place<double>(const int n, double* a, const double* b) {
+  vdDiv_in_place(n, a, b);
 }
 
 template <>
