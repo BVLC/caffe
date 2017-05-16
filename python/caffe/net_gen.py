@@ -625,8 +625,6 @@ class Graph:
                         error = error or not (equal_shape(aff_prob_shape[2:], components[2:]))
             else:
                 print('Unhandled sink: ' + sink.fn.type_name)
-                error = True
-            # print error
         return error
         
     def propagate_shape_forward(self, element, index, shape):

@@ -20,6 +20,8 @@ set(test_args --gtest_shuffle)
 
 if(HAVE_CUDA AND USE_CUDA)
   caffe_cuda_compile(test_cuda_objs ${test_cuda})
+  # remove them
+  remove_definitions(${__cuda_options})
   list(APPEND test_srcs ${test_cuda_objs} ${test_cuda})
 else()
   if(USE_GREENTEA)
