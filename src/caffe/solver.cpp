@@ -331,10 +331,13 @@ void Solver<Dtype>::Test(const int test_net_id) {
             << ", Testing net (#" << test_net_id << ")";
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
       ShareTrainedLayersWith(net_.get());
-  vector<Dtype> test_score;
+
+  vector<Blob<Dtype>* > test_score;
   vector<int> test_score_output_id;
+  vector<Blob<Dtype>*> bottom_vec;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
+
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
     SolverAction::Enum request = GetRequestedAction();
     // Check to see if stoppage of testing/training has been requested.
@@ -346,6 +349,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
         }
         request = GetRequestedAction();
     }
+
     if (requested_early_exit_) {
       // break out of test loop.
       break;
@@ -353,51 +357,105 @@ void Solver<Dtype>::Test(const int test_net_id) {
 
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-        test_net->Forward(&iter_loss);
+        test_net->Forward(bottom_vec, &iter_loss);
+
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
+
+    int num_results = result.size();
+    test_score.resize(num_results);
     if (i == 0) {
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
+        test_score[j] = new Blob<Dtype>;
+        test_score[j]->Reshape(result[j]->shape());
+        const int output_blob_index = test_net->output_blob_indices()[j];
+        const string& output_name = test_net->blob_names()[output_blob_index];
+        DLOG(INFO) << "Test net " << test_net_id
+                  << " output: " << j << " " << output_name
+                  << " dim=" << result[j]-> shape().size()
+                  << " size="<< result[j]-> count();
         for (int k = 0; k < result[j]->count(); ++k) {
-          test_score.push_back(result_vec[k]);
-          test_score_output_id.push_back(j);
+          test_score[j]->mutable_cpu_data()[k]=result_vec[k];
         }
+        test_score_output_id.push_back(j);
       }
     } else {
-      int idx = 0;
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
         for (int k = 0; k < result[j]->count(); ++k) {
-          test_score[idx++] += result_vec[k];
+          test_score[j]->mutable_cpu_data()[k] += result_vec[k];
         }
       }
     }
   }
+
   if (requested_early_exit_) {
     LOG(INFO)     << "Test interrupted.";
     return;
   }
+
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
-    const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
-    if (loss_weight) {
-      loss_msg_stream << " (* " << loss_weight
-                      << " = " << loss_weight * mean_score << " loss)";
+    if (test_score[i]->count() == 1) {
+      const Dtype mean_score =
+                  test_score[i]->cpu_data()[0] / param_.test_iter(test_net_id);
+      if (loss_weight) {
+        loss_msg_stream << " (* " << loss_weight
+                        << " = " << loss_weight * mean_score << " loss)";
+      }
+      LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
+                << mean_score << loss_msg_stream.str();
+    } else if (test_score[i]->shape().size() == 1) {    //  0- or 1-D-vector
+      for (int j = 0; j < test_score[i]->count(); ++j) {
+        Dtype mean_score =
+              test_score[i]->cpu_data()[j] / param_.test_iter(test_net_id);
+        if (loss_weight)
+           mean_score = mean_score * loss_weight;
+        loss_msg_stream <<  mean_score << " ";
+      }
+      LOG(INFO) << "    Test net output #" << i << ": "
+                << output_name << " = " << loss_msg_stream.str();
+    } else if (test_score[i]->shape().size() == 2) {    // 2D - array
+      LOG(INFO) << "    Test net output #" << i << ": " << output_name
+                << " [" << test_score[i]->shape()[0] << "x"
+                << test_score[i]->shape()[1] << "]";
+      int num_rows = test_score[i]->shape()[0];
+      int num_columns = test_score[i]->shape()[1];
+      for (int j = 0; j < num_rows; ++j) {
+        ostringstream line_msg_stream;
+        line_msg_stream << "      " << output_name << " ";
+        line_msg_stream.width(4);
+        line_msg_stream << j << ": ";
+        for (int k = 0; k < num_columns; ++k) {
+          line_msg_stream.width(6);
+          line_msg_stream.precision(4);
+          line_msg_stream.setf(ostringstream::fixed);
+          line_msg_stream.setf(ostringstream::showpoint);
+          Dtype prob = test_score[i]->cpu_data()[j*num_columns + k] /
+                          param_.test_iter(test_net_id);
+          line_msg_stream << prob << "  ";
+        }
+        LOG(INFO) << line_msg_stream.str();
+      }
+    } else {
+      LOG(INFO) << "    Test net output #" << i << ": " << output_name
+                << test_score[i]->shape().size()
+                << "-d shape is not supported ";
     }
-    LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
-              << mean_score << loss_msg_stream.str();
   }
 }
+
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
