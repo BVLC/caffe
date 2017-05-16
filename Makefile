@@ -425,6 +425,16 @@ else
 endif
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) $(PKG_CONFIG) \
 		$(foreach library,$(LIBRARIES),-l$(library))
+
+ifeq ($(OSX), 1)
+	OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
+	OSX_10_5_OR_LATER := $(shell [ $(OSX_MINOR_VERSION) -ge 5 ] && echo true)
+	ifeq ($(OSX_10_OR_LATER),true)
+		ifeq ($(OSX_10_5_OR_LATER),true)
+			LDFLAGS += -Wl,-rpath,$(CUDA_LIB_DIR)
+		endif
+	endif
+endif
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 # 'superclean' target recursively* deletes all files ending with an extension
