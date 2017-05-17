@@ -377,6 +377,8 @@ bp::object NCCL_New_Uid() {
 #endif
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RestoreOverloads, Restore, 1, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SnapshotOverloads, Snapshot, 0, 0);
 
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
@@ -496,8 +498,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore)
-    .def("snapshot", &Solver<Dtype>::Snapshot)
+    .def("restore", static_cast<void (Solver<Dtype>::*)(const char*)>(
+          &Solver<Dtype>::Restore), RestoreOverloads())
+    .def("snapshot", static_cast<void (Solver<Dtype>::*)()>(
+          &Solver<Dtype>::Snapshot), SnapshotOverloads())
     .def("share_weights", &share_weights)
     .add_property("param", bp::make_function(&Solver<Dtype>::param,
               bp::return_value_policy<bp::copy_const_reference>()));

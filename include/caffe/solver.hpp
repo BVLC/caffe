@@ -33,6 +33,11 @@ namespace caffe {
 typedef boost::function<SolverAction::Enum()> ActionCallback;
 
 /**
+ * @brief Type of a function that handles custom snapshotting.
+ */
+typedef boost::function<void()> SnapshotCallback;
+
+/**
  * @brief An interface for classes that perform optimization on Net%s.
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
@@ -52,20 +57,30 @@ class Solver {
   // exit training early).
   void SetActionFunction(ActionCallback func);
   SolverAction::Enum GetRequestedAction();
-  // The main entry of the solver function. In default, iter will be zero. Pass
-  // in a non-zero iter number to resume training for a pre-trained net.
-  virtual void Solve(const char* resume_file = NULL);
+  // The main entry of the solver function, simply dispatched to a protected
+  // method. By default, iter will be zero. Pass in a non-zero iter number to
+  // resume training for a pre-trained net.
+  inline void Solve(const char* resume_file = NULL) { Solve(resume_file, NULL, NULL); }
   inline void Solve(const string& resume_file) { Solve(resume_file.c_str()); }
+  inline void Solve(const NetParameter& net_param, const SolverState& state) { Solve(NULL, &net_param, &state); }
   void Step(int iters);
-  // The Restore method simply dispatches to one of the
-  // RestoreSolverStateFrom___ protected methods. You should implement these
-  // methods to restore the state from the appropriate snapshot type.
+  // The file version of the Restore method simply dispatches to one of the
+  // RestoreSolverStateFrom___ protected methods to restore the state from the
+  // appropriate snapshot type. The protocol buffer version of the Restore
+  // method restores the learned net and dispatches to the RestoreSolverState
+  // protected method to restore additional state information. You must
+  // implement all of these protected dispatch methods.
   void Restore(const char* resume_file);
+  void Restore(const NetParameter& net_param, const SolverState& state);
   // The Solver::Snapshot function implements the basic snapshotting utility
-  // that stores the learned net. You should implement the SnapshotSolverState()
+  // that stores the learned net. You must implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
-  // written to disk together with the learned net.
+  // written to disk or handled by a callback together with the learned net.
   void Snapshot();
+  void Snapshot(NetParameter* net_param, SolverState* state);
+  // Client of the Solver optionally may call this in order to set a function
+  // that replaces standard snapshotting with custom behavior.
+  void SetSnapshotFunction(SnapshotCallback func);
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() const { return net_; }
@@ -97,6 +112,7 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 
  protected:
+  virtual void Solve(const char* resume_file, const NetParameter* net_param, const SolverState* state);
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   string SnapshotFilename(const string& extension) const;
@@ -106,8 +122,10 @@ class Solver {
   void TestAll();
   void Test(const int test_net_id = 0);
   virtual void SnapshotSolverState(const string& model_filename) = 0;
+  virtual void SnapshotSolverState(SolverState* state) = 0;
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
+  virtual void RestoreSolverState(const SolverState& state) = 0;
   void DisplayOutputBlobs(const int net_id);
   void UpdateSmoothedLoss(Dtype loss, int start_iter, int average_loss);
 
@@ -124,6 +142,11 @@ class Solver {
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
   ActionCallback action_request_function_;
+
+  // A function that can be set by a client of the Solver to bypass standard
+  // snapshotting and provide custom functionality. For example, you may call
+  // the protocol buffer version of the Snapshot method from this function.
+  SnapshotCallback custom_snapshot_function_;
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;

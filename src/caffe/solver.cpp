@@ -17,6 +17,11 @@ void Solver<Dtype>::SetActionFunction(ActionCallback func) {
 }
 
 template<typename Dtype>
+void Solver<Dtype>::SetSnapshotFunction(SnapshotCallback func) {
+  custom_snapshot_function_ = func;
+}
+
+template<typename Dtype>
 SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
   if (action_request_function_) {
     // If the external request function has been set, call it.
@@ -269,7 +274,7 @@ void Solver<Dtype>::Step(int iters) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
+void Solver<Dtype>::Solve(const char* resume_file, const NetParameter* net_param, const SolverState* state) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
@@ -278,8 +283,16 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   requested_early_exit_ = false;
 
   if (resume_file) {
+    if (net_param || state) {
+      LOG(WARNING) << "Using resume_file. Ignoring net_param and state.";
+    }
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
+  } else if (net_param || state) {
+    LOG(INFO) << "Restoring previous solver status";
+    LOG_IF(FATAL, !net_param) << "Cannot proceed without net_param";
+    LOG_IF(FATAL, !state) << "Cannot proceed without state";
+    Restore(*net_param, *state);
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -405,6 +418,11 @@ void Solver<Dtype>::Test(const int test_net_id) {
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
+  if (custom_snapshot_function_) {
+    // If a custom function has been set, call it and return.
+    custom_snapshot_function_();
+    return;
+  }
   string model_filename;
   switch (param_.snapshot_format()) {
   case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
@@ -418,6 +436,12 @@ void Solver<Dtype>::Snapshot() {
   }
 
   SnapshotSolverState(model_filename);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Snapshot(NetParameter* net_param, SolverState* state) {
+  net_->ToProto(net_param, param_.snapshot_diff());
+  SnapshotSolverState(state);
 }
 
 template <typename Dtype>
@@ -471,6 +495,12 @@ void Solver<Dtype>::Restore(const char* state_file) {
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
   }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Restore(const NetParameter& net_param, const SolverState& state) {
+  net_->CopyTrainedLayersFrom(net_param);
+  RestoreSolverState(state);
 }
 
 template <typename Dtype>
