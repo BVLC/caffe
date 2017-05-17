@@ -60,9 +60,13 @@ class Solver {
   // The main entry of the solver function, simply dispatched to a protected
   // method. By default, iter will be zero. Pass in a non-zero iter number to
   // resume training for a pre-trained net.
-  inline void Solve(const char* resume_file = NULL) { Solve(resume_file, NULL, NULL); }
+  inline void Solve(const char* resume_file = NULL) {
+    Solve(resume_file, NULL, NULL);
+  }
   inline void Solve(const string& resume_file) { Solve(resume_file.c_str()); }
-  inline void Solve(const NetParameter& net_param, const SolverState& state) { Solve(NULL, &net_param, &state); }
+  inline void Solve(const NetParameter& net_param, const SolverState& state) {
+    Solve(NULL, &net_param, &state);
+  }
   void Step(int iters);
   // The file version of the Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods to restore the state from the
@@ -112,7 +116,8 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 
  protected:
-  virtual void Solve(const char* resume_file, const NetParameter* net_param, const SolverState* state);
+  virtual void Solve(const char* resume_file,
+                     const NetParameter* net_param, const SolverState* state);
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   string SnapshotFilename(const string& extension) const;

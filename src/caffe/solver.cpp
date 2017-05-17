@@ -274,7 +274,9 @@ void Solver<Dtype>::Step(int iters) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file, const NetParameter* net_param, const SolverState* state) {
+void Solver<Dtype>::Solve(const char* resume_file,
+                          const NetParameter* net_param,
+                          const SolverState* state) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
@@ -498,7 +500,8 @@ void Solver<Dtype>::Restore(const char* state_file) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Restore(const NetParameter& net_param, const SolverState& state) {
+void Solver<Dtype>::Restore(const NetParameter& net_param,
+                            const SolverState& state) {
   net_->CopyTrainedLayersFrom(net_param);
   RestoreSolverState(state);
 }
