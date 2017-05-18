@@ -580,7 +580,7 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
 //    score_index_vec: store the sorted (score, index) pair.
 template <typename Dtype>
 void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
-      const int top_k, vector<pair<Dtype, int> >* score_index_vec);
+      const int top_k, vector<pair<Dtype, int> >& score_index_vec);
 
 // Get max scores with corresponding indices.
 //    scores: a set of scores.
@@ -638,7 +638,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
 template <typename Dtype>
 void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,
-      const float eta, const int top_k, vector<int>* indices);
+      const float eta, const int top_k, vector<int>& indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);

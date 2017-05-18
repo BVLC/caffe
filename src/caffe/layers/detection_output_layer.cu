@@ -50,7 +50,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   vector<map<int, vector<int> > > all_indices;
   for (int i = 0; i < num; ++i) {
     map<int, vector<int> > indices;
-    int num_det = 0;
+    for(auto i = 0; i < num_classes_; ++i)
+      indices[i].resize(0);
     const int conf_idx = i * num_classes_ * num_priors_;
     int bbox_idx;
     if (share_location_) {
@@ -58,9 +59,14 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
     } else {
       bbox_idx = conf_idx * 4;
     }
+    int num_det = 0;
+#ifdef _OPENMP
+   #pragma omp parallel for reduction(+:num_det)
+#endif
     for (int c = 0; c < num_classes_; ++c) {
       if (c == background_label_id_) {
         // Ignore background class.
+        indices[c].clear();
         continue;
       }
       const Dtype* cur_conf_data = conf_cpu_data + conf_idx + c * num_priors_;
@@ -68,10 +74,12 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
       if (!share_location_) {
         cur_bbox_data += c * num_priors_ * 4;
       }
+      indices[c].clear();
       ApplyNMSFast(cur_bbox_data, cur_conf_data, num_priors_,
-          confidence_threshold_, nms_threshold_, eta_, top_k_, &(indices[c]));
+          confidence_threshold_, nms_threshold_, eta_, top_k_, indices[c]);
       num_det += indices[c].size();
     }
+
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
       vector<pair<float, pair<int, int> > > score_index_pairs;
       for (map<int, vector<int> >::iterator it = indices.begin();
@@ -86,7 +94,9 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
         }
       }
       // Keep top k results per image.
-      std::sort(score_index_pairs.begin(), score_index_pairs.end(),
+      std::partial_sort(score_index_pairs.begin(),
+                        score_index_pairs.begin() + keep_top_k_,
+                        score_index_pairs.end(),
                 SortScorePairDescend<pair<int, int> >);
       score_index_pairs.resize(keep_top_k_);
       // Store the new indices.

@@ -1784,31 +1784,31 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
 
 template <typename Dtype>
 void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
-      const int top_k, vector<pair<Dtype, int> >* score_index_vec) {
+      const int top_k, vector<pair<Dtype, int> >& score_index_vec) {
   // Generate index score pairs.
   for (int i = 0; i < num; ++i) {
     if (scores[i] > threshold) {
-      score_index_vec->push_back(std::make_pair(scores[i], i));
+      score_index_vec.push_back(std::make_pair(scores[i], i));
     }
   }
-
-  // Sort the score pair according to the scores in descending order
-  std::sort(score_index_vec->begin(), score_index_vec->end(),
+  if (score_index_vec.size() > top_k && top_k > -1) {
+    std::partial_sort(score_index_vec.begin(), score_index_vec.begin() + top_k,
+                        score_index_vec.end(), SortScorePairDescend<int>);
+    score_index_vec.resize(top_k);
+  } else {
+    // Sort the score pair according to the scores in descending order
+    std::sort(score_index_vec.begin(), score_index_vec.end(),
             SortScorePairDescend<int>);
-
-  // Keep top_k scores if needed.
-  if (top_k > -1 && top_k < score_index_vec->size()) {
-    score_index_vec->resize(top_k);
   }
 }
 
 template
 void GetMaxScoreIndex(const float* scores, const int num, const float threshold,
-      const int top_k, vector<pair<float, int> >* score_index_vec);
+      const int top_k, vector<pair<float, int> >& score_index_vec);
 template
 void GetMaxScoreIndex(const double* scores, const int num,
       const float threshold, const int top_k,
-      vector<pair<double, int> >* score_index_vec);
+      vector<pair<double, int> >& score_index_vec);
 
 void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, const bool reuse_overlaps,
@@ -1949,9 +1949,8 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       }
     }
     if (keep) {
-      indices->push_back(idx);
+      indices.push_back(idx);
     }
-    score_index_vec.erase(score_index_vec.begin());
     if (keep && eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
     }
@@ -1961,20 +1960,18 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
 template <typename Dtype>
 void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,
-      const float eta, const int top_k, vector<int>* indices) {
+      const float eta, const int top_k, vector<int>& indices) {
   // Get top_k scores (with corresponding indices).
   vector<pair<Dtype, int> > score_index_vec;
-  GetMaxScoreIndex(scores, num, score_threshold, top_k, &score_index_vec);
-
-  // Do nms.
+  score_index_vec.reserve(num);
+  GetMaxScoreIndex(scores, num, score_threshold, top_k, score_index_vec);
   float adaptive_threshold = nms_threshold;
-  indices->clear();
-  while (score_index_vec.size() != 0) {
-    const int idx = score_index_vec.front().second;
+  for (auto i =0; i < score_index_vec.size(); ++i) {
+    const int idx = score_index_vec[i].second;
     bool keep = true;
-    for (int k = 0; k < indices->size(); ++k) {
+    for (int k = 0; k < indices.size(); ++k) {
       if (keep) {
-        const int kept_idx = (*indices)[k];
+        const int kept_idx = indices[k];
         float overlap = JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4);
         keep = overlap <= adaptive_threshold;
       } else {
@@ -1994,11 +1991,11 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
 template
 void ApplyNMSFast(const float* bboxes, const float* scores, const int num,
       const float score_threshold, const float nms_threshold,
-      const float eta, const int top_k, vector<int>* indices);
+      const float eta, const int top_k, vector<int>& indices);
 template
 void ApplyNMSFast(const double* bboxes, const double* scores, const int num,
       const float score_threshold, const float nms_threshold,
-      const float eta, const int top_k, vector<int>* indices);
+      const float eta, const int top_k, vector<int>& indices);
 
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum) {
   // Sort the pairs based on first item of the pair.
