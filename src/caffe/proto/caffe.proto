@@ -193,6 +193,7 @@ message SolverParameter {
   enum SnapshotFormat {
     HDF5 = 0;
     BINARYPROTO = 1;
+    NONE = 2; // only valid if a snapshot callback function is defined
   }
   optional SnapshotFormat snapshot_format = 37 [default = BINARYPROTO];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.

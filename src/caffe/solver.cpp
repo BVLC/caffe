@@ -421,9 +421,14 @@ template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
   if (custom_snapshot_function_) {
-    // If a custom function has been set, call it and return.
+    // If a custom function has been set, call it.
     custom_snapshot_function_();
-    return;
+    if (param_.snapshot_format() ==
+        caffe::SolverParameter_SnapshotFormat_NONE) {
+      // We are replacing standard snapshotting.
+      return;
+    }
+    // We are extending standard snapshotting.
   }
   string model_filename;
   switch (param_.snapshot_format()) {
@@ -448,7 +453,8 @@ void Solver<Dtype>::Snapshot(NetParameter* net_param, SolverState* state) {
 
 template <typename Dtype>
 void Solver<Dtype>::CheckSnapshotWritePermissions() {
-  if (Caffe::root_solver() && param_.snapshot()) {
+  if (Caffe::root_solver() && param_.snapshot() && param_.snapshot_format() !=
+      caffe::SolverParameter_SnapshotFormat_NONE) {
     CHECK(param_.has_snapshot_prefix())
         << "In solver params, snapshot is specified but snapshot_prefix is not";
     string probe_filename = SnapshotFilename(".tempfile");

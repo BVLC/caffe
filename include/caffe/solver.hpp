@@ -83,7 +83,7 @@ class Solver {
   void Snapshot();
   void Snapshot(NetParameter* net_param, SolverState* state);
   // Client of the Solver optionally may call this in order to set a function
-  // that replaces standard snapshotting with custom behavior.
+  // that replaces or extends standard snapshotting.
   void SetSnapshotFunction(SnapshotCallback func);
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
