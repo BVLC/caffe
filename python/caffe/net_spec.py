@@ -61,6 +61,17 @@ def assign_proto(proto, name, val):
     lists; e.g., `my_repeated_int_field=3` is converted to
     `my_repeated_int_field=[3]`."""
 
+    enum_type = proto.DESCRIPTOR.fields_by_name[name].enum_type
+    if enum_type is not None and isinstance(val, str):
+        try:
+            val = enum_type.values_by_name[val].index
+        except KeyError:
+            enum_list = ", ".join(enum_type.values_by_name.keys())
+            msg = ("Parameter '{}' of layer {} does not accept value {}. "
+                   "Possible values: {}").format(name,
+                                                 proto.DESCRIPTOR.name,
+                                                 val, enum_list)
+            raise ValueError(msg)
     is_repeated_field = hasattr(getattr(proto, name), 'extend')
     if is_repeated_field and not isinstance(val, list):
         val = [val]
