@@ -97,7 +97,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
       // Collect Input layer tops as Net inputs.
-      if (layer_param.type() == "Input") {
+      if (num_top && !layer_param.bottom_size()) {
         const int blob_id = blobs_.size() - 1;
         net_input_blob_indices_.push_back(blob_id);
         net_input_blobs_.push_back(blobs_[blob_id].get());

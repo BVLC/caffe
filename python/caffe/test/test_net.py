@@ -120,7 +120,7 @@ class TestNet(unittest.TestCase):
         self.assertTrue((diff == 0).all())
 
     def test_inputs_outputs(self):
-        self.assertEqual(self.net.inputs, [])
+        self.assertEqual(self.net.inputs, ['data', 'label'])
         self.assertEqual(self.net.outputs, ['loss'])
 
     def test_top_bottom_names(self):
