@@ -45,6 +45,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     label = atoi(line.substr(pos + 1).c_str());
     lines_.push_back(std::make_pair(line.substr(0, pos), label));
   }
+  
+  // Check that image list is not empty.
+  CHECK_GT(lines_.size(), 0);
 
   CHECK(!lines_.empty()) << "File is empty";
 
