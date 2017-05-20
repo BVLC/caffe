@@ -44,7 +44,7 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_61,code=compute_61
 
 # BLAS choice:
-# atlas for ATLAS (default)
+# atlas for ATLAS (default) (on centos 7 use atlas-centos7)
 # mkl for MKL
 # open for OpenBlas
 BLAS := atlas
