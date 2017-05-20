@@ -44,9 +44,10 @@ class Classifier(caffe.Net):
             image_dims = self.crop_dims
         self.image_dims = image_dims
 
-    def predict(self, inputs, oversample=True):
+    def predict_multi(self, inputs, oversample=True):
         """
-        Predict classification probabilities of inputs.
+        Predicts multi-label classification probabilities of inputs (for
+        architectures with multiple output blobs).
 
         Parameters
         ----------
@@ -57,8 +58,9 @@ class Classifier(caffe.Net):
 
         Returns
         -------
-        predictions: (N x C) ndarray of class probabilities for N images and C
-            classes.
+        predictions: a dictionary where the keys are names of the blobs at the
+            last layer(s) and the values are (N x C) ndarray of class
+            probabilities for N images and C classes.
         """
         # Scale to standardize input dimensions.
         input_ = np.zeros((len(inputs),
@@ -88,11 +90,33 @@ class Classifier(caffe.Net):
         for ix, in_ in enumerate(input_):
             caffe_in[ix] = self.transformer.preprocess(self.inputs[0], in_)
         out = self.forward_all(**{self.inputs[0]: caffe_in})
-        predictions = out[self.outputs[0]]
+        multipreds = {}
+        for bname in self.outputs:
+            multipreds[bname] = out[bname]
+            # For oversampling, average predictions across crops.
+            if oversample:
+                tmparray = multipreds[bname]
+                tmparray = tmparray.reshape((len(tmparray) / 10, 10, -1))
+                multipreds[bname] = tmparray.mean(1)
+        return multipreds
+    
+    def predict(self, inputs, oversample=True):
+        """
+        Predicts classification probabilities of inputs.
 
-        # For oversampling, average predictions across crops.
-        if oversample:
-            predictions = predictions.reshape((len(predictions) / 10, 10, -1))
-            predictions = predictions.mean(1)
+        Parameters
+        ----------
+        inputs : iterable of (H x W x K) input ndarrays.
+        oversample : boolean
+            average predictions across center, corners, and mirrors
+            when True (default). Center-only prediction when False.
 
-        return predictions
+        Returns
+        -------
+        predictions: (N x C) ndarray of class probabilities for N images and C
+            classes.
+        """
+        multipreds = self.predict_multi(inputs, oversample)
+        ## Returns only the classification probabilities of the first output 
+        ## blob.
+        return multipreds[self.outputs[0]]
