@@ -49,6 +49,9 @@ void EltwiseLayer<Dtype>::Forward_cpu(
   const Dtype* bottom_data_b = NULL;
   const int_tp count = top[0]->count();
   Dtype* top_data = top[0]->mutable_cpu_data();
+  Dtype maxVal = FLT_MAX;
+  if (std::is_same<Dtype, half_float::half>::value)
+    maxVal = HALF_MAX;
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     caffe_mul(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
@@ -67,7 +70,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     // Initialize
     mask = max_idx_.mutable_cpu_data();
     caffe_set(count, (int_tp)-1, mask);
-    caffe_set(count, Dtype(-FLT_MAX), top_data);
+    caffe_set(count, Dtype(-maxVal), top_data);
     // bottom 0 & 1
     bottom_data_a = bottom[0]->cpu_data();
     bottom_data_b = bottom[1]->cpu_data();

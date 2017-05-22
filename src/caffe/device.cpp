@@ -100,7 +100,16 @@ int device::num_queues() {
   }
   return 1;
 }
-
+#ifdef HAS_HALF_SUPPORT
+template<>
+shared_ptr<Blob<half> > device::Buffer(int id) {
+  if (buff_h_.size() <= id) {
+    shared_ptr<Blob<half> > blob_pointer(new Blob<half>(this));
+    buff_h_.push_back(blob_pointer);
+  }
+  return buff_h_[id];
+}
+#endif
 template<>
 shared_ptr<Blob<float> > device::Buffer(int id) {
   if (buff_f_.size() <= id) {

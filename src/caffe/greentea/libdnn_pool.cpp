@@ -201,6 +201,16 @@ template<typename Dtype>
 std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
                                                    bool test_mode) {
   std::stringstream ss;
+#ifdef HAS_HALF_SUPPORT
+  if (std::is_same<Dtype, half_float::half>::value) {
+    ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
+    ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
+  } else
+#endif
+  {
+    ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
+    ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
+  }
 
   ss << "__kernel void " + name + "(";
   ss << "__global const Dtype* __restrict bottom_data, ";
@@ -248,7 +258,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
       ss << "__global int_tp* mask_ptr = mask + get_global_id(1) * v_imso;"
          << std::endl;
     }
-    ss << "Dtype val = -FLT_MAX;" << std::endl;
+    ss << "Dtype val = -DTYPE_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
   }
 
@@ -258,7 +268,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
 
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
     if (test_mode) {
-      ss << "Dtype cumsum = FLT_MIN;" << std::endl;
+      ss << "Dtype cumsum = DTYPE_MIN;" << std::endl;
       ss << "Dtype cumvalues = 0;" << std::endl;
     } else {
       ss << "__global Dtype* rand_ptr = rand_idx + get_global_id(1) * v_imso;"
@@ -387,7 +397,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
             ss << "if (cumsum > thres) {" << std::endl;
             ss << "stoidx = in_idx + " << kernel_offset << ";" << std::endl;
             ss << "val = in_ptr[" << kernel_offset << "];" << std::endl;
-            ss << "thres = FLT_MAX;" << std::endl;
+            ss << "thres = DTYPE_MAX;" << std::endl;
             ss << "}" << std::endl;
           }
         }

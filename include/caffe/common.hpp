@@ -29,6 +29,7 @@
 #endif
 
 #include "caffe/util/device_alternate.hpp"
+#include "caffe/util/fp16.hpp"
 
 // Convert macro to string
 #define STRINGIFY(m) #m
@@ -50,10 +51,42 @@ private:\
   classname& operator=(const classname&)
 
 // Instantiate a class with float and double specifications.
+#ifdef HAS_HALF_SUPPORT
+#define INSTANTIATE_CLASS(classname) \
+  char gInstantiationGuard##classname; \
+  template class classname<half>; \
+  template class classname<float>; \
+  template class classname<double>;
+
+#define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
+  template void classname<half>::Forward_gpu( \
+      const std::vector<Blob<half>*>& bottom, \
+      const std::vector<Blob<half>*>& top); \
+  template void classname<float>::Forward_gpu( \
+      const std::vector<Blob<float>*>& bottom, \
+      const std::vector<Blob<float>*>& top); \
+  template void classname<double>::Forward_gpu( \
+      const std::vector<Blob<double>*>& bottom, \
+      const std::vector<Blob<double>*>& top);
+
+#define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
+  template void classname<half>::Backward_gpu( \
+      const std::vector<Blob<half>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<half>*>& bottom); \
+  template void classname<float>::Backward_gpu( \
+      const std::vector<Blob<float>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<float>*>& bottom); \
+  template void classname<double>::Backward_gpu( \
+      const std::vector<Blob<double>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<double>*>& bottom)
+#else
 #define INSTANTIATE_CLASS(classname) \
   char gInstantiationGuard##classname; \
   template class classname<float>; \
-  template class classname<double>
+  template class classname<double>; \
 
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \
@@ -72,6 +105,7 @@ private:\
       const std::vector<Blob<double>*>& top, \
       const std::vector<bool>& propagate_down, \
       const std::vector<Blob<double>*>& bottom)
+#endif
 
 #define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
   INSTANTIATE_LAYER_GPU_FORWARD(classname); \

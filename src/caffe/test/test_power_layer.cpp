@@ -42,7 +42,10 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     // Now, check values
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
-    const Dtype min_precision = 1e-5;
+    const Dtype min_precision = std::is_same<Dtype, half_float::half>::value ?
+                                1e-3 : 1e-5;
+    const Dtype precision_factor = std::is_same<Dtype, half_float::half>::value ?
+                                   1e-2 : 1e-4;
     for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
       Dtype expected_value = pow(shift + scale * bottom_data[i], power);
       if (power == Dtype(0) || power == Dtype(1) || power == Dtype(2)) {
@@ -52,7 +55,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
         EXPECT_TRUE(isnan(top_data[i]));
       } else {
         Dtype precision = std::max(
-          Dtype(std::abs(expected_value * Dtype(1e-4))), min_precision);
+          Dtype(std::abs(expected_value * precision_factor)), min_precision);
         EXPECT_NEAR(expected_value, top_data[i], precision);
       }
     }

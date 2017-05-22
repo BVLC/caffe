@@ -85,8 +85,11 @@ TYPED_TEST(ScaleLayerTest, TestForwardEltwise) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i],
+                delta * fabs(in_data_a[i] * in_data_b[i]));
   }
 }
 
@@ -105,8 +108,11 @@ TYPED_TEST(ScaleLayerTest, TestForwardEltwiseInPlace) {
   const int_tp count = this->blob_bottom_->count();
   const Dtype* in_data_a = orig_bottom.cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i],
+                delta * fabs(in_data_a[i] * in_data_b[i]));
   }
 }
 
@@ -146,13 +152,17 @@ TYPED_TEST(ScaleLayerTest, TestBackwardEltwiseInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
-                this->blob_bottom_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_->cpu_diff()[i],
+                delta * fabs(orig_bottom_diff.cpu_diff()[i]));
   }
   for (int_tp i = 0; i < this->blob_bottom_eltwise_->count(); ++i) {
     EXPECT_NEAR(orig_scale_diff.cpu_diff()[i],
-                this->blob_bottom_eltwise_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_eltwise_->cpu_diff()[i],
+                delta * fabs(orig_scale_diff.cpu_diff()[i]));
   }
 }
 
@@ -171,8 +181,11 @@ TYPED_TEST(ScaleLayerTest, TestForwardEltwiseWithParam) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = layer->blobs()[0]->cpu_data();
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i],
+                delta * fabs(in_data_a[i] * in_data_b[i]));
   }
 }
 
@@ -185,6 +198,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastBegin) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -192,7 +207,7 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastBegin) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) *
                       this->blob_bottom_broadcast_0_->data_at(n, c, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -208,6 +223,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddle) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -215,7 +232,7 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddle) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) *
                       this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -233,6 +250,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleInPlace) {
   shared_ptr<ScaleLayer<Dtype> > layer(new ScaleLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -240,7 +259,7 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleInPlace) {
           EXPECT_NEAR(this->blob_bottom_->data_at(n, c, h, w),
                       orig_bottom.data_at(n, c, h, w) *
                       this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_bottom_->data_at(n, c, h, w)));
         }
       }
     }
@@ -283,13 +302,15 @@ TYPED_TEST(ScaleLayerTest, TestBackwardBroadcastMiddleInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
-                this->blob_bottom_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_->cpu_diff()[i], delta);
   }
   for (int_tp i = 0; i < this->blob_bottom_broadcast_1_->count(); ++i) {
     EXPECT_NEAR(orig_scale_diff.cpu_diff()[i],
-                this->blob_bottom_broadcast_1_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_broadcast_1_->cpu_diff()[i], delta);
   }
 }
 
@@ -304,13 +325,16 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleWithParam) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
         for (int_tp w = 0; w < this->blob_bottom_->width(); ++w) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) *
-                      layer->blobs()[0]->data_at(c, h, 0, 0), 1e-5);
+                      layer->blobs()[0]->data_at(c, h, 0, 0),
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -330,6 +354,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleWithParamAndBias) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      5e-3 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -337,7 +363,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleWithParamAndBias) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) *
                       layer->blobs()[0]->data_at(c, h, 0, 0) +
-                      layer->blobs()[1]->data_at(c, h, 0, 0), 1e-5);
+                      layer->blobs()[1]->data_at(c, h, 0, 0),
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -353,6 +380,8 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastEnd) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -360,7 +389,7 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastEnd) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) *
                       this->blob_bottom_broadcast_2_->data_at(h, w, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -379,8 +408,10 @@ TYPED_TEST(ScaleLayerTest, TestForwardScale) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype scale = *this->blob_bottom_scale_->cpu_data();
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data[i] * scale, 1e-5);
+    EXPECT_NEAR(data[i], in_data[i] * scale, delta * fabs(data[i]));
   }
 }
 
@@ -397,8 +428,10 @@ TYPED_TEST(ScaleLayerTest, TestForwardScaleAxis2) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype scale = *this->blob_bottom_scale_->cpu_data();
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-3 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data[i] * scale, 1e-5);
+    EXPECT_NEAR(data[i], in_data[i] * scale, delta * fabs(data[i]));
   }
 }
 

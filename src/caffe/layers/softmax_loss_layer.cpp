@@ -103,8 +103,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
       }
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, prob_.shape(softmax_axis_));
+      Dtype min_value = FLT_MIN;
+      if (std::is_same<Dtype, half_float::half>::value)
+        min_value = HALF_MIN;
       loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
-                           Dtype(FLT_MIN)));
+                           Dtype(min_value)));
       ++count;
     }
   }

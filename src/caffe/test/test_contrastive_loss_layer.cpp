@@ -77,12 +77,13 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
     if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
       loss += dist_sq;
     } else {
-      Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq), 0.0);
+      Dtype dist = fmax(Dtype(margin - sqrt(dist_sq)), Dtype(0.0));
       loss += dist*dist;
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-5);
+  Dtype delta = 1e-5 * std::is_same<Dtype, half_float::half>::value ? 100 : 1;
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, delta);
 }
 
 TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
@@ -120,11 +121,12 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
     if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
       loss += dist_sq;
     } else {
-      loss += std::max(margin - dist_sq, Dtype(0.0));
+      loss += fmax(Dtype(margin - dist_sq), Dtype(0.0));
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-5);
+  Dtype delta = 1e-5 * std::is_same<Dtype, half_float::half>::value ? 100 : 1;
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, delta);
 }
 
 TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {

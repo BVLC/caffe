@@ -43,7 +43,7 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_threshold = program.get_kernel(
         CL_KERNEL_SELECT("threshold"));
     viennacl::ocl::enqueue(
-        oclk_threshold(count, threshold_,
+        oclk_threshold(count, fixup_arg_type(threshold_),
                        WrapHandle((cl_mem) bottom_data, &ctx),
                        WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());

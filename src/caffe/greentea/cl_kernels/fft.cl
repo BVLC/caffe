@@ -2,7 +2,7 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(fft_phony,Dtype)(Dtype arg) {
+__kernel void TEMPLATE(fft_phony,Dtype)(KERNEL_ARG_DTYPE arg) {
   Dtype out = arg;
 }
 
@@ -813,8 +813,8 @@ __kernel void TEMPLATE(batchedCdotc,Dtype)(__global Dtype2* dst,
     cdotc4.xz += mad( s1.xz, s2.xz, s1.yw * s2.yw);
     cdotc4.yw += mad(-s1.xz, s2.yw, s1.yw * s2.xz);
   }
-  cdotc.x += dot(cdotc4.xz, (float2)(1));
-  cdotc.y += dot(cdotc4.yw, (float2)(1));
+  cdotc.x += dot(cdotc4.xz, (Dtype2)(1));
+  cdotc.y += dot(cdotc4.yw, (Dtype2)(1));
   if (r == 1) {
     const __global Dtype* src1_ptr2 = 
         (const __global Dtype*)(((const __global Dtype4*)(src1_ptr)) + n);

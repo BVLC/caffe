@@ -9111,6 +9111,55 @@ const char* TypedTestCasePState::VerifyRegisteredTestNames(
   return registered_tests;
 }
 
+template <>
+AssertionResult CmpHelperFloatingPointEQ<half>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         half expected,
+                                         half actual);
+template <>
+AssertionResult CmpHelperFloatingPointEQ<float>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         float expected,
+                                         float actual);
+template <>
+AssertionResult CmpHelperFloatingPointEQ<double>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         double expected,
+                                         double actual);
+
+template <>
+AssertionResult CmpHelperFloatingPointLE<half>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         half expected,
+                                         half actual);
+template <>
+AssertionResult CmpHelperFloatingPointLE<float>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         float expected,
+                                         float actual);
+template <>
+AssertionResult CmpHelperFloatingPointLE<double>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         double expected,
+                                         double actual);
+
+template <>
+AssertionResult CmpHelperFloatingPointGE<half>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         half expected,
+                                         half actual);
+template <>
+AssertionResult CmpHelperFloatingPointGE<float>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         float expected,
+                                         float actual);
+template <>
+AssertionResult CmpHelperFloatingPointGE<double>(const char* expected_expression,
+                                         const char* actual_expression,
+                                         double expected,
+                                         double actual);
+
+
 #endif  // GTEST_HAS_TYPED_TEST_P
 
 }  // namespace internal

@@ -22,7 +22,7 @@ void TEMPLATE(max_pool_forward_impl, Dtype)(
     const int_tp wend = min(wstart + kernel_w, width);
     hstart = max(hstart, (int_tp)0);
     wstart = max(wstart, (int_tp)0);
-    Dtype maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     int_tp maxidx = -1;
     __global const Dtype* bottom_slice = bottom_data
         + (n * channels + c) * height * width;
@@ -137,7 +137,7 @@ __kernel void TEMPLATE(sto_pool_forward_train,Dtype)(
         cumsum += bottom_slice[h * width + w];
       }
     }
-    const float thres = rand_idx[index] * cumsum;
+    const Dtype thres = rand_idx[index] * cumsum;
     // Second pass: get value, and set index.
     cumsum = 0;
     for (int_tp h = hstart; h < hend; ++h) {
@@ -171,7 +171,7 @@ __kernel void TEMPLATE(sto_pool_forward_test,Dtype)(
     const int_tp wstart = pw * stride_w;
     const int_tp wend = min(wstart + kernel_w, width);
     // We set cumsum to be 0 to avoid divide-by-zero problems
-    Dtype cumsum = FLT_MIN;
+    Dtype cumsum = DTYPE_MIN;
     Dtype cumvalues = 0.;
     __global const Dtype* bottom_slice = bottom_data
         + (n * channels + c) * height * width;

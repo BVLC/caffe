@@ -81,6 +81,7 @@ void caffe_rng_uniform(const int_tp n, uint_tp* r);
 template<typename Dtype>
 void caffe_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r);
 
+
 template<typename Dtype>
 void caffe_rng_gaussian(const int_tp n, const Dtype mu, const Dtype sigma,
                         Dtype* r);

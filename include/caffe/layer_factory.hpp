@@ -83,10 +83,16 @@ class LayerRegisterer {
   LayerRegisterer(const string& type,
                   shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&));
 };
-
+#ifdef HAS_HALF_SUPPORT
+#define REGISTER_LAYER_CREATOR(type, creator)                                  \
+  static LayerRegisterer<half> g_creator_h_##type(#type, creator<half>);     \
+  static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
+  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)
+#else
 #define REGISTER_LAYER_CREATOR(type, creator)                                  \
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
-  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)    \
+  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)
+#endif
 
 #define REGISTER_LAYER_CLASS(type)                                             \
   template <typename Dtype>                                                    \

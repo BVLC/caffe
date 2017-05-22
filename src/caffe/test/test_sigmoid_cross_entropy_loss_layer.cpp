@@ -70,7 +70,8 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
     targets_filler_param.set_min(0.0);
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
-    Dtype eps = 2e-2;
+    Dtype eps = std::is_same<Dtype, half_float::half>::value ?
+                2e-1 : 2e-2;
     for (int_tp i = 0; i < 100; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);
@@ -87,7 +88,8 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
           this->blob_bottom_targets_->cpu_data();
       Dtype reference_loss = kLossWeight * SigmoidCrossEntropyLossReference(
           count, num, blob_bottom_data, blob_bottom_targets);
-      EXPECT_NEAR(reference_loss, layer_loss, eps) << "debug: trial #" << i;
+      EXPECT_NEAR(reference_loss, layer_loss, eps * reference_loss)
+        << "debug: trial #" << i;
     }
   }
 

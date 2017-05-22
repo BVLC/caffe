@@ -33,6 +33,7 @@ static void CL_CALLBACK gemm_callback (cl_event event,
 // Will return image to caller if the input image is NULL. Otherwise,
 // will use the image directly. It's caller's responsibility to
 // release the created image.
+template<typename Dtype>
 static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
                  cl_mem *image, cl_mem buffer, int offset,
                  bool is_matrix_a, bool transpose,
@@ -48,7 +49,7 @@ static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
   cl_image_desc desc;
   cl_image_format format;
 
-  bool halfPrecisionMode = false;
+  bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
 
   memset(&desc, 0, sizeof(desc));
   int src_offset = halfPrecisionMode ? sizeof(unsigned short) * offset : sizeof(float) * offset;
@@ -88,9 +89,8 @@ static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
                                  origin, region, wait_list_size,
                                  wait_list, event));
     } else {
-      std::string kernel_name("gemm_buffer_copy_image_transpose_float");
-
-      viennacl::ocl::kernel &oclk_gemm_copy = program.get_kernel(kernel_name);
+      viennacl::ocl::kernel &oclk_gemm_copy = program.get_kernel(
+        CL_KERNEL_SELECT("gemm_buffer_copy_image_transpose"));
 
       size_t global_copy[2];
       global_copy[0] = width;
@@ -144,9 +144,8 @@ static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
                                  buffer, *image, src_offset,
                                  origin, region, wait_list_size, wait_list, event));
     } else {
-      std::string kernel_name("gemm_buffer_copy_image_no_transpose_float");
-
-      viennacl::ocl::kernel &oclk_gemm_copy = program.get_kernel(kernel_name);
+      viennacl::ocl::kernel &oclk_gemm_copy = program.get_kernel(
+        CL_KERNEL_SELECT("gemm_buffer_copy_image_no_transpose"));
 
       size_t global_copy[2];
       global_copy[0] = padding ? padded_width : width;
@@ -166,11 +165,12 @@ static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
   }
 }
 
+template<typename Dtype>
 static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                        const CBLAS_TRANSPOSE TransB, const int_tp M,
-                       const int_tp N, const int_tp K, const float alpha,
+                       const int_tp N, const int_tp K, const Dtype alpha,
                        const cl_mem A, const int_tp offA, const cl_mem B,
-                       const int_tp offB, const float beta, cl_mem C,
+                       const int_tp offB, const Dtype beta, cl_mem C,
                        const int_tp offC, bool is_image_a, bool is_image_b,
                        enum gemm_type_t gemm_type, const size_t max_image_size) {
   CHECK_EQ(gemm_type == GEMM_TYPE_FAST_IMAGE_32_1
@@ -183,7 +183,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
   if (is_image_b)
     CHECK_EQ(offB, 0) << "Invalid input image offset." << std::endl;
 
-  bool halfPrecisionMode = false;
+  bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
   int widthA = (TransA == CblasNoTrans) ? K : M;
   int heightA = (TransA == CblasNoTrans) ? M : K;
   int widthB = (TransB == CblasNoTrans) ? N : K;
@@ -250,7 +250,12 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
     kernel_name += "0";
   else
     kernel_name += "1";
-  kernel_name += "_float";
+
+  if(halfPrecisionMode) {
+    kernel_name += "_half";
+  } else {
+    kernel_name += "_float";
+  }
 
   oclk_gemm_float = &program.get_kernel(kernel_name);
   while(C_start_y < M) {
@@ -295,7 +300,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
         }
 
         if (!is_image_a) {
-          greentea_gpu_gemm_copy_buffer_to_image(ctx_id, &ImA, A, blockA_offset,
+          greentea_gpu_gemm_copy_buffer_to_image<Dtype>(ctx_id, &ImA, A, blockA_offset,
                                     true, TransA != CblasNoTrans,
                                     padding_A, imageA_h, imageA_w,
                                     blockA_height, blockA_width, ldA, 0, NULL, &ev[ev_idx]);
@@ -303,7 +308,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
             ev_idx++;
         }
         if (!is_image_b) {
-          greentea_gpu_gemm_copy_buffer_to_image(ctx_id, &ImB, B, blockB_offset,
+          greentea_gpu_gemm_copy_buffer_to_image<Dtype>(ctx_id, &ImB, B, blockB_offset,
                                     false, false,
                                     padding_B, imageB_h, imageB_w,
                                     blockB_height, blockB_width, ldB, 0, NULL, &ev[ev_idx]);
@@ -316,7 +321,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
         if (!is_image_a) {
           bool padding;
           padding = !is_image_b || halfPrecisionMode;
-          greentea_gpu_gemm_copy_buffer_to_image(ctx_id, &ImA, A, blockA_offset,
+          greentea_gpu_gemm_copy_buffer_to_image<Dtype>(ctx_id, &ImA, A, blockA_offset,
                                     true, TransA != CblasNoTrans,
                                     padding, imageA_h, imageA_w,
                                     blockA_height, blockA_width, ldA, 0, NULL, &ev[ev_idx]);
@@ -325,7 +330,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
         }
 
         if(!is_image_b && (K % use_buffer_indicator != 0)) {
-          greentea_gpu_gemm_copy_buffer_to_image(ctx_id, &ImB, B, blockB_offset,
+          greentea_gpu_gemm_copy_buffer_to_image<Dtype>(ctx_id, &ImB, B, blockB_offset,
                                     false, true, false, imageB_h, imageB_w,
                                     blockB_height, blockB_width, ldB, 0, NULL, &ev[ev_idx]);
           if (ev[ev_idx] != NULL)
@@ -378,8 +383,8 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
       oclk_gemm_float->arg(arg_idx++, blockC_height);
       oclk_gemm_float->arg(arg_idx++, blockC_width);
       oclk_gemm_float->arg(arg_idx++, ldC);
-      oclk_gemm_float->arg(arg_idx++, alpha);
-      oclk_gemm_float->arg(arg_idx++, beta);
+      oclk_gemm_float->arg(arg_idx++, fixup_arg_type(alpha));
+      oclk_gemm_float->arg(arg_idx++, fixup_arg_type(beta));
       oclk_gemm_float->arg(arg_idx++, padded_k);
       if (TransB != CblasNoTrans)
         oclk_gemm_float->arg(arg_idx++, block_Ksize);
@@ -437,11 +442,12 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id, const CBLAS_TRANSP
     clReleaseMemObject(ImB);
 }
 
+template<typename Dtype>
 static void greentea_gpu_fast_buffer_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                        const CBLAS_TRANSPOSE TransB, const int_tp M,
-                       const int_tp N, const int_tp K, const float alpha,
+                       const int_tp N, const int_tp K, const Dtype alpha,
                        const cl_mem A, const int_tp offA, const cl_mem B,
-                       const int_tp offB, const float beta, cl_mem C,
+                       const int_tp offB, const Dtype beta, cl_mem C,
                        const int_tp offC, enum gemm_type_t gemm_type) {
     CHECK_EQ(gemm_type == GEMM_TYPE_FAST_BUFFER, true)
       << "Invalid fast buffer gemm type." << std::endl;
@@ -451,33 +457,39 @@ static void greentea_gpu_fast_buffer_gemm(const int_tp ctx_id, const CBLAS_TRANS
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
     viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
                                        ->program();
-    bool halfPrecisionMode= false;
+    bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
 
     size_t sub_group_size = 8;
     bool is_small_batch = (M == 2 || M == 4 || M == 8);
     viennacl::ocl::kernel *oclk_gemm_float;
     std::string kernel_name("gemm_buffer_");
     if(TransA == CblasNoTrans && TransB == CblasNoTrans) {
-        kernel_name += "NN_float";
+        kernel_name += "NN";
         if(halfPrecisionMode) {
           sub_group_size = 16;
         }
     } else if(TransA == CblasNoTrans && TransB != CblasNoTrans) {
         if (M == 2)
-          kernel_name +="NT_M_2_float";
+          kernel_name +="NT_M_2";
         else if (M == 4)
-          kernel_name +="NT_M_4_float";
+          kernel_name +="NT_M_4";
         else if (M == 8)
-          kernel_name +="NT_M_8_float";
+          kernel_name +="NT_M_8";
         else
-          kernel_name += "NT_float";
+          kernel_name += "NT";
     } else if(TransA != CblasNoTrans && TransB == CblasNoTrans) {
-        kernel_name += "TN_float";
+        kernel_name += "TN";
         if(halfPrecisionMode) {
           sub_group_size = 16;
         }
     } else {
-        kernel_name += "TT_float";
+        kernel_name += "TT";
+    }
+
+    if(halfPrecisionMode) {
+      kernel_name += "_half";
+    } else {
+      kernel_name += "_float";
     }
 
     oclk_gemm_float = &program.get_kernel(kernel_name);
@@ -520,8 +532,8 @@ static void greentea_gpu_fast_buffer_gemm(const int_tp ctx_id, const CBLAS_TRANS
     oclk_gemm_float->arg(arg_idx++, M);
     oclk_gemm_float->arg(arg_idx++, N);
     oclk_gemm_float->arg(arg_idx++, K);
-    oclk_gemm_float->arg(arg_idx++, alpha);
-    oclk_gemm_float->arg(arg_idx++, beta);
+    oclk_gemm_float->arg(arg_idx++, fixup_arg_type(alpha));
+    oclk_gemm_float->arg(arg_idx++, fixup_arg_type(beta));
 
     if(TransB == CblasNoTrans || TransA != CblasNoTrans) {
         int stride = 256;
@@ -549,16 +561,16 @@ static void innerprod_common(const int_tp ctx_id, const CBLAS_TRANSPOSE TransB,
 
     if (gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 ||
         gemm_type == GEMM_TYPE_FAST_IMAGE_32_2) {
-      greentea_gpu_fast_image_gemm(ctx_id, CblasNoTrans, TransB, M, N, K,
+      greentea_gpu_fast_image_gemm<Dtype>(ctx_id, CblasNoTrans, TransB, M, N, K,
                                    (Dtype)1., A, 0, B, 0, (Dtype)0., C,
                                    0, false, false, gemm_type, max_image_size);
     } else if (gemm_type == GEMM_TYPE_FAST_IMAGE_B_IMAGE) {
-      greentea_gpu_fast_image_gemm(ctx_id, CblasNoTrans, TransB, M, N, K,
+      greentea_gpu_fast_image_gemm<Dtype>(ctx_id, CblasNoTrans, TransB, M, N, K,
                                    (Dtype)1., A, 0, B_image, 0, (Dtype)0., C,
                                    0, false, true, GEMM_TYPE_FAST_IMAGE_B_IMAGE, max_image_size);
 
     } else if (gemm_type == GEMM_TYPE_FAST_BUFFER) {
-      greentea_gpu_fast_buffer_gemm(ctx_id, CblasNoTrans, TransB, M, N, K,
+      greentea_gpu_fast_buffer_gemm<Dtype>(ctx_id, CblasNoTrans, TransB, M, N, K,
                                     1.f, A, 0, B, 0, 0.f, C,
                                     0, gemm_type);
     } else
@@ -584,7 +596,9 @@ void InnerProductLayer<Dtype>::generate_key() {
   key_ = viennacl::tools::sha1(prefix + keyBuilder.str());
   // short_key_ = keyBuilder.str();
 }
-
+#ifdef HAS_HALF_SUPPORT
+template void InnerProductLayer<half>::generate_key();
+#endif
 template void InnerProductLayer<float>::generate_key();
 template void InnerProductLayer<double>::generate_key();
 
@@ -610,6 +624,9 @@ bool InnerProductLayer<Dtype>::load_cache() {
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template bool InnerProductLayer<half>::load_cache();
+#endif
 template bool InnerProductLayer<float>::load_cache();
 template bool InnerProductLayer<double>::load_cache();
 
@@ -618,6 +635,7 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
                       const CBLAS_TRANSPOSE TransB, const cl_mem A, const cl_mem B,
                       const cl_mem B_image, const size_t max_image_size) {
   if (std::is_same<Dtype, double>::value) {
+    innerprod_type_ = GEMM_TYPE_DEFAULT;
     return;
   } else {
     //1. load cache
@@ -626,7 +644,7 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
     } else {
       //2. if not cached generate tuning
       uint element_size = 0;
-      bool halfPrecisionMode= false;
+      bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
       if(halfPrecisionMode) {
         element_size = sizeof(uint16_t);
       } else {
@@ -649,7 +667,7 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
 
       // warm up.
       for( int i = 0; i < gemm_tests.size(); i++ ) {
-        innerprod_common<float>(ctx_id, TransB, M_, N_, K_,
+        innerprod_common<Dtype>(ctx_id, TransB, M_, N_, K_,
                          A, B, B_image, C, gemm_tests[i], max_image_size);
       }
       float fastest_time = 1e10;
@@ -659,7 +677,7 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
         Timer timer;
         timer.initted();
         timer.Start();
-        innerprod_common<float>(ctx_id, TransB, M_, N_, K_,
+        innerprod_common<Dtype>(ctx_id, TransB, M_, N_, K_,
                          A, B, B_image, C, gemm_tests[i], max_image_size);
         timer.Stop();
         float elapsedTime = timer.MilliSeconds();
@@ -692,6 +710,11 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
   return;
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void InnerProductLayer<half>::tune_innerprod_type(const int_tp ctx_id,
+                              const CBLAS_TRANSPOSE TransB, const cl_mem A, const cl_mem B,
+                              const cl_mem B_image, const size_t max_image_size);
+#endif
 template void InnerProductLayer<float>::tune_innerprod_type(const int_tp ctx_id,
                               const CBLAS_TRANSPOSE TransB, const cl_mem A, const cl_mem B,
                               const cl_mem B_image, const size_t max_image_size);
@@ -728,17 +751,16 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     int padded_height = 0, padded_width = 0;
-    Dtype *bias_mult_data;
-    Dtype *bias_term_data;
-    if (bias_term_) {
-      bias_mult_data = (Dtype*)bias_multiplier_.gpu_data();
-      bias_term_data = (Dtype*)this->blobs_[1]->gpu_data();
-    }
     int height = !transpose_ ? N_ : K_;
     int width = !transpose_ ? K_ : N_;
     if (M_ != 1) {
-      padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
-      padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
+      if (std::is_same<Dtype, float>::value) {
+        padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
+        padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
+      } else {
+        padded_height = !transpose_ ? height : (height + ((height & 7) ? (8-(height%8)) : 0));
+        padded_width = !transpose_ ? width : (width + ((width & 7) ? (8-(width%8)) : 0));
+      }
     }
 
     if (M_ == 1) {
@@ -759,18 +781,16 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       if (M_ <= max_image_size &&
           N_ <= max_image_size &&
           K_ <= max_image_size &&
-          std::is_same<Dtype, float>::value &&
+          !std::is_same<Dtype, double>::value &&
           this->device_->CheckCapability("cl_intel_subgroups")) {
         if (!test_only_ || copied_weight_data_ != this->blobs_[0]->data().get()) {
           int height = !transpose_ ? N_ : K_;
           int width = !transpose_ ? K_ : N_;
-          int padded_height = !transpose_ ? height : (height + ((height & 7) ? 1 : 0));
-          int padded_width = !transpose_ ? width : (width + ((width & 7) ? 1 : 0));
           if (weight_image_) {
             clReleaseMemObject((cl_mem)weight_image_);
             weight_image_ = NULL;
           }
-          greentea_gpu_gemm_copy_buffer_to_image(this->device_->id(),
+          greentea_gpu_gemm_copy_buffer_to_image<Dtype>(this->device_->id(),
             &weight_image_, (cl_mem) weight, 0,
             false, !transpose_,
             true, padded_height, padded_width,

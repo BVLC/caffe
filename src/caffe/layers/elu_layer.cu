@@ -42,7 +42,8 @@ void ELULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CL_KERNEL_SELECT("elu_forward"));
     viennacl::ocl::enqueue(
         oclk_elu(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                  WrapHandle((cl_mem) top_data, &ctx), alpha),
+                 WrapHandle((cl_mem) top_data, &ctx),
+                 fixup_arg_type(alpha)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -92,7 +93,8 @@ void ELULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           oclk_elu(count, WrapHandle((cl_mem) top_diff, &ctx),
                    WrapHandle((cl_mem) top_data, &ctx),
                    WrapHandle((cl_mem) bottom_data, &ctx),
-                   WrapHandle((cl_mem) bottom_diff, &ctx), alpha),
+                   WrapHandle((cl_mem) bottom_diff, &ctx),
+                   fixup_arg_type(alpha)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

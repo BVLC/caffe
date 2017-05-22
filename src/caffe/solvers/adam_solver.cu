@@ -42,14 +42,18 @@ void adam_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* m, Dtype* v,
     viennacl::ocl::enqueue(
         oclk_adam_update(N, WrapHandle((cl_mem) g, &ctx),
                          WrapHandle((cl_mem) m, &ctx),
-                         WrapHandle((cl_mem) v, &ctx), beta1, beta2, eps_hat,
-                         corrected_local_rate),
+                         WrapHandle((cl_mem) v, &ctx), fixup_arg_type(beta1),
+                         fixup_arg_type(beta2), fixup_arg_type(eps_hat),
+                         fixup_arg_type(corrected_local_rate)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
 }
 
-
+#ifdef HAS_HALF_SUPPORT
+template void adam_update_gpu<half>(device*, int_tp, half*, half*, half*,
+                                    half, half, half, half);
+#endif
 template void adam_update_gpu<float>(device*, int_tp, float*, float*, float*,
                                      float, float, float, float);
 template void adam_update_gpu<double>(device*, int_tp, double*, double*,

@@ -21,7 +21,7 @@ __kernel void TEMPLATE(softmax_forward_slm,Dtype)(const int_tp num, const int_tp
   int_tp n = get_global_id(1);
   for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=
       get_global_size(0), ++s) {
-    float maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {
       Dtype tmp = data[(n * channels + c) * spatial_dim + s];
       maxval = max((Dtype)tmp, (Dtype)maxval);
@@ -87,7 +87,7 @@ __kernel void TEMPLATE(softmax_forward,Dtype)(const int_tp num, const int_tp cha
   __global Dtype *group_tmp = scale + spatial_dim * num + n * get_max_sub_group_size() * spatial_dim;
   for (int_tp index = get_global_id(0), s = 0; index < spatial_dim * get_local_size(0); index +=
       get_global_size(0), ++s) {
-    float maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     for (int_tp c = get_global_id(0); c < channels; c += get_global_size(0)) {
       Dtype tmp = data[(n * channels + c) * spatial_dim + s];
       maxval = max((Dtype)tmp, (Dtype)maxval);
@@ -231,7 +231,7 @@ __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
     } else {
       loss[index] = -log((Dtype)(
           max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),
-              (Dtype) FLT_MIN)));
+              (Dtype) DTYPE_MIN)));
       counts[index] = 1;
     }
   }

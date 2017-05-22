@@ -82,8 +82,11 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwise) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i],
+                delta * fabs(in_data_a[i] + in_data_b[i]));
   }
 }
 
@@ -102,8 +105,11 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseInPlace) {
   const int_tp count = this->blob_bottom_->count();
   const Dtype* in_data_a = orig_bottom.cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i],
+                delta * fabs(in_data_a[i] + in_data_b[i]));
   }
 }
 
@@ -143,13 +149,15 @@ TYPED_TEST(BiasLayerTest, TestBackwardEltwiseInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
-                this->blob_bottom_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_->cpu_diff()[i], delta);
   }
   for (int_tp i = 0; i < this->blob_bottom_eltwise_->count(); ++i) {
     EXPECT_NEAR(orig_bias_diff.cpu_diff()[i],
-                this->blob_bottom_eltwise_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_eltwise_->cpu_diff()[i], delta);
   }
 }
 
@@ -168,8 +176,10 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseWithParam) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = layer->blobs()[0]->cpu_data();
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i], 1e-5);
+    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i], delta);
   }
 }
 
@@ -182,6 +192,8 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastBegin) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -189,7 +201,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastBegin) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) +
                       this->blob_bottom_broadcast_0_->data_at(n, c, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -205,6 +217,8 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddle) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -212,7 +226,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddle) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) +
                       this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
-                      1e-5);
+                      delta * fabs(this->blob_top_->data_at(n, c, h, w)));
         }
       }
     }
@@ -230,6 +244,8 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleInPlace) {
   shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -237,7 +253,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleInPlace) {
           EXPECT_NEAR(this->blob_bottom_->data_at(n, c, h, w),
                       orig_bottom.data_at(n, c, h, w) +
                       this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
-                      1e-5);
+                      delta);
         }
       }
     }
@@ -280,13 +296,15 @@ TYPED_TEST(BiasLayerTest, TestBackwardBroadcastMiddleInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
-                this->blob_bottom_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_->cpu_diff()[i], delta);
   }
   for (int_tp i = 0; i < this->blob_bottom_broadcast_1_->count(); ++i) {
     EXPECT_NEAR(orig_bias_diff.cpu_diff()[i],
-                this->blob_bottom_broadcast_1_->cpu_diff()[i], 1e-5);
+                this->blob_bottom_broadcast_1_->cpu_diff()[i], delta);
   }
 }
 
@@ -301,13 +319,15 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleWithParam) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
         for (int_tp w = 0; w < this->blob_bottom_->width(); ++w) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) +
-                      layer->blobs()[0]->data_at(c, h, 0, 0), 1e-5);
+                      layer->blobs()[0]->data_at(c, h, 0, 0), delta);
         }
       }
     }
@@ -323,6 +343,8 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastEnd) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -330,7 +352,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastEnd) {
           EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
                       this->blob_bottom_->data_at(n, c, h, w) +
                       this->blob_bottom_broadcast_2_->data_at(h, w, 0, 0),
-                      1e-5);
+                      delta);
         }
       }
     }
@@ -349,8 +371,10 @@ TYPED_TEST(BiasLayerTest, TestForwardBias) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype bias = *this->blob_bottom_bias_->cpu_data();
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data[i] + bias, 1e-5);
+    EXPECT_NEAR(data[i], in_data[i] + bias, delta);
   }
 }
 
@@ -367,8 +391,10 @@ TYPED_TEST(BiasLayerTest, TestForwardBiasAxis2) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype bias = *this->blob_bottom_bias_->cpu_data();
+  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+                      1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
-    EXPECT_NEAR(data[i], in_data[i] + bias, 1e-5);
+    EXPECT_NEAR(data[i], in_data[i] + bias, delta);
   }
 }
 

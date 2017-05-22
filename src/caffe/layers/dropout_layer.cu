@@ -54,7 +54,8 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           CL_KERNEL_SELECT("dropout_forward"));
       viennacl::ocl::enqueue(
           oclk_dropout(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                       WrapHandle(mask, &ctx), uint_thres_, scale_,
+                       WrapHandle(mask, &ctx), fixup_arg_type(uint_thres_),
+                       fixup_arg_type(scale_),
                        WrapHandle((cl_mem) top_data, &ctx)),
           ctx.get_queue());
     } else {
@@ -113,7 +114,8 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             CL_KERNEL_SELECT("dropout_backward"));
         viennacl::ocl::enqueue(
             oclk_dropout(count, WrapHandle((cl_mem) top_diff, &ctx),
-                         WrapHandle(mask, &ctx), uint_thres_, scale_,
+                         WrapHandle(mask, &ctx), fixup_arg_type(uint_thres_),
+                         fixup_arg_type(scale_),
                          WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       } else {

@@ -9,7 +9,7 @@ __kernel void TEMPLATE(eltwise_max_forward,Dtype)(
     __global int_tp* mask) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
-    Dtype maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     int_tp maxidx = -1;
     if (bottom_data_a[index] > bottom_data_b[index]) {
       // only update for very first bottom_data blob (blob_idx == 0)

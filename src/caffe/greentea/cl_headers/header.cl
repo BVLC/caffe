@@ -31,6 +31,7 @@
 
 #define TYPE_FLOAT 1
 #define TYPE_DOUBLE 2
+#define TYPE_HALF 3
 
 #if defined(cl_khr_fp64)
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
@@ -42,6 +43,11 @@
 #ifndef DISABLE_DOUBLE_SUPPORT
 #define DOUBLE_SUPPORT_AVAILABLE
 #endif //DISABLE_DOUBLE_SUPPORT
+#endif
+
+#if defined(cl_khr_fp16)
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
+#define HALF_SUPPORT_AVAILABLE
 #endif
 
 #if defined(cl_khr_int64_base_atomics)
@@ -58,4 +64,3 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #define ATOMICS_32_AVAILABLE
 #endif
-

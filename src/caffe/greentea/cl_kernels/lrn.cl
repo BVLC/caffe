@@ -5,18 +5,18 @@
 __kernel void TEMPLATE(lrn_compute_output,Dtype)(const int_tp nthreads,
                                                  __global const Dtype* in,
                                                  __global const Dtype* scale,
-                                                 const Dtype negative_beta,
+                                                 const KERNEL_ARG_DTYPE negative_beta,
                                                  __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
-    out[index] = in[index] * pow(scale[index], negative_beta);
+    out[index] = in[index] * pow(scale[index], (Dtype)negative_beta);
   }
 }
 
 __kernel void TEMPLATE(lrn_fill_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,
                              const int_tp num, const int_tp channels,
                              const int_tp height, const int_tp width, const int_tp size,
-                             const Dtype alpha_over_size, const Dtype k,
+                             const KERNEL_ARG_DTYPE alpha_over_size, const KERNEL_ARG_DTYPE k,
                              __global Dtype* const scale) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
@@ -67,8 +67,8 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
                                __global const Dtype* top_diff, const int_tp num,
                                const int_tp channels, const int_tp height,
                                const int_tp width, const int_tp size,
-                               const Dtype negative_beta,
-                               const Dtype cache_ratio,
+                               const KERNEL_ARG_DTYPE negative_beta,
+                               const KERNEL_ARG_DTYPE cache_ratio,
                                __global Dtype* bottom_diff) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
@@ -102,7 +102,7 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
             * top_off[(head - size) * step] / scale_off[(head - size) * step];
       }
       bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)
-          * step] * pow(scale_off[(head - post_pad) * step], negative_beta)
+          * step] * pow(scale_off[(head - post_pad) * step], (Dtype)negative_beta)
           - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;
       ++head;
     }
@@ -113,7 +113,7 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
             * top_off[(head - size) * step] / scale_off[(head - size) * step];
       }
       bottom_diff_off[(head - post_pad) * step] = top_diff_off[(head - post_pad)
-          * step] * pow(scale_off[(head - post_pad) * step], negative_beta)
+          * step] * pow(scale_off[(head - post_pad) * step], (Dtype)negative_beta)
           - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;
       ++head;
     }
@@ -136,9 +136,9 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
                              const int_tp height, const int_tp width,
                              const int_tp tiled_height, int_tp tiled_width,
                              const int_tp size,
-                             const Dtype alpha_over_size, const Dtype k,
+                             const KERNEL_ARG_DTYPE alpha_over_size, const KERNEL_ARG_DTYPE k,
                              __global Dtype* const out,
-                             const Dtype negative_beta,
+                             const KERNEL_ARG_DTYPE negative_beta,
                              const int_tp pool_h, const int_tp pool_w, const int_tp pool_stride_h, int_tp pool_stride_w,
                              const int_tp pooled_height, const int_tp pooled_width,
                              const int_tp tile_pooled_block_h, const int_tp tile_pooled_block_w) {
@@ -168,7 +168,7 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
   while ( head < channels + post_pad ) {
     int ph = 0;
     int cur_out_h = 0;
-    Dtype output_val = -FLT_MAX;
+    Dtype output_val = -DTYPE_MAX;
     // fill the scale at [n, :, h, w]
     // accumulate values
     for( int lrn_out_h = 0; lrn_out_h < TILE_H && (lrn_out_h + h) < height; lrn_out_h++) {
@@ -184,11 +184,11 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
       // compute output.
       if (head >= post_pad) {
         scale_val = k + prev_val * alpha_over_size;
-        Dtype tmp = -FLT_MAX;
+        Dtype tmp = -DTYPE_MAX;
         //if (w + get_local_id(1) < width)
-          tmp = in_off[(head - post_pad) * step + width * lrn_out_h] * native_powr(scale_val, negative_beta);
+          tmp = in_off[(head - post_pad) * step + width * lrn_out_h] * native_powr(scale_val, (Dtype)negative_beta);
 
-        Dtype h_max_val = -FLT_MAX;
+        Dtype h_max_val = -DTYPE_MAX;
         int index = (get_local_id(1) * pool_stride_w) % SIMD_WIDTH;
         for(int i = 0; i < pool_w; i++) {
           Dtype val = intel_sub_group_shuffle(tmp, index);
@@ -233,9 +233,9 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
 __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,
                              const int_tp num, const int_tp channels,
                              const int_tp height, const int_tp width, const int_tp size,
-                             const Dtype alpha_over_size, const Dtype k,
+                             const KERNEL_ARG_DTYPE alpha_over_size, const KERNEL_ARG_DTYPE k,
                              __global Dtype* const out,
-                             const Dtype negative_beta) {
+                             const KERNEL_ARG_DTYPE negative_beta) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
     // find out the local offset
@@ -265,7 +265,7 @@ __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global 
             * in_off[(head - size) * step];
       }
       scale_val = k + accum_scale * alpha_over_size;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((Dtype)scale_val, (Dtype)negative_beta);
       ++head;
     }
     // subtract only
@@ -275,7 +275,7 @@ __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global 
             * in_off[(head - size) * step];
       }
       scale_val = k + accum_scale * alpha_over_size;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((Dtype)scale_val, (Dtype)negative_beta);
       ++head;
     }
   }
@@ -284,10 +284,10 @@ __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global 
 __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dtype* in,
                              const int_tp num, const int_tp channels,
                              const int_tp height, const int_tp width, const int_tp size,
-                             const Dtype alpha_over_size, const Dtype k,
+                             const KERNEL_ARG_DTYPE alpha_over_size, const KERNEL_ARG_DTYPE k,
                              __global Dtype* const scale,
                              __global Dtype* const out,
-                             const Dtype negative_beta) {
+                             const KERNEL_ARG_DTYPE negative_beta) {
   for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
     // find out the local offset
@@ -319,7 +319,7 @@ __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dty
       }
       scale_val = k + accum_scale * alpha_over_size;
       scale_off[(head - post_pad) * step] = scale_val;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((Dtype)scale_val, (Dtype)negative_beta);
       ++head;
     }
     // subtract only
@@ -330,7 +330,7 @@ __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dty
       }
       scale_val = k + accum_scale * alpha_over_size;
       scale_off[(head - post_pad) * step] = scale_val;
-      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((float)scale_val, (float)negative_beta);
+      out_off[(head - post_pad) * step] = in_off[(head - post_pad) * step] * (Dtype)native_powr((Dtype)scale_val, (Dtype)negative_beta);
       ++head;
     }
   }

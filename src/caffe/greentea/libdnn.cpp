@@ -32,6 +32,13 @@ std::string LibDNN<Dtype>::generate_header() {
       ss << "#endif" << std::endl;
     }
 
+    if (std::is_same<Dtype, half_float::half>::value) {
+      ss << "#if defined(cl_khr_fp16)" << std::endl;
+      ss << "#pragma OPENCL EXTENSION cl_khr_fp16 : enable" << std::endl;
+      ss << "#define HALF_SUPPORT_AVAILABLE" << std::endl;
+      ss << "#endif" << std::endl;
+    }
+
     // Test/enable 32 bit atomics
     ss << "#if defined(cl_khr_int32_base_atomics)" << std::endl;
     ss << "#pragma OPENCL EXTENSION cl_khr_int32_base_atomics : enable"
@@ -62,13 +69,29 @@ std::string LibDNN<Dtype>::generate_header() {
     for (int_tp i = 2; i <= 16; i *= 2) {
       ss << "#define Dtype" << i << " double" << i << std::endl;
     }
-  } else {
+  } else if (std::is_same<Dtype, float>::value){
     ss << "#define Dtype float" << std::endl;
     ss << "#define Dtype1 float" << std::endl;
     // float2, float4, float8, float16
     for (int_tp i = 2; i <= 16; i *= 2) {
       ss << "#define Dtype" << i << " float" << i << std::endl;
     }
+  }
+#ifdef HAS_HALF_SUPPORT
+  else if (std::is_same<Dtype, half_float::half>::value) {
+    ss << "#define Dtype half" << std::endl;
+    ss << "#define Dtype1 half" << std::endl;
+    // half2, half4, half8, half16
+    for (int_tp i = 2; i <= 16; i *= 2) {
+      ss << "#define Dtype" << i << " half" << i << std::endl;
+    }
+  }
+#endif
+
+  if (std::is_same<Dtype, half_float::half>::value) {
+    ss << "#define KERNEL_ARG_DTYPE float" << std::endl;
+  } else {
+    ss << "#define KERNEL_ARG_DTYPE Dtype" << std::endl;
   }
 
   std::vector<std::string> elems4({
@@ -162,6 +185,7 @@ std::string LibDNN<Dtype>::generate_header() {
     } else {
       ss << "#ifdef ATOMICS_32_AVAILABLE" << std::endl;
     }
+    // FIXME, half version has bug.
     for (int i = 0; i < atomic_funcs.size(); ++i) {
       ss << "inline void atomic" << atomic_funcs[i];
       ss << "(volatile __global Dtype* source, const Dtype operand) {"
@@ -172,13 +196,22 @@ std::string LibDNN<Dtype>::generate_header() {
       } else {
         ss << "unsigned int intVal;" << std::endl;
       }
-      ss << "Dtype floatVal;" << std::endl;
+      if (std::is_same<Dtype, half_float::half>::value) {
+        ss << "Dtype floatVal[2];" << std::endl;
+      } else {
+        ss << "Dtype floatVal[1];" << std::endl;
+      }
       ss << "} next, expected, current;" << std::endl;
-      ss << "current.floatVal = *source;" << std::endl;
+      ss << "current.floatVal[0] = *source;" << std::endl;
+      if (std::is_same<Dtype, half_float::half>::value)
+        ss << "current.floatVal[1] = *(source + 1);" << std::endl;
       ss << "do {" << std::endl;
-      ss << "expected.floatVal = current.floatVal;" << std::endl;
-      ss << "next.floatVal = expected.floatVal " << atomic_ops[i] << " operand;"
+      ss << "expected.intVal = current.intVal;" << std::endl;
+      ss << "next.floatVal[0] = expected.floatVal[0] " << atomic_ops[i] << " operand;"
          << std::endl;
+      if (std::is_same<Dtype, half_float::half>::value) {
+        ss << "next.floatVal[1] = expected.floatVal[1]; " << std::endl;
+      }
       ss << "current.intVal = ";
       if (std::is_same<Dtype, double>::value) {
         ss << "atom_cmpxchg((volatile __global unsigned long *)";
@@ -197,7 +230,7 @@ std::string LibDNN<Dtype>::generate_header() {
   }
 
   // Memory set
-  ss << "__kernel void fill_memory(const int_tp n, const Dtype alpha,"
+  ss << "__kernel void fill_memory(const int_tp n, const KERNEL_ARG_DTYPE alpha,"
      << "__global Dtype* x, const int_tp offx) {" << std::endl;
   ss << "for (int_tp index = get_global_id(0); index < n; "
      << "index += get_global_size(0)) {" << std::endl;
@@ -361,8 +394,8 @@ void LibDNN<Dtype>::SetMemory(Dtype* memory, int_tp count, int_tp offset,
     kernel.global_work_size(2, 1);
 
     viennacl::ocl::enqueue(
-        kernel(count, value, WrapHandle((cl_mem) memory, &ctx), offset),
-        ctx.get_queue());
+        kernel(count, fixup_arg_type(value), WrapHandle((cl_mem) memory, &ctx),
+        offset), ctx.get_queue());
 #endif  // USE_GREENTEA
   } else {
 #ifdef USE_CUDA

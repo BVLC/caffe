@@ -10,8 +10,8 @@ namespace caffe {
          oclk_bn_use_global_stats.arg(argIdx++, num);   \
          oclk_bn_use_global_stats.arg(argIdx++, channels_);   \
          oclk_bn_use_global_stats.arg(argIdx++, spatial_dim); \
-         oclk_bn_use_global_stats.arg(argIdx++, scale_factor);  \
-         oclk_bn_use_global_stats.arg(argIdx++, eps_);  \
+         oclk_bn_use_global_stats.arg(argIdx++, fixup_arg_type(scale_factor));  \
+         oclk_bn_use_global_stats.arg(argIdx++, fixup_arg_type(eps_));  \
          oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));  \
          oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
 

@@ -5,9 +5,9 @@
 __kernel void TEMPLATE(ada_delta_update,Dtype)(int_tp N, __global Dtype* g,
                                                __global Dtype* h,
                                                __global Dtype* h2,
-                                               Dtype momentum,
-                                               Dtype delta,
-                                               Dtype local_rate) {
+                                               KERNEL_ARG_DTYPE momentum,
+                                               KERNEL_ARG_DTYPE delta,
+                                               KERNEL_ARG_DTYPE local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype gi = g[i];
     Dtype hi = h[i] = momentum * h[i] + ((Dtype)1.0 - momentum) * gi * gi;
@@ -19,8 +19,8 @@ __kernel void TEMPLATE(ada_delta_update,Dtype)(int_tp N, __global Dtype* g,
 
 __kernel void TEMPLATE(ada_grad_update,Dtype)(int_tp N, __global Dtype* g,
                                               __global Dtype* h,
-                                              Dtype delta,
-                                              Dtype local_rate) {
+                                              KERNEL_ARG_DTYPE delta,
+                                              KERNEL_ARG_DTYPE local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype gi = g[i];
     Dtype hi = h[i] = h[i] + gi * gi;
@@ -31,10 +31,10 @@ __kernel void TEMPLATE(ada_grad_update,Dtype)(int_tp N, __global Dtype* g,
 __kernel void TEMPLATE(adam_update,Dtype)(int_tp N, __global Dtype* g,
                                           __global Dtype* m,
                                           __global Dtype* v,
-                                          Dtype beta1,
-                                          Dtype beta2,
-                                          Dtype eps_hat,
-                                          Dtype corrected_local_rate) {
+                                          KERNEL_ARG_DTYPE beta1,
+                                          KERNEL_ARG_DTYPE beta2,
+                                          KERNEL_ARG_DTYPE eps_hat,
+                                          KERNEL_ARG_DTYPE corrected_local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype gi = g[i];
     Dtype mi = m[i] = m[i] * beta1 + gi * (1 - beta1);
@@ -46,8 +46,8 @@ __kernel void TEMPLATE(adam_update,Dtype)(int_tp N, __global Dtype* g,
 
 __kernel void TEMPLATE(nesterov_update,Dtype)(int_tp N, __global Dtype* g,
                                               __global Dtype* h,
-                                              Dtype momentum,
-                                              Dtype local_rate) {
+                                              KERNEL_ARG_DTYPE momentum,
+                                              KERNEL_ARG_DTYPE local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype hi = h[i];
     Dtype hi_new = h[i] = momentum * hi + local_rate * g[i];
@@ -57,9 +57,9 @@ __kernel void TEMPLATE(nesterov_update,Dtype)(int_tp N, __global Dtype* g,
 
 __kernel void TEMPLATE(rms_prop_update,Dtype)(int_tp N, __global Dtype* g,
                                               __global Dtype* h,
-                                              Dtype rms_decay,
-                                              Dtype delta,
-                                              Dtype local_rate) {
+                                              KERNEL_ARG_DTYPE rms_decay,
+                                              KERNEL_ARG_DTYPE delta,
+                                              KERNEL_ARG_DTYPE local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     Dtype gi = g[i];
     Dtype hi = h[i] = rms_decay * h[i] + (1 - rms_decay) * gi * gi;
@@ -69,8 +69,8 @@ __kernel void TEMPLATE(rms_prop_update,Dtype)(int_tp N, __global Dtype* g,
 
 __kernel void TEMPLATE(sgd_update,Dtype)(int_tp N, __global Dtype* g,
                                          __global Dtype* h,
-                                         Dtype momentum,
-                                         Dtype local_rate) {
+                                         KERNEL_ARG_DTYPE momentum,
+                                         KERNEL_ARG_DTYPE local_rate) {
   for (int_tp i = get_global_id(0); i < N; i += get_global_size(0)) {
     g[i] = h[i] = momentum * h[i] + local_rate * g[i];
   }

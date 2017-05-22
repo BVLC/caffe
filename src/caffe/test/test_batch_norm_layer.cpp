@@ -68,7 +68,8 @@ namespace caffe {
       sum /= height * width * num;
       var /= height * width * num;
 
-      const Dtype kErrorBound = 0.001;
+      const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                                1e-1 : 1e-3;
       // expect zero mean
       EXPECT_NEAR(0, sum, kErrorBound);
       // expect unit variance
@@ -112,7 +113,8 @@ namespace caffe {
       sum /= height * width * num;
       var /= height * width * num;
 
-      const Dtype kErrorBound = 0.001;
+      const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                                1e-1 : 1e-3;
       // expect zero mean
       EXPECT_NEAR(0, sum, kErrorBound);
       // expect unit variance

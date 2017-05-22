@@ -3,7 +3,7 @@
 #endif
 
 __kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp channels,
-                            const Dtype margin, const Dtype alpha, __global const Dtype* y,
+                            const KERNEL_ARG_DTYPE margin, const KERNEL_ARG_DTYPE alpha, __global const Dtype* y,
                             __global const Dtype* diff, __global const Dtype* dist_sq,
                             __global Dtype *bottom_diff) {
   for (int_tp i = get_global_id(0); i < count;
@@ -27,7 +27,7 @@ __kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp chan
 }
 
 __kernel void TEMPLATE(cll_backward_legacy,Dtype)(const int count, const int channels,
-    const Dtype margin, const Dtype alpha, __global Dtype* y,
+    const KERNEL_ARG_DTYPE margin, const KERNEL_ARG_DTYPE alpha, __global Dtype* y,
     __global Dtype* diff, __global Dtype* dist_sq,
     __global Dtype* bottom_diff) {
     for (int_tp i = get_global_id(0); i < count;
