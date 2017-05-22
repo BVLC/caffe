@@ -41,7 +41,7 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
       d_iter[i] = d_start[i];
 
       if (d_start[i] >= d_end[i]) {
-        top_data[index] = -FLT_MAX;
+        top_data[index] = -DTYPE_MAX;
         if (use_mask) {
           mask[index] = -1;
         } else {
@@ -59,7 +59,7 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
     num /= channels;
     offset *= (num * channels + chan);
 
-    Dtype maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     int_tp maxidx = -1;
     int_tp final_offset = 0;
 

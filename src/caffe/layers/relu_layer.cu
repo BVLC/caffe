@@ -44,7 +44,8 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CL_KERNEL_SELECT("relu_forward"));
     viennacl::ocl::enqueue(
         oclk_relu_forward(count, WrapHandle((cl_mem) bottom_data, &ctx),
-                          WrapHandle((cl_mem) top_data, &ctx), negative_slope),
+                          WrapHandle((cl_mem) top_data, &ctx),
+                          fixup_arg_type(negative_slope)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
@@ -96,7 +97,7 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           oclk_relu_backward(count, WrapHandle((cl_mem) top_diff, &ctx),
                              WrapHandle((cl_mem) bottom_data, &ctx),
                              WrapHandle((cl_mem) bottom_diff, &ctx),
-                             negative_slope),
+                             fixup_arg_type(negative_slope)),
           ctx.get_queue());
 #endif  // USE_GREENTEA
     }

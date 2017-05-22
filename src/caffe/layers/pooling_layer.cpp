@@ -247,6 +247,10 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_mask = NULL;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
+
+  Dtype maxVal = FLT_MAX;
+  if (std::is_same<Dtype, half_float::half>::value)
+    maxVal = HALF_MAX;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // Initialize
@@ -257,7 +261,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       mask = max_idx_.mutable_cpu_data();
       caffe_set(top_count, (int_tp)-1, mask);
     }
-    caffe_set(top_count, Dtype(-FLT_MAX), top_data);
+    caffe_set(top_count, Dtype(-maxVal), top_data);
     // The main loop
     for (int_tp n = 0; n < bottom[0]->num(); ++n) {
       for (int_tp c = 0; c < channels_; ++c) {
@@ -377,7 +381,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           for (int_tp pw = 0; pw < pooled_width_; ++pw) {
             const int_tp index = ph * pooled_width_ + pw;
             const int_tp bottom_index =
-                use_top_mask ? top_mask[index] : mask[index];
+                use_top_mask ? int_tp(top_mask[index]) : mask[index];
             bottom_diff[bottom_index] += top_diff[index];
           }
         }

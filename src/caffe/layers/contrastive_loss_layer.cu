@@ -59,9 +59,9 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       if (legacy_version) {
-        loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
+        loss += fmax(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
-        Dtype dist = std::max(margin - (Dtype) sqrt(dist_sq_.cpu_data()[i]),
+        Dtype dist = fmax(margin - (Dtype) sqrt(dist_sq_.cpu_data()[i]),
                               Dtype(0.0));
         loss += dist * dist;
       }
@@ -141,7 +141,8 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
                 CL_KERNEL_SELECT("cll_backward"));
         viennacl::ocl::enqueue(
             oclk_cll(
-                count, channels, margin, alpha,
+                count, channels, fixup_arg_type(margin),
+                fixup_arg_type(alpha),
                 WrapHandle((cl_mem) (bottom[2]->gpu_data()), &ctx),
                 WrapHandle((cl_mem) (diff_.gpu_data()), &ctx),
                 WrapHandle((cl_mem) (dist_sq_.gpu_data()), &ctx),

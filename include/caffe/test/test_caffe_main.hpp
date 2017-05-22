@@ -41,7 +41,11 @@ class MultiDeviceTest : public ::testing::Test {
   virtual ~MultiDeviceTest() { RemoveCaffeTempDir(); }
 };
 
+#ifdef HAS_HALF_SUPPORT
+typedef ::testing::Types<half, float, double> TestDtypes;
+#else
 typedef ::testing::Types<float, double> TestDtypes;
+#endif
 
 template <typename TypeParam>
 struct CPUDevice {
@@ -73,13 +77,26 @@ template <typename Dtype>
 class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
 
+#ifdef HAS_HALF_SUPPORT
+typedef ::testing::Types<CPUDevice<half>, CPUDevice<float>, CPUDevice<double>,
+                         GPUDevice<half>, GPUDevice<float>, GPUDevice<double> >
+                         TestDtypesAndDevices;
+
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<half>,
+                         GPUDevice<float>,
+                         GPUDevice<half>>
+                         TestFloatAndDevices;
+#else
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
                          GPUDevice<float>, GPUDevice<double> >
                          TestDtypesAndDevices;
 
 typedef ::testing::Types<CPUDevice<float>,
-                         GPUDevice<float> >
+                         GPUDevice<float>>
                          TestFloatAndDevices;
+
+#endif
 
 #endif
 
@@ -105,6 +122,19 @@ template <>
 bool isSupported<GPUDevice<double> >(void);
 
 template <>
+bool isSupported<CPUDevice<double> >(void);
+#ifdef HAS_HALF_SUPPORT
+template <>
+bool isSupported<half>(void);
+
+template <>
+bool isSupported<GPUDevice<half> >(void);
+
+template <>
+bool isSupported<CPUDevice<half> >(void);
+#endif
+
+template <>
 bool isSupported<float>(void);
 
 template <>
@@ -112,9 +142,6 @@ bool isSupported<GPUDevice<float> >(void);
 
 template <>
 bool isSupported<CPUDevice<float> >(void);
-
-template <>
-bool isSupported<CPUDevice<double> >(void);
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
 template <>
@@ -154,6 +181,7 @@ bool isSupported<TypeLMDB>(void);
   template <typename gtest_TypeParam_> \
   void GTEST_TEST_CLASS_NAME_(CaseName, TestName) \
      <gtest_TypeParam_>::TestBody_Impl()
+
 #endif
 
 

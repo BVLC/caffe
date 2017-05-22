@@ -134,10 +134,15 @@ TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int_tp n = this->blob_bottom_->count();
+  TypeParam precision = 0.01;
+  if (std::is_same<TypeParam, half_float::half>::value) {
+    n = 512;
+    precision = 0.1;
+  }
   const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
   for (int_tp i = 0; i < n; ++i) {
-    std_asum += std::fabs(x[i]);
+    std_asum += fabs(x[i]);
   }
   TypeParam gpu_asum;
 
@@ -153,7 +158,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
                     (cl_mem)(this->blob_bottom_->gpu_data()), 0, &gpu_asum);
 #endif  // USE_GREENTEA
   }
-  EXPECT_LT((gpu_asum - std_asum) / std_asum, 1e-2);
+  EXPECT_LT((gpu_asum - std_asum) / std_asum, precision);
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestSign) {

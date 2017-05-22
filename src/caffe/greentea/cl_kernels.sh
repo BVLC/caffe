@@ -42,6 +42,7 @@ echo "#endif  // DISABLE_DOUBLE_SUPPORT" >> $SOURCE
 echo "namespace caffe {" >> $SOURCE
 
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
+echo "template <typename Dtype>" >> $HEADER
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $HEADER
 echo "viennacl::ocl::context *ctx, string name, string options);" >> $HEADER
 echo "std::string getKernelBundleName(int index);" >> $HEADER
@@ -154,8 +155,15 @@ echo "  ss << \"#define Dtype2 float2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 float4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype8 float8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype16 float16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-
+echo "  ss << \"#define as_Dtype as_float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype2 as_float2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype4 as_float4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype8 as_float8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype16 as_float16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_FLOAT\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define KERNEL_ARG_DTYPE float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MAX FLT_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MIN FLT_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
 echo "    for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
 echo "      ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
@@ -173,8 +181,24 @@ echo "  ss << \"#define Dtype2 double2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 double4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype8 double8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype16 double16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype as_double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype2 as_double2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype4 as_double4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype8 as_double8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype16 as_double16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef KERNEL_ARG_DTYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define KERNEL_ARG_DTYPE double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef DTYPE_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef DTYPE_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MAX FLT_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MIN FLT_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 shopt -s nullglob
 echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
@@ -186,11 +210,55 @@ echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
+echo "  ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype half\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype2 half2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype4 half4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype8 half8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype16 half16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef as_Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype as_half\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype2 as_half2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype4 as_half4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype8 as_half8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define as_Dtype16 as_half16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define TYPE TYPE_HALF\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef KERNEL_ARG_DTYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef DTYPE_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef DTYPE_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MAX HALF_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define DTYPE_MIN HALF_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define KERNEL_ARG_DTYPE float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+
+shopt -s nullglob
+echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
+echo "    if (cl_kernel_names[i] != std::string(\"fft\")) {" >> $SOURCE
+echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
+echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
+echo "      }" >> $SOURCE
+echo "    }" >> $SOURCE
+echo "  }" >> $SOURCE
+echo "  ss << \"#endif  // HALF_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+
+
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
 echo "  string options;" >> $SOURCE
 echo "#ifdef USE_FFT" >> $SOURCE
-echo "  options = \" -DFFT \"" >> $SOURCE
+echo "  options = \" -DFFT \";" >> $SOURCE
+echo "#endif" >> $SOURCE
+echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
+echo "  options += \" -DHAS_HALF_SUPPORT; \";" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
 echo "                    != std::string::npos;" >> $SOURCE
@@ -201,18 +269,47 @@ echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $
 echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
+echo "template<typename Dtype>" >> $SOURCE
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $SOURCE
 echo "viennacl::ocl::context *ctx, string name, string options) {" >> $SOURCE
-echo "  static const char* core_defines =" >> $SOURCE
+echo "  static const char* float_core_defines =" >> $SOURCE
 echo "  \"#define Dtype float\n\"" >> $SOURCE
 echo "  \"#define Dtype2 float2\n\"" >> $SOURCE
 echo "  \"#define Dtype4 float4\n\"" >> $SOURCE
 echo "  \"#define Dtype8 float8\n\"" >> $SOURCE
 echo "  \"#define Dtype16 float16\n\"" >> $SOURCE
-echo "  \"#define OCL_KERNEL_LOOP(i, n)\"" >> $SOURCE
-echo "  \" for (int i = get_global_id(0); i < (n); i += get_global_size(0))\n\";" >> $SOURCE
+echo "  \"#define as_Dtype as_float\n\"" >> $SOURCE
+echo "  \"#define as_Dtype2 as_float2\n\"" >> $SOURCE
+echo "  \"#define as_Dtype4 as_float4\n\"" >> $SOURCE
+echo "  \"#define as_Dtype8 as_float8\n\"" >> $SOURCE
+echo "  \"#define as_Dtype16 as_float16\n\"" >> $SOURCE
+echo "  \"#define TYPE TYPE_FLOAT\n\"" >> $SOURCE
+echo "  \"#define DTYPE_MAX FLT_MAX\n\"" >> $SOURCE
+echo "  \"#define DTYPE_MIN FLT_MIN\n\"" >> $SOURCE
+echo "  \"#define KERNEL_ARG_DTYPE float\n\";" >> $SOURCE
+
+echo "  static const char* half_core_defines =" >> $SOURCE
+echo "  \"#define Dtype half\n\"" >> $SOURCE
+echo "  \"#define Dtype2 half2\n\"" >> $SOURCE
+echo "  \"#define Dtype4 half4\n\"" >> $SOURCE
+echo "  \"#define Dtype8 half8\n\"" >> $SOURCE
+echo "  \"#define Dtype16 half16\n\"" >> $SOURCE
+echo "  \"#define as_Dtype as_half\n\"" >> $SOURCE
+echo "  \"#define as_Dtype2 as_half2\n\"" >> $SOURCE
+echo "  \"#define as_Dtype4 as_half4\n\"" >> $SOURCE
+echo "  \"#define as_Dtype8 as_half8\n\"" >> $SOURCE
+echo "  \"#define as_Dtype16 as_half16\n\"" >> $SOURCE
+echo "  \"#define TYPE TYPE_HALF\n\"" >> $SOURCE
+echo "  \"#define DTYPE_MAX HALF_MAX\n\"" >> $SOURCE
+echo "  \"#define DTYPE_MIN HALF_MIN\n\"" >> $SOURCE
+echo "  \"#define KERNEL_ARG_DTYPE float\n\";" >> $SOURCE
+
 echo "  std::stringstream ss;" >> $SOURCE
-echo "  ss << core_defines;" >> $SOURCE
+echo "  if (std::is_same<Dtype, float>::value) {" >> $SOURCE
+echo "    ss << float_core_defines;" >> $SOURCE
+echo "  } else {" >> $SOURCE
+echo "    ss << half_core_defines;" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "#ifdef USE_INDEX_64" >> $SOURCE
 echo "  ss << header + \"\n\";" >> $SOURCE
 echo "  ss << definitions_64 + \"\n\";" >> $SOURCE
@@ -235,6 +332,16 @@ echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(ss.str(), name);" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
+
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & submit_conv_spatial_program<half>(" >> $SOURCE
+echo "viennacl::ocl::context *ctx, string name, string options);" >> $SOURCE
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & submit_conv_spatial_program<float>(" >> $SOURCE
+echo "viennacl::ocl::context *ctx, string name, string options);" >> $SOURCE
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & submit_conv_spatial_program<double>(" >> $SOURCE
+echo "viennacl::ocl::context *ctx, string name, string options);" >> $SOURCE
 echo "int getKernelBundleCount() {" >> $SOURCE
 echo "  return cl_kernels.size();" >> $SOURCE
 echo "}" >> $SOURCE
@@ -255,7 +362,15 @@ echo "    ss << \"#define Dtype4 float4\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype8 float8\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype16 float16\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define TYPE TYPE_FLOAT\" << \"\n\n\";  // NOLINT" >> $SOURCE
-echo "  } else {" >> $SOURCE
+echo "    ss << \"#define as_Dtype as_float\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype2 as_float2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype4 as_float4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype8 as_float8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype16 as_float16\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define KERNEL_ARG_DTYPE float\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MAX FLT_MAX\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MIN FLT_MIN\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  } else if (std::is_same<Dtype, double>::value) {" >> $SOURCE
 echo "    ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype double\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype2 double2\" << \"\n\n\";  // NOLINT" >> $SOURCE
@@ -263,6 +378,30 @@ echo "    ss << \"#define Dtype4 double4\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype8 double8\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype16 double16\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define TYPE TYPE_DOUBLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype as_double\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype2 as_double2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype4 as_double4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype8 as_double8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype16 as_double16\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define KERNEL_ARG_DTYPE double\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MAX FLT_MAX\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MIN FLT_MIN\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  } else {" >> $SOURCE
+echo "    ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype half\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype2 half2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype4 half4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype8 half8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype16 half16\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define TYPE TYPE_HALF\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype as_half\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype2 as_half2\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype4 as_half4\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype8 as_half8\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define as_Dtype16 as_half16\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define KERNEL_ARG_DTYPE float\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MAX HALF_MAX\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define DTYPE_MIN HALF_MIN\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  for (int j = 0; j < cl_kernels[index].size(); ++j) {" >> $SOURCE
 echo "    ss << cl_kernels[index][j] << \"\n\n\";" >> $SOURCE
@@ -273,6 +412,7 @@ echo "    ss << \"#endif\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  return ss.str();" >> $SOURCE
 echo "}" >> $SOURCE
+echo "template std::string getKernelBundleSource<half>(int index);" >> $SOURCE
 echo "template std::string getKernelBundleSource<float>(int index);" >> $SOURCE
 echo "template std::string getKernelBundleSource<double>(int index);" >> $SOURCE
 echo "std::string getKernelBundleName(int index) {" >> $SOURCE

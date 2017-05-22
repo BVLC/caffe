@@ -22,8 +22,8 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   for (int_tp i = 0; i < num; ++i) {
     for (int_tp j = 0; j < dim; ++j) {
-      bottom_diff[i * dim + j] = std::max(
-        Dtype(0), 1 + bottom_diff[i * dim + j]);
+      bottom_diff[i * dim + j] = fmax(
+        Dtype(0), Dtype(Dtype(1) + bottom_diff[i * dim + j]));
     }
   }
   Dtype* loss = top[0]->mutable_cpu_data();
@@ -61,10 +61,10 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
       caffe_cpu_sign(count, bottom_diff, bottom_diff);
-      caffe_scal(count, loss_weight / num, bottom_diff);
+      caffe_scal(count, Dtype(loss_weight / num), bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:
-      caffe_scal(count, loss_weight * 2 / num, bottom_diff);
+      caffe_scal(count, Dtype(loss_weight * 2 / num), bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

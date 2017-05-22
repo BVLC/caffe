@@ -38,15 +38,15 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Blob<Dtype>* val_t = this->temp_[param_id].get();
 
   const uint_tp t = this->iter_  + 1;
-  const Dtype correction = std::sqrt(Dtype(1) - pow(beta2, t)) /
-      (Dtype(1.) - pow(beta1, t));
+  const Dtype correction = sqrt(Dtype(1) - pow(beta2, Dtype(t))) /
+      (Dtype(1.) - pow(beta1, Dtype(t)));
   const uint_tp N = net_params[param_id]->count();
   const Dtype eps_hat = this->param_.delta();
 
   switch (Caffe::mode()) {
     case Caffe::CPU: {
     // update m <- \beta_1 m_{t-1} + (1-\beta_1)g_t
-    caffe_cpu_axpby(N, Dtype(1)-beta1,
+    caffe_cpu_axpby(N, Dtype(Dtype(1)-beta1),
         net_params[param_id]->cpu_diff(), beta1,
         val_m->mutable_cpu_data());
 
@@ -55,7 +55,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         net_params[param_id]->cpu_diff(),
         net_params[param_id]->cpu_diff(),
     val_t->mutable_cpu_data());
-    caffe_cpu_axpby(N, Dtype(1)-beta2,
+    caffe_cpu_axpby(N, Dtype(Dtype(1)-beta2),
         val_t->cpu_data(), beta2,
         val_v->mutable_cpu_data());
 
@@ -69,7 +69,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         val_t->cpu_data(),
         val_t->mutable_cpu_data());
 
-    caffe_cpu_scale(N, local_rate*correction,
+    caffe_cpu_scale(N, Dtype(local_rate*correction),
         val_t->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
     break;
@@ -79,7 +79,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     adam_update_gpu(this->device_, N,
                     net_params[param_id]->mutable_gpu_diff(),
                     val_m->mutable_gpu_data(), val_v->mutable_gpu_data(),
-                    beta1, beta2, eps_hat, local_rate * correction);
+                    beta1, beta2, eps_hat, Dtype(local_rate * correction));
 #else
     NO_GPU;
 #endif

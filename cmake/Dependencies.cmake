@@ -185,6 +185,10 @@ if (USE_ISAAC)
   endif()
   list(APPEND Caffe_LINKER_LIBS PUBLIC ${ISAAC_LIBRARY})
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAS)
+  if (USE_GREENTEA AND NOT USE_CUDA)
+    message(STATUS "Enable half floating point supprot.")
+    list(APPEND Caffe_DEFINITIONS PUBLIC -DHAS_HALF_SUPPORT)
+  endif()
 endif()
 
 # ---[ CLBlast

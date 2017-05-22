@@ -36,11 +36,17 @@ void sgd_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype momentum,
         CL_KERNEL_SELECT("sgd_update"));
     viennacl::ocl::enqueue(
         oclk_sgd_update(N, WrapHandle((cl_mem) g, &ctx),
-                        WrapHandle((cl_mem) h, &ctx), momentum, local_rate),
+                        WrapHandle((cl_mem) h, &ctx), fixup_arg_type(momentum),
+                        fixup_arg_type(local_rate)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
 }
+
+#ifdef HAS_HALF_SUPPORT
+template void sgd_update_gpu<half>(device*, int_tp, half*, half*, half,
+                                   half);
+#endif
 template void sgd_update_gpu<float>(device*, int_tp, float*, float*, float,
                                     float);
 template void sgd_update_gpu<double>(device*, int_tp, double*, double*, double,

@@ -55,6 +55,15 @@ void im2col_cpu(const Dtype* data_im, const int_tp channels,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void im2col_cpu<half>(const half* data_im, const int_tp channels,
+                                const int_tp height, const int_tp width,
+                                const int_tp kernel_h, const int_tp kernel_w,
+                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp stride_h, const int_tp stride_w,
+                                const int_tp dilation_h,
+                                const int_tp dilation_w, half* data_col);
+#endif
 template void im2col_cpu<float>(const float* data_im, const int_tp channels,
                                 const int_tp height, const int_tp width,
                                 const int_tp kernel_h, const int_tp kernel_w,
@@ -155,6 +164,15 @@ void im2col_nd_cpu(const Dtype* data_im, const int_tp num_spatial_axes,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void im2col_nd_cpu<half>(const half* data_im,
+                                  const int_tp num_spatial_axes,
+                                  const int_tp* im_shape,
+                                  const int_tp* col_shape,
+                                  const int_tp* kernel_shape,
+                                  const int_tp* pad, const int_tp* stride,
+                                  const int_tp* dilation, half* data_col);
+#endif
 template void im2col_nd_cpu<float>(const float* data_im,
                                    const int_tp num_spatial_axes,
                                    const int_tp* im_shape,
@@ -208,6 +226,15 @@ void col2im_cpu(const Dtype* data_col, const int_tp channels,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void col2im_cpu<half>(const half* data_col, const int_tp channels,
+                               const int_tp height, const int_tp width,
+                               const int_tp kernel_h, const int_tp kernel_w,
+                               const int_tp pad_h, const int_tp pad_w,
+                               const int_tp stride_h, const int_tp stride_w,
+                               const int_tp dilation_h,
+                               const int_tp dilation_w, half* data_im);
+#endif
 template void col2im_cpu<float>(const float* data_col, const int_tp channels,
                                 const int_tp height, const int_tp width,
                                 const int_tp kernel_h, const int_tp kernel_w,
@@ -235,6 +262,15 @@ void col2im_nd_cpu(const Dtype* data_col, const int_tp num_spatial_axes,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void col2im_nd_cpu<half>(const half* data_col,
+                                  const int_tp num_spatial_axes,
+                                  const int_tp* im_shape,
+                                  const int_tp* col_shape,
+                                  const int_tp* kernel_shape,
+                                  const int_tp* pad, const int_tp* stride,
+                                  const int_tp* dilation, half* data_im);
+#endif
 template void col2im_nd_cpu<float>(const float* data_col,
                                    const int_tp num_spatial_axes,
                                    const int_tp* im_shape,

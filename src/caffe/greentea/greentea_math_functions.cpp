@@ -175,6 +175,19 @@ template void greentea_copy<double>(const int_tp N, const cl_mem X,
                                     const int_tp offX, cl_mem Y,
                                     const int_tp offY,
                                     viennacl::ocl::context *ctx);
+#ifdef HAS_HALF_SUPPORT
+template void greentea_copy<half>(const int_tp N, const cl_mem X,
+                                  const int_tp offX, half* Y,
+                                  viennacl::ocl::context *ctx);
+template void greentea_copy<half>(const int_tp N, const half* X, cl_mem Y,
+                                  const int_tp offY,
+                                  viennacl::ocl::context *ctx);
+template void greentea_copy<half>(const int_tp N, const cl_mem X,
+                                  const int_tp offX, cl_mem Y,
+                                  const int_tp offY,
+                                  viennacl::ocl::context *ctx);
+#endif
+
 
 template<typename Dtype>
 void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
@@ -209,9 +222,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     int_tp lda = (TransA == CblasNoTrans) ? K : M;
     int_tp ldb = (TransB == CblasNoTrans) ? N : K;
     int_tp ldc = N;
-
 #if defined(USE_CLBLAS)
-
     clblasOrder clOrder = clblasRowMajor;
     clblasTranspose clTransA =
     (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
@@ -224,13 +235,20 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
           clblasSgemm(clOrder, clTransA, clTransB,
               M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
               C, offC, ldc, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasDgemm(clOrder, clTransA, clTransB,
               M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
               C, offC, ldc, 1, &queue, 0, NULL, NULL));
     }
-
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHgemm(clOrder, clTransA, clTransB,
+              M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
+              C, offC, ldc, 1, &queue, 0, NULL, NULL));
+    }
+#endif
 #elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
@@ -321,7 +339,17 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
-
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_gemm<half>(const int_tp ctx_id,
+                                      const CBLAS_TRANSPOSE TransA,
+                                      const CBLAS_TRANSPOSE TransB,
+                                      const int_tp M, const int_tp N,
+                                      const int_tp K, const half alpha,
+                                      const cl_mem A, const int_tp offA,
+                                      const cl_mem B, const int_tp offB,
+                                      const half beta, cl_mem C,
+                                      const int_tp offC);
+#endif
 template void greentea_gpu_gemm<float>(const int_tp ctx_id,
                                        const CBLAS_TRANSPOSE TransA,
                                        const CBLAS_TRANSPOSE TransB,
@@ -373,65 +401,40 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), y, yptr, 0, NULL,
     NULL);
   } else {
-      if (std::is_same<Dtype, float>::value && TransA == CblasNoTrans) {
+      if (!std::is_same<Dtype, double>::value && TransA == CblasNoTrans) {
         viennacl::ocl::program &program =
             (Caffe::Get().GetDevice(ctx_id, false))
                   ->program();
-        viennacl::ocl::kernel &k =
-            program.get_kernel(CL_KERNEL_SELECT("matvec_mul4"));
+        bool isTransA = (TransA == CblasTrans);
+        viennacl::ocl::kernel &k = (isTransA ?
+             program.get_kernel(CL_KERNEL_SELECT("trans_matvec_mul")) :
+            program.get_kernel(CL_KERNEL_SELECT("matvec_mul")));
         uint row_size = M;
         uint col_size = N;
         size_t localsize = 128;
-        size_t globalsize = row_size / 4 * localsize;
+        size_t globalsize = (isTransA ? col_size : (row_size + 3) / 4 * localsize);
 
         uint argId = 0;
+        k.arg(argId++, row_size);
+        k.arg(argId++, col_size);
         k.arg(argId++, WrapHandle(A, &ctx));
         k.arg(argId++, offA);
-        k.arg(argId++, cl_uint(col_size));
-        k.arg(argId++, cl_uint(col_size%4));
+        k.arg(argId++, col_size);
         k.arg(argId++, WrapHandle(x, &ctx));
         k.arg(argId++, offx);
-        k.arg(argId++, alpha);
-        k.arg(argId++, beta);
+        k.arg(argId++, 1);
+        k.arg(argId++, fixup_arg_type(alpha));
+        k.arg(argId++, fixup_arg_type(beta));
         k.arg(argId++, WrapHandle(y, &ctx));
         k.arg(argId++, offy);
-        k.arg(argId++, viennacl::ocl::local_mem(sizeof(cl_float4) * localsize));
+        k.arg(argId++, 1);
 
         clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      k.handle().get(), 1,
                                      NULL,
                                      &globalsize,
-                                     &localsize, 0, NULL,
+                                     (isTransA ? NULL : &localsize), 0, NULL,
                                      NULL);
-        if ((row_size % 4) != 0) {
-          viennacl::ocl::kernel &k_1 =
-              program.get_kernel(CL_KERNEL_SELECT("matvec_mul1"));
-          size_t localsize = 128;
-          size_t globalsize = row_size % 4 * localsize;
-          uint row_offset = row_size - (row_size % 4);
-
-          uint argId = 0;
-          k_1.arg(argId++, WrapHandle(A, &ctx));
-          k_1.arg(argId++, offA);
-          k_1.arg(argId++, cl_uint(col_size));
-          k_1.arg(argId++, cl_uint(row_offset));
-          k_1.arg(argId++, cl_uint(col_size%4));
-          k_1.arg(argId++, WrapHandle(x, &ctx));
-          k_1.arg(argId++, offx);
-          k_1.arg(argId++, alpha);
-          k_1.arg(argId++, beta);
-          k_1.arg(argId++, WrapHandle(y, &ctx));
-          k_1.arg(argId++, offy);
-          k_1.arg(argId++,
-                  viennacl::ocl::local_mem(sizeof(cl_float) * localsize));
-
-          clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                       k_1.handle().get(), 1,
-                                       NULL,
-                                       &globalsize,
-                                       &localsize, 0, NULL,
-                                       NULL);
-        }
       } else {
 #if defined(USE_CLBLAS)
 
@@ -445,13 +448,20 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
               clblasSgemv(clblasRowMajor,
                   clTransA, M, N, alpha, A, offA, N, x, offx, 1,
                   beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
-        } else {
+        } else if (std::is_same<Dtype, double>::value) {
           GREENTEA_CL_BLAS_CHECK(
               clblasDgemv(clblasRowMajor,
                   clTransA, M, N, alpha, A, offA, N, x, offx, 1,
                   beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
         }
-
+#ifdef HAS_HALF_SUPPORT
+        else if (std::is_same<Dtype, half_float::half>::value) {
+          GREENTEA_CL_BLAS_CHECK(
+              clblasHgemv(clblasRowMajor,
+                  clTransA, M, N, alpha, A, offA, N, x, offx, 1,
+                  beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
+        }
+#endif
 #elif defined(USE_CLBLAST)
 
         cl_command_queue queue = ctx.get_queue().handle().get();
@@ -523,6 +533,15 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_gemv<half>(const int_tp ctx_id,
+                                      const CBLAS_TRANSPOSE TransA,
+                                      const int_tp M, const int_tp N,
+                                      const half alpha, const cl_mem A,
+                                      const int_tp offA, const cl_mem x,
+                                      const int_tp offx, const half beta,
+                                      cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_gemv<float>(const int_tp ctx_id,
                                        const CBLAS_TRANSPOSE TransA,
                                        const int_tp M, const int_tp N,
@@ -567,12 +586,18 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
       GREENTEA_CL_BLAS_CHECK(
           clblasSaxpy(N, alpha, X, offX,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value){
       GREENTEA_CL_BLAS_CHECK(
           clblasDaxpy(N, alpha, X, offX,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
-
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHaxpy(N, alpha, X, offX,
+              1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
+    }
+#endif
 #elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
@@ -617,6 +642,12 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_axpy<half>(const int_tp ctx_id, const int_tp N,
+                                      const half alpha, const cl_mem X,
+                                      const int_tp offX, cl_mem Y,
+                                      const int_tp offY);
+#endif
 template void greentea_gpu_axpy<float>(const int_tp ctx_id, const int_tp N,
                                        const float alpha, const cl_mem X,
                                        const int_tp offX, cl_mem Y,
@@ -641,6 +672,12 @@ void greentea_gpu_mul(const int_tp ctx_id, const int_tp N, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_mul<half>(const int_tp ctx_id, const int_tp N,
+                                     const cl_mem a, const int_tp offa,
+                                     const cl_mem b, const int_tp offb,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_mul<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
                                       const cl_mem b, const int_tp offb,
@@ -665,6 +702,12 @@ void greentea_gpu_div(const int_tp ctx_id, const int_tp N, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_div<half>(const int_tp ctx_id, const int_tp N,
+                                     const cl_mem a, const int_tp offa,
+                                     const cl_mem b, const int_tp offb,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_div<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
                                       const cl_mem b, const int_tp offb,
@@ -696,11 +739,16 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(clblasSscal(N, alpha, x, offx,
               1, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(clblasDscal(N, alpha, x, offx,
               1, 1, &queue, 0, NULL, NULL));
     }
-
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(clblasHscal(N, alpha, x, offx,
+              1, 1, &queue, 0, NULL, NULL));
+    }
+#endif
 #elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
@@ -738,7 +786,11 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
-
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_scal<half>(const int_tp ctx_id, const int_tp N,
+                                      const half alpha, cl_mem x,
+                                      const int_tp offx);
+#endif
 template void greentea_gpu_scal<float>(const int_tp ctx_id, const int_tp N,
                                        const float alpha, cl_mem x,
                                        const int_tp offx);
@@ -753,6 +805,13 @@ void greentea_gpu_axpby(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   greentea_gpu_scal<Dtype>(ctx_id, N, beta, Y, offY);
   greentea_gpu_axpy<Dtype>(ctx_id, N, alpha, X, offX, Y, offY);
 }
+
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_axpby<half>(const int_tp ctx_id, const int_tp N,
+                                       const half alpha, const cl_mem X,
+                                       const int_tp offX, const half beta,
+                                       cl_mem Y, const int_tp offY);
+#endif
 
 template void greentea_gpu_axpby<float>(const int_tp ctx_id, const int_tp N,
                                         const float alpha, const cl_mem X,
@@ -800,12 +859,18 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
       GREENTEA_CL_BLAS_CHECK(
           clblasSdot(n, gpuout, 0, X, offX, 1, Y,
               offY, 1, scratch, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value){
       GREENTEA_CL_BLAS_CHECK(
           clblasDdot(n, gpuout, 0, X, offX, 1, Y,
               offY, 1, scratch, 1, &queue, 0, NULL, NULL));
     }
-
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHdot(n, gpuout, 0, X, offX, 1, Y,
+              offY, 1, scratch, 1, &queue, 0, NULL, NULL));
+    }
+#endif
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, out, &ctx);
 
     clReleaseMemObject(gpuout);
@@ -865,6 +930,12 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_dot<half>(const int_tp ctx_id, const int_tp n,
+                                     const cl_mem X, const int_tp offX,
+                                     const cl_mem Y, const int_tp offY,
+                                     half* out);
+#endif
 template void greentea_gpu_dot<float>(const int_tp ctx_id, const int_tp n,
                                       const cl_mem X, const int_tp offX,
                                       const cl_mem Y, const int_tp offY,
@@ -903,11 +974,18 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
       GREENTEA_CL_BLAS_CHECK(
           clblasSasum(n, gpuout, 0, X, offX, 1,
               scratch, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasDasum(n, gpuout, 0, X, offX, 1,
               scratch, 1, &queue, 0, NULL, NULL));
     }
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHasum(n, gpuout, 0, X, offX, 1,
+              scratch, 1, &queue, 0, NULL, NULL));
+    }
+#endif
 
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, Y, &ctx);
 
@@ -963,6 +1041,11 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_asum<half>(const int_tp ctx_id, const int_tp n,
+                                      const cl_mem X, const int_tp offX,
+                                      half* Y);
+#endif
 template void greentea_gpu_asum<float>(const int_tp ctx_id, const int_tp n,
                                        const cl_mem X, const int_tp offX,
                                        float* Y);
@@ -1003,12 +1086,20 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
           clblasScopy(n, X, offX, 1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
       GREENTEA_CL_BLAS_CHECK(
           clblasSscal(n, alpha, Y, offY, 1, 1, &queue, 0, NULL, NULL));
-    } else {
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasDcopy(n, X, offX, 1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
       GREENTEA_CL_BLAS_CHECK(
           clblasDscal(n, alpha, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
+#ifdef HAS_HALF_SUPPORT
+    else if (std::is_same<Dtype, half_float::half>::value) {
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHcopy(n, X, offX, 1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
+      GREENTEA_CL_BLAS_CHECK(
+          clblasHscal(n, alpha, Y, offY, 1, 1, &queue, 0, NULL, NULL));
+    }
+#endif
 
 #elif defined(USE_CLBLAST)
 
@@ -1065,11 +1156,16 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_scale<half>(const int_tp ctx_id, const int_tp n,
+                                       const half alpha, const cl_mem X,
+                                       const int_tp offX, cl_mem Y,
+                                       const int_tp offY);
+#endif
 template void greentea_gpu_scale<float>(const int_tp ctx_id, const int_tp n,
                                         const float alpha, const cl_mem X,
                                         const int_tp offX, cl_mem Y,
                                         const int_tp offY);
-
 template void greentea_gpu_scale<double>(const int_tp ctx_id, const int_tp n,
                                          const double alpha, const cl_mem X,
                                          const int_tp offX, cl_mem Y,
@@ -1089,13 +1185,19 @@ void greentea_gpu_set(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   // OpenCL Version < 1.2 fallback
   viennacl::ocl::kernel &oclk_fill = program.get_kernel(
       CL_KERNEL_SELECT("fill"));
-  viennacl::ocl::enqueue(oclk_fill(N, alpha, WrapHandle(Y, &ctx), offY),
+  viennacl::ocl::enqueue(oclk_fill(N, fixup_arg_type(alpha),
+                         WrapHandle(Y, &ctx), offY),
                          ctx.get_queue());
 }
 
 template void greentea_gpu_set<int_tp>(const int_tp ctx_id, const int_tp N,
                                        const int_tp alpha, cl_mem Y,
                                        const int_tp offY);
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_set<half>(const int_tp ctx_id, const int_tp N,
+                                     const half alpha, cl_mem Y,
+                                     const int_tp offY);
+#endif
 template void greentea_gpu_set<float>(const int_tp ctx_id, const int_tp N,
                                       const float alpha, cl_mem Y,
                                       const int_tp offY);
@@ -1112,10 +1214,15 @@ void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N,
 
   viennacl::ocl::kernel &oclk_add_scalar = program.get_kernel(
       CL_KERNEL_SELECT("add_scalar"));
-  viennacl::ocl::enqueue(oclk_add_scalar(N, alpha, WrapHandle(Y, &ctx), offY),
+  viennacl::ocl::enqueue(oclk_add_scalar(N, fixup_arg_type(alpha), WrapHandle(Y, &ctx), offY),
                          ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_add_scalar<half>(const int_tp ctx_id,
+                                            const int_tp N, const half alpha,
+                                            cl_mem Y, const int_tp offY);
+#endif
 template void greentea_gpu_add_scalar<float>(const int_tp ctx_id,
                                              const int_tp N, const float alpha,
                                              cl_mem Y, const int_tp offY);
@@ -1139,6 +1246,12 @@ void greentea_gpu_add(const int_tp ctx_id, const int_tp n, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_add<half>(const int_tp ctx_id, const int_tp n,
+                                     const cl_mem a, const int_tp offa,
+                                     const cl_mem b, const int_tp offb,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_add<float>(const int_tp ctx_id, const int_tp n,
                                       const cl_mem a, const int_tp offa,
                                       const cl_mem b, const int_tp offb,
@@ -1163,6 +1276,12 @@ void greentea_gpu_sub(const int_tp ctx_id, const int_tp n, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_sub<half>(const int_tp ctx_id, const int_tp n,
+                                      const cl_mem a, const int_tp offa,
+                                      const cl_mem b, const int_tp offb,
+                                      cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_sub<float>(const int_tp ctx_id, const int_tp n,
                                       const cl_mem a, const int_tp offa,
                                       const cl_mem b, const int_tp offb,
@@ -1185,6 +1304,11 @@ void greentea_gpu_abs(const int_tp ctx_id, const int_tp N, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_abs<half>(const int_tp ctx_id, const int_tp N,
+                                     const cl_mem a, const int_tp offa,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_abs<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
                                       cl_mem y, const int_tp offy);
@@ -1205,6 +1329,11 @@ void greentea_gpu_exp(const int_tp ctx_id, const int_tp N, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_exp<half>(const int_tp ctx_id, const int_tp N,
+                                     const cl_mem a, const int_tp offa,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_exp<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
                                       cl_mem y, const int_tp offy);
@@ -1227,6 +1356,9 @@ void greentea_gpu_sqrt(const int_tp ctx_id, const int_tp n,
       ctx.get_queue());
 }
 
+template void greentea_gpu_sqrt<half>(const int_tp ctx_id, const int_tp n,
+                                      const cl_mem a, const int_tp offa,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_sqrt<float>(const int_tp ctx_id, const int_tp n,
                                        const cl_mem a, const int_tp offa,
                                        cl_mem y, const int_tp offy);
@@ -1245,10 +1377,17 @@ void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
   viennacl::ocl::kernel &oclk_powx = program.get_kernel(
       CL_KERNEL_SELECT("powx"));
   viennacl::ocl::enqueue(
-      oclk_powx(N, WrapHandle(a, &ctx), offa, alpha, WrapHandle(y, &ctx), offy),
+      oclk_powx(N, WrapHandle(a, &ctx), offa, fixup_arg_type(alpha),
+                WrapHandle(y, &ctx), offy),
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_powx<half>(const int_tp ctx_id, const int_tp N,
+                                      const cl_mem a, const int_tp offa,
+                                      const half alpha, cl_mem y,
+                                      const int_tp offy);
+#endif
 template void greentea_gpu_powx<float>(const int_tp ctx_id, const int_tp N,
                                        const cl_mem a, const int_tp offa,
                                        const float alpha, cl_mem y,
@@ -1271,6 +1410,11 @@ void greentea_gpu_log(const int_tp ctx_id, const int_tp N, const cl_mem a,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_log<half>(const int_tp ctx_id, const int_tp N,
+                                     const cl_mem a, const int_tp offa,
+                                     cl_mem y, const int_tp offy);
+#endif
 template void greentea_gpu_log<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
                                       cl_mem y, const int_tp offy);
@@ -1293,6 +1437,11 @@ int_tp offx,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_sign<half>(const int_tp ctx_id, const int_tp n,
+                                      const cl_mem x, int_tp offx, cl_mem y,
+                                      const int_tp offy);
+#endif
 template void greentea_gpu_sign<float>(const int_tp ctx_id, const int_tp n,
                                        const cl_mem x, int_tp offx, cl_mem y,
                                        const int_tp offy);
@@ -1315,6 +1464,11 @@ int_tp offx,
       ctx.get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_sgnbit<half>(const int_tp ctx_id, const int_tp n,
+                                        const cl_mem x, int_tp offx, cl_mem y,
+                                        const int_tp offy);
+#endif
 template void greentea_gpu_sgnbit<float>(const int_tp ctx_id, const int_tp n,
                                          const cl_mem x, int_tp offx, cl_mem y,
                                          const int_tp offy);
@@ -1340,6 +1494,12 @@ void greentea_gpu_rng_uniform(const int_tp ctx_id, const int_tp n,
   greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, &ctx);
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_rng_uniform<half>(const int_tp ctx_id,
+                                              const int_tp n, const half a,
+                                              const half b, cl_mem r,
+                                              const int_tp offr);
+#endif
 template void greentea_gpu_rng_uniform<float>(const int_tp ctx_id,
                                               const int_tp n, const float a,
                                               const float b, cl_mem r,
@@ -1358,6 +1518,13 @@ void greentea_gpu_rng_gaussian(const int_tp ctx_id, const int_tp n,
   caffe_rng_gaussian(n, mu, sigma, &random[0]);
   greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, &ctx);
 }
+
+#ifdef HAS_HALF_SUPPORT
+template void greentea_gpu_rng_gaussian<half>(const int_tp ctx_id,
+                                              const int_tp n, const half mu,
+                                              const half sigma, cl_mem r,
+                                              const int_tp offr);
+#endif
 
 template void greentea_gpu_rng_gaussian<float>(const int_tp ctx_id,
                                                const int_tp n, const float mu,

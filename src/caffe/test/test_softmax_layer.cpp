@@ -61,12 +61,15 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
           scale += exp(this->blob_bottom_->data_at(i, j, k, l));
         }
+
+        const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+                      1e-2 : 1e-4;
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-          EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
-              exp(this->blob_bottom_->data_at(i, j, k, l)) / scale)
+          EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + delta),
+              Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
               << "debug: " << i << " " << j;
-          EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
-              exp(this->blob_bottom_->data_at(i, j, k, l)) / scale)
+          EXPECT_LE(Dtype(this->blob_top_->data_at(i, j, k, l) - delta),
+              Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
               << "debug: " << i << " " << j;
         }
       }
@@ -128,11 +131,11 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
             scale += exp(this->blob_bottom_->data_at(i, j, k, l));
           }
           for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-            EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
-                exp(this->blob_bottom_->data_at(i, j, k, l)) / scale)
+            EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + 1e-4),
+                Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
                 << "debug: " << i << " " << j;
-            EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
-                exp(this->blob_bottom_->data_at(i, j, k, l)) / scale)
+            EXPECT_LE(Dtype(this->blob_top_->data_at(i, j, k, l) - 1e-4),
+                Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
                 << "debug: " << i << " " << j;
           }
         }

@@ -37,6 +37,25 @@ void greentea_im2col_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void greentea_im2col_gpu<half>(viennacl::ocl::program *prog,
+                                        viennacl::ocl::context *ctx,
+                                        const cl_mem data_im,
+                                        const int_tp data_offset,
+                                        const int_tp channels,
+                                        const int_tp height,
+                                        const int_tp width,
+                                        const int_tp kernel_h,
+                                        const int_tp kernel_w,
+                                        const int_tp pad_h, const int_tp pad_w,
+                                        const int_tp stride_h,
+                                        const int_tp stride_w,
+                                        const int_tp dilation_h,
+                                        const int_tp dilation_w,
+                                        cl_mem data_col,
+                                        const int_tp data_col_off);
+#endif
+
 template void greentea_im2col_gpu<float>(viennacl::ocl::program *prog,
                                          viennacl::ocl::context *ctx,
                                          const cl_mem data_im,
@@ -97,6 +116,25 @@ void greentea_col2im_gpu(viennacl::ocl::program *prog,
       ctx->get_queue());
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void greentea_col2im_gpu<half>(viennacl::ocl::program *prog,
+                                        viennacl::ocl::context *ctx,
+                                        const cl_mem data_col,
+                                        const int_tp data_col_off,
+                                        const int_tp channels,
+                                        const int_tp height,
+                                        const int_tp width,
+                                        const int_tp patch_h,
+                                        const int_tp patch_w,
+                                        const int_tp pad_h, const int_tp pad_w,
+                                        const int_tp stride_h,
+                                        const int_tp stride_w,
+                                        const int_tp dilation_h,
+                                        const int_tp dilation_w,
+                                        cl_mem data_im,
+                                        const int_tp data_offset);
+#endif
+
 template void greentea_col2im_gpu<float>(viennacl::ocl::program *prog,
                                          viennacl::ocl::context *ctx,
                                          const cl_mem data_col,
@@ -156,6 +194,21 @@ void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void greentea_im2col_nd_gpu<half>(viennacl::ocl::program *prog,
+                                           viennacl::ocl::context *ctx,
+                                           cl_mem data_im,
+                                           const int_tp data_off,
+                                           const int_tp num_spatial_axes,
+                                           const int_tp channel_axis,
+                                           const int_tp num_kernels,
+                                           cl_mem im_shape, cl_mem col_shape,
+                                           cl_mem kernel_shape, cl_mem pad,
+                                           cl_mem stride, cl_mem dilation,
+                                           cl_mem data_col,
+                                           const int_tp data_col_off);
+#endif
+
 template void greentea_im2col_nd_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             cl_mem data_im,
@@ -207,6 +260,20 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
+#ifdef HAS_HALF_SUPPORT
+template void greentea_col2im_nd_gpu<half>(viennacl::ocl::program *prog,
+                                           viennacl::ocl::context *ctx,
+                                           cl_mem data_col,
+                                           const int_tp data_col_off,
+                                           const int_tp num_spatial_axes,
+                                           const int_tp channel_axis,
+                                           const int_tp im_size,
+                                           cl_mem im_shape, cl_mem col_shape,
+                                           cl_mem kernel_shape, cl_mem pad,
+                                           cl_mem stride, cl_mem dilation,
+                                           cl_mem data_im, int_tp data_off);
+#endif
+
 template void greentea_col2im_nd_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             cl_mem data_col,

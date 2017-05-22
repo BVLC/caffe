@@ -119,6 +119,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   int_tp num_correct_labels = 0;
   for (int_tp i = 0; i < 100; ++i) {
     max_value = -FLT_MAX;
+    if (std::is_same<TypeParam, half_float::half>::value)
+      max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
       if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
@@ -130,8 +132,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
       ++num_correct_labels;
     }
   }
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / 100.0, 1e-4);
+              num_correct_labels / 100.0, delta);
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
@@ -155,6 +159,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
     for (int_tp h = 0; h < this->blob_bottom_data_->height(); ++h) {
       for (int_tp w = 0; w < this->blob_bottom_data_->width(); ++w) {
         max_value = -FLT_MAX;
+        if (std::is_same<TypeParam, half_float::half>::value)
+          max_value = -HALF_MAX;
         max_id = 0;
         for (int_tp c = 0; c < this->blob_bottom_data_->channels(); ++c) {
           const TypeParam pred_value =
@@ -174,8 +180,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
       }
     }
   }
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / TypeParam(num_labels), 1e-4);
+              num_correct_labels / TypeParam(num_labels), delta);
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
@@ -200,6 +208,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
     }
     ++count;
     max_value = -FLT_MAX;
+    if (std::is_same<TypeParam, half_float::half>::value)
+      max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
       if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
@@ -212,8 +222,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
     }
   }
   EXPECT_EQ(count, 97);  // We set 3 out of 100 labels to kIgnoreLabelValue.
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / TypeParam(count), 1e-4);
+              num_correct_labels / TypeParam(count), delta);
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
@@ -243,8 +255,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
     }
   }
 
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / 100.0, 1e-4);
+              num_correct_labels / 100.0, delta);
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
@@ -261,6 +275,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
   vector<int_tp> num_per_class(num_class, 0);
   for (int_tp i = 0; i < 100; ++i) {
     max_value = -FLT_MAX;
+    if (std::is_same<TypeParam, half_float::half>::value)
+      max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
       if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
@@ -274,13 +290,15 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
       ++correct_per_class[max_id];
     }
   }
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / 100.0, 1e-4);
+              num_correct_labels / 100.0, delta);
   for (int_tp i = 0; i < num_class; ++i) {
     TypeParam accuracy_per_class = (num_per_class[i] > 0 ?
        static_cast<TypeParam>(correct_per_class[i]) / num_per_class[i] : 0);
     EXPECT_NEAR(this->blob_top_per_class_->data_at(i, 0, 0, 0),
-                accuracy_per_class, 1e-4);
+                accuracy_per_class, delta);
   }
 }
 
@@ -310,6 +328,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
     }
     ++count;
     max_value = -FLT_MAX;
+    if (std::is_same<TypeParam, half_float::half>::value)
+      max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
       if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
@@ -324,13 +344,15 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
     }
   }
   EXPECT_EQ(count, 97);
+  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+                      1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
-              num_correct_labels / TypeParam(count), 1e-4);
+              num_correct_labels / TypeParam(count), delta);
   for (int_tp i = 0; i < 10; ++i) {
     TypeParam accuracy_per_class = (num_per_class[i] > 0 ?
        static_cast<TypeParam>(correct_per_class[i]) / num_per_class[i] : 0);
     EXPECT_NEAR(this->blob_top_per_class_->data_at(i, 0, 0, 0),
-                accuracy_per_class, 1e-4);
+                accuracy_per_class, delta);
   }
 }
 

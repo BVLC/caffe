@@ -276,8 +276,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
         Dtype element = 0;
         for (int k = 0; k < N; ++k) {
           // (i, k) in X^T (== (k, i) in X) times (k, j) in X.
-          const Dtype element_i = (i == D) ? 1 : data.cpu_data()[k * D + i];
-          const Dtype element_j = (j == D) ? 1 : data.cpu_data()[k * D + j];
+          const Dtype element_i = (i == D) ? Dtype(1) : data.cpu_data()[k * D + i];
+          const Dtype element_j = (j == D) ? Dtype(1) : data.cpu_data()[k * D + j];
           element += element_i * element_j;
         }
         if (j == D) {
@@ -287,7 +287,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
         }
       }
       for (int k = 0; k < N; ++k) {
-        const Dtype element_i = (i == D) ? 1 : data.cpu_data()[k * D + i];
+        const Dtype element_i = (i == D) ? Dtype(1) : data.cpu_data()[k * D + i];
         grad -= element_i * targets.cpu_data()[k];
       }
       // Scale the gradient over the N samples.
@@ -343,8 +343,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
         const Dtype val_m = (1 - momentum) * grad + momentum * m;
         const Dtype val_v = (1 - momentum2) * grad * grad + momentum2 * v;
         Dtype alpha_t = learning_rate
-            * std::sqrt(Dtype(1) - pow(momentum2, num_iters))
-            / (Dtype(1.) - pow(momentum, num_iters));
+            * std::sqrt(Dtype(1) - pow(momentum2, Dtype(num_iters)))
+            / (Dtype(1.) - pow(momentum, Dtype(num_iters)));
         update_value = alpha_t * val_m / (std::sqrt(val_v) + delta_);
       } else {
         LOG(FATAL)<< "Unknown solver type: " << solver_->type();

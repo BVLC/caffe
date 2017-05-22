@@ -105,11 +105,11 @@ class LibDNNTunerParam {
   void add_constraint(std::shared_ptr<LibDNNTunerConstraint> constraint);
 
  protected:
+  std::vector<std::shared_ptr<LibDNNTunerConstraint>> constraints_;
   LibDNNTuner* tuner_;
   std::string name_;
   int_tp curr_idx_;
   int_tp def_idx_;
-  std::vector<std::shared_ptr<LibDNNTunerConstraint>> constraints_;
 };
 
 class LibDNNTunerParamInt: public LibDNNTunerParam {
