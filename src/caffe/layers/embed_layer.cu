@@ -92,6 +92,13 @@ template <typename Dtype>
 void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   CHECK(!propagate_down[0]) << "Can't backpropagate to EmbedLayer input.";
+#ifdef USE_GREENTEA
+  // FIXM, the half data type ocl kernel has bug, have to fall back.
+  if (std::is_same<Dtype, half_float::half>::value) {
+    Backward_cpu(top, propagate_down, bottom);
+    return;
+  }
+#endif
   if (this->param_propagate_down_[0]) {
     const int_tp top_count = top[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();

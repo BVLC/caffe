@@ -65,6 +65,7 @@ class device {
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
+  std::vector<shared_ptr<Blob<half> > > buff_h_;
   std::vector<shared_ptr<Blob<float> > > buff_f_;
   std::vector<shared_ptr<Blob<double> > > buff_d_;
   bool host_unified_;

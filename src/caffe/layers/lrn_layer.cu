@@ -120,9 +120,9 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     oclk_lrn_fill.arg(argIdx++, tiled_width);
     oclk_lrn_fill.arg(argIdx++, size_);
     oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
-    oclk_lrn_fill.arg(argIdx++, k_);
+    oclk_lrn_fill.arg(argIdx++, fixup_arg_type(k_));
     oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-    oclk_lrn_fill.arg(argIdx++, -beta_);
+    oclk_lrn_fill.arg(argIdx++, fixup_arg_type(-beta_));
     oclk_lrn_fill.arg(argIdx++, pool_h_);
     oclk_lrn_fill.arg(argIdx++, pool_w_);
     oclk_lrn_fill.arg(argIdx++, pool_stride_h_);
@@ -151,9 +151,9 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     oclk_lrn_fill.arg(argIdx++, width_);
     oclk_lrn_fill.arg(argIdx++, size_);
     oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
-    oclk_lrn_fill.arg(argIdx++, k_);
+    oclk_lrn_fill.arg(argIdx++, fixup_arg_type(k_));
     oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_lrn_data, &ctx));
-    oclk_lrn_fill.arg(argIdx++, -beta_);
+    oclk_lrn_fill.arg(argIdx++, fixup_arg_type(-beta_));
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    oclk_lrn_fill.handle().get(), 1, NULL,
                                    global_work_size_, NULL, 0, NULL,
@@ -224,10 +224,10 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
       oclk_lrn_fill.arg(argIdx++, width_);
       oclk_lrn_fill.arg(argIdx++, size_);
       oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
-      oclk_lrn_fill.arg(argIdx++, k_);
+      oclk_lrn_fill.arg(argIdx++, fixup_arg_type(k_));
       oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) scale_data, &ctx));
       oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-      oclk_lrn_fill.arg(argIdx++, -beta_);
+      oclk_lrn_fill.arg(argIdx++, fixup_arg_type(-beta_));
 
       OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      oclk_lrn_fill.handle().get(), 1, NULL,
@@ -249,9 +249,9 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
         oclk_lrn_fill.arg(argIdx++, width_);
         oclk_lrn_fill.arg(argIdx++, size_);
         oclk_lrn_fill.arg(argIdx++, alpha_ / size_);
-        oclk_lrn_fill.arg(argIdx++, k_);
+        oclk_lrn_fill.arg(argIdx++, fixup_arg_type(k_));
         oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
-        oclk_lrn_fill.arg(argIdx++, -beta_);
+        oclk_lrn_fill.arg(argIdx++, fixup_arg_type(-beta_));
         OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                        oclk_lrn_fill.handle().get(), 1, NULL,
                                        global_work_size_, NULL, 0, NULL,
@@ -286,6 +286,12 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
 #endif  // USE_GREENTEA
   }
 }
+#ifdef HAS_HALF_SUPPORT
+template void LRNLayer<half>::CrossChannelForward_gpu(
+    const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top);
+template void LRNLayer<half>::CrossChannelForward_fuse_pooling_gpu(
+    const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top, bool);
+#endif
 template void LRNLayer<float>::CrossChannelForward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
 template void LRNLayer<double>::CrossChannelForward_gpu(
@@ -404,13 +410,18 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
                  WrapHandle((cl_mem) (top[0]->gpu_data()), &ctx),
                  WrapHandle((cl_mem) (scale_.gpu_data()), &ctx),
                  WrapHandle((cl_mem) (top[0]->gpu_diff()), &ctx), num_,
-                 channels_, height_, width_, size_, -beta_,
-                 Dtype(2. * alpha_ * beta_ / size_),
+                 channels_, height_, width_, size_, fixup_arg_type(-beta_),
+                 fixup_arg_type(Dtype(2. * alpha_ * beta_ / size_)),
                  WrapHandle((cl_mem) (bottom[0]->mutable_gpu_diff()), &ctx)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
 }
+#ifdef HAS_HALF_SUPPORT
+template void LRNLayer<half>::CrossChannelBackward_gpu(
+    const vector<Blob<half>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<half>*>& bottom);
+#endif
 template void LRNLayer<float>::CrossChannelBackward_gpu(
     const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<float>*>& bottom);

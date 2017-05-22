@@ -10,7 +10,7 @@ __kernel void TEMPLATE(kernel_channel_max,Dtype)(const int_tp num, const int_tp 
       get_global_size(0)) {
     int_tp n = index / spatial_dim;
     int_tp s = index % spatial_dim;
-    float maxval = -FLT_MAX;
+    Dtype maxval = -DTYPE_MAX;
     for (int_tp c = 0; c < channels; ++c) {
       maxval = max((Dtype)(data[(n * channels + c) * spatial_dim + s]), (Dtype)maxval);
     }

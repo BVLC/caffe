@@ -41,12 +41,18 @@ void adadelta_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype* h2,
     viennacl::ocl::enqueue(
         oclk_ada_delta_update(N, WrapHandle((cl_mem) g, &ctx),
                               WrapHandle((cl_mem) h, &ctx),
-                              WrapHandle((cl_mem) h2, &ctx), momentum, delta,
-                              local_rate),
+                              WrapHandle((cl_mem) h2, &ctx),
+                              fixup_arg_type(momentum), fixup_arg_type(delta),
+                              fixup_arg_type(local_rate)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
 }
+
+#ifdef HAS_HALF_SUPPORT
+template void adadelta_update_gpu<half>(device*, int_tp, half*, half*,
+                                        half*, half, half, half);
+#endif
 template void adadelta_update_gpu<float>(device*, int_tp, float*, float*,
                                          float*, float, float, float);
 template void adadelta_update_gpu<double>(device*, int_tp, double*, double*,

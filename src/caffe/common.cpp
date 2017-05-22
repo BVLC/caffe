@@ -52,6 +52,9 @@ size_t dtsizeof(DataType data_type) {
   }
 }
 
+template<> DataType dtypeof<half_float::half>() {
+  return DFP16;
+}
 template<> DataType dtypeof<float>() {
   return DFP32;
 }

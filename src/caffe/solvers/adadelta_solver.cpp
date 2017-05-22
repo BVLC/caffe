@@ -38,7 +38,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         this->update_[param_id]->mutable_cpu_data());
 
     // update history of gradients
-    caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) - momentum,
+    caffe_cpu_axpby(net_params[param_id]->count(), Dtype(Dtype(1) - momentum),
         this->update_[param_id]->cpu_data(), momentum,
         this->history_[param_id]->mutable_cpu_data());
 
@@ -79,7 +79,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         this->update_[param_id]->mutable_cpu_data());
 
     // update history of updates
-    caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) - momentum,
+    caffe_cpu_axpby(net_params[param_id]->count(), Dtype(Dtype(1) - momentum),
         this->update_[param_id]->cpu_data(), momentum,
         this->history_[update_history_offset + param_id]->mutable_cpu_data());
 

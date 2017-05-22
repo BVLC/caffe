@@ -107,7 +107,7 @@ void ReductionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_scal(dim_, bottom_coeff, bottom_diff);
       break;
     case ReductionParameter_ReductionOp_SUMSQ:
-      caffe_cpu_scale(dim_, 2 * bottom_coeff, bottom_data, bottom_diff);
+      caffe_cpu_scale(dim_, Dtype(2 * bottom_coeff), bottom_data, bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown reduction op: "

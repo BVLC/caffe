@@ -58,10 +58,10 @@ void PowerLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // Special case for y = (shift + scale * x)^2
         //     -> dy/dx = 2 * scale * (shift + scale * x)
         //              = diff_scale * shift + diff_scale * scale * x
-        caffe_cpu_axpby(count, diff_scale_ * scale_, bottom_data,
+        caffe_cpu_axpby(count, Dtype(diff_scale_ * scale_), bottom_data,
             Dtype(0), bottom_diff);
         if (shift_ != Dtype(0)) {
-          caffe_add_scalar(count, diff_scale_ * shift_, bottom_diff);
+          caffe_add_scalar(count, Dtype(diff_scale_ * shift_), bottom_diff);
         }
       } else if (shift_ == Dtype(0)) {
         // Special case for y = (scale * x)^power

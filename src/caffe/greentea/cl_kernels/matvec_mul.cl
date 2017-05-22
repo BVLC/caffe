@@ -1,152 +1,177 @@
-#ifndef __OPENCL_VERSION__
-#include "header.cl"
-#endif
-
-__kernel void TEMPLATE(matvec_mul4,Dtype)(
-          __global const float * A,
-          int offA,
-          unsigned int A_col_size,
-          unsigned int trail_item,
-          __global const float * v,
-          int offv,
-          float alpha,
-          float beta,
-          __global float4 * result,
-          int offr,
-          __local float4 * work)
+void TEMPLATE(matvec_mul_trail_rows,Dtype)(unsigned int M,
+                           unsigned int N,
+                           int row_gid,
+                           int lid,
+                           const __global Dtype* src0_read,
+                           int lda,
+                           const __global Dtype* src1_read,
+                           int incv,
+                           __local Dtype4* work,
+                           Dtype alpha,
+                           Dtype beta,
+                           __global Dtype* result,
+                           int incr)
 {
-  unsigned int row_gid = get_group_id(0);
-  unsigned int lid = get_local_id(0);
-  const __global float *src0_read = A + row_gid * 4 * A_col_size + offA;
-  const __global float *src1_read = v + offv;
-  result = (__global float4*)((__global float*)result + offr);
-  float4 dot0 = (float4)(0.f);
-  float4 dot1 = (float4)(0.f);
-  float4 dot2 = (float4)(0.f);
-  float4 dot3 = (float4)(0.f);
+  __local Dtype* work_each = (__local Dtype*)work;
 
-  unsigned int i = lid;
-  while( i < A_col_size / 4) {
-    const float4 a0 = vload4(i, src0_read);
-    const float4 a1 = vload4(i, src0_read + A_col_size);
-    const float4 a2 = vload4(i, src0_read + 2 * A_col_size);
-    const float4 a3 = vload4(i, src0_read + 3 * A_col_size);
+  int rows = M - row_gid * 4;
 
-    const float4 b0 = vload4(i, src1_read);
+  Dtype4 dot[3] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.)};
 
-    dot0 += a0 * b0;
-    dot1 += a1 * b0;
-    dot2 += a2 * b0;
-    dot3 += a3 * b0;
+  int i = lid;
+  while( i < N / 4) {
+    const Dtype4 b0 = {src1_read[i*4*incv], src1_read[(i*4+1)*incv], src1_read[(i*4+2)*incv], src1_read[(i*4+3)*incv]};
+#pragma unroll
+    for(int j = 0; j < rows; ++j) {
+      dot[j] += b0 * vload4(i, src0_read + j * lda);
+    }
 
     i += get_local_size(0);
   }
-
-  work[lid].s0 = dot0.x + dot0.y + dot0.z + dot0.w;
-  work[lid].s1 = dot1.x + dot1.y + dot1.z + dot1.w;
-  work[lid].s2 = dot2.x + dot2.y + dot2.z + dot2.w;
-  work[lid].s3 = dot3.x + dot3.y + dot3.z + dot3.w;
-
-  if(i == A_col_size / 4)
-  {
-    if(trail_item != 0)
-    {
-      const __global float *src0_trail = src0_read + i * 4;
-      const __global float *src1_trail = src1_read + i * 4;
-      for(unsigned int i = 0; i < trail_item; ++i) {
-        const float at0 = src0_trail[i];
-        const float at1 = src0_trail[i + A_col_size];
-        const float at2 = src0_trail[i + 2 * A_col_size];
-        const float at3 = src0_trail[i + 3 * A_col_size];
-
-        const float bt = src1_trail[i];
-
-        work[lid].s0 += at0 * bt;
-        work[lid].s1 += at1 * bt;
-        work[lid].s2 += at2 * bt;
-        work[lid].s3 += at3 * bt;
-      }
-    }
-
+#pragma unroll
+  for(int j = 0; j < rows; ++j) {
+    work_each[lid * 4 + j] = dot[j].x + dot[j].y + dot[j].z + dot[j].w;
   }
 
-  for(unsigned int stride=get_local_size(0)/2 ; stride>0 ; stride>>=1) {
-      barrier(CLK_LOCAL_MEM_FENCE);
-      if(lid < stride)
-        work[lid] += work[lid+stride];
+  if(i == N / 4) {
+    short trail_item = N % 4;
+
+    if(trail_item != 0) {
+      const __global Dtype *src0_trail = src0_read + i * 4;
+      const __global Dtype *src1_trail = src1_read + i * 4 * incv;
+#pragma unroll
+      for(short i = 0; i < trail_item; ++i) {
+        const Dtype bt = src1_trail[i*incv];
+#pragma unroll
+        for(int j = 0; j < rows; ++j) {
+          work_each[lid * 4 + j] += bt * src0_trail[i + j * lda];
+        }
+      }
+    }
+  }
+
+  for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {
+    barrier(CLK_LOCAL_MEM_FENCE);
+    if(lid < stride)
+      work[lid] += work[lid+stride];
   }
 
   if(lid == 0) {
-    if(beta == (Dtype)0)
-      result[row_gid] = alpha * work[0];
-    else
-      result[row_gid] = alpha * work[0] + beta * result[row_gid];
+#pragma unroll
+    for(int j = 0; j < rows; ++j) {
+      result[(row_gid * 4  + j) * incr] = alpha * work_each[j] + beta * result[(row_gid * 4 + j) * incr];
+    }
   }
 
 }
 
-/* This kernel used for the trailing rows when row_of_A %4 !=0 */
-__kernel void TEMPLATE(matvec_mul1,Dtype)(
-          __global const float * A,
+__kernel void TEMPLATE(matvec_mul,Dtype)(
+          unsigned int M,
+          unsigned int N,
+          __global const Dtype * A,
           int offA,
-          unsigned int A_col_size,
-          unsigned int row_offset,
-          unsigned int trail_item,
-          __global const float * v,
+          int lda,
+          __global const Dtype * v,
           int offv,
-          float alpha,
-          float beta,
-          __global float * result,
+          int incv,
+          KERNEL_ARG_DTYPE alpha,
+          KERNEL_ARG_DTYPE beta,
+          __global Dtype * result,
           int offr,
-          __local float * work)
+          int incr)
 {
-  unsigned int row_gid = get_group_id(0);
-  unsigned int lid = get_local_id(0);
-
-  const __global float *src0_read = A + (row_offset + row_gid) * A_col_size + offA;
-  const __global float *src1_read = v + + offv;
+  int row_gid = get_group_id(0);
+  int lid = get_local_id(0);
+  const __global Dtype *src0_read = A + row_gid * 4 * lda + offA;
+  const __global Dtype *src1_read = v + offv;
   result = result + offr;
-  float4 dot0 = (float4)(0.f);
 
-  unsigned int i = lid;
-  while( i < A_col_size / 4)
+  src1_read += incv > 0 ? 0 : (1 - N) * incv;
+  result += incr > 0 ? 0 : (1 - M) * incr;
+  __local Dtype4 work[128];
+  __local Dtype* work_each = (__local Dtype*)work;
+
+  if(row_gid == M / 4)
+    TEMPLATE(matvec_mul_trail_rows,Dtype)(M, N, row_gid, lid, src0_read, lda, src1_read, incv, work, alpha, beta, result, incr);
+  else
   {
-    const float4 a0 = vload4(i, src0_read);
-    const float4 b0 = vload4(i, src1_read);
+    Dtype4 dot[4] = {(Dtype4)(0.), (Dtype4)(0.), (Dtype4)(0.f), (Dtype4)(0.f)};
+    int i = lid;
+    while( i < N / 4) {
+      const Dtype4 b0 = {src1_read[i*4*incv], src1_read[(i*4+1)*incv], src1_read[(i*4+2)*incv], src1_read[(i*4+3)*incv]};
+#pragma unroll
+      for(int j = 0; j < 4; ++j) {
+        dot[j] += b0 * vload4(i, src0_read + j * lda);
+      }
+      i += get_local_size(0);
+    }
+#pragma unroll
+    for(int j = 0; j < 4; ++j) {
+      work_each[lid * 4 + j] = dot[j].x + dot[j].y + dot[j].z + dot[j].w;
+    }
 
-    dot0 += a0 * b0;
-    i += get_local_size(0);
-  }
-
-  work[lid] = dot0.x + dot0.y + dot0.z + dot0.w;
-
-  if(i == A_col_size / 4)
-  {
-    if(trail_item != 0)
-    {
-      const __global float *src0_trail = src0_read + i * 4;
-      const __global float *src1_trail = src1_read + i * 4;
-      for(unsigned int i = 0; i < trail_item; ++i) {
-        const float at0 = src0_trail[i];
-        const float bt = src1_trail[i];
-
-        work[lid] += at0 * bt;
+    if(i == N / 4) {
+      short trail_item = N % 4;
+      if(trail_item != 0) {
+        const __global Dtype *src0_trail = src0_read + i * 4;
+        const __global Dtype *src1_trail = src1_read + i * 4 * incv;
+#pragma unroll
+        for(short i = 0; i < trail_item; ++i) {
+          const Dtype bt = src1_trail[i * incv];
+#pragma unroll
+          for(int j = 0; j < 4; ++j) {
+            work_each[lid * 4 + j] += bt * src0_trail[i + j * lda];
+          }
+        }
       }
     }
 
-  }
-  for(unsigned int stride=get_local_size(0)/2 ; stride>0 ; stride>>=1) {
+    for(int stride = get_local_size(0) >> 1; stride > 0 ; stride >>= 1) {
       barrier(CLK_LOCAL_MEM_FENCE);
       if(lid < stride)
         work[lid] += work[lid+stride];
-  }
+    }
 
-  if(lid == 0) {
-    if(beta == (Dtype)0) {
-      result[row_gid+row_offset] = alpha * work[0];
-    } else {
-      result[row_gid+row_offset] *= beta;
-      result[row_gid+row_offset] += alpha * work[0];
+    if(lid == 0) {
+      // vstore4(alpha * work[0] + beta * vload4(row_gid, result), row_gid, result);
+      result[row_gid*4*incr] = alpha * work[0].s0 + beta * result[row_gid*4*incr];
+      result[(row_gid*4+1)*incr] = alpha * work[0].s1 + beta * result[(row_gid*4+1)*incr];
+      result[(row_gid*4+2)*incr] = alpha * work[0].s2 + beta * result[(row_gid*4+2)*incr];
+      result[(row_gid*4+3)*incr] = alpha * work[0].s3 + beta * result[(row_gid*4+3)*incr];
     }
   }
+}
+
+__kernel void TEMPLATE(trans_matvec_mul,Dtype)(
+          unsigned int M,
+          unsigned int N,
+          __global const Dtype * A,
+          int offA,
+          int lda,
+          __global const Dtype * v,
+          int offv,
+          int incv,
+          KERNEL_ARG_DTYPE alpha,
+          KERNEL_ARG_DTYPE beta,
+          __global Dtype * result,
+          int offr,
+          int incr)
+{
+  int col_gid = get_global_id(0);
+  A += offA + col_gid;
+  v += offv;
+  result += offr;
+
+  v += incv > 0 ? 0 : (1 - M) * incv;
+  result += incr > 0 ? 0 : (1 - N) * incr;
+
+  Dtype dot_prod = 0;
+  int row_id = 0;
+#pragma unroll
+  for(int row = 0; row < M; ++row) {
+    dot_prod += A[row_id] * v[row * incv];
+    row_id += lda;
+  }
+  result[col_gid * incr] = beta * result[col_gid * incr];
+  result[col_gid * incr] += alpha * dot_prod;
 }

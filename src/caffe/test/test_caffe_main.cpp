@@ -36,7 +36,23 @@ bool caffe::isSupported<double>(void) {
   return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OpenCL ||
          caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp64");
 }
+#ifdef HAS_HALF_SUPPORT
+template <>
+bool caffe::isSupported<half>(void) {
+  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OpenCL ||
+         caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp16");
+}
 
+template <>
+bool caffe::isSupported<caffe::GPUDevice<half>>(void) {
+  return caffe::isSupported<half>();
+}
+
+template <>
+bool caffe::isSupported<caffe::CPUDevice<half>>(void) {
+  return true;
+}
+#endif
 template <>
 bool caffe::isSupported<caffe::GPUDevice<double>>(void) {
   return caffe::isSupported<double>();
@@ -63,6 +79,7 @@ bool caffe::isSupported<caffe::TypeLMDB>(void) {
   return true;
 }
 #endif
+
 #endif
 
 #ifndef CPU_ONLY

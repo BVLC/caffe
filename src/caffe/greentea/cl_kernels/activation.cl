@@ -5,7 +5,7 @@
 __kernel void TEMPLATE(relu_forward,Dtype)(const int_tp n,
                                            __global const Dtype* in,
                                            __global Dtype* out,
-                                           Dtype negative_slope) {
+                                           KERNEL_ARG_DTYPE negative_slope) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     out[index] = in[index] > 0 ? in[index] : in[index] * negative_slope;
   }
@@ -15,7 +15,7 @@ __kernel void TEMPLATE(relu_backward,Dtype)(const int_tp n,
                                             __global const Dtype* in_diff,
                                             __global const Dtype* in_data,
                                             __global Dtype* out_diff,
-                                            Dtype negative_slope) {
+                                            KERNEL_ARG_DTYPE negative_slope) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     out_diff[index] = in_diff[index]
         * ((Dtype)(in_data[index] > 0?1.0:0.0) + (Dtype)(in_data[index] <= 0?1.0:0.0) * negative_slope);
@@ -58,7 +58,7 @@ __kernel void TEMPLATE(sigmoid_backward,Dtype)(const int_tp n,
   }
 }
 
-__kernel void TEMPLATE(threshold,Dtype)(const int_tp n, const Dtype threshold,
+__kernel void TEMPLATE(threshold,Dtype)(const int_tp n, const KERNEL_ARG_DTYPE threshold,
                                         __global const Dtype* in,
                                         __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {

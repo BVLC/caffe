@@ -177,7 +177,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
     for (int_tp i = 0; i < 5; ++i) {
       Dtype value = this->blob_top_label_->cpu_data()[i];
       // Check that the value has not been seen already (no duplicates).
-      EXPECT_EQ(values_to_indices.find(value), values_to_indices.end());
+      EXPECT_EQ(values_to_indices.find(value) == values_to_indices.end(), true);
       values_to_indices[value] = i;
       num_in_order += (value == Dtype(i));
     }

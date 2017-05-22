@@ -248,7 +248,7 @@ template<> int_tp Blob<int_tp>::asum_data() const {
 template<typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) {
-    return 0;
+    return (Dtype)0;
   }
   switch (data_->head()) {
     case SyncedMemory::HEAD_AT_CPU:
@@ -644,7 +644,27 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
     }
   }
 }
-
+#ifdef HAS_HALF_SUPPORT
+template <>
+void Blob<half>::ToProto(BlobProto* proto, bool write_diff) const {
+  proto->clear_shape();
+  for (int_tp i = 0; i < shape_.size(); ++i) {
+    proto->mutable_shape()->add_dim(shape_[i]);
+  }
+  proto->clear_double_data();
+  proto->clear_double_diff();
+  const half* data_vec = cpu_data();
+  for (int_tp i = 0; i < count_; ++i) {
+    proto->add_double_data(data_vec[i]);
+  }
+  if (write_diff) {
+    const half* diff_vec = cpu_diff();
+    for (int_tp i = 0; i < count_; ++i) {
+      proto->add_double_diff(diff_vec[i]);
+    }
+  }
+}
+#endif
 template <>
 void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();

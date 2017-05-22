@@ -94,8 +94,8 @@ struct is_same<T, T> {
 // Macro to select the single (_float) or double (_double) precision kernel
 #define CL_KERNEL_SELECT(kernel) \
   is_same<Dtype, float>::value ? \
-      kernel "_float" : \
-      kernel "_double"
+      kernel "_float" : (is_same<Dtype, double>::value ?\
+       kernel "_double" : kernel "_half")
 
 #endif
 
