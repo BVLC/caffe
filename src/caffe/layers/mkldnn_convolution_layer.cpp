@@ -264,7 +264,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                           , *fwd_top_data_memory));
         }
     }
-    fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (Need Checking!)
+    fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (TODO: Checking!)
     //MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
     //fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
 
@@ -444,7 +444,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
 
     bwdd_bottom_diff->set_mkldnn_primitive(convBwdData);
 
-    bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (Need Checking!)
+    bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (TODO: Checking!)
     //MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
     //bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
 
@@ -453,11 +453,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
 
 
-    bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (Need Checking!)
+    bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (TODO: Checking!)
     //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
     //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
 
-    bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (Need Checking!)
+    bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (TODO: Checking!)
     //MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
     //bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
 
