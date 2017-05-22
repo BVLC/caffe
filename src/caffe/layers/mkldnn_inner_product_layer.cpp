@@ -233,9 +233,18 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
                             , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
                             , *fwd_top_data_memory));
     }
-    fwd_bottom_data->set_mkldnn_primitive(ipFwd);
+    
+    //Because the inputs of inner product layer always come from user memory, so will not trigger the wrong reorder from extprv to prv
+    fwd_bottom_data->set_mkldnn_primitive(ipFwd);     //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    //fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+
     fwd_top_data->set_mkldnn_primitive(ipFwd);
-    fwd_weights_data->set_mkldnn_primitive(ipFwd);
+    
+    fwd_weights_data->set_mkldnn_primitive(ipFwd);    //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> fwd_weights_data_primitive_transfer(fwd_weights_data_primitive);    
+    //fwd_weights_data->set_mkldnn_primitive(fwd_weights_data_primitive_transfer);
+
     if (this->bias_term_) 
       fwd_bias_data->set_mkldnn_primitive(ipFwd);
 }
@@ -408,14 +417,28 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
                     , *bwdd_bottom_diff_memory));
 
     bwdd_bottom_diff->set_mkldnn_primitive(ipBwdData);
-    bwdd_top_diff->set_mkldnn_primitive(ipBwdData);
-    bwdd_weights_data->set_mkldnn_primitive(ipBwdData);
+    
+    bwdd_top_diff->set_mkldnn_primitive(ipBwdData);           //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
+    //bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
 
-    bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);
-    bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);
+    bwdd_weights_data->set_mkldnn_primitive(ipBwdData);       //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdd_weights_data_primitive_transfer(bwdd_weights_data_primitive);
+    //bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
+
+
+    bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);     //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
+    //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
+
+    bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);        //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
+    //bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
+
     bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);
+
     if (this->bias_term_)
-    bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
+        bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
 }
 
 
@@ -440,7 +463,52 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
 
         PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
         PERFORMANCE_MEASUREMENT_BEGIN();
+#ifdef DEBUG
+        if (bottom[0]->prv_data() != NULL)
+        {
+            LOG(INFO) << "Debug: Bottom prv data: " << *bottom[0]->prv_data();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Bottom prv data is NULL!";
+            //LOG(INFO) << "Debug: Bottom cpu data: " << *bottom[0]->cpu_data();
+            //Chong: if don't have this LOG print, will cause: this->_cpu_ptr == cpu_ptr crash, without the fix in dropout_layer.cpp
+        }
+
+        if (top[0]->prv_diff() != NULL)
+        {
+            LOG(INFO) << "Debug: Top prv diff: " << *top[0]->prv_diff();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Top prv diff is NULL!";
+            LOG(INFO) << "Debug: Top cpu diff: " << *top[0]->cpu_diff();
+        }
+
+        if (this->blobs_[0]->prv_data() != NULL)
+        {
+            LOG(INFO) << "Debug: Weights prv data from blobs_[0]: " << *this->blobs_[0]->prv_data();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Weights prv data is NULL!";
+            LOG(INFO) << "Debug: Weights cpu data: " << *this->blobs_[0]->cpu_data();
+        }
+        //Before submit, so get_prv_ptr() always has the value
+        LOG(INFO) << "Debug: Weights prv data from get_prv_ptr: " << *bwdd_weights_data->get_prv_ptr();
+#endif
         ipBwdData.submit();
+#ifdef DEBUG
+        if (bottom[0]->prv_diff() != NULL)
+        {
+            LOG(INFO) << "Debug: Bottom prv diff: " << *bottom[0]->prv_diff();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Bottom prv diff is NULL!";
+            LOG(INFO) << "Debug: Bottom cpu diff: " << *bottom[0]->cpu_diff();
+        }
+#endif
         PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
     }
     if (this->param_propagate_down(0)) {

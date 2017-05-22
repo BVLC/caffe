@@ -203,6 +203,10 @@ template <typename Dtype>
 class MKLDNNPrimitive {
 public:
     explicit MKLDNNPrimitive():aprimitive(), mkldnn_stream() {}
+
+    //API for initializing with shared_ptr<primitive>
+    MKLDNNPrimitive(shared_ptr<primitive> aprimitive_input) {this->aprimitive = aprimitive_input;}
+
     virtual ~MKLDNNPrimitive() {}
     void reset(primitive* pprimitive) { this->aprimitive.reset(pprimitive);}
     shared_ptr<primitive> aprimitive;

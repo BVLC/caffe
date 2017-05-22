@@ -182,15 +182,16 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     }
 
     shared_ptr<memory::primitive_desc> usr_top_data_mpd(new memory::primitive_desc(
-        {{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));   
-    shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
+        {{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
     
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
         subengines = "MKLDNN:CPU";
-    eltwiseFwd_pd.reset(new sum::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, scale, bottom_data_mpd));
+    eltwiseFwd_pd.reset(new sum::primitive_desc({{n, ic, ih, iw}, mpcsn, memory::format::any}, scale, bottom_data_mpd));
     CHECK(eltwiseFwd_pd);
+
+    shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc(eltwiseFwd_pd->dst_primitive_desc()));
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_top_data_mpd, top[0], this));
     fwd_top_data->name = "fwd_top_data   @ " + this->layer_param_.name();

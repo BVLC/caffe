@@ -163,7 +163,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::dims bottom_tz = {n, ic, ih, iw};
     memory::dims bias_tz = {oc};
     memory::dims top_tz = {n, oc, oh, ow};
-    memory::dims weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    memory::dims weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt_any);
@@ -216,7 +216,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
     // ---- Create usr memory primitive descriptors -------------
     memory::format mfmt_nchw = memory::format::nchw;
-    memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
+    memory::format weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
 
     // TODO: There should not be a problem to use this for Backward as well
     shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
@@ -264,9 +264,15 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                           , *fwd_top_data_memory));
         }
     }
-    fwd_bottom_data->set_mkldnn_primitive(convFwd);
+    fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    //fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+
     fwd_top_data->set_mkldnn_primitive(convFwd);
-    fwd_weights_data->set_mkldnn_primitive(convFwd);
+
+    //fwd_weights_data->set_mkldnn_primitive(convFwd);  //Wrong passed primitive! (For sure!)
+    MKLDNNPrimitive<Dtype> fwd_weights_data_primitive_transfer(fwd_weights_data_primitive);
+    fwd_weights_data->set_mkldnn_primitive(fwd_weights_data_primitive_transfer);
 
     // Names are for debugging purposes only.
 }
@@ -437,11 +443,24 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
                     , *bwdd_bottom_diff_memory));
 
     bwdd_bottom_diff->set_mkldnn_primitive(convBwdData);
-    bwdd_top_diff->set_mkldnn_primitive(convBwdData);
-    bwdd_weights_data->set_mkldnn_primitive(convBwdData);
 
-    bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);
-    bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);
+    bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
+    //bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
+
+    //bwdd_weights_data->set_mkldnn_primitive(convBwdData);     //Wrong passed primitive! (For sure!)
+    MKLDNNPrimitive<Dtype> bwdd_weights_data_primitive_transfer(bwdd_weights_data_primitive);
+    bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
+
+
+    bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
+    //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
+
+    bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (Need Checking!)
+    //MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
+    //bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
+
     bwdw_weights_diff->set_mkldnn_primitive(convBwdWeights);
 
     // Names are for debugging purposes only.
@@ -464,7 +483,51 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 
         PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
         PERFORMANCE_MEASUREMENT_BEGIN();
+#ifdef DEBUG
+        if (bottom[0]->prv_data() != NULL)
+        {
+            LOG(INFO) << "Debug: Bottom prv data: " << *bottom[0]->prv_data();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Bottom prv data is NULL!";
+            //LOG(INFO) << "Debug: Bottom cpu data: " << *bottom[0]->cpu_data();
+        }
+
+        if (top[0]->prv_diff() != NULL)
+        {
+            LOG(INFO) << "Debug: Top prv diff: " << *top[0]->prv_diff();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Top prv diff is NULL!";
+            LOG(INFO) << "Debug: Top cpu diff: " << *top[0]->cpu_diff();
+        }
+
+        if (this->blobs_[0]->prv_data() != NULL)
+        {
+            LOG(INFO) << "Debug: Weights prv data from blobs_[0]: " << *this->blobs_[0]->prv_data();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Weights prv data is NULL!";
+            LOG(INFO) << "Debug: Weights cpu data: " << *this->blobs_[0]->cpu_data();
+        }
+        //Before submit, so get_prv_ptr() always has the value
+        LOG(INFO) << "Debug: Weights prv data from get_prv_ptr: " << *bwdd_weights_data->get_prv_ptr();
+#endif
         convBwdData.submit();
+#ifdef DEBUG
+        if (bottom[0]->prv_diff() != NULL)
+        {
+            LOG(INFO) << "Debug: Bottom prv diff: " << *bottom[0]->prv_diff();
+        }
+        else
+        {
+            LOG(INFO) << "Debug: Bottom prv diff is NULL!";
+            LOG(INFO) << "Debug: Bottom cpu diff: " << *bottom[0]->cpu_diff();
+        }
+#endif
         PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
     }
     if (this->param_propagate_down(0)) {

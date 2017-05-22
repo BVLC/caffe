@@ -81,6 +81,7 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors()
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd));
+
         _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd));
     }
@@ -134,10 +135,18 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_to_prv(void* cpu_ptr
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
 {
+#ifdef DEBUG
+    LOG(INFO) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
+#endif
     CHECK(cpu_ptr);
     CHECK_EQ(this->_cpu_ptr, cpu_ptr);
     create_reorder_to_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
+#ifdef DEBUG
+    LOG(INFO) << "Reorder: from usr to prv.";
+    LOG(INFO) << "Format of _usr_memory_pd: " << this->_usr_memory_pd->desc().data.format;
+    LOG(INFO) << "Format of _prv_memory_pd: " << this->_prv_memory_pd->desc().data.format;
+#endif
     PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_usr2prv.submit();
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
@@ -165,11 +174,19 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_p
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* cpu_ptr)
 {
+#ifdef DEBUG
+    LOG(INFO) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
+#endif
     CHECK(cpu_ptr);
     if(this->_reorder_prv2usr_pd == NULL)
         return;
     create_reorder_from_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_prv --- " << this->name;
+#ifdef DEBUG
+    LOG(INFO) << "Reorder: from prv to usr.";
+    LOG(INFO) << "Format of _prv_memory_pd: " << this->_prv_memory_pd->desc().data.format;
+    LOG(INFO) << "Format of _usr_memory_pd: " << this->_usr_memory_pd->desc().data.format;
+#endif
     PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_prv2usr.submit();
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
@@ -189,11 +206,26 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_extprv(shared_p
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<primitive> aprimitive)
 {
+#ifdef DEBUG
+    LOG(INFO) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
+#endif
     CHECK(aprimitive);
     if(this->_reorder_extprv2prv_pd == NULL)
         return;
+    if (this->_extprv_memory_pd->desc().data.format == this->_prv_memory_pd->desc().data.format)
+    {
+#ifdef DEBUG
+        LOG(INFO) << "The format of _extprv_memory_pd and _prv_memory_pd is same, no need do conversion.";
+#endif
+        return;
+    }
     create_reorder_from_extprv(aprimitive);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_from_extprv --- " << this->name;
+#ifdef DEBUG
+    LOG(INFO) << "Reorder: from extprv to prv.";
+    LOG(INFO) << "Format of _extprv_memory_pd: " << this->_extprv_memory_pd->desc().data.format;
+    LOG(INFO) << "Format of _prv_memory_pd: " << this->_prv_memory_pd->desc().data.format;
+#endif
     PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_extprv2prv.submit();
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
@@ -298,14 +330,22 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
         // if blob has not prv descriptor then set it to avoid conversions on next iterations
         if (is_diff) {
             this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
+            // Original:
             // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
             // TODO: need to optimize
-            this->_blob->set_prv_diff_descriptor(NULL);
+            //this->_blob->set_prv_diff_descriptor(NULL);
+            // It will lead the performance drop in two aspects:
+            // 1. FWD Conv: Reorder of weights from oihw to OIhw16i16o is executed for every iteration. This should be happening only once per convolution layer including all iterations.
+            // 2. BWD Conv: Reorder of weights is happening from oihw to OIhw16o16i format, where as expected, the reorder should happen from OIhw16i16o to OIhw16o16i for better performance.
         } else {
-            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), false);
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), true);     //Change from false to true, suggested by Czaja, Jacek
+            // Original:
             // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
             // TODO: need to optimize
-            this->_blob->set_prv_data_descriptor(NULL);
+            //this->_blob->set_prv_data_descriptor(NULL);
+            // It will lead the performance drop in two aspects:
+            // 1. FWD Conv: Reorder of weights from oihw to OIhw16i16o is executed for every iteration. This should be happening only once per convolution layer including all iterations.
+            // 2. BWD Conv: Reorder of weights is happening from oihw to OIhw16o16i format, where as expected, the reorder should happen from OIhw16i16o to OIhw16o16i for better performance.
         }
     } else {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(this->_blob);
