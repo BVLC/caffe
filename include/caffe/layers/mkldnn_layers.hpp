@@ -244,6 +244,7 @@ private:
     shared_ptr<lrn_backward::primitive_desc> lrnBwd_pd;
     MKLDNNPrimitive<Dtype> lrnFwd;
     MKLDNNPrimitive<Dtype> lrnBwd;
+    shared_ptr<memory::desc> bottom_md;
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory, scratch_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     Dtype alpha_, beta_, k_;

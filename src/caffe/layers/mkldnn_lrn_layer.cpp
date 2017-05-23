@@ -138,7 +138,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNFwd(const vector<Blob<Dtype>*>& bottom, const
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
     memory::dims tz = {n, ic, ih, iw};
-    shared_ptr<memory::desc> bottom_md, top_md;
+    shared_ptr<memory::desc> top_md;
     shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd;
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
@@ -266,7 +266,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
     bottom_diff_md = top_diff_md;
 
     // ---- Initialize LRN primitive descriptor -------------
-    lrn_backward::desc lrnBwd_desc(lrn_algorithm, *bottom_diff_md, *top_diff_md,
+    lrn_backward::desc lrnBwd_desc(lrn_algorithm, *bottom_md, *top_diff_md,
                         size_, alpha_, beta_);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
