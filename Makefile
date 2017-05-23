@@ -402,7 +402,7 @@ else
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
-LIBRARY_DIRS += $(BLAS_LIB)
+LIBRARY_DIRS += $(BLAS_LIB) /usr/lib/atlas-base
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 

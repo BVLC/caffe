@@ -5,7 +5,7 @@ namespace bp = boost::python;
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-
+#include <fstream>
 #include <cstring>
 #include <map>
 #include <string>
@@ -48,6 +48,10 @@ DEFINE_string(weights, "",
     "separated by ','. Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
+DEFINE_int32(classnum, 50,
+    "The class of label");
+DEFINE_string(outfile,"outfile.txt",
+    "The name of outfile ");
 DEFINE_string(sigint_effect, "stop",
              "Optional; action to take when a SIGINT signal is received: "
               "snapshot, stop or none.");
@@ -292,12 +296,29 @@ int test() {
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
+  int softmaxLayer_index = -1;
+  vector<int> softmax_maxprob_index;
   for (int i = 0; i < FLAGS_iterations; ++i) {
+
+    if( !(i%100))
+          LOG(INFO)<<"Iteration : "<<i;
+
     float iter_loss;
     const vector<Blob<float>*>& result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int idx = 0;
+
+    if(softmaxLayer_index < 0)
+        for(int t = 0; t< result.size() ; ++t){
+            const std::string& blob_name = caffe_net.blob_names()[
+                     caffe_net.output_blob_indices()[t]];
+           LOG(INFO)<<"output_layer : "<<t<<", blob_name : "<<blob_name;
+            if(blob_name == "prob")
+                softmaxLayer_index = t;
+        }
+    float max_prob = 0.0;
+    int max_prob_index = -1;
     for (int j = 0; j < result.size(); ++j) {
       const float* result_vec = result[j]->cpu_data();
       for (int k = 0; k < result[j]->count(); ++k, ++idx) {
@@ -305,22 +326,48 @@ int test() {
         if (i == 0) {
           test_score.push_back(score);
           test_score_output_id.push_back(j);
-        } else {
+        } 
+        else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
-            caffe_net.output_blob_indices()[j]];
-        LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
-      }
-    }
+        if( j == softmaxLayer_index ){
+            if(max_prob < score){
+                max_prob = score;
+                max_prob_index = k;
+            }
+        }
+        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        //switch (j)
+        //{
+        //    case 0 : out<<"accuracy : "<<score<<std::endl; break;
+        //    case 1 : out<<"loss : " <<score<<std::endl; break;
+        //    case 2 : { 
+        //            out<<score<<" ";
+        //            break;
+
+        //      }
+        //}
+        }
+//LOG(INFO)<<"CLOSE filname : "<<filename;
+     }
+     softmax_maxprob_index.push_back(max_prob_index);
+    //out <<std::endl;
   }
+  std::string filename = FLAGS_outfile;
+//LOG(INFO) << "OPEN filename : "<<filename;
+  std::ofstream out(filename.c_str());
+  for(int i =0; i<softmax_maxprob_index.size(); ++i){
+      out<<softmax_maxprob_index[i]<<std::endl;
+  }
+  out.close();
+
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int i = 0; i < test_score.size(); ++i) {
     const std::string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
-    const float loss_weight = caffe_net.blob_loss_weights()[
-        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+    const float loss_weight =
+        caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[i]];
     std::ostringstream loss_msg_stream;
     const float mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
@@ -388,6 +435,9 @@ int time() {
     forward_timer.Start();
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
+      // Although Reshape should be essentially free, we include it here
+      // so that we will notice Reshape performance bugs.
+      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
