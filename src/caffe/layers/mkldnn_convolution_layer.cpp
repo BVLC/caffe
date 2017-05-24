@@ -133,7 +133,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (std::is_same<Dtype, double>::value)   NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
     bool relu = this->layer_param_.convolution_param().relu();
-    Dtype negative_slope;
+    Dtype negative_slope = 0;
     if(relu)
     {
         propagation = prop_kind::forward_inference;
