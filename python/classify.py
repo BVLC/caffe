@@ -86,6 +86,10 @@ def main(argv):
         help="Image file extension to take as input when a directory " +
              "is given as the input file."
     )
+    parser.add_argument(
+        "--layer_name",
+        help="Name of the layer to extract from classifier (e.g. fc7)"
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
@@ -107,7 +111,7 @@ def main(argv):
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
             image_dims=image_dims, mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
-            channel_swap=channel_swap)
+            channel_swap=channel_swap, layer_name=args.layer_name)
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)

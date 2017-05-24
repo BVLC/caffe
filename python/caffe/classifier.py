@@ -22,7 +22,7 @@ class Classifier(caffe.Net):
     """
     def __init__(self, model_file, pretrained_file, image_dims=None,
                  mean=None, input_scale=None, raw_scale=None,
-                 channel_swap=None):
+                 channel_swap=None, layer_name=None):
         caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
 
         # configure pre-processing
@@ -43,6 +43,8 @@ class Classifier(caffe.Net):
         if not image_dims:
             image_dims = self.crop_dims
         self.image_dims = image_dims
+
+        self.layer_name = layer_name
 
     def predict(self, inputs, oversample=True):
         """
@@ -87,8 +89,12 @@ class Classifier(caffe.Net):
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
             caffe_in[ix] = self.transformer.preprocess(self.inputs[0], in_)
-        out = self.forward_all(**{self.inputs[0]: caffe_in})
-        predictions = out[self.outputs[0]]
+        if self.layer_name:
+            out = self.forward_all(**{self.inputs[0]: caffe_in, 'blobs': [self.layer_name]})
+            predictions = out[self.layer_name]
+        else:
+            out = self.forward_all(**{self.inputs[0]: caffe_in})
+            predictions = out[self.outputs[0]]
 
         # For oversampling, average predictions across crops.
         if oversample:
