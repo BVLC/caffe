@@ -188,10 +188,31 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     if (top_diff_is_prv) {
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, /* is_diff */ true> > mem_descr
         = get_mkldnn_prv_descriptor<Dtype, /* is_diff */ true>(top[0]);
+#ifdef DEBUG
+      memory::format bwd_prv_top_diff_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
+      LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitReLUBwd: memory format of prv top diff is: " << bwd_prv_top_diff_mfmt;
+#endif
       top_diff_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
       usr_diff_mpd = mem_descr->usr_memory_pd();
       prv_diff_mpd = mem_descr->prv_memory_pd();
     } else {
+      bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+      if (bottom_data_is_prv) {
+          shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+              = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
+#ifdef DEBUG
+          memory::format fwd_prv_bottom_data_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
+          LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitReLUBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
+          LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitReLUBwd: Reorder the usr top diff to the format of prv bottom data! (Performance consideration)";              
+#endif
+          prv_diff_mpd = mem_descr->prv_memory_pd();
+          //top[0]->prv_data() is empty, however top[0]->get_prv_diff_descriptor() has value.
+          //Find root cause in the mkldnn_memory: create_output_memory() and sync_before_write() functions.
+          //But that a major fix, will lead the nan in the AlexNet training.
+          //So need investigation further, however, this will fix ICL-84.
+          top[0]->set_prv_diff_descriptor(NULL);
+      }
+
       top_diff_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
       usr_diff_mpd.reset(new memory::primitive_desc(*top_diff_md, cpu_engine));
     }
