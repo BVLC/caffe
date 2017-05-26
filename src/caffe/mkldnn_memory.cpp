@@ -374,6 +374,16 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_write(bool inplace)
             this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
         }
     }
+    //Fix me: this->conversion_needed() == false means diff/data is in the CPU, no need to set the prv_diff/data_descriptor
+    /*
+    if ((!inplace) && (this->conversion_needed())) {
+        if (is_diff) {
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
+        } else {
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), false);
+        }
+    }
+    */
 }
 
 template <typename Dtype, bool is_diff>
@@ -420,7 +430,7 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_input(bool 
 template <typename Dtype, bool is_diff>
 shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(bool inplace)
 {
-    // TODO: need to iptimize code
+    // TODO: need to optimize code
     shared_ptr<memory> omem = create_output_memory(this->_blob);
     if(!inplace) {
         if(is_diff) {
@@ -429,6 +439,16 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
             this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), this->conversion_needed() ? false : true);
         }
     }
+    /*
+    //Fix me: this->conversion_needed() == false means diff/data is in the CPU, no need to set the prv_diff/data_descriptor
+    if ((!inplace) && (this->conversion_needed())) {
+        if (is_diff) {
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
+        } else {
+            this->_blob->set_prv_data_descriptor(this->get_shared_ptr(), false);
+        }
+    }
+    */
     return omem;
 }
 
