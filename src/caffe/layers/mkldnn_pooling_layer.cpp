@@ -364,6 +364,18 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
             = get_mkldnn_prv_descriptor<Dtype, true>(top[0]);
         bwd_cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
     }
+    
+    bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+    if (bottom_data_is_prv) {
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+            = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
+        memory::format fwd_prv_bottom_data_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
+#ifdef DEBUG
+        LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitPoolingBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
+        LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitPoolingBwd: Reorder the top and bottom diff to the format of prv bottom data! (Performance consideration)";              
+#endif
+        bwd_cmfmt = fwd_prv_bottom_data_mfmt;
+    }
 
     shared_ptr<memory::desc> init_bwd_bottom_md(new memory::desc({bottom_tz}, mpcsn, bwd_cmfmt));
     shared_ptr<memory::desc> init_bwd_top_md(new memory::desc({top_tz}, mpcsn, bwd_cmfmt));
