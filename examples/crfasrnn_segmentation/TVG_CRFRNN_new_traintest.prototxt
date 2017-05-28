@@ -526,7 +526,6 @@ layer {
     engine: CAFFE
     weight_filler {
       type: "msra"
-      std: 0.010
     }
   }
 }
@@ -564,14 +563,22 @@ layer {
     engine: CAFFE
     weight_filler {
       type: "msra"
-      std: 0.010
     }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'score-pool4' bottom: 'score2'
-  top: 'score-pool4c' }
 layer {
-  name: "fuse"
+	type: 'Crop'
+	name: 'score-pool4c'
+	bottom: 'score-pool4'
+	bottom: 'score2'
+  	top: 'score-pool4c'
+	crop_param {
+	  axis: 2
+	  offset: 5
+	}
+}
+layer {
+  name: "fuse-pool4"
   type: "Eltwise"
   bottom: "score2"
   bottom: "score-pool4c"
@@ -616,14 +623,21 @@ layer {
     engine: CAFFE
     weight_filler {
       type: "msra"
-      std: 0.010
     }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'score-pool3' bottom: 'score4'
-  top: 'score-pool3c' }
+layer { type: 'Crop'
+	name: 'score-pool3c'
+	bottom: 'score-pool3'
+	bottom: 'score4'
+  top: 'score-pool3c'
+  crop_param {
+	     axis: 2
+	     offset: 9
+  }
+}
 layer {
-  name: "fuse"
+  name: "fuse_pool3"
   type: "Eltwise"
   bottom: "score4"
   bottom: "score-pool3c"
@@ -648,7 +662,17 @@ layer {
     weight_filler: { type: "bilinear" }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'bigscore' bottom: 'data' top: 'coarse' }
+layer {
+	type: 'Crop'
+	name: 'crop'
+	bottom: 'bigscore'
+	bottom: 'data'
+	top: 'coarse'
+	crop_param {
+	  axis: 2
+	  offset: 31
+	}
+}
 
 layer { type: 'Split' name: 'splitting'
   bottom: 'coarse' top: 'unary' top: 'Q0'
@@ -677,8 +701,8 @@ layer {
    theta_alpha: 160
    theta_beta: 3
    theta_gamma: 3
-   spatial_filter_weight: 3
-   bilateral_filter_weight: 5
+   spatial_filter_weights_str: "3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3"
+   bilateral_filter_weights_str: "5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5"
   }
 }
 layer {
@@ -693,4 +717,3 @@ layer {
   }
   include: { phase: TRAIN }
 }
-
