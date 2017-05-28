@@ -2862,8 +2862,6 @@ void LibDNNConvSpatial<double>::calculate_global_size(
   NOT_IMPLEMENTED;
 }
 
-INSTANTIATE_CLASS(LibDNNConvSpatial);
-
 }  // namespace caffe
 #endif  // USE_GREENTEA
 #endif  // USE_LIBDNN
