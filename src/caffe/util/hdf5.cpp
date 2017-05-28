@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include "caffe/util/hdf5.hpp"
 
 #include <string>
@@ -56,9 +57,8 @@ void hdf5_load_nd_dataset_helper(
     LOG(FATAL) << "Datatype class unknown";
   }
 
-
-  vector<int> blob_dims(dims.size());
-  for (int i = 0; i < dims.size(); ++i) {
+  vector<int_tp> blob_dims(dims.size());
+  for (int_tp i = 0; i < dims.size(); ++i) {
     blob_dims[i] = dims[i];
   }
 
@@ -68,8 +68,8 @@ void hdf5_load_nd_dataset_helper(
     if (blob_dims != blob->shape()) {
       // create shape string for error message
       ostringstream stream;
-      int count = 1;
-      for (int i = 0; i < blob_dims.size(); ++i) {
+      int_tp count = 1;
+      for (int_tp i = 0; i < blob_dims.size(); ++i) {
         stream << blob_dims[i] << " ";
         count = count * blob_dims[i];
       }
@@ -107,9 +107,9 @@ template <>
 void hdf5_save_nd_dataset<float>(
     const hid_t file_id, const string& dataset_name, const Blob<float>& blob,
     bool write_diff) {
-  int num_axes = blob.num_axes();
+  int_tp num_axes = blob.num_axes();
   hsize_t *dims = new hsize_t[num_axes];
-  for (int i = 0; i < num_axes; ++i) {
+  for (int_tp i = 0; i < num_axes; ++i) {
     dims[i] = blob.shape(i);
   }
   const float* data;
@@ -128,9 +128,9 @@ template <>
 void hdf5_save_nd_dataset<double>(
     hid_t file_id, const string& dataset_name, const Blob<double>& blob,
     bool write_diff) {
-  int num_axes = blob.num_axes();
+  int_tp num_axes = blob.num_axes();
   hsize_t *dims = new hsize_t[num_axes];
-  for (int i = 0; i < num_axes; ++i) {
+  for (int_tp i = 0; i < num_axes; ++i) {
     dims[i] = blob.shape(i);
   }
   const double* data;
@@ -193,11 +193,11 @@ int hdf5_get_num_links(hid_t loc_id) {
 }
 
 string hdf5_get_name_by_idx(hid_t loc_id, int idx) {
-  ssize_t str_size = H5Lget_name_by_idx(
+  int str_size = H5Lget_name_by_idx(
       loc_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, idx, NULL, 0, H5P_DEFAULT);
   CHECK_GE(str_size, 0) << "Error retrieving HDF5 dataset at index " << idx;
   char *c_str = new char[str_size+1];
-  ssize_t status = H5Lget_name_by_idx(
+  int status = H5Lget_name_by_idx(
       loc_id, ".", H5_INDEX_NAME, H5_ITER_NATIVE, idx, c_str, str_size+1,
       H5P_DEFAULT);
   CHECK_GE(status, 0) << "Error retrieving HDF5 dataset at index " << idx;
@@ -207,3 +207,4 @@ string hdf5_get_name_by_idx(hid_t loc_id, int idx) {
 }
 
 }  // namespace caffe
+#endif  // USE_HDF5

@@ -22,8 +22,8 @@ class SilenceLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "Silence"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 0; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

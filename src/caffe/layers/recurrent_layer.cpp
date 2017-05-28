@@ -105,7 +105,7 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Create the unrolled net.
-  unrolled_net_.reset(new Net<Dtype>(net_param));
+  unrolled_net_.reset(new Net<Dtype>(net_param, this->device_));
   unrolled_net_->set_debug_info(
       this->layer_param_.recurrent_param().debug_info());
 
@@ -191,7 +191,7 @@ void RecurrentLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(T_, bottom[1]->shape(0));
   CHECK_EQ(N_, bottom[1]->shape(1));
   x_input_blob_->ReshapeLike(*bottom[0]);
-  vector<int> cont_shape = bottom[1]->shape();
+  vector<int_tp> cont_shape = bottom[1]->shape();
   cont_input_blob_->Reshape(cont_shape);
   if (static_input_) {
     x_static_input_blob_->ReshapeLike(*bottom[2]);

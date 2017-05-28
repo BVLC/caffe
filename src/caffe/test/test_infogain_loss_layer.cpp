@@ -25,14 +25,14 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_loss_(new Blob<Dtype>()),
         blob_top_prob_(new Blob<Dtype>()),
         inner_(2), outer_(4*2), num_labels_(5) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     filler_param.set_min(-0.5);
     filler_param.set_max(2.0);
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] =
         caffe_rng_rand() % num_labels_;
     }

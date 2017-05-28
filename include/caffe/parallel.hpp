@@ -1,6 +1,13 @@
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#ifdef USE_CUDA
 #ifdef USE_NCCL
 
 #include <boost/thread.hpp>
@@ -30,7 +37,7 @@ class Params {
   virtual ~Params() {
   }
 
-  inline size_t size() const {
+  inline uint_tp size() const {
     return size_;
   }
   inline Dtype* data() const {
@@ -41,7 +48,7 @@ class Params {
   }
 
  protected:
-  const size_t size_;           // Size of buffers
+  const uint_tp size_;           // Size of buffers
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
 
@@ -62,6 +69,7 @@ class GPUParams : public Params<Dtype> {
   using Params<Dtype>::data_;
   using Params<Dtype>::diff_;
 };
+
 
 template<typename Dtype>
 class NCCL : public GPUParams<Dtype>,
@@ -120,4 +128,5 @@ class NCCL : public GPUParams<Dtype>,
 }  // namespace caffe
 
 #endif  // USE_NCCL
+#endif  // USE_CUDA
 #endif  // header

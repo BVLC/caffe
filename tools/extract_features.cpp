@@ -95,7 +95,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
    */
   std::string feature_extraction_proto(argv[++arg_pos]);
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto, caffe::TEST));
+      new Net<Dtype>(feature_extraction_proto, caffe::TEST,
+                     Caffe::GetDefaultDevice()));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
   std::string extract_feature_blob_names(argv[++arg_pos]);
@@ -108,20 +109,20 @@ int feature_extraction_pipeline(int argc, char** argv) {
                boost::is_any_of(","));
   CHECK_EQ(blob_names.size(), dataset_names.size()) <<
       " the number of blob names and dataset names must be equal";
-  size_t num_features = blob_names.size();
+  uint_tp num_features = blob_names.size();
 
-  for (size_t i = 0; i < num_features; i++) {
+  for (uint_tp i = 0; i < num_features; i++) {
     CHECK(feature_extraction_net->has_blob(blob_names[i]))
         << "Unknown feature blob name " << blob_names[i]
         << " in the network " << feature_extraction_proto;
   }
 
-  int num_mini_batches = atoi(argv[++arg_pos]);
+  int_tp num_mini_batches = atoi(argv[++arg_pos]);
 
   std::vector<boost::shared_ptr<db::DB> > feature_dbs;
   std::vector<boost::shared_ptr<db::Transaction> > txns;
   const char* db_type = argv[++arg_pos];
-  for (size_t i = 0; i < num_features; ++i) {
+  for (uint_tp i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
     boost::shared_ptr<db::DB> db(db::GetDB(db_type));
     db->Open(dataset_names.at(i), db::NEW);
@@ -133,16 +134,16 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extracting Features";
 
   Datum datum;
-  std::vector<int> image_indices(num_features, 0);
-  for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
+  std::vector<int_tp> image_indices(num_features, 0);
+  for (int_tp batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward();
-    for (int i = 0; i < num_features; ++i) {
+    for (int_tp i = 0; i < num_features; ++i) {
       const boost::shared_ptr<Blob<Dtype> > feature_blob =
         feature_extraction_net->blob_by_name(blob_names[i]);
-      int batch_size = feature_blob->num();
-      int dim_features = feature_blob->count() / batch_size;
+      int_tp batch_size = feature_blob->shape(0);
+      int_tp dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;
-      for (int n = 0; n < batch_size; ++n) {
+      for (int_tp n = 0; n < batch_size; ++n) {
         datum.set_height(feature_blob->height());
         datum.set_width(feature_blob->width());
         datum.set_channels(feature_blob->channels());
@@ -150,11 +151,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
         datum.clear_float_data();
         feature_blob_data = feature_blob->cpu_data() +
             feature_blob->offset(n);
-        for (int d = 0; d < dim_features; ++d) {
+        for (int_tp d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
         string key_str = caffe::format_int(image_indices[i], 10);
-
         string out;
         CHECK(datum.SerializeToString(&out));
         txns.at(i)->Put(key_str, out);
@@ -165,11 +165,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
         }
-      }  // for (int n = 0; n < batch_size; ++n)
-    }  // for (int i = 0; i < num_features; ++i)
-  }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
+      }  // for (int_tp n = 0; n < batch_size; ++n)
+    }  // for (int_tp i = 0; i < num_features; ++i)
+  }  // for (int_tp batch_index = 0;
+  // batch_index < num_mini_batches; ++batch_index)
   // write the last batch
-  for (int i = 0; i < num_features; ++i) {
+  for (int_tp i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
       txns.at(i)->Commit();
     }

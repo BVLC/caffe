@@ -1,5 +1,6 @@
 #ifndef CAFFE_UTIL_NCCL_H_
 #define CAFFE_UTIL_NCCL_H_
+#ifdef USE_CUDA
 #ifdef USE_NCCL
 
 #include <nccl.h>
@@ -32,6 +33,9 @@ template<> class dataType<double> {
 
 }  // namespace caffe
 
-#endif  // end USE_NCCL
+
+#endif  // USE_NCCL
+
+#endif  // USE_CUDA
 
 #endif  // CAFFE_UTIL_NCCL_H_

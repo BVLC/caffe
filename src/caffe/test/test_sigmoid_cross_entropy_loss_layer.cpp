@@ -43,11 +43,11 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_loss_;
   }
 
-  Dtype SigmoidCrossEntropyLossReference(const int count, const int num,
+  Dtype SigmoidCrossEntropyLossReference(const int_tp count, const int_tp num,
                                          const Dtype* input,
                                          const Dtype* target) {
     Dtype loss = 0;
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       const Dtype prediction = 1 / (1 + exp(-input[i]));
       EXPECT_LE(prediction, 1);
       EXPECT_GE(prediction, 0);
@@ -71,7 +71,7 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     Dtype eps = 2e-2;
-    for (int i = 0; i < 100; ++i) {
+    for (int_tp i = 0; i < 100; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);
       // Fill the targets vector
@@ -80,8 +80,8 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
       layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
       Dtype layer_loss =
           layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-      const int count = this->blob_bottom_data_->count();
-      const int num = this->blob_bottom_data_->num();
+      const int_tp count = this->blob_bottom_data_->count();
+      const int_tp num = this->blob_bottom_data_->num();
       const Dtype* blob_bottom_data = this->blob_bottom_data_->cpu_data();
       const Dtype* blob_bottom_targets =
           this->blob_bottom_targets_->cpu_data();

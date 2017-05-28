@@ -114,10 +114,10 @@ TYPED_TEST(DeconvolutionLayerTest, TestSimpleDeconvolution) {
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // simply check that accumulation works with overlapping filters
   const Dtype* top_data = this->blob_top_->cpu_data();
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_top_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_top_->width(); ++w) {
           Dtype expected = 3.1;
           bool h_overlap = h % 2 == 0 && h > 0
             && h < this->blob_top_->height() - 1;
@@ -156,16 +156,16 @@ TYPED_TEST(DeconvolutionLayerTest, TestGradient) {
 
 TYPED_TEST(DeconvolutionLayerTest, TestNDAgainst2D) {
   typedef typename TypeParam::Dtype Dtype;
-  const int kernel_h = 11;
-  const int kernel_w = 13;
-  vector<int> bottom_shape(4);
+  const int_tp kernel_h = 11;
+  const int_tp kernel_w = 13;
+  vector<int_tp> bottom_shape(4);
   bottom_shape[0] = 15;
   bottom_shape[1] = 12;
   bottom_shape[2] = kernel_h * 2;
   bottom_shape[3] = kernel_w * 2;
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
-  for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_vec_.size(); ++i) {
     this->blob_bottom_vec_[i]->Reshape(bottom_shape);
     filler.Fill(this->blob_bottom_vec_[i]);
   }
@@ -216,7 +216,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestNDAgainst2D) {
     // Copy pre-generated top diff into actual top diff;
     // do Backward and save result in backward_result_2d.
     ASSERT_EQ(this->blob_top_->shape(), top_diff.shape());
-    caffe_copy(top_diff.count(), top_diff.cpu_data(),
+    caffe_cpu_copy(top_diff.count(), top_diff.cpu_data(),
                this->blob_top_->mutable_cpu_diff());
     layer_2d.Backward(this->blob_top_vec_, propagate_down,
                       this->blob_bottom_vec_);
@@ -247,7 +247,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestNDAgainst2D) {
     // Copy pre-generated top diff into actual top diff;
     // do Backward and save result in backward_result_nd.
     ASSERT_EQ(this->blob_top_->shape(), top_diff.shape());
-    caffe_copy(top_diff.count(), top_diff.cpu_data(),
+    caffe_cpu_copy(top_diff.count(), top_diff.cpu_data(),
                this->blob_top_->mutable_cpu_diff());
     layer_nd.Backward(this->blob_top_vec_, propagate_down,
                       this->blob_bottom_vec_);
@@ -256,17 +256,17 @@ TYPED_TEST(DeconvolutionLayerTest, TestNDAgainst2D) {
     backward_weight_result_nd.CopyFrom(weights, copy_diff, reshape);
   }
   ASSERT_EQ(result_nd.count(), result_2d.count());
-  for (int i = 0; i < result_2d.count(); ++i)  {
+  for (int_tp i = 0; i < result_2d.count(); ++i)  {
     EXPECT_EQ(result_2d.cpu_data()[i], result_nd.cpu_data()[i]);
   }
   ASSERT_EQ(backward_result_nd.count(), backward_result_2d.count());
-  for (int i = 0; i < backward_result_2d.count(); ++i) {
+  for (int_tp i = 0; i < backward_result_2d.count(); ++i) {
     EXPECT_EQ(backward_result_2d.cpu_diff()[i],
               backward_result_nd.cpu_diff()[i]);
   }
   ASSERT_EQ(backward_weight_result_nd.count(),
             backward_weight_result_2d.count());
-  for (int i = 0; i < backward_weight_result_2d.count(); ++i) {
+  for (int_tp i = 0; i < backward_weight_result_2d.count(); ++i) {
     EXPECT_EQ(backward_weight_result_2d.cpu_diff()[i],
               backward_weight_result_nd.cpu_diff()[i]);
   }
@@ -274,7 +274,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestNDAgainst2D) {
 
 TYPED_TEST(DeconvolutionLayerTest, TestGradient3D) {
   typedef typename TypeParam::Dtype Dtype;
-  vector<int> bottom_shape(5);
+  vector<int_tp> bottom_shape(5);
   bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
   bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
   bottom_shape[2] = 2;
@@ -282,7 +282,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestGradient3D) {
   bottom_shape[4] = 2;
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
-  for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_vec_.size(); ++i) {
     this->blob_bottom_vec_[i]->Reshape(bottom_shape);
     filler.Fill(this->blob_bottom_vec_[i]);
   }

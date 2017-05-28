@@ -50,9 +50,13 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    * Unlike most loss layers, in the EuclideanLossLayer we can backpropagate
    * to both inputs -- override to return true and always allow force_backward.
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
+  virtual inline bool AllowForceBackward(const int_tp bottom_index) const {
     return true;
   }
+
+  virtual inline int_tp ExactNumBottomBlobs() const { return -1; }
+  virtual inline int_tp MinBottomBlobs() const { return 2; }
+  virtual inline int_tp MaxBottomBlobs() const { return 3; }
 
  protected:
   /// @copydoc EuclideanLossLayer
@@ -101,6 +105,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 
   Blob<Dtype> diff_;
 };
+
 
 }  // namespace caffe
 

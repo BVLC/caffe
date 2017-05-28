@@ -9,17 +9,18 @@ void AdamSolver<Dtype>::AdamPreSolve() {
   // Add the extra history entries for Adam after those from
   // SGDSolver::PreSolve
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  for (int i = 0; i < net_params.size(); ++i) {
-    const vector<int>& shape = net_params[i]->shape();
+  for (uint_tp i = 0; i < net_params.size(); ++i) {
+    const vector<int_tp>& shape = net_params[i]->shape();
     this->history_.push_back(
-            shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+            shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
   }
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
-void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, Dtype beta1,
-    Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate);
+template<typename Dtype>
+void adam_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* m, Dtype* v,
+                     Dtype beta1, Dtype beta2, Dtype eps_hat,
+                     Dtype corrected_local_rate);
 #endif
 
 template <typename Dtype>
@@ -31,15 +32,15 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const Dtype beta2 = this->param_.momentum2();
 
   // we create aliases for convenience
-  size_t update_history_offset = net_params.size();
+  uint_tp update_history_offset = net_params.size();
   Blob<Dtype>* val_m = this->history_[param_id].get();
   Blob<Dtype>* val_v = this->history_[param_id + update_history_offset].get();
   Blob<Dtype>* val_t = this->temp_[param_id].get();
 
-  const int t = this->iter_ + 1;
+  const uint_tp t = this->iter_  + 1;
   const Dtype correction = std::sqrt(Dtype(1) - pow(beta2, t)) /
       (Dtype(1.) - pow(beta1, t));
-  const int N = net_params[param_id]->count();
+  const uint_tp N = net_params[param_id]->count();
   const Dtype eps_hat = this->param_.delta();
 
   switch (Caffe::mode()) {
@@ -75,9 +76,10 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    adam_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
-        val_m->mutable_gpu_data(), val_v->mutable_gpu_data(), beta1, beta2,
-        eps_hat, local_rate*correction);
+    adam_update_gpu(this->device_, N,
+                    net_params[param_id]->mutable_gpu_diff(),
+                    val_m->mutable_gpu_data(), val_v->mutable_gpu_data(),
+                    beta1, beta2, eps_hat, local_rate * correction);
 #else
     NO_GPU;
 #endif

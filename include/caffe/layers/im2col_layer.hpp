@@ -10,7 +10,7 @@
 namespace caffe {
 
 /**
- * @brief A helper for image operations that rearranges image regions into
+ * @brief A helper for image operations that rearranges image regions int_tpo
  *        column vectors.  Used by ConvolutionLayer to perform convolution
  *        by matrix multiplication.
  *
@@ -27,8 +27,8 @@ class Im2colLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Im2col"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -41,21 +41,21 @@ class Im2colLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   /// @brief The spatial dimensions of a filter kernel.
-  Blob<int> kernel_shape_;
+  Blob<int_tp> kernel_shape_;
   /// @brief The spatial dimensions of the stride.
-  Blob<int> stride_;
+  Blob<int_tp> stride_;
   /// @brief The spatial dimensions of the padding.
-  Blob<int> pad_;
+  Blob<int_tp> pad_;
   /// @brief The spatial dimensions of the dilation.
-  Blob<int> dilation_;
+  Blob<int_tp> dilation_;
 
-  int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
+  int_tp num_spatial_axes_;
+  int_tp bottom_dim_;
+  int_tp top_dim_;
 
-  int channel_axis_;
-  int num_;
-  int channels_;
+  int_tp channel_axis_;
+  int_tp num_;
+  int_tp channels_;
 
   bool force_nd_im2col_;
 };

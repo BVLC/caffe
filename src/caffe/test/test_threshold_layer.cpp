@@ -18,7 +18,7 @@ class ThresholdLayerTest : public MultiDeviceTest<TypeParam> {
   ThresholdLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -57,7 +57,7 @@ TYPED_TEST(ThresholdLayerTest, Test) {
   const Dtype* bottom_data = this->blob_bottom_->cpu_data();
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype threshold_ = layer_param.threshold_param().threshold();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
     if (top_data[i] == 0) {
@@ -83,7 +83,7 @@ TYPED_TEST(ThresholdLayerTest, Test2) {
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype threshold_ = layer_param.threshold_param().threshold();
   EXPECT_FLOAT_EQ(threshold_, 0.5);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
     if (top_data[i] == 0) {

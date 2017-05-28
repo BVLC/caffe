@@ -34,8 +34,8 @@ class RecurrentLayer : public Layer<Dtype> {
   virtual void Reset();
 
   virtual inline const char* type() const { return "Recurrent"; }
-  virtual inline int MinBottomBlobs() const {
-    int min_bottoms = 2;
+  virtual inline int_tp MinBottomBlobs() const {
+    int_tp min_bottoms = 2;
     if (this->layer_param_.recurrent_param().expose_hidden()) {
       vector<string> inputs;
       this->RecurrentInputBlobNames(&inputs);
@@ -43,9 +43,9 @@ class RecurrentLayer : public Layer<Dtype> {
     }
     return min_bottoms;
   }
-  virtual inline int MaxBottomBlobs() const { return MinBottomBlobs() + 1; }
-  virtual inline int ExactNumTopBlobs() const {
-    int num_tops = 1;
+  virtual inline int_tp MaxBottomBlobs() const { return MinBottomBlobs() + 1; }
+  virtual inline int_tp ExactNumTopBlobs() const {
+    int_tp num_tops = 1;
     if (this->layer_param_.recurrent_param().expose_hidden()) {
       vector<string> outputs;
       this->RecurrentOutputBlobNames(&outputs);

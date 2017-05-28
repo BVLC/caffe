@@ -70,7 +70,7 @@ void InfogainLossLayer<Dtype>::Reshape(
     infogain = bottom[2];
   }
   CHECK_EQ(infogain->count(), num_labels_*num_labels_);
-  sum_rows_H_.Reshape(vector<int>(1, num_labels_));
+  sum_rows_H_.Reshape(vector<int_tp>(1, num_labels_));
   if (bottom.size() == 2) {
     // H is provided as a parameter and will not change. sum rows once
     sum_rows_of_H(infogain);
@@ -83,7 +83,7 @@ void InfogainLossLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 Dtype InfogainLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
@@ -117,9 +117,9 @@ void InfogainLossLayer<Dtype>::sum_rows_of_H(const Blob<Dtype>* H) {
     << "H must be " << num_labels_ << "x" << num_labels_;
   const Dtype* infogain_mat = H->cpu_data();
   Dtype* sum = sum_rows_H_.mutable_cpu_data();
-  for ( int row = 0; row < num_labels_ ; row++ ) {
+  for ( int_tp row = 0; row < num_labels_ ; row++ ) {
     sum[row] = 0;
-    for ( int col = 0; col < num_labels_ ; col++ ) {
+    for ( int_tp col = 0; col < num_labels_ ; col++ ) {
       sum[row] += infogain_mat[row*num_labels_+col];
     }
   }
@@ -138,18 +138,18 @@ void InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     infogain_mat = bottom[2]->cpu_data();
   }
-  int count = 0;
+  int_tp count = 0;
   Dtype loss = 0;
-  for (int i = 0; i < outer_num_; ++i) {
-    for (int j = 0; j < inner_num_; j++) {
-      const int label_value =
-        static_cast<int>(bottom_label[i * inner_num_ + j]);
+  for (int_tp i = 0; i < outer_num_; ++i) {
+    for (int_tp j = 0; j < inner_num_; j++) {
+      const int_tp label_value =
+        static_cast<int_tp>(bottom_label[i * inner_num_ + j]);
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
       }
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, num_labels_);
-      for (int l = 0; l < num_labels_; l++) {
+      for (int_tp l = 0; l < num_labels_; l++) {
         loss -= infogain_mat[label_value * num_labels_ + l] *
           log(std::max(
                 prob_data[i * inner_num_*num_labels_ + l * inner_num_ + j],
@@ -189,20 +189,20 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
     const Dtype* sum_rows_H = sum_rows_H_.cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    const int dim = bottom[0]->count() / outer_num_;
-    int count = 0;
-    for (int i = 0; i < outer_num_; ++i) {
-      for (int j = 0; j < inner_num_; ++j) {
-        const int label_value =
-          static_cast<int>(bottom_label[i * inner_num_ + j]);
+    const int_tp dim = bottom[0]->count() / outer_num_;
+    int_tp count = 0;
+    for (int_tp i = 0; i < outer_num_; ++i) {
+      for (int_tp j = 0; j < inner_num_; ++j) {
+        const int_tp label_value =
+          static_cast<int_tp>(bottom_label[i * inner_num_ + j]);
         DCHECK_GE(label_value, 0);
         DCHECK_LT(label_value, num_labels_);
         if (has_ignore_label_ && label_value == ignore_label_) {
-          for (int l = 0; l < num_labels_; ++l) {
+          for (int_tp l = 0; l < num_labels_; ++l) {
             bottom_diff[i * dim + l * inner_num_ + j] = 0;
           }
         } else {
-          for (int l = 0; l < num_labels_; ++l) {
+          for (int_tp l = 0; l < num_labels_; ++l) {
             bottom_diff[i * dim + l * inner_num_ + j] =
                prob_data[i*dim + l*inner_num_ + j]*sum_rows_H[label_value]
                - infogain_mat[label_value * num_labels_ + l];

@@ -11,10 +11,10 @@
 namespace caffe {
 
 /**
- * @brief Index into the input blob along its first axis.
+ * @brief Index int_tpo the input blob along its first axis.
  *
  * This layer can be used to select, reorder, and even replicate examples in a
- * batch.  The second blob is cast to int and treated as an index into the
+ * batch.  The second blob is cast to int_tp and treated as an index int_tpo the
  * first axis of the first blob.
  */
 template <typename Dtype>
@@ -26,8 +26,8 @@ class BatchReindexLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "BatchReindex"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -69,12 +69,12 @@ class BatchReindexLayer : public Layer<Dtype> {
 
  private:
   struct pair_sort_first {
-    bool operator()(const std::pair<int, int> &left,
-                    const std::pair<int, int> &right) {
+    bool operator()(const std::pair<int_tp, int_tp> &left,
+                    const std::pair<int_tp, int_tp> &right) {
       return left.first < right.first;
     }
   };
-  void check_batch_reindex(int initial_num, int final_num,
+  void check_batch_reindex(int_tp initial_num, int_tp final_num,
                            const Dtype* ridx_data);
 };
 

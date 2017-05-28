@@ -32,9 +32,9 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  int num_top_axes = bottom[0]->num_axes();
+  int_tp num_top_axes = bottom[0]->num_axes();
   if ( num_top_axes < 3 ) num_top_axes = 3;
-  std::vector<int> shape(num_top_axes, 1);
+  std::vector<int_tp> shape(num_top_axes, 1);
   if (has_axis_) {
     // Produces max_ind or max_val per axis
     shape = bottom[0]->shape();
@@ -56,7 +56,7 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  int dim, axis_dist;
+  int_tp dim, axis_dist;
   if (has_axis_) {
     dim = bottom[0]->shape(axis_);
     // Distance between values of axis in blob
@@ -65,17 +65,17 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     dim = bottom[0]->count(1);
     axis_dist = 1;
   }
-  int num = bottom[0]->count() / dim;
-  std::vector<std::pair<Dtype, int> > bottom_data_vector(dim);
-  for (int i = 0; i < num; ++i) {
-    for (int j = 0; j < dim; ++j) {
+  int_tp num = bottom[0]->count() / dim;
+  std::vector<std::pair<Dtype, int_tp> > bottom_data_vector(dim);
+  for (int_tp i = 0; i < num; ++i) {
+    for (int_tp j = 0; j < dim; ++j) {
       bottom_data_vector[j] = std::make_pair(
         bottom_data[(i / axis_dist * dim + j) * axis_dist + i % axis_dist], j);
     }
     std::partial_sort(
         bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
-        bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
-    for (int j = 0; j < top_k_; ++j) {
+        bottom_data_vector.end(), std::greater<std::pair<Dtype, int_tp> >());
+    for (int_tp j = 0; j < top_k_; ++j) {
       if (out_max_val_) {
         if (has_axis_) {
           // Produces max_val per axis

@@ -27,13 +27,44 @@ if(@USE_OPENCV@)
 
       if(EXISTS ${Caffe_OpenCV_CONFIG_PATH} AND NOT TARGET opencv_core)
         message(STATUS "Caffe: using OpenCV config from ${Caffe_OpenCV_CONFIG_PATH}")
-	include(${Caffe_OpenCV_CONFIG_PATH}/OpenCVConfig.cmake)
+		include(${Caffe_OpenCV_CONFIG_PATH}/OpenCVConfig.cmake)
       endif()
-
     else()
       find_package(OpenCV REQUIRED)
     endif()
     unset(Caffe_OpenCV_CONFIG_PATH)
+  endif()
+endif()
+
+# CLBlast dependency (optional)
+
+include(CMakeFindDependencyMacro)
+
+if(@USE_CLBLAST@)
+  find_dependency(CLBlast)
+endif()
+
+# Handle other imported targets libraries
+if(@GFLAGS_IMPORTED@)
+  find_package(gflags REQUIRED NO_MODULE)
+endif()
+
+if(@GLOG_IMPORTED@)
+  find_package(glog REQUIRED NO_MODULE)
+endif()
+
+if(@HDF5_IMPORTED@)
+  find_package(HDF5 COMPONENTS C HL REQUIRED NO_MODULE)
+endif()
+
+if(@USE_LMDB@ AND @LMDB_IMPORTED@)
+  find_package(LMDB REQUIRED NO_MODULE)
+endif()
+
+if(@USE_LEVELDB@ AND @LEVELDB_IMPORTED@)
+  find_package(LevelDB REQUIRED NO_MODULE)
+  if(@SNAPPY_IMPORTED@)
+    find_package(Snappy REQUIRED NO_MODULE)
   endif()
 endif()
 

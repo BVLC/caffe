@@ -55,7 +55,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeAll) {
   layer_param.mutable_crop_param()->set_axis(0);
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->num_axes(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     EXPECT_EQ(this->blob_bottom_1_->shape(i), this->blob_top_->shape(i));
   }
 }
@@ -66,7 +66,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeDefault) {
   // Crop last two dimensions, axis is 2 by default
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->num_axes(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     if (i < 2) {
       EXPECT_EQ(this->blob_bottom_0_->shape(i), this->blob_top_->shape(i));
     } else {
@@ -82,7 +82,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeNegativeIndexing) {
   layer_param.mutable_crop_param()->set_axis(-1);
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->num_axes(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     if (i < 3) {
       EXPECT_EQ(this->blob_bottom_0_->shape(i), this->blob_top_->shape(i));
     } else {
@@ -116,10 +116,10 @@ TYPED_TEST(CropLayerTest, TestCropAll) {
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_bottom_0_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_0_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_0_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_bottom_0_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_bottom_0_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_bottom_0_->width(); ++w) {
           if ( n < this->blob_top_->shape(0) &&
               c < this->blob_top_->shape(1) &&
               h < this->blob_top_->shape(2) &&
@@ -144,10 +144,10 @@ TYPED_TEST(CropLayerTest, TestCropAllOffset) {
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_bottom_0_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_0_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_0_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_bottom_0_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_bottom_0_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_bottom_0_->width(); ++w) {
           if ( n < this->blob_top_->shape(0) &&
               c < this->blob_top_->shape(1) &&
               h < this->blob_top_->shape(2) &&
@@ -170,10 +170,10 @@ TYPED_TEST(CropLayerTest, TestCropHW) {
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_bottom_0_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_0_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_0_->width(); ++w) {
+  for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
+    for (int_tp c = 0; c < this->blob_bottom_0_->channels(); ++c) {
+      for (int_tp h = 0; h < this->blob_bottom_0_->height(); ++h) {
+        for (int_tp w = 0; w < this->blob_bottom_0_->width(); ++w) {
           if (n < this->blob_top_->shape(0) &&
               c < this->blob_top_->shape(1) &&
               h < this->blob_top_->shape(2) &&
@@ -190,8 +190,8 @@ TYPED_TEST(CropLayerTest, TestCropHW) {
 TYPED_TEST(CropLayerTest, TestCrop5D) {
   typedef typename TypeParam::Dtype Dtype;
   // Add dimension to each bottom for >4D check
-  vector<int> bottom_0_shape = this->blob_bottom_0_->shape();
-  vector<int> bottom_1_shape = this->blob_bottom_1_->shape();
+  vector<int_tp> bottom_0_shape = this->blob_bottom_0_->shape();
+  vector<int_tp> bottom_1_shape = this->blob_bottom_1_->shape();
   bottom_0_shape.push_back(2);
   bottom_1_shape.push_back(1);
   this->blob_bottom_0_->Reshape(bottom_0_shape);
@@ -209,13 +209,13 @@ TYPED_TEST(CropLayerTest, TestCrop5D) {
   CropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  vector<int> bottom_idx = vector<int>(5, 0);
-  vector<int> top_idx = vector<int>(5, 0);
-  for (int n = 0; n < this->blob_bottom_0_->shape(0); ++n) {
-    for (int c = 0; c < this->blob_bottom_0_->shape(1); ++c) {
-      for (int z = 0; z < this->blob_bottom_0_->shape(2); ++z) {
-        for (int h = 0; h < this->blob_bottom_0_->shape(3); ++h) {
-          for (int w = 0; w < this->blob_bottom_0_->shape(4); ++w) {
+  vector<int_tp> bottom_idx = vector<int_tp>(5, 0);
+  vector<int_tp> top_idx = vector<int_tp>(5, 0);
+  for (int_tp n = 0; n < this->blob_bottom_0_->shape(0); ++n) {
+    for (int_tp c = 0; c < this->blob_bottom_0_->shape(1); ++c) {
+      for (int_tp z = 0; z < this->blob_bottom_0_->shape(2); ++z) {
+        for (int_tp h = 0; h < this->blob_bottom_0_->shape(3); ++h) {
+          for (int_tp w = 0; w < this->blob_bottom_0_->shape(4); ++w) {
             if (n < this->blob_top_->shape(0) &&
                 c < this->blob_top_->shape(1) &&
                 z < this->blob_top_->shape(2) &&
@@ -269,8 +269,8 @@ TYPED_TEST(CropLayerTest, TestCrop5DGradient) {
   layer_param.mutable_crop_param()->add_offset(0);
   CropLayer<Dtype> layer(layer_param);
   // Add dimension to each bottom for >4D check
-  vector<int> bottom_0_shape = this->blob_bottom_0_->shape();
-  vector<int> bottom_1_shape = this->blob_bottom_1_->shape();
+  vector<int_tp> bottom_0_shape = this->blob_bottom_0_->shape();
+  vector<int_tp> bottom_1_shape = this->blob_bottom_1_->shape();
   bottom_0_shape.push_back(2);
   bottom_1_shape.push_back(1);
   this->blob_bottom_0_->Reshape(bottom_0_shape);

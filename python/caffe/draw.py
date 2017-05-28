@@ -9,6 +9,7 @@ Caffe network visualization: draw the NetParameter protobuffer.
     Caffe.
 """
 
+import os
 from caffe.proto import caffe_pb2
 
 """
@@ -20,6 +21,35 @@ try:
     import pydotplus as pydot
 except ImportError:
     import pydot
+
+
+if os.name == 'nt':
+    # Workaround to find graphviz executables
+    # with graphviz conda package under windows
+
+    # Monkeypatch the pydot package
+    pydot_find_graphviz = pydot.graphviz.find_graphviz
+
+    def resolve_graphviz_executables():
+        """
+        Resolve the graphviz executables by adding a `graphviz` suffix
+        to folders located on path
+        """
+        # first check if we can find the executables the normal way
+        progs = pydot_find_graphviz()
+        if not progs:
+            directories = os.environ['PATH'].split(';')
+            suffix = 'graphviz'
+            progs = {}
+            for directory in directories:
+                for exe in ['dot', 'twopi', 'neato', 'circo', 'fdp']:
+                    full_path = os.path.join(directory, suffix,
+                                             '{}.exe'.format(exe))
+                    if os.path.exists(full_path):
+                        progs[exe] = full_path
+        return progs
+
+    pydot.graphviz.find_graphviz = resolve_graphviz_executables
 
 # Internal layer and blob styles.
 LAYER_STYLE_DEFAULT = {'shape': 'record',
@@ -86,29 +116,34 @@ def get_layer_label(layer, rankdir):
     if layer.type == 'Convolution' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%sdilation: %d"' %\
                      (layer.name,
                       separator,
                       layer.type,
                       separator,
-                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size) else 1,
+                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride) else 1,
+                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride) > 0 else 1,
                       separator,
-                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad) else 0)
+                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
+                      separator,
+                      layer.convolution_param.dilation[0] if len(layer.convolution_param.dilation) > 0 else 1)
+
     elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%sdilation: %d"' %\
                      (layer.name,
                       separator,
                       pooling_types_dict[layer.pooling_param.pool],
                       layer.type,
                       separator,
-                      layer.pooling_param.kernel_size,
+                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.pooling_param.stride,
+                      layer.pooling_param.stride[0] if len(layer.pooling_param.stride) > 0 else 1,
                       separator,
-                      layer.pooling_param.pad)
+                      layer.pooling_param.pad[0] if len(layer.pooling_param.pad) > 0 else 0,
+                      separator,
+                      layer.pooling_param.dilation[0] if len(layer.pooling_param.dilation) > 0 else 1)
     else:
         node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
     return node_label
@@ -127,7 +162,7 @@ def choose_color_by_layertype(layertype):
     return color
 
 
-def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
+def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, label_edges=True, phase=None):
     """Create a data structure which represents the `caffe_net`.
 
     Parameters
@@ -148,6 +183,13 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
     pydot_graph = pydot.Dot(caffe_net.name if caffe_net.name else 'Net',
                             graph_type='digraph',
                             rankdir=rankdir)
+
+    if margin != '': pydot_graph.set('margin',margin)
+    if page != '': pydot_graph.set('page', page)
+    if pagesize != '': pydot_graph.set('pagesize', pagesize)
+    if size != '': pydot_graph.set('size', size)
+
+
     pydot_nodes = {}
     pydot_edges = []
     for layer in caffe_net.layer:
@@ -202,7 +244,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, ext='png', phase=None):
+def draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext='png', phase=None):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
@@ -220,10 +262,10 @@ def draw_net(caffe_net, rankdir, ext='png', phase=None):
     string :
         Postscript representation of the graph.
     """
-    return get_pydot_graph(caffe_net, rankdir, phase=phase).create(format=ext)
+    return get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size).create(format=ext)
 
 
-def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None):
+def draw_net_to_file(caffe_net, filename, rankdir='LR', margin='', page='', pagesize='', size='', phase=None):
     """Draws a caffe net, and saves it to file using the format given as the
     file extension. Use '.raw' to output raw text that you can manually feed
     to graphviz to draw graphs.
@@ -241,4 +283,4 @@ def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None):
     """
     ext = filename[filename.rfind('.')+1:]
     with open(filename, 'wb') as fid:
-        fid.write(draw_net(caffe_net, rankdir, ext, phase))
+        fid.write(draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext, phase))

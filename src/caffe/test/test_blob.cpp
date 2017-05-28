@@ -35,12 +35,14 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_EQ(this->blob_->count(), 0);
 }
 
+#if !defined(CPU_ONLY)
 TYPED_TEST(BlobSimpleTest, TestPointersCPUGPU) {
   EXPECT_TRUE(this->blob_preshaped_->gpu_data());
   EXPECT_TRUE(this->blob_preshaped_->cpu_data());
   EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data());
   EXPECT_TRUE(this->blob_preshaped_->mutable_cpu_data());
 }
+#endif
 
 TYPED_TEST(BlobSimpleTest, TestReshape) {
   this->blob_->Reshape(2, 3, 4, 5);
@@ -52,7 +54,7 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestReshapeZero) {
-  vector<int> shape(2);
+  vector<int_tp> shape(2);
   shape[0] = 0;
   shape[1] = 5;
   this->blob_->Reshape(shape);
@@ -63,7 +65,7 @@ TYPED_TEST(BlobSimpleTest, TestLegacyBlobProtoShapeEquals) {
   BlobProto blob_proto;
 
   // Reshape to (3 x 2).
-  vector<int> shape(2);
+  vector<int_tp> shape(2);
   shape[0] = 3;
   shape[1] = 2;
   this->blob_->Reshape(shape);
@@ -140,7 +142,7 @@ TYPED_TEST(BlobMathTest, TestSumOfSquares) {
   filler.Fill(this->blob_);
   Dtype expected_sumsq = 0;
   const Dtype* data = this->blob_->cpu_data();
-  for (int i = 0; i < this->blob_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_->count(); ++i) {
     expected_sumsq += data[i] * data[i];
   }
   // Do a mutable access on the current device,
@@ -195,7 +197,7 @@ TYPED_TEST(BlobMathTest, TestAsum) {
   filler.Fill(this->blob_);
   Dtype expected_asum = 0;
   const Dtype* data = this->blob_->cpu_data();
-  for (int i = 0; i < this->blob_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_->count(); ++i) {
     expected_asum += std::fabs(data[i]);
   }
   // Do a mutable access on the current device,

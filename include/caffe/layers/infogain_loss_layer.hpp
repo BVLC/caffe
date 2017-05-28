@@ -28,7 +28,7 @@ namespace caffe {
  *      should sum to 1 as in a probability distribution: @f$
  *      \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 @f$.
  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
- *      the labels @f$ l @f$, an integer-valued Blob with values
+ *      the labels @f$ l @f$, an int_tpeger-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
  *      indicating the correct class label among the @f$ K @f$ classes
  *   -# @f$ (1 \times 1 \times K \times K) @f$
@@ -57,15 +57,15 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
   // file specified by LayerParameter.)
-  virtual inline int ExactNumBottomBlobs() const { return -1; }
-  virtual inline int MinBottomBlobs() const { return 2; }
-  virtual inline int MaxBottomBlobs() const { return 3; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return -1; }
+  virtual inline int_tp MinBottomBlobs() const { return 2; }
+  virtual inline int_tp MaxBottomBlobs() const { return 3; }
 
   // InfogainLossLayer computes softmax prob internally.
   // optional second "top" outputs the softmax prob
-  virtual inline int ExactNumTopBlobs() const { return -1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return -1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
   virtual inline const char* type() const { return "InfogainLoss"; }
 
@@ -114,7 +114,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   /// outputs will be read from valid_count, unless it is -1 in which case
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
+      LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
   /// fill sum_rows_H_ according to matrix H
   virtual void sum_rows_of_H(const Blob<Dtype>* H);
 
@@ -133,11 +133,11 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// How to normalize the output loss.
   LossParameter_NormalizationMode normalization_;
 
-  int infogain_axis_, outer_num_, inner_num_, num_labels_;
+  int_tp infogain_axis_, outer_num_, inner_num_, num_labels_;
 };
 
 }  // namespace caffe

@@ -24,7 +24,7 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_a_);
@@ -75,11 +75,11 @@ TYPED_TEST(EltwiseLayerTest, TestProd) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
+  const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i] * in_data_c[i], 1e-4);
   }
 }
@@ -94,11 +94,11 @@ TYPED_TEST(EltwiseLayerTest, TestSum) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
+  const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i], 1e-4);
   }
 }
@@ -116,11 +116,11 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeff) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
+  const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] - 0.5*in_data_b[i] + 2*in_data_c[i],
         1e-4);
   }
@@ -185,11 +185,11 @@ TYPED_TEST(EltwiseLayerTest, TestMax) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
+  const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_EQ(data[i],
               std::max(in_data_a[i], std::max(in_data_b[i], in_data_c[i])));
   }

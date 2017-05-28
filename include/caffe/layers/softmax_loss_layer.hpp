@@ -31,7 +31,7 @@ namespace caffe {
  *      @f$ \hat{p}_{nk} = \exp(x_{nk}) /
  *      \left[\sum_{k'} \exp(x_{nk'})\right] @f$ (see SoftmaxLayer).
  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
- *      the labels @f$ l @f$, an integer-valued Blob with values
+ *      the labels @f$ l @f$, an int_tpeger-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
  *      indicating the correct class label among the @f$ K @f$ classes
  * @param top output Blob vector (length 1)
@@ -59,9 +59,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
-  virtual inline int ExactNumTopBlobs() const { return -1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return -1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -105,9 +105,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// outputs will be read from valid_count, unless it is -1 in which case
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
+      LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
 
-  /// The internal SoftmaxLayer used to map predictions to a distribution.
+  /// The int_tpernal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
   Blob<Dtype> prob_;
@@ -118,11 +118,11 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// How to normalize the output loss.
   LossParameter_NormalizationMode normalization_;
 
-  int softmax_axis_, outer_num_, inner_num_;
+  int_tp softmax_axis_, outer_num_, inner_num_;
 };
 
 }  // namespace caffe
