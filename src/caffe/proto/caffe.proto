@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: bn_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -364,6 +364,7 @@ message LayerParameter {
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
+  optional BNParameter bn_param = 147; // added by jinbin.lin @20170423
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -488,6 +489,23 @@ message ArgMaxParameter {
   // By default ArgMaxLayer maximizes over the flattened trailing dimensions
   // for each index of the first / num dimension.
   optional int32 axis = 3;
+}
+
+message BNParameter {
+  optional FillerParameter slope_filler = 1;
+  optional FillerParameter bias_filler = 2;
+  optional float momentum = 3 [default = 0.9];
+  optional float eps = 4 [default = 1e-5];
+  // If true, will use the moving average mean and std for training and test.
+  // Will override the lr_param and freeze all the parameters.
+  // Make sure to initialize the layer properly with pretrained parameters.
+  optional bool frozen = 5 [default = false];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 6 [default = DEFAULT];
 }
 
 message ConcatParameter {
@@ -1196,6 +1214,12 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+}
+
+// Message that stores parameters used by MapRegressionLossLayer
+message MapRegressionParameter {
+  //Specify the beta in the loss function
+  optional float beta = 1 [default = 1.0];
 }
 
 message SPPParameter {

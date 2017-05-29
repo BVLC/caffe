@@ -76,6 +76,8 @@ endif()
 # ---[ Prebuild dependencies on windows
 include(cmake/WindowsDownloadPrebuiltDependencies.cmake)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "/media/ssd/caffe_bvlc/build")
+
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 
