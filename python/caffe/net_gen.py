@@ -91,6 +91,8 @@ class UNetConf:
     sknetconfs = []
     # Upsampling path with deconvolutions instead of convolutions
     use_deconv_uppath = False
+    # Use a more stable implementation of upconvolutions
+    use_stable_upconv = False
     
     def parse(self, params):
         if ('depth' in params):
@@ -111,6 +113,8 @@ class UNetConf:
             self.conv_up = params['act_up']
         if ('use_deconv_uppath' in params):
             self.use_deconv_uppath = params['use_deconv_uppath']
+        if ('use_stable_upconv' in params):
+            self.use_stable_upconv = params['use_stable_upconv']
         if ('sknetconfs' in params):
             for sknetconf_dict in params['sknetconfs']:
                 if (sknetconf_dict != None):
@@ -226,10 +230,22 @@ def convolution(bottom, num_output, kernel_size=[3], stride=[1], pad=[0], dilati
 def max_pool(netconf, bottom, kernel_size=[2], stride=[2], pad=[0], dilation=[1]):
     return L.Pooling(bottom, pool=P.Pooling.MAX, kernel_size=kernel_size, stride=stride, pad=pad, dilation=dilation)
     
-def upconv(netconf, bottom, num_output_conv, kernel_size=[2], stride=[2]):    
-    deconv = L.Deconvolution(bottom, convolution_param=dict(num_output=num_output_conv, kernel_size=kernel_size, stride=stride, pad=[0], group=1,
+def upconv(netconf, bottom, num_output_dec, num_output_conv, kernel_size=[2], stride=[2], stable_mode=False):
+    # Stable mode is the more numerically stable pathway
+    if stable_mode:
+        deconv = L.Deconvolution(bottom, convolution_param=dict(num_output=num_output_dec, kernel_size=kernel_size, stride=stride, pad=[0], group=num_output_dec,
+                                 weight_filler=dict(type='constant', value=1), bias_term=False),
+                                 param=dict(lr_mult=0, decay_mult=0))
+    
+        conv = L.Convolution(deconv, num_output=num_output_conv, kernel_size=[1], stride=[1], pad=[0], group=1,
+                             param=[dict(lr_mult=1),dict(lr_mult=2)],
+                             weight_filler=dict(type='msra'),
+                             bias_filler=dict(type='constant'))
+        return conv
+    else:
+        deconv = L.Deconvolution(bottom, convolution_param=dict(num_output=num_output_conv, kernel_size=kernel_size, stride=stride, pad=[0], group=1,
                                                             weight_filler=dict(type='msra'), bias_filler=dict(type='constant')),param=[dict(lr_mult=1),dict(lr_mult=2)])
-    return deconv
+        return deconv
     
 def mergecrop(bottom_a, bottom_b, op = 'stack'):
     return L.MergeCrop(bottom_a, bottom_b, forward=[1,1], backward=[1,1], operation=(0 if (op == 'stack') else 1))
@@ -331,8 +347,8 @@ def implement_usknet(bottom, netconf, unetconf, return_blobs_only=True):
     if unetconf.depth > 0:
         # U-Net upsampling; Upconvolution+MergeCrop+2*Convolution
         for i in range(0, unetconf.depth):
-            conv = upconv(netconf, blobs[-1], unetconf.fmap_dec_rule(fmaps[-1]), kernel_size=unetconf.downsampling_strategy[unetconf.depth - i - 1],
-                                       stride=unetconf.downsampling_strategy[unetconf.depth - i - 1])
+            conv = upconv(netconf, blobs[-1], fmaps[-1], unetconf.fmap_dec_rule(fmaps[-1]), kernel_size=unetconf.downsampling_strategy[unetconf.depth - i - 1],
+                                       stride=unetconf.downsampling_strategy[unetconf.depth - i - 1], stable_mode=unetconf.use_stable_upconv)
             blobs = blobs + [conv]
             fmaps = fmaps + [unetconf.fmap_dec_rule(fmaps[-1])]
             
