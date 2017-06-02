@@ -59,16 +59,16 @@ void ConvolutionDepthwiseLayer<Dtype>::Forward_gpu(
   const int top_width = top[0]->width();
   const int bottom_height = bottom[0]->height();
   const int bottom_width = bottom[0]->width();
-  ConvolutionDepthwiseWeightForward<Dtype> <<<CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS>>>(
+  ConvolutionDepthwiseWeightForward<Dtype>
+        <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, weight_data, num, channels,
       top_height, top_width, bottom_height, bottom_width,
       kernel_h_, kernel_w_, stride_h_, stride_w_,
       pad_h_, pad_w_, dilation_h_, dilation_w_, top_data);
   if (this->layer_param_.convolution_param().bias_term()) {
     const Dtype* bias_data = this->blobs_[1]->gpu_data();
-    ConvolutionDepthwiseBiasForward<Dtype> <<<CAFFE_GET_BLOCKS(count),
-          CAFFE_CUDA_NUM_THREADS>>>(
+    ConvolutionDepthwiseBiasForward<Dtype>
+          <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bias_data, num, channels,
         top_height, top_width, top_data);
   }
@@ -173,8 +173,8 @@ void ConvolutionDepthwiseLayer<Dtype>::Backward_gpu(
         && this->param_propagate_down_[1]) {
     const int bias_buffer_count = bias_buffer_.count();
     Dtype* bias_buffer_mutable_data = bias_buffer_.mutable_gpu_data();
-    ConvolutionDepthwiseBiasBackward<Dtype> <<<CAFFE_GET_BLOCKS(
-          bias_buffer_count), CAFFE_CUDA_NUM_THREADS>>>(
+    ConvolutionDepthwiseBiasBackward<Dtype>
+          <<<CAFFE_GET_BLOCKS(bias_buffer_count), CAFFE_CUDA_NUM_THREADS>>>(
         bias_buffer_count, top_diff, num, channels,
         top_height, top_width, bias_buffer_mutable_data);
     const int bias_count = this->blobs_[1]->count();
@@ -188,8 +188,8 @@ void ConvolutionDepthwiseLayer<Dtype>::Backward_gpu(
     const int weight_buffer_count = weight_buffer_.count();
     const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* weight_buffer_mutable_data = weight_buffer_.mutable_gpu_data();
-    ConvolutionDepthwiseWeightBackward<Dtype> <<<CAFFE_GET_BLOCKS(
-          weight_buffer_count), CAFFE_CUDA_NUM_THREADS>>>(
+    ConvolutionDepthwiseWeightBackward<Dtype>
+          <<<CAFFE_GET_BLOCKS(weight_buffer_count), CAFFE_CUDA_NUM_THREADS>>>(
         weight_buffer_count, top_diff, bottom_data, num, channels,
         top_height, top_width, bottom_height, bottom_width,
         kernel_h_, kernel_w_, stride_h_, stride_w_,
@@ -204,8 +204,8 @@ void ConvolutionDepthwiseLayer<Dtype>::Backward_gpu(
   if (propagate_down[0]) {
     const Dtype* weight_data = this->blobs_[0]->gpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    ConvolutionDepthwiseBottomBackward<Dtype> <<<CAFFE_GET_BLOCKS(
-          bottom_count), CAFFE_CUDA_NUM_THREADS>>>(
+    ConvolutionDepthwiseBottomBackward<Dtype>
+          <<<CAFFE_GET_BLOCKS(bottom_count), CAFFE_CUDA_NUM_THREADS>>>(
         bottom_count, top_diff, weight_data, num, channels,
         top_height, top_width, bottom_height, bottom_width,
         kernel_h_, kernel_w_, stride_h_, stride_w_,

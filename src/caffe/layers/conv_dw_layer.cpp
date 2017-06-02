@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <vector>
 #include "caffe/filler.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/layers/conv_dw_layer.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
