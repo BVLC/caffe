@@ -85,7 +85,8 @@ __global__ void ConvolutionDepthwiseWeightBackward(const int nthreads,
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int h = (index / top_width) % top_height;
     const int w = index % top_width;
-    const int kh = (index / kernel_w / num / top_height / top_width) % kernel_h;
+    const int kh = (index / kernel_w / num / top_height / top_width)
+          % kernel_h;
     const int kw = (index / num / top_height / top_width) % kernel_w;
     const int h_in = -pad_h + h * stride_h + kh * dilation_h;
     const int w_in = -pad_w + w * stride_w + kw * dilation_w;
@@ -93,8 +94,10 @@ __global__ void ConvolutionDepthwiseWeightBackward(const int nthreads,
           && (w_in >= 0) && (w_in < bottom_width)) {
       const int c = index / kernel_h / kernel_w / num / top_height / top_width;
       const int n = (index / top_height / top_width) % num;
-      const int top_offset = ((n * channels + c) * top_height + h) * top_width + w;
-      const int bottom_offset = ((n * channels + c) * bottom_height + h_in) * bottom_width + w_in;
+      const int top_offset = ((n * channels + c) * top_height + h)
+            * top_width + w;
+      const int bottom_offset = ((n * channels + c) * bottom_height + h_in)
+            * bottom_width + w_in;
       buffer_data[index] = top_diff[top_offset] * bottom_data[bottom_offset];
     } else {
       buffer_data[index] = 0;
