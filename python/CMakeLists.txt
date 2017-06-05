@@ -7,7 +7,7 @@ file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
 
 add_library(pycaffe SHARED ${python_srcs})
 caffe_default_properties(pycaffe)
-set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
+set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe" SUFFIX ".so")
 target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
 target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES})
 
