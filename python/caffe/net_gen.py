@@ -382,7 +382,7 @@ def implement_usknet(bottom, netconf, unetconf, return_blobs_only=True):
     else:
         return blobs[-1], fmaps[-1]
     
-def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=None, stage=None, verbose=False):
+def fix_input_dims(net, source_layers, max_shapes=[], min_shapes=[], shape_coupled=[], phase=None, stage=None, verbose=False):
     """
     This function takes as input:
     net - The network
@@ -415,11 +415,12 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
     print("Source nodes: " + str(len(graph.get_source_nodes())))
     print("Sink nodes: " + str(len(graph.get_sink_nodes())))
 
-    sources = graph.get_source_nodes()
+    sources = graph.get_source_nodes()   
     sinks = graph.get_sink_nodes()
     
     test_sources = []
     test_max_shapes = []
+    test_min_shapes = []
     
     dims = 0
     
@@ -431,21 +432,46 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                 if (source.fn == source_layer):
                     test_sources = test_sources + [source]
                     test_max_shape = source.fn.params['dim']
+                    test_min_shape = source.fn.params['dim']
                     if (len(max_shapes) > i):
                         test_max_shape = test_max_shape + max_shapes[i]
+                    if (len(min_shapes) > i):
+                        test_min_shape = test_min_shape + min_shapes[i]
                     dims = max(dims, len(test_max_shape) - 2)
+                    while (len(test_min_shape) < len(test_max_shape)):
+                        test_min_shape.append(1)
                     test_max_shapes = test_max_shapes + [test_max_shape]
+                    test_min_shapes = test_min_shapes + [test_min_shape]
             elif('input_param' in source.fn.params):
                 if (source.fn == source_layer):
                     test_sources = test_sources + [source]
                     test_max_shape = source.fn.params['input_param']['shape']['dim']
+                    test_min_shape = source.fn.params['input_param']['shape']['dim']
                     if (len(max_shapes) > i):
                         test_max_shape = test_max_shape + max_shapes[i]
+                    if (len(min_shapes) > i):
+                        test_min_shape = test_min_shape + min_shapes[i]
                     dims = max(dims, len(test_max_shape) - 2)
+                    while (len(test_min_shape) < len(test_max_shape)):
+                        test_min_shape.append(1)
                     test_max_shapes = test_max_shapes + [test_max_shape]
-
+                    test_min_shapes = test_min_shapes + [test_min_shape]
+            elif('dummy_data_param' in source.fn.params):
+                if (source.fn == source_layer):
+                    test_sources = test_sources + [source]
+                    test_max_shape = source.fn.params['dummy_data_param']['shape']['dim']
+                    test_min_shape = source.fn.params['dummy_data_param']['shape']['dim']
+                    if (len(max_shapes) > i):
+                        test_max_shape = test_max_shape + max_shapes[i]
+                    if (len(min_shapes) > i):
+                        test_min_shape = test_min_shape + min_shapes[i]
+                    dims = max(dims, len(test_max_shape) - 2)
+                    while (len(test_min_shape) < len(test_max_shape)):
+                        test_min_shape.append(1)
+                    test_max_shapes = test_max_shapes + [test_max_shape]
+                    test_min_shapes = test_min_shapes + [test_min_shape]
     test_current_shapes = [[] for i in range(0,len(test_sources))]
-    
+                
     curr_src_idx = 0
     
     # Test each dimension
@@ -478,7 +504,7 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                     print test_current_shapes
                     print "Valid shape: " + str(not error)
                 
-                if (error and ((len(test_current_shapes[curr_src_idx]) - 2 <= dim_idx) or (test_current_shapes[curr_src_idx][2 + dim_idx] == 1))):
+                if (error and ((len(test_current_shapes[curr_src_idx]) - 2 <= dim_idx) or (test_current_shapes[curr_src_idx][2 + dim_idx] == test_min_shapes[curr_src_idx][2 + dim_idx]))):
                     # Reached minimum shape, reset source and go to previous source
                     if (len(test_current_shapes) - 2 > dim_idx):
                         test_current_shapes[curr_src_idx][2 + dim_idx] = test_max_shapes[curr_src_idx][2 + dim_idx]
@@ -488,7 +514,7 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                         # Unsuccessful return
                         return False
                 # Change the shape
-                if (error and test_current_shapes[curr_src_idx][2 + dim_idx] > 1):
+                if (error and test_current_shapes[curr_src_idx][2 + dim_idx] > test_min_shapes[curr_src_idx][2 + dim_idx]):
                     # Error, but still variants left to try, so decrease the dimension
                     test_current_shapes[curr_src_idx][2 + dim_idx] = test_current_shapes[curr_src_idx][2 + dim_idx] - 1
                 
@@ -502,11 +528,13 @@ def fix_input_dims(net, source_layers, max_shapes=[], shape_coupled=[], phase=No
                                     
     # Set the shapes
     for src_idx in range(0, len(test_sources)):
-        if ('dim' in source.fn.params):
+        if ('dim' in test_sources[src_idx].fn.params):
             test_sources[src_idx].fn.params['dim'] = test_current_shapes[src_idx]
-        elif('input_param' in source.fn.params):
+        elif('input_param' in test_sources[src_idx].fn.params):
             test_sources[src_idx].fn.params['input_param']['shape']['dim'] = test_current_shapes[src_idx]
-
+        elif('dummy_data_param' in test_sources[src_idx].fn.params):
+            test_sources[src_idx].fn.params['dummy_data_param']['shape']['dim'] = test_current_shapes[src_idx]
+            
     # Successful return
     return True
         
@@ -811,7 +839,28 @@ class Node:
             if (len(shape) > 0):
                 for out_edge in self.out_edges:
                     out_edge.set_shape(index, shape)
-                    
+        
+        elif (self.fn.type_name == 'Crop'):
+            shape = []
+                        
+            shape_A = self.in_edges[0].get_shape(index)
+            shape_B = self.in_edges[1].get_shape(index)
+                       
+            shape = copy.deepcopy(shape_B)
+                        
+            if (len(shape_A) > 0 and len(shape_B) > 0):
+                for i in range(2,len(shape_A)):
+                    if (shape_A[i] > shape_B[i]):
+                        self.error = True
+                        
+            if len(shape) >= 2 and len(shape_A) >= 2:
+                shape[0] = shape_A[0]
+                shape[1] = shape_A[1]
+
+            if (len(shape) > 0):
+                for out_edge in self.out_edges:
+                    out_edge.set_shape(index, shape)
+            
         elif (self.fn.type_name == 'InnerProduct'):
             num_output = self.fn.params['inner_product_param']['num_output'] if ('inner_product_param' in self.fn.params and 'num_output' in self.fn.params['inner_product_param']) else 1
 
