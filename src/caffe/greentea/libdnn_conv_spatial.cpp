@@ -2755,25 +2755,6 @@ void LibDNNConvSpatial<Dtype>::SetUp(
   }
 }
 
-template void LibDNNConvSpatial<float>::SetUp(
-    const float *bottom, const float *top,
-    caffe::Backend backend);
-
-template void LibDNNConvSpatial<double>::SetUp(
-    const double *bottom, const double *top,
-    caffe::Backend backend);
-
-template void LibDNNConvSpatial<float>::swizzleWeights(
-    const float *bottom,
-    const float *top,
-    int_tp swizzle_factor,
-    bool interleave = false);
-template void LibDNNConvSpatial<double>::swizzleWeights(
-    const double *bottom,
-    const double *top,
-    int_tp swizzle_factor,
-    bool interleave = false);
-
 template<>
 void LibDNNConvSpatial<double>::create_convolution_kernel(
     const double *bottom, const double *top,
