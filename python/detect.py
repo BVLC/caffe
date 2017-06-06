@@ -63,7 +63,7 @@ def main(argv):
     )
     parser.add_argument(
         "--gpu",
-        action='store_true',
+        default='0',
         help="Switch for gpu computation."
     )
     parser.add_argument(
@@ -109,7 +109,8 @@ def main(argv):
 
     if args.gpu:
         caffe.set_mode_gpu()
-        print("GPU mode")
+        caffe.set_device(int(args.gpu))
+        print("GPU mode [device id: %s]" % args.gpu)
     else:
         caffe.set_mode_cpu()
         print("CPU mode")
