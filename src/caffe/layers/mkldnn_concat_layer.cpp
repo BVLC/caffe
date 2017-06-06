@@ -90,6 +90,31 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
 
+  //Fix: MKLDNN concat layer should use 4D blob as input! Reshape the 2D input blob into 4D for calculation!
+  bool has_spatial = (bottom[0]->shape().size() != 2);
+#ifdef DEBUG
+  LOG(INFO) << "has_spatial flag value: " << has_spatial;
+#endif
+  if (has_spatial == false)
+  {
+#ifdef DEBUG
+      LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
+      LOG(INFO) << "size of top blob: " << top[0]->shape().size();
+      LOG(INFO) << "MKLDNN concat layer only support 4D blob as input! Reshape the 2D input blob into 4D for calculation!";
+#endif
+      vector<int> bottom_4D_shape;
+      int bottom_4D_height = 1;
+      int bottom_4D_width = 1;
+      bottom_4D_shape.push_back(bottom[0]->num());
+      bottom_4D_shape.push_back(bottom[0]->channels());
+      bottom_4D_shape.push_back(bottom_4D_height);
+      bottom_4D_shape.push_back(bottom_4D_width);
+      for (auto i = 0; i < num_concats_; i++)
+      {
+          bottom[i]->Reshape(bottom_4D_shape);
+      }      
+  }
+
   engine cpu_engine = CpuEngine::Instance().get_engine();
   memory::data_type data_type = memory::data_type::f32;
   // memory::format mfmt_any = memory::format::any;
@@ -222,7 +247,10 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  //VLOG(1) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+  VLOG(1) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+  LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
 
   if (NULL == concatFwd_pd)
     InitConcatFwd(bottom, top);
@@ -244,7 +272,11 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                            ,const vector<bool>& propagate_down
                                            ,const vector<Blob<Dtype>*>& bottom)
 {
-  //VLOG(1) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+  VLOG(1) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+  LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
+
   if (reorders.size() == 0)
     InitConcatBwd(top, propagate_down, bottom);
   bwd_top_diff->sync_before_read();
@@ -255,7 +287,6 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     reorders[i].submit();
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
   }
-
 }
 
 #ifdef CPU_ONLY

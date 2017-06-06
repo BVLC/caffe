@@ -153,6 +153,8 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   status = H5Fclose(file_id);
   EXPECT_GE(status, 0) << "Failed to close HDF5 file " <<
       this->output_file_name_;
+
+  delete blob_label;
 }
 
 }  // namespace caffe

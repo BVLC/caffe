@@ -73,7 +73,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 #ifdef _OPENMP
-    #pragma omp parallel for num_threads(this->num_of_threads_)
+    #pragma omp parallel if(this->num_of_threads_ > 1) num_threads(this->num_of_threads_)
+    {
+      #pragma omp for
 #endif
       for (int n = 0; n < this->num_; ++n) {
         this->forward_cpu_gemm(bottom_data + n*this->bottom_dim_,
@@ -84,6 +86,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
         }
       }
+#ifdef _OPENMP
+    }
+#endif
   }
 }
 
@@ -111,8 +116,10 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if (this->param_propagate_down_[0]) {
 #ifdef _OPENMP
-      this->clear_weight_mt();
-      #pragma omp parallel num_threads(this->num_of_threads_)
+      if (this->num_of_threads_ > 1) {
+        this->clear_weight_mt();
+      }
+      #pragma omp parallel if(this->num_of_threads_ > 1) num_threads(this->num_of_threads_)
 #endif
       {
 #ifdef _OPENMP
@@ -125,20 +132,27 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
 
 #ifdef _OPENMP
-        this->sum_weight_mt(weight_diff);
+        if (this->num_of_threads_ > 1) {
+          this->sum_weight_mt(weight_diff);
+        }
 #endif
       }
     }
 
     if (propagate_down[i]) {
 #ifdef _OPENMP
-      #pragma omp parallel for num_threads(this->num_of_threads_)
+      #pragma omp parallel if(this->num_of_threads_ > 1) num_threads(this->num_of_threads_)
+      {
+        #pragma omp for
 #endif
         for (int n = 0; n < this->num_; ++n) {
           // gradient w.r.t. bottom data, if necessary.
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);
         }
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 }

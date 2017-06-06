@@ -130,7 +130,12 @@ void MKLDNNBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
 
-    top[0]->Reshape(this->num_, this->channels_, this->height_, this->width_);
+    //Fix: should reshape the top blob with the real size of bottom blob
+    //top[0]->Reshape(this->num_, this->channels_, this->height_, this->width_);
+#ifdef DEBUG
+    LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
+#endif
+    top[0]->ReshapeLike(*bottom[0]);
 }
 
 template <typename Dtype>
@@ -146,12 +151,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     int32_t n  = this->num_;
     int32_t iw = this->width_;
     int32_t ih = this->height_;
-    int32_t ic = this->channels_;
+    int32_t ic = this->channels_;    
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
+    
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
     shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd, scaleshift_mpd;
@@ -162,7 +168,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         usr_mpd = mem_descr->usr_memory_pd();
         prv_mpd = mem_descr->prv_memory_pd();
     } else {
-        input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
+        input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));   //MKLDNN batch norm only support 4D memory descriptor!
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
@@ -242,6 +248,23 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
 
     fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);
     fwd_top_data->set_mkldnn_primitive(BatchNormFwd);
+
+    //Fix: MKLDNN batch norm only support 4D memory descriptor! Use 4D for calculation and reshape to 2D for output!
+    bool has_spatial = (bottom[0]->shape().size() != 2);
+#ifdef DEBUG
+    LOG(INFO) << "has_spatial flag value: " << has_spatial;
+#endif
+    if (has_spatial == false)
+    {
+#ifdef DEBUG
+        LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
+        LOG(INFO) << "MKLDNN batch norm only support 4D memory descriptor! Use 4D for calculation and reshape to 2D for output!";
+#endif
+        vector<int> top_shape;
+        top_shape.push_back(bottom[0]->num());
+        top_shape.push_back(bottom[0]->channels());
+        top[0]->Reshape(top_shape);
+    }
 }
 
 
@@ -250,8 +273,11 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNBatchNormLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
+#endif
 
-    if( BatchNormFwd_pd == NULL)
+    if(BatchNormFwd_pd == NULL)
         InitBatchNorm(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
@@ -323,8 +349,8 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
-    // ---- Initialize memory descriptors -------------
 
+    // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> top_diff_md, top_data_md;
     shared_ptr<memory::primitive_desc> usr_diff_mpd(NULL), prv_diff_mpd(NULL);
     if (top_diff_is_prv) {
@@ -334,7 +360,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
         usr_diff_mpd = mem_descr->usr_memory_pd();
         prv_diff_mpd = mem_descr->prv_memory_pd();
     } else {
-        top_diff_md.reset(new memory::desc({{n, c, h, w}}, mpcsn, memory::format::nchw));
+        top_diff_md.reset(new memory::desc({{n, c, h, w}}, mpcsn, memory::format::nchw));   //MKLDNN batch norm only support 4D memory descriptor!
         usr_diff_mpd.reset(new memory::primitive_desc(*top_diff_md, cpu_engine));
     }
 
@@ -392,10 +418,13 @@ template <typename Dtype>
 void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
 {
-    VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::Backward_cpu: "
-        << this->layer_param_.name();
+    VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#ifdef DEBUG
+    LOG(INFO) << "MKLDNNBatchNormLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+#endif
 
-    if (BatchNormBwd_pd == NULL) InitBatchNormBwd(top, propagate_down, bottom);
+    if (BatchNormBwd_pd == NULL)
+        InitBatchNormBwd(top, propagate_down, bottom);
     // making reorders if needed.
     bwd_top_diff->sync_before_read();
     // update bottom that head at prv
@@ -403,7 +432,38 @@ void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
+#ifdef DEBUG
+    if (bottom[0]->prv_data() != NULL)
+    {
+        LOG(INFO) << "Debug: Bottom prv data: " << *bottom[0]->prv_data();
+    }
+    else
+    {
+        LOG(INFO) << "Debug: Bottom prv data is NULL!";
+    }
+
+    if (top[0]->prv_diff() != NULL)
+    {
+        LOG(INFO) << "Debug: Top prv diff: " << *top[0]->prv_diff();
+    }
+    else
+    {
+        LOG(INFO) << "Debug: Top prv diff is NULL!";
+        LOG(INFO) << "Debug: Top cpu diff: " << *top[0]->cpu_diff();
+    }
+#endif
     BatchNormBwd.submit();
+#ifdef DEBUG
+    if (bottom[0]->prv_diff() != NULL)
+    {
+        LOG(INFO) << "Debug: Bottom prv diff: " << *bottom[0]->prv_diff();
+    }
+    else
+    {
+        LOG(INFO) << "Debug: Bottom prv diff is NULL!";
+        LOG(INFO) << "Debug: Bottom cpu diff: " << *bottom[0]->cpu_diff();
+    }
+#endif
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
     /* FIXME: this wouldn't work with lazy stream */

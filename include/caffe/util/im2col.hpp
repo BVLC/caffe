@@ -54,6 +54,13 @@ void im2col_cpu(const Dtype* data_im, const int channels,
     Dtype* data_col);
 
 template <typename Dtype>
+void im3d2col_cpu(const Dtype* data_im, const int channels,
+    const int depth, const int height, const int width, const int kernel_d, const int kernel_h, const int kernel_w,
+    const int pad_d, const int pad_h, const int pad_w, const int stride_d, const int stride_h,
+    const int stride_w, const int dilation_d, const int dilation_h, const int dilation_w,
+    Dtype* data_col);
+
+template <typename Dtype>
 void col2im_nd_cpu(const Dtype* data_col, const int num_spatial_axes,
     const int* im_shape, const int* col_shape,
     const int* kernel_shape, const int* pad, const int* stride,
@@ -64,6 +71,13 @@ void col2im_cpu(const Dtype* data_col, const int channels,
     const int height, const int width, const int kernel_h, const int kernel_w,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, const int dilation_h, const int dilation_w,
+    Dtype* data_im);
+
+template <typename Dtype>
+void col2im3d_cpu(const Dtype* data_col, const int channels,
+    const int depth, const int height, const int width, const int kernel_d, const int kernel_h, const int kernel_w,
+    const int pad_d, const int pad_h, const int pad_w, const int stride_d, const int stride_h,
+    const int stride_w, const int dilation_d, const int dilation_h, const int dilation_w,
     Dtype* data_im);
 
 template <typename Dtype>

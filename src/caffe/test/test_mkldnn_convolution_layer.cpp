@@ -300,7 +300,55 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNN) {
   EXPECT_EQ(this->blob_top_2_->width(), OW);
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionMKLDNN) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNNWithRectangeKernelStridePad) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_h(4);
+  convolution_param->set_kernel_w(1);
+  convolution_param->set_stride_h(3);
+  convolution_param->set_stride_w(1);
+  convolution_param->set_num_output(OC);
+  convolution_param->set_pad_h(2);
+  convolution_param->set_pad_w(1);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  shared_ptr<MKLDNNConvolutionLayer<Dtype> > layer(
+      new MKLDNNConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(convolution_param->kernel_h(), 4);
+  EXPECT_EQ(layer->GetKernelHeight(), 4);
+  EXPECT_EQ(convolution_param->kernel_w(), 1);
+  EXPECT_EQ(layer->GetKernelWidth(), 1);
+  EXPECT_EQ(convolution_param->stride_h(), 3);
+  EXPECT_EQ(layer->GetStrideHeight(), 3);
+  EXPECT_EQ(convolution_param->stride_w(), 1);
+  EXPECT_EQ(layer->GetStrideWidth(), 1);
+  EXPECT_EQ(convolution_param->pad_h(), 2);
+  EXPECT_EQ(layer->GetPadHeight(), 2);
+  EXPECT_EQ(convolution_param->pad_w(), 1);
+  EXPECT_EQ(layer->GetPadWidth(), 1);
+  // setting group should not change the shape
+  convolution_param->set_num_output(OC);
+  convolution_param->set_group(GR);
+  layer.reset(new MKLDNNConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(convolution_param->kernel_h(), 4);
+  EXPECT_EQ(layer->GetKernelHeight(), 4);
+  EXPECT_EQ(convolution_param->kernel_w(), 1);
+  EXPECT_EQ(layer->GetKernelWidth(), 1);
+  EXPECT_EQ(convolution_param->stride_h(), 3);
+  EXPECT_EQ(layer->GetStrideHeight(), 3);
+  EXPECT_EQ(convolution_param->stride_w(), 1);
+  EXPECT_EQ(layer->GetStrideWidth(), 1);
+  EXPECT_EQ(convolution_param->pad_h(), 2);
+  EXPECT_EQ(layer->GetPadHeight(), 2);
+  EXPECT_EQ(convolution_param->pad_w(), 1);
+  EXPECT_EQ(layer->GetPadWidth(), 1);
+}
+
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -340,7 +388,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionMKLDNN) {
 #endif
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionReLUMKLDNN) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -559,7 +607,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestDilated3DConvolution) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Convolution) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Convolution) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -586,7 +634,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Convolution) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1ConvolutionReLU) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1ConvolutionReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -614,7 +662,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1ConvolutionReLU) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -643,7 +691,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionGroup) {
   }
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestSimpleConvolutionReLUGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -964,7 +1012,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradient3D) {
 }
 #endif
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Gradient) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Gradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -982,7 +1030,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_Test1x1Gradient) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(MKLDNNConvolutionLayerTest, DISABLED_TestGradientGroup) {
+TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradientGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =

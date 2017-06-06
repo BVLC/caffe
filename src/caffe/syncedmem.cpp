@@ -92,8 +92,10 @@ inline void SyncedMemory::to_cpu() {
   case SYNCED_PRV:
   case HEAD_AT_CPU:
     if (prv_descriptor_.get()) {
-        if ( prv_descriptor_->on_to_cpu())
-            head_ = SYNCED;
+        if (prv_descriptor_->on_to_cpu())
+            //Fix: head_ = SYNCED means for caffe that CPU and GPU are in sync,
+            //as we do not have GPU setting, head_ to SYNCED will cause problems.
+            head_ = SYNCED_PRV;
     }
     break;
   case SYNCED:
