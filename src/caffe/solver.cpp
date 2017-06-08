@@ -530,11 +530,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
   }
 
-#ifdef USE_MLSL
   // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();
-#endif
 
   LOG(INFO) << "Optimization Done.";
 }
