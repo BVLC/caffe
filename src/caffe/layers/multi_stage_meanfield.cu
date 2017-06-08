@@ -63,7 +63,7 @@ namespace caffe {
             this->Forward_cpu(bottom, top);
             return;
         }
-        printf("%d\n",init_cpu_); 
+        //printf("%d\n",init_cpu_); 
         if(init_cpu_) {
             LOG(FATAL)
             << ("You initialised your network on CPU, please initialize it on GPU.");
