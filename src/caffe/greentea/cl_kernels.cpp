@@ -5423,8 +5423,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if(lid < stride)",    // NOLINT
 "work[lid] += work[lid+stride];",    // NOLINT
 "}",    // NOLINT
-"if(lid == 0)",    // NOLINT
+"",    // NOLINT
+"if(lid == 0) {",    // NOLINT
+"if(beta == (Dtype)0)",    // NOLINT
+"result[row_gid] = alpha * work[0];",    // NOLINT
+"else",    // NOLINT
 "result[row_gid] = alpha * work[0] + beta * result[row_gid];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "/* This kernel used for the trailing rows when row_of_A %4 !=0 */",    // NOLINT
@@ -5484,9 +5490,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "if(lid == 0) {",    // NOLINT
+"if(beta == (Dtype)0) {",    // NOLINT
+"result[row_gid+row_offset] = alpha * work[0];",    // NOLINT
+"} else {",    // NOLINT
 "result[row_gid+row_offset] *= beta;",    // NOLINT
 "result[row_gid+row_offset] += alpha * work[0];",    // NOLINT
-"//result[row_gid+row_offset] = alpha * work[0] + beta * result[row_gid+row_offset];",    // NOLINT
+"}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 ""},   // NOLINT

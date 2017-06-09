@@ -75,8 +75,14 @@ __kernel void TEMPLATE(matvec_mul4,Dtype)(
       if(lid < stride)
         work[lid] += work[lid+stride];
   }
-  if(lid == 0)
-    result[row_gid] = alpha * work[0] + beta * result[row_gid];
+
+  if(lid == 0) {
+    if(beta == (Dtype)0)
+      result[row_gid] = alpha * work[0];
+    else
+      result[row_gid] = alpha * work[0] + beta * result[row_gid];
+  }
+
 }
 
 /* This kernel used for the trailing rows when row_of_A %4 !=0 */
@@ -136,8 +142,11 @@ __kernel void TEMPLATE(matvec_mul1,Dtype)(
   }
 
   if(lid == 0) {
-    result[row_gid+row_offset] *= beta;
-    result[row_gid+row_offset] += alpha * work[0];
-    //result[row_gid+row_offset] = alpha * work[0] + beta * result[row_gid+row_offset];
+    if(beta == (Dtype)0) {
+      result[row_gid+row_offset] = alpha * work[0];
+    } else {
+      result[row_gid+row_offset] *= beta;
+      result[row_gid+row_offset] += alpha * work[0];
+    }
   }
 }
