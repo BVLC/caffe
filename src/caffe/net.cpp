@@ -5,6 +5,11 @@
 #include <utility>
 #include <vector>
 
+#ifdef WITH_PYTHON_LAYER
+#include <boost/python.hpp>
+namespace bp = boost::python;
+#endif
+
 #include "hdf5.h"
 
 #include "caffe/common.hpp"
@@ -118,7 +123,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
     // After this layer is connected, set it up.
-    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+#ifdef WITH_PYTHON_LAYER
+    try {
+#endif
+      layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+#ifdef WITH_PYTHON_LAYER
+    } catch (bp::error_already_set) {
+      PyErr_Print();
+      throw;
+    }
+#endif
     LOG_IF(INFO, Caffe::root_solver())
         << "Setting up " << layer_names_[layer_id];
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
@@ -521,7 +535,17 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     for (int c = 0; c < before_forward_.size(); ++c) {
       before_forward_[c]->run(i);
     }
-    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+    Dtype layer_loss;
+#ifdef WITH_PYTHON_LAYER
+    try {
+#endif
+      layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+#ifdef WITH_PYTHON_LAYER
+    } catch (bp::error_already_set) {
+      PyErr_Print();
+      throw;
+    }
+#endif
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
     for (int c = 0; c < after_forward_.size(); ++c) {
@@ -572,8 +596,17 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
       before_backward_[c]->run(i);
     }
     if (layer_need_backward_[i]) {
-      layers_[i]->Backward(
-          top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+#ifdef WITH_PYTHON_LAYER
+      try {
+#endif
+        layers_[i]->Backward(
+            top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+#ifdef WITH_PYTHON_LAYER
+      } catch (bp::error_already_set) {
+        PyErr_Print();
+        throw;
+      }
+#endif
       if (debug_info_) { BackwardDebugInfo(i); }
     }
     for (int c = 0; c < after_backward_.size(); ++c) {
@@ -725,7 +758,16 @@ void Net<Dtype>::Backward() {
 template <typename Dtype>
 void Net<Dtype>::Reshape() {
   for (int i = 0; i < layers_.size(); ++i) {
+#ifdef WITH_PYTHON_LAYER
+    try {
+#endif
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+#ifdef WITH_PYTHON_LAYER
+    } catch (bp::error_already_set) {
+      PyErr_Print();
+      throw;
+    }
+#endif
   }
 }
 
