@@ -371,8 +371,8 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         memory::format fwd_prv_bottom_data_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
 #ifdef DEBUG
-        LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitPoolingBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
-        LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitPoolingBwd: Reorder the top and bottom diff to the format of prv bottom data! (Performance consideration)";              
+        LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::InitPoolingBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
+        LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::InitPoolingBwd: Reorder the top and bottom diff to the format of prv bottom data! (Performance consideration)";              
 #endif
         bwd_cmfmt = fwd_prv_bottom_data_mfmt;
     }

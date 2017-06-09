@@ -258,7 +258,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
             = get_mkldnn_prv_descriptor<Dtype, true>(top[0]);
         memory::format bwd_prv_top_diff_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
 #ifdef DEBUG
-        LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitLRNBwd: memory format of prv top diff is: " << bwd_prv_top_diff_mfmt;
+        LOG(INFO) << "MKLDNNLRNLayer<Dtype>::InitLRNBwd: memory format of prv top diff is: " << bwd_prv_top_diff_mfmt;
 #endif        
         top_diff_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
         usr_diff_mpd = mem_descr->usr_memory_pd();
@@ -270,12 +270,12 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
                 = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
             memory::format fwd_prv_bottom_data_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
 #ifdef DEBUG
-            LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitLRNBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
+            LOG(INFO) << "MKLDNNLRNLayer<Dtype>::InitLRNBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
 #endif
             if (bwd_prv_top_diff_mfmt != fwd_prv_bottom_data_mfmt)
             {
 #ifdef DEBUG
-                LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitLRNBwd: Reorder the prv top/bottom diff to the format of prv bottom data! (Performance consideration)";
+                LOG(INFO) << "MKLDNNLRNLayer<Dtype>::InitLRNBwd: Reorder the prv top/bottom diff to the format of prv bottom data! (Performance consideration)";
 #endif
                 top_diff_md.reset(new memory::desc({tz}, mpcsn, fwd_prv_bottom_data_mfmt));
             }
@@ -289,8 +289,8 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
                 = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
             memory::format fwd_prv_bottom_data_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
 #ifdef DEBUG
-            LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitLRNBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
-            LOG(INFO) << "MKLDNNReLULayer<Dtype>::InitLRNBwd: Reorder the usr top/bottom diff to the format of prv bottom data! (Performance consideration)";
+            LOG(INFO) << "MKLDNNLRNLayer<Dtype>::InitLRNBwd: memory format of prv bottom data is: " << fwd_prv_bottom_data_mfmt;
+            LOG(INFO) << "MKLDNNLRNLayer<Dtype>::InitLRNBwd: Reorder the usr top/bottom diff to the format of prv bottom data! (Performance consideration)";
 #endif
             bwd_cmfmt = fwd_prv_bottom_data_mfmt;
             //top[0]->set_prv_diff_descriptor(NULL);
