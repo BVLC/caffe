@@ -37,6 +37,30 @@ if(@USE_OPENCV@)
   endif()
 endif()
 
+# Handle other imported targets libraries
+if(@GFLAGS_IMPORTED@)
+  find_package(gflags REQUIRED NO_MODULE)
+endif()
+
+if(@GLOG_IMPORTED@)
+  find_package(glog REQUIRED NO_MODULE)
+endif()
+
+if(@HDF5_IMPORTED@)
+  find_package(HDF5 COMPONENTS C HL REQUIRED NO_MODULE)
+endif()
+
+if(@USE_LMDB@ AND @LMDB_IMPORTED@)
+  find_package(LMDB REQUIRED NO_MODULE)
+endif()
+
+if(@USE_LEVELDB@ AND @LEVELDB_IMPORTED@)
+  find_package(LevelDB REQUIRED NO_MODULE)
+  if(@SNAPPY_IMPORTED@)
+    find_package(Snappy REQUIRED NO_MODULE)
+  endif()
+endif()
+
 # Compute paths
 get_filename_component(Caffe_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
