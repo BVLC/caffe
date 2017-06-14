@@ -112,7 +112,7 @@ void ConvolutionDepthwiseLayer<Dtype>::Reshape(
   weight_multiplier_shape.push_back(top[0]->width());
   weight_multiplier_.Reshape(weight_multiplier_shape);
   caffe_set(weight_multiplier_.count(), Dtype(1),
-        weight_multiplier_.mutable_gpu_data());
+        weight_multiplier_.mutable_cpu_data());
   if (this->layer_param_.convolution_param().bias_term()) {
     vector<int> bias_buffer_shape;
     bias_buffer_shape.push_back(bottom[0]->channels());
@@ -126,7 +126,7 @@ void ConvolutionDepthwiseLayer<Dtype>::Reshape(
     bias_multiplier_shape.push_back(top[0]->width());
     bias_multiplier_.Reshape(bias_multiplier_shape);
     caffe_set(bias_multiplier_.count(), Dtype(1),
-          bias_multiplier_.mutable_gpu_data());
+          bias_multiplier_.mutable_cpu_data());
   }
 }
 
