@@ -114,6 +114,10 @@ class BatchNormLayer : public Layer<Dtype> {
                        const Dtype* data_to_be_replicated,
                        FuncTy op_func);
 
+#ifdef USE_MLSL
+  virtual bool ParamNeedReduce(int param_id) { return false; }
+#endif
+
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;

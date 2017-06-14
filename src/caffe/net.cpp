@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hdf5.h"
 
+#include "boost/algorithm/string.hpp"
+
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
@@ -58,6 +60,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/multinode/mlsl.hpp"
+#include "caffe/multinode/apply_mn_param.hpp"
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -125,13 +128,25 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     filtered_param.set_engine("MKLDNN");
 #endif
   engine_name_ = filtered_param.engine();
+
+  NetParameter& param = filtered_param;
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
-  InsertSplits(filtered_param, &param_with_splits);
+  InsertSplits(param, &param_with_splits);
+  param = param_with_splits;
 
+  NetParameter compiled_param;
   // Transform Net (merge layers etc.) improve computational performance
-  NetParameter param;
-  CompileNet(param_with_splits, &param);
+  CompileNet(param, &compiled_param);
+  param = compiled_param;
+
+#ifdef USE_MLSL
+  NetParameter param_with_mn;
+  if (mn::is_multinode()) {
+    ApplyMultinodeParams<Dtype>(param, &param_with_mn);
+    param = param_with_mn;
+  }
+#endif
 
   // Printing processed model
   if (Caffe::root_solver()) {
@@ -142,6 +157,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     fflush(0);
   }
 
+#ifdef USE_MLSL
+  int global_batch_size = -1;
+#endif
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -245,7 +263,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
-            mn::train::set_global_minibatch_size(batch_size * mn::get_nodes_count());
+            if (global_batch_size < 0) {
+              global_batch_size = batch_size * mn::get_nodes_count();
+              mn::train::set_global_minibatch_size(global_batch_size);
+            } else {
+              CHECK_EQ(global_batch_size, batch_size * mn::get_nodes_count());
+            }
         }
     }
 #endif /* USE_MLSL */
@@ -411,7 +434,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
                   if (mlsl_weight_size < caffe_weight_size)
-                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id 
+                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id
                                  << ", param_id " << param_ids[i]
                                  << ", MLSL weight size in bytes " << mlsl_weight_size
                                  << ", CAFFE weight size in bytes " << caffe_weight_size;
@@ -592,7 +615,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     //          H == 0 &&
     //          I == string::npos)))))
     */
-    if ((param.state().phase() == TEST) && 
+    if ((param.state().phase() == TEST) &&
         (layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
        || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
@@ -1191,9 +1214,31 @@ void Net<Dtype>::Reshape() {
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   NetParameter param_tmp = param_inp;
-  param_tmp.set_engine(engine_name_);
-  NetParameter param;
-  CompileNet(param_tmp, &param);
+  NetParameter &param = param_tmp;
+  param.set_engine(engine_name_);
+  NetParameter param_compiled;
+  CompileNet(param, &param_compiled);
+  param = param_compiled;
+#ifdef USE_MLSL
+  NetParameter param_mn;
+  if (mn::is_multinode()) {
+    // set per-layer multi-node parameters before adjusting net proto
+    for (int i = 0; i < param.layer_size(); i++) {
+      LayerParameter* source_layer = param.mutable_layer(i);
+      const string& source_layer_name = source_layer->name();
+      int target_layer_id = 0;
+      while (target_layer_id != layer_names_.size() &&
+             layer_names_[target_layer_id] != source_layer_name) {
+        ++target_layer_id;
+      }
+      if (target_layer_id == layer_names_.size()) continue;
+      *source_layer->mutable_multinode() =
+        layers_[target_layer_id]->layer_param().multinode();
+    }
+    ApplyMultinodeParams<Dtype>(param, &param_mn);
+    param = param_mn;
+  }
+#endif
 
   int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
@@ -1290,8 +1335,29 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
               << source_layer_name;
         }
       }
+#ifdef USE_MLSL
+      const MultinodeLayerParameter &mn_layer_param =
+        layers_[target_layer_id]->layer_param().multinode();
+      int num_nodes = mn_layer_param.num_nodes();
+      int model_parts = mn_layer_param.model_parts();
+      mn::GetCanonicalMnParam(num_nodes, model_parts);
+      Blob<Dtype> orig_blob;
+      vector<int> shape = target_blobs[j]->shape();
+      CHECK_GT(shape.size(), 0);
+      int offset = 0;
+      if (model_parts > 1) {
+        shape[0] *= model_parts;
+        offset = target_blobs[j]->count() * (mn::get_node_id() % model_parts);
+      }
+      orig_blob.Reshape(shape);
+      hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,
+          &orig_blob);
+      caffe_copy(target_blobs[j]->count(), orig_blob.cpu_data() + offset,
+                 target_blobs[j]->mutable_cpu_data());
+#else
       hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,
           target_blobs[j].get());
+#endif
     }
     H5Gclose(layer_hid);
   }
@@ -1309,6 +1375,14 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
     LayerParameter* layer_param = param->add_layer();
     layers_[i]->ToProto(layer_param, write_diff);
   }
+  // TODO: Should implement the param adjustment for ToHDF5 as well
+  // TODO: Decompile net to BVLC compatibility
+  // DecompileNet(param);
+#ifdef USE_MLSL
+  if (mn::is_multinode()) {
+    RevertMultinodeParams<Dtype>(param, write_diff);
+  }
+#endif
 }
 
 template <typename Dtype>
@@ -1328,6 +1402,9 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
   }
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
     const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+#ifdef USE_MLSL
+    if (layer_param.type() == "MnActivation") continue;
+#endif
     string layer_name = layer_param.name();
     hid_t layer_data_hid = H5Gcreate2(data_hid, layer_name.c_str(),
         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1345,6 +1422,48 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
       ostringstream dataset_name;
       dataset_name << param_id;
       const int net_param_id = param_id_vecs_[layer_id][param_id];
+#ifdef USE_MLSL
+      const MultinodeLayerParameter &mn_layer_param = layer_param.multinode();
+      int num_nodes = mn_layer_param.num_nodes();
+      int model_parts = mn_layer_param.model_parts();
+      mn::GetCanonicalMnParam(num_nodes, model_parts);
+      Blob<Dtype> new_blob;
+      vector<int> shape = params_[net_param_id]->shape();
+      CHECK_GT(shape.size(), 0);
+      if (model_parts > 1) {
+        mn::Distribution *distrib = mn::get_distrib(num_nodes/model_parts, model_parts);
+        shape[0] *= model_parts;
+        new_blob.Reshape(shape);
+        distrib->allgather<Dtype,MLSL::GT_MODEL>(
+          params_[net_param_id]->mutable_cpu_data(),
+          params_[net_param_id]->count(),
+          new_blob.mutable_cpu_data());
+        if (write_diff) {
+          distrib->allgather<Dtype,MLSL::GT_MODEL>(
+            params_[net_param_id]->mutable_cpu_diff(),
+            params_[net_param_id]->count(),
+            new_blob.mutable_cpu_diff());
+        }
+      } else {
+        new_blob.Reshape(shape);
+        caffe_copy(new_blob.count(), params_[net_param_id]->cpu_data(),
+                   new_blob.mutable_cpu_data());
+        if (write_diff) {
+          caffe_copy(new_blob.count(), params_[net_param_id]->cpu_diff(),
+                     new_blob.mutable_cpu_diff());
+        }
+      }
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            new_blob);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            new_blob, true);
+      }
+#else
       if (param_owners_[net_param_id] == -1) {
         // Only save params that own themselves
         hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
@@ -1355,6 +1474,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
         hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
             *params_[net_param_id], true);
       }
+#endif
     }
     H5Gclose(layer_data_hid);
     if (write_diff) {

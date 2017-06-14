@@ -438,6 +438,10 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   void Init(const vector<Blob<Dtype>*>& bottom,
             const vector<Blob<Dtype>*>& top);
 
+#ifdef USE_MLSL
+  virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
+#endif
+
   Dtype moving_average_fraction_;
   Dtype eps_;
   bool use_weight_bias_;

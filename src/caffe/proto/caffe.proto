@@ -209,6 +209,20 @@ message NetParameter {
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
+  
+  // Multinode settings
+  optional MultinodeParameter multinode = 101;
+}
+
+message MultinodeParameter {
+  repeated MnModelParallelParameter model_parallel = 1;
+}
+
+message MnModelParallelParameter {
+  required string layer_from = 1;
+  optional string layer_to = 2;
+  optional uint32 num_nodes = 3;   // 0 means all nodes
+  optional uint32 model_parts = 4; // 0 or >= num_nodes, means all nodes
 }
 
 message MultiPhaseSolverParameter {
@@ -451,7 +465,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: engine)
+// LayerParameter next available layer-specific ID: 152 (last added: mn_activation_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -559,6 +573,28 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
 
   optional string engine = 149 [default = ""];
+  
+  optional MultinodeLayerParameter multinode = 150;
+  optional MnActivationParameter mn_activation_param = 151;
+}
+
+message MultinodeLayerParameter {
+  // 0 means all nodes
+  optional uint32 num_nodes = 1;
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts = 2 [default = 1];
+}
+
+message MnActivationParameter {
+  // 0 means all nodes
+  optional uint32 num_nodes_in = 1;
+  // 0 means all nodes
+  optional uint32 num_nodes_out = 2;
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts_in = 3 [default = 1];
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts_out = 4 [default = 1];
+  optional bool need_reduce = 5 [default = true];
 }
 
 // Message that stores parameters used to apply transformation

@@ -62,11 +62,11 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #endif /* CAFFE_PER_LAYER_TIMINGS */
 
   net.ClearParamDiffs();
+
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef CAFFE_PER_LAYER_TIMINGS
     timer.Start();
 #endif
-
     loss += net.ForwardFromTo(i, i);
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
@@ -82,7 +82,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     if (!layer_need_backward[i]) {
       continue;
     }
-    
+
     net.BackwardFromTo(i, i);
 
     if (last && (layers[i]->layerOp != nullptr) && layers[i]->layerOp->HasParameterSets()) {
@@ -97,15 +97,14 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   }
 
   if (last) {
-    for (int i = 0; i < layers.size(); ++i) {
 
+    for (int i = 0; i < layers.size(); ++i) {
 #ifdef CAFFE_PER_LAYER_TIMINGS
       timer.Start();
 #endif
-
       if (!layer_need_backward[i] || ((layers[i]->layerOp != nullptr) && !layers[i]->layerOp->HasParameterSets())) {
         DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # " << i
-                   << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
+          << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
         continue;
       }
 
@@ -113,16 +112,12 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
         callbacks_[j]->on_delwt_wait(i);
       }
 
-      boost::shared_ptr<Layer<Dtype>> layer{ net.layers()[i] };
-
       for (int j = 0; j < callbacks_.size(); ++j) {
-          callbacks_[j]->apply_updates(i);
+        callbacks_[j]->apply_updates(i);
       }
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
       update_time_per_layer[i] += timer.MicroSeconds();
 #endif
-
     }
   }
 
