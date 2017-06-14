@@ -138,7 +138,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
   UniformFiller<Dtype> filler(filler_param);
   caffe::Caffe::SetDevice(0);
 
-  for(auto i = 1; i <= 8; i*=2) {
+  for(auto i = 1; i <= 64; i*=2) {
     Blob<Dtype>* const blob_bottom = new Blob<Dtype>(i, 392, 8, 8);
     Blob<Dtype>* const blob_top = new Blob<Dtype>();
     filler.Fill(blob_bottom);
@@ -187,10 +187,9 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
       elapsedTime /= times;
       std::cout << "MNK(" << M << ","<<N<<","<<K<<") Time is: " << elapsedTime
                 <<" ms" << std::endl;
-      std::cout << "I/O: " << (M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
-      std::cout << "FLOPS: " << M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
+      std::cout << "I/O: " << ((double)M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
+      std::cout << "FLOPS: " << (double)M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
     }
-
     delete blob_bottom;
     delete blob_top;
   }
@@ -202,7 +201,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
   UniformFiller<Dtype> filler(filler_param);
   caffe::Caffe::SetDevice(0);
 
-  for(auto i = 1; i <= 8; i*=2) {
+  for(auto i = 1; i <= 64; i*=2) {
     Blob<Dtype>* const blob_bottom = new Blob<Dtype>(i, 25088+1, 1, 1);
     Blob<Dtype>* const blob_top = new Blob<Dtype>();
     filler.Fill(blob_bottom);
@@ -252,10 +251,9 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
       elapsedTime /= times;
       std::cout << "MNK(" << M << ","<<N<<","<<K<<") Time is: " << elapsedTime
                 <<" ms" << std::endl;
-      std::cout << "I/O: " << (M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
-      std::cout << "FLOPS: " << M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
+      std::cout << "I/O: " << ((double)M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
+      std::cout << "FLOPS: " << (double)M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
     }
-
     delete blob_bottom;
     delete blob_top;
   }
