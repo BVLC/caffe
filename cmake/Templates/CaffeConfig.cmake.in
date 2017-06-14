@@ -9,9 +9,9 @@
 # After successful configuration the following variables
 # will be defined:
 #
-#   Caffe_INCLUDE_DIRS - Caffe include directories
-#   Caffe_LIBRARIES    - libraries to link against
-#   Caffe_DEFINITIONS  - a list of definitions to pass to compiler
+#   Caffe_LIBRARIES    - IMPORTED targets to link against
+#                        (There is no Caffe_INCLUDE_DIRS and Caffe_DEFINITIONS
+#                         because they are specified in the IMPORTED target interface.)
 #
 #   Caffe_HAVE_CUDA    - signals about CUDA support
 #   Caffe_HAVE_CUDNN   - signals about cuDNN support
@@ -27,7 +27,7 @@ if(@USE_OPENCV@)
 
       if(EXISTS ${Caffe_OpenCV_CONFIG_PATH} AND NOT TARGET opencv_core)
         message(STATUS "Caffe: using OpenCV config from ${Caffe_OpenCV_CONFIG_PATH}")
-        include(${Caffe_OpenCV_CONFIG_PATH}/OpenCVModules.cmake)
+	include(${Caffe_OpenCV_CONFIG_PATH}/OpenCVConfig.cmake)
       endif()
 
     else()
@@ -39,9 +39,6 @@ endif()
 
 # Compute paths
 get_filename_component(Caffe_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(Caffe_INCLUDE_DIRS "@Caffe_INCLUDE_DIRS@")
-
-@Caffe_INSTALL_INCLUDE_DIR_APPEND_COMMAND@
 
 # Our library dependencies
 if(NOT TARGET caffe AND NOT caffe_BINARY_DIR)
@@ -49,10 +46,8 @@ if(NOT TARGET caffe AND NOT caffe_BINARY_DIR)
 endif()
 
 # List of IMPORTED libs created by CaffeTargets.cmake
+# These targets already specify all needed definitions and include pathes
 set(Caffe_LIBRARIES caffe)
-
-# Definitions
-set(Caffe_DEFINITIONS "@Caffe_DEFINITIONS@")
 
 # Cuda support variables
 set(Caffe_CPU_ONLY @CPU_ONLY@)

@@ -1,5 +1,5 @@
 ---
-title: Installation: OS X
+title: "Installation: OS X"
 ---
 
 # OS X Installation

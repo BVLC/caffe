@@ -30,8 +30,7 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_label2_);
 
     // Check out generate_sample_data.py in the same directory.
-    filename = new string(
-    CMAKE_SOURCE_DIR "caffe/test/test_data/sample_data_list.txt" CMAKE_EXT);
+    filename = new string(ABS_TEST_DATA_DIR "/sample_data_list.txt");
     LOG(INFO)<< "Using sample HDF5 data file " << filename;
   }
 
@@ -70,7 +69,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   int height = 6;
   int width = 5;
 
-  // Test that the layer setup got the correct parameters.
+  // Test that the layer setup gives correct parameters.
   HDF5DataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
@@ -131,6 +130,36 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
       }
     }
   }
+}
+
+TYPED_TEST(HDF5DataLayerTest, TestSkip) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter param;
+  param.add_top("data");
+  param.add_top("label");
+
+  HDF5DataParameter* hdf5_data_param = param.mutable_hdf5_data_param();
+  int batch_size = 5;
+  hdf5_data_param->set_batch_size(batch_size);
+  hdf5_data_param->set_source(*(this->filename));
+
+  Caffe::set_solver_count(8);
+  for (int dev = 0; dev < Caffe::solver_count(); ++dev) {
+    Caffe::set_solver_rank(dev);
+
+    HDF5DataLayer<Dtype> layer(param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    int label = dev;
+    for (int iter = 0; iter < 1; ++iter) {
+      layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+      for (int i = 0; i < batch_size; ++i) {
+        EXPECT_EQ(1 + label, this->blob_top_label_->cpu_data()[i]);
+        label = (label + Caffe::solver_count()) % (batch_size * 2);
+      }
+    }
+  }
+  Caffe::set_solver_count(1);
+  Caffe::set_solver_rank(0);
 }
 
 }  // namespace caffe

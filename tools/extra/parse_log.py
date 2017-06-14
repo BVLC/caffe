@@ -38,6 +38,7 @@ def parse_log(path_to_log):
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
         start_time = extract_seconds.get_start_time(f, logfile_year)
+        last_time = start_time
 
         for line in f:
             iteration_match = regex_iteration.search(line)
@@ -48,8 +49,19 @@ def parse_log(path_to_log):
                 # iteration
                 continue
 
-            time = extract_seconds.extract_datetime_from_line(line,
-                                                              logfile_year)
+            try:
+                time = extract_seconds.extract_datetime_from_line(line,
+                                                                  logfile_year)
+            except ValueError:
+                # Skip lines with bad formatting, for example when resuming solver
+                continue
+
+            # if it's another year
+            if time.month < last_time.month:
+                logfile_year += 1
+                time = extract_seconds.extract_datetime_from_line(line, logfile_year)
+            last_time = time
+
             seconds = (time - start_time).total_seconds()
 
             learning_rate_match = regex_learning_rate.search(line)
@@ -191,7 +203,7 @@ def main():
     args = parse_args()
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
-                   test_dict_list, delimiter=args.delimiter)
+                   test_dict_list, delimiter=args.delimiter, verbose=args.verbose)
 
 
 if __name__ == '__main__':

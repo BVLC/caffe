@@ -103,6 +103,10 @@ class Function(object):
 
     def __init__(self, type_name, inputs, params):
         self.type_name = type_name
+        for index, input in enumerate(inputs):
+            if not isinstance(input, Top):
+                raise TypeError('%s input %d is not a Top (type is %s)' %
+                                (type_name, index, type(input)))
         self.inputs = inputs
         self.params = params
         self.ntop = self.params.get('ntop', 1)
