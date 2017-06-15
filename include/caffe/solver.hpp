@@ -80,8 +80,9 @@ class Solver {
   // that stores the learned net. You must implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk or handled by a callback together with the learned net.
+  // However, it is valid to implement custom snapshotting without SolverState.
   void Snapshot();
-  void Snapshot(NetParameter* net_param, SolverState* state);
+  void Snapshot(NetParameter* net_param, SolverState* state = NULL);
   // Client of the Solver optionally may call this in order to set a function
   // that replaces or extends standard snapshotting.
   void SetSnapshotFunction(SnapshotCallback func);

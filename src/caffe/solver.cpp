@@ -447,8 +447,11 @@ void Solver<Dtype>::Snapshot() {
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot(NetParameter* net_param, SolverState* state) {
+  CHECK_NOTNULL(net_param);
   net_->ToProto(net_param, param_.snapshot_diff());
-  SnapshotSolverState(state);
+  if (state) {
+    SnapshotSolverState(state);
+  }
 }
 
 template <typename Dtype>
