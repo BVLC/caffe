@@ -2,6 +2,16 @@
 
 **This is an experimental, community-maintained branch led by Fabian Tschopp (@naibaf7). It is a work-in-progress.**
 
+## Custom distributions
+
+- [Intel optimized branch](https://github.com/BVLC/caffe/tree/intel) for CPU, in particular Xeon processors (HSW, BDW, Xeon Phi).
+- [OpenCL Caffe](https://github.com/BVLC/caffe/tree/opencl) e.g. for AMD or Intel devices.
+- [Windows Caffe](https://github.com/BVLC/caffe/tree/windows)
+
+## Community
+
+[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu))/The Berkeley Vision and Learning Center (BVLC) and community contributors.
 
@@ -9,7 +19,6 @@ Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe
 The BAIR/BVLC reference models are released for unrestricted use.
 
 **For error reports, please run and include the result of `./build/test/test_all.testbin --gtest_filter=*OpenCLKernelCompileTest* X` where `X` is the OpenCL device to test (i.e. `0`). This test is available after a build with `make all`, `make runtest`.**
-
 
 This branch of Caffe contains an OpenCL backend and additional layers for fast image segmentation.
 This work is partially supported by:
@@ -30,6 +39,7 @@ The backend is supposed to work with all vendors. Note however there may be prob
 It is therefore recommended to install another OpenCL implementation after installing nVidia drivers. Possibilities are:
 - Intel OpenCL, see https://github.com/01org/caffe/wiki/clCaffe for details. 
 - AMD APP SDK (OpenCL), recommended if you have an AMD GPU or CPU.
+
 
 ## Technical Report
 Available on arXiv:
