@@ -72,11 +72,7 @@ mn::Distribution & Layer<Dtype>::GetDistribution() {
 template <typename Dtype>
 bool Layer<Dtype>::Bypass(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  int num_nodes = layer_param_.multinode().num_nodes();
-  int model_parts = layer_param_.multinode().model_parts();
-  mn::GetCanonicalMnParam(num_nodes, model_parts);
-  int data_parts = num_nodes / model_parts;
-  return mn::get_group_id(data_parts, model_parts) > 0;
+  return GetDistribution().get_group_id() > 0;
 }
 
 template <typename Dtype>
