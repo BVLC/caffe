@@ -324,19 +324,6 @@ void MKLConvolutionLayer<Dtype>::Init(
     bwdb_bias_diff_iter->create_layouts(convolutionBwdBias, dnnResourceDiffBias,
                                         1, bias_sizes, bias_strides);
   }
-
-#ifdef USE_MLSL
-  if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
-    mn::OpRegInfo reg_info{mn::train::get_session(), MLSL::OT_CC};
-    reg_info.set_name(this->layer_param_.name());
-    reg_info.add_parameter_set<Dtype>(ic * oc / g, kw * kh);
-    if (this->bias_term_) {
-      reg_info.add_parameter_set<Dtype>(oc, 1);
-    }
-    this->layerOp = mn::train::add_operation(reg_info);
-  }
-#endif /* USE_MLSL */
-
 }
 
 template <typename Dtype>

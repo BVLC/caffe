@@ -120,6 +120,13 @@ class Solver {
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
+#ifdef USE_MLSL
+    virtual void on_before_test() {}
+    virtual void on_after_test() {}
+    virtual void on_before_snapshot() {}
+    virtual void on_after_snapshot() {}
+#endif
+
     template <typename T>
     friend class Solver;
   };
