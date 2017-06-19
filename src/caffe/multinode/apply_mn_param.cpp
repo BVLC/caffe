@@ -84,6 +84,13 @@ void ApplyMultinodeParams(const NetParameter& param,
           marked_blobs.insert(layer_param.top(j));
         }
         net_layer_params[layer_param.name()] = model_parallel_param;
+        // For cross-channel LRN, we assume there is always one model part
+        // for simple implementation.
+        if (layer_param.type() == "LRN" &&
+            layer_param.lrn_param().norm_region() ==
+            LRNParameter_NormRegion_ACROSS_CHANNELS) {
+          net_layer_params[layer_param.name()].set_model_parts(1);
+        }
       }
       if (layer_param.name() == layer_to ||
           layer_param.top_size() == 0) {
