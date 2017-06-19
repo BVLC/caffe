@@ -79,7 +79,8 @@ void MnActivationLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
               << ",1), data color: " << data_color
               << ", data color max: " << data_parts_min-1;
     distrib_data_in_out_ = mn::create_distrib(
-      data_parts_max / data_parts_min, 1, data_color, -1, data_parts_min-1, -1);
+      data_parts_max / data_parts_min, 1, data_color, MLSL_DEFAULT_COLOR,
+      data_parts_min-1, MLSL_DEFAULT_COLOR);
   }
 }
 

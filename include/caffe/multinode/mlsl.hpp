@@ -46,6 +46,8 @@
 namespace caffe {
   namespace mn {
 
+#define MLSL_DEFAULT_COLOR -1
+
     inline void free(void *addr) {
       return MLSL::Environment::GetEnv().Free(addr);
     }
@@ -101,12 +103,12 @@ namespace caffe {
       Distribution & operator = (const Distribution &) = delete;
       Distribution(const Distribution &) = delete;
 
-      Distribution(int dataParts, int modelParts, int dataColor = -1, int modelColor = -1,
-                   int dataColorMax = -1, int modelColorMax = -1) :
+      Distribution(int dataParts, int modelParts, int dataColor = MLSL_DEFAULT_COLOR, int modelColor = MLSL_DEFAULT_COLOR,
+                   int dataColorMax = MLSL_DEFAULT_COLOR, int modelColorMax = MLSL_DEFAULT_COLOR) :
         data_parts_(dataParts), model_parts_(modelParts),
         data_color_(dataColor), model_color_(modelColor),
         data_color_max_(dataColorMax), model_color_max_(modelColorMax) {
-        if (dataColor == -1 || modelColor == -1) {
+        if (dataColor == MLSL_DEFAULT_COLOR || modelColor == MLSL_DEFAULT_COLOR) {
           distrib_ = MLSL::Environment::GetEnv().CreateDistribution(dataParts, modelParts);
         } else {
           distrib_ = MLSL::Environment::GetEnv().CreateDistributionWithColors(dataColor, modelColor);
@@ -197,9 +199,9 @@ namespace caffe {
       }
     private:
       inline bool skip_comm(MLSL::GroupType Gtype) {
-        if (Gtype == MLSL::GT_DATA && data_color_max_ != -1) {
+        if (Gtype == MLSL::GT_DATA && data_color_max_ != MLSL_DEFAULT_COLOR) {
           return data_color_ > data_color_max_;
-        } else if (Gtype == MLSL::GT_MODEL && model_color_max_ != -1) {
+        } else if (Gtype == MLSL::GT_MODEL && model_color_max_ != MLSL_DEFAULT_COLOR) {
           return model_color_ > model_color_max_;
         } else return get_group_id() > 0;
       }
@@ -219,8 +221,8 @@ namespace caffe {
     }
 
     shared_ptr<Distribution> create_distrib(
-      int dataParts, int modelParts, int dataColor = -1, int modelColor = -1,
-      int dataColorMax = -1, int modelColorMax = -1);
+      int dataParts, int modelParts, int dataColor = MLSL_DEFAULT_COLOR, int modelColor = MLSL_DEFAULT_COLOR,
+      int dataColorMax = MLSL_DEFAULT_COLOR, int modelColorMax = MLSL_DEFAULT_COLOR);
     Distribution * get_distrib(int dataParts, int modelParts);
     Distribution * get_distrib();
 
