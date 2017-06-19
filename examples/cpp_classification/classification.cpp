@@ -266,7 +266,7 @@ void Classifier::Preprocess(const cv::Mat& img,
 }
 
 int main(int argc, char** argv) {
-  if (argc < 7) {
+  if (argc < 6) {
     std::cerr << "Usage: " << argv[0]
               << " deploy.prototxt network.caffemodel"
               << " mean.binaryproto labels.txt img.jpg [CAFFE|MKL2017|MKLDNN]" << std::endl;
