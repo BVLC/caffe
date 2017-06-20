@@ -1,4 +1,5 @@
 #include <functional>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -47,6 +48,16 @@ void AccuracyLayer<Dtype>::Reshape(
 template <typename Dtype>
 void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  if (top_k_ > 1) {
+    Forward_cpu_topk(bottom, top);
+  } else {
+    Forward_cpu_best(bottom, top);
+  }
+}
+
+template <typename Dtype>
+void AccuracyLayer<Dtype>::Forward_cpu_topk(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -69,22 +80,86 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, num_labels);
-      // Top-k accuracy
-      std::vector<std::pair<Dtype, int> > bottom_data_vector;
-      for (int k = 0; k < num_labels; ++k) {
-        bottom_data_vector.push_back(std::make_pair(
-            bottom_data[i * dim + k * inner_num_ + j], k));
+      // Top-k accuracy using priority queue
+      typedef std::pair<Dtype, int> Dpair;
+      std::priority_queue<Dpair, vector<Dpair>, std::greater<Dpair> > top_scores;
+      std::greater<Dpair> greater_;
+      // fill the first k elements
+      for (int k = 0; k < top_k_; ++k) {
+        const Dtype score = bottom_data[i * dim + k * inner_num_ + j];
+        top_scores.push(std::make_pair(score, k));
       }
-      std::partial_sort(
-          bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
-          bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
+      // only push new element if it's greater than the current smallest
+      for (int k = top_k_; k < num_labels; ++k) {
+        const Dtype score = bottom_data[i * dim + k * inner_num_ + j];
+        if (greater_(std::make_pair(score, k), top_scores.top())) {
+          top_scores.pop();
+          top_scores.push(std::make_pair(score, k));
+        }
+      }
       // check if true label is in top k predictions
-      for (int k = 0; k < top_k_; k++) {
-        if (bottom_data_vector[k].second == label_value) {
+      while (!top_scores.empty()) {
+        if (top_scores.top().second == label_value) {
           ++accuracy;
           if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
           break;
         }
+        top_scores.pop();
+      }
+      ++count;
+    }
+  }
+
+  // LOG(INFO) << "Accuracy: " << accuracy;
+  top[0]->mutable_cpu_data()[0] = accuracy / count;
+  if (top.size() > 1) {
+    for (int i = 0; i < top[1]->count(); ++i) {
+      top[1]->mutable_cpu_data()[i] =
+          nums_buffer_.cpu_data()[i] == 0 ? 0
+          : top[1]->cpu_data()[i] / nums_buffer_.cpu_data()[i];
+    }
+  }
+  // Accuracy layer should not be used as a loss function.
+}
+
+template <typename Dtype>
+void AccuracyLayer<Dtype>::Forward_cpu_best(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype accuracy = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const Dtype* bottom_label = bottom[1]->cpu_data();
+  const int dim = bottom[0]->count() / outer_num_;
+  const int num_labels = bottom[0]->shape(label_axis_);
+  vector<Dtype> maxval(top_k_+1);
+  vector<int> max_id(top_k_+1);
+  if (top.size() > 1) {
+    caffe_set(nums_buffer_.count(), Dtype(0), nums_buffer_.mutable_cpu_data());
+    caffe_set(top[1]->count(), Dtype(0), top[1]->mutable_cpu_data());
+  }
+  int count = 0;
+  for (int i = 0; i < outer_num_; ++i) {
+    for (int j = 0; j < inner_num_; ++j) {
+      const int label_value =
+          static_cast<int>(bottom_label[i * inner_num_ + j]);
+      if (has_ignore_label_ && label_value == ignore_label_) {
+        continue;
+      }
+      if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
+      DCHECK_GE(label_value, 0);
+      DCHECK_LT(label_value, num_labels);
+      // optimal search method for top-1 accuracy
+      std::pair<Dtype, int> prediction =
+        std::make_pair(bottom_data[i * dim + j], 0);
+      for (int k = 1; k < num_labels; ++k) {
+        const Dtype score =  bottom_data[i * dim + k * inner_num_ + j];
+        if (score > prediction.first) {
+          prediction.first = score;
+          prediction.second = k;
+        }
+      }
+      if (prediction.second == label_value) {
+        ++accuracy;
+        if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
       }
       ++count;
     }
