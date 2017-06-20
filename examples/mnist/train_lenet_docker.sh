@@ -109,7 +109,7 @@ fi
 if [ ${TRAIN:-1} -eq 1 ]
 then
 $DOCKER_RUN bash -c "cp \$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt ./examples/mnist/;
-                     cp \$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt ./examples/mnist/"
+                     cp \$CAFFE_ROOT/examples/mnist/lenet_network.prototxt ./examples/mnist/"
     # Ensure that the solver_mode is compatible with the desired GPU mode.
     if [ ${GPU:-0} -eq 0 ]
     then

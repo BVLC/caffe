@@ -1,9 +1,40 @@
-name: "CIFAR10_quick_test"
+name: "CIFAR10_quick"
 layer {
-  name: "data"
+  name: "train_data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    mean_file: "examples/cifar10/mean.binaryproto"
+  }
+  data_param {
+    source: "examples/cifar10/cifar10_train_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+  include { stage: "train" }
+}
+layer {
+  name: "val_data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    mean_file: "examples/cifar10/mean.binaryproto"
+  }
+  data_param {
+    source: "examples/cifar10/cifar10_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+  include { stage: "val" }
+}
+layer {
+  name: "deploy_data"
   type: "Input"
   top: "data"
   input_param { shape: { dim: 1 dim: 3 dim: 32 dim: 32 } }
+  include { stage: "deploy" }
 }
 layer {
   name: "conv1"
@@ -21,6 +52,13 @@ layer {
     pad: 2
     kernel_size: 5
     stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.0001
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -56,6 +94,13 @@ layer {
     pad: 2
     kernel_size: 5
     stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -91,6 +136,13 @@ layer {
     pad: 2
     kernel_size: 5
     stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -123,6 +175,13 @@ layer {
   }
   inner_product_param {
     num_output: 64
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -138,11 +197,36 @@ layer {
   }
   inner_product_param {
     num_output: 10
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "ip2"
+  bottom: "label"
+  top: "loss"
+  include { stage: "train" }
+  include { stage: "val" }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "ip2"
+  bottom: "label"
+  top: "accuracy"
+  include { stage: "val" }
 }
 layer {
   name: "prob"
   type: "Softmax"
   bottom: "ip2"
   top: "prob"
+  include { stage: "deploy" }
 }

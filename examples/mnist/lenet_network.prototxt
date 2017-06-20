@@ -1,37 +1,40 @@
-name: "CIFAR10_quick"
+name: "LeNet"
 layer {
-  name: "cifar"
+  name: "train_data"
   type: "Data"
   top: "data"
   top: "label"
-  include {
-    phase: TRAIN
-  }
   transform_param {
-    mean_file: "examples/cifar10/mean.binaryproto"
+    scale: 0.00390625
   }
   data_param {
-    source: "examples/cifar10/cifar10_train_lmdb"
-    batch_size: 100
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 64
     backend: LMDB
   }
+  include { stage: "train" }
 }
 layer {
-  name: "cifar"
+  name: "val_data"
   type: "Data"
   top: "data"
   top: "label"
-  include {
-    phase: TEST
-  }
   transform_param {
-    mean_file: "examples/cifar10/mean.binaryproto"
+    scale: 0.00390625
   }
   data_param {
-    source: "examples/cifar10/cifar10_test_lmdb"
+    source: "examples/mnist/mnist_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
+  include { stage: "val" }
+}
+layer {
+  name: "deploy_data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 64 dim: 1 dim: 28 dim: 28 } }
+  include { stage: "deploy" }
 }
 layer {
   name: "conv1"
@@ -45,13 +48,11 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 32
-    pad: 2
+    num_output: 20
     kernel_size: 5
     stride: 1
     weight_filler {
-      type: "gaussian"
-      std: 0.0001
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -65,15 +66,9 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
   }
-}
-layer {
-  name: "relu1"
-  type: "ReLU"
-  bottom: "pool1"
-  top: "pool1"
 }
 layer {
   name: "conv2"
@@ -87,24 +82,16 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 32
-    pad: 2
+    num_output: 50
     kernel_size: 5
     stride: 1
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
     }
   }
-}
-layer {
-  name: "relu2"
-  type: "ReLU"
-  bottom: "conv2"
-  top: "conv2"
 }
 layer {
   name: "pool2"
@@ -112,57 +99,15 @@ layer {
   bottom: "conv2"
   top: "pool2"
   pooling_param {
-    pool: AVE
-    kernel_size: 3
-    stride: 2
-  }
-}
-layer {
-  name: "conv3"
-  type: "Convolution"
-  bottom: "pool2"
-  top: "conv3"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 64
-    pad: 2
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "relu3"
-  type: "ReLU"
-  bottom: "conv3"
-  top: "conv3"
-}
-layer {
-  name: "pool3"
-  type: "Pooling"
-  bottom: "conv3"
-  top: "pool3"
-  pooling_param {
-    pool: AVE
-    kernel_size: 3
+    pool: MAX
+    kernel_size: 2
     stride: 2
   }
 }
 layer {
   name: "ip1"
   type: "InnerProduct"
-  bottom: "pool3"
+  bottom: "pool2"
   top: "ip1"
   param {
     lr_mult: 1
@@ -171,15 +116,20 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 64
+    num_output: 500
     weight_filler {
-      type: "gaussian"
-      std: 0.1
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
     }
   }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "ip1"
+  top: "ip1"
 }
 layer {
   name: "ip2"
@@ -195,22 +145,11 @@ layer {
   inner_product_param {
     num_output: 10
     weight_filler {
-      type: "gaussian"
-      std: 0.1
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
     }
-  }
-}
-layer {
-  name: "accuracy"
-  type: "Accuracy"
-  bottom: "ip2"
-  bottom: "label"
-  top: "accuracy"
-  include {
-    phase: TEST
   }
 }
 layer {
@@ -219,4 +158,21 @@ layer {
   bottom: "ip2"
   bottom: "label"
   top: "loss"
+  include { stage: "train" }
+  include { stage: "val" }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy"
+  bottom: "ip2"
+  bottom: "label"
+  top: "accuracy"
+  include { stage: "val" }
+}
+layer {
+  name: "prob"
+  type: "Softmax"
+  bottom: "ip2"
+  top: "prob"
+  include { stage: "deploy" }
 }

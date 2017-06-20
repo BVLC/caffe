@@ -34,7 +34,7 @@ After running the script there should be two datasets,
 ## The Model
 First, we will define the model that we want to train using the siamese network.
 We will use the convolutional net defined in
-`./examples/siamese/mnist_siamese.prototxt`. This model is almost
+`./examples/siamese/mnist_siamese_network.prototxt`. This model is almost
 exactly the same as the [LeNet model](mnist.html), the only difference is that
 we have replaced the top layers that produced probabilities over the 10 digit
 classes with a linear "feature" layer that produces a 2 dimensional vector.
@@ -61,7 +61,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 
 In this section we will define the siamese network used for training. The
 resulting network is defined in
-`./examples/siamese/mnist_siamese_train_test.prototxt`.
+`./examples/siamese/mnist_siamese_network.prototxt`.
 
 ### Reading in the Pair Data
 
@@ -169,16 +169,12 @@ protobuf and solver protobuf files. Simply run
 
 # Plotting the results
 
-First, we can draw the model and siamese networks by running the following
-commands that draw the DAGs defined in the .prototxt files:
+First, we can draw the model and siamese network by running the following
+command that draw the DAGs defined in the .prototxt files:
 
     ./python/draw_net.py \
-        ./examples/siamese/mnist_siamese.prototxt \
+        ./examples/siamese/mnist_siamese_network.prototxt \
         ./examples/siamese/mnist_siamese.png
-
-    ./python/draw_net.py \
-        ./examples/siamese/mnist_siamese_train_test.prototxt \
-        ./examples/siamese/mnist_siamese_train_test.png
 
 Second, we can load the learned model and plot the features using the iPython
 notebook:

@@ -32,18 +32,18 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 **Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
 
     # score the learned LeNet model on the validation set as defined in the
-    # model architeture lenet_train_test.prototxt
-    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+    # model architecture lenet_network.prototxt
+    caffe test -model examples/mnist/lenet_network.prototxt -stage val -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
 
     # (These example calls require you complete the LeNet / MNIST example first.)
     # time LeNet training on CPU for 10 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+    caffe time -model examples/mnist/lenet_network.prototxt -stage train -iterations 10
     # time LeNet training on GPU for the default 50 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
+    caffe time -model examples/mnist/lenet_network.prototxt -stage train -gpu 0
     # time a model architecture with the given weights on the first GPU for 10 iterations
-    caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+    caffe time -model examples/mnist/lenet_network.prototxt -stage train -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
 
 **Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
 
