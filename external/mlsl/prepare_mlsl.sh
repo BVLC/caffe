@@ -50,10 +50,9 @@ if [ -z $MLSLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
   # ..if MLSLROOT is not set then check if we have MLSL unpacked and installed in proper version
   FindLibrary $DST
   #echo "[Debug] LOCALMLSL value inside if: $LOCALMLSL"
-  if [ -z $LOCALMLSL ]; then
-    echo "No MLSL unpacked and installed in proper version"
-  else
-    echo "Some verison of MLSL is unpacked and installed"
+  if [ $LOCALMLSL ]; then
+    #in order to return value to calling script (Makefile,cmake), cannot print other info
+    #echo "[Debug] Some verison of MLSL is unpacked and installed"
     MLSL_PREVIOUS_CONTENT_DIR=`echo $LOCALMLSL | rev | cut -d "/" -f 4- | cut -d "/" -f -1 | rev`
     VERSION_LINE=`GetVersionName $DST/$MLSL_PREVIOUS_CONTENT_DIR`
   fi

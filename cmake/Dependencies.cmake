@@ -96,7 +96,17 @@ endif()
 
 # ---[ MLSL
 if(USE_MLSL)
-  set(MLSL_ROOT "$ENV{MLSL_ROOT}")
+  #--find mlsl in external/mkl
+  set(script_cmd "./external/mlsl/prepare_mlsl.sh" )
+  execute_process(COMMAND ${script_cmd}
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	RESULT_VARIABLE script_result
+	OUTPUT_VARIABLE RETURN_STRING)
+  separate_arguments(RETURN_STRING)
+  list(GET RETURN_STRING 0 MLSL_ROOT_DIR)
+  list(GET RETURN_STRING 1 MLSL_LIBRARIES)
+  set(MLSL_ROOT "${MLSL_ROOT_DIR}")
+  #set(MLSL_ROOT "$ENV{MLSL_ROOT}")
   if(NOT MLSL_ROOT)
     message(FATAL_ERROR "Unable to find MLSL package installation directory!")
   endif()
