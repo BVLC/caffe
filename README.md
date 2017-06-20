@@ -17,7 +17,7 @@ and step-by-step examples.
 
 ## Custom distributions
 
-- [Intel optimized branch](https://github.com/BVLC/caffe/tree/intel) for CPU, in particular Xeon processors (HSW, BDW, Xeon Phi).
+ - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, Xeon Phi).
 - [OpenCL Caffe](https://github.com/BVLC/caffe/tree/opencl) e.g. for AMD or Intel devices.
 - [Windows Caffe](https://github.com/BVLC/caffe/tree/windows)
 
