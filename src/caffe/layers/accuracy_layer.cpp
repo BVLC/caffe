@@ -82,7 +82,9 @@ void AccuracyLayer<Dtype>::Forward_cpu_topk(const vector<Blob<Dtype>*>& bottom,
       DCHECK_LT(label_value, num_labels);
       // Top-k accuracy using priority queue
       typedef std::pair<Dtype, int> Dpair;
-      std::priority_queue<Dpair, vector<Dpair>, std::greater<Dpair> > top_scores;
+      std::priority_queue<Dpair,
+                          vector<Dpair>,
+                          std::greater<Dpair> > top_scores;
       std::greater<Dpair> greater_;
       // fill the first k elements
       for (int k = 0; k < top_k_; ++k) {
