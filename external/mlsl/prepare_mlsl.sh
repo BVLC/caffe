@@ -57,32 +57,34 @@ if [ -z $MLSLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
     VERSION_LINE=`GetVersionName $DST/$MLSL_PREVIOUS_CONTENT_DIR`
   fi
   #echo "[Debug] VERSION_LINE value inside if: $VERSION_LINE"
-  #if MLSLROOT is set, but version is not given, not to download our own version
-  if [ -z $MLSLROOT ] && [ $VERSION_LINE -lt $VERSION_MATCH ] ; then
-    #...If it is not then downloaded, unpacked and installed
-    wget --no-check-certificate -P $DST $MLSLURL -O $DST/$ARCHIVE_BASENAME
-    tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
-    #echo "[Debug] PWD value: $PWD"
-    #install.sh did not support the relative path as the parameter
-    bash $DST/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
-	
+
+  #if MLSLROOT is not set 
+  if [ -z $MLSLROOT ] ; then
+    #if version is not given, or the version is lower than expected version 
+    if [ $VERSION_LINE -lt $VERSION_MATCH ] ; then
+      #Then downloaded, unpacked and installed
+      wget --no-check-certificate -P $DST $MLSLURL -O $DST/$ARCHIVE_BASENAME
+      tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
+      #echo "[Debug] PWD value: $PWD"
+      #install.sh did not support the relative path as the parameter
+      bash $DST/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
+    fi
+    #else: version is just our expected version, no need to donload again, but need to set the MLSLROOT
     #do not change the value of MLSLROOT if MLSLROOT is set, but version is not given
     FindLibrary $DST
     #echo "[Debug] LOCALMLSL value: $LOCALMLSL"
     #echo "[Debug] PWD value: $PWD"
     MLSLROOT=$PWD/`echo $LOCALMLSL | sed -e 's/intel64.*$//'`
+  else
+    #if MLSLROOT is set, but version is not given, or the version is lower than expected version
+    #not to download our own version, and just use mlsl as the return value of LIBRARIES
+    LIBRARIES="mlsl"
   fi
   #echo "[Debug] MLSLROOT value: $MLSLROOT"
 fi
 
-if [ -z $LOCALMLSL ] ; then
-# LOCALMLSL is not set, when MLSLROOT was set manually and it should point to MLSL in correct version
-  FindLibrary $MLSLROOT
-  LIBRARIES=""
-else
-  LIBRARIES=`basename $LOCALMLSL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`  
-fi
-    
+#The simplest implementation of LIBRARIES return value
+LIBRARIES="mlsl"
 #echo "[Debug] LIBRARIES value: $LIBRARIES"
 
 # return value to calling script (Makefile,cmake)
