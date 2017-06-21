@@ -57,27 +57,32 @@ if [ -z $MLSLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
     VERSION_LINE=`GetVersionName $DST/$MLSL_PREVIOUS_CONTENT_DIR`
   fi
   #echo "[Debug] VERSION_LINE value inside if: $VERSION_LINE"
-  if [ $VERSION_LINE -lt $VERSION_MATCH ] ; then
+  #if MLSLROOT is set, but version is not given, not to download our own version
+  if [ -z $MLSLROOT ] && [ $VERSION_LINE -lt $VERSION_MATCH ] ; then
     #...If it is not then downloaded, unpacked and installed
     wget --no-check-certificate -P $DST $MLSLURL -O $DST/$ARCHIVE_BASENAME
     tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
     #echo "[Debug] PWD value: $PWD"
     #install.sh did not support the relative path as the parameter
     bash $DST/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
+	
+    #do not change the value of MLSLROOT if MLSLROOT is set, but version is not given
+    FindLibrary $DST
+    #echo "[Debug] LOCALMLSL value: $LOCALMLSL"
+    #echo "[Debug] PWD value: $PWD"
+    MLSLROOT=$PWD/`echo $LOCALMLSL | sed -e 's/intel64.*$//'`
   fi
-  FindLibrary $DST
-  #echo "[Debug] LOCALMLSL value: $LOCALMLSL"
-  #echo "[Debug] PWD value: $PWD"
-  MLSLROOT=$PWD/`echo $LOCALMLSL | sed -e 's/intel64.*$//'`
   #echo "[Debug] MLSLROOT value: $MLSLROOT"
 fi
 
 if [ -z $LOCALMLSL ] ; then
 # LOCALMLSL is not set, when MLSLROOT was set manually and it should point to MLSL in correct version
   FindLibrary $MLSLROOT
+  LIBRARIES=""
+else
+  LIBRARIES=`basename $LOCALMLSL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`  
 fi
     
-LIBRARIES=`basename $LOCALMLSL | sed -e 's/^.*lib//' | sed -e 's/\.so.*$//'`
 #echo "[Debug] LIBRARIES value: $LIBRARIES"
 
 # return value to calling script (Makefile,cmake)
