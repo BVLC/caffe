@@ -694,6 +694,6 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	install -m 644 $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
 	cd $(DISTRIBUTE_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 	# add python - it's not the standard way, indeed...
-	cp -r python $(DISTRIBUTE_DIR)/python
+	cp -r python $(DISTRIBUTE_DIR)/
 
 -include $(DEPS)
