@@ -25,6 +25,10 @@ fi
 if [ -z $VERSION_LINE ]; then
   VERSION_LINE=0
 fi
+if [ -z "$(echo $VERSION_LINE | sed -n "/^[0-9]\+$/p")" ];then 
+  #echo "[Debug] VERSION_LINE value contains other string or flags, not only numbers"
+  VERSION_LINE=0  
+fi 
 echo $VERSION_LINE  # Return Version Line
 }
 
@@ -54,6 +58,8 @@ if [ -z $MLSL_ROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
     #in order to return value to calling script (Makefile,cmake), cannot print other info
     #echo "[Debug] Some verison of MLSL is unpacked and installed"
     MLSL_PREVIOUS_CONTENT_DIR=`echo $LOCALMLSL | rev | cut -d "/" -f 4- | cut -d "/" -f -1 | rev`
+    #echo "[Debug] MLSL_PREVIOUS_CONTENT_DIR value: $MLSL_PREVIOUS_CONTENT_DIR"
+    #echo "[Debug] DST/MLSL_PREVIOUS_CONTENT_DIR value: $DST/$MLSL_PREVIOUS_CONTENT_DIR"
     VERSION_LINE=`GetVersionName $DST/$MLSL_PREVIOUS_CONTENT_DIR`
   fi
   #echo "[Debug] VERSION_LINE value inside if: $VERSION_LINE"
