@@ -107,7 +107,7 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const int offset_value = offset_concat_axis;
     offset_concat_axis += bottom_concat_axis;
 #ifdef _OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for if(num_concats_ > 1)
 #endif
     for (int n = 0; n < num_concats_; ++n) {
       caffe_copy(bottom_concat_axis * concat_input_size_,

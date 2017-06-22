@@ -226,8 +226,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int conv_in_channels_;
   int conv_out_spatial_dim_;
   int kernel_dim_;
-  int col_offset_;
-  int output_offset_;
+  size_t col_offset_;
+  size_t output_offset_;
 
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
