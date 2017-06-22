@@ -85,9 +85,14 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // bbox
-  vector<int> bbox_shape(1, batch_size);
+  vector<int> bbox_shape;
+  bbox_shape.push_back(batch_size);
+  bbox_shape.push_back(1);
+  bbox_shape.push_back(1);
+  bbox_shape.push_back(1);
   vector<single_object> bbox_;
-  infer_bbox_shape(lines_[lines_id_].second, bbox_);
+  infer_bbox_shape(root_folder + lines_[lines_id_].second, bbox_);
+  bbox_shape[0] = bbox_.size() * 5 + 1;
   top[1]->Reshape(bbox_shape);
   for (int i = 0; i < this->prefetch_.size(); ++i) {
       this->prefetch_[i]->label_.Reshape(bbox_shape);
@@ -97,8 +102,6 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename, std::vector<single_object>& bbox_) {
     std::ifstream infile(filename.c_str());
-    string line;
-    std::getline(infile, line);
     std::istream_iterator<int> bbox_begin(infile), bbox_end;
     std::vector<int> bbox(bbox_begin, bbox_end);
     bbox_.clear();
@@ -131,7 +134,7 @@ void BboxDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
-  ImageDataParameter bbox_data_param = this->layer_param_.bbox_data_param();
+  BboxDataParameter bbox_data_param = this->layer_param_.bbox_data_param();
   const int batch_size = bbox_data_param.batch_size();
   const int new_height = bbox_data_param.new_height();
   const int new_width = bbox_data_param.new_width();
@@ -190,9 +193,13 @@ void BboxDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Reshape the label blob to accomodate all the labels
   int total_batch_objs = 0;
   for (int i = 0; i < batch_bboxs.size(); ++i) {
-      total_batch_objs += batch_bboxs[i].size();
+      total_batch_objs += (batch_bboxs[i].size() * 5);
   }
-  vector<int> label_shape_(1, total_batch_objs + batch_bboxs.size());
+  vector<int> label_shape_;
+  label_shape_.push_back(total_batch_objs + batch_bboxs.size());
+  label_shape_.push_back(1);
+  label_shape_.push_back(1);
+  label_shape_.push_back(1);
   batch->label_.Reshape(label_shape_);
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
   for (int i = 0, idx = 0; i < batch_bboxs.size(); ++i, ++idx) {
