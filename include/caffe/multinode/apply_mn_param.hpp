@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef USE_MLSL
 
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/net.hpp"
 
 namespace caffe {
 /**
@@ -50,6 +51,12 @@ namespace caffe {
 template <typename Dtype>
 void ApplyMultinodeParams(const NetParameter& param,
     NetParameter* param_with_mn);
+
+/**
+ * @brief Copy per-layer parameters from a Net object.
+ */
+template <typename Dtype>
+void CopyMultinodeParamsFromNet(const Net<Dtype> *net, NetParameter *param);
 
 /**
  * @brief Revert all the multinode changes from NetParameter

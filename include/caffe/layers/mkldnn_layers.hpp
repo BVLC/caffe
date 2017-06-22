@@ -77,6 +77,9 @@ public:
           PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
     ~MKLDNNBatchNormLayer() {}
+#ifdef USE_MLSL
+    virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
+#endif
 
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -88,9 +91,6 @@ protected:
                                 , const vector<Blob<Dtype>*>& bottom);
     virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 , const vector<Blob<Dtype>*>& bottom);
-#ifdef USE_MLSL
-    virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
-#endif
 private:
     void InitBatchNorm(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,

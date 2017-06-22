@@ -87,15 +87,13 @@ void Layer<Dtype>::MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
   mn::GetCanonicalMnParam(num_nodes, model_parts);
   int data_parts = num_nodes / model_parts;
 
-  if (data_parts <= 1) return;
+  if (data_parts <= 1 || this->blobs_.size() == 0) return;
 
   // We only initialize data parallelism here so operation type is
   // irrelevant here, hard-code to OT_CC
   mn::OpRegInfo reg_info(mn::train::get_session(), MLSL::OT_CC);
   reg_info.set_name(this->layer_param().name());
-  bool has_parameters = false;
   for (int i = 0; i < this->blobs_.size(); i++) {
-    if (!ParamNeedReduce(i)) continue;
     int hw = 1, ic = 1, oc = 1;
     const vector<int> &shape = this->blobs_[i]->shape();
     CHECK_GT(shape.size(), 0);
@@ -105,11 +103,8 @@ void Layer<Dtype>::MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
     // Note that MLSL expects the entire weights from a model group.
     // So we should multiply by model_parts here.
     reg_info.add_parameter_set<Dtype>(ic * oc * model_parts, hw);
-    has_parameters = true;
   }
-  if (has_parameters) {
-    this->layerOp = mn::train::add_operation(reg_info, this->GetDistribution());
-  }
+  this->layerOp = mn::train::add_operation(reg_info, this->GetDistribution());
 }
 #endif
 

@@ -89,6 +89,9 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "BatchNorm"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+#ifdef USE_MLSL
+  virtual bool ParamNeedReduce(int param_id) { return false; }
+#endif
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -113,10 +116,6 @@ class BatchNormLayer : public Layer<Dtype> {
                        unsigned int channel_offset_incr,
                        const Dtype* data_to_be_replicated,
                        FuncTy op_func);
-
-#ifdef USE_MLSL
-  virtual bool ParamNeedReduce(int param_id) { return false; }
-#endif
 
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;

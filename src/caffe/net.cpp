@@ -1222,19 +1222,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
 #ifdef USE_MLSL
   NetParameter param_mn;
   if (mn::is_multinode()) {
-    // set per-layer multi-node parameters before adjusting net proto
-    for (int i = 0; i < param.layer_size(); i++) {
-      LayerParameter* source_layer = param.mutable_layer(i);
-      const string& source_layer_name = source_layer->name();
-      int target_layer_id = 0;
-      while (target_layer_id != layer_names_.size() &&
-             layer_names_[target_layer_id] != source_layer_name) {
-        ++target_layer_id;
-      }
-      if (target_layer_id == layer_names_.size()) continue;
-      *source_layer->mutable_multinode() =
-        layers_[target_layer_id]->layer_param().multinode();
-    }
+    CopyMultinodeParamsFromNet<Dtype>(this, &param);
     ApplyMultinodeParams<Dtype>(param, &param_mn);
     param = param_mn;
   }

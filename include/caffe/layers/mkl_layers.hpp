@@ -424,6 +424,9 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "BatchNorm"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+#ifdef USE_MLSL
+  virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
+#endif
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -437,10 +440,6 @@ class MKLBatchNormLayer : public Layer<Dtype> {
 
   void Init(const vector<Blob<Dtype>*>& bottom,
             const vector<Blob<Dtype>*>& top);
-
-#ifdef USE_MLSL
-  virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
-#endif
 
   Dtype moving_average_fraction_;
   Dtype eps_;
