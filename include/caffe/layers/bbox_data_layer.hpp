@@ -46,7 +46,7 @@ class BboxDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, std::string> > lines_;
   int lines_id_;
   void infer_bbox_shape(const string& filename,
-  const std::vector<single_object>& bbox_);
+      std::vector<single_object>* bbox_);
 };
 
 }  // namespace caffe

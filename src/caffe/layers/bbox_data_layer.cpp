@@ -91,7 +91,7 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bbox_shape.push_back(1);
   bbox_shape.push_back(1);
   vector<single_object> bbox_;
-  infer_bbox_shape(root_folder + lines_[lines_id_].second, bbox_);
+  infer_bbox_shape(root_folder + lines_[lines_id_].second, &bbox_);
   bbox_shape[0] = bbox_.size() * 5 + 1;
   top[1]->Reshape(bbox_shape);
   for (int i = 0; i < this->prefetch_.size(); ++i) {
@@ -101,11 +101,11 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename,
-     const std::vector<single_object>& bbox_) {
+     std::vector<single_object>* bbox_) {
   std::ifstream infile(filename.c_str());
   std::istream_iterator<int> bbox_begin(infile), bbox_end;
   std::vector<int> bbox(bbox_begin, bbox_end);
-  bbox_.clear();
+  bbox_->clear();
   for (int i = 0; i < bbox.size();) {
     single_object obj;
     obj.xmin = bbox[i];
@@ -115,7 +115,7 @@ void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename,
     obj.class_idx = bbox[i+4];
 
     i += 5;
-    bbox_.push_back(obj);
+    bbox_->push_back(obj);
   }
 }
 
@@ -176,7 +176,7 @@ void BboxDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
     // get the label data
     vector<single_object> bbox_;
-    infer_bbox_shape(root_folder + lines_[lines_id_].second, bbox_);
+    infer_bbox_shape(root_folder + lines_[lines_id_].second, &bbox_);
     batch_bboxs.push_back(bbox_);
 
     // go to the next iter
