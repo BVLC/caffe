@@ -815,6 +815,11 @@ message ImageDataParameter {
 
 message BboxDataParameter {
   // Specify the data source.
+  // Each line containing: <image-filename> <annotations-filename>.txt
+  // `<annotations-file>` should contain a single line with the following data (space separated)
+  // <xmin> <ymin> <xmax> <ymax> <class_idx>
+  // If an image contains more than one object:
+  // <xmin_1> <ymin_1> <xmax_1> <ymax_1> <class_idx_1> <xmin_2> <ymin_2> <xmax_2> <ymax_2> <class_idx_2> ...
   optional string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 4 [default = 1];
