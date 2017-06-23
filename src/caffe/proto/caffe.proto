@@ -980,6 +980,7 @@ message ConvolutionParameter {
   optional bool force_nd_im2col = 17 [default = false];
   optional bool relu = 19 [default = false];
   optional float negative_slope = 20 [default = 0];
+  optional string conv_algorithm = 21 [default = "direct"];
 }
 
 message CropParameter {
