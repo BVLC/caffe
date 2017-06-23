@@ -291,8 +291,11 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
         Dtype *mean_buffer_ = (Dtype *)(mean_memory->get_data_handle());
         Dtype *variance_buffer_ = (Dtype *)(variance_memory->get_data_handle());
 
-        caffe_scal(this->channels_, scale_factor, mean_buffer_);
-        caffe_scal(this->channels_, scale_factor, variance_buffer_);
+        //TODO: optimize, do this operation in the InitBatchNorm, so no need to calculate each time
+        caffe_cpu_scale(this->blobs_[0]->count(), scale_factor,
+                    this->blobs_[0]->cpu_data(), mean_buffer_);
+        caffe_cpu_scale(this->blobs_[1]->count(), scale_factor,
+                    this->blobs_[1]->cpu_data(), variance_buffer_);
     }
     if (use_weight_bias_) {
         Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
