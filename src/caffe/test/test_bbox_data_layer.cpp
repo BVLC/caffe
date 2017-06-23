@@ -73,6 +73,31 @@ TYPED_TEST(BboxDataLayerTest, TestRead) {
     EXPECT_EQ(this->blob_top_label_->channels(), 1);
     EXPECT_EQ(this->blob_top_label_->height(), 1);
     EXPECT_EQ(this->blob_top_label_->width(), 1);
+
+    // Iterate through the data
+    const int arr0[] = {0, 0, 0, 0};
+    const vector<int> num_objs(arr0, arr0 + sizeof(arr0) / sizeof(arr0[0]));
+    const int arr1[] = {1, 0, 0, 0};
+    const vector<int> xmin(arr1, arr1 + sizeof(arr1) / sizeof(arr1[0]));
+    const int arr2[] = {2, 0, 0, 0};
+    const vector<int> ymin(arr2, arr2 + sizeof(arr2) / sizeof(arr2[0]));
+    const int arr3[] = {3, 0, 0, 0};
+    const vector<int> xmax(arr3, arr3 + sizeof(arr3) / sizeof(arr3[0]));
+    const int arr4[] = {4, 0, 0, 0};
+    const vector<int> ymax(arr4, arr4 + sizeof(arr4) / sizeof(arr4[0]));
+    const int arr5[] = {5, 0, 0, 0};
+    const vector<int> class_idx(arr5, arr5 + sizeof(arr5) / sizeof(arr5[0]));
+    for (int iter = 0; iter < 2; ++iter) {
+        layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+        EXPECT_EQ(this->blob_top_label_->count(), 30);
+        EXPECT_EQ(this->blob_top_label_->num(), 30);
+        EXPECT_EQ(this->blob_top_label_->data_at(num_objs), 1);
+        EXPECT_EQ(this->blob_top_label_->data_at(xmin), 23);
+        EXPECT_EQ(this->blob_top_label_->data_at(ymin), 56);
+        EXPECT_EQ(this->blob_top_label_->data_at(xmax), 278);
+        EXPECT_EQ(this->blob_top_label_->data_at(ymax), 411);
+        EXPECT_EQ(this->blob_top_label_->data_at(class_idx), 0);
+    }
 }
 
 

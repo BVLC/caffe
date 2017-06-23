@@ -108,8 +108,8 @@ void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename, std::vector<
     for(int i = 0; i < bbox.size();) {
         single_object obj;
         obj.xmin = bbox[i];
-        obj.xmax = bbox[i+1];
-        obj.ymin = bbox[i+2];
+        obj.ymin = bbox[i+1];
+        obj.xmax = bbox[i+2];
         obj.ymax = bbox[i+3];
         obj.class_idx = bbox[i+4];
 
