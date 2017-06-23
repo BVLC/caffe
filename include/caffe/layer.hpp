@@ -120,6 +120,7 @@ class Layer {
 public:
 	MLSL::Operation *layerOp{ nullptr };
   mn::Distribution &GetDistribution();
+  virtual bool ParamNeedReduce(int param_id) { return true; }
 
 protected:
   virtual bool Bypass(const vector<Blob<Dtype>*>& bottom,
@@ -127,8 +128,6 @@ protected:
 
   virtual void MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
                               const vector<Blob<Dtype>*>& top);
-
-  virtual bool ParamNeedReduce(int param_id) { return true; }
 
 #endif /* USE_MLSL */
 

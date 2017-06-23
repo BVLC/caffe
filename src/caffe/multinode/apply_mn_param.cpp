@@ -254,6 +254,23 @@ void ApplyMultinodeParams(const NetParameter& param,
 }
 
 template <typename Dtype>
+void CopyMultinodeParamsFromNet(const Net<Dtype> *net, NetParameter *param) {
+  // set per-layer multi-node parameters before adjusting net proto
+  for (int i = 0; i < param->layer_size(); i++) {
+    LayerParameter* source_layer = param->mutable_layer(i);
+    const string& source_layer_name = source_layer->name();
+    int target_layer_id = 0;
+    while (target_layer_id != net->layer_names().size() &&
+           net->layer_names()[target_layer_id] != source_layer_name) {
+      ++target_layer_id;
+    }
+    if (target_layer_id == net->layer_names().size()) continue;
+    *source_layer->mutable_multinode() =
+      net->layers()[target_layer_id]->layer_param().multinode();
+  }
+}
+
+template <typename Dtype>
 void RevertMultinodeParams(NetParameter* param, bool write_diff) {
   NetParameter orig_param;
   orig_param.CopyFrom(*param);
@@ -315,6 +332,8 @@ template void ApplyMultinodeParams<float>(const NetParameter& param,
     NetParameter* param_with_mn);
 template void ApplyMultinodeParams<double>(const NetParameter& param,
     NetParameter* param_with_mn);
+template void CopyMultinodeParamsFromNet<float>(const Net<float> *net, NetParameter *param);
+template void CopyMultinodeParamsFromNet<double>(const Net<double> *net, NetParameter *param);
 template void RevertMultinodeParams<float>(NetParameter* param, bool write_diff);
 template void RevertMultinodeParams<double>(NetParameter* param, bool write_diff);
 } // namespace caffe
