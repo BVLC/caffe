@@ -66,11 +66,12 @@ void MKLBatchNormLayer<Dtype>::Init(const vector<Blob<Dtype>*>& bottom,
   eps_ = this->layer_param_.batch_norm_param().eps();
   use_weight_bias_ = this->layer_param_.batch_norm_param().use_weight_bias();
   bias_term_ = this->layer_param_.batch_norm_param().bias_term();
-  use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
+  
+  use_global_stats_ = this->phase_ == TEST;
+  if (this->layer_param_.batch_norm_param().has_use_global_stats())
+    use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
 
   CHECK(use_weight_bias_) << "BatchNorm without scaling have not supported yet";
-
-  use_global_stats_ = this->phase_ == TEST;
 
   size_t dim = 4, sizes[4], strides[4];
 
