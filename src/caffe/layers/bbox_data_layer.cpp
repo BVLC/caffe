@@ -50,7 +50,7 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
       ShuffleImages();
   } else {
-      if(this->phase_ == TRAIN && Caffe::solver_rank() > 0 &&
+      if (this->phase_ == TRAIN && Caffe::solver_rank() > 0 &&
          this->layer_param_.bbox_data_param().rand_skip() == 0) {
         LOG(WARNING) << "Shuffling or skipping recommended for multi-GPU";
       }
@@ -100,22 +100,23 @@ void BboxDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename, std::vector<single_object>& bbox_) {
-    std::ifstream infile(filename.c_str());
-    std::istream_iterator<int> bbox_begin(infile), bbox_end;
-    std::vector<int> bbox(bbox_begin, bbox_end);
-    bbox_.clear();
-    for(int i = 0; i < bbox.size();) {
-        single_object obj;
-        obj.xmin = bbox[i];
-        obj.ymin = bbox[i+1];
-        obj.xmax = bbox[i+2];
-        obj.ymax = bbox[i+3];
-        obj.class_idx = bbox[i+4];
+void BboxDataLayer<Dtype>::infer_bbox_shape(const string& filename,
+     const std::vector<single_object>& bbox_) {
+  std::ifstream infile(filename.c_str());
+  std::istream_iterator<int> bbox_begin(infile), bbox_end;
+  std::vector<int> bbox(bbox_begin, bbox_end);
+  bbox_.clear();
+  for (int i = 0; i < bbox.size();) {
+    single_object obj;
+    obj.xmin = bbox[i];
+    obj.ymin = bbox[i+1];
+    obj.xmax = bbox[i+2];
+    obj.ymax = bbox[i+3];
+    obj.class_idx = bbox[i+4];
 
-        i += 5;
-        bbox_.push_back(obj);
-    }
+    i += 5;
+    bbox_.push_back(obj);
+  }
 }
 
 template <typename Dtype>
@@ -222,5 +223,5 @@ void BboxDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 INSTANTIATE_CLASS(BboxDataLayer);
 REGISTER_LAYER_CLASS(BboxData);
 
-} // namespace caffe
-#endif // USE_OPENCV
+}  // namespace caffe
+#endif  // USE_OPENCV
