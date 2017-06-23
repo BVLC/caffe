@@ -261,6 +261,7 @@ class MKLPoolingLayer : public Layer<Dtype> {
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
+  dnnAlgorithm_t algorithm;
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
 

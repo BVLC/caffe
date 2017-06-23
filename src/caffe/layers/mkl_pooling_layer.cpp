@@ -161,6 +161,26 @@ void MKLPoolingLayer<Dtype>::Init(
       pooled_width_);
   }
 
+  switch (this->layer_param_.pooling_param().pool()) {
+  case PoolingParameter_PoolMethod_MAX:
+    this->algorithm = dnnAlgorithmPoolingMax;
+    break;
+  case PoolingParameter_PoolMethod_AVE:
+    if (this->layer_param_.pooling_param().avg_include_pad()) {
+        this->algorithm = dnnAlgorithmPoolingAvgIncludePadding;
+    }
+    else {
+        this->algorithm = dnnAlgorithmPoolingAvgExcludePadding;
+    }
+    break;
+  case PoolingParameter_PoolMethod_STOCHASTIC:
+    NOT_IMPLEMENTED;
+    break;
+  default:
+    LOG(FATAL) << "Unknown pooling method.";
+  }
+
+
   size_t dim = 4;
   size_t src_sizes[4], src_strides[4];
   size_t dst_sizes[4], dst_strides[4];
@@ -239,22 +259,6 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
-  dnnAlgorithm_t algorithm;
-
-  switch (this->layer_param_.pooling_param().pool()) {
-  case PoolingParameter_PoolMethod_MAX:
-    algorithm = dnnAlgorithmPoolingMax;
-    break;
-  case PoolingParameter_PoolMethod_AVE:
-    algorithm = dnnAlgorithmPoolingAvg;
-    break;
-  case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
-    break;
-  default:
-    LOG(FATAL) << "Unknown pooling method.";
-  }
-
   dnnError_t status;
   void* pooling_res[dnnResourceNumber];
 
@@ -271,13 +275,13 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (NULL == poolingFwd) {
       // Now create poolingFwd
       status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
-              algorithm, fwd_bottom_data->layout_usr,
+              this->algorithm, fwd_bottom_data->layout_usr,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
 
       // Now create poolingBwd
       status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL,
-              algorithm, fwd_bottom_data->layout_usr,
+              this->algorithm, fwd_bottom_data->layout_usr,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
     }
@@ -298,7 +302,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     // Now create poolingFwd
     status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
-            algorithm, fwd_bottom_data->layout_int, kernel_size,
+            this->algorithm, fwd_bottom_data->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
@@ -306,7 +310,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     // Now create poolingBwd
     status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL,
-            algorithm, fwd_bottom_data->layout_int, kernel_size,
+            this->algorithm, fwd_bottom_data->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 

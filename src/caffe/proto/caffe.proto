@@ -1458,6 +1458,7 @@ message PoolingParameter {
     AVE = 1;
     STOCHASTIC = 2;
   }
+  optional bool avg_include_pad = 13 [default = true];
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   // Pad, kernel size, and stride are all given as a single value for equal
   // dimensions in height and width or as Y, X pairs.
