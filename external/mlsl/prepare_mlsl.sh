@@ -25,6 +25,10 @@ fi
 if [ -z $VERSION_LINE ]; then
   VERSION_LINE=0
 fi
+if [ -z "$(echo $VERSION_LINE | sed -n "/^[0-9]\+$/p")" ];then 
+  #echo "[Debug] VERSION_LINE value contains other string or flags, not only numbers"
+  VERSION_LINE=0  
+fi 
 echo $VERSION_LINE  # Return Version Line
 }
 
@@ -42,24 +46,26 @@ MLSL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
 GITHUB_RELEASE_TAG=v2017-Preview
 
 MLSLURL="https://github.com/01org/MLSL/releases/download/$GITHUB_RELEASE_TAG/$ARCHIVE_BASENAME"
-#echo "[Debug] MLSLROOT value: $MLSLROOT"
-VERSION_LINE=`GetVersionName $MLSLROOT`
+#echo "[Debug] MLSL_ROOT value: $MLSL_ROOT"
+VERSION_LINE=`GetVersionName $MLSL_ROOT`
 #echo "[Debug] VERSION_LINE value: $VERSION_LINE"
-# Check if MLSLROOT is set if positive then set one will be used..
-if [ -z $MLSLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
-  # ..if MLSLROOT is not set then check if we have MLSL unpacked and installed in proper version
+# Check if MLSL_ROOT is set if positive then set one will be used..
+if [ -z $MLSL_ROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
+  # ..if MLSL_ROOT is not set then check if we have MLSL unpacked and installed in proper version
   FindLibrary $DST
   #echo "[Debug] LOCALMLSL value inside if: $LOCALMLSL"
   if [ $LOCALMLSL ]; then
     #in order to return value to calling script (Makefile,cmake), cannot print other info
     #echo "[Debug] Some verison of MLSL is unpacked and installed"
     MLSL_PREVIOUS_CONTENT_DIR=`echo $LOCALMLSL | rev | cut -d "/" -f 4- | cut -d "/" -f -1 | rev`
+    #echo "[Debug] MLSL_PREVIOUS_CONTENT_DIR value: $MLSL_PREVIOUS_CONTENT_DIR"
+    #echo "[Debug] DST/MLSL_PREVIOUS_CONTENT_DIR value: $DST/$MLSL_PREVIOUS_CONTENT_DIR"
     VERSION_LINE=`GetVersionName $DST/$MLSL_PREVIOUS_CONTENT_DIR`
   fi
   #echo "[Debug] VERSION_LINE value inside if: $VERSION_LINE"
 
-  #if MLSLROOT is not set 
-  if [ -z $MLSLROOT ] ; then
+  #if MLSL_ROOT is not set 
+  if [ -z $MLSL_ROOT ] ; then
     #if version is not given, or the version is lower than expected version 
     if [ $VERSION_LINE -lt $VERSION_MATCH ] ; then
       #Then downloaded, unpacked and installed
@@ -69,18 +75,18 @@ if [ -z $MLSLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
       #install.sh did not support the relative path as the parameter
       bash $DST/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
     fi
-    #else: version is just our expected version, no need to donload again, but need to set the MLSLROOT
-    #do not change the value of MLSLROOT if MLSLROOT is set, but version is not given
+    #else: version is just our expected version, no need to donload again, but need to set the MLSL_ROOT
+    #do not change the value of MLSL_ROOT if MLSL_ROOT is set, but version is not given
     FindLibrary $DST
     #echo "[Debug] LOCALMLSL value: $LOCALMLSL"
     #echo "[Debug] PWD value: $PWD"
-    MLSLROOT=$PWD/`echo $LOCALMLSL | sed -e 's/intel64.*$//'`
+    MLSL_ROOT=$PWD/`echo $LOCALMLSL | sed -e 's/intel64.*$//'`
   else
-    #if MLSLROOT is set, but version is not given, or the version is lower than expected version
+    #if MLSL_ROOT is set, but version is not given, or the version is lower than expected version
     #not to download our own version, and just use mlsl as the return value of LIBRARIES
     LIBRARIES="mlsl"
   fi
-  #echo "[Debug] MLSLROOT value: $MLSLROOT"
+  #echo "[Debug] MLSL_ROOT value: $MLSL_ROOT"
 fi
 
 #The simplest implementation of LIBRARIES return value
@@ -88,4 +94,4 @@ LIBRARIES="mlsl"
 #echo "[Debug] LIBRARIES value: $LIBRARIES"
 
 # return value to calling script (Makefile,cmake)
-echo $MLSLROOT $LIBRARIES
+echo $MLSL_ROOT $LIBRARIES
