@@ -197,6 +197,11 @@ message NetParameter {
   // specified in the layers' include and exclude fields.
   optional NetState state = 6;
 
+  //The CompileNet will do some layer-fusion optimization to current network if it
+  //finds something can be optimized, compile_net_state records which Compilation Rule
+  //really works.
+  optional CompileNetState compile_net_state = 10;
+
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
@@ -212,6 +217,15 @@ message NetParameter {
   
   // Multinode settings
   optional MultinodeParameter multinode = 101;
+}
+
+
+
+message CompileNetState {
+  optional bool is_init = 1 [default = true];
+  optional bool bn_scale_remove = 2 [default = false];
+  optional bool bn_scale_merge = 3 [default = false];
+  repeated string kept_bn_layers = 4;
 }
 
 message MultinodeParameter {

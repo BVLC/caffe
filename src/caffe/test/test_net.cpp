@@ -2958,6 +2958,7 @@ TYPED_TEST(NetTest, TestAllInOneNetDeploy) {
   ASSERT_TRUE(found_data);
 }
 
+
 class CompileNetTest : public ::testing::Test {
  protected:
   void RunCompilerNetTest(
@@ -2970,13 +2971,19 @@ class CompileNetTest : public ::testing::Test {
         compiled_param_string, &expected_compiled_param));
     NetParameter actual_compiled_param;
     Net<float>::CompileNet(input_param, &actual_compiled_param);
-    EXPECT_EQ(expected_compiled_param.DebugString(),
-        actual_compiled_param.DebugString());
+    actual_compiled_param.mutable_compile_net_state()->Clear();
+    expected_compiled_param.mutable_compile_net_state()->Clear();
+    string expect_net_string = expected_compiled_param.DebugString();
+    string actual_net_string = actual_compiled_param.DebugString();
+    EXPECT_EQ(expect_net_string,
+        actual_net_string);
     // Also test idempotence.
     NetParameter double_compiled_param;
     Net<float>::CompileNet(actual_compiled_param, &double_compiled_param);
-    EXPECT_EQ(actual_compiled_param.DebugString(),
-       double_compiled_param.DebugString());
+    double_compiled_param.mutable_compile_net_state()->Clear();
+    string double_net_string = double_compiled_param.DebugString();
+    EXPECT_EQ(actual_net_string,
+       double_net_string);
   }
 };
 
