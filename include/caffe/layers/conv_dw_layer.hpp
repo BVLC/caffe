@@ -46,4 +46,5 @@ class ConvolutionDepthwiseLayer : public Layer<Dtype> {
 
 }  // namespace caffe
 
+
 #endif  // CAFFE_CONV_DW_LAYER_HPP_
