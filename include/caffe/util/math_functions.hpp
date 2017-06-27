@@ -50,6 +50,10 @@ template <typename Dtype>
 void caffe_scal(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
+void caffe_strided_scal(const int N, const Dtype alpha, Dtype *X, int incx);
+
+
+template <typename Dtype>
 void caffe_sqr(const int N, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
@@ -107,6 +111,9 @@ Dtype caffe_cpu_strided_dot(const int n, const Dtype* x, const int incx,
 // Returns the sum of the absolute values of the elements of vector x
 template <typename Dtype>
 Dtype caffe_cpu_asum(const int n, const Dtype* x);
+
+template <typename Dtype>
+Dtype caffe_cpu_strided_asum(const int n, const Dtype* x, int incx);
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c

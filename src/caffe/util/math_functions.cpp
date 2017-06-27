@@ -114,6 +114,19 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
   cblas_dscal(N, alpha, X, 1);
 }
 
+
+template <>
+void caffe_strided_scal<float>(const int N, const float alpha, float *X, int incx) {
+  cblas_sscal(N, alpha, X, incx);
+}
+
+template <>
+void caffe_strided_scal<double>(const int N, const double alpha, double *X, int incx) {
+  cblas_dscal(N, alpha, X, incx);
+}
+
+
+
 template <>
 void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
                             const float beta, float* Y) {
@@ -373,6 +386,16 @@ void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
                             float* y) {
   cblas_scopy(n, x, 1, y, 1);
   cblas_sscal(n, alpha, y, 1);
+}
+
+template <>
+double caffe_cpu_strided_asum<double>(const int n, const double* x, int incx) {
+  return cblas_dasum(n, x, incx);
+}
+
+template <>
+float caffe_cpu_strided_asum<float>(const int n, const float* x, int incx) {
+  return cblas_sasum(n, x, incx);
 }
 
 template <>
