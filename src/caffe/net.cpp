@@ -139,16 +139,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   NetParameter compiled_param;
   // Transform Net (merge layers etc.) improve computational performance
   CompileNet(param, &compiled_param);
-
-
-
+  param = compiled_param;
   this->bn_scale_remove_ = param.compile_net_state().bn_scale_remove();
   this->bn_scale_merge_ = param.compile_net_state().bn_scale_merge();
   int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
   for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
     this->kept_bn_layers_.push_back(param.compile_net_state().kept_bn_layers(idx));
   }
-  param = compiled_param;
 
 #ifdef USE_MLSL
   NetParameter param_with_mn;
