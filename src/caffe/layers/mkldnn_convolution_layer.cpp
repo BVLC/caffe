@@ -196,26 +196,20 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         shared_ptr<convolution_relu_forward::desc> convReluFwd_desc;
         if(relu) convReluFwd_desc.reset(new convolution_relu_forward::desc(*convFwd_desc, negative_slope));
 
-        try {
-            for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
-                try {
-                    convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
-                                                                             ep.getMKLDNNSubEngine(subEngineIndex)));
-                    if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
-                                                                                               ep.getMKLDNNSubEngine(subEngineIndex)));
-                }
-                catch(...) {
-                    continue;
-                }
-                break;
+        for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+            try {
+                convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
+                                                                         ep.getMKLDNNSubEngine(subEngineIndex)));
+                if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
+                                                                                           ep.getMKLDNNSubEngine(subEngineIndex)));
             }
-            if ((!convFwd_pd) || (relu && !convReluFwd_pd))
+            catch(...) {
+                continue;
+            }
+            break;
+        }
+        if ((convFwd_pd) && (!relu || convReluFwd_pd))
                 break;
-        }
-        catch(...) {
-            continue;
-        }
-        break;
     }
 
     CHECK(convFwd_pd);
@@ -378,27 +372,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
                                                                    , init_bottom_md, init_weights_md, init_top_md
                                                                    , convolutionStrides, padding, padding, padding_kind::zero));
 
-        try {
-            for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
-                try {
-                    convBwdData_pd.reset(new convolution_backward_data::primitive_desc(*convBwdData_desc,
-                                                                                       ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
-                    
-                    convBwdWeights_pd.reset(new convolution_backward_weights::primitive_desc(*convBwdWeights_desc,
-                                                                                             ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
-                }
-                catch(...) {
-                    continue;
-                }
-                break;
+        for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+            try {
+                convBwdData_pd.reset(new convolution_backward_data::primitive_desc(*convBwdData_desc,
+                                                                                   ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
+
+                convBwdWeights_pd.reset(new convolution_backward_weights::primitive_desc(*convBwdWeights_desc,
+                                                                                         ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
             }
-            if (!convBwdData_pd || !convBwdWeights_pd)
-                break;
+            catch(...) {
+                continue;
+            }
+            break;
         }
-        catch(...) {
-            continue;
-        }
-        break;
+        if (convBwdData_pd && convBwdWeights_pd)
+            break;
     }
 
     CHECK(convBwdData_pd);
