@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <csignal>
+#include <chrono>
 #include <ctime>
 #include <functional>
 #include <map>
@@ -2150,7 +2151,7 @@ vector<cv::Scalar> GetColors(const int n) {
   return colors;
 }
 
-static clock_t start_clock = clock();
+static std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
 static cv::VideoWriter cap_out;
 
 template <typename Dtype>
@@ -2166,8 +2167,10 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     return;
   }
   // Comute FPS.
-  float fps = num_img / (static_cast<double>(clock() - start_clock) /
-          CLOCKS_PER_SEC);
+  std::chrono::time_point<std::chrono::system_clock> end_time = std::chrono::system_clock::now();
+
+  std::chrono::duration<double> elapsed_seconds = end_time -start_time;
+  float fps = num_img / elapsed_seconds.count();
 
   const Dtype* detections_data = detections->cpu_data();
   const int width = images[0].cols;
@@ -2249,7 +2252,7 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
       raise(SIGINT);
     }
   }
-  start_clock = clock();
+  start_time = std::chrono::system_clock::now();
 }
 
 template

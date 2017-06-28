@@ -45,7 +45,6 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(),
       num_classes_, num_priors_, 1, conf_permute_data);
   const Dtype* conf_cpu_data = conf_permute_.cpu_data();
-
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
   for (int i = 0; i < num; ++i) {
