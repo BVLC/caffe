@@ -1235,6 +1235,7 @@ message V1LayerParameter {
     DROPOUT = 6;
     DUMMY_DATA = 32;
     EUCLIDEAN_LOSS = 7;
+    WEIGHTED_EUCLIDEAN_LOSS = 40;
     ELTWISE = 25;
     EXP = 38;
     FLATTEN = 8;
