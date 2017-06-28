@@ -222,7 +222,18 @@ void hdf5_save_int(hid_t loc_id, const string& dataset_name, int i) {
   CHECK_GE(status, 0)
     << "Failed to save int dataset with name " << dataset_name;
 }
-
+#ifdef HAS_HALF_SUPPORT
+template <>
+half hdf5_load_float<half>(hid_t loc_id, const string& dataset_name) {
+  half val;
+  short short_val;
+  herr_t status = H5LTread_dataset_short(loc_id, dataset_name.c_str(), &short_val);
+  memcpy(&val, &short_val, sizeof(short_val));
+  CHECK_GE(status, 0)
+    << "Failed to load int dataset with name " << dataset_name;
+  return val;
+}
+#endif
 template <>
 float hdf5_load_float<float>(hid_t loc_id, const string& dataset_name) {
   float val;
@@ -239,7 +250,19 @@ double hdf5_load_float<double>(hid_t loc_id, const string& dataset_name) {
     << "Failed to load int dataset with name " << dataset_name;
   return val;
 }
-
+#ifdef HAS_HALF_SUPPORT
+template <>
+void hdf5_save_float<half>(hid_t loc_id,
+                           const string& dataset_name, half f) {
+  short short_val;
+  memcpy(&short_val, &f, sizeof(f));
+  hsize_t one = 1;
+  herr_t status = \
+    H5LTmake_dataset_short(loc_id, dataset_name.c_str(), 1, &one, &short_val);
+  CHECK_GE(status, 0)
+    << "Failed to save int dataset with name " << dataset_name;
+}
+#endif
 template <>
 void hdf5_save_float<float>(hid_t loc_id,
                             const string& dataset_name, float f) {
@@ -249,6 +272,7 @@ void hdf5_save_float<float>(hid_t loc_id,
   CHECK_GE(status, 0)
     << "Failed to save int dataset with name " << dataset_name;
 }
+
 template <>
 void hdf5_save_float<double>(hid_t loc_id,
                             const string& dataset_name, double f) {

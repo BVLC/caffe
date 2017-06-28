@@ -181,6 +181,10 @@ template void greentea_copy<double>(const int_tp N, const cl_mem X,
                                     const int_tp offX, cl_mem Y,
                                     const int_tp offY,
                                     viennacl::ocl::context *ctx);
+template void greentea_copy<bool>(const int_tp N, const cl_mem X,
+                                    const int_tp offX, cl_mem Y,
+                                    const int_tp offY,
+                                    viennacl::ocl::context *ctx);
 #ifdef HAS_HALF_SUPPORT
 template void greentea_copy<half>(const int_tp N, const cl_mem X,
                                   const int_tp offX, half* Y,

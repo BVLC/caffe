@@ -1054,6 +1054,19 @@ void MineHardExamples(const Blob<Dtype>& conf_blob,
 }
 
 // Explicite initialization.
+#ifdef HAS_HALF_SUPPORT
+template void MineHardExamples(const Blob<half>& conf_blob,
+    const vector<LabelBBox>& all_loc_preds,
+    const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+    const vector<NormalizedBBox>& prior_bboxes,
+    const vector<vector<float> >& prior_variances,
+    const vector<map<int, vector<float> > >& all_match_overlaps,
+    const MultiBoxLossParameter& multibox_loss_param,
+    int* num_matches, int* num_negs,
+    vector<map<int, vector<int> > >* all_match_indices,
+    vector<vector<int> >* all_neg_indices);
+#endif
+
 template void MineHardExamples(const Blob<float>& conf_blob,
     const vector<LabelBBox>& all_loc_preds,
     const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
@@ -1108,6 +1121,11 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetGroundTruth(const half* gt_data, const int num_gt,
+      const int background_label_id, const bool use_difficult_gt,
+      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
+#endif
 template void GetGroundTruth(const float* gt_data, const int num_gt,
       const int background_label_id, const bool use_difficult_gt,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes);
@@ -1147,6 +1165,11 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetGroundTruth(const half* gt_data, const int num_gt,
+      const int background_label_id, const bool use_difficult_gt,
+      map<int, LabelBBox>* all_gt_bboxes);
+#endif
 template void GetGroundTruth(const float* gt_data, const int num_gt,
       const int background_label_id, const bool use_difficult_gt,
       map<int, LabelBBox>* all_gt_bboxes);
@@ -1183,6 +1206,11 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetLocPredictions(const half* loc_data, const int num,
+      const int num_preds_per_class, const int num_loc_classes,
+      const bool share_location, vector<LabelBBox>* loc_preds);
+#endif
 template void GetLocPredictions(const float* loc_data, const int num,
       const int num_preds_per_class, const int num_loc_classes,
       const bool share_location, vector<LabelBBox>* loc_preds);
@@ -1278,6 +1306,15 @@ void EncodeLocPrediction(const vector<LabelBBox>& all_loc_preds,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void EncodeLocPrediction(const vector<LabelBBox>& all_loc_preds,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const vector<NormalizedBBox>& prior_bboxes,
+      const vector<vector<float> >& prior_variances,
+      const MultiBoxLossParameter& multibox_loss_param,
+      half* loc_pred_data, half* loc_gt_data);
+#endif
 template void EncodeLocPrediction(const vector<LabelBBox>& all_loc_preds,
       const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
       const vector<map<int, vector<int> > >& all_match_indices,
@@ -1345,6 +1382,13 @@ void ComputeLocLoss(const Blob<Dtype>& loc_pred, const Blob<Dtype>& loc_gt,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void ComputeLocLoss(const Blob<half>& loc_pred,
+      const Blob<half>& loc_gt,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const int num, const int num_priors, const LocLossType loc_loss_type,
+      vector<vector<float> >* all_loc_loss);
+#endif
 template void ComputeLocLoss(const Blob<float>& loc_pred,
       const Blob<float>& loc_gt,
       const vector<map<int, vector<int> > >& all_match_indices,
@@ -1374,6 +1418,11 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void GetConfidenceScores(const half* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      vector<map<int, vector<float> > >* conf_preds);
+#endif
 // Explicit initialization.
 template void GetConfidenceScores(const float* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
@@ -1408,6 +1457,11 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetConfidenceScores(const half* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      const bool class_major, vector<map<int, vector<float> > >* conf_preds);
+#endif
 template void GetConfidenceScores(const float* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       const bool class_major, vector<map<int, vector<float> > >* conf_preds);
@@ -1662,6 +1716,14 @@ void EncodeConfPrediction(const Dtype* conf_data, const int num,
 }
 
 // Explicite initialization.
+#ifdef HAS_HALF_SUPPORT
+template void EncodeConfPrediction(const half* conf_data, const int num,
+      const int num_priors, const MultiBoxLossParameter& multibox_loss_param,
+      const vector<map<int, vector<int> > >& all_match_indices,
+      const vector<vector<int> >& all_neg_indices,
+      const map<int, vector<NormalizedBBox> >& all_gt_bboxes,
+      half* conf_pred_data, half* conf_gt_data);
+#endif
 template void EncodeConfPrediction(const float* conf_data, const int num,
       const int num_priors, const MultiBoxLossParameter& multibox_loss_param,
       const vector<map<int, vector<int> > >& all_match_indices,
@@ -1704,6 +1766,11 @@ void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetPriorBBoxes(const half* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes,
+      vector<vector<float> >* prior_variances);
+#endif
 template void GetPriorBBoxes(const float* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
@@ -1738,6 +1805,11 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
 }
 
 // Explicit initialization.
+#ifdef HAS_HALF_SUPPORT
+template void GetDetectionResults(const half* det_data, const int num_det,
+      const int background_label_id,
+      map<int, map<int, vector<NormalizedBBox> > >* all_detections);
+#endif
 template void GetDetectionResults(const float* det_data, const int num_det,
       const int background_label_id,
       map<int, map<int, vector<NormalizedBBox> > >* all_detections);
@@ -1989,6 +2061,12 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template
+void ApplyNMSFast(const half* bboxes, const half* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+      const float eta, const int top_k, vector<int>& indices);
+#endif
 template
 void ApplyNMSFast(const float* bboxes, const float* scores, const int num,
       const float score_threshold, const float nms_threshold,
@@ -2254,7 +2332,14 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
   }
   start_time = std::chrono::system_clock::now();
 }
-
+#ifdef HAS_HALF_SUPPORT
+template
+void VisualizeBBox(const vector<cv::Mat>& images,
+                   const Blob<half>* detections,
+                   const float threshold, const vector<cv::Scalar>& colors,
+                   const map<int, string>& label_to_display_name,
+                   const string& save_file);
+#endif
 template
 void VisualizeBBox(const vector<cv::Mat>& images,
                    const Blob<float>* detections,

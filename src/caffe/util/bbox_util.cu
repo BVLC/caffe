@@ -244,6 +244,14 @@ void DecodeBBoxesGPU(const int nthreads,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void DecodeBBoxesGPU(const int nthreads,
+          const half* loc_data, const half* prior_data,
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          const bool clip_bbox, half* bbox_data);
+#endif
 template void DecodeBBoxesGPU(const int nthreads,
           const float* loc_data, const float* prior_data,
           const CodeType code_type, const bool variance_encoded_in_target,
@@ -304,6 +312,11 @@ void PermuteDataGPU(const int nthreads,
   }
 }
 
+#ifdef HAS_HALF_SUPPORT
+template void PermuteDataGPU(const int nthreads,
+          const half* data, const int num_classes, const int num_data,
+          const int num_dim, half* new_data);
+#endif
 template void PermuteDataGPU(const int nthreads,
           const float* data, const int num_classes, const int num_data,
           const int num_dim, float* new_data);

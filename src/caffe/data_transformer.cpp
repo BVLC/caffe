@@ -879,7 +879,7 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
     cv::split(*expand_img, channels);
     CHECK_EQ(channels.size(), mean_values_.size());
     for (int c = 0; c < img_channels; ++c) {
-      channels[c] = mean_values_[c];
+      channels[c] = fixup_arg_type(mean_values_[c]);
     }
     cv::merge(channels, *expand_img);
   }
