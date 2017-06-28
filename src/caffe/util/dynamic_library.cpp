@@ -8,6 +8,11 @@
 
 #ifndef _WIN32
 #  include "dlfcn.h"
+#  ifdef RTLD_DEEPBIND
+#    define CAFFE_DLOPEN_FLAGS (RTLD_LAZY | RTLD_LOCAL | RTLD_DEEPBIND)
+#  else
+#    define CAFFE_DLOPEN_FLAGS (RTLD_LAZY | RTLD_LOCAL)
+#  endif
 #else
 #  include "Windows.h"
 #endif
@@ -17,7 +22,7 @@ namespace caffe {
 namespace {
 #ifndef _WIN32
   void * OpenLibrary(std::string const & name) {
-    return ::dlopen(name.c_str(), RTLD_LAZY | RTLD_LOCAL);
+    return ::dlopen(name.c_str(), CAFFE_DLOPEN_FLAGS);
   }
 
   bool CloseLibrary(void * handle) {
