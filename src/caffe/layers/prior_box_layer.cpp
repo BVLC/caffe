@@ -97,6 +97,7 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   offset_ = prior_box_param.offset();
+  reduce_boxes_ = prior_box_param.reduce_boxes();
 }
 
 template <typename Dtype>
@@ -148,7 +149,13 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int s = 0; s < min_sizes_.size(); ++s) {
         int min_size_ = min_sizes_[s];
         // first prior: aspect_ratio = 1, size = min_size
-        box_width = box_height = min_size_;
+
+        if (reduce_boxes_) {
+          box_width = box_height = min_size_ / 2.0;// for mobilenet, conv11 featuremap
+        }
+        else{
+          box_width = box_height = min_size_;
+        }
         // xmin
         top_data[idx++] = (center_x - box_width / 2.) / img_width;
         // ymin
