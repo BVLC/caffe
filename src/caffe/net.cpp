@@ -852,6 +852,9 @@ void Net<Dtype>::RemoveBNScale(const NetParameter& param,
       layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
     }
     if (layer_included) {
+            if (layer_param->type().compare("BatchNorm") == 0) {
+              param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
+            }
             param_compiled->add_layer()->CopyFrom(*layer_param);
     }
   }
