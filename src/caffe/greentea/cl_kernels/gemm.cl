@@ -1209,13 +1209,219 @@ __kernel void TEMPLATE(gemm_buffer_NN, Dtype)(
 #undef TILE_K
 #undef TILE_N
 
-
 #define VEC_SIZE        1
-#define LWG_HEIGHT      16
 #define TILE_M          8
-#define TILE_K          32
 #define TILE_N          8
-#define SLM_BLOCK       512
+#define SLM_BLOCK       128
+
+#if TYPE == TYPE_HALF
+#define LWG_HEIGHT      2
+#define TILE_K          64
+#else
+#define LWG_HEIGHT      4
+#define TILE_K          32
+#endif
+
+#if TYPE == TYPE_HALF
+__attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))
+__attribute__((intel_reqd_sub_group_size(8)))
+__kernel void TEMPLATE(gemm_buffer_NT, Dtype)(
+    const __global Dtype *src0, int off0,
+    const __global Dtype *src1, int off1,
+    __global Dtype *dst, int offd,
+    int M,
+    int N,
+    int K,
+    KERNEL_ARG_DTYPE alpha_in,
+    KERNEL_ARG_DTYPE beta_in)
+{
+    const Dtype alpha = (Dtype)alpha_in;
+    const Dtype beta = (Dtype)beta_in;
+    const int group_x = get_group_id(0);
+    const int group_y = get_group_id(1);
+    const int local_x = get_local_id(0);
+    const int local_y = get_local_id(1);
+    const int global_x = get_global_id(0);
+    const int global_y = get_global_id(1);
+
+    Dtype8 dot00 = 0.f;
+    Dtype8 dot01 = 0.f;
+    Dtype8 dot02 = 0.f;
+    Dtype8 dot03 = 0.f;
+    Dtype8 dot04 = 0.f;
+    Dtype8 dot05 = 0.f;
+    Dtype8 dot06 = 0.f;
+    Dtype8 dot07 = 0.f;
+    
+    Dtype8 brow0;
+    Dtype8 brow1;
+    Dtype8 brow2;
+    Dtype8 brow3;
+    Dtype8 brow4;
+    Dtype8 brow5;
+    Dtype8 brow6;
+    Dtype8 brow7;
+    
+    __global Dtype *dst_write0 = dst + local_x * VEC_SIZE + (group_x * TILE_N) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * N + offd;
+
+    const __global Dtype *src0_read = src0 + local_x * (TILE_K / 8) + (group_y * LWG_HEIGHT * TILE_M + local_y * TILE_M) * K + off0;
+
+    const __global Dtype *src1_read0 = src1 + (group_x * TILE_N) * K + off1;
+
+    __local Dtype slm_brow[8 * SLM_BLOCK];
+    __local Dtype* slm_brow0;
+
+    int local_index = mad24(local_y, 8, local_x) * 8;
+    int w;
+    for(int b_tile = 0; b_tile < K; b_tile += SLM_BLOCK) {
+        barrier(CLK_LOCAL_MEM_FENCE);
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(0, K, local_index))), 0, (__local float *)(slm_brow + mad24(0, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(1, K, local_index))), 0, (__local float *)(slm_brow + mad24(1, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(2, K, local_index))), 0, (__local float *)(slm_brow + mad24(2, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(3, K, local_index))), 0, (__local float *)(slm_brow + mad24(3, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(4, K, local_index))), 0, (__local float *)(slm_brow + mad24(4, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(5, K, local_index))), 0, (__local float *)(slm_brow + mad24(5, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(6, K, local_index))), 0, (__local float *)(slm_brow + mad24(6, SLM_BLOCK, local_index)));
+        vstore4(vload4(0, (__global float *)(src1_read0 + mad24(7, K, local_index))), 0, (__local float *)(slm_brow + mad24(7, SLM_BLOCK, local_index)));
+        barrier(CLK_LOCAL_MEM_FENCE);
+
+        slm_brow0 = slm_brow + local_x * (TILE_K / 8);
+        w = b_tile;
+        int end_w = min(b_tile + SLM_BLOCK, K);
+        while( w + TILE_K <= end_w ) {
+            Dtype8 arow;
+                            
+            brow0 = as_half8(vload4(0, (__local float *)(slm_brow0 + 0 * SLM_BLOCK)));
+            brow1 = as_half8(vload4(0, (__local float *)(slm_brow0 + 1 * SLM_BLOCK)));
+            brow2 = as_half8(vload4(0, (__local float *)(slm_brow0 + 2 * SLM_BLOCK)));
+            brow3 = as_half8(vload4(0, (__local float *)(slm_brow0 + 3 * SLM_BLOCK)));
+            brow4 = as_half8(vload4(0, (__local float *)(slm_brow0 + 4 * SLM_BLOCK)));
+            brow5 = as_half8(vload4(0, (__local float *)(slm_brow0 + 5 * SLM_BLOCK)));
+            brow6 = as_half8(vload4(0, (__local float *)(slm_brow0 + 6 * SLM_BLOCK)));
+            brow7 = as_half8(vload4(0, (__local float *)(slm_brow0 + 7 * SLM_BLOCK)));
+            
+#define MM_DOT_PRODUCT( _row, _dot )   \
+            arow = as_half8(vload4(0, (__global float *)(src0_read + _row * K)));                           \
+            _dot = mad( (Dtype8)(arow.s0), (Dtype8)(brow0.s0, brow1.s0, brow2.s0, brow3.s0, brow4.s0, brow5.s0, brow6.s0, brow7.s0), _dot ); \
+            _dot = mad( (Dtype8)(arow.s1), (Dtype8)(brow0.s1, brow1.s1, brow2.s1, brow3.s1, brow4.s1, brow5.s1, brow6.s1, brow7.s1), _dot ); \
+            _dot = mad( (Dtype8)(arow.s2), (Dtype8)(brow0.s2, brow1.s2, brow2.s2, brow3.s2, brow4.s2, brow5.s2, brow6.s2, brow7.s2), _dot ); \
+            _dot = mad( (Dtype8)(arow.s3), (Dtype8)(brow0.s3, brow1.s3, brow2.s3, brow3.s3, brow4.s3, brow5.s3, brow6.s3, brow7.s3), _dot ); \
+            _dot = mad( (Dtype8)(arow.s4), (Dtype8)(brow0.s4, brow1.s4, brow2.s4, brow3.s4, brow4.s4, brow5.s4, brow6.s4, brow7.s4), _dot ); \
+            _dot = mad( (Dtype8)(arow.s5), (Dtype8)(brow0.s5, brow1.s5, brow2.s5, brow3.s5, brow4.s5, brow5.s5, brow6.s5, brow7.s5), _dot ); \
+            _dot = mad( (Dtype8)(arow.s6), (Dtype8)(brow0.s6, brow1.s6, brow2.s6, brow3.s6, brow4.s6, brow5.s6, brow6.s6, brow7.s6), _dot ); \
+            _dot = mad( (Dtype8)(arow.s7), (Dtype8)(brow0.s7, brow1.s7, brow2.s7, brow3.s7, brow4.s7, brow5.s7, brow6.s7, brow7.s7), _dot ); \
+                        
+            MM_DOT_PRODUCT( 0, dot00 );
+            MM_DOT_PRODUCT( 1, dot01 );
+            MM_DOT_PRODUCT( 2, dot02 );
+            MM_DOT_PRODUCT( 3, dot03 );
+            MM_DOT_PRODUCT( 4, dot04 );
+            MM_DOT_PRODUCT( 5, dot05 );
+            MM_DOT_PRODUCT( 6, dot06 );
+            MM_DOT_PRODUCT( 7, dot07 );
+#undef MM_DOT_PRODUCT
+       
+            src0_read += TILE_K;
+            slm_brow0 += TILE_K;
+            w += TILE_K;
+        }
+        src1_read0 += SLM_BLOCK;
+    }
+
+    if(w < K) {
+        Dtype8 arow;
+
+#define READ_BROW(_brow, _row) \
+        _brow = as_half8(vload4(0, (__local float *)(slm_brow0 + _row * SLM_BLOCK))); \
+        _brow.s0 = (mad24(local_x, 8, w) < K) ? _brow.s0 : 0.0f; \
+        _brow.s1 = (mad24(local_x, 8, w + 1) < K) ? _brow.s1 : 0.0f; \
+        _brow.s2 = (mad24(local_x, 8, w + 2) < K) ? _brow.s2 : 0.0f; \
+        _brow.s3 = (mad24(local_x, 8, w + 3) < K) ? _brow.s3 : 0.0f; \
+        _brow.s4 = (mad24(local_x, 8, w + 4) < K) ? _brow.s4 : 0.0f; \
+        _brow.s5 = (mad24(local_x, 8, w + 5) < K) ? _brow.s5 : 0.0f; \
+        _brow.s6 = (mad24(local_x, 8, w + 6) < K) ? _brow.s6 : 0.0f; \
+        _brow.s7 = (mad24(local_x, 8, w + 7) < K) ? _brow.s7 : 0.0f; \
+
+        READ_BROW(brow0, 0);
+        READ_BROW(brow1, 1);
+        READ_BROW(brow2, 2);
+        READ_BROW(brow3, 3);
+        READ_BROW(brow4, 4);
+        READ_BROW(brow5, 5);
+        READ_BROW(brow6, 6);
+        READ_BROW(brow7, 7);
+
+#define MM_DOT_PRODUCT( _row, _dot )   \
+        arow = as_half8(vload4(0, (__global float *)(src0_read + _row * K)));                           \
+        arow.s0 = (mad24(local_x, 8, w) < K) ? arow.s0 : 0.0f; \
+        arow.s1 = (mad24(local_x, 8, w + 1) < K) ? arow.s1 : 0.0f; \
+        arow.s2 = (mad24(local_x, 8, w + 2) < K) ? arow.s2 : 0.0f; \
+        arow.s3 = (mad24(local_x, 8, w + 3) < K) ? arow.s3 : 0.0f; \
+        arow.s4 = (mad24(local_x, 8, w + 4) < K) ? arow.s4 : 0.0f; \
+        arow.s5 = (mad24(local_x, 8, w + 5) < K) ? arow.s5 : 0.0f; \
+        arow.s6 = (mad24(local_x, 8, w + 6) < K) ? arow.s6 : 0.0f; \
+        arow.s7 = (mad24(local_x, 8, w + 7) < K) ? arow.s7 : 0.0f; \
+        _dot = mad( (Dtype8)(arow.s0), (Dtype8)(brow0.s0, brow1.s0, brow2.s0, brow3.s0, brow4.s0, brow5.s0, brow6.s0, brow7.s0), _dot ); \
+        _dot = mad( (Dtype8)(arow.s1), (Dtype8)(brow0.s1, brow1.s1, brow2.s1, brow3.s1, brow4.s1, brow5.s1, brow6.s1, brow7.s1), _dot ); \
+        _dot = mad( (Dtype8)(arow.s2), (Dtype8)(brow0.s2, brow1.s2, brow2.s2, brow3.s2, brow4.s2, brow5.s2, brow6.s2, brow7.s2), _dot ); \
+        _dot = mad( (Dtype8)(arow.s3), (Dtype8)(brow0.s3, brow1.s3, brow2.s3, brow3.s3, brow4.s3, brow5.s3, brow6.s3, brow7.s3), _dot ); \
+        _dot = mad( (Dtype8)(arow.s4), (Dtype8)(brow0.s4, brow1.s4, brow2.s4, brow3.s4, brow4.s4, brow5.s4, brow6.s4, brow7.s4), _dot ); \
+        _dot = mad( (Dtype8)(arow.s5), (Dtype8)(brow0.s5, brow1.s5, brow2.s5, brow3.s5, brow4.s5, brow5.s5, brow6.s5, brow7.s5), _dot ); \
+        _dot = mad( (Dtype8)(arow.s6), (Dtype8)(brow0.s6, brow1.s6, brow2.s6, brow3.s6, brow4.s6, brow5.s6, brow6.s6, brow7.s6), _dot ); \
+        _dot = mad( (Dtype8)(arow.s7), (Dtype8)(brow0.s7, brow1.s7, brow2.s7, brow3.s7, brow4.s7, brow5.s7, brow6.s7, brow7.s7), _dot ); \
+
+        MM_DOT_PRODUCT( 0, dot00 );
+        MM_DOT_PRODUCT( 1, dot01 );
+        MM_DOT_PRODUCT( 2, dot02 );
+        MM_DOT_PRODUCT( 3, dot03 );
+        MM_DOT_PRODUCT( 4, dot04 );
+        MM_DOT_PRODUCT( 5, dot05 );
+        MM_DOT_PRODUCT( 6, dot06 );
+        MM_DOT_PRODUCT( 7, dot07 );
+#undef MM_DOT_PRODUCT
+    }
+
+#define REDUCE(_dot) \
+    _dot = as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 0)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 1)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 2)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 3)) +  \
+           as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 4)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 5)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 6)) + as_Dtype8(intel_sub_group_shuffle(SHUFFLE_TYPE8(_dot), 7)); \
+    
+    REDUCE(dot00);
+    REDUCE(dot01);
+    REDUCE(dot02);
+    REDUCE(dot03);
+    REDUCE(dot04);
+    REDUCE(dot05);
+    REDUCE(dot06);
+    REDUCE(dot07);
+#undef REDUCE
+
+    Dtype output = 0.0f;
+#define OUTPUT( _dot) \
+    output = (local_x == 0) ? _dot.s0 : output; \
+    output = (local_x == 1) ? _dot.s1 : output; \
+    output = (local_x == 2) ? _dot.s2 : output; \
+    output = (local_x == 3) ? _dot.s3 : output; \
+    output = (local_x == 4) ? _dot.s4 : output; \
+    output = (local_x == 5) ? _dot.s5 : output; \
+    output = (local_x == 6) ? _dot.s6 : output; \
+    output = (local_x == 7) ? _dot.s7 : output; \
+    dst_write0[0] = mad(output, alpha, beta * dst_write0[0]); \
+    dst_write0 += N;
+
+    if(global_x < N && global_y * 8 < M) {
+        OUTPUT(dot00);
+        if(mad24(global_y, 8, 1) < M) { OUTPUT(dot01); }
+        if(mad24(global_y, 8, 2) < M) { OUTPUT(dot02); }
+        if(mad24(global_y, 8, 3) < M) { OUTPUT(dot03); }
+        if(mad24(global_y, 8, 4) < M) { OUTPUT(dot04); }
+        if(mad24(global_y, 8, 5) < M) { OUTPUT(dot05); }
+        if(mad24(global_y, 8, 6) < M) { OUTPUT(dot06); }
+        if(mad24(global_y, 8, 7) < M) { OUTPUT(dot07); }
+    }
+#undef OUTPUT
+}
+
+#else
 
 __attribute__((reqd_work_group_size(8, LWG_HEIGHT, 1)))
 __attribute__((intel_reqd_sub_group_size(8)))
@@ -1398,6 +1604,7 @@ __kernel void TEMPLATE(gemm_buffer_NT, Dtype)(
     }
 #undef OUTPUT
 }
+#endif
 
 #undef VEC_SIZE
 #undef LWG_HEIGHT
