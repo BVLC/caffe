@@ -437,7 +437,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 152 (last added: video_data_param)
+// LayerParameter next available layer-specific ID: 207 (last added: detection_output_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -488,7 +488,7 @@ message LayerParameter {
   // Parameters shared by loss layers.
   optional LossParameter loss_param = 101;
   // Yolo 9000
-  optional YoloDetectionOutputParameter detection_output_param = 204;
+  optional YoloDetectionOutputParameter yolo_detection_output_param = 204;
   optional ReorgParameter reorg_param = 149;
 
   // Layer type-specific parameters.
@@ -508,7 +508,7 @@ message LayerParameter {
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
   optional DetectionEvaluateParameter detection_evaluate_param = 205;
-  optional DetectionOutputParameter detection_output_param = 204;
+  optional DetectionOutputParameter detection_output_param = 207;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;

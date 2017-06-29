@@ -18,24 +18,24 @@ namespace caffe {
 template <typename Dtype>
 void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const YoloDetectionOutputParameter& detection_output_param =
-      this->layer_param_.detection_output_param();
-  CHECK(detection_output_param.has_num_classes()) << "Must specify num_classes";
-  side_ = detection_output_param.side();
-  num_classes_ = detection_output_param.num_classes();
-  num_box_ = detection_output_param.num_box();
-  coords_ = detection_output_param.coords();
-  confidence_threshold_ = detection_output_param.confidence_threshold();
-  nms_threshold_ = detection_output_param.nms_threshold();
+  const YoloDetectionOutputParameter& yolo_detection_output_param =
+      this->layer_param_.yolo_detection_output_param();
+  CHECK(yolo_detection_output_param.has_num_classes()) << "Must specify num_classes";
+  side_ = yolo_detection_output_param.side();
+  num_classes_ = yolo_detection_output_param.num_classes();
+  num_box_ = yolo_detection_output_param.num_box();
+  coords_ = yolo_detection_output_param.coords();
+  confidence_threshold_ = yolo_detection_output_param.confidence_threshold();
+  nms_threshold_ = yolo_detection_output_param.nms_threshold();
 
-  for (int_tp c = 0; c < detection_output_param.biases_size(); ++c) {
-     biases_.push_back(detection_output_param.biases(c)); 
+  for (int_tp c = 0; c < yolo_detection_output_param.biases_size(); ++c) {
+     biases_.push_back(yolo_detection_output_param.biases(c)); 
   } //0.73 0.87;2.42 2.65;4.30 7.04;10.24 4.59;12.68 11.87;
 
 /*
-  if (detection_output_param.has_label_map_file())
+  if (yolo_detection_output_param.has_label_map_file())
   {
-    string label_map_file = detection_output_param.label_map_file();
+    string label_map_file = yolo_detection_output_param.label_map_file();
     if (label_map_file.empty()) 
     {
       // Ignore saving if there is no label_map_file provided.

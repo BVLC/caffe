@@ -15,7 +15,7 @@
 
 namespace caffe {
 
-float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true) {
+float BBoxSize(const NormalizedBBox& bbox, const bool normalized) {
   if (bbox.xmax() < bbox.xmin() || bbox.ymax() < bbox.ymin()) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
     return 0;
@@ -55,18 +55,6 @@ template bool SortScorePairAscend(const pair<float, int>& pair1,
                                   const pair<float, int>& pair2);
 template bool SortScorePairAscend(const pair<float, pair<int, int> >& pair1,
                                   const pair<float, pair<int, int> >& pair2);
-
-template <typename T>
-bool SortScorePairDescend(const pair<float, T>& pair1,
-                          const pair<float, T>& pair2) {
-  return pair1.first > pair2.first;
-}
-
-// Explicit initialization.
-template bool SortScorePairDescend(const pair<float, int>& pair1,
-                                   const pair<float, int>& pair2);
-template bool SortScorePairDescend(const pair<float, pair<int, int> >& pair1,
-                                   const pair<float, pair<int, int> >& pair2);
 
 NormalizedBBox UnitBBox() {
   NormalizedBBox unit_bbox;
@@ -118,7 +106,7 @@ void CumSum(const vector<pair<float, int_tp> >& pairs, vector<int_tp>* cumsum) {
 }
 
 template <typename Dtype>
-Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
+Dtype BBoxSize(const Dtype* bbox, const bool normalized = true) {
   if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
     return Dtype(0.);
@@ -134,6 +122,7 @@ Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
   }
 }
 
+template half BBoxSize(const half* bbox, const bool normalized);
 template float BBoxSize(const float* bbox, const bool normalized);
 template double BBoxSize(const double* bbox, const bool normalized);
 
@@ -333,6 +322,7 @@ Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2) {
   }
 }
 
+template half JaccardOverlap(const half* bbox1, const half* bbox2);
 template float JaccardOverlap(const float* bbox1, const float* bbox2);
 template double JaccardOverlap(const double* bbox1, const double* bbox2);
 
@@ -2022,7 +2012,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       }
     }
     if (keep) {
-      indices.push_back(idx);
+      indices->push_back(idx);
     }
     if (keep && eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
@@ -2052,7 +2042,7 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       }
     }
     if (keep) {
-      indices->push_back(idx);
+      indices.push_back(idx);
     }
     score_index_vec.erase(score_index_vec.begin());
     if (keep && eta < 1 && adaptive_threshold > 0.5) {
@@ -2075,22 +2065,6 @@ template
 void ApplyNMSFast(const double* bboxes, const double* scores, const int num,
       const float score_threshold, const float nms_threshold,
       const float eta, const int top_k, vector<int>& indices);
-
-void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum) {
-  // Sort the pairs based on first item of the pair.
-  vector<pair<float, int> > sort_pairs = pairs;
-  std::stable_sort(sort_pairs.begin(), sort_pairs.end(),
-                   SortScorePairDescend<int>);
-
-  cumsum->clear();
-  for (int i = 0; i < sort_pairs.size(); ++i) {
-    if (i == 0) {
-      cumsum->push_back(sort_pairs[i].second);
-    } else {
-      cumsum->push_back(cumsum->back() + sort_pairs[i].second);
-    }
-  }
-}
 
 void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
                const vector<pair<float, int> >& fp, const string ap_version,
