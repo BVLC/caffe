@@ -273,9 +273,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                           , *fwd_top_data_memory));
         }
     }
-    fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
-    //fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+    //fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (For sure!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
 
     fwd_top_data->set_mkldnn_primitive(convFwd);
 
