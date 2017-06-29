@@ -356,6 +356,9 @@ message LayerParameter {
 
   // Parameters shared by loss layers.
   optional LossParameter loss_param = 101;
+  // Yolo 9000
+  optional DetectionOutputParameter detection_output_param = 204;
+  optional ReorgParameter reorg_param = 149;
 
   // Layer type-specific parameters.
   //
@@ -564,6 +567,33 @@ message ContrastiveLossParameter {
   optional bool legacy_version = 2 [default = false];
 }
 
+message ReorgParameter {
+  optional uint32 stride = 1;
+  optional bool reverse = 2 [default = false];
+}
+// Message that store parameters used by DetectionOutputLayer
+message DetectionOutputParameter {
+  // Yolo detection output layer
+  optional uint32 side = 1 [default = 13];
+  optional uint32 num_classes = 2 [default = 20];
+  optional uint32 num_box = 3 [default = 5];
+  optional uint32 coords = 4 [default = 4];
+  optional float confidence_threshold = 5 [default = 0.01];
+  optional float nms_threshold = 6 [default = 0.45];
+  repeated float biases = 7;
+  optional string label_map_file = 8;
+}
+// The normalized bounding box [0, 1] w.r.t. the input image size.
+message NormalizedBBox {
+  optional float xmin = 1;
+  optional float ymin = 2;
+  optional float xmax = 3;
+  optional float ymax = 4;
+  optional int32 label = 5;
+  optional bool difficult = 6;
+  optional float score = 7;
+  optional float size = 8;
+}
 message ConvolutionParameter {
   optional uint64 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
