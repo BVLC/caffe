@@ -8,6 +8,14 @@
 #ifdef WITH_PYTHON_LAYER
 #include <boost/python.hpp>
 namespace bp = boost::python;
+
+void PrintPyError() {
+  PyObject * ptype, * pvalue, * ptraceback;
+  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+  PyErr_Print();
+  PyErr_Restore(ptype, pvalue, ptraceback);
+}
+
 #endif
 
 #include "hdf5.h"
@@ -128,8 +136,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 #endif
       layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
 #ifdef WITH_PYTHON_LAYER
-    } catch (bp::error_already_set) {
-      PyErr_Print();
+    } catch (bp::error_already_set const &) {
+      PrintPyError();
       throw;
     }
 #endif
@@ -542,7 +550,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
       layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
-      PyErr_Print();
+      PrintPyError();
       throw;
     }
 #endif
@@ -603,7 +611,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
             top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
 #ifdef WITH_PYTHON_LAYER
       } catch (bp::error_already_set) {
-        PyErr_Print();
+        PrintPyError();
         throw;
       }
 #endif
