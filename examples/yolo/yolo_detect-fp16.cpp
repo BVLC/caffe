@@ -11,12 +11,12 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <sys/time.h>  
+#include <sys/time.h>
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)
 
-#define Dtype float
+#define Dtype half
 
 class Detector {
  public:
@@ -30,7 +30,7 @@ class Detector {
 
   void Preprocess(const cv::Mat& img,
                   std::vector<Dtype *> input_channels);
- 
+
   shared_ptr<Net<Dtype> > net_;
   cv::Size input_geometry_;
   int num_channels_;
@@ -110,10 +110,10 @@ void Detector::Detect(cv::Mat& img) {
     int top = (int)((result[k+4]-result[k+6]/2.0) * h);
     int bot = (int)((result[k+4]+result[k+6]/2.0) * h);
 	cv::rectangle(img,cvPoint(left,top),cvPoint(right,bot),cv::Scalar(255, 242, 35));
-	std::stringstream ss;  
-	ss << classid << "/" << confidence;  
-	std::string  text = ss.str();  
-	cv::putText(img, text, cvPoint(left,top+20), cv::FONT_HERSHEY_PLAIN, 1.0f, cv::Scalar(0, 255, 255));  	
+	std::stringstream ss;
+	ss << classid << "/" << confidence;
+	std::string  text = ss.str();
+	cv::putText(img, text, cvPoint(left,top+20), cv::FONT_HERSHEY_PLAIN, 1.0f, cv::Scalar(0, 255, 255));
   }
 }
 
@@ -194,16 +194,16 @@ int main(int argc, char** argv) {
 
   // Initialize the network.
   Detector detector(model_file, weights_file);
-  
+
   cv::Mat img = cv::imread(filename, -1);
-      struct timeval tstart,tend;  
-	double timeUsed;  
-	gettimeofday(&tstart, NULL);  	  
+      struct timeval tstart,tend;
+	double timeUsed;
+	gettimeofday(&tstart, NULL);
     detector.Detect(img);
-	gettimeofday(&tend, NULL);  
-    timeUsed=1000000*(tend.tv_sec-tstart.tv_sec)+tend.tv_usec-tstart.tv_usec;  
+	gettimeofday(&tend, NULL);
+    timeUsed=1000000*(tend.tv_sec-tstart.tv_sec)+tend.tv_usec-tstart.tv_usec;
 	out << "lym time=" << timeUsed/1000 <<"ms\n";
-  
+
   cv::imwrite(filenameout, img);
 
   return 0;
