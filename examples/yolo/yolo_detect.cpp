@@ -21,7 +21,7 @@ class Detector {
   Detector(const string& model_file,
            const string& weights_file);
 
-  void Detect(const cv::Mat& img);
+  void Detect(cv::Mat& img);
 
  private:
   void WrapInputLayer(std::vector<cv::Mat>* input_channels);
@@ -79,7 +79,7 @@ Detector::Detector(const string& model_file,
   input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
 }
 
-void Detector::Detect(const cv::Mat& img) {
+void Detector::Detect(cv::Mat& img) {
   int w = img.cols;
   int h = img.rows;
   Blob<float>* input_layer = net_->input_blobs()[0];
