@@ -14,6 +14,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
+  half_pad_ = conv_param.half_pad();
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = channel_axis_ + 1;
   const int num_axes = bottom[0]->num_axes();
@@ -259,7 +260,12 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
-      conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+      if(!half_pad_){
+          conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+      }
+      else {
+          conv_im2col_cpu_half_pad(input, col_buffer_.mutable_cpu_data());
+      }
     }
     col_buff = col_buffer_.cpu_data();
   }
@@ -302,7 +308,12 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
   const Dtype* col_buff = input;
   if (!is_1x1_) {
-    conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+      if(!half_pad_){
+         conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+      }
+      else{
+         conv_im2col_cpu_half_pad(input, col_buffer_.mutable_cpu_data());
+      }
     col_buff = col_buffer_.cpu_data();
   }
   for (int g = 0; g < group_; ++g) {
