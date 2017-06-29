@@ -511,7 +511,7 @@ static void greentea_gpu_fast_buffer_gemm(const int_tp ctx_id, const CBLAS_TRANS
       global[1] = 1;
     } else {
       size_t lx = sub_group_size;
-      size_t ly = (TransB != CblasNoTrans && TransA == CblasNoTrans) ? 16 : 4;
+      size_t ly = (TransB != CblasNoTrans && TransA == CblasNoTrans && halfPrecisionMode) ? 2 : 4;
       int dx = (TransB != CblasNoTrans && TransA == CblasNoTrans) ? 1 : 4;
       int dy = 8;
       size_t gx = (size_t)(N + dx - 1) / dx;
