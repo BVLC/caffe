@@ -357,7 +357,7 @@ message LayerParameter {
   // Parameters shared by loss layers.
   optional LossParameter loss_param = 101;
   // Yolo 9000
-  optional DetectionOutputParameter detection_output_param = 204;
+  optional YoloDetectionOutputParameter detection_output_param = 204;
   optional ReorgParameter reorg_param = 149;
 
   // Layer type-specific parameters.
@@ -571,8 +571,8 @@ message ReorgParameter {
   optional uint32 stride = 1;
   optional bool reverse = 2 [default = false];
 }
-// Message that store parameters used by DetectionOutputLayer
-message DetectionOutputParameter {
+// Message that store parameters used by YoloDetectionOutputLayer
+message YoloDetectionOutputParameter {
   // Yolo detection output layer
   optional uint32 side = 1 [default = 13];
   optional uint32 num_classes = 2 [default = 20];

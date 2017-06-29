@@ -1,5 +1,5 @@
-#ifndef CAFFE_DETECTION_OUTPUT_LAYER_HPP_
-#define CAFFE_DETECTION_OUTPUT_LAYER_HPP_
+#ifndef CAFFE_YOLO_DETECTION_OUTPUT_LAYER_HPP_
+#define CAFFE_YOLO_DETECTION_OUTPUT_LAYER_HPP_
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -34,16 +34,16 @@ inline Dtype sigmoid(Dtype x)
 }
 
 template <typename Dtype>
-class DetectionOutputLayer : public Layer<Dtype> {
+class YoloDetectionOutputLayer : public Layer<Dtype> {
  public:
-  explicit DetectionOutputLayer(const LayerParameter& param)
+  explicit YoloDetectionOutputLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "DetectionOutput"; }
+  virtual inline const char* type() const { return "YoloDetectionOutput"; }
   virtual inline int_tp MinBottomBlobs() const { return 1; }
   //virtual inline int_tp MaxBottomBlobs() const { return 4; }
   virtual inline int_tp ExactNumTopBlobs() const { return 1; }

@@ -9,16 +9,16 @@
 #include "boost/foreach.hpp"
 
 //#include "caffe/layers/region_loss_layer.hpp"
-#include "caffe/layers/detection_output_layer.hpp"
+#include "caffe/layers/yolo_detection_output_layer.hpp"
 //#include "caffe/layers/detection_evaluate_layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
 template <typename Dtype>
-void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const DetectionOutputParameter& detection_output_param =
+  const YoloDetectionOutputParameter& detection_output_param =
       this->layer_param_.detection_output_param();
   CHECK(detection_output_param.has_num_classes()) << "Must specify num_classes";
   side_ = detection_output_param.side();
@@ -54,7 +54,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void YoloDetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
   CHECK_EQ(bottom[0]->num(), 1);
@@ -70,7 +70,7 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DetectionOutputLayer<Dtype>::Forward_cpu(
+void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int_tp num = bottom[0]->num();
 
@@ -99,7 +99,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       for (int_tp i = 0; i < side_; ++i)
         for (int_tp n = 0; n < num_box_; ++n){
           int_tp index = b * swap.channels() * swap.height() * swap.width() + (j * side_ + i) * swap.height() * swap.width() + n * swap.width();
-          CHECK_EQ(swap_data[index],swap.data_at(b, j * side_ + i, n, 0));
+          //CHECK_EQ(swap_data[index],swap.data_at(b, j * side_ + i, n, 0));
           get_region_box(swap_data, predict, biases_, n, index, i, j, side_, side_);
           predict.objScore = sigmoid(swap_data[index+4]);
           class_index_and_score(swap_data+index+5, num_classes_, predict);
@@ -150,10 +150,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 }
 
 #ifdef CPU_ONLY
-//STUB_GPU_FORWARD(DetectionOutputLayer, Forward);
+//STUB_GPU_FORWARD(YoloDetectionOutputLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS(DetectionOutputLayer);
-REGISTER_LAYER_CLASS(DetectionOutput);
+INSTANTIATE_CLASS(YoloDetectionOutputLayer);
+REGISTER_LAYER_CLASS(YoloDetectionOutput);
 
 }  // namespace caffe

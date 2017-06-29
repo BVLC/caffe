@@ -976,7 +976,7 @@ layer {
 }
 layer {
   name: "detection_out"
-  type: "DetectionOutput"
+  type: "YoloDetectionOutput"
   bottom: "conv30"
   top: "detection_out"
 
