@@ -12,7 +12,7 @@ import matplotlib.markers as mks
 def get_log_parsing_script():
     dirname = os.path.dirname(os.path.abspath(inspect.getfile(
         inspect.currentframe())))
-    return dirname + '/parse_log.sh'
+    return dirname + '/parse_log.py'
 
 def get_log_file_suffix():
     return '.log'
@@ -27,10 +27,10 @@ def is_x_axis_field(field):
 def create_field_index():
     train_key = 'Train'
     test_key = 'Test'
-    field_index = {train_key:{'Iters':0, 'Seconds':1, train_key + ' loss':2,
-                              train_key + ' learning rate':3},
-                   test_key:{'Iters':0, 'Seconds':1, test_key + ' accuracy':2,
-                             test_key + ' loss':3}}
+    field_index = {train_key:{'Iters':0, 'Seconds':1, train_key + ' loss':4,
+                              train_key + ' learning rate':2},
+                   test_key:{'Iters':0, 'Seconds':1, test_key + ' accuracy':3,
+                             test_key + ' loss':4}}
     fields = set()
     for data_file_type in field_index.keys():
         fields = fields.union(set(field_index[data_file_type].keys()))
@@ -79,20 +79,24 @@ def get_field_indices(x_axis_field, y_axis_field):
 
 def load_data(data_file, field_idx0, field_idx1):
     data = [[], []]
+    head = True
     with open(data_file, 'r') as f:
         for line in f:
-            line = line.strip()
+            line = line.strip(",")
+            if(head):
+                head = False
+                continue
             if line[0] != '#':
-                fields = line.split()
+                fields = line.split(",")
                 data[0].append(float(fields[field_idx0].strip()))
                 data[1].append(float(fields[field_idx1].strip()))
     return data
 
 def random_marker():
     markers = mks.MarkerStyle.markers
-    num = len(markers.keys())
+    num = len(markers.values())
     idx = random.randint(0, num - 1)
-    return markers.keys()[idx]
+    return markers.values()[idx]
 
 def get_data_label(path_to_log):
     label = path_to_log[path_to_log.rfind('/')+1 : path_to_log.rfind(
@@ -110,7 +114,7 @@ def get_legend_loc(chart_type):
 
 def plot_chart(chart_type, path_to_png, path_to_log_list):
     for path_to_log in path_to_log_list:
-        os.system('%s %s' % (get_log_parsing_script(), path_to_log))
+        os.system('%s %s .' % (get_log_parsing_script(), path_to_log))
         data_file = get_data_file(chart_type, path_to_log)
         x_axis_field, y_axis_field = get_field_descriptions(chart_type)
         x, y = get_field_indices(x_axis_field, y_axis_field)
@@ -126,9 +130,16 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
             plt.plot(data[0], data[1], label = label, color = color,
                      linewidth = linewidth)
         else:
-            marker = random_marker()
-            plt.plot(data[0], data[1], label = label, color = color,
-                     marker = marker, linewidth = linewidth)
+            ok = False
+            ## Some markers throw ValueError: Unrecognized marker style
+            while not ok:
+                try:
+                    marker = random_marker()
+                    plt.plot(data[0], data[1], label = label, color = color,
+                             marker = marker, linewidth = linewidth)
+                    ok = True
+                except:
+                    pass
     legend_loc = get_legend_loc(chart_type)
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
     plt.title(get_chart_type_description(chart_type))
