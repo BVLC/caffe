@@ -1,6 +1,4 @@
-#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
-#endif  // USE_OPENCV
 
 #include <string>
 #include <vector>
@@ -600,7 +598,8 @@ template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob,
                                        NormalizedBBox* crop_bbox,
-                                       bool* do_mirror) {
+                                       bool* do_mirror,
+                                       bool preserve_pixel_vals) {
   // Check dimensions.
   const int img_channels = cv_img.channels();
   const int channels = transformed_blob->channels();
@@ -620,11 +619,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool has_mean_values = mean_values_.size() > 0;
 
   Dtype* mean = NULL;
-  if (has_mean_file) { // XXX beniz: doesn't work with bbox since the image is already cropped according to bbox, use mean values instead
+  if (has_mean_file && !preserve_pixel_vals) {  // XXX beniz: doesn't work with bbox since the image is already cropped according to bbox, use mean values instead
     CHECK_EQ(img_channels, data_mean_.channels());
     mean = data_mean_.mutable_cpu_data();
   }
-  if (has_mean_values) {
+  if (has_mean_values && !preserve_pixel_vals) {
     CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
         "Specify either 1 mean_value or as many as channels: " << img_channels;
     if (img_channels > 1 && mean_values_.size() == 1) {
@@ -648,12 +647,12 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   } else {
     cv_resized_image = cv_img;
   }
-  if (param_.has_distort_param()) { //TODO: not for annotated datum, since labels do change in that case (taken care of from within data layer)
+  if (param_.has_distort_param() && !preserve_pixel_vals) { //TODO: not for annotated datum, since labels do change in that case (taken care of from within data layer)
     cv_distort_image = ApplyDistort(cv_resized_image, param_.distort_param());
   } else {
     cv_distort_image = cv_resized_image;
   }
-  if (param_.has_noise_param()) {
+  if (param_.has_noise_param() && !preserve_pixel_vals) {
     cv_noised_image = ApplyNoise(cv_distort_image, param_.noise_param());
   } else {
     cv_noised_image = cv_distort_image;
@@ -734,13 +733,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       for (int c = 0; c < img_channels; ++c) {
         top_index = (c * height + h_idx_real) * width + w_idx_real;
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        if (has_mean_file) {
+        if (has_mean_file && !preserve_pixel_vals) {
           int mean_index = (c * img_height + h_off + h_idx_real) * img_width
               + w_off + w_idx_real;
           transformed_data[top_index] =
               (pixel - mean[mean_index]) * scale;
         } else {
-          if (has_mean_values) {
+          if (has_mean_values && !preserve_pixel_vals) {
             transformed_data[top_index] =
                 (pixel - mean_values_[c]) * scale;
           } else {
@@ -827,10 +826,10 @@ void DataTransformer<Dtype>::TransformInv(const Blob<Dtype>* blob,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-                                       Blob<Dtype>* transformed_blob) {
+                                       Blob<Dtype>* transformed_blob, bool preserve_pixel_vals) {
   NormalizedBBox crop_bbox;
   bool do_mirror;
-  Transform(cv_img, transformed_blob, &crop_bbox, &do_mirror);
+  Transform(cv_img, transformed_blob, &crop_bbox, &do_mirror, preserve_pixel_vals);
 }
 
 template <typename Dtype>
@@ -1138,7 +1137,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   shape[3] = (crop_w)? crop_w: img_width;
   return shape;
 }
-
+#endif // USE_OPENCV
+ 
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(
     const vector<cv::Mat> & mat_vector) {
@@ -1150,7 +1150,6 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   shape[0] = num;
   return shape;
 }
-#endif  // USE_OPENCV
 
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
