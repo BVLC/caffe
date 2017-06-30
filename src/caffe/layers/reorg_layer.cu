@@ -62,14 +62,12 @@ void ReorgLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
 
     // Execute kernel
     viennacl::ocl::kernel &oclk_reorg_forward = program.get_kernel(
-      CL_KERNEL_SELECT_EXT("reorg"));
+      CL_KERNEL_SELECT("reorg"));
     viennacl::ocl::enqueue(
       oclk_reorg_forward(count, WrapHandle((cl_mem)bottom_data, &ctx),
-	  width_, height_, channels_, batch_num_, stride_, reverse_, 
+	  width_, height_, channels_, batch_num_, stride_, reverse_,
       WrapHandle((cl_mem)top_data, &ctx)),
       ctx.get_queue());
-
-    }
 #endif  // USE_GREENTEA
   }
 }
@@ -77,12 +75,12 @@ void ReorgLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
 template<typename Dtype>
 void ReorgLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top, const vector<bool> &propagate_down,
 									 const vector<Blob<Dtype> *> &bottom) {
-	if(!propagate_down[0]){
-		return;
-	}
-	int_tp count = diff_.count();
-	const Dtype *top_diff = diff_.mutable_gpu_diff();
-	Dtype *bottom_diff = bottom[0]->mutable_gpu_diff();
+  if (!propagate_down[0]) {
+    return;
+  }
+  int_tp count = diff_.count();
+  const Dtype *top_diff = diff_.mutable_gpu_diff();
+  Dtype *bottom_diff = bottom[0]->mutable_gpu_diff();
   if (this->device_->backend() == BACKEND_CUDA) {	
 #ifdef USE_CUDA	
 	reorg_kernel<Dtype>
@@ -98,11 +96,11 @@ void ReorgLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top, const vec
           CL_KERNEL_SELECT("reorg"));
       viennacl::ocl::enqueue(
           oclk_reorg_backward(count, WrapHandle((cl_mem)top_diff, &ctx),
-							width_, height_, channels_, batch_num_, stride_, !reverse_, 
-				WrapHandle((cl_mem)bottom_diff, &ctx)),
+			      width_, height_, channels_, batch_num_, stride_, int(!reverse_),
+			      WrapHandle((cl_mem)bottom_diff, &ctx)),
 		  ctx.get_queue());
 #endif  // USE_GREENTEA
-  }			  
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ReorgLayer);

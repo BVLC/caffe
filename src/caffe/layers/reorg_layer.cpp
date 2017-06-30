@@ -59,7 +59,7 @@ namespace caffe {
                   channels_, batch_num_, stride_, !reverse_, bottom_diff);
     }
 #ifdef CPU_ONLY
-//STUB_GPU(ReorgLayer);
+STUB_GPU(ReorgLayer);
 #endif
 
 INSTANTIATE_CLASS(ReorgLayer);

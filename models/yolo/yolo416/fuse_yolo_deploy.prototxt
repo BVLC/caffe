@@ -412,10 +412,10 @@ layer {
 }
 layer {
   name: "detection_out"
-  type: "DetectionOutput"
+  type: "YoloDetectionOutput"
   bottom: "conv30"
   top: "detection_out"
-  detection_output_param {
+  yolo_detection_output_param {
     num_classes: 20
     coords: 4
     confidence_threshold: 0.600000023842

@@ -7205,6 +7205,49 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(reorg, Dtype)(const int_tp n,__global const Dtype* x,",    // NOLINT
+"int_tp w, int_tp h, int_tp c,",    // NOLINT
+"int_tp batch, int_tp stride, int_tp forward,",    // NOLINT
+"__global Dtype* out) {",    // NOLINT
+"int_tp size = batch*c*h*w;",    // NOLINT
+"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0))",    // NOLINT
+"{",    // NOLINT
+"int_tp i;",    // NOLINT
+"i = index;",    // NOLINT
+"if(i >= size) return;",    // NOLINT
+"int_tp in_index = i;",    // NOLINT
+"int_tp in_w = i%w;",    // NOLINT
+"i = i/w;",    // NOLINT
+"int_tp in_h = i%h;",    // NOLINT
+"i = i/h;",    // NOLINT
+"int_tp in_c = i%c;",    // NOLINT
+"i = i/c;",    // NOLINT
+"int_tp b = i%batch;",    // NOLINT
+"",    // NOLINT
+"int_tp out_c = c/(stride*stride);",    // NOLINT
+"",    // NOLINT
+"int_tp c2 = in_c % out_c;",    // NOLINT
+"int_tp offset = in_c / out_c;",    // NOLINT
+"int_tp w2 = in_w*stride + (offset % stride);",    // NOLINT
+"int_tp h2 = in_h*stride + offset / stride;",    // NOLINT
+"int_tp out_index = w2 + w*stride*(h2 + h*stride*(c2 + out_c*b));",    // NOLINT
+"",    // NOLINT
+"if(forward)",    // NOLINT
+"{",    // NOLINT
+"out[out_index] = x[in_index];",    // NOLINT
+"}",    // NOLINT
+"else",    // NOLINT
+"{",    // NOLINT
+"out[in_index] = x[out_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(slice,Dtype)(const int_tp nthreads,",    // NOLINT
 "__global const Dtype* in_data,",    // NOLINT
 "const int forward, const int_tp num_slices,",    // NOLINT
@@ -7648,6 +7691,7 @@ static std::string cl_kernel_names[] = {
     "pooling",   // NOLINT
     "pooling_nd",   // NOLINT
     "pooling_sk",   // NOLINT
+    "reorg",   // NOLINT
     "slice",   // NOLINT
     "softmax_loss",   // NOLINT
     "solvers",   // NOLINT
