@@ -426,6 +426,9 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
 }
 
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
+  if (param.prob() == 0.0)
+    return in_img;
+  
   cv::Mat out_img;
 
   bool decolorize = param.decolorize();
@@ -444,8 +447,9 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
   vector<float> binary_probs;
   if (param.prob() > 0.0)
     binary_probs = {1.f-param.prob(),param.prob()};
-  
-  decolorize = param.prob() ? roll_weighted_die(binary_probs) == 1 : decolorize;
+
+  if (decolorize)
+    decolorize = (roll_weighted_die(binary_probs) == 1);
   if (decolorize) {
     cv::Mat grayscale_img;
     cv::cvtColor(in_img, grayscale_img, CV_BGR2GRAY);
@@ -454,12 +458,14 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     out_img = in_img;
   }
 
-  gauss_blur = param.prob() ? roll_weighted_die(binary_probs) == 1 : gauss_blur;
+  if (gauss_blur)
+    gauss_blur = (roll_weighted_die(binary_probs) == 1);
   if (gauss_blur) {
     cv::GaussianBlur(out_img, out_img, cv::Size(7, 7), 1.5);
   }
 
-  hist_eq = param.prob() ? roll_weighted_die(binary_probs) == 1 : hist_eq;
+  if (hist_eq)
+    hist_eq = (roll_weighted_die(binary_probs) == 1);
   if (hist_eq) {
     if (out_img.channels() > 1) {
       cv::Mat ycrcb_image;
@@ -481,7 +487,8 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     }
   }
 
-  clahe = param.prob() ? roll_weighted_die(binary_probs) == 1 : clahe;
+  if (clahe)
+    clahe = (roll_weighted_die(binary_probs) == 1);
   if (clahe) {
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
     clahe->setClipLimit(4);
@@ -516,60 +523,68 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     out_img = cv::imdecode(buf, CV_LOAD_IMAGE_COLOR);
   }
 
-  erode = param.prob() ? roll_weighted_die(binary_probs) == 1 : erode;
+  if (erode)
+    erode = (roll_weighted_die(binary_probs) == 1);
   if (erode) {
     cv::Mat element = cv::getStructuringElement(
         2, cv::Size(3, 3), cv::Point(1, 1));
     cv::erode(out_img, out_img, element);
   }
 
-  posterize = param.prob() ? roll_weighted_die(binary_probs) == 1 : posterize;
+  if (posterize)
+    posterize = (roll_weighted_die(binary_probs) == 1);
   if (posterize) {
     cv::Mat tmp_img;
     tmp_img = colorReduce(out_img);
     out_img = tmp_img;
   }
 
-  inverse = param.prob() ? roll_weighted_die(binary_probs) == 1 : inverse;
+  if (inverse)
+    inverse = (roll_weighted_die(binary_probs) == 1);
   if (inverse) {
     cv::Mat tmp_img;
     cv::bitwise_not(out_img, tmp_img);
     out_img = tmp_img;
   }
 
-  vector<uchar> noise_values;
-  if (param.saltpepper_param().value_size() > 0) {
-    CHECK(param.saltpepper_param().value_size() == 1
-          || param.saltpepper_param().value_size() == out_img.channels())
-        << "Specify either 1 pad_value or as many as channels: "
-        << out_img.channels();
-
-    for (int i = 0; i < param.saltpepper_param().value_size(); i++) {
-      noise_values.push_back(uchar(param.saltpepper_param().value(i)));
-    }
-    if (out_img.channels()  > 1
-        && param.saltpepper_param().value_size() == 1) {
-      // Replicate the pad_value for simplicity
-      for (int c = 1; c < out_img.channels(); ++c) {
-        noise_values.push_back(uchar(noise_values[0]));
+  if (saltpepper)
+    saltpepper = (roll_weighted_die(binary_probs) == 1);
+  if (saltpepper)
+    {
+      vector<uchar> noise_values;
+      if (param.saltpepper_param().value_size() > 0) {
+	CHECK(param.saltpepper_param().value_size() == 1
+	      || param.saltpepper_param().value_size() == out_img.channels())
+	  << "Specify either 1 pad_value or as many as channels: "
+	  << out_img.channels();
+	
+	for (int i = 0; i < param.saltpepper_param().value_size(); i++) {
+	  noise_values.push_back(uchar(param.saltpepper_param().value(i)));
+	}
+	if (out_img.channels()  > 1
+	    && param.saltpepper_param().value_size() == 1) {
+	  // Replicate the pad_value for simplicity
+	  for (int c = 1; c < out_img.channels(); ++c) {
+	    noise_values.push_back(uchar(noise_values[0]));
+	  }
+	}
       }
-    }
-  }
-  saltpepper = param.prob() ? roll_weighted_die(binary_probs) == 1 : saltpepper;
-  if (saltpepper) {
-    const int noise_pixels_num =
+      const int noise_pixels_num =
         floor(param.saltpepper_param().fraction()
               * out_img.cols * out_img.rows);
-    constantNoise(noise_pixels_num, noise_values, &out_img);
-  }
-
-  convert_to_hsv = param.prob() ? roll_weighted_die(binary_probs) == 1 : convert_to_hsv;
+      constantNoise(noise_pixels_num, noise_values, &out_img);
+    }
+  
+  if (convert_to_hsv)
+    convert_to_hsv = (roll_weighted_die(binary_probs) == 1);
   if (convert_to_hsv) {
     cv::Mat hsv_image;
     cv::cvtColor(out_img, hsv_image, CV_BGR2HSV);
     out_img = hsv_image;
   }
-  convert_to_lab = param.prob() ? roll_weighted_die(binary_probs) == 1 : convert_to_lab;
+
+  if (convert_to_lab)
+    convert_to_lab = (roll_weighted_die(binary_probs) == 1);
   if (convert_to_lab) {
     cv::Mat lab_image;
     out_img.convertTo(lab_image, CV_32F);
