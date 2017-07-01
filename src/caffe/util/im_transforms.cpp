@@ -575,9 +575,9 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
       constantNoise(noise_pixels_num, noise_values, &out_img);
     }
   
-  if (convert_to_hsv && out_img.channels() > 1)
+  if (convert_to_hsv)
     convert_to_hsv = (roll_weighted_die(binary_probs) == 1);
-  if (convert_to_hsv) {
+  if (convert_to_hsv && out_img.channels() > 1) {
     cv::Mat hsv_image;
     cv::cvtColor(out_img, hsv_image, CV_BGR2HSV);
     out_img = hsv_image;
