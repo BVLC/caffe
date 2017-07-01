@@ -87,6 +87,11 @@ typedef ::testing::Types<CPUDevice<float>,
                          GPUDevice<float>,
                          GPUDevice<half>>
                          TestFloatAndDevices;
+
+typedef ::testing::Types<GPUDevice<half>,
+                         GPUDevice<float>,
+                         GPUDevice<double> >
+                         TestGPUDtypesAndDevices;
 #else
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
                          GPUDevice<float>, GPUDevice<double> >
