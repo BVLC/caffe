@@ -450,7 +450,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
 
   if (decolorize)
     decolorize = (roll_weighted_die(binary_probs) == 1);
-  if (decolorize) {
+  if (decolorize && out_img.channels() > 1) {
     cv::Mat grayscale_img;
     cv::cvtColor(in_img, grayscale_img, CV_BGR2GRAY);
     cv::cvtColor(grayscale_img, out_img,  CV_GRAY2BGR);
@@ -514,7 +514,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
     }
   }
 
-  if (param.jpeg() > 0) {
+  if (param.jpeg() > 0 && out_img.channels() > 1) {
     vector<uchar> buf;
     vector<int> params;
     params.push_back(CV_IMWRITE_JPEG_QUALITY);
@@ -575,7 +575,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
       constantNoise(noise_pixels_num, noise_values, &out_img);
     }
   
-  if (convert_to_hsv)
+  if (convert_to_hsv && out_img.channels() > 1)
     convert_to_hsv = (roll_weighted_die(binary_probs) == 1);
   if (convert_to_hsv) {
     cv::Mat hsv_image;
@@ -585,7 +585,7 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
 
   if (convert_to_lab)
     convert_to_lab = (roll_weighted_die(binary_probs) == 1);
-  if (convert_to_lab) {
+  if (convert_to_lab && out_img.channels() > 1) {
     cv::Mat lab_image;
     out_img.convertTo(lab_image, CV_32F);
     lab_image *= 1.0 / 255;
