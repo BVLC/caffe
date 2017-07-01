@@ -36,7 +36,6 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
   uint64_t offset_;
-  DataReader<Datum> reader_;
 };
 
 }  // namespace caffe
