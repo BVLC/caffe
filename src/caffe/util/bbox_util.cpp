@@ -106,7 +106,7 @@ void CumSum(const vector<pair<float, int_tp> >& pairs, vector<int_tp>* cumsum) {
 }
 
 template <typename Dtype>
-Dtype BBoxSize(const Dtype* bbox, const bool normalized = true) {
+Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
   if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
     return Dtype(0.);
@@ -2014,6 +2014,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
     if (keep) {
       indices->push_back(idx);
     }
+    score_index_vec.erase(score_index_vec.begin());
     if (keep && eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
     }
@@ -2044,7 +2045,6 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
     if (keep) {
       indices.push_back(idx);
     }
-    score_index_vec.erase(score_index_vec.begin());
     if (keep && eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
     }

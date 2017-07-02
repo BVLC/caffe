@@ -29,6 +29,9 @@ typedef MultiBoxLossParameter_ConfLossType ConfLossType;
 typedef MultiBoxLossParameter_MiningType MiningType;
 
 float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true);
+
+template <typename Dtype>
+Dtype BBoxSize(const Dtype* bbox, const bool normalized = true);
 // Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
 // in ascend order based on the score value.
 bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
