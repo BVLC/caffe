@@ -121,9 +121,11 @@ class DetectionOutputLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(static_cast<int>(blob_data[num * blob.width() + i]),
                 atoi(items[i].c_str()));
     }
+    float eps_scale = std::is_same<Dtype, half_float::half>::value ?
+                      1000 : 1;
     for (int i = 2; i < 7; ++i) {
       EXPECT_NEAR(blob_data[num * blob.width() + i],
-                  atof(items[i].c_str()), eps);
+                  atof(items[i].c_str()), eps * eps_scale);
     }
   }
 

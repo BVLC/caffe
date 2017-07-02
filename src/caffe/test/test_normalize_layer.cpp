@@ -61,7 +61,8 @@ TYPED_TEST(NormalizeLayerTest, TestForward) {
         }
       }
     }
-    const Dtype kErrorBound = 1e-5;
+    const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
     // expect unit norm
     EXPECT_NEAR(1, sqrt(norm), kErrorBound);
   }
@@ -92,9 +93,10 @@ TYPED_TEST(NormalizeLayerTest, TestForwardScale) {
         }
       }
     }
-    const Dtype kErrorBound = 1e-5;
+    const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
     // expect unit norm
-    EXPECT_NEAR(10, sqrt(norm), kErrorBound);
+    EXPECT_NEAR(10, sqrt(norm), kErrorBound * 10.);
   }
 }
 
@@ -124,9 +126,10 @@ TYPED_TEST(NormalizeLayerTest, TestForwardScaleChannels) {
         }
       }
     }
-    const Dtype kErrorBound = 1e-5;
+    const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
     // expect unit norm
-    EXPECT_NEAR(10, sqrt(norm), kErrorBound);
+    EXPECT_NEAR(10, sqrt(norm), kErrorBound * 10);
   }
 }
 
@@ -152,7 +155,8 @@ TYPED_TEST(NormalizeLayerTest, TestForwardEltWise) {
           Dtype data = this->blob_top_->data_at(i, j, k, l);
           norm += data * data;
         }
-        const Dtype kErrorBound = 1e-5;
+        const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
         // expect unit norm
         EXPECT_NEAR(1, sqrt(norm), kErrorBound);
       }
@@ -184,9 +188,10 @@ TYPED_TEST(NormalizeLayerTest, TestForwardEltWiseScale) {
           Dtype data = this->blob_top_->data_at(i, j, k, l);
           norm += data * data;
         }
-        const Dtype kErrorBound = 1e-5;
+        const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
         // expect unit norm
-        EXPECT_NEAR(10, sqrt(norm), kErrorBound);
+        EXPECT_NEAR(10, sqrt(norm), kErrorBound * 10);
       }
     }
   }
@@ -217,9 +222,10 @@ TYPED_TEST(NormalizeLayerTest, TestForwardEltWiseScaleChannel) {
           Dtype data = this->blob_top_->data_at(i, j, k, l);
           norm += data * data;
         }
-        const Dtype kErrorBound = 1e-5;
+        const Dtype kErrorBound = std::is_same<Dtype, half_float::half>::value ?
+                              5e-3 : 1e-5;
         // expect unit norm
-        EXPECT_NEAR(10, sqrt(norm), kErrorBound);
+        EXPECT_NEAR(10, sqrt(norm), kErrorBound * 10);
       }
     }
   }

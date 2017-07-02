@@ -122,7 +122,7 @@ class BlobMathTest : public MultiDeviceTest<TypeParam> {
       : blob_(new Blob<Dtype>(2, 3, 4, 5)),
         epsilon_(1e-6) {
     if (std::is_same<Dtype, half_float::half>::value)
-      epsilon_ = 1e-2;
+      epsilon_ = 5e-2;
   }
 
   virtual ~BlobMathTest() { delete blob_; }

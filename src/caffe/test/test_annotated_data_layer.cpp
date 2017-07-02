@@ -56,7 +56,10 @@ class AnnotatedDataLayerTest : public MultiDeviceTest<TypeParam> {
         channels_(2),
         height_(10),
         width_(10),
-        eps_(1e-6) {}
+        eps_(1e-6) {
+    if (std::is_same<Dtype, half_float::half>::value)
+      eps_ = 1e-3;
+  }
 
   virtual void SetUp() {
     spatial_dim_ = height_ * width_;

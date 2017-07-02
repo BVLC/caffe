@@ -100,10 +100,12 @@ class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
 
     // Check data.
     const Dtype* blob_data = blob.cpu_data();
+    Dtype eps_scale = std::is_same<Dtype, half_float::half>::value ?
+                      500 : 1;
     for (int i = 0; i < 5; ++i) {
       if (i == 2) {
         EXPECT_NEAR(blob_data[num * blob.width() + i],
-                    atof(items[i].c_str()), eps);
+                    atof(items[i].c_str()), eps * eps_scale);
       } else {
         EXPECT_EQ(static_cast<int>(blob_data[num * blob.width() + i]),
                   atoi(items[i].c_str()));

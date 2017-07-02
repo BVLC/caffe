@@ -161,7 +161,8 @@ TYPED_TEST(PriorBoxLayerTest, TestSetupAspectRatioMultiSize) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPU) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -197,7 +198,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPU) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUNoMaxSize) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -227,7 +229,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUNoMaxSize) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUVariance1) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -264,7 +267,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUVariance1) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUVarianceMulti) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -304,7 +308,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUVarianceMulti) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatioNoFlip) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -352,7 +357,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatioNoFlip) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatio) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -409,7 +415,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatio) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatioMultiSize) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
@@ -489,7 +496,8 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatioMultiSize) {
 }
 
 TYPED_TEST(PriorBoxLayerTest, TestCPUFixStep) {
-  const TypeParam eps = 1e-6;
+  const TypeParam eps = std::is_same<TypeParam, half_float::half>::value ?
+                        1e-3 : 1e-6;
   LayerParameter layer_param;
   PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
   prior_box_param->add_min_size(this->min_size_);
