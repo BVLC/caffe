@@ -450,7 +450,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     top_data = this->blob_top_->cpu_data();
     ref_top_data = this->ref_blob_top_->cpu_data();
     Dtype delta = std::is_same<Dtype, half_float::half>::value ?
-                  5e-1 : 1e-4;
+                  8e-1 : 1e-4;
     for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
       EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
     }

@@ -103,7 +103,8 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
       }
       for ( int l = 0; l < this->num_labels_; l++ ) {
         EXPECT_NEAR(prob[i*this->num_labels_*this->inner_ + l*this->inner_ + j],
-          est_prob[l]/den, 1e-6);
+          est_prob[l]/den,
+          (std::is_same<Dtype, half_float::half>::value) ? 1e-3 : 1e-6);
       }
     }
   }
@@ -120,7 +121,8 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
     }
   }
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0],
-    loss/(this->outer_*this->inner_), 1e-6);
+    loss/(this->outer_*this->inner_),
+    (std::is_same<Dtype, half_float::half>::value) ? 1e-3 : 1e-6);
 }
 
 TYPED_TEST(InfogainLossLayerTest, TestGradient) {

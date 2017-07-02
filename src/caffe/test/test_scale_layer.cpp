@@ -355,7 +355,7 @@ TYPED_TEST(ScaleLayerTest, TestForwardBroadcastMiddleWithParamAndBias) {
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
-                      5e-3 : 1e-5;
+                      5e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int_tp h = 0; h < this->blob_bottom_->height(); ++h) {
