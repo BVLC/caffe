@@ -25,14 +25,13 @@ void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
   num_classes_ = yolo_detection_output_param.num_classes();
   num_box_ = yolo_detection_output_param.num_box();
   coords_ = yolo_detection_output_param.coords();
-  confidence_threshold_ = yolo_detection_output_param.confidence_threshold();
-  nms_threshold_ = yolo_detection_output_param.nms_threshold();
+  confidence_threshold_ = 0.3; //yolo_detection_output_param.confidence_threshold();
+  nms_threshold_ = 0.05; //yolo_detection_output_param.nms_threshold();
 
   for (int_tp c = 0; c < yolo_detection_output_param.biases_size(); ++c) {
      biases_.push_back(yolo_detection_output_param.biases(c)); 
   } //0.73 0.87;2.42 2.65;4.30 7.04;10.24 4.59;12.68 11.87;
 
-/*
   if (yolo_detection_output_param.has_label_map_file())
   {
     string label_map_file = yolo_detection_output_param.label_map_file();
@@ -48,9 +47,24 @@ void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
           << "Failed to read label map file: " << label_map_file;
       CHECK(MapLabelToName(label_map, true, &label_to_name_))
           << "Failed to convert label to name.";
+      CHECK(MapLabelToDisplayName(label_map, true, &label_to_display_name_))
+          << "Failed to convert label to display name.";
+
     }
   }
-*/
+  visualize_ = yolo_detection_output_param.visualize();
+  if (visualize_) {
+    visualize_threshold_ = 0.3;
+    if (yolo_detection_output_param.has_visualize_threshold()) {
+      visualize_threshold_ = yolo_detection_output_param.visualize_threshold();
+    }
+    data_transformer_.reset(
+        new DataTransformer<Dtype>(this->layer_param_.transform_param(),
+                                   this->phase_, this->device_));
+    data_transformer_->InitRand();
+    save_file_ = yolo_detection_output_param.save_file();
+  }
+
 }
 
 template <typename Dtype>
@@ -73,9 +87,8 @@ template <typename Dtype>
 void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int_tp num = bottom[0]->num();
-
   Blob<Dtype> swap;
-  swap.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(), num_box_, bottom[0]->channels() / num_box_);
+  swap.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(), num_box_, (bottom[0]->channels() + num_box_ - 1) / num_box_);
   //std::cout<<"4"<<std::endl;  
   Dtype* swap_data = swap.mutable_cpu_data();
   int_tp index = 0;
@@ -143,9 +156,18 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
       top_data[i*7+5] = predicts[idxes[i]].w;
       top_data[i*7+6] = predicts[idxes[i]].h;
     }
-  }
+ if (visualize_) {
+#ifdef USE_OPENCV
+    vector<cv::Mat> cv_imgs;
+    this->data_transformer_->TransformInv(bottom[1], &cv_imgs);
+    vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
+    VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
+        label_to_display_name_, "", true);
+#endif
+ }
+ }
 
-  }
+ }
 
 }
 

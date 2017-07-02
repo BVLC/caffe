@@ -2210,7 +2210,7 @@ template <typename Dtype>
 void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
                    const map<int, string>& label_to_display_name,
-                   const string& save_file) {
+                   const string& save_file, bool is_yolo) {
   // Retrieve detections.
   CHECK_EQ(detections->width(), 7);
   const int num_det = detections->height();
@@ -2231,16 +2231,23 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
   for (int i = 0; i < num_det; ++i) {
     const int img_idx = detections_data[i * 7];
     CHECK_LT(img_idx, num_img);
-    const int label = detections_data[i * 7 + 1];
+    const int label = detections_data[i * 7 + 1] + (is_yolo ? 1 : 0);
     const float score = detections_data[i * 7 + 2];
     if (score < threshold) {
       continue;
     }
     NormalizedBBox bbox;
-    bbox.set_xmin(detections_data[i * 7 + 3] * width);
-    bbox.set_ymin(detections_data[i * 7 + 4] * height);
-    bbox.set_xmax(detections_data[i * 7 + 5] * width);
-    bbox.set_ymax(detections_data[i * 7 + 6] * height);
+    if (!is_yolo) {
+      bbox.set_xmin(detections_data[i * 7 + 3] * width);
+      bbox.set_ymin(detections_data[i * 7 + 4] * height);
+      bbox.set_xmax(detections_data[i * 7 + 5] * width);
+      bbox.set_ymax(detections_data[i * 7 + 6] * height);
+    } else {
+      bbox.set_xmin((detections_data[i * 7 + 3] - detections_data[i * 7 + 5] / 2.0) * width);
+      bbox.set_ymin((detections_data[i * 7 + 4] - detections_data[i * 7 + 6] / 2.0) * height);
+      bbox.set_xmax((detections_data[i * 7 + 3] + detections_data[i * 7 + 5] / 2.0) * width);
+      bbox.set_ymax((detections_data[i * 7 + 4] + detections_data[i * 7 + 6] / 2.0) * height);
+    }
     bbox.set_score(score);
     all_detections[img_idx][label].push_back(bbox);
   }
@@ -2312,20 +2319,20 @@ void VisualizeBBox(const vector<cv::Mat>& images,
                    const Blob<half>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
                    const map<int, string>& label_to_display_name,
-                   const string& save_file);
+                   const string& save_file, bool is_yolo);
 #endif
 template
 void VisualizeBBox(const vector<cv::Mat>& images,
                    const Blob<float>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
                    const map<int, string>& label_to_display_name,
-                   const string& save_file);
+                   const string& save_file, bool is_yolo);
 template
 void VisualizeBBox(const vector<cv::Mat>& images,
                    const Blob<double>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
                    const map<int, string>& label_to_display_name,
-                   const string& save_file);
+                   const string& save_file, bool is_yolo);
 
 #endif  // USE_OPENCV
 }  // namespace caffe

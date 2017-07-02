@@ -976,11 +976,12 @@ layer {
 }
 layer {
   name: "detection_out"
-  type: "DetectionOutput"
+  type: "YoloDetectionOutput"
   bottom: "conv30"
+  bottom: "data"
   top: "detection_out"
 
-  detection_output_param {
+  yolo_detection_output_param {
     num_classes: 20
     confidence_threshold: 0.6
     biases: 0.57273

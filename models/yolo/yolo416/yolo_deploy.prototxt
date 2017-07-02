@@ -978,6 +978,7 @@ layer {
   name: "detection_out"
   type: "YoloDetectionOutput"
   bottom: "conv30"
+  bottom: "data"
   top: "detection_out"
 
   yolo_detection_output_param {

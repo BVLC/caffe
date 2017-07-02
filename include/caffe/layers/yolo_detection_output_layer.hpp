@@ -82,6 +82,11 @@ class YoloDetectionOutputLayer : public Layer<Dtype> {
   vector<Dtype> biases_;
 
   map<int_tp, string> label_to_name_;
+  map<int_tp, string> label_to_display_name_;
+  shared_ptr<DataTransformer<Dtype> > data_transformer_;
+  float visualize_threshold_;
+  string save_file_;
+  bool visualize_;
 };
 
 }  // namespace caffe

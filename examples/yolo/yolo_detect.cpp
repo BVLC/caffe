@@ -101,7 +101,7 @@ void Detector::Detect(cv::Mat& img) {
   Blob<Dtype>* result_blob = net_->output_blobs()[0];
   const Dtype* result = result_blob->cpu_data();
   const int num_det = result_blob->height();
-  for (int k = 0; k < num_det; k+=7) {
+  for (int k = 0; k < num_det*7; k+=7) {
 	int imgid = (int)result[k+0];
 	int classid = (int)result[k+1];
 	float confidence = result[k+2];

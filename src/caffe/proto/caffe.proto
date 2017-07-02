@@ -869,6 +869,9 @@ message YoloDetectionOutputParameter {
   optional float nms_threshold = 6 [default = 0.45];
   repeated float biases = 7;
   optional string label_map_file = 8;
+  optional bool visualize = 9 [default = false];
+  optional float visualize_threshold = 10 [default = 0.4];
+  optional string save_file = 11;
 }
 message ConvolutionParameter {
   optional uint64 num_output = 1; // The number of outputs for the layer
