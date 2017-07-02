@@ -155,48 +155,26 @@ def tuneEngine(logs, model):
     for k, v in layer_map.items():
         optimal_layer = selectOptimalEngine(v)
         assert(optimal_layer != None)
-        # TODO: assign optimal layer object
-        optimal_layer_map[optimal_layer[0]] = optimal_layer[1]
+        optimal_layer_map[optimal_layer[0]] = optimal_layer[3]
         
     genModel(net, model, optimal_layer_map)
 
-def engineStrToInt(engine_str):
-    if engine_str == "CAFFE":
-        return 1
-    elif engine_str == "MKL2017":
-        return 3
-    else:
-        return 4
-
 def genModel(net, model, optimal_layer_map):
-    new_net = copy.deepcopy(net)
+    net_str = ""
+    net_str += "name: \"" + net.name + "\"\n"
     for index in range(0, len(net.layer)):
-        l = new_net.layer[index]
+        net_str += "layer {\n"
+        l = net.layer[index]
         if l.type.endswith("Data"):
+            net_str += str(l) + "\n}\n"
             continue
-        param_engine = engineStrToInt(optimal_layer_map[index])
-        if l.type == "Convolution" or l.type == "Deconvolution":
-            l.convolution_param.engine = param_engine
-            if param_engine == 3:
-                l.convolution_param.conv_algorithm = "direct"
-        elif l.type == "BatchNorm":
-            l.batch_norm_param.engine = param_engine
-        elif l.type == "Concat":
-            l.concat_param.engine = param_engine
-        elif l.type == "Eltwise":
-            l.eltwise_param.engine = param_engine
-        elif l.type == "InnerProduct":
-            l.inner_product_param.engine = param_engine
-        elif l.type == "LRN":
-            l.lrn_param.engine = param_engine
-        elif l.type == "Pooling":
-            l.pooling_param.engine = param_engine
-        elif l.type == "ReLU":
-            l.relu_param.engine = param_engine
-
+        l = optimal_layer_map[index]
+        net_str += str(l) + "\n}\n"
     with open(model, 'w') as f:
-       f.write(str(new_net))
-       print "[INFO] Complete model engine tuning:", model
+        net = caffe_pb2.NetParameter()
+        txtf.Merge(net_str, net)
+        f.write(str(net))
+        print "[INFO] Complete model engine tuning:", model
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
