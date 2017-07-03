@@ -79,6 +79,11 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
     CHECK(op_ == EltwiseParameter_EltwiseOp_SUM);
   }
 
+  if (IsFusedWithReLU())
+    negative_slope_ = this->layer_param_.convolution_param().relu_param().negative_slope();
+  else
+    negative_slope_ = 0;
+
   if (std::getenv("CLCAFFE_CACHE_PATH"))
     cache_path_ << std::getenv("CLCAFFE_CACHE_PATH");
   else if (std::getenv("VIENNACL_CACHE_PATH"))
@@ -460,7 +465,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
                 << kernel_name_;
 
   if (IsFusedWithEltwiseReLU()) {
-    optionsString << " -DFUSED_CONV_RELU=1 -DFUSED_CONV_ELTWISE=1";
+    optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
   if (IsFusedWithReLU()) {
@@ -568,6 +573,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       cl_uint argIdx = 0;
       if (IsFusedWithEltwiseReLU())
         kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
+      if (IsFusedWithReLU())
+        kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
 
       try {
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
@@ -636,6 +643,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       cl_uint argIdx = 0;
       if (IsFusedWithEltwiseReLU())
         kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
+      if (IsFusedWithReLU())
+        kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
 
       int_tp kernel_offset = kernel_h_ * kernel_w_
                              * (this->channels_ / this->group_) * M_ * g;
@@ -727,6 +736,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
         if (IsFusedWithEltwiseReLU())
           kernel.arg(argIdx++,
                      WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
+        if (IsFusedWithReLU())
+          kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
 
         int_tp kernel_offset = kernel_h_ * kernel_w_ *
                                (this->channels_ / this->group_) * M_
@@ -947,7 +958,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
         " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8;
 
   if (IsFusedWithEltwiseReLU()) {
-    optionsString << " -DFUSED_CONV_RELU=1 -DFUSED_CONV_ELTWISE=1";
+    optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
   if (IsFusedWithReLU()) {
@@ -1059,7 +1070,7 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
 
   if (IsFusedWithEltwiseReLU()) {
-    optionsString << " -DFUSED_CONV_RELU=1 -DFUSED_CONV_ELTWISE=1";
+    optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
   if (IsFusedWithReLU()) {

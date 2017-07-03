@@ -193,11 +193,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return (this->layer_param_.convolution_param().fuse_type() != ConvolutionParameter_FuseType_UNFUSED);
   }
 
-  bool IsFusedWithReLU() const
-  {
-    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
-  }
-
   bool IsFusedWithMaxPoolAndReLU() const
   {
     return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_MAX_POOLING_RELU);
@@ -206,6 +201,12 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   bool IsFusedWithEltwiseReLU() const
   {
     return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
+  }
+
+  bool IsFusedWithReLU() const
+  {
+    return IsFusedWithEltwiseReLU() ||
+           (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
   }
 
 #endif
@@ -262,8 +263,11 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   kernelConfig* bestKernelConfig;
 
   // parameters for fused eltwise layer.
-  EltwiseParameter_EltwiseOp op_;                                                                                                                                                                                                        vector<Dtype> coeffs_;
+  EltwiseParameter_EltwiseOp op_;
+  vector<Dtype> coeffs_;
   Blob<int_tp> max_idx_;
+  // parameter for relu
+  Dtype negative_slope_;
 
   bool stable_prod_grad_;
 

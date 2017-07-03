@@ -13,16 +13,30 @@ from google.protobuf import text_format
 from pdb import set_trace
 
 def resnet_block_to_fuse_type(model, cur_conv_index):
-    actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, model.layer[cur_conv_index+3].type, model.layer[cur_conv_index+4].type]
+    maxindex = len(model.layer)-1
+    if cur_conv_index+1>maxindex:
+        return 0 #UNFUSED
+    elif  cur_conv_index+2>maxindex:
+        actual = [model.layer[cur_conv_index+1].type, 'xxx', 'xxx', 'xxx']
+    elif  cur_conv_index+3>maxindex:
+        actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, 'xxx', 'xxx']
+    elif  cur_conv_index+4>maxindex:
+        actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, model.layer[cur_conv_index+3].type, 'xxx']
+    else:
+        actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, model.layer[cur_conv_index+3].type, model.layer[cur_conv_index+4].type]
     resnet = ['BatchNorm', 'Scale', 'ReLU']
     resnet_merged = ['ReLU']
     resnet_elt = ['BatchNorm', 'Scale', 'Eltwise', 'ReLU']
     resnet_elt_merged = ['Eltwise', 'ReLU']
-    if actual[:1] == resnet_merged or actual[:3] == resnet:
-        return 2 #FUSED_CONV_RELU TODO: not magic number
-    if actual[:2] == resnet_elt_merged or actual == resnet_elt:
-        return 3 #FUSED_CONV_ELTWISE_RELU 
-    return 0 #UNFUSED
+    if actual[:1] == resnet_merged:
+        return (2, model.layer[cur_conv_index+1].relu_param.negative_slope) #FUSED_CONV_RELU TODO: not magic number
+    if actual[:3] == resnet:
+        return (2, model.layer[cur_conv_index+3].relu_param.negative_slope) #FUSED_CONV_RELU TODO: not magic number
+    if actual[:2] == resnet_elt_merged:
+        return (3, model.layer[cur_conv_index+2].relu_param.negative_slope)#FUSED_CONV_ELTWISE_RELU
+    if actual == resnet_elt:
+        return (3, model.layer[cur_conv_index+4].relu_param.negative_slope) #FUSED_CONV_ELTWISE_RELU
+    return 0,0 #UNFUSED
 
 def find_fused_blob_names(model, cur_conv_index):
     i = cur_conv_index + 1
@@ -71,8 +85,8 @@ def is_fused_layer(model, layer_index):
 
 def fuse_conv_layer(in_model, in_index, out_model, new_index):
     if out_model.layer[new_index].type == 'Convolution':
-        fuse_mode = resnet_block_to_fuse_type(in_model, in_index)
-        if [in_model.layer[in_index+1].type, in_model.layer[in_index+2].type] == ['BatchNorm', 'Scale']:
+        (fuse_mode, negative_slope) = resnet_block_to_fuse_type(in_model, in_index)
+        if len(in_model.layer)>in_index+2 and [in_model.layer[in_index+1].type, in_model.layer[in_index+2].type] == ['BatchNorm', 'Scale']:
             out_model.layer[new_index].convolution_param.bias_term = True
         out_model.layer[new_index].convolution_param.fuse_type = fuse_mode
         if fuse_mode == 3:  # FUSED_CONV_ELTWISE_RELU, need to change top name to orig ReLU's top name
@@ -80,6 +94,8 @@ def fuse_conv_layer(in_model, in_index, out_model, new_index):
             out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
             out_model.layer[new_index].top.append(new_top)
             out_model.layer[new_index].bottom.append(elt_bottom)
+        if fuse_mode != 0:
+            out_model.layer[new_index].convolution_param.relu_param.negative_slope = negative_slope
 
 def fuse_lrn_layer(in_model, in_index, out_model, out_index):
     if out_model.layer[out_index].type == 'LRN' and in_model.layer[in_index + 1].type == 'Pooling' and in_model.layer[
@@ -182,8 +198,14 @@ def generate_weights(in_model, args):
         continue
     #TODO:Need fix conv+bn
       if (in_model.layer[k].type == 'Convolution'): # Assuming convolution is followed by bn and scale
-        next1type = in_model.layer[k + 1].type
-        next2type = in_model.layer[k + 2].type
+        if k + 1 < len(in_model.layer):
+          next1type = in_model.layer[k + 1].type
+        else:
+          next1type = 'end'
+        if k + 2 < len(in_model.layer):
+          next2type = in_model.layer[k + 2].type
+        else:
+          next2type = 'end'
       else:
         print 'Warning: ' + prm + ' has parameters but I can\'t infer its layer type.'
         continue
