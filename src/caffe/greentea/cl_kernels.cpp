@@ -698,15 +698,19 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "#ifdef FUSED_CONV_RELU",    // NOLINT
-"#define ACTIVATION_RELU_FUNCTION(x) max((Dtype)(x), (Dtype)0.0f)",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))",    // NOLINT
+"#define NEGATIVE_SLOPE_ARG KERNEL_ARG_DTYPE negative_slope,",    // NOLINT
 "#else",    // NOLINT
 "#define ACTIVATION_RELU_FUNCTION(x) (x)",    // NOLINT
+"#define NEGATIVE_SLOPE_ARG",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "#ifdef FUSED_CONV_ELTWISE",    // NOLINT
 "#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)",    // NOLINT
+"#define ELTWISE_DATA_ARG __global Dtype* eltwise_data,",    // NOLINT
 "#else",    // NOLINT
 "#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)",    // NOLINT
+"#define ELTWISE_DATA_ARG",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "#define __CAT(x, y) x##y",    // NOLINT
@@ -732,9 +736,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#ifdef MULTI",    // NOLINT
 "__kernel void CFMultiNoPadding(",    // NOLINT
-"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
-"__global Dtype* eltwise_data,",    // NOLINT
-"#endif",    // NOLINT
+"ELTWISE_DATA_ARG",    // NOLINT
+"NEGATIVE_SLOPE_ARG",    // NOLINT
 "__global Dtype* image_data,",    // NOLINT
 "int_tp image_offset,",    // NOLINT
 "__global Dtype* kernel_data, int_tp kernel_offset,",    // NOLINT
@@ -853,9 +856,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif",    // NOLINT
 "__kernel void",    // NOLINT
 "convolve_simd(",    // NOLINT
-"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
-"__global Dtype* eltwise_data,",    // NOLINT
-"#endif",    // NOLINT
+"ELTWISE_DATA_ARG",    // NOLINT
+"NEGATIVE_SLOPE_ARG",    // NOLINT
 "__global Dtype* inputs_base,",    // NOLINT
 "filter_qualifier Dtype* weights_base,",    // NOLINT
 "__global Dtype* biases_base,",    // NOLINT
@@ -1103,11 +1105,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define OUT_PITCH_X output_width",    // NOLINT
 "#define ROW_PITCH input_width",    // NOLINT
 "",    // NOLINT
-"#ifdef FUSED_CONV_ELTWISE",    // NOLINT
-"#define GEMM_LIKE_KERNEL_ARGS         __global Dtype* eltwise_data,     const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
-"#else",    // NOLINT
-"#define GEMM_LIKE_KERNEL_ARGS         const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
-"#endif",    // NOLINT
+"",    // NOLINT
+"#define GEMM_LIKE_KERNEL_ARGS         ELTWISE_DATA_ARG                  NEGATIVE_SLOPE_ARG                const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
 "",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT

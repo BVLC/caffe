@@ -7,15 +7,19 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(KERNEL_ARG_DTYPE arg) {
 }
 
 #ifdef FUSED_CONV_RELU
-#define ACTIVATION_RELU_FUNCTION(x) max((Dtype)(x), (Dtype)0.0f)
+#define ACTIVATION_RELU_FUNCTION(x) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))
+#define NEGATIVE_SLOPE_ARG KERNEL_ARG_DTYPE negative_slope,
 #else
 #define ACTIVATION_RELU_FUNCTION(x) (x)
+#define NEGATIVE_SLOPE_ARG
 #endif
 
 #ifdef FUSED_CONV_ELTWISE
 #define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)
+#define ELTWISE_DATA_ARG __global Dtype* eltwise_data,
 #else
 #define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)
+#define ELTWISE_DATA_ARG
 #endif
 
 #define __CAT(x, y) x##y
@@ -41,9 +45,8 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(KERNEL_ARG_DTYPE arg) {
 
 #ifdef MULTI
 __kernel void CFMultiNoPadding(
-#ifdef FUSED_CONV_ELTWISE
-   __global Dtype* eltwise_data,
-#endif
+    ELTWISE_DATA_ARG
+    NEGATIVE_SLOPE_ARG
     __global Dtype* image_data,
     int_tp image_offset,
     __global Dtype* kernel_data, int_tp kernel_offset,
@@ -162,9 +165,8 @@ __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
 #endif
 __kernel void
 convolve_simd(
-#ifdef FUSED_CONV_ELTWISE
-    __global Dtype* eltwise_data,
-#endif
+    ELTWISE_DATA_ARG
+    NEGATIVE_SLOPE_ARG
     __global Dtype* inputs_base,
     filter_qualifier Dtype* weights_base,
     __global Dtype* biases_base,
@@ -412,9 +414,10 @@ typedef struct half0 { half s0; } half0; //never used but makes compiler happy.
 #define OUT_PITCH_X output_width
 #define ROW_PITCH input_width
 
-#ifdef FUSED_CONV_ELTWISE
+
 #define GEMM_LIKE_KERNEL_ARGS     \
-    __global Dtype* eltwise_data, \
+    ELTWISE_DATA_ARG              \
+    NEGATIVE_SLOPE_ARG            \
     const __global Dtype *src0,   \
     const __global Dtype *src1,   \
     const __global Dtype *biases, \
@@ -427,21 +430,6 @@ typedef struct half0 { half s0; } half0; //never used but makes compiler happy.
     const int_tp out_pitch_z,     \
     const int_tp aligned_input_size, \
     const int_tp slice_pitch
-#else
-#define GEMM_LIKE_KERNEL_ARGS     \
-    const __global Dtype *src0,   \
-    const __global Dtype *src1,   \
-    const __global Dtype *biases, \
-    __global Dtype *dst,          \
-    const ushort input_width,     \
-    const ushort input_height,    \
-    const ushort output_width,    \
-    const ushort output_height,   \
-    const int_tp out_pitch_y,     \
-    const int_tp out_pitch_z,     \
-    const int_tp aligned_input_size, \
-    const int_tp slice_pitch
-#endif
 
 #endif
 
