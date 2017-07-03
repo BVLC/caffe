@@ -25,8 +25,8 @@ void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
   num_classes_ = yolo_detection_output_param.num_classes();
   num_box_ = yolo_detection_output_param.num_box();
   coords_ = yolo_detection_output_param.coords();
-  confidence_threshold_ = 0.3; //yolo_detection_output_param.confidence_threshold();
-  nms_threshold_ = 0.05; //yolo_detection_output_param.nms_threshold();
+  confidence_threshold_ = yolo_detection_output_param.confidence_threshold();
+  nms_threshold_ = yolo_detection_output_param.nms_threshold();
 
   for (int_tp c = 0; c < yolo_detection_output_param.biases_size(); ++c) {
      biases_.push_back(yolo_detection_output_param.biases(c)); 
@@ -49,7 +49,6 @@ void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
           << "Failed to convert label to name.";
       CHECK(MapLabelToDisplayName(label_map, true, &label_to_display_name_))
           << "Failed to convert label to display name.";
-
     }
   }
   visualize_ = yolo_detection_output_param.visualize();
@@ -134,7 +133,6 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     Dtype* top_data;
   
   if (num_kept == 0) {
-    LOG(INFO) << "Couldn't find any detections";
     top_shape[2] = swap.num();
     top[0]->Reshape(top_shape);
     top_data = top[0]->mutable_cpu_data();
@@ -162,7 +160,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     this->data_transformer_->TransformInv(bottom[1], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_, "", true);
+        label_to_display_name_, save_file_, true);
 #endif
  }
  }

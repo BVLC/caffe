@@ -866,9 +866,9 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
                                          config);
   // Currently we can't do verification when conv is fused because the results
   // won't match the results of forward_gpu_gemm. Need more work to fix it.
-  if (IsFused())
+  // FP16 verification may fail due to the natrue accuracy lost between FP16 and FP32.
+  if (IsFused() || std::is_same<Dtype, half_float::half>::value)
     return true;
-  return true;
   const Dtype *verify_data = verify_blob.cpu_data();
   const Dtype *data = top[index]->cpu_data();
   Dtype err_factor = 1;
