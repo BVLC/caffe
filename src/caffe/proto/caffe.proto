@@ -637,6 +637,7 @@ message ConvolutionParameter {
   }
   optional FuseType fuse_type = 19 [default = UNFUSED]; // Whether to fuse convolution with other layers
   optional EltwiseParameter eltwise_param = 20;
+  optional ReLUParameter relu_param = 30;
 }
 
 message CropParameter {
