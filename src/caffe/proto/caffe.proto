@@ -553,7 +553,6 @@ message LayerParameter {
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
   optional UpsampleParameter upsample_param = 149;
-  optional BNParameter bn_param = 45;
   optional DenseImageDataParameter dense_image_data_param = 46;
 }
 
@@ -801,17 +800,6 @@ message ArgMaxParameter {
   // By default ArgMaxLayer maximizes over the flattened trailing dimensions
   // for each index of the first / num dimension.
   optional int32 axis = 3;
-}
-
-// Message that stores parameters used by BN (Batch Normalization)  layer
-message BNParameter {
-  enum BNMode {
-    LEARN = 0;
-    INFERENCE = 1;
-  }
-  optional BNMode bn_mode = 3 [default = LEARN];
-  optional FillerParameter scale_filler = 1;  // The filler for the scale
-  optional FillerParameter shift_filler = 2;  // The filler for the shift
 }
 
 message ConcatParameter {
