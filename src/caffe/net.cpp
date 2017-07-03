@@ -839,7 +839,9 @@ void Net<Dtype>::RemoveBNScale(const NetParameter& param,
             shared_ptr<LayerParameter> scale_layer_param(new LayerParameter());
             RecoverScaleFromBN(child_layer_param, *scale_layer_param, (Dtype)1, (Dtype)0);
             AdjustConvLayer<Dtype>(*layer_param, child_layer_param, *scale_layer_param, is_net_init);
-          }
+          } else {
+            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, true);
+		  }
           if (bn_scale_remove == false) bn_scale_remove = true;
           layers_to_drop.insert(child_layer_param.name());
         }
