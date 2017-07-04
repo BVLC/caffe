@@ -70,7 +70,7 @@ template <typename Dtype>
 void YoloDetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  CHECK_EQ(bottom[0]->num(), 1);
+  //CHECK_EQ(bottom[0]->num(), 1);
   // num() and channels() are 1.
   vector<int_tp> top_shape(2, 1);
   // Since the number of bboxes to be kept is unknown before nms, we manually
