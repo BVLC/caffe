@@ -1280,8 +1280,8 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     }
     //temp_net_param.mutable_compile_net_state()->set_bn_top_rename(other->bn_top_rename_);
     complete_net_param.CopyFrom(temp_net_param);
-    complete_net_param.clear_layer();
     if (other->bn_scale_merge_) {
+      complete_net_param.clear_layer();
       RecoverBNScaleMergedNet<Dtype>(&temp_net_param, &complete_net_param);
     }
     CopyTrainedLayersFrom(complete_net_param);
