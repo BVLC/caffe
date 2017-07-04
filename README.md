@@ -40,6 +40,12 @@ It is therefore recommended to install another OpenCL implementation after insta
 - Intel OpenCL, see https://github.com/01org/caffe/wiki/clCaffe for details. 
 - AMD APP SDK (OpenCL), recommended if you have an AMD GPU or CPU.
 
+<<<<<<< HEAD
+=======
+ - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, Xeon Phi).
+- [OpenCL Caffe](https://github.com/BVLC/caffe/tree/opencl) e.g. for AMD or Intel devices.
+- [Windows Caffe](https://github.com/BVLC/caffe/tree/windows)
+>>>>>>> 4efdf7ee49cffefdd7ea099c00dc5ea327640f04
 
 ## Technical Report
 Available on arXiv:
