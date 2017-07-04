@@ -117,7 +117,7 @@ def array_to_datum(arr, label=None):
     if arr.dtype == np.uint8:
         datum.data = arr.tostring()
     else:
-        datum.float_data.extend(arr.flat)
+        datum.float_data.extend(arr.astype(float).flat)
     if label is not None:
         datum.label = label
     return datum
@@ -303,7 +303,7 @@ class Transformer:
                 m_min, m_max = mean.min(), mean.max()
                 normal_mean = (mean - m_min) / (m_max - m_min)
                 mean = resize_image(normal_mean.transpose((1,2,0)),in_shape[1:]).transpose((2,0,1)) * (m_max - m_min) + m_min
-                #aise ValueError('Mean shape incompatible with input shape.')
+                #raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
     def set_input_scale(self, in_, scale):
