@@ -473,9 +473,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
     //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
 
-    bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
-    //bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
+    //bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
+    bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
 
     bwdw_weights_diff->set_mkldnn_primitive(convBwdWeights);
 
