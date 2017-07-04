@@ -460,20 +460,20 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
 
     bwdd_bottom_diff->set_mkldnn_primitive(convBwdData);
 
-    bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
-    //bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
+    //bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
+    bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
 
     //bwdd_weights_data->set_mkldnn_primitive(convBwdData);     //Wrong passed primitive! (For sure!)
     MKLDNNPrimitive<Dtype> bwdd_weights_data_primitive_transfer(bwdd_weights_data_primitive);
     bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
 
 
-    bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
-    //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
+    //bwdw_bottom_data->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
+    bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
 
-    //bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (TODO: Checking!)
+    //bwdw_top_diff->set_mkldnn_primitive(convBwdWeights);      //Wrong passed primitive! (For sure!)
     MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
     bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
 
