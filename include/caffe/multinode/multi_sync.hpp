@@ -63,7 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#define CAN_USE_PRV(param) (param->prv_diff())
+#define CAN_USE_PRV(param) (param->prv_diff() && (param->prv_diff_count() == param->count()))
 
   template <typename Dtype>
   class MultiSync : public MultiSolver<Dtype>::Callback {
