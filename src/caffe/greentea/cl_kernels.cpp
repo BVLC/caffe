@@ -4058,6 +4058,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "READ_BROW(brow6, 6);",    // NOLINT
 "READ_BROW(brow7, 7);",    // NOLINT
 "",    // NOLINT
+"#undef READ_BROW",    // NOLINT
+"",    // NOLINT
 "#define MM_DOT_PRODUCT( _row, _dot )           arow = as_half8(vload4(0, (__global float *)(src0_read + _row * K)));                                   arow.s0 = (mad24(local_x, 8, w) < K) ? arow.s0 : 0.0f;         arow.s1 = (mad24(local_x, 8, w + 1) < K) ? arow.s1 : 0.0f;         arow.s2 = (mad24(local_x, 8, w + 2) < K) ? arow.s2 : 0.0f;         arow.s3 = (mad24(local_x, 8, w + 3) < K) ? arow.s3 : 0.0f;         arow.s4 = (mad24(local_x, 8, w + 4) < K) ? arow.s4 : 0.0f;         arow.s5 = (mad24(local_x, 8, w + 5) < K) ? arow.s5 : 0.0f;         arow.s6 = (mad24(local_x, 8, w + 6) < K) ? arow.s6 : 0.0f;         arow.s7 = (mad24(local_x, 8, w + 7) < K) ? arow.s7 : 0.0f;         _dot = mad( (Dtype8)(arow.s0), (Dtype8)(brow0.s0, brow1.s0, brow2.s0, brow3.s0, brow4.s0, brow5.s0, brow6.s0, brow7.s0), _dot );         _dot = mad( (Dtype8)(arow.s1), (Dtype8)(brow0.s1, brow1.s1, brow2.s1, brow3.s1, brow4.s1, brow5.s1, brow6.s1, brow7.s1), _dot );         _dot = mad( (Dtype8)(arow.s2), (Dtype8)(brow0.s2, brow1.s2, brow2.s2, brow3.s2, brow4.s2, brow5.s2, brow6.s2, brow7.s2), _dot );         _dot = mad( (Dtype8)(arow.s3), (Dtype8)(brow0.s3, brow1.s3, brow2.s3, brow3.s3, brow4.s3, brow5.s3, brow6.s3, brow7.s3), _dot );         _dot = mad( (Dtype8)(arow.s4), (Dtype8)(brow0.s4, brow1.s4, brow2.s4, brow3.s4, brow4.s4, brow5.s4, brow6.s4, brow7.s4), _dot );         _dot = mad( (Dtype8)(arow.s5), (Dtype8)(brow0.s5, brow1.s5, brow2.s5, brow3.s5, brow4.s5, brow5.s5, brow6.s5, brow7.s5), _dot );         _dot = mad( (Dtype8)(arow.s6), (Dtype8)(brow0.s6, brow1.s6, brow2.s6, brow3.s6, brow4.s6, brow5.s6, brow6.s6, brow7.s6), _dot );         _dot = mad( (Dtype8)(arow.s7), (Dtype8)(brow0.s7, brow1.s7, brow2.s7, brow3.s7, brow4.s7, brow5.s7, brow6.s7, brow7.s7), _dot );",    // NOLINT
 "MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
 "MM_DOT_PRODUCT( 1, dot01 );",    // NOLINT
@@ -4206,6 +4208,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "READ_BROW(brow5, 5);",    // NOLINT
 "READ_BROW(brow6, 6);",    // NOLINT
 "READ_BROW(brow7, 7);",    // NOLINT
+"",    // NOLINT
+"#undef READ_BROW",    // NOLINT
 "",    // NOLINT
 "#define MM_DOT_PRODUCT( _row, _dot )           arow = vload4(0, src0_read + _row * K);                                   arow.x = (mad24(local_x, 4, w) < K) ? arow.x : 0.0f;         arow.y = (mad24(local_x, 4, w + 1) < K) ? arow.y : 0.0f;         arow.z = (mad24(local_x, 4, w + 2) < K) ? arow.z : 0.0f;         arow.w = (mad24(local_x, 4, w + 3) < K) ? arow.w : 0.0f;         _dot = mad( (Dtype8)(arow.x), (Dtype8)(brow0.x, brow1.x, brow2.x, brow3.x, brow4.x, brow5.x, brow6.x, brow7.x), _dot );         _dot = mad( (Dtype8)(arow.y), (Dtype8)(brow0.y, brow1.y, brow2.y, brow3.y, brow4.y, brow5.y, brow6.y, brow7.y), _dot );         _dot = mad( (Dtype8)(arow.z), (Dtype8)(brow0.z, brow1.z, brow2.z, brow3.z, brow4.z, brow5.z, brow6.z, brow7.z), _dot );         _dot = mad( (Dtype8)(arow.w), (Dtype8)(brow0.w, brow1.w, brow2.w, brow3.w, brow4.w, brow5.w, brow6.w, brow7.w), _dot );",    // NOLINT
 "MM_DOT_PRODUCT( 0, dot00 );",    // NOLINT
@@ -7961,7 +7965,7 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   options = " -DFFT ";
 #endif
 #ifdef HAS_HALF_SUPPORT
-  options += " -DHAS_HALF_SUPPORT; ";
+  options += " -DHAS_HALF_SUPPORT ";
 #endif
   bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
                     != std::string::npos;

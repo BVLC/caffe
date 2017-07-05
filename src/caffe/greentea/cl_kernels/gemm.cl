@@ -1351,6 +1351,8 @@ __kernel void TEMPLATE(gemm_buffer_NT, Dtype)(
         READ_BROW(brow6, 6);
         READ_BROW(brow7, 7);
 
+#undef READ_BROW
+
 #define MM_DOT_PRODUCT( _row, _dot )   \
         arow = as_half8(vload4(0, (__global float *)(src0_read + _row * K)));                           \
         arow.s0 = (mad24(local_x, 8, w) < K) ? arow.s0 : 0.0f; \
@@ -1542,6 +1544,8 @@ __kernel void TEMPLATE(gemm_buffer_NT, Dtype)(
         READ_BROW(brow5, 5);
         READ_BROW(brow6, 6);
         READ_BROW(brow7, 7);
+
+#undef READ_BROW
 
 #define MM_DOT_PRODUCT( _row, _dot )   \
         arow = vload4(0, src0_read + _row * K);                           \
