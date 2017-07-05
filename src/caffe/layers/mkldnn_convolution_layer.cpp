@@ -261,7 +261,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                           , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
                           , *fwd_bias_data_primitive, *fwd_top_data_memory));
         }
-        fwd_bias_data->set_mkldnn_primitive(convFwd);
+        //fwd_bias_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (For sure!)
+        MKLDNNPrimitive<Dtype> fwd_bias_data_primitive_transfer(fwd_bias_data_primitive);
+        fwd_bias_data->set_mkldnn_primitive(fwd_bias_data_primitive_transfer);
     } else {
         if(relu) {
           convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
@@ -277,7 +279,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
     fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
 
-    fwd_top_data->set_mkldnn_primitive(convFwd);
+    //fwd_top_data->set_mkldnn_primitive(convFwd);      //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_top_data_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 
     //fwd_weights_data->set_mkldnn_primitive(convFwd);  //Wrong passed primitive! (For sure!)
     MKLDNNPrimitive<Dtype> fwd_weights_data_primitive_transfer(fwd_weights_data_primitive);
@@ -447,7 +451,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
                         , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
                         , *bwdw_weights_diff_memory, *bwdw_bias_diff_memory));
 
-        bwdw_bias_diff->set_mkldnn_primitive(convBwdWeights);
+        //bwdw_bias_diff->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (For sure!)
+        MKLDNNPrimitive<Dtype> bwdw_bias_diff_memory_transfer(bwdw_bias_diff_memory);
+        bwdw_bias_diff->set_mkldnn_primitive(bwdw_bias_diff_memory_transfer);
     } else {
         convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
                         , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
@@ -458,7 +464,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
                     , *bwdd_top_diff_primitive, *bwdd_weights_data_primitive
                     , *bwdd_bottom_diff_memory));
 
-    bwdd_bottom_diff->set_mkldnn_primitive(convBwdData);
+    //bwdd_bottom_diff->set_mkldnn_primitive(convBwdData);      //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdd_bottom_diff_memory_transfer(bwdd_bottom_diff_memory);
+    bwdd_bottom_diff->set_mkldnn_primitive(bwdd_bottom_diff_memory_transfer);
 
     //bwdd_top_diff->set_mkldnn_primitive(convBwdData);         //Wrong passed primitive! (TODO: Checking!)
     MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
@@ -477,7 +485,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
     bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
 
-    bwdw_weights_diff->set_mkldnn_primitive(convBwdWeights);
+    //bwdw_weights_diff->set_mkldnn_primitive(convBwdWeights);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_weights_diff_memory_transfer(bwdw_weights_diff_memory);
+    bwdw_weights_diff->set_mkldnn_primitive(bwdw_weights_diff_memory_transfer);
 
     // Names are for debugging purposes only.
 }
