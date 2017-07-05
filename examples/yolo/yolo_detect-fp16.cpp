@@ -11,9 +11,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <sys/time.h>
 
-#ifdef USE_OPENCV
+#if defined(USE_OPENCV) && defined(HAS_HALF_SUPPORT)
 using namespace caffe;  // NOLINT(build/namespaces)
 
 #define Dtype half
@@ -185,8 +184,8 @@ int main(int argc, char** argv) {
   if (argc < 3) {
     return 1;
   }
-	std::streambuf* buf = std::cout.rdbuf();
-	std::ostream out(buf);
+  std::streambuf* buf = std::cout.rdbuf();
+  std::ostream out(buf);
   const string& model_file = argv[1];
   const string& weights_file = argv[2];
   const string& filename = argv[3];
@@ -196,13 +195,13 @@ int main(int argc, char** argv) {
   Detector detector(model_file, weights_file);
 
   cv::Mat img = cv::imread(filename, -1);
-      struct timeval tstart,tend;
-	double timeUsed;
-	gettimeofday(&tstart, NULL);
-    detector.Detect(img);
-	gettimeofday(&tend, NULL);
-    timeUsed=1000000*(tend.tv_sec-tstart.tv_sec)+tend.tv_usec-tstart.tv_usec;
-	out << "lym time=" << timeUsed/1000 <<"ms\n";
+  Timer detect_timer;
+  detect_timer.Start();
+  double timeUsed;
+  detector.Detect(img);
+  detect_timer.Stop();
+  timeUsed = detect_timer.MilliSeconds();
+  out << "lym time=" << timeUsed/1000 <<"ms\n";
 
   cv::imwrite(filenameout, img);
 
@@ -210,6 +209,7 @@ int main(int argc, char** argv) {
 }
 #else
 int main(int argc, char** argv) {
-  LOG(FATAL) << "This example requires OpenCV; compile with USE_OPENCV.";
+  LOG(FATAL) << "This example requires OpenCV and half floating point support."
+             << "compile with USE_OPENCV and USE_ISAAC.";
 }
 #endif  // USE_OPENCV

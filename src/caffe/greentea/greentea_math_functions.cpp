@@ -47,7 +47,6 @@
 #include "viennacl/scalar.hpp"
 #include "viennacl/vector.hpp"
 
-
 // ViennaCL 1.5.1 compability fix
 #ifndef VIENNACL_MINOR_VERSION
 #define VIENNACL_MINOR_VERSION 5
@@ -419,13 +418,13 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
         viennacl::ocl::kernel &k = (isTransA ?
              program.get_kernel(CL_KERNEL_SELECT("trans_matvec_mul")) :
             program.get_kernel(CL_KERNEL_SELECT("matvec_mul")));
-        uint row_size = M;
-        uint col_size = N;
+        unsigned int row_size = M;
+        unsigned int col_size = N;
         size_t localsize = 128;
         size_t globalsize = (isTransA ?
                             col_size : (row_size + 3) / 4 * localsize);
 
-        uint argId = 0;
+        unsigned int argId = 0;
         k.arg(argId++, row_size);
         k.arg(argId++, col_size);
         k.arg(argId++, WrapHandle(A, &ctx));

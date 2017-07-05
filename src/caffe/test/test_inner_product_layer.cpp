@@ -363,7 +363,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC6) {
   Timer timer;
   timer.initted();
   timer.Start();
-  for (uint i = 0; i < 100; ++i) {
+  for (int i = 0; i < 100; ++i) {
      layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   timer.Stop();
@@ -413,7 +413,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC7) {
   Timer timer;
   timer.initted();
   timer.Start();
-  for (uint i = 0; i < 100; ++i) {
+  for (int i = 0; i < 100; ++i) {
      layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   timer.Stop();
@@ -461,7 +461,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC8) {
   Timer timer;
   timer.initted();
   timer.Start();
-  for (uint i = 0; i < 100; ++i) {
+  for (int i = 0; i < 100; ++i) {
      layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   timer.Stop();
@@ -511,7 +511,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC_dev1) {
   Timer timer;
   timer.initted();
   timer.Start();
-  for (uint i = 0; i < 100; ++i) {
+  for (int i = 0; i < 100; ++i) {
      layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   timer.Stop();

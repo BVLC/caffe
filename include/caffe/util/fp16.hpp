@@ -5,8 +5,15 @@
 #include "3rdparty/half/half.hpp"
 using half_float::half;
 
-#define HALF_MAX  0x1.ffcp15f
-#define HALF_MIN  0x1.0p-14f
+#ifdef _MSC_VER
+	#define HALF_MAX	65503
+	#define HALF_MIN	0.00061036
+#else
+	#define HALF_MAX	0x1.ffcp15f
+	#define HALF_MIN	0x1.0p-14f
+#endif
+
+#include <boost/shared_ptr.hpp>
 
 inline float fixup_arg_type(float v) {
   return v;

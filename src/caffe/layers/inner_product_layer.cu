@@ -669,7 +669,7 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
       return;
     } else {
       // 2. if not cached generate tuning
-      uint element_size = 0;
+      unsigned int element_size = 0;
       bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
       if (halfPrecisionMode) {
         element_size = sizeof(uint16_t);

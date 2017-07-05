@@ -305,3 +305,29 @@ We have provided the latest models that are trained from different datasets. To 
    * trainval1: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_a2NKQ2d1d043VXM), [SSD500](https://drive.google.com/open?id=0BzKzrI_SkD1_X2ZCLVgwLTgzaTQ)
 
 <sup>[1]</sup>We use [`examples/convert_model.ipynb`](https://github.com/weiliu89/caffe/blob/ssd/examples/convert_model.ipynb) to extract a VOC model from a pretrained COCO model.
+
+# Windows support for Intel Gen platform
+
+## Prerequisites
+* Visual Studio 2015 - Choose to install visual c++ and Windows SDK during the installation.
+* CMake
+* ViennaCL - put it in the same directory as Caffe's source code.
+* MKL
+* Python 2.7
+
+## How to build
+
+  ```Shell
+  Modify the scripts\build_win.cmd to use MKL rather than OpenBLAS.
+   cmake -G"!CMAKE_GENERATOR!" ^
+  -      -DBLAS=Open ^
+  +      -DBLAS=MKL ^
+  +      -DMKL_USE_SINGLE_DYNAMIC_LIBRARY=1 ^
+
+  Open a Windows command prompt console (cmd)
+  # cd caffe_source_dir
+  # set BUILD_PYTHON=0
+  # set BUILD_PYTHON_LAYER=0
+  # set USE_INTEL_SPATIAL=1
+  # scripts\build_win.cmd
+  ```

@@ -5,7 +5,7 @@
 if DEFINED APPVEYOR (
     echo Setting Appveyor defaults
     if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
-    if NOT DEFINED WITH_NINJA set WITH_NINJA=1
+    if NOT DEFINED WITH_NINJA set WITH_NINJA=0
     if NOT DEFINED CPU_ONLY set CPU_ONLY=1
     if NOT DEFINED CMAKE_CONFIG set CMAKE_CONFIG=Release
     if NOT DEFINED USE_NCCL set USE_NCCL=0
@@ -69,7 +69,7 @@ if DEFINED APPVEYOR (
     :: Change MSVC_VERSION to 12 to use VS 2013
     if NOT DEFINED MSVC_VERSION set MSVC_VERSION=14
     :: Change to 1 to use Ninja generator (builds much faster)
-    if NOT DEFINED WITH_NINJA set WITH_NINJA=1
+    if NOT DEFINED WITH_NINJA set WITH_NINJA=0
     :: Change to 1 to build caffe without CUDA support
     if NOT DEFINED CPU_ONLY set CPU_ONLY=0
     :: Change to Debug to build Debug. This is only relevant for the Ninja generator the Visual Studio generator will generate both Debug and Release configs
