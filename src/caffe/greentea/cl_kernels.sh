@@ -258,7 +258,7 @@ echo "#ifdef USE_FFT" >> $SOURCE
 echo "  options = \" -DFFT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
-echo "  options += \" -DHAS_HALF_SUPPORT; \";" >> $SOURCE
+echo "  options += \" -DHAS_HALF_SUPPORT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
 echo "                    != std::string::npos;" >> $SOURCE
