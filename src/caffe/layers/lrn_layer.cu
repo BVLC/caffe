@@ -259,27 +259,31 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
       } else if (IsFusedWithPoolMax()) {
         // We can't make sure the fused kernel be the faster for all platforms.
         // have to apply a simple tuning here.
-        if (fuse_tuned_)
-          CrossChannelForward_fuse_pooling_gpu(bottom, top, tuned_use_fuse_);
-        else {
-          float elapsedTime[2];
-          bool use_fuse[2] = {true, false};
-          // warm up.
-          CrossChannelForward_fuse_pooling_gpu(bottom, top, true);
-          CrossChannelForward_fuse_pooling_gpu(bottom, top, false);
-          for (int i = 0; i < 2; i++) {
-            Timer timer;
-            timer.initted();
-            timer.Start();
-            int loop_cnt = 2;
-            for (int j = 0; j < loop_cnt; j++) {
-              CrossChannelForward_fuse_pooling_gpu(bottom, top, use_fuse[i]);
+        if (this->device_->CheckCapability("cl_intel_subgroups")) {
+          if (fuse_tuned_)
+            CrossChannelForward_fuse_pooling_gpu(bottom, top, tuned_use_fuse_);
+          else {
+            float elapsedTime[2];
+            bool use_fuse[2] = {true, false};
+            // warm up.
+            CrossChannelForward_fuse_pooling_gpu(bottom, top, true);
+            CrossChannelForward_fuse_pooling_gpu(bottom, top, false);
+            for (int i = 0; i < 2; i++) {
+              Timer timer;
+              timer.initted();
+              timer.Start();
+              int loop_cnt = 2;
+              for (int j = 0; j < loop_cnt; j++) {
+                CrossChannelForward_fuse_pooling_gpu(bottom, top, use_fuse[i]);
+              }
+              timer.Stop();
+              elapsedTime[i] = timer.MilliSeconds() / loop_cnt;
             }
-            timer.Stop();
-            elapsedTime[i] = timer.MilliSeconds() / loop_cnt;
+            tuned_use_fuse_ = elapsedTime[0] < elapsedTime[1];
+            fuse_tuned_ = true;
           }
-          tuned_use_fuse_ = elapsedTime[0] < elapsedTime[1];
-          fuse_tuned_ = true;
+        } else {
+          CrossChannelForward_fuse_pooling_gpu(bottom, top, false);
         }
       }
     }
