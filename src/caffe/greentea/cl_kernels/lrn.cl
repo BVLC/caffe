@@ -120,6 +120,9 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
   }
 }
 
+#if defined(cl_intel_subgroups)
+#pragma OPENCL EXTENSION  cl_intel_subgroups : enable
+
 #define SIMD_WIDTH 16 
 #define TILE_W SIMD_WIDTH
 #define TILE_H 8
@@ -229,6 +232,7 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
 #undef TILE_W
 #undef TILE_H
 #undef SIMD_WIDTH
+#endif
 
 __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,
                              const int_tp num, const int_tp channels,
