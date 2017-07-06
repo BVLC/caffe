@@ -103,9 +103,11 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     //std::cout<<"5"<<std::endl;
     //*********************************************************Activation********************************************************//
     //disp(swap);
-  vector< PredictionResult<Dtype> > predicts;
+  vector<vector< PredictionResult<Dtype> > > predicts(swap.num());
   PredictionResult<Dtype> predict;
   predicts.clear(); 
+  vector<vector<int_tp> > idxes(swap.num());
+  idxes.clear();
   for (int_tp b = 0; b < swap.num(); ++b){
     for (int_tp j = 0; j < side_; ++j)
       for (int_tp i = 0; i < side_; ++i)
@@ -117,43 +119,36 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
           class_index_and_score(swap_data+index+5, num_classes_, predict);
           predict.confidence = predict.objScore * predict.classScore;
           if (predict.confidence >= confidence_threshold_){
-            predicts.push_back(predict);
+            predicts[b].push_back(predict);
           }
         }
-    vector<int_tp> idxes;
-    int_tp num_kept = 0;
-    if(predicts.size() > 0){
-      ApplyNms(predicts, idxes, nms_threshold_);
-      num_kept = idxes.size();
+    
+    if(predicts[b].size() > 0){
+      ApplyNms(predicts[b], idxes[b], nms_threshold_);
     }
+  }
+  int_tp num_kept=0;
+  for (int_tp b = 0; b < swap.num(); ++b)
+	  num_kept+=idxes[b].size();
     vector<int_tp> top_shape(2, 1);
-    top_shape.push_back(num_kept);
-    top_shape.push_back(7);
+  top_shape.push_back(num_kept);
+  top_shape.push_back(7);
+  top[0]->Reshape(top_shape);
 
-    Dtype* top_data;
-  
-  if (num_kept == 0) {
-    top_shape[2] = swap.num();
-    top[0]->Reshape(top_shape);
-    top_data = top[0]->mutable_cpu_data();
-    caffe_set<Dtype>(top[0]->count(), -1, top_data);
-    // Generate fake results per image.
-    for (int_tp i = 0; i < num; ++i) {
-      top_data[0] = i;
-      top_data += 7;
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int_tp start_pos=0;
+  for (int_tp b = 0; b < swap.num(); ++b){
+    for (int_tp i = 0; i < idxes[b].size(); i++){
+      top_data[start_pos+i*7] = b;                              //Image_Id
+      top_data[start_pos+i*7+1] = predicts[b][idxes[b][i]].classType; //label
+      top_data[start_pos+i*7+2] = predicts[b][idxes[b][i]].confidence; //confidence
+      top_data[start_pos+i*7+3] = predicts[b][idxes[b][i]].x;          
+      top_data[start_pos+i*7+4] = predicts[b][idxes[b][i]].y;
+      top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].w;
+      top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].h;
     }
-  } else {
-    top[0]->Reshape(top_shape);
-    top_data = top[0]->mutable_cpu_data();
-    for (int_tp i = 0; i < num_kept; i++){
-      top_data[i*7] = b;                              //Image_Id
-      top_data[i*7+1] = predicts[idxes[i]].classType; //label
-      top_data[i*7+2] = predicts[idxes[i]].confidence; //confidence
-      top_data[i*7+3] = predicts[idxes[i]].x;          
-      top_data[i*7+4] = predicts[idxes[i]].y;
-      top_data[i*7+5] = predicts[idxes[i]].w;
-      top_data[i*7+6] = predicts[idxes[i]].h;
-    }
+	start_pos += idxes[b].size()*7;
+  }
  if (visualize_) {
 #ifdef USE_OPENCV
     vector<cv::Mat> cv_imgs;
@@ -162,11 +157,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
         label_to_display_name_, save_file_, true);
 #endif
- }
- }
-
- }
-
+  }  
 }
 
 #ifdef CPU_ONLY
