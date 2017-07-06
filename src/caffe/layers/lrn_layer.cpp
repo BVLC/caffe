@@ -69,10 +69,10 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK(this->phase_ == caffe::TEST);
     CHECK(this->layer_param_.lrn_param().pooling_param().pool()
           == PoolingParameter_PoolMethod_MAX);
-    CHECK(this->layer_param_.lrn_param().pooling_param().kernel_size(0)
-          < 6);
-    CHECK(this->layer_param_.lrn_param().pooling_param().stride(0) < 4);
-    CHECK(this->layer_param_.lrn_param().pooling_param().dilation_size() == 0);
+    CHECK_LT(this->layer_param_.lrn_param().pooling_param().kernel_size(0),
+            6);
+    CHECK_LT(this->layer_param_.lrn_param().pooling_param().stride(0), 4);
+    CHECK_EQ(this->layer_param_.lrn_param().pooling_param().dilation_size(), 0);
     pool_w_ = this->layer_param_.lrn_param().pooling_param().kernel_size(0);
     pool_h_ = this->layer_param_.lrn_param().pooling_param().kernel_size(0);
     pool_stride_w_ =  this->layer_param_.lrn_param().pooling_param().stride(0);
@@ -88,7 +88,8 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     lrn_top_vec_.push_back(&lrn_top_blob_);
     LayerParameter pooling_param;
-    pooling_param.mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
+    pooling_param.mutable_pooling_param()->set_pool
+      (PoolingParameter_PoolMethod_MAX);
     pooling_param.mutable_pooling_param()->add_kernel_size(pool_w_);
     pooling_param.mutable_pooling_param()->add_stride(pool_stride_w_);
     pool_layer_.reset(new PoolingLayer<Dtype>(pooling_param));

@@ -38,7 +38,9 @@ void adagrad_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype delta,
         CL_KERNEL_SELECT("ada_grad_update"));
     viennacl::ocl::enqueue(
         oclk_ada_grad_update(N, WrapHandle((cl_mem) g, &ctx),
-                             WrapHandle((cl_mem) h, &ctx), fixup_arg_type(delta), fixup_arg_type(local_rate)),
+                             WrapHandle((cl_mem) h, &ctx),
+                             fixup_arg_type(delta),
+                             fixup_arg_type(local_rate)),
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }

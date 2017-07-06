@@ -69,7 +69,7 @@ std::string LibDNN<Dtype>::generate_header() {
     for (int_tp i = 2; i <= 16; i *= 2) {
       ss << "#define Dtype" << i << " double" << i << std::endl;
     }
-  } else if (std::is_same<Dtype, float>::value){
+  } else if (std::is_same<Dtype, float>::value) {
     ss << "#define Dtype float" << std::endl;
     ss << "#define Dtype1 float" << std::endl;
     // float2, float4, float8, float16
@@ -207,8 +207,8 @@ std::string LibDNN<Dtype>::generate_header() {
         ss << "current.floatVal[1] = *(source + 1);" << std::endl;
       ss << "do {" << std::endl;
       ss << "expected.intVal = current.intVal;" << std::endl;
-      ss << "next.floatVal[0] = expected.floatVal[0] " << atomic_ops[i] << " operand;"
-         << std::endl;
+      ss << "next.floatVal[0] = expected.floatVal[0] "
+         << atomic_ops[i] << " operand;" << std::endl;
       if (std::is_same<Dtype, half_float::half>::value) {
         ss << "next.floatVal[1] = expected.floatVal[1]; " << std::endl;
       }
@@ -230,7 +230,8 @@ std::string LibDNN<Dtype>::generate_header() {
   }
 
   // Memory set
-  ss << "__kernel void fill_memory(const int_tp n, const KERNEL_ARG_DTYPE alpha,"
+  ss << "__kernel void fill_memory(const int_tp n, "
+     << "const KERNEL_ARG_DTYPE alpha,"
      << "__global Dtype* x, const int_tp offx) {" << std::endl;
   ss << "for (int_tp index = get_global_id(0); index < n; "
      << "index += get_global_size(0)) {" << std::endl;

@@ -82,7 +82,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwise) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i],
@@ -105,7 +105,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseInPlace) {
   const int_tp count = this->blob_bottom_->count();
   const Dtype* in_data_a = orig_bottom.cpu_data();
   const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i],
@@ -149,7 +149,7 @@ TYPED_TEST(BiasLayerTest, TestBackwardEltwiseInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
@@ -176,7 +176,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseWithParam) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data_a = this->blob_bottom_->cpu_data();
   const Dtype* in_data_b = layer->blobs()[0]->cpu_data();
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i], delta);
@@ -192,7 +192,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastBegin) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
@@ -217,7 +217,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddle) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
@@ -244,7 +244,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleInPlace) {
   shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
@@ -296,7 +296,7 @@ TYPED_TEST(BiasLayerTest, TestBackwardBroadcastMiddleInPlace) {
   caffe_copy(top_diff.count(), top_diff.cpu_data(),
              this->blob_bottom_->mutable_cpu_diff());
   layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
@@ -319,7 +319,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleWithParam) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
@@ -343,7 +343,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastEnd) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int_tp c = 0; c < this->blob_bottom_->channels(); ++c) {
@@ -371,7 +371,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBias) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype bias = *this->blob_bottom_bias_->cpu_data();
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data[i] + bias, delta);
@@ -391,7 +391,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBiasAxis2) {
   const int_tp count = this->blob_top_->count();
   const Dtype* in_data = this->blob_bottom_->cpu_data();
   const Dtype bias = *this->blob_bottom_bias_->cpu_data();
-  const Dtype delta = std::is_same<Dtype,half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
                       1e-2 : 1e-5;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data[i] + bias, delta);

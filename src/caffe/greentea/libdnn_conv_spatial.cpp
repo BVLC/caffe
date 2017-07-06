@@ -258,29 +258,39 @@ std::string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     // SIMD16/8 mode will be used,
     // the compiler could choose to use two SIMD8 threads,
     // and if that happens the code will break.
-    ss << "#if defined(convolve_simd) || defined(Conv_Interleaved)" << std::endl;
+    ss << "#if defined(convolve_simd) || defined(Conv_Interleaved)"
+       << std::endl;
     ss << "#if TYPE == TYPE_HALF" << std::endl;
     ss << "#define INT_TYPE ushort" << std::endl;
     ss << "#define INT_TYPE2 ushort2" << std::endl;
     ss << "#define INT_TYPE4 ushort4" << std::endl;
     ss << "#define INT_TYPE8 ushort8" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ2 intel_sub_group_block_read_us2" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ4 intel_sub_group_block_read_us4" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ8 intel_sub_group_block_read_us8" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ intel_sub_group_block_read_us" << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ2 intel_sub_group_block_read_us2"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ4 intel_sub_group_block_read_us4"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ8 intel_sub_group_block_read_us8"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ intel_sub_group_block_read_us"
+       << std::endl;
     ss << "#else" << std::endl;
     ss << "#define INT_TYPE uint" << std::endl;
     ss << "#define INT_TYPE2 uint2" << std::endl;
     ss << "#define INT_TYPE4 uint4" << std::endl;
     ss << "#define INT_TYPE8 uint8" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ2 intel_sub_group_block_read2" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ4 intel_sub_group_block_read4" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ8 intel_sub_group_block_read8" << std::endl;
-    ss << "#define SUB_GROUP_BLOCK_READ intel_sub_group_block_read" << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ2 intel_sub_group_block_read2"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ4 intel_sub_group_block_read4"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ8 intel_sub_group_block_read8"
+       << std::endl;
+    ss << "#define SUB_GROUP_BLOCK_READ intel_sub_group_block_read"
+       << std::endl;
     ss << "#endif" << std::endl;
     ss << "#endif" << std::endl;
     ss << "#define activation_function(x) (x)" << std::endl;
-    ss << "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))" << std::endl;
+    ss << "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))"
+       << std::endl;
     ss << "kernel void" << std::endl;
     ss << "convolve_simd(" << std::endl;
     ss << "__global Dtype* inputs_base," << std::endl;
@@ -2244,7 +2254,8 @@ bool LibDNNConvSpatial<Dtype>::verify_result(
               dbgPrint(printf("test verification failed @ image %d group %d"
                               "out_ch %d h %d w %d got %G expected %G\n",
                       n, g, out_ch, h, w,
-                      (double)data[offset], (double)verify_data[offset]));
+                      static_cast<double>(data[offset]),
+                      static_cast<double>(verify_data[offset])));
               verificationFail = 1;
               goto out;
             }

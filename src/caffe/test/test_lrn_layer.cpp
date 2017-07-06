@@ -498,7 +498,8 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
   lrnLayer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   lrnLayer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   LayerParameter pooling_param;
-  pooling_param.mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
+  pooling_param.mutable_pooling_param()->
+    set_pool(PoolingParameter_PoolMethod_MAX);
   pooling_param.mutable_pooling_param()->add_kernel_size(3);
   pooling_param.mutable_pooling_param()->add_stride(2);
   PoolingLayer<TypeParam> pooling_layer(pooling_param);
@@ -509,15 +510,20 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
   // calculate result by lrn fused with pooling layer.
   LayerParameter fused_layer_param;
   fused_layer_param.set_phase(TEST);
-  fused_layer_param.mutable_lrn_param()->set_fuse_type(LRNParameter_FuseType_FUSED_POOL_MAX);
+  fused_layer_param.mutable_lrn_param()->
+    set_fuse_type(LRNParameter_FuseType_FUSED_POOL_MAX);
   fused_layer_param.mutable_lrn_param()->set_unit_test_mode(true);
-  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_MAX);
-  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->add_kernel_size(3);
-  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->add_stride(2);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->
+    set_pool(PoolingParameter_PoolMethod_MAX);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->
+    add_kernel_size(3);
+  fused_layer_param.mutable_lrn_param()->mutable_pooling_param()->
+    add_stride(2);
 
   bool test_fuse_kernel[2] = {true, false};
   for (int_tp index = 0; index < 2; index++) {
-    fused_layer_param.mutable_lrn_param()->set_unit_test_fuse_kernel(test_fuse_kernel[index]);
+    fused_layer_param.mutable_lrn_param()->
+      set_unit_test_fuse_kernel(test_fuse_kernel[index]);
     LRNLayer<TypeParam> fused_layer(fused_layer_param);
     fused_layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     fused_layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -526,7 +532,8 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
       EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                   this->epsilon_);
     }
-    memset(this->blob_top_->mutable_cpu_data(), 0, top_reference.count());
+    caffe_set(top_reference.count(), TypeParam(0),
+              this->blob_top_->mutable_cpu_data());
   }
 }
 

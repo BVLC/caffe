@@ -18,7 +18,7 @@ template <typename TypeParam>
 class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
-protected:
+ protected:
   InnerProductLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_nobatch_(new Blob<Dtype>(1, 2, 3, 4)),
@@ -132,13 +132,13 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
   }
 }
 
+#if 0
 TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
   typedef typename TypeParam::Dtype Dtype;
   FillerParameter filler_param;
   UniformFiller<Dtype> filler(filler_param);
   caffe::Caffe::SetDevice(0);
-  #if 0
-  for(auto i = 1; i <= 64; i*=2) {
+  for (auto i = 1; i <= 64; i*=2) {
     Blob<Dtype>* const blob_bottom = new Blob<Dtype>(i, 392, 8, 8);
     Blob<Dtype>* const blob_top = new Blob<Dtype>();
     filler.Fill(blob_bottom);
@@ -168,7 +168,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
     int_tp K = layer->blobs()[0]->shape(1);
 
     if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
-      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K, (Dtype)1., A, B, (Dtype)0., C);
+      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K,
+                     (Dtype)1., A, B, (Dtype)0., C);
 
       const Dtype* data = blob_top->cpu_data();
       const int_tp count = blob_top->count();
@@ -176,8 +177,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
         EXPECT_NEAR(data[i], C[i], 1e-1);
       }
     }
-    if (Caffe::mode() == Caffe::GPU)
-    {
+    if (Caffe::mode() == Caffe::GPU) {
       Timer timer;
       timer.initted();
       timer.Start();
@@ -188,15 +188,20 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
       timer.Stop();
       float elapsedTime = timer.MilliSeconds();
       elapsedTime /= times;
-      std::cout << "MNK(" << M << ","<<N<<","<<K<<") Time is: " << elapsedTime
-                <<" ms" << std::endl;
-      std::cout << "I/O: " << ((double)M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
-      std::cout << "FLOPS: " << (double)M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
+      std::cout << "MNK(" << M << "," << N << "," << K << ") Time is: "
+                << elapsedTime
+                << " ms" << std::endl;
+      std::cout << "I/O: "
+                << static_cast<double>(M*K + K*N + M*N) * sizeof(Dtype)
+                   /elapsedTime / 1e6
+                << "GB/s" << std::endl;
+      std::cout << "FLOPS: "
+                << static_cast<double>(M*N*(2*K-1)/elapsedTime/1e6) <<"GFLOPS"
+                << std::endl;
     }
     delete blob_bottom;
     delete blob_top;
   }
-  #endif
 }
 
 TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
@@ -204,8 +209,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
   FillerParameter filler_param;
   UniformFiller<Dtype> filler(filler_param);
   caffe::Caffe::SetDevice(0);
-#if 0
-  for(auto i = 1; i <= 64; i*=2) {
+  for (auto i = 1; i <= 64; i*=2) {
     Blob<Dtype>* const blob_bottom = new Blob<Dtype>(i, 25088+1, 1, 1);
     Blob<Dtype>* const blob_top = new Blob<Dtype>();
     filler.Fill(blob_bottom);
@@ -235,7 +239,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
     int_tp K = layer->blobs()[0]->shape(1);
 
     if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
-      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K, (Dtype)1., A, B, (Dtype)0., C);
+      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K, (Dtype)1.,
+                     A, B, (Dtype)0., C);
 
       const Dtype* data = blob_top->cpu_data();
       const int_tp count = blob_top->count();
@@ -244,8 +249,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
         EXPECT_NEAR(data[i], C[i], 1e-1);
       }
     }
-    if (Caffe::mode() == Caffe::GPU)
-    {
+    if (Caffe::mode() == Caffe::GPU) {
       Timer timer;
       timer.initted();
       timer.Start();
@@ -256,16 +260,22 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
       timer.Stop();
       float elapsedTime = timer.MilliSeconds();
       elapsedTime /= times;
-      std::cout << "MNK(" << M << ","<<N<<","<<K<<") Time is: " << elapsedTime
-                <<" ms" << std::endl;
-      std::cout << "I/O: " << ((double)M*K + K*N + M*N) * sizeof(Dtype) /elapsedTime / 1e6 << "GB/s" << std::endl;
-      std::cout << "FLOPS: " << (double)M*N*(2*K-1)/elapsedTime/1e6 <<"GFLOPS" << std::endl;
+      std::cout << "MNK(" << M << "," << N << "," << K << ") Time is: "
+                << elapsedTime
+                << " ms" << std::endl;
+      std::cout << "I/O: "
+                << static_cast<double>(M*K + K*N + M*N) * sizeof(Dtype)
+                   /elapsedTime / 1e6
+                << "GB/s" << std::endl;
+      std::cout << "FLOPS: "
+                << static_cast<double>(M*N*(2*K-1)/elapsedTime/1e6) <<"GFLOPS"
+                << std::endl;
     }
     delete blob_bottom;
     delete blob_top;
   }
-#endif
 }
+#endif
 
 template <typename Dtype>
 void gemv(const vector<shared_ptr<Blob<Dtype> > >& A,
@@ -314,6 +324,7 @@ template void gemv(const vector<shared_ptr<Blob<double> > >& A,
           const float alpha,
           const float beta);
 
+#if 0
 TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC6) {
   typedef typename TypeParam::Dtype Dtype;
 
@@ -322,7 +333,6 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC6) {
   FillerParameter filler_param;
   UniformFiller<Dtype> filler(filler_param);
   filler.Fill(blob_bottom);
-
   this->blob_bottom_vec_.clear();
   this->blob_bottom_vec_.push_back(blob_bottom);
   this->blob_top_vec_.clear();
@@ -462,6 +472,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC8) {
   delete blob_bottom;
   delete blob_top;
 }
+#endif
 
 TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC_dev1) {
   typedef typename TypeParam::Dtype Dtype;
@@ -497,7 +508,6 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC_dev1) {
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], ref_data[i], 1e-1);
   }
-
   Timer timer;
   timer.initted();
   timer.Start();
@@ -515,7 +525,6 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC_dev1) {
 TYPED_TEST(InnerProductLayerTest, TestGEMV) {
   typedef typename TypeParam::Dtype Dtype;
   if (Caffe::mode() == Caffe::GPU) {
-
     Blob<Dtype>* const blob_bottom = new Blob<Dtype>(1, 4099, 1, 1);
     Blob<Dtype>* const blob_top = new Blob<Dtype>();
     FillerParameter filler_param;
@@ -543,7 +552,7 @@ TYPED_TEST(InnerProductLayerTest, TestGEMV) {
     Dtype beta = 2;
     unsigned int M = layer->blobs()[0]->shape(0);
     unsigned int N = layer->blobs()[0]->shape(1);
-    //add offset
+    //  add offset
     unsigned int offA = M * N / 2;
     unsigned int offx = 0;
     unsigned int offy = M / 2;
@@ -551,7 +560,8 @@ TYPED_TEST(InnerProductLayerTest, TestGEMV) {
     greentea_gpu_gemv<Dtype>(dc->id(), CblasNoTrans,
                            M, N,
                            alpha,
-                           (cl_mem)layer->blobs()[0]->gpu_data(), offA, (cl_mem)x,
+                           (cl_mem)layer->blobs()[0]->gpu_data(),
+                           offA, (cl_mem)x,
                            offx, beta, (cl_mem)y,
                            offy);
     gemv(layer->blobs(), offA, M, N,
