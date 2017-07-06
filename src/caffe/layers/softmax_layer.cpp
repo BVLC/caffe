@@ -43,7 +43,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int_tp i = 0; i < outer_num_; ++i) {
     // initialize scale_data to the first plane
     caffe_cpu_copy(inner_num_, bottom_data + i * dim, scale_data);
-    // start max after the first inner_num values (j=1) since they were just copied
+    // start max after the first inner_num values
+    // (j=1) since they were just copied
     for (int_tp j = 1; j < channels; j++) {
       for (int_tp k = 0; k < inner_num_; k++) {
         scale_data[k] = std::max(scale_data[k],

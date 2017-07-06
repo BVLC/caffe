@@ -1,6 +1,7 @@
 #ifndef CAFFE_INNER_PRODUCT_LAYER_HPP_
 #define CAFFE_INNER_PRODUCT_LAYER_HPP_
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -75,6 +76,7 @@ class InnerProductLayer : public Layer<Dtype> {
     weight_image_ = NULL;
   }
 #endif
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

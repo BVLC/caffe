@@ -1,8 +1,8 @@
 #include <vector>
 
 #include "caffe/layers/lrn_layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/benchmark.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -107,8 +107,9 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     const int_tp tile_pooled_block_w = (TILE_W - pool_w_) / pool_stride_w_ + 1;
     const int tiled_width = (width_ + tile_pooled_block_w * pool_stride_w_ - 1)
                             / (tile_pooled_block_w * pool_stride_w_);
-    const int tiled_height = (height_ + tile_pooled_block_h * pool_stride_h_ - 1)
-                           / (tile_pooled_block_h * pool_stride_h_);
+    const int tiled_height =
+      (height_ + tile_pooled_block_h * pool_stride_h_ - 1)
+       / (tile_pooled_block_h * pool_stride_h_);
     int_tp n_threads = num_ * tiled_width * tiled_height;
     size_t global_work_size_[2] = {(size_t)n_threads, simd_size};
     size_t local_work_size[2] = {1, simd_size};
@@ -133,8 +134,8 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     oclk_lrn_fill.arg(argIdx++, tile_pooled_block_w);
     OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      oclk_lrn_fill.handle().get(), 2, NULL,
-                                     global_work_size_, local_work_size, 0, NULL,
-                                     NULL));
+                                     global_work_size_, local_work_size, 0,
+                                     NULL, NULL));
   } else {
     Dtype* top_lrn_data = lrn_top_blob_.mutable_gpu_data();
     // Do LRN firstly.
@@ -171,7 +172,7 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
           pool_w_, pool_stride_h_, pool_stride_w_, 0, 0,
           WrapHandle((cl_mem) top_data, &ctx)),
       ctx.get_queue());
-   }
+  }
 }
 
 template<typename Dtype>
@@ -234,7 +235,6 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
                                      global_work_size_, NULL, 0, NULL,
                                      NULL));
     } else {
-
       if (!IsFused()) {
         cl_uint argIdx = 0;
         int_tp n_threads = num_ * height_ * width_;
@@ -260,9 +260,9 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
         // We can't make sure the fused kernel be the faster for all platforms.
         // have to apply a simple tuning here.
         if (this->device_->CheckCapability("cl_intel_subgroups")) {
-          if (fuse_tuned_)
+          if (fuse_tuned_) {
             CrossChannelForward_fuse_pooling_gpu(bottom, top, tuned_use_fuse_);
-          else {
+          } else {
             float elapsedTime[2];
             bool use_fuse[2] = {true, false};
             // warm up.
@@ -304,7 +304,8 @@ template void LRNLayer<double>::CrossChannelForward_gpu(
 template void LRNLayer<float>::CrossChannelForward_fuse_pooling_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top, bool);
 template void LRNLayer<double>::CrossChannelForward_fuse_pooling_gpu(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top, bool);
+    const vector<Blob<double>*>& bottom,
+    const vector<Blob<double>*>& top, bool);
 
 template<typename Dtype>
 void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
