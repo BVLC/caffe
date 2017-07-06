@@ -89,7 +89,6 @@ DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 inline void cblas_haxpby(const int_tp N, const half alpha, const half* X,
                          const int_tp incX, const half beta, half* Y,
                          const int_tp incY) {
-
   for (int_tp n = 0; n < N; n++)
     Y[n * incY] *= beta;
 

@@ -10,10 +10,13 @@ namespace caffe {
          oclk_bn_use_global_stats.arg(argIdx++, num);   \
          oclk_bn_use_global_stats.arg(argIdx++, channels_);   \
          oclk_bn_use_global_stats.arg(argIdx++, spatial_dim); \
-         oclk_bn_use_global_stats.arg(argIdx++, fixup_arg_type(scale_factor));  \
+         oclk_bn_use_global_stats.arg(argIdx++, \
+           fixup_arg_type(scale_factor));  \
          oclk_bn_use_global_stats.arg(argIdx++, fixup_arg_type(eps_));  \
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));  \
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
+         oclk_bn_use_global_stats.arg(argIdx++, \
+           WrapHandle((cl_mem) this->blobs_[0]->gpu_data(), &ctx));  \
+         oclk_bn_use_global_stats.arg(argIdx++, \
+           WrapHandle((cl_mem) this->blobs_[1]->gpu_data(), &ctx));
 
 
 template<typename Dtype>
@@ -136,16 +139,17 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
          OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                    oclk_bn_use_global_stats.handle().get(), 3, NULL,
                    global_work_size_, NULL, 0, NULL, NULL));
-        }
-        else {
+        } else {
          viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
            CL_KERNEL_SELECT("bn_use_global_stats_in_place"));
 
          SET_COMMON_KERNEL_PARAMS
 
-         oclk_bn_use_global_stats.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+         oclk_bn_use_global_stats.arg(argIdx++,
+           WrapHandle((cl_mem) top_data, &ctx));
          OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                  oclk_bn_use_global_stats.handle().get(), 3, NULL, global_work_size_, NULL, 0, NULL, NULL));
+                   oclk_bn_use_global_stats.handle().get(), 3, NULL,
+                   global_work_size_, NULL, 0, NULL, NULL));
         }
       } else {
         if (fused_relu) {
@@ -162,8 +166,7 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                       oclk_bn_use_global_stats.handle().get(), 3, NULL,
                       global_work_size_, NULL, 0, NULL, NULL));
-        }
-        else {
+        } else {
             viennacl::ocl::kernel &oclk_bn_use_global_stats =
               program.get_kernel(CL_KERNEL_SELECT("bn_use_global_stats"));
 

@@ -64,7 +64,8 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
     for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
       Dtype expected_value = tanh_naive(bottom_data[i]);
       Dtype precision = std::max(
-        Dtype(std::abs(expected_value * Dtype(precision_factor))), min_precision);
+        Dtype(std::abs(expected_value * Dtype(precision_factor))),
+              min_precision);
       EXPECT_NEAR(expected_value, top_data[i], precision);
     }
   }

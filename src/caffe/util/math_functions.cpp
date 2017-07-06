@@ -88,7 +88,7 @@ void caffe_cpu_axpby<half>(const int_tp N, const half alpha, const half* X,
 
 void vhAdd(const int_tp n, const half* a, const half* b,
                      half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = a[i] + b[i];
   }
 }
@@ -100,7 +100,7 @@ void caffe_add<half>(const int_tp n, const half* a, const half* b,
 }
 void vhSub(const int_tp n, const half* a, const half* b,
            half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = a[i] - b[i];
   }
 }
@@ -113,7 +113,7 @@ void caffe_sub<half>(const int_tp n, const half* a, const half* b,
 
 void vhMul(const int_tp n, const half* a, const half* b,
            half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = a[i] * b[i];
   }
 }
@@ -126,7 +126,7 @@ void caffe_mul<half>(const int_tp n, const half* a, const half* b,
 
 void vhDiv(const int_tp n, const half* a, const half* b,
            half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = a[i] / b[i];
   }
 }
@@ -137,9 +137,8 @@ void caffe_div<half>(const int_tp n, const half* a, const half* b,
   vhDiv(n, a, b, y);
 }
 
-void vhPowx(const int_tp n, const half*a, const half b, half* y)
-{
-  for( int i = 0; i < n; i++)
+void vhPowx(const int_tp n, const half*a, const half b, half* y) {
+  for (int i = 0; i < n; i++)
     y[i] = pow(a[i], b);
 }
 
@@ -150,7 +149,7 @@ void caffe_powx<half>(const int_tp n, const half* a, const half b,
 }
 
 void vhSqr(const int_tp n, const half *a, half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = sqrt(a[i]);
   }
 }
@@ -161,7 +160,7 @@ void caffe_sqr<half>(const int_tp n, const half* a, half* y) {
 }
 
 void vhExp(const int_tp n, const half* a, half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = exp(a[i]);
   }
 }
@@ -172,7 +171,7 @@ void caffe_exp<half>(const int_tp n, const half* a, half* y) {
 }
 
 void vhLn(const int_tp n, const half* a, half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = log(a[i]);
   }
 }
@@ -183,7 +182,7 @@ void caffe_log<half>(const int_tp n, const half* a, half* y) {
 }
 
 void vhAbs(const int_tp n, const half *a, half* y) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     y[i] = fabs(a[i]);
   }
 }
@@ -194,11 +193,13 @@ void caffe_abs<half>(const int_tp n, const half* a, half* y) {
 }
 
 template<>
-void caffe_rng_uniform<half>(const int_tp n, const half a, const half b, half* r) {
+void caffe_rng_uniform<half>(const int_tp n, const half a,
+                             const half b, half* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_LE(a, b);
-  boost::uniform_real<float> random_distribution(float(a), caffe_nextafter<float>(float(b)));
+  boost::uniform_real<float> random_distribution(static_cast<float>(a),
+    caffe_nextafter<float>(static_cast<float>(b)));
 
   boost::variate_generator<caffe::rng_t*,
     boost::uniform_real<float>> variate_generator(
@@ -239,7 +240,7 @@ void caffe_rng_bernoulli<half, unsigned int>(const int_tp n, const half p,
   boost::bernoulli_distribution<float>> variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
-    //r[i] = static_cast<Itype>(variate_generator());
+    r[i] = static_cast<unsigned int>(variate_generator());
   }
 }
 template<>
@@ -256,7 +257,7 @@ void caffe_rng_bernoulli<half, int>(const int_tp n, const half p,
   boost::bernoulli_distribution<float>> variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
-    //r[i] = static_cast<Itype>(variate_generator());
+    r[i] = static_cast<int>(variate_generator());
   }
 }
 
@@ -265,7 +266,6 @@ void caffe_cpu_scale<half>(const int_tp n, const half alpha, const half *x,
                            half* y) {
   for (int_tp i = 0; i < n; i++)
     y[i] = x[i];
-  //cblas_hcopy(n, x, 1, y, 1);
   caffe_scal(n, alpha, y);
 }
 

@@ -135,11 +135,13 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           //     -> dy/dx = 2 * scale * (shift + scale * x)
           //              = diff_scale * shift + diff_scale * scale * x
           greentea_gpu_axpby(this->device_->id(), count,
-                             Dtype(diff_scale_ * scale_), (cl_mem) bottom_data, 0,
+                             Dtype(diff_scale_ * scale_),
+                             (cl_mem) bottom_data, 0,
                              Dtype(0), (cl_mem) bottom_diff, 0);
           if (shift_ != Dtype(0)) {
             greentea_gpu_add_scalar(this->device_->id(), count,
-                                    Dtype(diff_scale_ * shift_), (cl_mem) bottom_diff,
+                                    Dtype(diff_scale_ * shift_),
+                                    (cl_mem) bottom_diff,
                                     0);
           }
         } else if (shift_ == Dtype(0)) {

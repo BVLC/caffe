@@ -26,7 +26,7 @@
 
 namespace caffe {
 
-#define ALIGN(val,N) ( ( (val) + (N) - 1 ) & ~( (N) - 1 ) )
+#define ALIGN(val, N) (((val) + (N) - 1) & ~((N) - 1))
 
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::compute_output_shape() {
@@ -73,14 +73,17 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   bias_ = NULL;
 
   if (IsFusedWithEltwiseReLU()) {
-    CHECK(this->layer_param().eltwise_param().coeff_size() == 0);
-    CHECK(bottom.size() == 2);
+    CHECK_EQ(
+      this->layer_param().convolution_param().eltwise_param().coeff_size(),
+      0);
+    CHECK_EQ(bottom.size(), 2);
     op_ = this->layer_param_.eltwise_param().operation();
-    CHECK(op_ == EltwiseParameter_EltwiseOp_SUM);
+    CHECK_EQ(op_, EltwiseParameter_EltwiseOp_SUM);
   }
 
   if (IsFusedWithReLU())
-    negative_slope_ = this->layer_param_.convolution_param().relu_param().negative_slope();
+    negative_slope_ =
+      this->layer_param_.convolution_param().relu_param().negative_slope();
   else
     negative_slope_ = 0;
 
@@ -111,7 +114,6 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
-  //printf("handle layer %s bottom size %ld \n", this->layer_param_.name().c_str(), bottom.size());
   if (IsFusedWithEltwiseReLU()) {
     const vector<Blob<Dtype>*> bottom_image(bottom.begin(), bottom.end() - 1);
     BaseConvolutionLayer<Dtype>::Reshape(bottom_image, top);
@@ -160,7 +162,8 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  CHECK(IsFusedWithEltwiseReLU() == false && IsFusedWithReLU() == false);
+  CHECK_EQ(IsFusedWithEltwiseReLU() == false && IsFusedWithReLU() == false,
+           true);
   for (int_tp i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
@@ -228,7 +231,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::generate_key() {
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   std::stringstream keyBuilder;
   if (std::is_same<Dtype, float>::value)
     keyBuilder << "float_";
@@ -264,7 +267,7 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
 template<typename Dtype>
 std::string ConvolutionLayerSpatial<Dtype>::generate_specific_key(
     int_tp type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   std::stringstream keyBuilder;
   keyBuilder << short_key_
              << "_" << type
@@ -401,7 +404,7 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
                 * kernel_w_ + c) * M_ + od]
                 = weight_cpu[((od * this->channels_ + id)
                 * kernel_h_ + r) * kernel_w_ + c ];
-    interleaveMatrix( cpu_swizzled_weight, tmpSwizzledWeight,
+    interleaveMatrix(cpu_swizzled_weight, tmpSwizzledWeight,
               kernel_w_ * kernel_h_ * this->channels_, M_,
               interleavedRows, nonInterleavedRows, blockWidth, rowAlignment);
     free(tmpSwizzledWeight);
@@ -413,7 +416,7 @@ void ConvolutionLayerSpatial<Dtype>::calculate_global_size(int_tp batch,
                                   int_tp* wio,  // work item output size
                                   size_t* lSize,  // local size
                                   size_t* gSize) {  // global size
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   gSize[0] = ceil(
       (fmax(static_cast<float>(output_w_) / wio[0], 1.0)) / lSize[0])
       * lSize[0];
@@ -431,7 +434,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
     const vector<Blob<Dtype>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp blockDepth) {
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   // Standard spatial setup is done here
   std::stringstream keyBuilder;
   std::stringstream multFunctionBuilder;
@@ -551,7 +554,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
     int_tp index,
     int_tp numImages, kernelConfig* config) {
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
   viennacl::ocl::kernel &kernel = program.get_kernel(config->kernelName);
@@ -792,7 +795,7 @@ float ConvolutionLayerSpatial<Dtype>::timed_convolve(
     int_tp index,
     int_tp numImages, kernelConfig* config) {
   // warm up.
-  CHECK((!std::is_same<Dtype, double>::value));
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
   bool saved_tuned = tuned_;
   tuned_ = false;
   convolve(bottom, top, index, this->num_, config);
@@ -856,7 +859,6 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
     return true;
   else if (config->tested)
     return false;
-  
   greentea_memset(this->device_->id(),
                   top[index]->count() * sizeof(Dtype),
                   0xff,
@@ -887,10 +889,13 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
             if (fabs(data[offset] - verify_data[offset]) >
                        0.1 * fabs(verify_data[offset] * err_factor) &&
                 !(fabs(verify_data[offset]) < 1e-3 * err_factor
-                  && fabs(data[offset] - verify_data[offset]) < 1e-4 * err_factor)) {
+                  && fabs(data[offset] - verify_data[offset]) <
+                     1e-4 * err_factor)) {
               dbgPrint(printf("test verification failed @ image %d group %d"
                               "out_ch %d h %d w %d got %G expected %G\n",
-                      n, g, out_ch, h, w, float(data[offset]), float(verify_data[offset])));
+                      n, g, out_ch, h, w,
+                      static_cast<float>(data[offset]),
+                      static_cast<float>(verify_data[offset])));
               verificationFail = 1;
               break;
             }
@@ -1244,7 +1249,8 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
-      if ((kernel_w_ < 4 || (!std::is_same<Dtype, float>::value)) && M_ % 32 == 0)
+      if ((kernel_w_ < 4 || (!std::is_same<Dtype, float>::value))
+          && M_ % 32 == 0)
         create_convolution_kernel(bottom, top, 5, 1, 16, 32);
       if (kernel_w_ < 4 && (!std::is_same<Dtype, float>::value))
         create_convolution_kernel(bottom, top, 5, 2, 16, 32);

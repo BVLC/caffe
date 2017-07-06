@@ -205,12 +205,13 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
   if (std::is_same<Dtype, half_float::half>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
     ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
-  } else
+  } else {
 #endif
-  {
     ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
     ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
+#ifdef HAS_HALF_SUPPORT
   }
+#endif
 
   ss << "__kernel void " + name + "(";
   ss << "__global const Dtype* __restrict bottom_data, ";

@@ -188,25 +188,25 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
   std::vector<cl_mem> tmpSubBuffers;
 
-  bool IsFused() const
-  {
-    return (this->layer_param_.convolution_param().fuse_type() != ConvolutionParameter_FuseType_UNFUSED);
+  bool IsFused() const {
+    return (this->layer_param_.convolution_param().fuse_type()
+            != ConvolutionParameter_FuseType_UNFUSED);
   }
 
-  bool IsFusedWithMaxPoolAndReLU() const
-  {
-    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_MAX_POOLING_RELU);
+  bool IsFusedWithMaxPoolAndReLU() const {
+    return (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_MAX_POOLING_RELU);
   }
 
-  bool IsFusedWithEltwiseReLU() const
-  {
-    return (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
+  bool IsFusedWithEltwiseReLU() const {
+    return (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
   }
 
-  bool IsFusedWithReLU() const
-  {
+  bool IsFusedWithReLU() const {
     return IsFusedWithEltwiseReLU() ||
-           (this->layer_param_.convolution_param().fuse_type() == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
+           (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
   }
 
 #endif
@@ -270,9 +270,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   Dtype negative_slope_;
 
   bool stable_prod_grad_;
-
 };
-
 }  // namespace caffe
 
 #endif  // CAFFE_CONV_SPATIAL_LAYER_HPP_

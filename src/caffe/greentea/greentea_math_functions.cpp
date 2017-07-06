@@ -422,7 +422,8 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
         uint row_size = M;
         uint col_size = N;
         size_t localsize = 128;
-        size_t globalsize = (isTransA ? col_size : (row_size + 3) / 4 * localsize);
+        size_t globalsize = (isTransA ?
+                            col_size : (row_size + 3) / 4 * localsize);
 
         uint argId = 0;
         k.arg(argId++, row_size);
@@ -596,7 +597,7 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
       GREENTEA_CL_BLAS_CHECK(
           clblasSaxpy(N, alpha, X, offX,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
-    } else if (std::is_same<Dtype, double>::value){
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasDaxpy(N, alpha, X, offX,
               1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
@@ -869,7 +870,7 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
       GREENTEA_CL_BLAS_CHECK(
           clblasSdot(n, gpuout, 0, X, offX, 1, Y,
               offY, 1, scratch, 1, &queue, 0, NULL, NULL));
-    } else if (std::is_same<Dtype, double>::value){
+    } else if (std::is_same<Dtype, double>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasDdot(n, gpuout, 0, X, offX, 1, Y,
               offY, 1, scratch, 1, &queue, 0, NULL, NULL));
@@ -1224,7 +1225,8 @@ void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N,
 
   viennacl::ocl::kernel &oclk_add_scalar = program.get_kernel(
       CL_KERNEL_SELECT("add_scalar"));
-  viennacl::ocl::enqueue(oclk_add_scalar(N, fixup_arg_type(alpha), WrapHandle(Y, &ctx), offY),
+  viennacl::ocl::enqueue(oclk_add_scalar(N, fixup_arg_type(alpha),
+                         WrapHandle(Y, &ctx), offY),
                          ctx.get_queue());
 }
 

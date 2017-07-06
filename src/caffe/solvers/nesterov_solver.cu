@@ -38,7 +38,8 @@ void nesterov_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h,
         CL_KERNEL_SELECT("nesterov_update"));
     viennacl::ocl::enqueue(
         oclk_nesterov_update(N, WrapHandle((cl_mem) g, &ctx),
-                             WrapHandle((cl_mem) h, &ctx), fixup_arg_type(momentum),
+                             WrapHandle((cl_mem) h, &ctx),
+                             fixup_arg_type(momentum),
                              fixup_arg_type(local_rate)),
         ctx.get_queue());
 #endif  // USE_GREENTEA

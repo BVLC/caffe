@@ -49,7 +49,8 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
 #ifndef USE_GREENTEA
   *ptr = mkl_malloc(size ? size:1, 64);
 #else
-  *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
+  *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) :
+         64, OPENCL_PAGE_ALIGN);
 #endif
 #else
   CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
