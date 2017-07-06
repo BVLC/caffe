@@ -2,6 +2,9 @@
 #include "header.cl"
 #endif
 
+#if defined(cl_intel_subgroups)
+#pragma OPENCL EXTENSION  cl_intel_subgroups : enable
+
 #if TYPE != TYPE_DOUBLE 
 
 #define TILE_M          32
@@ -2646,4 +2649,5 @@ __kernel void TEMPLATE(gemm_buffer_TT, Dtype)(
 #undef SHUFFLE_TYPE2
 #undef SHUFFLE_TYPE8
 
+#endif
 #endif
