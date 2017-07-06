@@ -3262,6 +3262,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#if defined(cl_intel_subgroups)",    // NOLINT
+"#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
+"",    // NOLINT
 "#if TYPE != TYPE_DOUBLE",    // NOLINT
 "",    // NOLINT
 "#define TILE_M          32",    // NOLINT
@@ -5091,6 +5094,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef SHUFFLE_TYPE8",    // NOLINT
 "",    // NOLINT
 "#endif",    // NOLINT
+"#endif",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
@@ -5525,6 +5529,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"#if defined(cl_intel_subgroups)",    // NOLINT
+"#pragma OPENCL EXTENSION  cl_intel_subgroups : enable",    // NOLINT
+"",    // NOLINT
 "#define SIMD_WIDTH 16",    // NOLINT
 "#define TILE_W SIMD_WIDTH",    // NOLINT
 "#define TILE_H 8",    // NOLINT
@@ -5634,6 +5641,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#undef TILE_W",    // NOLINT
 "#undef TILE_H",    // NOLINT
 "#undef SIMD_WIDTH",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global const Dtype* in,",    // NOLINT
 "const int_tp num, const int_tp channels,",    // NOLINT
