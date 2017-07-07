@@ -275,7 +275,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this));
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    if ( propagation == prop_kind::forward_training &&
+    if (propagation == prop_kind::forward_training &&
             pooling_algorithm != algorithm::pooling_avg_exclude_padding &&
             pooling_algorithm != algorithm::pooling_avg_include_padding) {
         indices_pd.reset(new MemPD(poolingFwd_pd->workspace_primitive_desc()));
@@ -284,8 +284,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     } else {
         poolingFwd.reset(new pooling_forward(*poolingFwd_pd, *fwd_bottom_data_primitive, *fwd_top_data_memory));
     }
-    fwd_bottom_data->set_mkldnn_primitive(poolingFwd);
-    fwd_top_data->set_mkldnn_primitive(poolingFwd);
+    //fwd_bottom_data->set_mkldnn_primitive(poolingFwd);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+
+    //fwd_top_data->set_mkldnn_primitive(poolingFwd);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_top_data_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
@@ -440,8 +445,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
     else
         poolingBwd.reset(new pooling_backward(*poolingBwd_pd,
                     *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
-    bwd_bottom_diff->set_mkldnn_primitive(poolingBwd);
-    bwd_top_diff->set_mkldnn_primitive(poolingBwd);
+    //bwd_bottom_diff->set_mkldnn_primitive(poolingBwd);    //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
+    bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
+
+    //bwd_top_diff->set_mkldnn_primitive(poolingBwd);       //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
+    bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
 }
 
 template <typename Dtype>
