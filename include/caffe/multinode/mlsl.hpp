@@ -41,9 +41,12 @@
 #ifdef USE_MLSL
 
 #include <mlsl.hpp>
+#include "caffe/common.hpp"
 
 namespace caffe {
   namespace mn {
+
+#define MLSL_DEFAULT_COLOR -1
 
     inline void free(void *addr) {
       return MLSL::Environment::GetEnv().Free(addr);
@@ -61,9 +64,19 @@ namespace caffe {
       return MLSL::Environment::GetEnv().GetProcessCount();
     }
 
+    inline int get_group_id(int data_parts, int model_parts) {
+      int node_id = get_node_id();
+      int num_nodes = get_nodes_count();
+      return (node_id % (num_nodes / data_parts)) / model_parts;
+    }
+
     inline bool is_multinode() {
       static bool multinode{ get_nodes_count() > 1 };
       return multinode;
+    }
+
+    inline bool is_root() {
+      return mn::get_node_id() == 0;
     }
 
     namespace detail {
@@ -90,8 +103,16 @@ namespace caffe {
       Distribution & operator = (const Distribution &) = delete;
       Distribution(const Distribution &) = delete;
 
-      Distribution(int dataParts, int modelParts)
-        : distrib_{ MLSL::Environment::GetEnv().CreateDistribution(dataParts, modelParts) } {
+      Distribution(int dataParts, int modelParts, int dataColor = MLSL_DEFAULT_COLOR, int modelColor = MLSL_DEFAULT_COLOR,
+                   int dataColorMax = MLSL_DEFAULT_COLOR, int modelColorMax = MLSL_DEFAULT_COLOR) :
+        data_parts_(dataParts), model_parts_(modelParts),
+        data_color_(dataColor), model_color_(modelColor),
+        data_color_max_(dataColorMax), model_color_max_(modelColorMax) {
+        if (dataColor == MLSL_DEFAULT_COLOR || modelColor == MLSL_DEFAULT_COLOR) {
+          distrib_ = MLSL::Environment::GetEnv().CreateDistribution(dataParts, modelParts);
+        } else {
+          distrib_ = MLSL::Environment::GetEnv().CreateDistributionWithColors(dataColor, modelColor);
+        }
       }
       ~Distribution() {
         MLSL::Environment::GetEnv().DeleteDistribution(distrib_);
@@ -100,71 +121,134 @@ namespace caffe {
         return distrib_;
       }
       template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
-      void reduce(Dtype *buffer, size_t count, size_t rootIdx) {
-        MLSL::CommReq *rqts = distrib_->Reduce((void *)buffer, count, detail::dtype<Dtype>(), Rtype, rootIdx, Gtype);
+      void reduce(Dtype *sendBuffer, Dtype *recvBuffer, size_t count, size_t rootIdx = 0) {
+        if (skip_comm(Gtype)) return;
+        MLSL::CommReq *rqts = distrib_->Reduce((void *)sendBuffer, (void*)recvBuffer, count, detail::dtype<Dtype>(), Rtype, rootIdx, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
       template <typename Dtype, MLSL::GroupType Gtype>
-      void bcast(Dtype *buffer, size_t count, int rootId) {
+      void bcast(Dtype *buffer, size_t count, int rootId = 0) {
+        if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->Bcast((void *)buffer, count, detail::dtype<Dtype>(), rootId, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
       template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
       void allreduce(Dtype *sendBuffer, Dtype *recvBuffer, size_t count) {
+        if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->AllReduce((void *)sendBuffer, (void *)recvBuffer, count, detail::dtype<Dtype>(), Rtype, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
       template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
       void allreduce(Dtype *buffer, size_t count) {
+        if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->AllReduce((void *)buffer, (void *)buffer, count, detail::dtype<Dtype>(), Rtype, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
       template <typename Dtype, MLSL::GroupType Gtype>
-      void gather(const Dtype *sendBuffer, size_t count, Dtype *recvBuffer, size_t rootIdx) {
+      void gather(const Dtype *sendBuffer, size_t count, Dtype *recvBuffer, size_t rootIdx = 0) {
+        if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->Gather((void *)sendBuffer, count, (void *)recvBuffer, detail::dtype<Dtype>(), rootIdx, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
       template <typename Dtype, MLSL::GroupType Gtype>
-      void scatter(Dtype *sendBuffer, Dtype *recvBuffer, size_t count, size_t rootIdx) {
+      void scatter(Dtype *sendBuffer, Dtype *recvBuffer, size_t count, size_t rootIdx = 0) {
+        if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->Scatter((void *)sendBuffer, (void *)recvBuffer, count, detail::dtype<Dtype>(), rootIdx, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
+      template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
+      void reducescatter(Dtype *sendBuffer, Dtype *recvBuffer, size_t count) {
+        if (skip_comm(Gtype)) return;
+        MLSL::CommReq *rqts = distrib_->ReduceScatter(sendBuffer, recvBuffer, count, detail::dtype<Dtype>(), Rtype, Gtype);
+        MLSL::Environment::GetEnv().Wait(rqts);
+      }
+      template <typename Dtype, MLSL::GroupType Gtype>
+      void allgather(Dtype *sendBuffer, size_t count, Dtype *recvBuffer) {
+        if (skip_comm(Gtype)) return;
+        // TODO: support allgather from MLSL
+        gather<Dtype,Gtype>(sendBuffer, count, recvBuffer);
+        size_t bcast_count = count;
+        switch (Gtype) {
+        case MLSL::GT_MODEL:
+          bcast_count *= model_parts_;
+          break;
+        case MLSL::GT_DATA:
+          bcast_count *= data_parts_;
+          break;
+        case MLSL::GT_GLOBAL:
+          bcast_count *= model_parts_ * data_parts_;
+          break;
+        default:
+          NOT_IMPLEMENTED;
+        }
+        bcast<Dtype,Gtype>(recvBuffer, bcast_count);
+      }
       template <MLSL::GroupType Gtype>
       void barrier() {
+        if (skip_comm(Gtype)) return;
         distrib_->Barrier(Gtype);
       }
+      inline int get_data_parts() {
+        return data_parts_;
+      }
+      inline int get_model_parts() {
+        return model_parts_;
+      }
+      inline int get_group_id() {
+        return mn::get_group_id(data_parts_, model_parts_);
+      }
     private:
+      inline bool skip_comm(MLSL::GroupType Gtype) {
+        if (Gtype == MLSL::GT_DATA && data_color_max_ != MLSL_DEFAULT_COLOR) {
+          return data_color_ > data_color_max_;
+        } else if (Gtype == MLSL::GT_MODEL && model_color_max_ != MLSL_DEFAULT_COLOR) {
+          return model_color_ > model_color_max_;
+        } else return get_group_id() > 0;
+      }
+
       MLSL::Distribution *distrib_{ nullptr };
+      int data_parts_;
+      int model_parts_;
+      int data_color_;
+      int model_color_;
+      int data_color_max_;
+      int model_color_max_;
     };
 
-    inline Distribution & get_distrib() {
-      static Distribution distrib{ get_nodes_count(), 1 };
-      return distrib;
+    inline void GetCanonicalMnParam(int &num_nodes, int &model_parts) {
+      if (num_nodes == 0) num_nodes = mn::get_nodes_count();
+      if (model_parts == 0 || model_parts > num_nodes) model_parts = num_nodes;
     }
+
+    shared_ptr<Distribution> create_distrib(
+      int dataParts, int modelParts, int dataColor = MLSL_DEFAULT_COLOR, int modelColor = MLSL_DEFAULT_COLOR,
+      int dataColorMax = MLSL_DEFAULT_COLOR, int modelColorMax = MLSL_DEFAULT_COLOR);
+    Distribution * get_distrib(int dataParts, int modelParts);
+    Distribution * get_distrib();
 
     template <typename Dtype, MLSL::ReductionType Rtype = MLSL::RT_SUM>
     inline void allreduce(Dtype *sendBuffer, Dtype *recvBuffer, size_t count) {
-      get_distrib().allreduce<Dtype, Rtype, MLSL::GT_GLOBAL>(sendBuffer, recvBuffer, count);
+      get_distrib()->allreduce<Dtype, Rtype, MLSL::GT_GLOBAL>(sendBuffer, recvBuffer, count);
     }
     template <typename Dtype, MLSL::ReductionType Rtype = MLSL::RT_SUM>
     inline void allreduce(Dtype *buffer, size_t count) {
-      get_distrib().allreduce<Dtype, Rtype, MLSL::GT_GLOBAL>(buffer, count);
+      get_distrib()->allreduce<Dtype, Rtype, MLSL::GT_GLOBAL>(buffer, count);
     }
     template <typename Dtype, MLSL::ReductionType Rtype = MLSL::RT_SUM>
     inline void reduce(Dtype *buffer, size_t count, int rootId = 0) {
-      get_distrib().reduce<Dtype, Rtype, MLSL::GT_GLOBAL>(buffer, count, rootId);
+      get_distrib()->reduce<Dtype, Rtype, MLSL::GT_GLOBAL>(buffer, count, rootId);
     }
     template <typename Dtype>
     void bcast(Dtype *buffer, size_t count, int rootId = 0) {
-      get_distrib().bcast<Dtype, MLSL::GT_GLOBAL>(buffer, count, rootId);
+      get_distrib()->bcast<Dtype, MLSL::GT_GLOBAL>(buffer, count, rootId);
     }
     template <typename Dtype>
     inline void gather(const Dtype *sendBuffer, size_t count, Dtype *recvBuffer, int rootId = 0) {
-      get_distrib().gather<Dtype, MLSL::GT_GLOBAL>(sendBuffer, count, recvBuffer, rootId);
+      get_distrib()->gather<Dtype, MLSL::GT_GLOBAL>(sendBuffer, count, recvBuffer, rootId);
     }
     template <typename Dtype>
     inline void scatter(Dtype *sendBuffer, Dtype *recvBuffer, size_t count, int rootId = 0) {
-      get_distrib().scatter<Dtype, MLSL::GT_GLOBAL>(sendBuffer, recvBuffer, count, rootId);
+      get_distrib()->scatter<Dtype, MLSL::GT_GLOBAL>(sendBuffer, recvBuffer, count, rootId);
     }
 
     /* */
@@ -218,7 +302,7 @@ namespace caffe {
         return session;
       }
       
-      inline MLSL::Operation * add_operation(MLSL::OperationRegInfo* opRegInfo, MLSL::Distribution* distrib = get_distrib()) {
+      inline MLSL::Operation * add_operation(MLSL::OperationRegInfo* opRegInfo, MLSL::Distribution* distrib = *get_distrib()) {
         return get_session().add_operation(opRegInfo, distrib);
       }
 

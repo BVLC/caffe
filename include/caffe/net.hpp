@@ -300,6 +300,11 @@ class Net {
                              NetParameter* param_compiled);
 
 
+  /**
+   * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
+   * layers, this optimization only works in caffe TEST phase now.
+   */
+  static void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled);
 
   static void GetBlobConsumers(std::vector<const LayerParameter*> &cnsmer_blobs,
                                                 const string& blob_name_to_find,
@@ -330,7 +335,9 @@ class Net {
   void BackwardDebugInfo(const int layer_id);
   /// @brief Helper for displaying debug info in Update.
   void UpdateDebugInfo(const int param_id);
-
+  bool bn_scale_remove_;
+  bool bn_scale_merge_;
+  vector<string> kept_bn_layers_;
   /// @brief The network name
   string name_;
   /// @brief The engine name

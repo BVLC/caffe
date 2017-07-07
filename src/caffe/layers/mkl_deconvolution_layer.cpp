@@ -45,6 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/mkl_layers.hpp"
 #include "caffe/util/performance.hpp"
 #include "mkl_service.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 static int getMKLBuildDate() {
   static int build = 0;
@@ -58,9 +62,9 @@ static int getMKLBuildDate() {
 
 namespace caffe {
 template <typename Dtype>
-MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
+MKLDeconvolutionLayer<Dtype>::MKLDeconvolutionLayer(
   const LayerParameter& param)
-      : ConvolutionLayer<Dtype>(param),
+      : DeconvolutionLayer<Dtype>(param),
         fwd_bottom_data(new MKLData<Dtype>()),
         fwd_top_data(new MKLData<Dtype>()),
         fwd_filter_data(new MKLData<Dtype>()),
@@ -88,16 +92,16 @@ MKLConvolutionLayer<Dtype>::MKLConvolutionLayer(
         }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::compute_output_shape() {
-  ConvolutionLayer<Dtype>::compute_output_shape();
-  this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
-      / this->stride_h_ + 1;
-  this->width_out_ = (this->width_ + 2 * this->pad_w_ - this->kernel_w_)
-      / this->stride_w_ + 1;
+void MKLDeconvolutionLayer<Dtype>::compute_output_shape() {
+  DeconvolutionLayer<Dtype>::compute_output_shape();
+  this->height_out_ = this->stride_h_ * (this->height_ - 1)
+      + this->kernel_h_ - 2 * this->pad_h_ ;
+  this->width_out_ = this->stride_w_ * (this->width_ - 1)
+      + this->kernel_w_ - 2 * this->pad_w_ ;
 }
 
 template <typename Dtype>
-MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
+MKLDeconvolutionLayer<Dtype>::~MKLDeconvolutionLayer() {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
@@ -106,9 +110,21 @@ MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Init(
+void MKLDeconvolutionLayer<Dtype>::Init(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+#ifdef _OPENMP
+  this->num_of_threads_ = omp_get_max_threads() < bottom[0]->shape(0) ?
+                    omp_get_max_threads() : bottom[0]->shape(0);
+  if (this->num_of_threads_ < 1) {
+     LOG(WARNING) << "DeConv layer: omp_get_max_threads() ="
+                  << this->num_of_threads_;
+     this->num_of_threads_ = 1;
+  }
+#endif
+
+
   this->width_ = bottom[0]->width();
   this->height_ = bottom[0]->height();
   this->num_ = bottom[0]->num();
@@ -155,8 +171,8 @@ void MKLConvolutionLayer<Dtype>::Init(
       f_dimension = dimension;
   }
 
-  size_t fdata_sizes[5] = {kw, kh, ic/g, oc/g_mkl2017, g_mkl2017};
-  size_t fdata_strides[5]  = {1, kw, kw*kh, kw*kh*ic/g, kw*kh*ic/g*oc/g};
+  size_t fdata_sizes[5] = {kw, kh, oc/g, ic/g_mkl2017, g_mkl2017};
+  size_t fdata_strides[5]  = {1, kw, kw*kh, kw*kh*oc/g, kw*kh*ic/g*oc/g};
 
   size_t bias_sizes[1] = {oc};
   size_t bias_strides[1] = {1};
@@ -183,52 +199,9 @@ void MKLConvolutionLayer<Dtype>::Init(
   bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
   bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 
-  // Free MKL primitives
-  dnnDelete<Dtype>(convolutionFwd);
-  if (this->bias_term_) {
-    status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
-      &convolutionFwd,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  } else {
-    status = dnnGroupsConvolutionCreateForward<Dtype>(
-      &convolutionFwd,
-      NULL,
-      dnnAlgorithmConvolutionDirect,
-      g,
-      dimension,
-      bdata_sizes,
-      tdata_sizes,
-      fdata_sizes,
-      convolutionStrides,
-      inputOffset,
-      dnnBorderZeros);
-  }
 
-  CHECK_EQ(status, 0)
-          << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
-          << status << "\n";
-
-  fwd_bottom_data->create_layouts(convolutionFwd, dnnResourceSrc, dimension,
-                                  bdata_sizes, bdata_strides);
-  fwd_top_data   ->create_layouts(convolutionFwd, dnnResourceDst, dimension,
-                                  tdata_sizes, tdata_strides);
-  fwd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,
-                                  f_dimension, fdata_sizes, fdata_strides);
-
-  if (this->bias_term_)
-    fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
-                                  bias_sizes, bias_strides);
 /*
- * Backward by data layer setup
+ * Forward setup, implemented by convolutionBwdData
  */
   dnnDelete<Dtype>(convolutionBwdData);
   status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
@@ -237,8 +210,8 @@ void MKLConvolutionLayer<Dtype>::Init(
     dnnAlgorithmConvolutionDirect,
     g,
     dimension,
-    bdata_sizes,
     tdata_sizes,
+    bdata_sizes,
     fdata_sizes,
     convolutionStrides,
     inputOffset,
@@ -246,12 +219,41 @@ void MKLConvolutionLayer<Dtype>::Init(
   CHECK_EQ(status, 0)
           << "Failed dnnConvolutionCreateBackwardData with status "
           << status << "\n";
+  fwd_bottom_data->create_layouts(convolutionBwdData, dnnResourceDiffDst, dimension,
+                                  bdata_sizes, bdata_strides);
+  fwd_top_data   ->create_layouts(convolutionBwdData, dnnResourceDiffSrc, dimension,
+                                  tdata_sizes, tdata_strides);
+  fwd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
+                                  f_dimension, fdata_sizes, fdata_strides);
 
-  bwdd_bottom_diff->create_layouts(convolutionBwdData, dnnResourceDiffSrc,
+/*
+ * Backward by Data setup, implemented by  convolutionFwd
+ */
+
+  dnnDelete<Dtype>(convolutionFwd);
+
+  status = dnnGroupsConvolutionCreateForward<Dtype>(
+          &convolutionFwd,
+          NULL,
+          dnnAlgorithmConvolutionDirect,
+          g,
+          dimension,
+          tdata_sizes,
+          bdata_sizes,
+          fdata_sizes,
+          convolutionStrides,
+          inputOffset,
+          dnnBorderZeros);
+
+  CHECK_EQ(status, 0)
+          << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
+          << status << "\n";
+
+  bwdd_bottom_diff->create_layouts(convolutionFwd, dnnResourceDst,
                                    dimension, bdata_sizes, bdata_strides);
-  bwdd_top_diff   ->create_layouts(convolutionBwdData, dnnResourceDiffDst,
+  bwdd_top_diff   ->create_layouts(convolutionFwd, dnnResourceSrc,
                                    dimension, tdata_sizes, tdata_strides);
-  bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
+  bwdd_filter_data->create_layouts(convolutionFwd, dnnResourceFilter,
                                    f_dimension, fdata_sizes, fdata_strides);
 
 /*
@@ -264,8 +266,8 @@ void MKLConvolutionLayer<Dtype>::Init(
     dnnAlgorithmConvolutionDirect,
     g,
     dimension,
-    bdata_sizes,
     tdata_sizes,
+    bdata_sizes,
     fdata_sizes,
     convolutionStrides,
     inputOffset,
@@ -274,11 +276,11 @@ void MKLConvolutionLayer<Dtype>::Init(
           << "Failed dnnConvolutionCreateBackwardFilter with status "
           << status << "\n";
 
-  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceSrc,
+  bwdf_bottom_data->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
                                    dimension, bdata_sizes, bdata_strides);
-  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
+  bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceSrc,
                                    dimension, tdata_sizes, tdata_strides);
-  bwdf_filter_diff->create_layouts(convolutionFwd, dnnResourceFilter,
+  bwdf_filter_diff->create_layouts(convolutionBwdData, dnnResourceFilter,
                                    f_dimension, fdata_sizes, fdata_strides);
   // support for (iter_size > 1) requires additional buffer
   bwdf_filter_diff_iter->create_layouts(convolutionFwd, dnnResourceFilter,
@@ -293,7 +295,7 @@ void MKLConvolutionLayer<Dtype>::Init(
         dnnResourceDiffFilter);
     bwdf2fwd_filter_diff->remove_user_layout();
     status = dnnLayoutCreateFromPrimitive<Dtype>(
-        &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
+        &bwdf2fwd_filter_diff->layout_usr, convolutionBwdData, dnnResourceFilter);
     CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
             << status << "\n";
 
@@ -324,19 +326,20 @@ void MKLConvolutionLayer<Dtype>::Init(
     bwdb_bias_diff_iter->create_layouts(convolutionBwdBias, dnnResourceDiffBias,
                                         1, bias_sizes, bias_strides);
   }
+
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::LayerSetUp(
+void MKLDeconvolutionLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+  DeconvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
   Init(bottom, top);
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MKLDeconvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   bool reinitialize = (this->width_ == bottom[0]->width() &&
                        this->height_ == bottom[0]->height() &&
@@ -351,7 +354,7 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Forward_cpu(
+void MKLDeconvolutionLayer<Dtype>::Forward_cpu(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int status;
   size_t n, g;
@@ -379,33 +382,46 @@ void MKLConvolutionLayer<Dtype>::Forward_cpu(
         top[0]->num()      == n) << "Inclompatible shape of bottom with layer";
 
 
-  void *res_convolutionFwd[dnnResourceNumber];
-  res_convolutionFwd[dnnResourceSrc] =
-    fwd_bottom_data->get_converted_prv(bottom[0], false);
-  res_convolutionFwd[dnnResourceFilter] =
-    fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
-  if (this->bias_term_) {
-    res_convolutionFwd[dnnResourceBias] =
-      fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
-  }
+  void *res_convolutionBwdData[dnnResourceNumber];
+
+  res_convolutionBwdData[dnnResourceDiffDst] =
+      fwd_bottom_data->get_converted_prv(bottom[0], false);
+  // Currently this conversion adds padding to weights.
+  // We don't want that to be stored in the weights prv_ptr_
+  res_convolutionBwdData[dnnResourceFilter]  =
+      fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
 
   if (fwd_top_data->conversion_needed()) {
-    top[0]->set_prv_data_descriptor(fwd_top_data);
-    res_convolutionFwd[dnnResourceDst] =
-            reinterpret_cast<void *>(top[0]->mutable_prv_data());
+      top[0]->set_prv_data_descriptor(fwd_top_data);
+      res_convolutionBwdData[dnnResourceDiffSrc] =
+          reinterpret_cast<void *>(top[0]->mutable_prv_data());
   } else {
-    res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
+      res_convolutionBwdData[dnnResourceDiffSrc] =
+          top[0]->mutable_cpu_data();
   }
+
   PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKL_NAME("FW"));
   PERFORMANCE_MEASUREMENT_BEGIN();
-  status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
+  status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
   PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
-  CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
+  CHECK_EQ(status, 0) << "Forward deconvolution failed with status " << status;
+
+  if (this->bias_term_) {
+      const Dtype* bias = this->blobs_[1]->cpu_data();
+      Dtype* top_data = top[0]->mutable_cpu_data();
+
+#ifdef _OPENMP
+#   pragma omp parallel for num_threads(this->num_of_threads_)
+#endif
+      for (int n = 0; n < this->num_; ++n) {
+          this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
+      }
+  }
 }
 
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Backward_cpu(
+void MKLDeconvolutionLayer<Dtype>::Backward_cpu(
   const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
   const vector<Blob<Dtype>*>& bottom) {
   int status;
@@ -431,45 +447,43 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
   CHECK(top[0]->width()    == ow &&
         top[0]->height()   == oh &&
         top[0]->channels() == oc*g &&
-        top[0]->num()      == n) << "Incompatible shape of bottom with layer";
+        top[0]->num()      == n) << "Incompatible shape of top with layer";
 
   if (propagate_down[0]) {
-    void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] =
-      bwdd_top_diff->get_converted_prv(top[0], true);
+      void *res_convolutionFwd[dnnResourceNumber];
+      res_convolutionFwd[dnnResourceSrc] =
+          bwdd_top_diff->get_converted_prv(top[0], true);
     // Currently this conversion adds padding to weights.
     // We don't want that to be stored in the weights prv_ptr_
-    res_convolutionBwdData[dnnResourceFilter]  =
-      bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
+      res_convolutionFwd[dnnResourceFilter] =
+          bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
 
     if (bwdd_bottom_diff->conversion_needed()) {
       bottom[0]->set_prv_diff_descriptor(bwdd_bottom_diff);
-      res_convolutionBwdData[dnnResourceDiffSrc] =
-              bottom[0]->mutable_prv_diff();
+      res_convolutionFwd[dnnResourceDst] =
+          bottom[0]->mutable_prv_diff();
     } else {
-      res_convolutionBwdData[dnnResourceDiffSrc] =
-              bottom[0]->mutable_cpu_diff();
+      res_convolutionFwd[dnnResourceDst] =
+          bottom[0]->mutable_cpu_diff();
     }
     PERFORMANCE_EVENT_ID_INIT(perf_id_bw_prop_,
         PERFORMANCE_MKL_NAME_DETAILED("BW", "_prop"));
     PERFORMANCE_MEASUREMENT_BEGIN();
-    status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
+    status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_prop_);
 
-    CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
+    CHECK_EQ(status, 0) << "Backward Data deconv failed with status " << status;
   }
 
   if (this->param_propagate_down(0)) {
     void *res_convolutionBwdFilter[dnnResourceNumber];
-
     res_convolutionBwdFilter[dnnResourceDiffDst] =
-            bwdf_top_diff->get_converted_prv(top[0], true);
-    // The last get_converted_prv() argument is a hack for reusing conversion
-    // done already in the forward direction.
+        bwdf_bottom_data->get_converted_prv(bottom[0], false);
+
     res_convolutionBwdFilter[dnnResourceSrc] =
-            bwdf_bottom_data->get_converted_prv(bottom[0], false,
-            fwd_bottom_data.get());
+            bwdf_top_diff->get_converted_prv(top[0], false);
+
 
     if (bwdf_filter_diff->conversion_needed()) {
       this->blobs_[0]->set_prv_diff_descriptor(bwdf_filter_diff);
@@ -598,19 +612,19 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(MKLConvolutionLayer);
+STUB_GPU(MKLDeconvolutionLayer);
 #else
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Forward_gpu(
+void MKLDeconvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
   {NOT_IMPLEMENTED;}
 template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Backward_gpu(
+void MKLDeconvolutionLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom)
   {NOT_IMPLEMENTED;}
 #endif
 
-INSTANTIATE_CLASS(MKLConvolutionLayer);
+INSTANTIATE_CLASS(MKLDeconvolutionLayer);
 }  // namespace caffe
 #endif  // #ifdef MKL2017_SUPPORTED

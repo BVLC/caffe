@@ -93,18 +93,20 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
     this->pad_h_ = this->pad_.cpu_data()[0];
     this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
     this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
-
-#ifdef USE_MLSL
-    if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
-      mn::OpRegInfo reg_info{ mn::train::get_session(), MLSL::OT_CC };
-      reg_info.set_name(this->layer_param_.name());
-      reg_info.add_parameter_set<Dtype>(this->channels_ * this->num_output_ / std::max(this->group_, 1), this->kernel_w_ * this->kernel_h_);
-      if (this->bias_term_) {
-        reg_info.add_parameter_set<Dtype>(this->num_output_, 1);
-      }
-      this->layerOp = mn::train::add_operation(reg_info);
+    string _conv_algorithm = this->layer_param_.convolution_param().conv_algorithm();
+    if(_conv_algorithm == "direct")
+    {
+        conv_algorithm = algorithm::convolution_direct;
     }
-#endif /* USE_MLSL */
+    else if(_conv_algorithm == "winograd")
+    {
+        conv_algorithm = algorithm::convolution_winograd;
+    }
+    else
+    {
+        LOG(ERROR) << "Unsupported convolution algorithm.";
+        CHECK(false);
+    }
 }
 
 template <typename Dtype>
@@ -171,19 +173,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::desc init_top_md({top_tz}, mpcsn, mfmt_any);
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt_any);
 
-    // ---- Initialize convolution primitive descriptor -------------
-    shared_ptr<convolution_forward::desc> convFwd_desc;
-    if (this->bias_term_) {
-        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
-                                    , init_bottom_md, init_weights_md, init_bias_md, init_top_md
-                                    , convolutionStrides, padding, padding, padding_kind::zero));
-    } else {
-        convFwd_desc.reset(new convolution_forward::desc(propagation, algorithm::convolution_direct
-                                    , init_bottom_md, init_weights_md, init_top_md
-                                    , convolutionStrides, padding, padding, padding_kind::zero));
-    }
-    shared_ptr<convolution_relu_forward::desc> convReluFwd_desc;
-    if(relu) convReluFwd_desc.reset(new convolution_relu_forward::desc(*convFwd_desc, negative_slope));
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
@@ -191,20 +180,40 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
     shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd;
-    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
-      try {
-        convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
-                ep.getMKLDNNSubEngine(subEngineIndex)));
-        if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
-                ep.getMKLDNNSubEngine(subEngineIndex)));
-      }
-      catch(...) {
-        continue;
-      }
-      break;
+    mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
+    for (auto &convAlgorithm : eligibleAlgorithms) {
+        // ---- Initialize convolution primitive descriptor -------------
+        shared_ptr<convolution_forward::desc> convFwd_desc;
+        if (this->bias_term_) {
+            convFwd_desc.reset(new convolution_forward::desc(propagation, convAlgorithm
+                                                             , init_bottom_md, init_weights_md, init_bias_md, init_top_md
+                                                             , convolutionStrides, padding, padding, padding_kind::zero));
+        } else {
+            convFwd_desc.reset(new convolution_forward::desc(propagation, convAlgorithm
+                                                             , init_bottom_md, init_weights_md, init_top_md
+                                                             , convolutionStrides, padding, padding, padding_kind::zero));
+        }
+        shared_ptr<convolution_relu_forward::desc> convReluFwd_desc;
+        if(relu) convReluFwd_desc.reset(new convolution_relu_forward::desc(*convFwd_desc, negative_slope));
+
+        for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+            try {
+                convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
+                                                                         ep.getMKLDNNSubEngine(subEngineIndex)));
+                if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
+                                                                                           ep.getMKLDNNSubEngine(subEngineIndex)));
+            }
+            catch(...) {
+                continue;
+            }
+            break;
+        }
+        if ((convFwd_pd) && (!relu || convReluFwd_pd))
+                break;
     }
 
     CHECK(convFwd_pd);
+    if (relu) CHECK(convReluFwd_pd);
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
@@ -337,42 +346,49 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     memory::desc init_top_md({top_tz}, mpcsn, mfmt_any);
     memory::desc init_weights_md({weights_tz}, mpcsn, mfmt_any);
 
-    // ---- Initialize convolution primitive descriptor -------------
-    shared_ptr<convolution_backward_data::desc> convBwdData_desc;
-    shared_ptr<convolution_backward_weights::desc> convBwdWeights_desc;
-    if (this->bias_term_) {
-        convBwdWeights_desc.reset(new convolution_backward_weights::desc(algorithm::convolution_direct
-                            , init_bottom_md, init_weights_md, init_bias_md, init_top_md
-                            , convolutionStrides, padding, padding, padding_kind::zero));
-    } else {
-        convBwdWeights_desc.reset(new convolution_backward_weights::desc(algorithm::convolution_direct
-                            , init_bottom_md, init_weights_md, init_top_md
-                            , convolutionStrides, padding, padding, padding_kind::zero));
-    }
-
-    convBwdData_desc.reset(new convolution_backward_data::desc(algorithm::convolution_direct
-                            , init_bottom_md, init_weights_md, init_top_md
-                            , convolutionStrides, padding, padding, padding_kind::zero));
-
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
-    for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
-      try {
-        convBwdData_pd.reset(new convolution_backward_data::primitive_desc(*convBwdData_desc,
-                ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
 
-        convBwdWeights_pd.reset(new convolution_backward_weights::primitive_desc(*convBwdWeights_desc,
-                ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
-      }
-      catch(...) {
-        continue;
-      }
-      break;
+    auto eligibleAlgorithms = {conv_algorithm, algorithm::convolution_direct};
+    for (auto &convAlgorithm : eligibleAlgorithms) {
+        // ---- Initialize convolution primitive descriptor -------------
+        shared_ptr<convolution_backward_data::desc> convBwdData_desc;
+        shared_ptr<convolution_backward_weights::desc> convBwdWeights_desc;
+        if (this->bias_term_) {
+            convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_bias_md, init_top_md
+                            , convolutionStrides, padding, padding, padding_kind::zero));
+        } else {
+            convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+                                                                             , init_bottom_md, init_weights_md, init_top_md
+                                                                             , convolutionStrides, padding, padding, padding_kind::zero));
+        }
+       
+        convBwdData_desc.reset(new convolution_backward_data::desc(convAlgorithm
+                                                                   , init_bottom_md, init_weights_md, init_top_md
+                                                                   , convolutionStrides, padding, padding, padding_kind::zero));
+
+        for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
+            try {
+                convBwdData_pd.reset(new convolution_backward_data::primitive_desc(*convBwdData_desc,
+                                                                                   ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
+
+                convBwdWeights_pd.reset(new convolution_backward_weights::primitive_desc(*convBwdWeights_desc,
+                                                                                         ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
+            }
+            catch(...) {
+                continue;
+            }
+            break;
+        }
+        if (convBwdData_pd && convBwdWeights_pd)
+            break;
     }
+
     CHECK(convBwdData_pd);
     CHECK(convBwdWeights_pd);
     engine cpu_engine = CpuEngine::Instance().get_engine();

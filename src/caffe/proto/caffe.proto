@@ -197,6 +197,11 @@ message NetParameter {
   // specified in the layers' include and exclude fields.
   optional NetState state = 6;
 
+  //The CompileNet will do some layer-fusion optimization to current network if it
+  //finds something can be optimized, compile_net_state records which Compilation Rule
+  //really works.
+  optional CompileNetState compile_net_state = 10;
+
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
@@ -209,6 +214,29 @@ message NetParameter {
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
+  
+  // Multinode settings
+  optional MultinodeParameter multinode = 101;
+}
+
+
+
+message CompileNetState {
+  optional bool is_init = 1 [default = true];
+  optional bool bn_scale_remove = 2 [default = false];
+  optional bool bn_scale_merge = 3 [default = false];
+  repeated string kept_bn_layers = 4;
+}
+
+message MultinodeParameter {
+  repeated MnModelParallelParameter model_parallel = 1;
+}
+
+message MnModelParallelParameter {
+  required string layer_from = 1;
+  optional string layer_to = 2;
+  optional uint32 num_nodes = 3;   // 0 means all nodes
+  optional uint32 model_parts = 4; // 0 or >= num_nodes, means all nodes
 }
 
 message MultiPhaseSolverParameter {
@@ -451,7 +479,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: engine)
+// LayerParameter next available layer-specific ID: 152 (last added: mn_activation_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -559,6 +587,28 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
 
   optional string engine = 149 [default = ""];
+  
+  optional MultinodeLayerParameter multinode = 150;
+  optional MnActivationParameter mn_activation_param = 151;
+}
+
+message MultinodeLayerParameter {
+  // 0 means all nodes
+  optional uint32 num_nodes = 1;
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts = 2 [default = 1];
+}
+
+message MnActivationParameter {
+  // 0 means all nodes
+  optional uint32 num_nodes_in = 1;
+  // 0 means all nodes
+  optional uint32 num_nodes_out = 2;
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts_in = 3 [default = 1];
+  // 0 or > num_nodes, means all nodes
+  optional uint32 model_parts_out = 4 [default = 1];
+  optional bool need_reduce = 5 [default = true];
 }
 
 // Message that stores parameters used to apply transformation
@@ -944,6 +994,7 @@ message ConvolutionParameter {
   optional bool force_nd_im2col = 17 [default = false];
   optional bool relu = 19 [default = false];
   optional float negative_slope = 20 [default = 0];
+  optional string conv_algorithm = 21 [default = "direct"];
 }
 
 message CropParameter {
@@ -1422,6 +1473,7 @@ message PoolingParameter {
     AVE = 1;
     STOCHASTIC = 2;
   }
+  optional bool avg_include_pad = 13 [default = true];
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   // Pad, kernel size, and stride are all given as a single value for equal
   // dimensions in height and width or as Y, X pairs.

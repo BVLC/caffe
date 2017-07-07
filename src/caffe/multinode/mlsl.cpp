@@ -37,7 +37,9 @@
 
 #ifdef USE_MLSL
 
-#include <mlsl.hpp>
+#include <map>
+#include "boost/thread/mutex.hpp"
+#include "caffe/multinode/mlsl.hpp"
 
 namespace {
 
@@ -52,6 +54,39 @@ namespace {
         MLSL::Environment::GetEnv().Finalize();
       }
     } __init{ &argc, &argv };
+  }
+}
+
+namespace caffe {
+  namespace mn {
+    boost::mutex distrib_lock;
+    std::map<std::pair<int,int>, boost::shared_ptr<Distribution>> distrib_map;
+    
+    shared_ptr<Distribution> create_distrib(
+      int dataParts, int modelParts, int dataColor, int modelColor,
+      int dataColorMax, int modelColorMax) {
+      return shared_ptr<Distribution>(
+        new Distribution(dataParts, modelParts, dataColor, modelColor,
+                         dataColorMax, modelColorMax));
+    }
+
+    Distribution * get_distrib(int dataParts, int modelParts) {
+      boost::mutex::scoped_lock l(distrib_lock);
+      std::pair<int,int> key = std::make_pair(dataParts, modelParts);
+      if (distrib_map.find(key) == distrib_map.end()) {
+        int node_id = get_node_id();
+        int num_nodes = get_nodes_count();
+        int modelColor = node_id / modelParts;
+        int dataColor = node_id % (num_nodes / dataParts);
+        distrib_map[key] = boost::shared_ptr<Distribution>(
+          new Distribution(dataParts, modelParts, dataColor, modelColor));
+      }
+      return distrib_map[key].get();
+    }
+
+    Distribution * get_distrib() {
+      return get_distrib(get_nodes_count(), 1);
+    }
   }
 }
 

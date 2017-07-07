@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/common.hpp"
 #include "caffe/layers/base_conv_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/neuron_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -133,7 +134,82 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_bias_);
 };
 
+template <typename Dtype>
+class MKLDeconvolutionLayer : public DeconvolutionLayer<Dtype> {
+ public:
+  explicit MKLDeconvolutionLayer(const LayerParameter& param);
 
+  virtual ~MKLDeconvolutionLayer();
+
+  virtual inline const char* type() const { return "MklDeconvolution"; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+  // Customized methods
+  void Init(const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top);
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+  virtual void compute_output_shape();
+
+  void Reshape(const vector<Blob<Dtype>*>& bottom,
+          const vector<Blob<Dtype>*>& top);
+
+ private:
+  /* Fwd step */
+  shared_ptr<MKLData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
+                                 fwd_bias_data;
+  dnnPrimitive_t convolutionFwd;
+
+  /* Bwd data step */
+  shared_ptr<MKLDiff<Dtype> > bwdd_top_diff, bwdd_bottom_diff;
+  shared_ptr<MKLData<Dtype> > bwdd_filter_data;
+  dnnPrimitive_t convolutionBwdData;
+
+  /* Bwd filter step */
+  shared_ptr<MKLDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
+  shared_ptr<MKLDiff<Dtype> > bwdf2fwd_filter_diff;
+  shared_ptr<MKLData<Dtype> > bwdf_bottom_data;
+  dnnPrimitive_t convolutionBwdFilter;
+
+  /* Bwd bias step */
+  shared_ptr<MKLDiff<Dtype> > bwdb_top_diff, bwdb_bias_diff;
+  dnnPrimitive_t convolutionBwdBias;
+
+  /* In case of (iter_size > 1) we need additional buffers */
+  shared_ptr<MKLDiff<Dtype> > bwdf_filter_diff_iter,
+                              bwdb_bias_diff_iter;
+
+  // TODO: temp. compatibility vs. older cafe
+  size_t width_,
+         height_,
+         width_out_,
+         height_out_,
+         kernel_w_,
+         kernel_h_,
+         stride_w_,
+         stride_h_;
+  int    pad_w_,
+         pad_h_;
+
+  bool bprop_unpack_called;
+
+  PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
+  PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
+  PERFORMANCE_EVENT_ID_DECL(perf_id_bw_prop_);
+  PERFORMANCE_EVENT_ID_DECL(perf_id_bw_diff_);
+  PERFORMANCE_EVENT_ID_DECL(perf_id_bw_bias_);
+};
 /**
  * @brief Normalize the input in a local region across feature maps.
  */
@@ -261,6 +337,7 @@ class MKLPoolingLayer : public Layer<Dtype> {
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
+  dnnAlgorithm_t algorithm;
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
 
@@ -424,6 +501,9 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "BatchNorm"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+#ifdef USE_MLSL
+  virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
+#endif
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

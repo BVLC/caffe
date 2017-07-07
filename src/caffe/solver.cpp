@@ -54,7 +54,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+#ifdef USE_MLSL
 #include "caffe/multinode/mlsl.hpp"
+#endif
 
 namespace caffe {
 
@@ -530,17 +532,20 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
   }
 
-#ifdef USE_MLSL
   // in multinode last test must be done after weights update
   if (param_.test_interval() && iter_ % param_.test_interval() == 0)
     TestAll();
-#endif
 
   LOG(INFO) << "Optimization Done.";
 }
 
 template <typename Dtype>
 void Solver<Dtype>::TestAll() {
+#ifdef USE_MLSL
+  for (int i = 0; i < callbacks_.size(); ++i) {
+    callbacks_[i]->on_before_test();
+  }
+#endif
   for (int test_net_id = 0;
        test_net_id < test_nets_.size() && !requested_early_exit_;
        ++test_net_id) {
@@ -552,6 +557,11 @@ void Solver<Dtype>::TestAll() {
       LOG(FATAL) << "Unknown evaluation type: " << param_.eval_type();
     }
   }
+#ifdef USE_MLSL
+  for (int i = 0; i < callbacks_.size(); ++i) {
+    callbacks_[i]->on_after_test();
+  }
+#endif
 }
 
 template <typename Dtype>
@@ -769,11 +779,10 @@ void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
 
 #ifdef USE_MLSL
-  if (mn::get_node_id() != 0) {
-    return;
+  for (int i = 0; i < callbacks_.size(); ++i) {
+    callbacks_[i]->on_before_snapshot();
   }
 #endif /* USE_MLSL */
-
   string model_filename;
   switch (param_.snapshot_format()) {
   case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
@@ -787,6 +796,12 @@ void Solver<Dtype>::Snapshot() {
   }
 
   SnapshotSolverState(model_filename);
+
+#ifdef USE_MLSL
+  for (int i = 0; i < callbacks_.size(); ++i) {
+    callbacks_[i]->on_after_snapshot();
+  }
+#endif
 }
 
 template <typename Dtype>

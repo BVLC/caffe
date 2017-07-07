@@ -90,7 +90,7 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   sz[0]=bottom[0]->shape(0);
   batch_sum_multiplier_.Reshape(sz);
 
-  int spatial_dim = bottom[0]->count()/(channels_*bottom[0]->shape(0));
+  int spatial_dim = bottom[0]->count(2);
   if (spatial_sum_multiplier_.num_axes() == 0 ||
       spatial_sum_multiplier_.shape(0) != spatial_dim) {
     sz[0] = spatial_dim;

@@ -119,6 +119,15 @@ class Layer {
 
 public:
 	MLSL::Operation *layerOp{ nullptr };
+  mn::Distribution &GetDistribution();
+  virtual bool ParamNeedReduce(int param_id) { return true; }
+
+protected:
+  virtual bool Bypass(const vector<Blob<Dtype>*>& bottom,
+                      const vector<Blob<Dtype>*>& top);
+
+  virtual void MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
+                              const vector<Blob<Dtype>*>& top);
 
 #endif /* USE_MLSL */
 
@@ -163,6 +172,9 @@ public:
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+#ifdef USE_MLSL
+    MultinodeSetUp(bottom, top);
+#endif
   }
 
   /**
@@ -546,6 +558,12 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   Lock();
   Dtype loss = 0;
   Reshape(bottom, top);
+#ifdef USE_MLSL
+  if (Bypass(bottom, top)) {
+    Unlock();
+    return loss;
+  }
+#endif
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
@@ -582,6 +600,9 @@ template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+#ifdef USE_MLSL
+  if (Bypass(bottom, top)) return;
+#endif
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Backward_cpu(top, propagate_down, bottom);

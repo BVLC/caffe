@@ -69,15 +69,6 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
-  // Fix the issue of "Check failed: this->_cpu_ptr == cpu_ptr (0 vs. 0x5587dfc87ec0)" (GoogleNet V1)
-  // The reason is after pooling layer: MKLDNNPoolingLayer<Dtype>::Forward_cpu: pool5/7x7_s1, the top[0]->prv_data() has value
-  // It will convert to cpu data in the dropout layer, and set the _head to HEAD_AT_CPU after executing top[0]->mutable_cpu_data()
-  // Howerver, I found top[0]->cpu_data() and top[0]->prv_data() both has value
-  // So in the inner product layer: loss3/classifier, the data will convert from bottom prv data
-  // and the reorder will change from this->_reorder_usr2prv to this->_reorder_extprv2prv_pd
-  // So eventually trigger the assertion.
-  top[0]->set_prv_data_descriptor(NULL);
   unsigned int* mask = rand_vec_.mutable_cpu_data();
   const int count = bottom[0]->count();
   if (this->phase_ == TRAIN) {

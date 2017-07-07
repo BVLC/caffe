@@ -162,6 +162,58 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
+// Get deconvolution layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetDeconvolutionLayer(
+    const LayerParameter& param) {
+  ConvolutionParameter conv_param = param.convolution_param();
+  ConvolutionParameter_Engine engine = conv_param.engine();
+
+#if defined(MKL2017_SUPPORTED)
+  bool use_dilation = false;
+  for (int i = 0; i < conv_param.dilation_size(); ++i) {
+    if (conv_param.dilation(i) > 1) {
+      use_dilation = true;
+    }
+  }
+#endif
+
+  // New, more flexible way of providing engine
+  if (engine == ConvolutionParameter_Engine_DEFAULT && param.engine() != "") {
+    EngineParser ep(param.engine());
+
+    if (ep.isEngine("CAFFE")) {
+      engine = ConvolutionParameter_Engine_CAFFE;
+    }
+#ifdef MKL2017_SUPPORTED
+    else if (!use_dilation && ep.isEngine("MKL2017")) {
+      engine = ConvolutionParameter_Engine_MKL2017;
+    }
+#endif
+
+  }
+
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+    engine = ConvolutionParameter_Engine_CAFFE;
+  }
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new DeconvolutionLayer<Dtype>(param));
+#ifdef MKL2017_SUPPORTED
+  } else if (engine == ConvolutionParameter_Engine_MKL2017) {
+    if (use_dilation) {
+      LOG(FATAL) << "MKL2017 doesn't support the dilated convolution at Layer "
+                 << param.name();
+    }
+    return shared_ptr<Layer<Dtype> >(new MKLDeconvolutionLayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+  return shared_ptr<Layer<Dtype> >();
+}
+
+REGISTER_LAYER_CREATOR(Deconvolution, GetDeconvolutionLayer);
+
 // Get inner_product layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetInnerProductLayer(

@@ -71,15 +71,6 @@ void BiasLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     filler->Fill(this->blobs_[0].get());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
-
-#ifdef USE_MLSL
-  if ((this->layerOp == nullptr) && (this->phase_ == TRAIN)) {
-    mn::OpRegInfo reg_info(mn::train::get_session(), MLSL::OT_BIAS);
-    reg_info.set_name(this->layer_param_.name());
-    reg_info.add_parameter_set<Dtype>(bottom[0]->channels(), 1, false);
-    this->layerOp = mn::train::add_operation(reg_info);
-  }
-#endif /* USE_MLSL */
 }
 
 template <typename Dtype>

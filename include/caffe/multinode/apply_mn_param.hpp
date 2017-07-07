@@ -35,34 +35,36 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef _CAFFE_MULTINODE_APPLY_MN_PARAM_HPP_
+#define _CAFFE_MULTINODE_APPLY_MN_PARAM_HPP_
+
 #ifdef USE_MLSL
 
-#include "caffe/multinode/multi_sync.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/net.hpp"
 
 namespace caffe {
+/**
+ * @brief Apply the multinode parameters to the NetParameter
+ *        inserting mn_activation layer if needed.
+ */
+template <typename Dtype>
+void ApplyMultinodeParams(const NetParameter& param,
+    NetParameter* param_with_mn);
 
-template<typename Dtype>
-MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
-        : solver(boost::make_shared<MultiSolver<Dtype> >(root_solver)),
-          layers(root_solver->net()->layers()),
-          net(root_solver->net()),
-          net_params(root_solver->net()->learnable_params()) {
-  root_solver->param().set_disabled_update(true);
+/**
+ * @brief Copy per-layer parameters from a Net object.
+ */
+template <typename Dtype>
+void CopyMultinodeParamsFromNet(const Net<Dtype> *net, NetParameter *param);
 
-  if (root_solver->iter() == 0)
-    root_solver->set_iter(1);
-
-  layer_param_ids.resize(layers.size());
-
-  for (int layer_id = 0; layer_id < layers.size(); layer_id++) {
-    shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-
-    /* cache param ids */
-    layer_param_ids[layer_id] = net->get_layer_learnable_param_ids(layer_id);
-  }
+/**
+ * @brief Revert all the multinode changes from NetParameter
+ */
+template <typename Dtype>
+void RevertMultinodeParams(NetParameter* param, bool write_diff = false);
 }
 
-  INSTANTIATE_CLASS(MultiSync);
-} // namespace caffe
+#endif // USE_MLSL
 
-#endif /* USE_MLSL */
+#endif // _CAFFE_MULTINODE_APPLY_MN_PARAM_HPP_

@@ -1,3 +1,4 @@
+
 /*
 All modification made by Intel Corporation: © 2016 Intel Corporation
 
@@ -34,35 +35,39 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifdef USE_MLSL
-
-#include "caffe/multinode/multi_sync.hpp"
+#ifndef COMPILE_NET_UTIL_HPP_
+#define COMPILE_NET_UTIL_HPP_
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
+/**
+ *  @brief If CompileNet's compilation rule one does work, some scale layer's weights and bias blobs
+ *  may be merged into batch norm layer. RecoverScaleFromBN will recover the merged scale layer's info.
+ *  Currently, we only care about the weights and bias info.
+ */
+template <typename Dtype>
+void RecoverScaleFromBN(const LayerParameter& bn_layer_param, LayerParameter& scale_layer_param, Dtype default_scale_weights, Dtype default_scale_bias);
+/**
+ *  @brief rename layer1's top to layer2's
+ */
+void MergeLayer(LayerParameter &layer1, const LayerParameter &layer2);
 
-template<typename Dtype>
-MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
-        : solver(boost::make_shared<MultiSolver<Dtype> >(root_solver)),
-          layers(root_solver->net()->layers()),
-          net(root_solver->net()),
-          net_params(root_solver->net()->learnable_params()) {
-  root_solver->param().set_disabled_update(true);
+/**
+ *  @brief After removing the batch norm and scale layer after a convolution layer, to make the inference
+ *  result correct, we must adjust convolution layer's weights and bias blobs
+ */
 
-  if (root_solver->iter() == 0)
-    root_solver->set_iter(1);
+template <typename Dtype>
+void AdjustConvLayer(LayerParameter &conv_layer,
+                     const LayerParameter &batch_norm_layer,
+                     const LayerParameter &scale_layer, bool is_net_init);
 
-  layer_param_ids.resize(layers.size());
+/**
+ *  @brief The batch norm and scale layer may be merged due to compilation rule one's effect, RecoverBNScaleMergedNet
+ *  is used to recover the scale layer
+ */
+template <typename Dtype>
+void RecoverBNScaleMergedNet(NetParameter * net_param, NetParameter* recovered_net_param);
 
-  for (int layer_id = 0; layer_id < layers.size(); layer_id++) {
-    shared_ptr<Layer<Dtype> > layer = layers[layer_id];
-
-    /* cache param ids */
-    layer_param_ids[layer_id] = net->get_layer_learnable_param_ids(layer_id);
-  }
 }
-
-  INSTANTIATE_CLASS(MultiSync);
-} // namespace caffe
-
-#endif /* USE_MLSL */
+#endif

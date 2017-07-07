@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "hdf5.h"
 
+#include "boost/algorithm/string.hpp"
+
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
@@ -58,6 +60,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/multinode/mlsl.hpp"
+#include "caffe/multinode/apply_mn_param.hpp"
+#include "caffe/util/remove_batch_norm.hpp"
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -125,13 +129,31 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     filtered_param.set_engine("MKLDNN");
 #endif
   engine_name_ = filtered_param.engine();
+
+  NetParameter& param = filtered_param;
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param_with_splits;
-  InsertSplits(filtered_param, &param_with_splits);
+  InsertSplits(param, &param_with_splits);
+  param = param_with_splits;
 
+  NetParameter compiled_param;
   // Transform Net (merge layers etc.) improve computational performance
-  NetParameter param;
-  CompileNet(param_with_splits, &param);
+  CompileNet(param, &compiled_param);
+  param = compiled_param;
+  this->bn_scale_remove_ = param.compile_net_state().bn_scale_remove();
+  this->bn_scale_merge_ = param.compile_net_state().bn_scale_merge();
+  int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
+  for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
+    this->kept_bn_layers_.push_back(param.compile_net_state().kept_bn_layers(idx));
+  }
+
+#ifdef USE_MLSL
+  NetParameter param_with_mn;
+  if (mn::is_multinode()) {
+    ApplyMultinodeParams<Dtype>(param, &param_with_mn);
+    param = param_with_mn;
+  }
+#endif
 
   // Printing processed model
   if (Caffe::root_solver()) {
@@ -142,6 +164,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     fflush(0);
   }
 
+#ifdef USE_MLSL
+  int global_batch_size = -1;
+#endif
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -245,7 +270,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
-            mn::train::set_global_minibatch_size(batch_size * mn::get_nodes_count());
+            if (global_batch_size < 0) {
+              global_batch_size = batch_size * mn::get_nodes_count();
+              mn::train::set_global_minibatch_size(global_batch_size);
+            } else {
+              CHECK_EQ(global_batch_size, batch_size * mn::get_nodes_count());
+            }
         }
     }
 #endif /* USE_MLSL */
@@ -411,7 +441,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
                                         * sizeof(Dtype);
                   int caffe_weight_size = learnable_params_[param_ids[i]]->count() * sizeof(Dtype);
                   if (mlsl_weight_size < caffe_weight_size)
-                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id 
+                      LOG(FATAL) << "InitNet: ERROR: check weight sizes for layer " << layer->type() << ", layer_id " << layer_id
                                  << ", param_id " << param_ids[i]
                                  << ", MLSL weight size in bytes " << mlsl_weight_size
                                  << ", CAFFE weight size in bytes " << caffe_weight_size;
@@ -457,10 +487,18 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
+
+
+
+  NetParameter param_temp0;
+  param_temp0.CopyFrom(param);
+  param_temp0.clear_layer();
+  RemoveBNScale(param, &param_temp0);
+
   NetParameter param_temp;  // temporary compiled param
-  param_temp.CopyFrom(param);
+  param_temp.CopyFrom(param_temp0);
   param_temp.clear_layer();    // Remove layers
-  CompilationRuleOne(param, &param_temp);
+  CompilationRuleOne(param_temp0, &param_temp);
 
   NetParameter param_temp2;  // temporary compiled param
   param_temp2.CopyFrom(param_temp);
@@ -476,6 +514,8 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
                                     NetParameter* param_compiled) {
+
+  bool merge_bn_scale = false;
   std::set<std::string> layers_to_drop;
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
@@ -525,6 +565,7 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
         const string& scale_top_blob_name = consumer_layer_param.top(0);
         // Mark Consumer layer (its name) as the one marked for dropping
         layers_to_drop.insert(consumer_layer_param.name());
+        if (!merge_bn_scale) merge_bn_scale = true;
 
         // Replace BatchNorm top name with Scale top name
         batchnorm_top_blob_name.resize(scale_top_blob_name.size());
@@ -556,6 +597,7 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
       param_compiled->add_layer()->CopyFrom(*layer_param);
     }
   }
+  param_compiled->mutable_compile_net_state()->set_bn_scale_merge(merge_bn_scale);
 }
 
 
@@ -592,7 +634,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     //          H == 0 &&
     //          I == string::npos)))))
     */
-    if ((param.state().phase() == TEST) && 
+    if ((param.state().phase() == TEST) &&
         (layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
        || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
@@ -720,6 +762,107 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
   }
   return;
 }
+
+
+template <typename Dtype>
+void Net<Dtype>::RemoveBNScale(const NetParameter& param,
+                             NetParameter* param_compiled) {
+    // - In TEST Phase, if we detect sequential layers conv->batch norm ->scale,
+    // We will merge batch norm and scale layer into conv layer.
+  if(param.state().phase() != TEST) {
+    param_compiled->CopyFrom(param);
+    param_compiled->mutable_compile_net_state()->set_bn_scale_remove(false);
+    return ;
+  }
+
+  bool bn_scale_remove = false;
+  bool is_net_init = param.compile_net_state().is_init();
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter *layer_param = (const_cast<NetParameter&>(param)).mutable_layer(i);
+    bool layer_included = true;
+    bool bn_use_global_stats_set = true;
+    if (layer_param->type().compare("Convolution") == 0) {
+      std::vector<const LayerParameter*> child_layers_params;
+      GetBlobConsumers(child_layers_params, layer_param->top(0), param, i + 1 < param.layer_size() ? i + 1 : i);
+      const LayerParameter &child_layer_param = child_layers_params.size() > 0 ? *(child_layers_params[0]) : *layer_param;
+      // check whether child layer is BatchNorm
+      if (child_layer_param.type().compare("BatchNorm") == 0) {
+        BatchNormParameter bn_param = child_layer_param.batch_norm_param();
+        if (is_net_init) {
+          //Testing Network init process
+          bool bn_use_global_stats = true;
+          if (bn_param.has_use_global_stats()) {
+            bn_use_global_stats = bn_param.use_global_stats();
+          }
+          if (!bn_use_global_stats) {
+            //This bn layer's use_global_stats is set manually! Don't remove it.
+            //remained_bn_layer_names.push_back(child_layer_param.name());
+            param_compiled->mutable_compile_net_state()->add_kept_bn_layers(child_layer_param.name());
+            bn_use_global_stats_set = false;
+          }
+        } else {
+          int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
+          bool in_kept_list = false;
+          for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
+            if (child_layer_param.name().compare(param.compile_net_state().kept_bn_layers(idx)) == 0) {
+              in_kept_list = true;
+              break;
+            }
+          }
+          if (in_kept_list) {
+            bn_use_global_stats_set = false;
+          }
+        }
+
+        if (!bn_use_global_stats_set) {
+          //Even in caffe TEST phase, current batch norm layer has set use_global_stats = false in protxt file, so we won't
+          //merge this layer into convolution layer.
+         param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+        std::vector<const LayerParameter*> grandchild_layers_params;
+        GetBlobConsumers(grandchild_layers_params, child_layer_param.top(0), param, i + 2 < param.layer_size() ? i + 2 : i);
+        const LayerParameter &grandchild_layer_param = (grandchild_layers_params.size() > 0) ? *(grandchild_layers_params[0]) : child_layer_param;
+        if (grandchild_layer_param.type().compare("Scale") == 0) {
+          MergeLayer(*layer_param, grandchild_layer_param);
+          AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, is_net_init);
+          if (bn_scale_remove == false) bn_scale_remove = true;
+          layers_to_drop.insert(child_layer_param.name());
+          layers_to_drop.insert(grandchild_layer_param.name());
+        } else if (&child_layer_param != &grandchild_layer_param) {
+          //In fact, conv-->batchnorm can also be optimized. In such case, we check the blob size of batch norm layer
+          //if is 3, it means current net hasn't used scale layer, this is equivalent to scale layer with all 1 weights and 0 bias
+          //if is 4 or 5, it means intel caffe compilation rule 1 works here, we can recover the scale layer from batch norm layer
+          MergeLayer(*layer_param, child_layer_param);
+          if (!is_net_init) {
+            shared_ptr<LayerParameter> scale_layer_param(new LayerParameter());
+            RecoverScaleFromBN(child_layer_param, *scale_layer_param, (Dtype)1, (Dtype)0);
+            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, *scale_layer_param, is_net_init);
+          } else {
+            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, true);
+		  }
+          if (bn_scale_remove == false) bn_scale_remove = true;
+          layers_to_drop.insert(child_layer_param.name());
+        }
+      }
+    }
+    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+      LOG_IF(INFO, Caffe::root_solver()) << "Dropped Layer: "<< layer_param->name() << std::endl;
+      layer_included = false;
+      // Remove dropped layer from the list of layers to be dropped
+      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+    }
+    if (layer_included) {
+            if (layer_param->type().compare("BatchNorm") == 0) {
+              param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
+            }
+            param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
+
+  param_compiled->mutable_compile_net_state()->set_bn_scale_remove(bn_scale_remove);
+ }
 
 template <typename Dtype>
 void Net<Dtype>::GetBlobConsumers(
@@ -1122,6 +1265,28 @@ void Net<Dtype>::UpdateDebugInfo(const int param_id) {
 
 template <typename Dtype>
 void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
+
+
+    if (this->bn_scale_remove_) {
+    //This path shows testing network's blobs(weight & bias) has been adjusted
+    //We can't share weights & blobs with training net! We will save current
+    //training net to a temp model file and load to memory later
+    NetParameter temp_net_param;
+    NetParameter complete_net_param;
+    other->ToProto(&temp_net_param, false);
+    //Copy this->remained_bn_layer_names to temp_net_param
+    for (vector<string>::iterator it = kept_bn_layers_.begin(); it != kept_bn_layers_.end(); it++) {
+      temp_net_param.mutable_compile_net_state()->add_kept_bn_layers(*it);
+    }
+    //temp_net_param.mutable_compile_net_state()->set_bn_top_rename(other->bn_top_rename_);
+    complete_net_param.CopyFrom(temp_net_param);
+    if (other->bn_scale_merge_) {
+      complete_net_param.clear_layer();
+      RecoverBNScaleMergedNet<Dtype>(&temp_net_param, &complete_net_param);
+    }
+    CopyTrainedLayersFrom(complete_net_param);
+    return ;
+  }
   int num_source_layers = other->layers().size();
   for (int i = 0; i < num_source_layers; ++i) {
     Layer<Dtype>* source_layer = other->layers()[i].get();
@@ -1191,9 +1356,24 @@ void Net<Dtype>::Reshape() {
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   NetParameter param_tmp = param_inp;
-  param_tmp.set_engine(engine_name_);
-  NetParameter param;
-  CompileNet(param_tmp, &param);
+  NetParameter &param = param_tmp;
+  param.set_engine(engine_name_);
+  param_tmp.mutable_state()->set_phase(phase_);
+  param_tmp.mutable_compile_net_state()->set_is_init(false);
+  for (vector<string>::iterator it = this->kept_bn_layers_.begin(); it != this->kept_bn_layers_.end(); it++) {
+    param_tmp.mutable_compile_net_state()->add_kept_bn_layers(*it);
+  }
+  NetParameter param_compiled;
+  CompileNet(param, &param_compiled);
+  param = param_compiled;
+#ifdef USE_MLSL
+  NetParameter param_mn;
+  if (mn::is_multinode()) {
+    CopyMultinodeParamsFromNet<Dtype>(this, &param);
+    ApplyMultinodeParams<Dtype>(param, &param_mn);
+    param = param_mn;
+  }
+#endif
 
   int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
@@ -1290,8 +1470,29 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
               << source_layer_name;
         }
       }
+#ifdef USE_MLSL
+      const MultinodeLayerParameter &mn_layer_param =
+        layers_[target_layer_id]->layer_param().multinode();
+      int num_nodes = mn_layer_param.num_nodes();
+      int model_parts = mn_layer_param.model_parts();
+      mn::GetCanonicalMnParam(num_nodes, model_parts);
+      Blob<Dtype> orig_blob;
+      vector<int> shape = target_blobs[j]->shape();
+      CHECK_GT(shape.size(), 0);
+      int offset = 0;
+      if (model_parts > 1) {
+        shape[0] *= model_parts;
+        offset = target_blobs[j]->count() * (mn::get_node_id() % model_parts);
+      }
+      orig_blob.Reshape(shape);
+      hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,
+          &orig_blob);
+      caffe_copy(target_blobs[j]->count(), orig_blob.cpu_data() + offset,
+                 target_blobs[j]->mutable_cpu_data());
+#else
       hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,
           target_blobs[j].get());
+#endif
     }
     H5Gclose(layer_hid);
   }
@@ -1309,6 +1510,14 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
     LayerParameter* layer_param = param->add_layer();
     layers_[i]->ToProto(layer_param, write_diff);
   }
+  // TODO: Should implement the param adjustment for ToHDF5 as well
+  // TODO: Decompile net to BVLC compatibility
+  // DecompileNet(param);
+#ifdef USE_MLSL
+  if (mn::is_multinode()) {
+    RevertMultinodeParams<Dtype>(param, write_diff);
+  }
+#endif
 }
 
 template <typename Dtype>
@@ -1328,6 +1537,9 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
   }
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
     const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+#ifdef USE_MLSL
+    if (layer_param.type() == "MnActivation") continue;
+#endif
     string layer_name = layer_param.name();
     hid_t layer_data_hid = H5Gcreate2(data_hid, layer_name.c_str(),
         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1345,6 +1557,48 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
       ostringstream dataset_name;
       dataset_name << param_id;
       const int net_param_id = param_id_vecs_[layer_id][param_id];
+#ifdef USE_MLSL
+      const MultinodeLayerParameter &mn_layer_param = layer_param.multinode();
+      int num_nodes = mn_layer_param.num_nodes();
+      int model_parts = mn_layer_param.model_parts();
+      mn::GetCanonicalMnParam(num_nodes, model_parts);
+      Blob<Dtype> new_blob;
+      vector<int> shape = params_[net_param_id]->shape();
+      CHECK_GT(shape.size(), 0);
+      if (model_parts > 1) {
+        mn::Distribution *distrib = mn::get_distrib(num_nodes/model_parts, model_parts);
+        shape[0] *= model_parts;
+        new_blob.Reshape(shape);
+        distrib->allgather<Dtype,MLSL::GT_MODEL>(
+          params_[net_param_id]->mutable_cpu_data(),
+          params_[net_param_id]->count(),
+          new_blob.mutable_cpu_data());
+        if (write_diff) {
+          distrib->allgather<Dtype,MLSL::GT_MODEL>(
+            params_[net_param_id]->mutable_cpu_diff(),
+            params_[net_param_id]->count(),
+            new_blob.mutable_cpu_diff());
+        }
+      } else {
+        new_blob.Reshape(shape);
+        caffe_copy(new_blob.count(), params_[net_param_id]->cpu_data(),
+                   new_blob.mutable_cpu_data());
+        if (write_diff) {
+          caffe_copy(new_blob.count(), params_[net_param_id]->cpu_diff(),
+                     new_blob.mutable_cpu_diff());
+        }
+      }
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            new_blob);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            new_blob, true);
+      }
+#else
       if (param_owners_[net_param_id] == -1) {
         // Only save params that own themselves
         hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
@@ -1355,6 +1609,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
         hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
             *params_[net_param_id], true);
       }
+#endif
     }
     H5Gclose(layer_data_hid);
     if (write_diff) {

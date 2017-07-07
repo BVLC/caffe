@@ -60,7 +60,8 @@ class Classifier {
   Classifier(const string& model_file,
              const string& trained_file,
              const string& mean_file,
-             const string& label_file);
+             const string& label_file,
+             const string& engine);
 
   std::vector<Prediction> Classify(const cv::Mat& img, int N = 5);
 
@@ -85,7 +86,8 @@ class Classifier {
 Classifier::Classifier(const string& model_file,
                        const string& trained_file,
                        const string& mean_file,
-                       const string& label_file) {
+                       const string& label_file,
+                       const string& engine) {
 #ifdef CPU_ONLY
   Caffe::set_mode(Caffe::CPU);
 #else
@@ -93,7 +95,7 @@ Classifier::Classifier(const string& model_file,
 #endif
 
   /* Load the network. */
-  net_.reset(new Net<float>(model_file, TEST));
+  net_.reset(new Net<float>(model_file, TEST, 0, NULL, NULL, engine));
   net_->CopyTrainedLayersFrom(trained_file);
 
   CHECK_EQ(net_->num_inputs(), 1) << "Network should have exactly one input.";
@@ -264,10 +266,10 @@ void Classifier::Preprocess(const cv::Mat& img,
 }
 
 int main(int argc, char** argv) {
-  if (argc != 6) {
+  if (argc < 6) {
     std::cerr << "Usage: " << argv[0]
               << " deploy.prototxt network.caffemodel"
-              << " mean.binaryproto labels.txt img.jpg" << std::endl;
+              << " mean.binaryproto labels.txt img.jpg [CAFFE|MKL2017|MKLDNN]" << std::endl;
     return 1;
   }
 
@@ -277,9 +279,14 @@ int main(int argc, char** argv) {
   string trained_file = argv[2];
   string mean_file    = argv[3];
   string label_file   = argv[4];
-  Classifier classifier(model_file, trained_file, mean_file, label_file);
+  string file         = argv[5];
+  string engine = "";
+  if (argc > 6) {
+    engine = argv[6];
+  }
 
-  string file = argv[5];
+  Classifier classifier(model_file, trained_file, mean_file, label_file, engine);
+
 
   std::cout << "---------- Prediction for "
             << file << " ----------" << std::endl;

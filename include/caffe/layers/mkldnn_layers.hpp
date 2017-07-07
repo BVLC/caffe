@@ -77,6 +77,9 @@ public:
           PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
     ~MKLDNNBatchNormLayer() {}
+#ifdef USE_MLSL
+    virtual bool ParamNeedReduce(int param_id) { return param_id >= 3; }
+#endif
 
 protected:
     virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -161,6 +164,7 @@ private:
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
     int  pad_w_, pad_h_;
+    mkldnn::algorithm  conv_algorithm;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
