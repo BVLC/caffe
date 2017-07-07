@@ -129,9 +129,13 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     fwd_top_data_memory = fwd_top_data->create_output_memory(inplace);
 
     reluFwd.reset(new relu_forward(*reluFwd_pd, *fwd_bottom_data_primitive, *fwd_top_data_memory));
-    fwd_bottom_data->set_mkldnn_primitive(reluFwd);
-    fwd_top_data->set_mkldnn_primitive(reluFwd);
+    //fwd_bottom_data->set_mkldnn_primitive(reluFwd);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
 
+    //fwd_top_data->set_mkldnn_primitive(reluFwd);        //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_top_data_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 }
 
 
@@ -269,8 +273,13 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bwd_bottom_diff_memory = bwd_bottom_diff->create_output_memory(inplace);
 
     reluBwd.reset(new relu_backward(*reluBwd_pd, *fwd_bottom_data_primitive, *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
-    bwd_top_diff->set_mkldnn_primitive(reluBwd);
-    bwd_bottom_diff->set_mkldnn_primitive(reluBwd);
+    //bwd_top_diff->set_mkldnn_primitive(reluBwd);          //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
+    bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
+
+    //bwd_bottom_diff->set_mkldnn_primitive(reluBwd);       //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
+    bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
 }
 
 template <typename Dtype>
