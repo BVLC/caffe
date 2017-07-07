@@ -168,9 +168,13 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   concatFwd.reset(new concat(*concatFwd_pd, fwd_input_primitives_at_, *fwd_output_memory));
 
   for (auto i = 0; i < num_concats_; i++) {
-    fwd_bottom_data[i]->set_mkldnn_primitive(concatFwd);
+    //fwd_bottom_data[i]->set_mkldnn_primitive(concatFwd);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_input_primitives_[i]);
+    fwd_bottom_data[i]->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
   }
-  fwd_top_data->set_mkldnn_primitive(concatFwd);
+  //fwd_top_data->set_mkldnn_primitive(concatFwd);          //Wrong passed primitive! (TODO: Checking!)
+  MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_output_memory);
+  fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 }
 
 template <typename Dtype>
@@ -237,11 +241,14 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
 
     offsets[concat_dimension] += dims[concat_dimension];
 
-    bwd_bottom_diff[i]->set_mkldnn_primitive(reorders[i]);
+    //bwd_bottom_diff[i]->set_mkldnn_primitive(reorders[i]);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_reorder_output_memory[i]);
+    bwd_bottom_diff[i]->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
   }
 
-  bwd_top_diff->set_mkldnn_primitive(reorders[0]);
-
+  //bwd_top_diff->set_mkldnn_primitive(reorders[0]);          //Wrong passed primitive! (TODO: Checking!)
+  MKLDNNPrimitive<Dtype> bwd_top_diff_memory_transfer(bwd_reorder_input_memory);
+  bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_memory_transfer);
 }
 
 template <typename Dtype>
