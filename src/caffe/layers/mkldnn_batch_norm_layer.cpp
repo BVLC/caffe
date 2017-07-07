@@ -246,8 +246,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         }
     }
 
-    fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);
-    fwd_top_data->set_mkldnn_primitive(BatchNormFwd);
+    //fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(input_primitive);
+    fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+
+    //fwd_top_data->set_mkldnn_primitive(BatchNormFwd);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(output_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 
     //Fix: MKLDNN batch norm only support 4D memory descriptor! Use 4D for calculation and reshape to 2D for output!
     bool has_spatial = (bottom[0]->shape().size() != 2);
@@ -413,8 +418,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
                     *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
     }
 
-    bwd_top_diff->set_mkldnn_primitive(BatchNormBwd);
-    bwd_bottom_diff->set_mkldnn_primitive(BatchNormBwd);
+    //bwd_top_diff->set_mkldnn_primitive(BatchNormBwd);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
+    bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
+
+    //bwd_bottom_diff->set_mkldnn_primitive(BatchNormBwd);  //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
+    bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
 }
 
 template <typename Dtype>
