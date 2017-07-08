@@ -20,6 +20,10 @@ for CPU-only version, or
 for CUDA version. Note, the cuda version may break if your NVIDIA driver
 and CUDA toolkit are not installed by APT.
 
+[Package status of CPU-only version](https://launchpad.net/ubuntu/+source/caffe)
+
+[Package status of CUDA version](https://launchpad.net/ubuntu/+source/caffe-contrib)
+
 **Installing Caffe from source**
 
 We may install the dependencies by merely one line
