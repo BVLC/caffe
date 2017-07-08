@@ -105,10 +105,10 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     //disp(swap);
   vector<vector< PredictionResult<Dtype> > > predicts(swap.num());
   PredictionResult<Dtype> predict;
-  predicts.clear(); 
   vector<vector<int_tp> > idxes(swap.num());
-  idxes.clear();
   for (int_tp b = 0; b < swap.num(); ++b){
+    predicts[b].clear(); 
+    idxes[b].clear();
     for (int_tp j = 0; j < side_; ++j)
       for (int_tp i = 0; i < side_; ++i)
         for (int_tp n = 0; n < num_box_; ++n){
