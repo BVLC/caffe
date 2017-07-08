@@ -31,6 +31,11 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
 #endif  // USE_CUDA
     } else {
       // Make sure the memory is zero-copy usable in OpenCL
+#ifdef USE_MKL
+      #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+      #define ALIGN(x,a)              __ALIGN_MASK(x,(int32_t)(a)-1)
+      *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
+#else
 #ifdef _MSC_VER
       // No aligned allocation support in windows for now.
       // Using _aligned_malloc will crash due to a bug.
@@ -41,6 +46,7 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
                   << "Host memory allocation error of size: "
                   << size << " B";
 #endif  // _MSC_VER
+#endif
       return;
     }
   }
@@ -70,7 +76,11 @@ void CaffeFreeHost(void* ptr, device* dev) {
       return;
 #endif  // USE_CUDA
     } else {
+#ifdef USE_MKL
+      mkl_free(ptr);
+#else
       free(ptr);
+#endif
       return;
     }
   }
