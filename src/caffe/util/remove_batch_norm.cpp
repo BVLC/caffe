@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/blob.hpp"
 #include "caffe/util/remove_batch_norm.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/net.hpp"
 namespace caffe {
 
 template <typename Dtype>
@@ -188,6 +189,106 @@ void RecoverBNScaleMergedNet(NetParameter * net_param, NetParameter* recovered_n
   }
 }
 
+template <typename Dtype>
+void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled) {
+
+  // - In TEST Phase, if we detect sequential layers conv->batch norm ->scale,
+    // We will merge batch norm and scale layer into conv layer.
+  if(param.state().phase() != TEST) {
+    param_compiled->CopyFrom(param);
+    param_compiled->mutable_compile_net_state()->set_bn_scale_remove(false);
+    return ;
+  }
+
+  bool bn_scale_remove = false;
+  bool is_net_init = param.compile_net_state().is_init();
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter *layer_param = (const_cast<NetParameter&>(param)).mutable_layer(i);
+    bool layer_included = true;
+    bool bn_use_global_stats_set = true;
+    if (layer_param->type().compare("Convolution") == 0) {
+      std::vector<const LayerParameter*> child_layers_params;
+	  Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0), param, i + 1 < param.layer_size() ? i + 1 : i);
+      const LayerParameter &child_layer_param = child_layers_params.size() > 0 ? *(child_layers_params[0]) : *layer_param;
+      // check whether child layer is BatchNorm
+      if (child_layer_param.type().compare("BatchNorm") == 0) {
+        BatchNormParameter bn_param = child_layer_param.batch_norm_param();
+        if (is_net_init) {
+          //Testing Network init process
+          bool bn_use_global_stats = true;
+          if (bn_param.has_use_global_stats()) {
+            bn_use_global_stats = bn_param.use_global_stats();
+          }
+          if (!bn_use_global_stats) {
+            //This bn layer's use_global_stats is set manually! Don't remove it.
+            //remained_bn_layer_names.push_back(child_layer_param.name());
+            param_compiled->mutable_compile_net_state()->add_kept_bn_layers(child_layer_param.name());
+            bn_use_global_stats_set = false;
+          }
+        } else {
+          int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
+          bool in_kept_list = false;
+          for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
+            if (child_layer_param.name().compare(param.compile_net_state().kept_bn_layers(idx)) == 0) {
+              in_kept_list = true;
+              break;
+            }
+          }
+          if (in_kept_list) {
+            bn_use_global_stats_set = false;
+          }
+        }
+
+        if (!bn_use_global_stats_set) {
+          //Even in caffe TEST phase, current batch norm layer has set use_global_stats = false in protxt file, so we won't
+          //merge this layer into convolution layer.
+         param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+        std::vector<const LayerParameter*> grandchild_layers_params;
+		Net<Dtype>::GetBlobConsumers(grandchild_layers_params, child_layer_param.top(0), param, i + 2 < param.layer_size() ? i + 2 : i);
+        const LayerParameter &grandchild_layer_param = (grandchild_layers_params.size() > 0) ? *(grandchild_layers_params[0]) : child_layer_param;
+        if (grandchild_layer_param.type().compare("Scale") == 0) {
+          MergeLayer(*layer_param, grandchild_layer_param);
+          AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, is_net_init);
+          if (bn_scale_remove == false) bn_scale_remove = true;
+          layers_to_drop.insert(child_layer_param.name());
+          layers_to_drop.insert(grandchild_layer_param.name());
+        } else if (&child_layer_param != &grandchild_layer_param) {
+          //In fact, conv-->batchnorm can also be optimized. In such case, we check the blob size of batch norm layer
+          //if is 3, it means current net hasn't used scale layer, this is equivalent to scale layer with all 1 weights and 0 bias
+          //if is 4 or 5, it means intel caffe compilation rule 1 works here, we can recover the scale layer from batch norm layer
+          MergeLayer(*layer_param, child_layer_param);
+          if (!is_net_init) {
+            shared_ptr<LayerParameter> scale_layer_param(new LayerParameter());
+            RecoverScaleFromBN(child_layer_param, *scale_layer_param, (Dtype)1, (Dtype)0);
+            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, *scale_layer_param, is_net_init);
+          } else {
+            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, true);
+          }
+          if (bn_scale_remove == false) bn_scale_remove = true;
+          layers_to_drop.insert(child_layer_param.name());
+        }
+      }
+    }
+    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+      LOG_IF(INFO, Caffe::root_solver()) << "Dropped Layer: "<< layer_param->name() << std::endl;
+      layer_included = false;
+      // Remove dropped layer from the list of layers to be dropped
+      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+    }
+    if (layer_included) {
+            if (layer_param->type().compare("BatchNorm") == 0) {
+              param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
+            }
+            param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
+
+  param_compiled->mutable_compile_net_state()->set_bn_scale_remove(bn_scale_remove);
+}
+
 template void RecoverScaleFromBN<float>(const LayerParameter& bn_layer_param, LayerParameter& scale_layer_param, float default_scale_weights, float default_scale_bias);
 template void RecoverScaleFromBN<double>(const LayerParameter& bn_layer_param, LayerParameter& scale_layer_param, double default_scale_weights, double default_scale_bias);
 template void AdjustConvLayer<float>(LayerParameter &conv_layer,
@@ -200,4 +301,6 @@ template void AdjustConvLayer<double>(LayerParameter &conv_layer,
 
 template void RecoverBNScaleMergedNet<float>(NetParameter * net_param, NetParameter* recovered_net_param);
 template void RecoverBNScaleMergedNet<double>(NetParameter * net_param, NetParameter* recovered_net_param);
+template void RemoveBNScale<float>(const NetParameter& param, NetParameter* param_compiled);
+template void RemoveBNScale<double>(const NetParameter& param, NetParameter* param_compiled);
 }
