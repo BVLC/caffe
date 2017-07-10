@@ -163,10 +163,14 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
   // there may be reorders to be done for inputs(tops' diffs) 
   // so it match SplitBwd primitive inputs format expectations
   for(int i = 0; i < top.size(); ++i) {
-    bwd_top_diffs_[i]->set_mkldnn_primitive(splitBwd_);
+    //bwd_top_diffs_[i]->set_mkldnn_primitive(splitBwd_);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitives_[i]);
+    bwd_top_diffs_[i]->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
   }
 
-  bwd_bottom_diff_->set_mkldnn_primitive(splitBwd_);
+  //bwd_bottom_diff_->set_mkldnn_primitive(splitBwd_);        //Wrong passed primitive! (TODO: Checking!)
+  MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory_);
+  bwd_bottom_diff_->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
 }
 
 
