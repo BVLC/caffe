@@ -405,6 +405,11 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+
+  optional ROIPoolingParameter roi_pooling_param = 8266711;
+  optional SmoothL1LossParameter smooth_l1_loss_param = 8266712;
+  optional ProposalParameter proposal_param = 8266713;
+  optional LocalConvolutionParameter local_conv_param = 8266714;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1116,6 +1121,8 @@ message SigmoidParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
+
+
 message SliceParameter {
   // The axis along which to slice -- may be negative to index from the end
   // (e.g., -1 for the last axis).
@@ -1410,3 +1417,73 @@ message PReLUParameter {
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+message LocalConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 3 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 4; // The kernel size (square)
+  optional uint32 kernel_h = 11; // The kernel height
+  optional uint32 kernel_w = 12; // The kernel width
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+  optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 13; // The stride height
+  optional uint32 stride_w = 14; // The stride width
+  repeated uint32 dilation = 25; // The dilation; defaults to 1
+  optional FillerParameter weight_filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 15 [default = DEFAULT];
+  
+  optional uint32 local_region_number = 16 [default = 1]; 		// If default, it will degrade to normal convlution
+  optional uint32 local_region_number_w = 17 [default = 1]; 	//, otherwise local_region_number * local_region_number local regions will 
+  optional uint32 local_region_number_h = 18 [default = 1]; 	// be convolved with different convolution kernel banks.
+
+  optional float local_region_ratio = 19 [default = 1.0]; 		// range in (0, 1], combined with local region number to determine the local region size
+  optional float local_region_ratio_w = 20 [default = 1.0]; 
+  optional float local_region_ratio_h = 21 [default = 1.0]; 
+  
+  optional uint32 local_region_step = 22 [default = 1]; 	//step between adjacent input local regions
+  optional uint32 local_region_step_w = 23 [default = 1]; 
+  optional uint32 local_region_step_h = 24 [default = 1]; 	
+}
+
+message SmoothL1LossParameter {
+  // SmoothL1Loss(x) =
+  //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
+  //   |x| - 0.5 / sigma / sigma -- otherwise
+  optional float sigma = 1 [default = 1];
+}
+
+// Message that stores parameters used by ROIPoolingLayer
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
+}
+
+// Message that stores parameters used by ProposalLayer
+message ProposalParameter {
+  optional uint32 feat_stride = 1 [default = 16];
+  optional uint32 base_size = 2 [default = 16];
+  optional uint32 min_size = 3 [default = 16];
+  repeated float ratio = 4;
+  repeated float scale = 5;
+  optional uint32 pre_nms_topn = 6 [default = 6000];
+  optional uint32 post_nms_topn = 7 [default = 300];
+  optional float nms_thresh = 8 [default = 0.7];
+  optional float score_thresh = 9 [default = 0.0];
+}
+
