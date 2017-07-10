@@ -692,6 +692,9 @@ int main(int argc, char** argv) {
       "  compare         collects layer data using inputs from other device");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {

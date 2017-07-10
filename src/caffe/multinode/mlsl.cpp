@@ -41,26 +41,22 @@
 #include "boost/thread/mutex.hpp"
 #include "caffe/multinode/mlsl.hpp"
 
-namespace {
-
-  __attribute__((constructor))
-  void init(int argc, char **argv) {
-    static class initialize {
-    public:
-      initialize(int* argc, char** argv[]) {
-        MLSL::Environment::GetEnv().Init(argc, argv);
-      }
-      ~initialize() {
-        MLSL::Environment::GetEnv().Finalize();
-      }
-    } __init{ &argc, &argv };
-  }
-}
-
 namespace caffe {
   namespace mn {
     boost::mutex distrib_lock;
     std::map<std::pair<int,int>, boost::shared_ptr<Distribution>> distrib_map;
+
+    void init(int* argc, char **argv[]) {
+      static class initialize {
+      public:
+        initialize(int* argc, char** argv[]) {
+          MLSL::Environment::GetEnv().Init(argc, argv);
+        }
+        ~initialize() {
+          MLSL::Environment::GetEnv().Finalize();
+        }
+      } __init{ argc, argv };
+    }
     
     shared_ptr<Distribution> create_distrib(
       int dataParts, int modelParts, int dataColor, int modelColor,
