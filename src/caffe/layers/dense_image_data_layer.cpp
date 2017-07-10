@@ -35,6 +35,7 @@ DenseImageDataLayer<Dtype>::~DenseImageDataLayer<Dtype>() {
 template <typename Dtype>
 void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  rd_ = std::uniform_int_distribution<int>(0,3);
   const int new_height = this->layer_param_.dense_image_data_param().new_height();
   const int new_width  = this->layer_param_.dense_image_data_param().new_width();
   const int crop_height = this->layer_param_.dense_image_data_param().crop_height();
@@ -187,6 +188,38 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         cv::flip(cv_img,cv_img,1);
         cv::flip(cv_lab,cv_lab,1);
       }
+    }
+    // Apply random rotation of images
+    if (this->layer_param_.dense_image_data_param().rotate()) {
+      int r = rd_(rg_);
+      if (r > 0)
+	{
+	  CHECK(new_height == new_width) << "If random rotation is enabled, the image must be square";
+	  if (r != 2)
+	    {
+	      cv::Mat cv_timg, cv_tlab;
+	      transpose(cv_img,cv_timg);
+	      transpose(cv_lab,cv_tlab);
+	      if (r == 1) // 90
+		{
+		  flip(cv_timg,cv_img,1);
+		  flip(cv_tlab,cv_lab,1);
+		}
+	      else if (r == 3) // 270
+		{
+		  flip(cv_timg,cv_img,0);
+		  flip(cv_tlab,cv_lab,0);
+		}
+	    }
+	  else // 180
+	    {
+	      cv::Mat cv_imgr,cv_labr;
+	      flip(cv_img,cv_imgr,-1);
+	      flip(cv_lab,cv_labr,-1);
+	      cv_img = cv_imgr;
+	      cv_lab = cv_labr;
+	    }
+	}
     }
     // Apply crop
     int height = cv_img.rows;

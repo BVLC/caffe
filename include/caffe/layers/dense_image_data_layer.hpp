@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <random>
 
 #include "caffe/blob.hpp"
 #include "caffe/data_transformer.hpp"
@@ -37,8 +38,8 @@ class DenseImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, std::string> > lines_;
   int lines_id_;
   Blob<Dtype> transformed_label_;
-  
-
+  std::mt19937 rg_;
+  std::uniform_int_distribution<int> rd_;  
 };
 
 

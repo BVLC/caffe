@@ -1086,6 +1086,7 @@ message DenseImageDataParameter {
   optional bool mirror = 10 [default = false];
   optional uint32 crop_width = 11 [default = 0];
   optional uint32 crop_height = 12 [default = 0];
+  optional bool rotate = 13 [default = false];
 }
 
 message DropoutParameter {
