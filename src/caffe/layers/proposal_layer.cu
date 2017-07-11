@@ -1,4 +1,5 @@
 #include "caffe/layers/fast_rcnn_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/util/nms.hpp"
 
 namespace caffe {
@@ -185,10 +186,10 @@ void ProposalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* p_d_anchor_item = bottom[1]->gpu_data();
   const Dtype* p_img_info_cpu = bottom[2]->cpu_data();
   Dtype* p_roi_item = top[0]->mutable_gpu_data();
-  cudaMemset(p_roi_item, 0, top[0]->count() * sizeof(Dtype));
+  caffe_gpu_set(top[0]->count(),0, p_roi_item);
   Dtype* p_score_item = (top.size() > 1) ? top[1]->mutable_gpu_data() : NULL;
   if (p_score_item)
-    cudaMemset(p_score_item, 0, top[1]->count() * sizeof(Dtype));
+    caffe_gpu_set(top[1]->count(),0, p_score_item);
 
   vector<int> proposals_shape(2);
   proposals_shape[0] = 0;
