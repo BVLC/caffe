@@ -22,9 +22,11 @@ DEFINE_string(backend, "lmdb",
         "The backend {leveldb, lmdb} containing the images");
 
 int main(int argc, char** argv) {
-  ::google::InitGoogleLogging(argv[0]);
-
 #ifdef USE_OPENCV
+  ::google::InitGoogleLogging(argv[0]);
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
+
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
@@ -65,7 +67,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < size_in_datum; ++i) {
     sum_blob.add_data(0.);
   }
-  LOG(INFO) << "Starting Iteration";
+  LOG(INFO) << "Starting iteration";
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
@@ -114,7 +116,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim; ++i) {
       mean_values[c] += sum_blob.data(dim * c + i);
     }
-    LOG(INFO) << "mean_value channel [" << c << "]:" << mean_values[c] / dim;
+    LOG(INFO) << "mean_value channel [" << c << "]: " << mean_values[c] / dim;
   }
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";

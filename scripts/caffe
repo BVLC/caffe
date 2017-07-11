@@ -1,0 +1,73 @@
+# bash completion for Caffe's command line utility       -*- shell-script -*-
+# COPYRIGHT (C) 2015,2016 Zhou Mo <cdluminate@gmail.com>
+# License: BSD-2-Clause
+# Originally appeard at https://github.com/BVLC/caffe/issues/3149
+
+# Updated for caffe (1.0.0~rc3+20160715-g42cd785)
+_caffe()
+{
+  local cur prev words cword
+  _init_completion -s || return
+
+  local prototxts='@(prototxt)'
+  local caffemodels='@(caffemodel,binaryproto)'
+  local solverstates='@(solverstate)'
+  local caffefiles='@(prototxt|caffemodel|solverstate)'
+
+  local flags='-gpu -iterations -model -snapshot -solver -weights -sighup_effect -sigint_effect -level -stage -phase'
+  
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=( $( compgen -W 'train test time device_query' -- "$cur" ) )
+    return 0
+  fi
+  
+  if [[ $cword -eq 2 ]]; then
+    case ${words[1]} in
+    train|test|device_query|time)
+      COMPREPLY=( $( compgen -W "$flags" -- "$cur") )
+      return 0
+      ;;
+    *)
+      return 0
+      ;;
+    esac
+  fi
+
+  case $prev in
+  -gpu|-iterations|-version|-level|-stage)
+    return 0
+    ;;
+  -solver|-model)
+    _filedir $prototxts
+    return 0
+    ;;
+  -weights)
+    _filedir $caffemodels
+    return 0
+    ;;
+  -snapshot)
+    _filedir $solverstates
+    return 0
+    ;;
+  -sighup_effect|-sigint_effect)
+    COMPREPLY=( $( compgen -W 'snapshot stop none' -- "$cur") )
+    return 0
+    ;;
+  -phase)
+    COMPREPLY=( $( compgen -W 'TRAIN TEST' -- "$cur") )
+    return 0
+    ;;
+  *)
+    COMPREPLY=( $( compgen -W "$flags" -- "$cur") )
+    return 0
+    ;;
+  esac
+
+  # file completion on relevant files
+  _filedir "$caffefiles"
+
+  return 0
+}
+complete -F _caffe caffe
+
+# vim
