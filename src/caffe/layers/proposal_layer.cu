@@ -186,10 +186,10 @@ void ProposalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* p_d_anchor_item = bottom[1]->gpu_data();
   const Dtype* p_img_info_cpu = bottom[2]->cpu_data();
   Dtype* p_roi_item = top[0]->mutable_gpu_data();
-  caffe_gpu_set(top[0]->count(),0, p_roi_item);
+  caffe_gpu_set(top[0]->count(),Dtype(0), p_roi_item);
   Dtype* p_score_item = (top.size() > 1) ? top[1]->mutable_gpu_data() : NULL;
   if (p_score_item)
-    caffe_gpu_set(top[1]->count(),0, p_score_item);
+    caffe_gpu_set(top[1]->count(),Dtype(0), p_score_item);
 
   vector<int> proposals_shape(2);
   proposals_shape[0] = 0;
