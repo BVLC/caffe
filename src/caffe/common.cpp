@@ -499,7 +499,17 @@ void Caffe::SetDevice(const int device_id) {
     Caffe::SetDevices(std::vector<int> { device_id });
   }
 
-  Get().default_device_ = GetDevice(0, true);
+  Get().default_device_ = GetDevice(device_id, true);
+#ifdef USE_GREENTEA
+  int cuda_device_count = 0;
+#ifdef USE_CUDA
+  cudaGetDeviceCount(&cuda_device_count);
+#endif  // USE_CUDA
+  if (device_id >= cuda_device_count) {
+    viennacl::ocl::switch_context(device_id - cuda_device_count);
+  }
+#endif
+
 #if defined(USE_GREENTEA) && defined(USE_FFT)
   Get().cl_fft_state_.setup();
 #endif
