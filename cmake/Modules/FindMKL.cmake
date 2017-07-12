@@ -42,10 +42,10 @@ else()
     if(WIN32)
       list(APPEND __mkl_libs intel_c)
     else()
-      list(APPEND __mkl_libs intel gf)
+      list(APPEND __mkl_libs intel)
     endif()
   else()
-    list(APPEND __mkl_libs intel_lp64 gf_lp64)
+    list(APPEND __mkl_libs intel_lp64)
   endif()
 
   if(MKL_MULTI_THREADED)
@@ -54,9 +54,8 @@ else()
      list(APPEND __mkl_libs sequential)
   endif()
 
-  list(APPEND __mkl_libs core cdft_core)
+  list (APPEND __mkl_libs core)
 endif()
-
 
 foreach (__lib ${__mkl_libs})
   set(__mkl_lib "mkl_${__lib}")
@@ -77,7 +76,6 @@ foreach (__lib ${__mkl_libs})
   list(APPEND MKL_LIBRARIES ${${__mkl_lib_upper}_LIBRARY})
 endforeach()
 
-
 if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
   if (MKL_USE_STATIC_LIBS)
     set(__iomp5_libs iomp5 libiomp5mt.lib)
@@ -86,7 +84,7 @@ if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
   endif()
 
   if(WIN32)
-    find_path(INTEL_INCLUDE_DIR omp.h PATHS ${INTEL_ROOT} PATH_SUFFIXES include)
+    find_path(INTEL_INCLUDE_DIR omp_lib.h PATHS ${INTEL_ROOT} PATH_SUFFIXES include)
     list(APPEND __looked_for INTEL_INCLUDE_DIR)
   endif()
 
