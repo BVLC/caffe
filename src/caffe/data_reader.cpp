@@ -99,7 +99,7 @@ DataReader::QueuePair::~QueuePair() {
 
 DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
-      new_queue_pairs_() {
+      new_queue_pairs_(), first_read_(true) {
   StartInternalThread();
 }
 
@@ -149,12 +149,11 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
 
 #ifdef USE_MLSL
   string* data = qp->free_.pop();
-  static int mb=0;
-  if(!mb) { /* move each node’s file position to its node ID – this part can be move to the initialization */
+  if(first_read_) { /* move each node’s file position to its node ID – this part can be move to the initialization */
     for(int i=0;i<mn::get_node_id();i++) {
       dbw->Next();
     }
-    mb = 1;
+    first_read_ = false;
   }
   *data = dbw->value();
   qp->full_.push(data);
