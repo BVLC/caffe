@@ -315,6 +315,15 @@ We have provided the latest models that are trained from different datasets. To 
 * MKL
 * Python 2.7
 
+Need to add the following directories to the environment variable Path:
+
+   ```shell
+   C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl
+   C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64
+   ```
+
+Theoritically, we do not need to set the second path, but don't know why the cmake could not find those MKL libraries if we don't add it to the Path variable.
+
 ## How to build
 
   ```Shell
@@ -322,7 +331,6 @@ We have provided the latest models that are trained from different datasets. To 
    cmake -G"!CMAKE_GENERATOR!" ^
   -      -DBLAS=Open ^
   +      -DBLAS=MKL ^
-  +      -DMKL_USE_SINGLE_DYNAMIC_LIBRARY=1 ^
 
   Open a Windows command prompt console (cmd)
   # cd caffe_source_dir
@@ -330,4 +338,7 @@ We have provided the latest models that are trained from different datasets. To 
   # set BUILD_PYTHON_LAYER=0
   # set USE_INTEL_SPATIAL=1
   # scripts\build_win.cmd
+  If you also want to run the test suite
+  # set RUN_TESTS=1
+  Please be noted that, after building finished successfully, when you try to run the test suite or the application, it may encounter missing DLL files. If that is the case, you may have to copy those DLL to the directory of the executable file you are running now.
   ```
