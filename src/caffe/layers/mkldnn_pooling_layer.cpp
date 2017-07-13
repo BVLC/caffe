@@ -216,18 +216,20 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
 
     // ---- Initialize memory descriptors -------------
     typedef typename memory::primitive_desc MemPD; // short name for memory::primitive_desc
-
     memory::format cmfmt = mfmt_nchw;
+
+    shared_ptr<MemPD> usr_bottom_data_mpd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_mpd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
+        mpcsn = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
     }
     shared_ptr<memory::desc> init_fwd_bottom_md(new memory::desc({bottom_tz}, mpcsn, cmfmt));
     shared_ptr<memory::desc> init_fwd_top_md(new memory::desc({top_tz}, mpcsn, cmfmt));
 
-    shared_ptr<MemPD> usr_bottom_data_mpd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
-    shared_ptr<MemPD> usr_top_data_mpd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     // ---- Initialize pooling primitive descriptor -------------
     pooling_forward::desc poolingFwd_desc(propagation, pooling_algorithm, *init_fwd_bottom_md,*init_fwd_top_md
                                         , {sh, sw}, {kh, kw}, {pt, pl}, {pb, pr}, padding_kind::zero);
