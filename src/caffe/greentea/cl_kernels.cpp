@@ -292,7 +292,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const int d = (index / 4 / num_loc_classes) % num_priors;",    // NOLINT
 "if (!share_location && c == background_label_id) {",    // NOLINT
 "// Ignore background class if not share_location.",    // NOLINT
-"return;",    // NOLINT
+"continue;",    // NOLINT
 "}",    // NOLINT
 "const int pi = d * 4;",    // NOLINT
 "const int vi = pi + num_priors * 4;",    // NOLINT

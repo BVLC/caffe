@@ -15,7 +15,7 @@ __kernel void TEMPLATE(DecodeBBoxesCORNER, Dtype)(const int nthreads,
     const int d = (index / 4 / num_loc_classes) % num_priors;
     if (!share_location && c == background_label_id) {
       // Ignore background class if not share_location.
-      return;
+      continue;
     }
     const int pi = d * 4;
     const int vi = pi + num_priors * 4;

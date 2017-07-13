@@ -49,8 +49,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   vector<map<int, vector<int> > > all_indices;
   for (int i = 0; i < num; ++i) {
     map<int, vector<int> > indices;
-    for(auto i = 0; i < num_classes_; ++i)
-      indices[i].resize(0);
+    for(auto j = 0; j < num_classes_; ++j)
+      indices[j].resize(0);
     const int conf_idx = i * num_classes_ * num_priors_;
     int bbox_idx;
     if (share_location_) {
