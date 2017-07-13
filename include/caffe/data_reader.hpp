@@ -129,6 +129,7 @@ class DataReader {
 
     const LayerParameter param_;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
+    bool first_read_;
 
     friend class DataReader;
 
