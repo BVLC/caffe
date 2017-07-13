@@ -10,7 +10,9 @@
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {
-
+/*
+调整数据尺寸与网络结构一致
+*/
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),

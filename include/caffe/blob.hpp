@@ -9,6 +9,10 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
+/*
+主要是分配内存和释放内存。class yncedMemory定义了内存分配管理和CPU与GPU之间同步的函数。
+ Blob会使用SyncedMem自动决定什么时候去copy data以提高运行效率，通常情况是仅当gnu或cpu修改后有copy操作。
+ */
 const int kMaxBlobAxes = 32;
 
 namespace caffe {
@@ -23,10 +27,18 @@ namespace caffe {
 template <typename Dtype>
 class Blob {
  public:
+  /**
+ BLob只是一个基本的数据结构，因此内部的变量相对较少，首先是data_指针，指针类型是shared_ptr，
+ 属于boost库的一个智能指针，这一部分主要用来申请内存存储data，data主要是正向传播的时候用的。
+ diff_主要用来存储偏差，update data，shape_data和shape_都是存储Blob的形状，一个
+ 是老版本一个是新版本。
+ count表示Blob中的元素个数，也就是个数*通道数*高度*宽度
+ capacity表示当前的元素个数，因为Blob可能会reshape。
+ */
   Blob()
        : data_(), diff_(), count_(0), capacity_(0) {}
-
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
+  //当构造函数被声明 explicit 时,编译器将不使用它作为转换操作符。
   explicit Blob(const int num, const int channels, const int height,
       const int width);
   explicit Blob(const vector<int>& shape);
@@ -141,6 +153,7 @@ class Blob {
         << "Cannot use legacy accessors on Blobs with > 4 axes.";
     CHECK_LT(index, 4);
     CHECK_GE(index, -4);
+    //肯定是在做比较Geater or Eqal这样的意思。这其实是GLOG，谷歌的一个日志库，Caffe里面用用了大量这样的宏，看起来也比较直观
     if (index >= num_axes() || index < -num_axes()) {
       // Axis is out of range, but still in [0, 3] (or [-4, -1] for reverse
       // indexing) -- this special case simulates the one-padding used to fill
@@ -149,7 +162,9 @@ class Blob {
     }
     return shape(index);
   }
-
+/*
+offset计算的方式也支持两种方式，一种直接指定n,c,h,w或者放到一个vector中进行计算，偏差是根据对应的n,c,h,w
+*/
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
@@ -185,6 +200,7 @@ class Blob {
    *        of other (and die otherwise); if true, Reshape this Blob to other's
    *        shape if necessary
    */
+  //CopyFrom()从source拷贝数据，copy_diff来作为标志区分拷贝的是data还是diff。 
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
@@ -223,13 +239,18 @@ class Blob {
   void set_gpu_data(Dtype* data);
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;
+  //data就是存储前向传递的信息的数据，diff指的是神经网络在反向传播时候的梯度。
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
   void Update();
-  void FromProto(const BlobProto& proto, bool reshape = true);
-  void ToProto(BlobProto* proto, bool write_diff = false) const;
+  /*
+  这两个函数主要是将数据序列化，存储到BlobProto，这里说到Proto是谷歌的一个数据序列化的存储格式，
+  可以实现语言、平台无关、可扩展的序列化结构数据格式。
+  */
+  void FromProto(const BlobProto& proto, bool reshape = true);  //反序列化
+  void ToProto(BlobProto* proto, bool write_diff = false) const;  //序列化
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
