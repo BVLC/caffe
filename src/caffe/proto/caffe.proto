@@ -1626,6 +1626,7 @@ message ReLUParameter {
     MKLDNN = 4;
   }
   optional Engine engine = 2 [default = DEFAULT];
+  optional bool fuse = 3 [default = false];
 }
 
 message ReshapeParameter {

@@ -616,26 +616,8 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // then we can remove ReLU layer
     // and rename Convolution top blob after deleted ReLU's top
     // Note: Currently merging of convolution and relu layers is feasible
-    // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
-
     // If current layer is Convolution of MKLDNN engine..
-    /*
-    //Old Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || ((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos)) || ((G == "" && H == 0 && I == string::npos)))))
-    //New tmp Structure:    if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos))) || ((G == "" && H == 0 && I == string::npos)))))
-    //New Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && (E == 0 && F == string::npos)) || (G == "" && H == 0 && I == string::npos))))
-    //Old Structure:
-    //if ((A == TEST) &&
-    //    (B == 0) &&
-    //   ((C == ConvolutionParameter_Engine_MKLDNN)
-    //   || ((D == ConvolutionParameter_Engine_DEFAULT) &&
-    //        ((E == 0
-    //        && F == string::npos)) ||
-    //        ((G == "" &&
-    //          H == 0 &&
-    //          I == string::npos)))))
-    */
-    if ((param.state().phase() == TEST) &&
-        (layer_param->type().compare("Convolution") == 0) &&
+    if ((layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
        || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
             (param.engine().compare(0, 6, "MKLDNN") == 0
@@ -652,20 +634,6 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
-      /*
-      //Old Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || ((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos)) || ((F == "" && G == 0 && H == string::npos)))))
-      //New tmp Structure:  if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos))) || ((F == "" && G == 0 && H == string::npos)))))
-      //New Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && (D == 0 && E == string::npos)) || (F == "" && G == 0 && H == string::npos))))
-      //Old Structure:
-      //if ((A == 0) &&
-      //  ((B == ReLUParameter_Engine_MKLDNN)
-      //  || ((C == ReLUParameter_Engine_DEFAULT) &&
-      //      ((D == 0
-      //      && E == string::npos)) ||
-      //      ((F == "" &&
-      //        G == 0 &&
-      //        H == string::npos)))))
-      */
       if ((consumer_layer_param.type().compare("ReLU") == 0) &&
         ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
         || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
@@ -676,34 +644,47 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
               layer_param->engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
-        const string& scale_top_blob_name = consumer_layer_param.top(0);
-        // Mark Consumer layer (its name) as the one marked for dropping
-        layers_to_drop.insert(consumer_layer_param.name());
 
-        // Replace Convolution top name with ReLU top name
-        convolution_top_blob_name.resize(scale_top_blob_name.size());
-        convolution_top_blob_name.replace(0,
-                                        scale_top_blob_name.size(),
-                                        scale_top_blob_name);
+        if(param.state().phase() == TEST) {
+          const string& scale_top_blob_name = consumer_layer_param.top(0);
+          // Mark Consumer layer (its name) as the one marked for dropping
+          layers_to_drop.insert(consumer_layer_param.name());
+
+          // Replace Convolution top name with ReLU top name
+          convolution_top_blob_name.resize(scale_top_blob_name.size());
+          convolution_top_blob_name.replace(0,
+                                          scale_top_blob_name.size(),
+                                          scale_top_blob_name);
+        }
         // set relu flag in convolution
         layer_param->mutable_convolution_param()->set_relu(true);
         float negative_slope1 =
                   consumer_layer_param.relu_param().negative_slope();
         layer_param->mutable_convolution_param()->
                     set_negative_slope(negative_slope1);
+
+        if(param.state().phase() == TRAIN) {
+          if(i+1 < param.layer_size()) {
+            LayerParameter* relu_layer_param =
+              (const_cast<NetParameter&>(param)).mutable_layer(i+1);
+            relu_layer_param->mutable_relu_param()->set_fuse(true);
+          }
+        }
       }
     }
 
-    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
-      LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
-             << layer_param->name() << std::endl;
-      layer_included = false;
-      // Remove dropped layer from the list of layers to be dropped
-      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
-    }
+    if(param.state().phase() == TEST) {
+      if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+        LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+               << layer_param->name() << std::endl;
+        layer_included = false;
+        // Remove dropped layer from the list of layers to be dropped
+        layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+      }
 
-    if (layer_included) {
-      param_compiled->add_layer()->CopyFrom(*layer_param);
+      if (layer_included) {
+        param_compiled->add_layer()->CopyFrom(*layer_param);
+      }
     }
   }
 }

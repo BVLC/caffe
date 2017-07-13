@@ -70,6 +70,8 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
+    if(this->layer_param_.relu_param().fuse()) return;
+
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
     int32_t n  = this->num_;
@@ -143,6 +145,8 @@ template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
+    if(this->layer_param_.relu_param().fuse()) return;
+
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #ifdef DEBUG
     LOG(INFO) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
