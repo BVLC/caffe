@@ -84,7 +84,7 @@ if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
   endif()
 
   if(WIN32)
-    find_path(INTEL_INCLUDE_DIR omp_lib.h PATHS ${INTEL_ROOT} ${MKL_ROOT}/../compiler PATH_SUFFIXES include)
+    find_path(INTEL_INCLUDE_DIR omp.h PATHS ${INTEL_ROOT} ${MKL_ROOT}/../compiler PATH_SUFFIXES include)
     list(APPEND __looked_for INTEL_INCLUDE_DIR)
   endif()
 
