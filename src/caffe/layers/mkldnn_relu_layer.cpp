@@ -145,7 +145,10 @@ template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
-    if(this->layer_param_.relu_param().fuse()) return;
+    if(this->layer_param_.relu_param().fuse()) {
+      top[0]->ShareData(*bottom[0]);
+      return;
+    }
 
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #ifdef DEBUG

@@ -681,10 +681,10 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
         // Remove dropped layer from the list of layers to be dropped
         layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
       }
+    }
 
-      if (layer_included) {
-        param_compiled->add_layer()->CopyFrom(*layer_param);
-      }
+    if (layer_included) {
+      param_compiled->add_layer()->CopyFrom(*layer_param);
     }
   }
 }
