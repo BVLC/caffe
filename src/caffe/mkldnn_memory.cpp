@@ -212,10 +212,11 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<prim
     CHECK(aprimitive);
     if(this->_reorder_extprv2prv_pd == NULL)
         return;
-    if (this->_extprv_memory_pd->desc().data.format == this->_prv_memory_pd->desc().data.format)
+    if (this->_extprv_memory_pd->desc().data.format == this->_prv_memory_pd->desc().data.format &&
+        this->_extprv_memory_pd->desc().data.data_type == this->_prv_memory_pd->desc().data.data_type)
     {
 #ifdef DEBUG
-        LOG(INFO) << "The format of _extprv_memory_pd and _prv_memory_pd is same, no need do conversion.";
+        LOG(INFO) << "The format and data_type of _extprv_memory_pd and _prv_memory_pd is same, no need do conversion.";
 #endif
         return;
     }
