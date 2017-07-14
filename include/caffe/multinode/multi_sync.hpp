@@ -203,7 +203,7 @@ namespace caffe {
 
       std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
-        if (!layer->ParamNeedReduce(param_ids[i])) continue;
+        if (!layer->ParamNeedReduce(i)) continue;
         if (CAN_USE_PRV(net_params[param_ids[i]])) {
           layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_prv_diff());
         } else {
@@ -221,7 +221,7 @@ namespace caffe {
       std::vector<int> &param_ids = layer_param_ids[layer_id];
 
       for (int i=0; i<param_ids.size(); i++) {
-        if (!layer->ParamNeedReduce(param_ids[i])) continue;
+        if (!layer->ParamNeedReduce(i)) continue;
         Dtype *delwt_buf{(Dtype *) layer->layerOp->GetParameterSet(i)->WaitGradientComm()};
         if (delwt_buf) {
           if (CAN_USE_PRV(net_params[param_ids[i]])) {
