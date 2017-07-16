@@ -70,8 +70,6 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
-    if(this->layer_param_.relu_param().fuse()) return;
-
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
     int32_t n  = this->num_;
@@ -101,7 +99,10 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     top_data_md = bottom_data_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    relu_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
+    //relu_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
+    // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
+    // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
+    eltwise_forward::desc eltwise_reluFwd_desc(propagation, eltwise_relu, *bottom_data_md, negative_slope);
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
@@ -111,7 +112,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     unsigned subEngineIndex = 0;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        reluFwd_pd.reset(new relu_forward::primitive_desc(reluFwd_desc,
+        reluFwd_pd.reset(new relu_forward::primitive_desc(eltwise_reluFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
@@ -145,11 +146,6 @@ template <typename Dtype>
 void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
-    if(this->layer_param_.relu_param().fuse()) {
-      top[0]->ShareData(*bottom[0]);
-      return;
-    }
-
     VLOG(1) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #ifdef DEBUG
     LOG(INFO) << "MKLDNNReLULayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
@@ -250,7 +246,10 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bottom_diff_md = top_diff_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    relu_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
+    //relu_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
+    // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
+    // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
+    eltwise_backward::desc eltwise_reluBwd_desc(eltwise_relu, *top_diff_md, *top_data_md, negative_slope);
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
@@ -260,7 +259,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     unsigned subEngineIndex = 0;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        reluBwd_pd.reset(new relu_backward::primitive_desc(reluBwd_desc,
+        reluBwd_pd.reset(new relu_backward::primitive_desc(eltwise_reluBwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex), *reluFwd_pd));
       }
       catch(...) {
