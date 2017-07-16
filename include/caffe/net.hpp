@@ -336,9 +336,6 @@ class Net {
   vector<Callback*> before_backward_;
   vector<Callback*> after_backward_;
 
-#ifndef CPU_ONLY
-  cudaStream_t stream_;
-#endif
 
 DISABLE_COPY_AND_ASSIGN(Net);
 };
