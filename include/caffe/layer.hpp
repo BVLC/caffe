@@ -49,6 +49,8 @@ class Layer {
         }
       }
     }
+  // 基类的析构函数一般都为虚析构
+  //这样做是为了当用一个基类的指针删除一个派生类的对象时，派生类的析构函数会被调用。
   virtual ~Layer() {}
 
   /**
@@ -294,6 +296,7 @@ class Layer {
 
  protected:
   /** The protobuf that stores the layer parameters */
+  // protobuf文件中存储的layer参数
   LayerParameter layer_param_;
   /** The phase: TRAIN or TEST */
   Phase phase_;
