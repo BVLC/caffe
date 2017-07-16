@@ -20,8 +20,25 @@ template <typename Dtype>
 __global__ void ScaleBiasForward(const int n, const Dtype* in,
     const Dtype* scale, const Dtype* bias,
     const int scale_dim, const int inner_dim, Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n) {
-    const int scale_index = (index / inner_dim) % scale_dim;
+
+  const int n_thread_size = (n + blockDim.x * gridDim.x - 1) / (blockDim.x * gridDim.x);
+  const int n_start_idx = (blockIdx.x * blockDim.x + threadIdx.x) * n_thread_size;
+
+  int n_end_idx = n_start_idx + n_thread_size;
+  if (n_end_idx > n) {
+    n_end_idx = n;
+  }
+ 
+  int inner_dim_remainder = n_start_idx%inner_dim;
+  int scale_index = (n_start_idx / inner_dim) % scale_dim;
+  for(int index = n_start_idx ;index < n_end_idx;index++,inner_dim_remainder++) {
+    if(inner_dim_remainder == inner_dim) {
+      scale_index++;
+      inner_dim_remainder = 0;
+      if(scale_index == scale_dim) {
+	scale_index = 0;
+      }
+    }
     out[index] = in[index] * scale[scale_index] + bias[scale_index];
   }
 }
@@ -45,7 +62,8 @@ void ScaleLayer<Dtype>::Forward_gpu(
   if (bias_layer_) {
     const Dtype* bias_data = this->blobs_[bias_param_id_]->gpu_data();
     ScaleBiasForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-        <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+     //   <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        <<<8, CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, scale_data, bias_data, scale_dim_, inner_dim_,
         top_data);
   } else {
