@@ -53,6 +53,7 @@ class Layer {
   //这样做是为了当用一个基类的指针删除一个派生类的对象时，派生类的析构函数会被调用。
   virtual ~Layer() {}
 
+  //输入统一都是bottom，输出为top
   /**
    * @brief Implements common layer setup functionality.
    *
@@ -127,7 +128,6 @@ class Layer {
    */
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
   /**
    * @brief Given the top blob error gradients, compute the bottom blob error
    *        gradients.
@@ -168,6 +168,7 @@ class Layer {
   /**
    * @brief Writes the layer parameter to a protocol buffer
    */
+  //实现了ToProto的接口，将Layer的参数写入到protocol buffer文件中
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
 
   /**
