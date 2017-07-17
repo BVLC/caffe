@@ -396,6 +396,11 @@ class DataTransformer {
           bool has_mean_values>
   void Transform(const Datum& datum, Dtype* transformed_data,
                  NormalizedBBox* crop_bbox, RandNumbers& rand_num);
+
+#ifdef USE_OPENCV
+  void RandomResizeImage(const Datum& datum, Datum *resized_datum);
+  void RandomResizeImage(const cv::Mat& img, cv::Mat *resized_img);
+#endif
 };
 
 }  // namespace caffe
