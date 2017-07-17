@@ -154,6 +154,11 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     bool inplace = (bottom[0] == top[0]);
     if( reluFwd_pd == NULL)
         InitReLUFwd(bottom, top);
+
+    if(this->layer_param_.relu_param().fuse()) {
+      top[0]->ShareData(*bottom[0]);
+      return;
+    }
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
     // update top that head at prv
