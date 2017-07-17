@@ -1057,9 +1057,17 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::RandomResizeImage(const Datum& datum, Datum *resized_datum) {
-  cv::Mat img = DecodeDatumToCVMatNative(datum);
+  shared_ptr<cv::Mat> img;
+  if (datum.encoded()) {
+    img = shared_ptr<cv::Mat>(new cv::Mat(DecodeDatumToCVMatNative(datum)));
+  } else {
+    img = shared_ptr<cv::Mat>(new cv::Mat(
+                                cv::Size(datum.width(), datum.height()),
+                                CV_8UC(datum.channels()),
+                                (void*)datum.data().data()));
+  }
   cv::Mat resized_img;
-  RandomResizeImage(img, &resized_img);
+  RandomResizeImage(*img, &resized_img);
   CVMatToDatum(resized_img, resized_datum);
 }
 
