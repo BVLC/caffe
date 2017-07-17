@@ -138,6 +138,8 @@ namespace caffe {
             distrib.allreduce<Dtype,MLSL::RT_SUM,MLSL::GT_DATA>(
               net_param->mutable_cpu_data(), net_param->mutable_cpu_data(),
               net_param->count());
+            caffe_scal<Dtype>(net_param->count(), 1./distrib.get_data_parts(),
+                              net_param->mutable_cpu_data());
           }
           cached_stats[i] = cached_blobs;
         }
