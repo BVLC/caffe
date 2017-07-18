@@ -425,7 +425,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
 
     // ---- Initialize remaining memory descriptors -------------
     shared_ptr<MemPD> prv_bwd_bottom_diff_mpd, prv_bwd_top_diff_mpd;
-    if (top_diff_is_prv) {
+    if (top_diff_is_prv || bottom_data_is_prv) {
         prv_bwd_bottom_diff_mpd.reset(new MemPD(*init_bwd_bottom_md, engine));
         prv_bwd_top_diff_mpd.reset(new MemPD(*init_bwd_top_md, engine));
     }
