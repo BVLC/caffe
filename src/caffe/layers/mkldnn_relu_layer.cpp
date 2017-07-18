@@ -284,14 +284,13 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bwd_bottom_diff_memory = bwd_bottom_diff->create_output_memory(inplace);
 
     reluBwd.reset(new relu_backward(*reluBwd_pd, *fwd_bottom_data_primitive, *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
-    //TODO: the transfer fix will lead AlexNet not converge. The root cause is the "inplace".
-    bwd_top_diff->set_mkldnn_primitive(reluBwd);          //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
-    //bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
+    //bwd_top_diff->set_mkldnn_primitive(reluBwd);          //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
+    bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);
 
-    bwd_bottom_diff->set_mkldnn_primitive(reluBwd);       //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
-    //bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
+    //bwd_bottom_diff->set_mkldnn_primitive(reluBwd);       //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
+    bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
 }
 
 template <typename Dtype>
