@@ -15,6 +15,7 @@ namespace caffe {
  * @brief Rectified Linear Unit non-linearity @f$ y = \max(0, x) @f$.
  *        The simple max is fast to compute, and the function does not saturate.
  */
+//非饱和性、非线性函数，y = max(0, x)
 template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
  public:
@@ -41,6 +42,7 @@ class ReLULayer : public NeuronLayer<Dtype> {
    *      @f$ by default.  If a non-zero negative_slope @f$ \nu @f$ is provided,
    *      the computed outputs are @f$ y = \max(0, x) + \nu \min(0, x) @f$.
    */
+  //如果有负斜率式子变为：y=max(0,x)+νmin(0,x)
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
