@@ -57,7 +57,7 @@ def tuneModelDefinition(model):
             if l.bottom[0] in output_layer_map.keys():
                 ic = output_layer_map[l.bottom[0]][4]
             output_layer_map[l.name] = (index, 0, 0, ic, oc, False)
-        elif l.type.endswith("Data"):
+        elif l.type.endswith("Data") or l.type.endswith("Input"):
             # TODO: correct the output
             #    dynamic_net = caffe.Net(model, caffe.TEST)
             #    for k, v in dynamic_net.blobs.items():
