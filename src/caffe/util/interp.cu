@@ -3,6 +3,7 @@
 #include "caffe/common.hpp"
 #include "caffe/common.cuh"
 #include "caffe/util/interp.hpp"
+#include <cublas_v2.h>
 
 namespace caffe {
 

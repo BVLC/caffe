@@ -3,9 +3,6 @@
 #ifndef CAFFE_UTIL_INTERP_H_
 #define CAFFE_UTIL_INTERP_H_
 
-#include <cublas_v2.h>
-#include "caffe/proto/caffe.pb.h"
-
 namespace caffe {
 
 // Bi-linear interpolation
