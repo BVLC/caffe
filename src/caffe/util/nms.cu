@@ -122,7 +122,6 @@ void nms_mask(const Dtype boxes[], unsigned long long mask[],
 //   num_boxes: number of box proposals given
 //   boxes: "num_boxes x 5" array (x1, y1, x2, y2, score)
 //          sorted in descending order of scores
-//   aux_data: auxiliary data for NMS operation
 //   num_out: number of remaining boxes
 //   index_out_cpu: "num_out x 1" array
 //                  indices of remaining boxes
@@ -132,9 +131,6 @@ void nms_mask(const Dtype boxes[], unsigned long long mask[],
 //   nms_thresh: threshold for determining "significant overlap"
 //               if "intersection area / union area > nms_thresh",
 //               two boxes are thought of as significantly overlapped
-//   bbox_vote: whether bounding-box voting is used (= 1) or not (= 0)
-//   vote_thresh: threshold for selecting overlapped boxes
-//                which are participated in bounding-box voting
 template <typename Dtype>
 void nms_gpu(const int num_boxes,
              const Dtype boxes_gpu[],
