@@ -61,8 +61,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   std::vector<double>& update_time_per_layer = root_solver_->update_time_per_layer;
 #endif /* CAFFE_PER_LAYER_TIMINGS */
 
-  net.ClearParamDiffs();
-
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef CAFFE_PER_LAYER_TIMINGS
     timer.Start();
@@ -128,6 +126,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 template <typename Dtype>
 Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
+  root_solver_->net()->ClearParamDiffs();
   for (int i = 0; i < iter_size; ++i) {
     loss += ForwardBackwardImpl(
       (i == 0), (i + 1 == iter_size));
