@@ -194,7 +194,7 @@ DataReader::DBShuffle::DBShuffle(const LayerParameter& param):DBWrapper(param) {
   mn::Distribution * distrib = mn::get_distrib();
   float fetch_seed;
   fetch_seed = static_cast<float>(caffe_rng_rand() % 15);
-  distrib->bcast<float, MLSL::GT_DATA>(&fetch_seed, sizeof(fetch_seed));
+  distrib->bcast<float, MLSL::GT_DATA>(&fetch_seed, 1);
   LOG(INFO) << "Random seed for shuffling: " << fetch_seed;
   prefetch_rng_.reset(new Caffe::RNG(static_cast<unsigned int>(fetch_seed)));
 #else
