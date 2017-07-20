@@ -112,9 +112,21 @@ protected:
 
     void allocate() {
         if (_prv_memory == NULL) {
+#ifdef USE_MLSL
+          if (mn::is_multinode()) {
+            auto mlsl_free = [](char* p) { mn::free((void*)p); };
+            _mlsl_memory.reset(
+              (char*)mn::alloc(_prv_memory_pd->get_size(), 64), mlsl_free);
+            _prv_memory = shared_ptr<memory>(
+              new memory(*_prv_memory_pd, (void*)_mlsl_memory.get()));
+          } else {
+#endif
             _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd));
-            _internal_ptr = (Dtype *)(_prv_memory->get_data_handle());
-            // TODO: may need initialize memory by 0
+#ifdef USE_MLSL
+          }
+#endif
+          _internal_ptr = (Dtype *)(_prv_memory->get_data_handle());
+          // TODO: may need initialize memory by 0
         }
     }
     void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd)  {
@@ -156,6 +168,9 @@ protected:
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
+#ifdef USE_MLSL
+    shared_ptr<char> _mlsl_memory;
+#endif
 };
 
 template <typename Dtype, bool is_diff>
