@@ -53,12 +53,19 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
     root_solver->set_iter(1);
 
   layer_param_ids.resize(layers.size());
+#ifdef FW_OVERLAP_OPT
+  param_ids_finished_flags.resize(layers.size());
+#endif
 
   for (int layer_id = 0; layer_id < layers.size(); layer_id++) {
     shared_ptr<Layer<Dtype> > layer = layers[layer_id];
 
     /* cache param ids */
     layer_param_ids[layer_id] = net->get_layer_learnable_param_ids(layer_id);
+#ifdef FW_OVERLAP_OPT
+    param_ids_finished_flags[layer_id].resize(layer_param_ids[layer_id].size());
+    std::fill(param_ids_finished_flags[layer_id].begin(), param_ids_finished_flags[layer_id].end(), false);
+#endif
   }
 }
 

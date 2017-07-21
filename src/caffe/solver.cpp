@@ -394,10 +394,17 @@ void Solver<Dtype>::InitTimers() {
   this->forward_time_per_layer.resize(layer_count, 0.0);
   this->backward_time_per_layer.resize(layer_count, 0.0);
   this->update_time_per_layer.resize(layer_count, 0.0);
-
+#ifdef USE_MLSL
+  this->startcomm_time_per_layer.resize(layer_count, 0.0);
+  this->waitcomm_time_per_layer.resize(layer_count, 0.0);
+#endif
   this->forward_time_per_layer_total.resize(layer_count, 0.0);
   this->backward_time_per_layer_total.resize(layer_count, 0.0);
   this->update_time_per_layer_total.resize(layer_count, 0.0);
+#ifdef USE_MLSL
+  this->startcomm_time_per_layer_total.resize(layer_count, 0.0);
+  this->waitcomm_time_per_layer_total.resize(layer_count, 0.0);
+#endif
 }
 
 template <typename Dtype>
@@ -419,6 +426,19 @@ void Solver<Dtype>::ResetTimers() {
                  this->update_time_per_layer.begin(),
                  this->update_time_per_layer_total.begin(),
                  std::plus<int>());
+#ifdef USE_MLSL
+  std::transform(this->startcomm_time_per_layer_total.begin(),
+                 this->startcomm_time_per_layer_total.end(),
+                 this->startcomm_time_per_layer.begin(),
+                 this->startcomm_time_per_layer_total.begin(),
+                 std::plus<int>());
+
+  std::transform(this->waitcomm_time_per_layer_total.begin(),
+                 this->waitcomm_time_per_layer_total.end(),
+                 this->waitcomm_time_per_layer.begin(),
+                 this->waitcomm_time_per_layer_total.begin(),
+                 std::plus<int>());
+#endif
 
   std::fill(this->forward_time_per_layer.begin(),
           this->forward_time_per_layer.end(), 0);
@@ -426,6 +446,12 @@ void Solver<Dtype>::ResetTimers() {
           this->backward_time_per_layer.end(), 0);
   std::fill(this->update_time_per_layer.begin(),
           this->update_time_per_layer.end(), 0);
+#ifdef USE_MLSL
+  std::fill(this->startcomm_time_per_layer.begin(),
+          this->startcomm_time_per_layer.end(), 0);
+  std::fill(this->waitcomm_time_per_layer.begin(),
+          this->waitcomm_time_per_layer.end(), 0);
+#endif
 }
 
 template <typename Dtype>
@@ -444,7 +470,13 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
         backward_time_per_layer_total : backward_time_per_layer;
     std::vector<double>& update_timers = printTotal ?
         update_time_per_layer_total : update_time_per_layer;
+#ifdef USE_MLSL
+    std::vector<double>& startcomm_timers = printTotal ?
+        startcomm_time_per_layer_total : startcomm_time_per_layer;
+    std::vector<double>& waitcomm_timers = printTotal ?
+        waitcomm_time_per_layer_total : waitcomm_time_per_layer;
     std::string prefix = printTotal ? "TOTAL " : "DELTA ";
+#endif
 
     double forward_time = std::accumulate(forward_timers.begin(),
             forward_timers.end(), 0) / 1000;
@@ -479,8 +511,37 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
     }
     LOG(WARNING) << std::endl;
 
-    LOG(WARNING) << prefix << "TIME (F+B+U): " << (forward_time +
-            backward_time + update_time) / 1000 << " sec";
+#ifdef USE_MLSL
+    double startcomm_time = std::accumulate(startcomm_timers.begin(),
+            startcomm_timers.end(), 0) / 1000;
+    LOG(WARNING) << prefix << "START COMMUNICATION TIME: " << startcomm_time << " ms";
+    for (int layer_idx = 0; layer_idx < net_->layers().size(); layer_idx++) {
+        LOG(WARNING) << "LAYER-" << layer_idx << " "
+                     << net_->layers()[layer_idx]->type()
+                     << ": startcomm_time: " << startcomm_timers[layer_idx] / 1000
+                     << " ms";
+    }
+    LOG(WARNING) << std::endl;
+
+    double waitcomm_time = std::accumulate(waitcomm_timers.begin(),
+            waitcomm_timers.end(), 0) / 1000;
+    LOG(WARNING) << prefix << "WAIT COMMUNICATION TIME: " << waitcomm_time << " ms";
+    for (int layer_idx = 0; layer_idx < net_->layers().size(); layer_idx++) {
+        LOG(WARNING) << "LAYER-" << layer_idx << " "
+                     << net_->layers()[layer_idx]->type()
+                     << ": waitcomm_time: " << waitcomm_timers[layer_idx] / 1000
+                     << " ms";
+    }
+    LOG(WARNING) << std::endl;
+
+    LOG(WARNING) << prefix << "TIME (Computation + Communication): " << (forward_time +
+        backward_time + update_time + startcomm_time + waitcomm_time) / 1000
+        << " sec";
+#else
+    LOG(WARNING) << prefix << "TIME (Computation): " << (forward_time +
+        backward_time + update_time) / 1000 << " sec";
+#endif
+
     LOG(WARNING) << "####################################################";
     LOG(WARNING) << std::endl;
 }

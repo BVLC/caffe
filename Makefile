@@ -77,11 +77,13 @@ ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
 endif
 
 ifeq ($(CAFFE_MLSL_SHUFFLE), 1)
-        COMMON_FLAGS += -DCAFFE_MLSL_SHUFFLE
+	COMMON_FLAGS += -DCAFFE_MLSL_SHUFFLE
 endif
 
+ifneq ($(FW_OVERLAP_OPT), 0)
+	COMMON_FLAGS += -DFW_OVERLAP_OPT
 endif
-
+endif
 #################### MLSL ####################
 
 

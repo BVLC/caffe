@@ -60,6 +60,12 @@ class MultiSolver {
       iter_size(root_solver_->param().iter_size()) {
     root_solver_->set_forward_backward(
       boost::bind(&MultiSolver<Dtype>::ForwardBackward, this));
+#ifdef FW_OVERLAP_OPT    
+    Net<Dtype>& net = *root_solver_->net();
+    const std::vector<shared_ptr<Layer<Dtype>>> & layers{ net.layers() };
+    layer_finished_flags_.resize(layers.size());
+    std::fill(layer_finished_flags_.begin(), layer_finished_flags_.end(), false);
+#endif
   }
 
 
@@ -99,14 +105,23 @@ class MultiSolver {
   boost::shared_ptr<Solver<Dtype>> root_solver() {
     return root_solver_;
   }
-
+#ifdef FW_OVERLAP_OPT
+  void set_layer_finished_flag(int layer_id, bool flag) {
+    layer_finished_flags_[layer_id] = flag;
+  }
+#endif
  private:
   virtual Dtype ForwardBackwardImpl(bool first, bool last);
+  bool IsSkipWaitGradient(int layer_id);
+  void WaitAndUpdateGradient(int layer_id);
 
  protected:
   boost::shared_ptr<Solver<Dtype>> root_solver_;
   int iter_size;
   vector<Callback*> callbacks_;
+#ifdef FW_OVERLAP_OPT
+  vector<bool> layer_finished_flags_;
+#endif
 };
 
 }  // namespace caffe

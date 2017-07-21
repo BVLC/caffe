@@ -46,6 +46,59 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
+#define START_ITER 1
+
+
+#ifdef CAFFE_PER_LAYER_TIMINGS
+#define LAYER_TIMING_START() do { \
+  timer.Start(); \
+}while(0)
+
+#define LAYER_TIMING_STOP(name, index) do { \
+  name##_time_per_layer[index] += timer.MicroSeconds(); \
+}while(0)
+#else
+#define LAYER_TIMING_START()
+
+#define LAYER_TIMING_STOP(name,index)
+#endif
+
+template <typename Dtype>
+inline bool MultiSolver<Dtype>::IsSkipWaitGradient(int layer_id) {
+  Net<Dtype>& net = *root_solver_->net();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+  const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
+
+  if (!layer_need_backward[layer_id] || ((layers[layer_id]->layerOp != nullptr)
+        && !layers[layer_id]->layerOp->HasParameterSets())) {
+      DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # "
+        << layer_id << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
+      return true;
+  }
+  return false;
+}
+
+template <typename Dtype>
+inline void MultiSolver<Dtype>::WaitAndUpdateGradient(int layer_id) {
+  LAYER_TIMING_START();
+  for (int j = 0; j < callbacks_.size(); ++j) {
+    callbacks_[j]->on_delwt_wait(layer_id);
+  }
+  LAYER_TIMING_STOP(waitcomm, layer_id);
+
+#ifdef FW_OVERLAP_OPT
+  if (layer_finished_flags_[layer_id]) {
+#endif
+    LAYER_TIMING_START();
+    for (int j = 0; j < callbacks_.size(); ++j) {
+      callbacks_[j]->apply_updates(layer_id);
+    }
+    LAYER_TIMING_STOP(update, layer_id);
+#ifdef FW_OVERLAP_OPT
+  }
+#endif
+}
+
 template <typename Dtype>
 Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
@@ -53,70 +106,107 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
+#ifdef FW_OVERLAP_OPT
+  int iter = root_solver_->iter();
+#endif
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
   Timer& timer = root_solver_->timer;
   std::vector<double>& forward_time_per_layer = root_solver_->forward_time_per_layer;
   std::vector<double>& backward_time_per_layer = root_solver_->backward_time_per_layer;
   std::vector<double>& update_time_per_layer = root_solver_->update_time_per_layer;
+  std::vector<double>& startcomm_time_per_layer = root_solver_->startcomm_time_per_layer;
+  std::vector<double>& waitcomm_time_per_layer = root_solver_->waitcomm_time_per_layer;
 #endif /* CAFFE_PER_LAYER_TIMINGS */
 
-  for (int i = 0; i < layers.size(); ++i) {
-#ifdef CAFFE_PER_LAYER_TIMINGS
-    timer.Start();
-#endif
-    loss += net.ForwardFromTo(i, i);
 
-#ifdef CAFFE_PER_LAYER_TIMINGS
-    forward_time_per_layer[i] += timer.MicroSeconds();
+  for (int i = 0; i < layers.size(); ++i) {
+#ifdef FW_OVERLAP_OPT
+    if (first && iter >= START_ITER + 1) {
+      while (layer_finished_flags_[i] == false) {
+        if (IsSkipWaitGradient(i)) {
+          break;
+        }
+
+        WaitAndUpdateGradient(i);
+        if (layer_finished_flags_[i]) {
+          break;
+        }
+
+        for (int k=i+1; k<layers.size(); k++) {
+          if (layer_finished_flags_[k] || IsSkipWaitGradient(k)) {
+            layer_finished_flags_[k] = true;
+            continue;
+          }
+
+          WaitAndUpdateGradient(k);
+          if (layer_finished_flags_[k])
+            break;
+        }
+      }
+      layer_finished_flags_[i] = false;
+    }
 #endif
+
+    LAYER_TIMING_START();
+    loss += net.ForwardFromTo(i, i);
+    LAYER_TIMING_STOP(forward, i);
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
-#ifdef CAFFE_PER_LAYER_TIMINGS
-    timer.Start();
-#endif
-
     if (!layer_need_backward[i]) {
       continue;
     }
+    
+    LAYER_TIMING_START();
 
     net.BackwardFromTo(i, i);
 
-    if (last && (layers[i]->layerOp != nullptr) && layers[i]->layerOp->HasParameterSets()) {
-      for (int j = 0; j < callbacks_.size(); ++j) {
-          callbacks_[j]->on_iter_finished(i);
-      }
-    }
+    LAYER_TIMING_STOP(backward, i);
 
-#ifdef CAFFE_PER_LAYER_TIMINGS
-    backward_time_per_layer[i] += timer.MicroSeconds();
-#endif
+    if (last && (layers[i]->layerOp != nullptr) && layers[i]->layerOp->HasParameterSets()) {
+      LAYER_TIMING_START();
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_iter_finished(i);
+      }
+      LAYER_TIMING_STOP(startcomm, i);
+    }
   }
 
+#ifdef FW_OVERLAP_OPT
+  int max_iter = root_solver_->param().max_iter();
+  bool test = (root_solver_->param().test_interval()
+          && ((iter + 1) % root_solver_->param().test_interval() == 0));
+  if (last && (test || (iter == max_iter - 1))) {
+    int finished_count = 0;
+    while (finished_count < layers.size()) {
+#else
   if (last) {
+#endif
 
     for (int i = 0; i < layers.size(); ++i) {
-#ifdef CAFFE_PER_LAYER_TIMINGS
-      timer.Start();
+#ifdef FW_OVERLAP_OPT
+        if (layer_finished_flags_[i])
+          continue;
 #endif
-      if (!layer_need_backward[i] || ((layers[i]->layerOp != nullptr) && !layers[i]->layerOp->HasParameterSets())) {
-        DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # " << i
-          << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
-        continue;
-      }
-
-      for (int j = 0; j < callbacks_.size(); ++j) {
-        callbacks_[j]->on_delwt_wait(i);
-      }
-
-      for (int j = 0; j < callbacks_.size(); ++j) {
-        callbacks_[j]->apply_updates(i);
-      }
-#ifdef CAFFE_PER_LAYER_TIMINGS
-      update_time_per_layer[i] += timer.MicroSeconds();
+        if (IsSkipWaitGradient(i)) {
+#ifdef FW_OVERLAP_OPT
+          finished_count++;
+          layer_finished_flags_[i] = true;
 #endif
+          continue;
+        }
+
+        WaitAndUpdateGradient(i);
+
+#ifdef FW_OVERLAP_OPT
+        if (layer_finished_flags_[i])
+          finished_count++;
+#endif
+      }
+#ifdef FW_OVERLAP_OPT
     }
+#endif
   }
 
   DLOG(WARNING) << "iter " << root_solver_->iter() << ", loss " << loss;
