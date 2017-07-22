@@ -46,16 +46,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#define START_ITER 1
-
-
 #ifdef CAFFE_PER_LAYER_TIMINGS
 #define LAYER_TIMING_START() do { \
-  timer.Start(); \
+  root_solver_->timer.Start(); \
 }while(0)
 
 #define LAYER_TIMING_STOP(name, index) do { \
-  name##_time_per_layer[index] += timer.MicroSeconds(); \
+  root_solver_->name##_time_per_layer[index] += root_solver_->timer.MicroSeconds(); \
 }while(0)
 #else
 #define LAYER_TIMING_START()
@@ -101,50 +98,29 @@ inline void MultiSolver<Dtype>::WaitAndUpdateGradient(int layer_id) {
 
 template <typename Dtype>
 Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
-
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
-#ifdef FW_OVERLAP_OPT
-  int iter = root_solver_->iter();
-#endif
-
-#ifdef CAFFE_PER_LAYER_TIMINGS
-  Timer& timer = root_solver_->timer;
-  std::vector<double>& forward_time_per_layer = root_solver_->forward_time_per_layer;
-  std::vector<double>& backward_time_per_layer = root_solver_->backward_time_per_layer;
-  std::vector<double>& update_time_per_layer = root_solver_->update_time_per_layer;
-  std::vector<double>& startcomm_time_per_layer = root_solver_->startcomm_time_per_layer;
-  std::vector<double>& waitcomm_time_per_layer = root_solver_->waitcomm_time_per_layer;
-#endif /* CAFFE_PER_LAYER_TIMINGS */
-
 
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef FW_OVERLAP_OPT
-    if (first && iter >= START_ITER + 1) {
+    if (first && IsSkipWaitGradient(i) == false) {
       while (layer_finished_flags_[i] == false) {
-        if (IsSkipWaitGradient(i)) {
-          break;
-        }
-
         WaitAndUpdateGradient(i);
-        if (layer_finished_flags_[i]) {
+        if (layer_finished_flags_[i])
           break;
-        }
 
         for (int k=i+1; k<layers.size(); k++) {
           if (layer_finished_flags_[k] || IsSkipWaitGradient(k)) {
             layer_finished_flags_[k] = true;
             continue;
           }
-
           WaitAndUpdateGradient(k);
           if (layer_finished_flags_[k])
             break;
         }
       }
-      layer_finished_flags_[i] = false;
     }
 #endif
 
@@ -159,12 +135,11 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     }
     
     LAYER_TIMING_START();
-
     net.BackwardFromTo(i, i);
-
     LAYER_TIMING_STOP(backward, i);
 
-    if (last && (layers[i]->layerOp != nullptr) && layers[i]->layerOp->HasParameterSets()) {
+    if (last && (layers[i]->layerOp != nullptr)
+        && layers[i]->layerOp->HasParameterSets()) {
       LAYER_TIMING_START();
       for (int j = 0; j < callbacks_.size(); ++j) {
         callbacks_[j]->on_iter_finished(i);
@@ -174,6 +149,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   }
 
 #ifdef FW_OVERLAP_OPT
+  int iter = root_solver_->iter();
   int max_iter = root_solver_->param().max_iter();
   bool test = (root_solver_->param().test_interval()
           && ((iter + 1) % root_solver_->param().test_interval() == 0));
@@ -183,12 +159,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #else
   if (last) {
 #endif
-
-    for (int i = 0; i < layers.size(); ++i) {
-#ifdef FW_OVERLAP_OPT
-        if (layer_finished_flags_[i])
-          continue;
-#endif
+      for (int i = 0; i < layers.size(); ++i) {
         if (IsSkipWaitGradient(i)) {
 #ifdef FW_OVERLAP_OPT
           finished_count++;
@@ -196,9 +167,12 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #endif
           continue;
         }
+#ifdef FW_OVERLAP_OPT
+        if (layer_finished_flags_[i])
+          continue;
+#endif
 
         WaitAndUpdateGradient(i);
-
 #ifdef FW_OVERLAP_OPT
         if (layer_finished_flags_[i])
           finished_count++;

@@ -64,7 +64,7 @@ class MultiSolver {
     Net<Dtype>& net = *root_solver_->net();
     const std::vector<shared_ptr<Layer<Dtype>>> & layers{ net.layers() };
     layer_finished_flags_.resize(layers.size());
-    std::fill(layer_finished_flags_.begin(), layer_finished_flags_.end(), false);
+    std::fill(layer_finished_flags_.begin(), layer_finished_flags_.end(), true);
 #endif
   }
 

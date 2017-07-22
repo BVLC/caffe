@@ -182,15 +182,15 @@ namespace caffe {
       mn::train::commit();
 
 #ifdef PERFORMANCE_MONITORING
-  statsIterResult.resize(caffe::mn::train::get_session().get_operation_count());
-  caffe::mn::train::stats::start();
+      statsIterResult.resize(caffe::mn::train::get_session().get_operation_count());
+      caffe::mn::train::stats::start();
 #endif
 
       solver->add_callback(this);
       solver->Solve();
 
 #ifdef PERFORMANCE_MONITORING
-    dump_stats_to_file();
+      dump_stats_to_file();
 #endif
     }
 
@@ -206,6 +206,10 @@ namespace caffe {
     }
 
     void on_iter_finished(int layer_id) {
+#ifdef FW_OVERLAP_OPT
+      solver->set_layer_finished_flag(layer_id, false);
+#endif
+
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
       if (layer->layerOp == nullptr) {
         return;
@@ -238,16 +242,11 @@ namespace caffe {
       }
 
       std::vector<int> &param_ids = layer_param_ids[layer_id];
-
-#ifdef FW_OVERLAP_OPT
-      int finished_count = 0;
-#endif
-
       for (int i=0; i<param_ids.size(); i++) {
         if (!layer->ParamNeedReduce(i)
 #ifdef FW_OVERLAP_OPT
             || (param_ids_finished_flags[layer_id][i] == true)) {
-          finished_count++;
+          param_ids_finished_flags[layer_id][i] = true;
 #else
           ) {
 #endif
@@ -264,7 +263,6 @@ namespace caffe {
 #ifdef FW_OVERLAP_OPT
           assert(is_completed);
           param_ids_finished_flags[layer_id][i] = true;
-          finished_count++;
 #endif
           if (CAN_USE_PRV(net_params[param_ids[i]])) {
             if (delwt_buf != net_params[param_ids[i]]->prv_diff())
@@ -279,6 +277,8 @@ namespace caffe {
       }
 
 #ifdef FW_OVERLAP_OPT
+      int finished_count = std::count(param_ids_finished_flags[layer_id].begin(),
+            param_ids_finished_flags[layer_id].end(), true);
       if (finished_count == param_ids.size()) {
         solver->set_layer_finished_flag(layer_id, true);
       }
