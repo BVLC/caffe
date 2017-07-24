@@ -1689,3 +1689,414 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
     }
 }
 #endif
+
+#if TYPE != TYPE_DOUBLE
+#ifdef WINOGRAD
+#define ALPHA 4
+#define INPUT_TILE_SIZE (ALPHA*ALPHA)
+#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
+
+__kernel void
+data_transform_4x4(__global Dtype *data,
+        __global Dtype *V,
+        int P,
+        int H,
+        int W,
+        int num_h_tiles,
+        int num_w_tiles)
+{
+  int c = get_global_id(0);
+  int block_y = get_global_id(1);
+  int block_x = get_global_id(2);
+  /* Data transform matrix. */
+  /*
+  B^T*d*B
+  B^T = {4, 0,  -5, 0,  1, 0,
+         0, -4, -4, 1,  1, 0,
+         0, 4,  -4, -1, 1, 0,
+         0, -2, -1, 2,  1, 0,
+         0, 2,  -1, -2, 1, 0,
+         0, 4,   0, -5, 0, 1}
+
+  d' =  {d0   d1   d2   d3   d4   d5
+         d6   d7   d8   d9   d10  d11
+         d12  d13  d14  d15  d16  d17
+         d18  d19  d20  d21  d22  d23
+         d24  d25  d26  d27  d28  d29
+         d30  d31  d32  d33  d34  d35}
+
+   d' =  {d00  d01  d02  d03  d04  d05
+         d10  d11  d12  d13  d14  d15
+         d20  d21  d22  d23  d24  d25
+         d30  d31  d32  d33  d34  d35
+         d40  d41  d42  d43  d44  d45
+         d50  d51  d52  d53  d54  d55}
+   B = {4, 0,  0, 0, 0, 0,
+        0, -4, 4,-2, 2, 4,
+        -5,-4,-4,-1,-1, 0,
+        0, 1, -1, 2, -2,-5,
+        1, 1,  1, 1, 1, 0,
+        0, 0,  0, 0, 0, 1}
+
+  */
+    int b = block_y * num_w_tiles + block_x;
+    int x = block_x * 4 - INPUT_PAD_W;
+    int y = block_y * 4 - INPUT_PAD_H;
+    __global Dtype *data_local = data + c * H * W+y*W+x;
+    Dtype d[36] = {0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,
+                   0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f};
+    for(int h = 0; h < 6; ++h) {
+      if((y+h < 0) || (y+h >= H)) continue;
+      for(int w = 0; w < 6; ++w) {
+        if((x+w < 0) || (x+w >= W)) continue;
+        d[h*6+w] = data_local[h*W+w];
+      }
+    }
+
+    Dtype d00 = 4*d[0]-5*d[12]+d[24];
+    Dtype d01 = 4*d[1]-5*d[13]+d[25];
+    Dtype d02 = 4*d[2]-5*d[14]+d[26];
+    Dtype d03 = 4*d[3]-5*d[15]+d[27];
+    Dtype d04 = 4*d[4]-5*d[16]+d[28];
+    Dtype d05 = 4*d[5]-5*d[17]+d[29];
+
+    Dtype d10 = -4*d[6]-4*d[12]+d[18]+d[24];
+    Dtype d11 = -4*d[7]-4*d[13]+d[19]+d[25];
+    Dtype d12 = -4*d[8]-4*d[14]+d[20]+d[26];
+    Dtype d13 = -4*d[9]-4*d[15]+d[21]+d[27];
+    Dtype d14 = -4*d[10]-4*d[16]+d[22]+d[28];
+    Dtype d15 = -4*d[11]-4*d[17]+d[23]+d[29];
+
+    Dtype d20 = 4*d[6]-4*d[12]-d[18]+d[24];
+    Dtype d21 = 4*d[7]-4*d[13]-d[19]+d[25];
+    Dtype d22 = 4*d[8]-4*d[14]-d[20]+d[26];
+    Dtype d23 = 4*d[9]-4*d[15]-d[21]+d[27];
+    Dtype d24 = 4*d[10]-4*d[16]-d[22]+d[28];
+    Dtype d25 = 4*d[11]-4*d[17]-d[23]+d[29];
+
+    Dtype d30 = -2*d[6]-d[12]+2*d[18]+d[24];
+    Dtype d31 = -2*d[7]-d[13]+2*d[19]+d[25];
+    Dtype d32 = -2*d[8]-d[14]+2*d[20]+d[26];
+    Dtype d33 = -2*d[9]-d[15]+2*d[21]+d[27];
+    Dtype d34 = -2*d[10]-d[16]+2*d[22]+d[28];
+    Dtype d35 = -2*d[11]-d[17]+2*d[23]+d[29];
+
+    Dtype d40 = 2*d[6]-d[12]-2*d[18]+d[24];
+    Dtype d41 = 2*d[7]-d[13]-2*d[19]+d[25];
+    Dtype d42 = 2*d[8]-d[14]-2*d[20]+d[26];
+    Dtype d43 = 2*d[9]-d[15]-2*d[21]+d[27];
+    Dtype d44 = 2*d[10]-d[16]-2*d[22]+d[28];
+    Dtype d45 = 2*d[11]-d[17]-2*d[23]+d[29];
+
+    Dtype d50 = 4*d[6]-5*d[18]+d[30];
+    Dtype d51 = 4*d[7]-5*d[19]+d[31];
+    Dtype d52 = 4*d[8]-5*d[20]+d[32];
+    Dtype d53 = 4*d[9]-5*d[21]+d[33];
+    Dtype d54 = 4*d[10]-5*d[22]+d[34];
+    Dtype d55 = 4*d[11]-5*d[23]+d[35];
+
+    /*V[C][B][6][6]*/
+    __global Dtype* v = V + c*P*36 + b*36;
+
+    v[0] = 4*d00-5*d02+d04;  v[1] = -4*d01-4*d02+d03+d04;  v[2] = 4*d01-4*d02-d03+d04;  v[3] = -2*d01-d02+2*d03+d04;  v[4] = 2*d01-d02-2*d03+d04;  v[5] = 4*d01-5*d03+d05;
+    v[6] = 4*d10-5*d12+d14;  v[7] = -4*d11-4*d12+d13+d14;  v[8] = 4*d11-4*d12-d13+d14;  v[9] = -2*d11-d12+2*d13+d14;  v[10] = 2*d11-d12-2*d13+d14; v[11] = 4*d11-5*d13+d15;
+    v[12] = 4*d20-5*d22+d24; v[13] = -4*d21-4*d22+d23+d24; v[14] = 4*d21-4*d22-d23+d24; v[15] = -2*d21-d22+2*d23+d24; v[16] = 2*d21-d22-2*d23+d24; v[17] = 4*d21-5*d23+d25;
+    v[18] = 4*d30-5*d32+d34; v[19] = -4*d31-4*d32+d33+d34; v[20] = 4*d31-4*d32-d33+d34; v[21] = -2*d31-d32+2*d33+d34; v[22] = 2*d31-d32-2*d33+d34; v[23] = 4*d31-5*d33+d35;
+    v[24] = 4*d40-5*d42+d44; v[25] = -4*d41-4*d42+d43+d44; v[26] = 4*d41-4*d42-d43+d44; v[27] = -2*d41-d42+2*d43+d44; v[28] = 2*d41-d42-2*d43+d44; v[29] = 4*d41-5*d43+d45;
+    v[30] = 4*d50-5*d52+d54; v[31] = -4*d51-4*d52+d53+d54; v[32] = 4*d51-4*d52-d53+d54; v[33] = -2*d51-d52+2*d53+d54; v[34] = 2*d51-d52-2*d53+d54; v[35] = 4*d51-5*d53+d55;
+}
+
+const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+#if TYPE == TYPE_HALF
+#define READ_IMAGE read_imageh
+#else
+#define READ_IMAGE read_imagef
+#endif
+__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))
+__kernel void
+winograd_4x4(
+    ELTWISE_DATA_ARG
+    NEGATIVE_SLOPE_ARG
+    __global Dtype* inputs_base,
+    __read_only image2d_t weights_base,
+    __global Dtype* biases_base,
+    __global Dtype* outputs_base,
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height)
+{
+  __global Dtype* outputs = outputs_base;
+  __global Dtype* inputs = inputs_base;
+  __global Dtype* biases = biases_base;
+  uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column
+  uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row
+  uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
+  uint_tp lid = get_sub_group_local_id();
+
+  int_tp in_addr;
+  Dtype sum[36];
+  for(int_tp i = 0; i < 36; i++) {
+    sum[i] = 0.f;
+  }
+
+  uint_tp num_in_batch = ( fm ) / ALIGNED_NUM_FILTERS;
+  uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;
+
+  int curr_y = or/4;
+  int curr_x = oc*9 + lid;
+
+  in_addr = input_batch_offset
+            +  curr_y * input_width             // y tile offset
+            +   curr_x;                        // x tile offset
+  Dtype in_buf[5];
+
+  int2 coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS);
+  Dtype4 weight;
+#define BLOCK_IN(n,i) sub_group_broadcast(in_buf[(i)], (n))
+//#pragma unroll
+#if IS_LARGE_INPUT
+  for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)
+#else
+  for(int_tp kd = 0; kd < INPUT_DEPTH; kd++)
+#endif
+  {
+
+    int_tp in_offset = in_addr;
+    int_tp reg = 0;
+    LOOP(5, reg,
+        {
+          in_buf[reg] = *(inputs + in_offset);    // read SIMD_SIZE elements
+          in_offset += SIMD_SIZE;
+        });
+    in_addr += input_height * input_width;
+
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[0]  = mad(BLOCK_IN(0, 0), weight.x, sum[0]);
+      sum[1]  = mad(BLOCK_IN(1, 0), weight.y, sum[1]);
+      sum[2]  = mad(BLOCK_IN(2, 0), weight.z, sum[2]);
+      sum[3]  = mad(BLOCK_IN(3, 0), weight.w, sum[3]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[4]  = mad(BLOCK_IN(4, 0), weight.x, sum[4]);
+      sum[5]  = mad(BLOCK_IN(5, 0), weight.y, sum[5]);
+      sum[6]  = mad(BLOCK_IN(6, 0), weight.z, sum[6]);
+      sum[7]  = mad(BLOCK_IN(7, 0), weight.w, sum[7]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[8]  = mad(BLOCK_IN(0, 1), weight.x, sum[8] );
+      sum[9]  = mad(BLOCK_IN(1, 1), weight.y, sum[9] );
+      sum[10] = mad(BLOCK_IN(2, 1), weight.z, sum[10]);
+      sum[11] = mad(BLOCK_IN(3, 1), weight.w, sum[11]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[12] = mad(BLOCK_IN(4, 1), weight.x, sum[12]);
+      sum[13] = mad(BLOCK_IN(5, 1), weight.y, sum[13]);
+      sum[14] = mad(BLOCK_IN(6, 1), weight.z, sum[14]);
+      sum[15] = mad(BLOCK_IN(7, 1), weight.w, sum[15]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[16] = mad(BLOCK_IN(0, 2), weight.x, sum[16]);
+      sum[17] = mad(BLOCK_IN(1, 2), weight.y, sum[17]);
+      sum[18] = mad(BLOCK_IN(2, 2), weight.z, sum[18]);
+      sum[19] = mad(BLOCK_IN(3, 2), weight.w, sum[19]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[20] = mad(BLOCK_IN(4, 2), weight.x, sum[20]);
+      sum[21] = mad(BLOCK_IN(5, 2), weight.y, sum[21]);
+      sum[22] = mad(BLOCK_IN(6, 2), weight.z, sum[22]);
+      sum[23] = mad(BLOCK_IN(7, 2), weight.w, sum[23]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[24] = mad(BLOCK_IN(0, 3), weight.x, sum[24]);
+      sum[25] = mad(BLOCK_IN(1, 3), weight.y, sum[25]);
+      sum[26] = mad(BLOCK_IN(2, 3), weight.z, sum[26]);
+      sum[27] = mad(BLOCK_IN(3, 3), weight.w, sum[27]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[28] = mad(BLOCK_IN(4, 3), weight.x, sum[28]);
+      sum[29] = mad(BLOCK_IN(5, 3), weight.y, sum[29]);
+      sum[30] = mad(BLOCK_IN(6, 3), weight.z, sum[30]);
+      sum[31] = mad(BLOCK_IN(7, 3), weight.w, sum[31]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[32] = mad(BLOCK_IN(0, 4), weight.x, sum[32]);
+      sum[33] = mad(BLOCK_IN(1, 4), weight.y, sum[33]);
+      sum[34] = mad(BLOCK_IN(2, 4), weight.z, sum[34]);
+      sum[35] = mad(BLOCK_IN(3, 4), weight.w, sum[35]);
+
+  }
+#if IS_LARGE_INPUT
+  coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+TOTAL_NUM_FILTERS);
+//#pragma unroll
+  for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)
+  {
+
+    int_tp in_offset = in_addr;
+    int_tp reg = 0;
+    LOOP(5, reg,
+        {
+          in_buf[reg] = *(inputs + in_offset);    // read SIMD_SIZE elements
+          in_offset += SIMD_SIZE;
+        });
+    in_addr += input_height * input_width;
+
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[0]  = mad(BLOCK_IN(0, 0), weight.x, sum[0]);
+      sum[1]  = mad(BLOCK_IN(1, 0), weight.y, sum[1]);
+      sum[2]  = mad(BLOCK_IN(2, 0), weight.z, sum[2]);
+      sum[3]  = mad(BLOCK_IN(3, 0), weight.w, sum[3]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[4]  = mad(BLOCK_IN(4, 0), weight.x, sum[4]);
+      sum[5]  = mad(BLOCK_IN(5, 0), weight.y, sum[5]);
+      sum[6]  = mad(BLOCK_IN(6, 0), weight.z, sum[6]);
+      sum[7]  = mad(BLOCK_IN(7, 0), weight.w, sum[7]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[8]  = mad(BLOCK_IN(0, 1), weight.x, sum[8] );
+      sum[9]  = mad(BLOCK_IN(1, 1), weight.y, sum[9] );
+      sum[10] = mad(BLOCK_IN(2, 1), weight.z, sum[10]);
+      sum[11] = mad(BLOCK_IN(3, 1), weight.w, sum[11]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[12] = mad(BLOCK_IN(4, 1), weight.x, sum[12]);
+      sum[13] = mad(BLOCK_IN(5, 1), weight.y, sum[13]);
+      sum[14] = mad(BLOCK_IN(6, 1), weight.z, sum[14]);
+      sum[15] = mad(BLOCK_IN(7, 1), weight.w, sum[15]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[16] = mad(BLOCK_IN(0, 2), weight.x, sum[16]);
+      sum[17] = mad(BLOCK_IN(1, 2), weight.y, sum[17]);
+      sum[18] = mad(BLOCK_IN(2, 2), weight.z, sum[18]);
+      sum[19] = mad(BLOCK_IN(3, 2), weight.w, sum[19]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[20] = mad(BLOCK_IN(4, 2), weight.x, sum[20]);
+      sum[21] = mad(BLOCK_IN(5, 2), weight.y, sum[21]);
+      sum[22] = mad(BLOCK_IN(6, 2), weight.z, sum[22]);
+      sum[23] = mad(BLOCK_IN(7, 2), weight.w, sum[23]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[24] = mad(BLOCK_IN(0, 3), weight.x, sum[24]);
+      sum[25] = mad(BLOCK_IN(1, 3), weight.y, sum[25]);
+      sum[26] = mad(BLOCK_IN(2, 3), weight.z, sum[26]);
+      sum[27] = mad(BLOCK_IN(3, 3), weight.w, sum[27]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[28] = mad(BLOCK_IN(4, 3), weight.x, sum[28]);
+      sum[29] = mad(BLOCK_IN(5, 3), weight.y, sum[29]);
+      sum[30] = mad(BLOCK_IN(6, 3), weight.z, sum[30]);
+      sum[31] = mad(BLOCK_IN(7, 3), weight.w, sum[31]);
+      weight = READ_IMAGE(weights_base, sampler,coordW);
+      coordW.x += 1;
+      sum[32] = mad(BLOCK_IN(0, 4), weight.x, sum[32]);
+      sum[33] = mad(BLOCK_IN(1, 4), weight.y, sum[33]);
+      sum[34] = mad(BLOCK_IN(2, 4), weight.z, sum[34]);
+      sum[35] = mad(BLOCK_IN(3, 4), weight.w, sum[35]);
+
+  }
+#endif
+
+  if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {
+    uint_tp out_addr = fm * output_width * output_height;
+    out_addr += or * output_width + oc;
+    Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];
+      /*
+      A^T = {1, 1, 1, 1, 1, 0,
+             0, 1, -1,2,-2,0,
+             0, 1, 1, 4, 4, 0,
+             0, 1, -1,8,-8, 1}
+      sum = {s0, s1, s2, s3, s4, s5,
+             s6, s7, s8, s9, s10,s11,
+             s12,s13,s14,s15,s16,s17,
+             s18,s19,s20,s21,s22,s23,
+             s24,s25,s26,s27,s28,s29,
+             s30,s31,s32,s33,s34,s35}
+      */
+
+      if(or < output_height) {
+        Dtype y00 = sum[0] + sum[6] + sum[12] + sum[18] + sum[24];
+        Dtype y01 = sum[1] + sum[7] + sum[13] + sum[19] + sum[25];
+        Dtype y02 = sum[2] + sum[8] + sum[14] + sum[20] + sum[26];
+        Dtype y03 = sum[3] + sum[9] + sum[15] + sum[21] + sum[27];
+        Dtype y04 = sum[4] + sum[10] + sum[16] + sum[22] + sum[28];
+        Dtype y05 = sum[5] + sum[11] + sum[17] + sum[23] + sum[29];
+
+        if(oc < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04);
+        if(oc+1< output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04);
+        if(oc+2 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04);
+        if(oc+3 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05);
+      }
+
+      if(or + 1 < output_height) {
+        Dtype y10 = sum[6] - sum[12] + 2*sum[18] - 2*sum[24];
+        Dtype y11 = sum[7] - sum[13] + 2*sum[19] - 2*sum[25];
+        Dtype y12 = sum[8] - sum[14] + 2*sum[20] - 2*sum[26];
+        Dtype y13 = sum[9] - sum[15] + 2*sum[21] - 2*sum[27];
+        Dtype y14 = sum[10] - sum[16] + 2*sum[22] - 2*sum[28];
+        Dtype y15 = sum[11] - sum[17] + 2*sum[23] - 2*sum[29];
+
+        out_addr += output_width;
+        if(oc < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14);
+        if(oc+1< output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14);
+        if(oc+2 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14);
+        if(oc+3 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15);
+      }
+
+      if(or+2 < output_height) {
+        Dtype y20 = sum[6] + sum[12] + 4*sum[18] + 4*sum[24];
+        Dtype y21 = sum[7] + sum[13] + 4*sum[19] + 4*sum[25];
+        Dtype y22 = sum[8] + sum[14] + 4*sum[20] + 4*sum[26];
+        Dtype y23 = sum[9] + sum[15] + 4*sum[21] + 4*sum[27];
+        Dtype y24 = sum[10] + sum[16] + 4*sum[22] + 4*sum[28];
+        Dtype y25 = sum[11] + sum[17] + 4*sum[23] + 4*sum[29];
+
+        out_addr += output_width;
+        if(oc < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24);
+        if(oc+1< output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24);
+        if(oc+2 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24);
+        if(oc+3 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25);
+      }
+
+      if(or+3 < output_height) {
+        Dtype y30 = sum[6] - sum[12] + 8*sum[18] - 8*sum[24] + sum[30];
+        Dtype y31 = sum[7] - sum[13] + 8*sum[19] - 8*sum[25] + sum[31];
+        Dtype y32 = sum[8] - sum[14] + 8*sum[20] - 8*sum[26] + sum[32];
+        Dtype y33 = sum[9] - sum[15] + 8*sum[21] - 8*sum[27] + sum[33];
+        Dtype y34 = sum[10] - sum[16] + 8*sum[22] - 8*sum[28] + sum[34];
+        Dtype y35 = sum[11] - sum[17] + 8*sum[23] - 8*sum[29] + sum[35];
+
+        out_addr += output_width;
+        if(oc < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34);
+        if(oc+1< output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34);
+        if(oc+2 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34);
+        if(oc+3 < output_width)
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35);
+      }
+  }
+}
+
+#undef READ_IMAGE
+#undef ALPHA
+#undef OUT_BLOCK_SIZE
+#undef INPUT_TILE_SIZE
+#endif
+#endif

@@ -2256,6 +2256,417 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
+"",    // NOLINT
+"#if TYPE != TYPE_DOUBLE",    // NOLINT
+"#ifdef WINOGRAD",    // NOLINT
+"#define ALPHA 4",    // NOLINT
+"#define INPUT_TILE_SIZE (ALPHA*ALPHA)",    // NOLINT
+"#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
+"",    // NOLINT
+"__kernel void",    // NOLINT
+"data_transform_4x4(__global Dtype *data,",    // NOLINT
+"__global Dtype *V,",    // NOLINT
+"int P,",    // NOLINT
+"int H,",    // NOLINT
+"int W,",    // NOLINT
+"int num_h_tiles,",    // NOLINT
+"int num_w_tiles)",    // NOLINT
+"{",    // NOLINT
+"int c = get_global_id(0);",    // NOLINT
+"int block_y = get_global_id(1);",    // NOLINT
+"int block_x = get_global_id(2);",    // NOLINT
+"/* Data transform matrix. */",    // NOLINT
+"/*",    // NOLINT
+"B^T*d*B",    // NOLINT
+"B^T = {4, 0,  -5, 0,  1, 0,",    // NOLINT
+"0, -4, -4, 1,  1, 0,",    // NOLINT
+"0, 4,  -4, -1, 1, 0,",    // NOLINT
+"0, -2, -1, 2,  1, 0,",    // NOLINT
+"0, 2,  -1, -2, 1, 0,",    // NOLINT
+"0, 4,   0, -5, 0, 1}",    // NOLINT
+"",    // NOLINT
+"d' =  {d0   d1   d2   d3   d4   d5",    // NOLINT
+"d6   d7   d8   d9   d10  d11",    // NOLINT
+"d12  d13  d14  d15  d16  d17",    // NOLINT
+"d18  d19  d20  d21  d22  d23",    // NOLINT
+"d24  d25  d26  d27  d28  d29",    // NOLINT
+"d30  d31  d32  d33  d34  d35}",    // NOLINT
+"",    // NOLINT
+"d' =  {d00  d01  d02  d03  d04  d05",    // NOLINT
+"d10  d11  d12  d13  d14  d15",    // NOLINT
+"d20  d21  d22  d23  d24  d25",    // NOLINT
+"d30  d31  d32  d33  d34  d35",    // NOLINT
+"d40  d41  d42  d43  d44  d45",    // NOLINT
+"d50  d51  d52  d53  d54  d55}",    // NOLINT
+"B = {4, 0,  0, 0, 0, 0,",    // NOLINT
+"0, -4, 4,-2, 2, 4,",    // NOLINT
+"-5,-4,-4,-1,-1, 0,",    // NOLINT
+"0, 1, -1, 2, -2,-5,",    // NOLINT
+"1, 1,  1, 1, 1, 0,",    // NOLINT
+"0, 0,  0, 0, 0, 1}",    // NOLINT
+"",    // NOLINT
+"*/",    // NOLINT
+"int b = block_y * num_w_tiles + block_x;",    // NOLINT
+"int x = block_x * 4 - INPUT_PAD_W;",    // NOLINT
+"int y = block_y * 4 - INPUT_PAD_H;",    // NOLINT
+"__global Dtype *data_local = data + c * H * W+y*W+x;",    // NOLINT
+"Dtype d[36] = {0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,",    // NOLINT
+"0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f};",    // NOLINT
+"for(int h = 0; h < 6; ++h) {",    // NOLINT
+"if((y+h < 0) || (y+h >= H)) continue;",    // NOLINT
+"for(int w = 0; w < 6; ++w) {",    // NOLINT
+"if((x+w < 0) || (x+w >= W)) continue;",    // NOLINT
+"d[h*6+w] = data_local[h*W+w];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"Dtype d00 = 4*d[0]-5*d[12]+d[24];",    // NOLINT
+"Dtype d01 = 4*d[1]-5*d[13]+d[25];",    // NOLINT
+"Dtype d02 = 4*d[2]-5*d[14]+d[26];",    // NOLINT
+"Dtype d03 = 4*d[3]-5*d[15]+d[27];",    // NOLINT
+"Dtype d04 = 4*d[4]-5*d[16]+d[28];",    // NOLINT
+"Dtype d05 = 4*d[5]-5*d[17]+d[29];",    // NOLINT
+"",    // NOLINT
+"Dtype d10 = -4*d[6]-4*d[12]+d[18]+d[24];",    // NOLINT
+"Dtype d11 = -4*d[7]-4*d[13]+d[19]+d[25];",    // NOLINT
+"Dtype d12 = -4*d[8]-4*d[14]+d[20]+d[26];",    // NOLINT
+"Dtype d13 = -4*d[9]-4*d[15]+d[21]+d[27];",    // NOLINT
+"Dtype d14 = -4*d[10]-4*d[16]+d[22]+d[28];",    // NOLINT
+"Dtype d15 = -4*d[11]-4*d[17]+d[23]+d[29];",    // NOLINT
+"",    // NOLINT
+"Dtype d20 = 4*d[6]-4*d[12]-d[18]+d[24];",    // NOLINT
+"Dtype d21 = 4*d[7]-4*d[13]-d[19]+d[25];",    // NOLINT
+"Dtype d22 = 4*d[8]-4*d[14]-d[20]+d[26];",    // NOLINT
+"Dtype d23 = 4*d[9]-4*d[15]-d[21]+d[27];",    // NOLINT
+"Dtype d24 = 4*d[10]-4*d[16]-d[22]+d[28];",    // NOLINT
+"Dtype d25 = 4*d[11]-4*d[17]-d[23]+d[29];",    // NOLINT
+"",    // NOLINT
+"Dtype d30 = -2*d[6]-d[12]+2*d[18]+d[24];",    // NOLINT
+"Dtype d31 = -2*d[7]-d[13]+2*d[19]+d[25];",    // NOLINT
+"Dtype d32 = -2*d[8]-d[14]+2*d[20]+d[26];",    // NOLINT
+"Dtype d33 = -2*d[9]-d[15]+2*d[21]+d[27];",    // NOLINT
+"Dtype d34 = -2*d[10]-d[16]+2*d[22]+d[28];",    // NOLINT
+"Dtype d35 = -2*d[11]-d[17]+2*d[23]+d[29];",    // NOLINT
+"",    // NOLINT
+"Dtype d40 = 2*d[6]-d[12]-2*d[18]+d[24];",    // NOLINT
+"Dtype d41 = 2*d[7]-d[13]-2*d[19]+d[25];",    // NOLINT
+"Dtype d42 = 2*d[8]-d[14]-2*d[20]+d[26];",    // NOLINT
+"Dtype d43 = 2*d[9]-d[15]-2*d[21]+d[27];",    // NOLINT
+"Dtype d44 = 2*d[10]-d[16]-2*d[22]+d[28];",    // NOLINT
+"Dtype d45 = 2*d[11]-d[17]-2*d[23]+d[29];",    // NOLINT
+"",    // NOLINT
+"Dtype d50 = 4*d[6]-5*d[18]+d[30];",    // NOLINT
+"Dtype d51 = 4*d[7]-5*d[19]+d[31];",    // NOLINT
+"Dtype d52 = 4*d[8]-5*d[20]+d[32];",    // NOLINT
+"Dtype d53 = 4*d[9]-5*d[21]+d[33];",    // NOLINT
+"Dtype d54 = 4*d[10]-5*d[22]+d[34];",    // NOLINT
+"Dtype d55 = 4*d[11]-5*d[23]+d[35];",    // NOLINT
+"",    // NOLINT
+"/*V[C][B][6][6]*/",    // NOLINT
+"__global Dtype* v = V + c*P*36 + b*36;",    // NOLINT
+"",    // NOLINT
+"v[0] = 4*d00-5*d02+d04;  v[1] = -4*d01-4*d02+d03+d04;  v[2] = 4*d01-4*d02-d03+d04;  v[3] = -2*d01-d02+2*d03+d04;  v[4] = 2*d01-d02-2*d03+d04;  v[5] = 4*d01-5*d03+d05;",    // NOLINT
+"v[6] = 4*d10-5*d12+d14;  v[7] = -4*d11-4*d12+d13+d14;  v[8] = 4*d11-4*d12-d13+d14;  v[9] = -2*d11-d12+2*d13+d14;  v[10] = 2*d11-d12-2*d13+d14; v[11] = 4*d11-5*d13+d15;",    // NOLINT
+"v[12] = 4*d20-5*d22+d24; v[13] = -4*d21-4*d22+d23+d24; v[14] = 4*d21-4*d22-d23+d24; v[15] = -2*d21-d22+2*d23+d24; v[16] = 2*d21-d22-2*d23+d24; v[17] = 4*d21-5*d23+d25;",    // NOLINT
+"v[18] = 4*d30-5*d32+d34; v[19] = -4*d31-4*d32+d33+d34; v[20] = 4*d31-4*d32-d33+d34; v[21] = -2*d31-d32+2*d33+d34; v[22] = 2*d31-d32-2*d33+d34; v[23] = 4*d31-5*d33+d35;",    // NOLINT
+"v[24] = 4*d40-5*d42+d44; v[25] = -4*d41-4*d42+d43+d44; v[26] = 4*d41-4*d42-d43+d44; v[27] = -2*d41-d42+2*d43+d44; v[28] = 2*d41-d42-2*d43+d44; v[29] = 4*d41-5*d43+d45;",    // NOLINT
+"v[30] = 4*d50-5*d52+d54; v[31] = -4*d51-4*d52+d53+d54; v[32] = 4*d51-4*d52-d53+d54; v[33] = -2*d51-d52+2*d53+d54; v[34] = 2*d51-d52-2*d53+d54; v[35] = 4*d51-5*d53+d55;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define READ_IMAGE read_imageh",    // NOLINT
+"#else",    // NOLINT
+"#define READ_IMAGE read_imagef",    // NOLINT
+"#endif",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))",    // NOLINT
+"__kernel void",    // NOLINT
+"winograd_4x4(",    // NOLINT
+"ELTWISE_DATA_ARG",    // NOLINT
+"NEGATIVE_SLOPE_ARG",    // NOLINT
+"__global Dtype* inputs_base,",    // NOLINT
+"__read_only image2d_t weights_base,",    // NOLINT
+"__global Dtype* biases_base,",    // NOLINT
+"__global Dtype* outputs_base,",    // NOLINT
+"const ushort input_width,",    // NOLINT
+"const ushort input_height,",    // NOLINT
+"const ushort output_width,",    // NOLINT
+"const ushort output_height)",    // NOLINT
+"{",    // NOLINT
+"__global Dtype* outputs = outputs_base;",    // NOLINT
+"__global Dtype* inputs = inputs_base;",    // NOLINT
+"__global Dtype* biases = biases_base;",    // NOLINT
+"uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column",    // NOLINT
+"uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row",    // NOLINT
+"uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth",    // NOLINT
+"uint_tp lid = get_sub_group_local_id();",    // NOLINT
+"",    // NOLINT
+"int_tp in_addr;",    // NOLINT
+"Dtype sum[36];",    // NOLINT
+"for(int_tp i = 0; i < 36; i++) {",    // NOLINT
+"sum[i] = 0.f;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"uint_tp num_in_batch = ( fm ) / ALIGNED_NUM_FILTERS;",    // NOLINT
+"uint_tp input_batch_offset = num_in_batch * input_height * input_width * TOTAL_INPUT_DEPTH_SIZE;",    // NOLINT
+"",    // NOLINT
+"int curr_y = or/4;",    // NOLINT
+"int curr_x = oc*9 + lid;",    // NOLINT
+"",    // NOLINT
+"in_addr = input_batch_offset",    // NOLINT
+"+  curr_y * input_width             // y tile offset",    // NOLINT
+"+   curr_x;                        // x tile offset",    // NOLINT
+"Dtype in_buf[5];",    // NOLINT
+"",    // NOLINT
+"int2 coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS);",    // NOLINT
+"Dtype4 weight;",    // NOLINT
+"#define BLOCK_IN(n,i) sub_group_broadcast(in_buf[(i)], (n))",    // NOLINT
+"//#pragma unroll",    // NOLINT
+"#if IS_LARGE_INPUT",    // NOLINT
+"for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)",    // NOLINT
+"#else",    // NOLINT
+"for(int_tp kd = 0; kd < INPUT_DEPTH; kd++)",    // NOLINT
+"#endif",    // NOLINT
+"{",    // NOLINT
+"",    // NOLINT
+"int_tp in_offset = in_addr;",    // NOLINT
+"int_tp reg = 0;",    // NOLINT
+"LOOP(5, reg,",    // NOLINT
+"{",    // NOLINT
+"in_buf[reg] = *(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
+"in_offset += SIMD_SIZE;",    // NOLINT
+"});",    // NOLINT
+"in_addr += input_height * input_width;",    // NOLINT
+"",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[0]  = mad(BLOCK_IN(0, 0), weight.x, sum[0]);",    // NOLINT
+"sum[1]  = mad(BLOCK_IN(1, 0), weight.y, sum[1]);",    // NOLINT
+"sum[2]  = mad(BLOCK_IN(2, 0), weight.z, sum[2]);",    // NOLINT
+"sum[3]  = mad(BLOCK_IN(3, 0), weight.w, sum[3]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[4]  = mad(BLOCK_IN(4, 0), weight.x, sum[4]);",    // NOLINT
+"sum[5]  = mad(BLOCK_IN(5, 0), weight.y, sum[5]);",    // NOLINT
+"sum[6]  = mad(BLOCK_IN(6, 0), weight.z, sum[6]);",    // NOLINT
+"sum[7]  = mad(BLOCK_IN(7, 0), weight.w, sum[7]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[8]  = mad(BLOCK_IN(0, 1), weight.x, sum[8] );",    // NOLINT
+"sum[9]  = mad(BLOCK_IN(1, 1), weight.y, sum[9] );",    // NOLINT
+"sum[10] = mad(BLOCK_IN(2, 1), weight.z, sum[10]);",    // NOLINT
+"sum[11] = mad(BLOCK_IN(3, 1), weight.w, sum[11]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[12] = mad(BLOCK_IN(4, 1), weight.x, sum[12]);",    // NOLINT
+"sum[13] = mad(BLOCK_IN(5, 1), weight.y, sum[13]);",    // NOLINT
+"sum[14] = mad(BLOCK_IN(6, 1), weight.z, sum[14]);",    // NOLINT
+"sum[15] = mad(BLOCK_IN(7, 1), weight.w, sum[15]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[16] = mad(BLOCK_IN(0, 2), weight.x, sum[16]);",    // NOLINT
+"sum[17] = mad(BLOCK_IN(1, 2), weight.y, sum[17]);",    // NOLINT
+"sum[18] = mad(BLOCK_IN(2, 2), weight.z, sum[18]);",    // NOLINT
+"sum[19] = mad(BLOCK_IN(3, 2), weight.w, sum[19]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[20] = mad(BLOCK_IN(4, 2), weight.x, sum[20]);",    // NOLINT
+"sum[21] = mad(BLOCK_IN(5, 2), weight.y, sum[21]);",    // NOLINT
+"sum[22] = mad(BLOCK_IN(6, 2), weight.z, sum[22]);",    // NOLINT
+"sum[23] = mad(BLOCK_IN(7, 2), weight.w, sum[23]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[24] = mad(BLOCK_IN(0, 3), weight.x, sum[24]);",    // NOLINT
+"sum[25] = mad(BLOCK_IN(1, 3), weight.y, sum[25]);",    // NOLINT
+"sum[26] = mad(BLOCK_IN(2, 3), weight.z, sum[26]);",    // NOLINT
+"sum[27] = mad(BLOCK_IN(3, 3), weight.w, sum[27]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[28] = mad(BLOCK_IN(4, 3), weight.x, sum[28]);",    // NOLINT
+"sum[29] = mad(BLOCK_IN(5, 3), weight.y, sum[29]);",    // NOLINT
+"sum[30] = mad(BLOCK_IN(6, 3), weight.z, sum[30]);",    // NOLINT
+"sum[31] = mad(BLOCK_IN(7, 3), weight.w, sum[31]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[32] = mad(BLOCK_IN(0, 4), weight.x, sum[32]);",    // NOLINT
+"sum[33] = mad(BLOCK_IN(1, 4), weight.y, sum[33]);",    // NOLINT
+"sum[34] = mad(BLOCK_IN(2, 4), weight.z, sum[34]);",    // NOLINT
+"sum[35] = mad(BLOCK_IN(3, 4), weight.w, sum[35]);",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"#if IS_LARGE_INPUT",    // NOLINT
+"coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+TOTAL_NUM_FILTERS);",    // NOLINT
+"//#pragma unroll",    // NOLINT
+"for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)",    // NOLINT
+"{",    // NOLINT
+"",    // NOLINT
+"int_tp in_offset = in_addr;",    // NOLINT
+"int_tp reg = 0;",    // NOLINT
+"LOOP(5, reg,",    // NOLINT
+"{",    // NOLINT
+"in_buf[reg] = *(inputs + in_offset);    // read SIMD_SIZE elements",    // NOLINT
+"in_offset += SIMD_SIZE;",    // NOLINT
+"});",    // NOLINT
+"in_addr += input_height * input_width;",    // NOLINT
+"",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[0]  = mad(BLOCK_IN(0, 0), weight.x, sum[0]);",    // NOLINT
+"sum[1]  = mad(BLOCK_IN(1, 0), weight.y, sum[1]);",    // NOLINT
+"sum[2]  = mad(BLOCK_IN(2, 0), weight.z, sum[2]);",    // NOLINT
+"sum[3]  = mad(BLOCK_IN(3, 0), weight.w, sum[3]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[4]  = mad(BLOCK_IN(4, 0), weight.x, sum[4]);",    // NOLINT
+"sum[5]  = mad(BLOCK_IN(5, 0), weight.y, sum[5]);",    // NOLINT
+"sum[6]  = mad(BLOCK_IN(6, 0), weight.z, sum[6]);",    // NOLINT
+"sum[7]  = mad(BLOCK_IN(7, 0), weight.w, sum[7]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[8]  = mad(BLOCK_IN(0, 1), weight.x, sum[8] );",    // NOLINT
+"sum[9]  = mad(BLOCK_IN(1, 1), weight.y, sum[9] );",    // NOLINT
+"sum[10] = mad(BLOCK_IN(2, 1), weight.z, sum[10]);",    // NOLINT
+"sum[11] = mad(BLOCK_IN(3, 1), weight.w, sum[11]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[12] = mad(BLOCK_IN(4, 1), weight.x, sum[12]);",    // NOLINT
+"sum[13] = mad(BLOCK_IN(5, 1), weight.y, sum[13]);",    // NOLINT
+"sum[14] = mad(BLOCK_IN(6, 1), weight.z, sum[14]);",    // NOLINT
+"sum[15] = mad(BLOCK_IN(7, 1), weight.w, sum[15]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[16] = mad(BLOCK_IN(0, 2), weight.x, sum[16]);",    // NOLINT
+"sum[17] = mad(BLOCK_IN(1, 2), weight.y, sum[17]);",    // NOLINT
+"sum[18] = mad(BLOCK_IN(2, 2), weight.z, sum[18]);",    // NOLINT
+"sum[19] = mad(BLOCK_IN(3, 2), weight.w, sum[19]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[20] = mad(BLOCK_IN(4, 2), weight.x, sum[20]);",    // NOLINT
+"sum[21] = mad(BLOCK_IN(5, 2), weight.y, sum[21]);",    // NOLINT
+"sum[22] = mad(BLOCK_IN(6, 2), weight.z, sum[22]);",    // NOLINT
+"sum[23] = mad(BLOCK_IN(7, 2), weight.w, sum[23]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[24] = mad(BLOCK_IN(0, 3), weight.x, sum[24]);",    // NOLINT
+"sum[25] = mad(BLOCK_IN(1, 3), weight.y, sum[25]);",    // NOLINT
+"sum[26] = mad(BLOCK_IN(2, 3), weight.z, sum[26]);",    // NOLINT
+"sum[27] = mad(BLOCK_IN(3, 3), weight.w, sum[27]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[28] = mad(BLOCK_IN(4, 3), weight.x, sum[28]);",    // NOLINT
+"sum[29] = mad(BLOCK_IN(5, 3), weight.y, sum[29]);",    // NOLINT
+"sum[30] = mad(BLOCK_IN(6, 3), weight.z, sum[30]);",    // NOLINT
+"sum[31] = mad(BLOCK_IN(7, 3), weight.w, sum[31]);",    // NOLINT
+"weight = READ_IMAGE(weights_base, sampler,coordW);",    // NOLINT
+"coordW.x += 1;",    // NOLINT
+"sum[32] = mad(BLOCK_IN(0, 4), weight.x, sum[32]);",    // NOLINT
+"sum[33] = mad(BLOCK_IN(1, 4), weight.y, sum[33]);",    // NOLINT
+"sum[34] = mad(BLOCK_IN(2, 4), weight.z, sum[34]);",    // NOLINT
+"sum[35] = mad(BLOCK_IN(3, 4), weight.w, sum[35]);",    // NOLINT
+"",    // NOLINT
+"}",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {",    // NOLINT
+"uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
+"out_addr += or * output_width + oc;",    // NOLINT
+"Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"/*",    // NOLINT
+"A^T = {1, 1, 1, 1, 1, 0,",    // NOLINT
+"0, 1, -1,2,-2,0,",    // NOLINT
+"0, 1, 1, 4, 4, 0,",    // NOLINT
+"0, 1, -1,8,-8, 1}",    // NOLINT
+"sum = {s0, s1, s2, s3, s4, s5,",    // NOLINT
+"s6, s7, s8, s9, s10,s11,",    // NOLINT
+"s12,s13,s14,s15,s16,s17,",    // NOLINT
+"s18,s19,s20,s21,s22,s23,",    // NOLINT
+"s24,s25,s26,s27,s28,s29,",    // NOLINT
+"s30,s31,s32,s33,s34,s35}",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"if(or < output_height) {",    // NOLINT
+"Dtype y00 = sum[0] + sum[6] + sum[12] + sum[18] + sum[24];",    // NOLINT
+"Dtype y01 = sum[1] + sum[7] + sum[13] + sum[19] + sum[25];",    // NOLINT
+"Dtype y02 = sum[2] + sum[8] + sum[14] + sum[20] + sum[26];",    // NOLINT
+"Dtype y03 = sum[3] + sum[9] + sum[15] + sum[21] + sum[27];",    // NOLINT
+"Dtype y04 = sum[4] + sum[10] + sum[16] + sum[22] + sum[28];",    // NOLINT
+"Dtype y05 = sum[5] + sum[11] + sum[17] + sum[23] + sum[29];",    // NOLINT
+"",    // NOLINT
+"if(oc < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04);",    // NOLINT
+"if(oc+1< output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04);",    // NOLINT
+"if(oc+2 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04);",    // NOLINT
+"if(oc+3 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(or + 1 < output_height) {",    // NOLINT
+"Dtype y10 = sum[6] - sum[12] + 2*sum[18] - 2*sum[24];",    // NOLINT
+"Dtype y11 = sum[7] - sum[13] + 2*sum[19] - 2*sum[25];",    // NOLINT
+"Dtype y12 = sum[8] - sum[14] + 2*sum[20] - 2*sum[26];",    // NOLINT
+"Dtype y13 = sum[9] - sum[15] + 2*sum[21] - 2*sum[27];",    // NOLINT
+"Dtype y14 = sum[10] - sum[16] + 2*sum[22] - 2*sum[28];",    // NOLINT
+"Dtype y15 = sum[11] - sum[17] + 2*sum[23] - 2*sum[29];",    // NOLINT
+"",    // NOLINT
+"out_addr += output_width;",    // NOLINT
+"if(oc < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14);",    // NOLINT
+"if(oc+1< output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14);",    // NOLINT
+"if(oc+2 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14);",    // NOLINT
+"if(oc+3 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(or+2 < output_height) {",    // NOLINT
+"Dtype y20 = sum[6] + sum[12] + 4*sum[18] + 4*sum[24];",    // NOLINT
+"Dtype y21 = sum[7] + sum[13] + 4*sum[19] + 4*sum[25];",    // NOLINT
+"Dtype y22 = sum[8] + sum[14] + 4*sum[20] + 4*sum[26];",    // NOLINT
+"Dtype y23 = sum[9] + sum[15] + 4*sum[21] + 4*sum[27];",    // NOLINT
+"Dtype y24 = sum[10] + sum[16] + 4*sum[22] + 4*sum[28];",    // NOLINT
+"Dtype y25 = sum[11] + sum[17] + 4*sum[23] + 4*sum[29];",    // NOLINT
+"",    // NOLINT
+"out_addr += output_width;",    // NOLINT
+"if(oc < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24);",    // NOLINT
+"if(oc+1< output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24);",    // NOLINT
+"if(oc+2 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24);",    // NOLINT
+"if(oc+3 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25);",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"if(or+3 < output_height) {",    // NOLINT
+"Dtype y30 = sum[6] - sum[12] + 8*sum[18] - 8*sum[24] + sum[30];",    // NOLINT
+"Dtype y31 = sum[7] - sum[13] + 8*sum[19] - 8*sum[25] + sum[31];",    // NOLINT
+"Dtype y32 = sum[8] - sum[14] + 8*sum[20] - 8*sum[26] + sum[32];",    // NOLINT
+"Dtype y33 = sum[9] - sum[15] + 8*sum[21] - 8*sum[27] + sum[33];",    // NOLINT
+"Dtype y34 = sum[10] - sum[16] + 8*sum[22] - 8*sum[28] + sum[34];",    // NOLINT
+"Dtype y35 = sum[11] - sum[17] + 8*sum[23] - 8*sum[29] + sum[35];",    // NOLINT
+"",    // NOLINT
+"out_addr += output_width;",    // NOLINT
+"if(oc < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34);",    // NOLINT
+"if(oc+1< output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34);",    // NOLINT
+"if(oc+2 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34);",    // NOLINT
+"if(oc+3 < output_width)",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#undef READ_IMAGE",    // NOLINT
+"#undef ALPHA",    // NOLINT
+"#undef OUT_BLOCK_SIZE",    // NOLINT
+"#undef INPUT_TILE_SIZE",    // NOLINT
+"#endif",    // NOLINT
+"#endif",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
@@ -2320,6 +2731,233 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "weightOut[FP*(kernel_w*kernel_h*channels*swizzleFactor) + kernel_C*(kernel_w*kernel_h*swizzleFactor) + kernel_Y*(kernel_w*swizzleFactor) + kernel_X*swizzleFactor + F1]",    // NOLINT
 "= weightIn[filter*(kernel_w*kernel_h*channels) + kernel_C*(kernel_w*kernel_h) + kernel_Y*kernel_w + kernel_X];",    // NOLINT
 "}",    // NOLINT
+"",    // NOLINT
+"/*------------------------------------------------------------------------",    // NOLINT
+"/*Below is winograd functions for weights transform.*/",    // NOLINT
+"",    // NOLINT
+"#if TYPE != TYPE_DOUBLE",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define WRITE_IMAGE write_imageh",    // NOLINT
+"#else",    // NOLINT
+"#define WRITE_IMAGE write_imagef",    // NOLINT
+"#endif",    // NOLINT
+"#define KERNEL_SIZE 9",    // NOLINT
+"",    // NOLINT
+"/* For the filter g located at FILTERS[k][c], computes the transformation",    // NOLINT
+"* u = G * g * G^T. Then, catters each matrix u into the output U.",    // NOLINT
+"* G has dimensions (ALPHA,r)*/",    // NOLINT
+"__kernel void TEMPLATE(filter_transform_4x4_v0,Dtype)(",    // NOLINT
+"__global Dtype *filters,",    // NOLINT
+"__write_only image2d_t U,",    // NOLINT
+"int_tp total_input_channels,",    // NOLINT
+"int_tp total_output_channels)",    // NOLINT
+"{",    // NOLINT
+"// size_t id = get_global_id(0);",    // NOLINT
+"/* Filter transform matrix.",    // NOLINT
+"G = {1/4, 0.0, 0.0,",    // NOLINT
+"-1.0/6.0, -1.0/6.0,-1.0/6.0,",    // NOLINT
+"-1.0/6.0, 1.0/6.0, -1.0/6.0,",    // NOLINT
+"1/24, 1/12, 1.0/6.0,",    // NOLINT
+"1/24,-1/12, 1.0/6.0,",    // NOLINT
+"0.0,  0.0,  1};",    // NOLINT
+"*/",    // NOLINT
+"//const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;",    // NOLINT
+"int in_channel = get_global_id(0);",    // NOLINT
+"int out_channel = get_global_id(1);",    // NOLINT
+"",    // NOLINT
+"Dtype g[18];",    // NOLINT
+"__global Dtype* f = filters + in_channel * KERNEL_SIZE + out_channel * total_input_channels *KERNEL_SIZE;",    // NOLINT
+"int2 coordU = (int2)(in_channel*9, out_channel);",    // NOLINT
+"/* Filter transform matrix. */",    // NOLINT
+"/*",    // NOLINT
+"G = {1/4, 0.0, 0.0,",    // NOLINT
+"-1.0/6.0, -1.0/6.0,-1.0/6.0,",    // NOLINT
+"-1.0/6.0, 1.0/6.0, -1.0/6.0,",    // NOLINT
+"1/24, 1/12, 1.0/6.0,",    // NOLINT
+"1/24,-1/12, 1.0/6.0,",    // NOLINT
+"0.0,  0.0,  1};",    // NOLINT
+"",    // NOLINT
+"*/",    // NOLINT
+"/*",    // NOLINT
+"f= { f0, f1, f2,",    // NOLINT
+"f3, f4, f5,",    // NOLINT
+"f6, f7, f8 }",    // NOLINT
+"*/",    // NOLINT
+"/*",    // NOLINT
+"",    // NOLINT
+"g = { g0, g1, g2,",    // NOLINT
+"g3, g4, g5,",    // NOLINT
+"g6, g7, g8,",    // NOLINT
+"g9, g10,g11,",    // NOLINT
+"g12,g13,g14,",    // NOLINT
+"g15,g16,g17};",    // NOLINT
+"*/",    // NOLINT
+"g[0] = 0.25f*f[0];",    // NOLINT
+"g[1] = 0.25f*f[1];",    // NOLINT
+"g[2] = 0.25f*f[2];",    // NOLINT
+"",    // NOLINT
+"g[3] = -1.0/6.0*f[0]-1.0/6.0*f[3]-1.0/6.0*f[6];",    // NOLINT
+"g[4] = -1.0/6.0*f[1]-1.0/6.0*f[4]-1.0/6.0*f[7];",    // NOLINT
+"g[5] = -1.0/6.0*f[2]-1.0/6.0*f[5]-1.0/6.0*f[8];",    // NOLINT
+"",    // NOLINT
+"g[6] = g[3] + f[3]/3.0;",    // NOLINT
+"g[7] = g[4] + f[4]/3.0;",    // NOLINT
+"g[8] = g[5] + f[5]/3.0;",    // NOLINT
+"",    // NOLINT
+"g[9] = f[0]/24.0 + f[3]/12.0 + f[6]/6.0;",    // NOLINT
+"g[10]= f[1]/24.0 + f[4]/12.0 + f[7]/6.0;",    // NOLINT
+"g[11]= f[2]/24.0 + f[5]/12.0 + f[8]/6.0;",    // NOLINT
+"",    // NOLINT
+"g[12]=g[9]-f[3]/6.0;",    // NOLINT
+"g[13]=g[10]-f[4]/6.0;",    // NOLINT
+"g[14]=g[11]-f[5]/6.0;",    // NOLINT
+"",    // NOLINT
+"g[15]=f[6];",    // NOLINT
+"g[16]=f[7];",    // NOLINT
+"g[17]=f[8];",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"/*U[K][C][ALPHA][ALPHA]",    // NOLINT
+"g = { g0, g1, g2,",    // NOLINT
+"g3, g4, g5,",    // NOLINT
+"g6, g7, g8,",    // NOLINT
+"g9, g10,g11,",    // NOLINT
+"g12,g13,g14,",    // NOLINT
+"g15,g16,g17};",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"G^T = {1/4, -1.0/6.0, -1.0/6.0, 1/24, 1/24, 0,",    // NOLINT
+"0,   -1.0/6.0,  1.0/6.0, 1/12,-1/12, 0,",    // NOLINT
+"0,   -1.0/6.0, -1.0/6.0, 1.0/6.0,  1/6,  1};",    // NOLINT
+"",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[0]*0.25, -1.0/6.0*g[0]-1.0/6.0*g[1]-1.0/6.0*g[2], -1.0/6.0*g[0]+1.0/6.0*g[1]-1.0/6.0*g[2], g[0]/24+g[1]/12+g[2]/6));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[0]/24-g[1]/12+g[2]/6, g[2], g[3]*0.25, -1.0/6.0*g[3]-1.0/6.0*g[4]-1.0/6.0*g[5]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[3]+1.0/6.0*g[4]-1.0/6.0*g[5], g[3]/24+g[4]/12+g[5]/6, g[3]/24-g[4]/12+g[5]/6, g[5]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[6]*0.25f, -1.0/6.0*g[6]-1.0/6.0*g[7]-1.0/6.0*g[8], -1.0/6.0*g[6]+1.0/6.0*g[7]-1.0/6.0*g[8], g[6]/24+g[7]/12+g[8]/6));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[6]/24-g[7]/12+g[8]/6, g[8], g[9]*0.25, -1.0/6.0*g[9]-1.0/6.0*g[10]-1.0/6.0*g[11]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[9]+1.0/6.0*g[10]-1.0/6.0*g[11], g[9]/24+g[10]/12+g[11]/6, g[9]/24-g[10]/12+g[11]/6, g[11]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[12]*0.25f, -1.0/6.0*g[12]-1.0/6.0*g[13]-1.0/6.0*g[14], -1.0/6.0*g[12]+1.0/6.0*g[13]-1.0/6.0*g[14], g[12]/24+g[13]/12+g[14]/6));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[12]/24-g[13]/12+g[14]/6, g[14], g[15]*0.25, -1.0/6.0*g[15]-1.0/6.0*g[16]-1.0/6.0*g[17]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[15]+1.0/6.0*g[16]-1.0/6.0*g[17], g[15]/24+g[16]/12+g[17]/6, g[15]/24-g[16]/12+g[17]/6, g[17]));",    // NOLINT
+"}",    // NOLINT
+"/*The v1 version for input channel size > 256*/",    // NOLINT
+"__kernel void TEMPLATE(filter_transform_4x4_v1,Dtype)(",    // NOLINT
+"__global Dtype *filters,",    // NOLINT
+"__write_only image2d_t U,",    // NOLINT
+"int_tp total_input_channels,",    // NOLINT
+"int_tp total_output_channels)",    // NOLINT
+"{",    // NOLINT
+"// size_t id = get_global_id(0);",    // NOLINT
+"/* Filter transform matrix.",    // NOLINT
+"G = {1/4, 0.0, 0.0,",    // NOLINT
+"-1.0/6.0, -1.0/6.0,-1.0/6.0,",    // NOLINT
+"-1.0/6.0, 1.0/6.0, -1.0/6.0,",    // NOLINT
+"1/24, 1/12, 1.0/6.0,",    // NOLINT
+"1/24,-1/12, 1.0/6.0,",    // NOLINT
+"0.0,  0.0,  1};",    // NOLINT
+"*/",    // NOLINT
+"//const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;",    // NOLINT
+"int in_channel = get_global_id(0);",    // NOLINT
+"int out_channel = get_global_id(1);",    // NOLINT
+"int slice = total_input_channels/2;",    // NOLINT
+"float g[18];",    // NOLINT
+"__global float* f = filters + in_channel * KERNEL_SIZE + out_channel * total_input_channels *KERNEL_SIZE;",    // NOLINT
+"int2 coordU = (int2)((in_channel%slice)*9, (in_channel/slice)*total_output_channels+out_channel);",    // NOLINT
+"/* Filter transform matrix. */",    // NOLINT
+"/*",    // NOLINT
+"G = {1/4, 0.0, 0.0,",    // NOLINT
+"-1.0/6.0, -1.0/6.0,-1.0/6.0,",    // NOLINT
+"-1.0/6.0, 1.0/6.0, -1.0/6.0,",    // NOLINT
+"1/24, 1/12, 1.0/6.0,",    // NOLINT
+"1/24,-1/12, 1.0/6.0,",    // NOLINT
+"0.0,  0.0,  1};",    // NOLINT
+"",    // NOLINT
+"*/",    // NOLINT
+"/*",    // NOLINT
+"f= { f0, f1, f2,",    // NOLINT
+"f3, f4, f5,",    // NOLINT
+"f6, f7, f8 }",    // NOLINT
+"*/",    // NOLINT
+"/*",    // NOLINT
+"",    // NOLINT
+"g = { g0, g1, g2,",    // NOLINT
+"g3, g4, g5,",    // NOLINT
+"g6, g7, g8,",    // NOLINT
+"g9, g10,g11,",    // NOLINT
+"g12,g13,g14,",    // NOLINT
+"g15,g16,g17};",    // NOLINT
+"*/",    // NOLINT
+"g[0] = 0.25f*f[0];",    // NOLINT
+"g[1] = 0.25f*f[1];",    // NOLINT
+"g[2] = 0.25f*f[2];",    // NOLINT
+"",    // NOLINT
+"g[3] = -1.0/6.0*f[0]-1.0/6.0*f[3]-1.0/6.0*f[6];",    // NOLINT
+"g[4] = -1.0/6.0*f[1]-1.0/6.0*f[4]-1.0/6.0*f[7];",    // NOLINT
+"g[5] = -1.0/6.0*f[2]-1.0/6.0*f[5]-1.0/6.0*f[8];",    // NOLINT
+"",    // NOLINT
+"g[6] = g[3] + f[3]/3.0;",    // NOLINT
+"g[7] = g[4] + f[4]/3.0;",    // NOLINT
+"g[8] = g[5] + f[5]/3.0;",    // NOLINT
+"",    // NOLINT
+"g[9] = f[0]/24.0 + f[3]/12.0 + f[6]/6.0;",    // NOLINT
+"g[10]= f[1]/24.0 + f[4]/12.0 + f[7]/6.0;",    // NOLINT
+"g[11]= f[2]/24.0 + f[5]/12.0 + f[8]/6.0;",    // NOLINT
+"",    // NOLINT
+"g[12]=g[9]-f[3]/6.0;",    // NOLINT
+"g[13]=g[10]-f[4]/6.0;",    // NOLINT
+"g[14]=g[11]-f[5]/6.0;",    // NOLINT
+"",    // NOLINT
+"g[15]=f[6];",    // NOLINT
+"g[16]=f[7];",    // NOLINT
+"g[17]=f[8];",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"/*U[K][C][ALPHA][ALPHA]",    // NOLINT
+"g = { g0, g1, g2,",    // NOLINT
+"g3, g4, g5,",    // NOLINT
+"g6, g7, g8,",    // NOLINT
+"g9, g10,g11,",    // NOLINT
+"g12,g13,g14,",    // NOLINT
+"g15,g16,g17};",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
+"G^T = {1/4, -1.0/6.0, -1.0/6.0, 1/24, 1/24, 0,",    // NOLINT
+"0,   -1.0/6.0,  1.0/6.0, 1/12,-1/12, 0,",    // NOLINT
+"0,   -1.0/6.0, -1.0/6.0, 1.0/6.0,  1/6,  1};",    // NOLINT
+"",    // NOLINT
+"*/",    // NOLINT
+"",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[0]*0.25, -1./6.*g[0]-1.0/6.0*g[1]-1.0/6.0*g[2], -1.0/6.0*g[0]+1.0/6.0*g[1]-1.0/6.0*g[2], g[0]/24.0+g[1]/12.0+g[2]/6.0));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[0]/24.0-g[1]/12.0+g[2]/6.0, g[2], g[3]*0.25, -1.0/6.0*g[3]-1.0/6.0*g[4]-1.0/6.0*g[5]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[3]+1.0/6.0*g[4]-1.0/6.0*g[5], g[3]/24+g[4]/12+g[5]/6, g[3]/24-g[4]/12+g[5]/6.0, g[5]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[6]*0.25f, -1.0/6.0*g[6]-1.0/6.0*g[7]-1.0/6.0*g[8], -1.0/6.0*g[6]+1.0/6.0*g[7]-1.0/6.0*g[8], g[6]/24+g[7]/12+g[8]/6));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[6]/24-g[7]/12+g[8]/6, g[8], g[9]*0.25f, -1.0/6.0*g[9]-1.0/6.0*g[10]-1.0/6.0*g[11]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[9]+1.0/6.0*g[10]-1.0/6.0*g[11], g[9]/24+g[10]/12+g[11]/6, g[9]/24-g[10]/12+g[11]/6, g[11]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[12]*0.25f, -1.0/6.0*g[12]-1.0/6.0*g[13]-1.0/6.0*g[14], -1.0/6.0*g[12]+1.0/6.0*g[13]-1.0/6.0*g[14], g[12]/24+g[13]/12+g[14]/6));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(g[12]/24-g[13]/12+g[14]/6, g[14], g[15]*0.25f, -1.0/6.0*g[15]-1.0/6.0*g[16]-1.0/6.0*g[17]));",    // NOLINT
+"coordU.x +=1;",    // NOLINT
+"WRITE_IMAGE(U, coordU, (Dtype4)(-1.0/6.0*g[15]+1.0/6.0*g[16]-1.0/6.0*g[17], g[15]/24+g[16]/12+g[17]/6, g[15]/24-g[16]/12+g[17]/6, g[17]));",    // NOLINT
+"}",    // NOLINT
+"#undef WRITE_IMAGE",    // NOLINT
+"#undef KERNEL_SIZE",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "",    // NOLINT
 ""},   // NOLINT

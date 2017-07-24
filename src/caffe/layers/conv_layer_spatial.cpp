@@ -71,6 +71,7 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
                             kernel_h_, ALIGN(kernel_w_, 2));
   swizzled_weights_ = NULL;
   bias_ = NULL;
+  winograd_weights_image_ = NULL;
 
   if (IsFusedWithEltwiseReLU()) {
     CHECK_EQ(
@@ -127,6 +128,8 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   output_h_ = (height_ + 2 * pad_h_ - kernel_extent_h) / stride_h_ + 1;
   output_w_ = (width_ + 2 * pad_w_ - kernel_extent_w) / stride_w_ + 1;
 
+  input_transform_blob_.Reshape(this->channels_ * this->num_, (output_h_+3)/4,
+                                (output_w_+3)/4, 36);
   // Shape the tops.
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
                            bottom[0]->shape().begin() + this->channel_axis_);
@@ -412,6 +415,86 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
 }
 
 template<typename Dtype>
+void ConvolutionLayerSpatial<Dtype>::winogradWeights() {
+
+  // Simply skip the weight swizzle if we already got a winograd_weights_
+  // in test phase and not in auto tuning
+  // This requires we always call convolve again with the winner configuration
+  // during the auto tuning stage.
+  if (tuned_ &&
+      winograd_weights_image_ != NULL &&
+      this->phase_ == TEST)
+    return;
+
+  cl_int err;
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  viennacl::ocl::program &program = this->device_->program();
+  if(!std::is_same<Dtype, double>::value) {
+    cl_image_format format;
+    cl_image_desc desc;
+#ifdef CL_VERSION_1_2
+    desc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    if(this->channels_ > 256) {
+      desc.image_width = 9*this->channels_/2;
+      desc.image_height = 2*ALIGN(this->num_output_, 16);
+    } else {
+      desc.image_width = 9*this->channels_;
+      desc.image_height = ALIGN(this->num_output_, 16);
+    }
+    desc.image_depth = 1;
+    desc.image_array_size = 0;
+    desc.image_row_pitch = 0;
+    desc.image_slice_pitch = 0;
+    desc.num_mip_levels = 0;
+    desc.num_samples = 0;
+#ifdef CL_VERSION_2_0
+    desc.mem_object = 0;
+#else
+    desc.buffer = 0;
+#endif
+#endif
+    if(std::is_same<Dtype, half_float::half>::value)
+      format.image_channel_data_type = CL_HALF_FLOAT;
+    else
+      format.image_channel_data_type = CL_FLOAT;
+    format.image_channel_order = CL_RGBA;
+    winograd_weights_image_ = clCreateImage(
+                            ctx.handle().get(),
+                            CL_MEM_READ_WRITE,
+                            &format,
+                            &desc,
+                            NULL,
+                            &err);
+    OCL_CHECK(err);
+  }
+
+  viennacl::ocl::kernel &oclk_winograd_weights = this->channels_>256?
+        program.get_kernel(CL_KERNEL_SELECT("filter_transform_4x4_v1")):
+        program.get_kernel(CL_KERNEL_SELECT("filter_transform_4x4_v0"));
+  cl_uint argIdx = 0;
+  oclk_winograd_weights.arg(argIdx++, WrapHandle((cl_mem)this->blobs()[0]->gpu_data(), &ctx));
+  oclk_winograd_weights.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
+  oclk_winograd_weights.arg(argIdx++, (int_tp)this->channels_);
+  oclk_winograd_weights.arg(argIdx++, (int_tp)this->num_output_);
+  size_t global_work_size_U[2] = {(size_t)this->channels_, (size_t)this->num_output_};
+
+
+  /* Compute data transform. */
+  err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+         oclk_winograd_weights.handle().get(),
+         2,//work_dim,
+         NULL, //global_work_offset
+         global_work_size_U, //global_work_size
+         NULL, //local_work_size
+         0, //num_events_in_wait_list
+         NULL, //event_wait_list
+         NULL //
+         );
+  OCL_CHECK(err);
+
+}
+
+template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::calculate_global_size(int_tp batch,
                                   int_tp* wio,  // work item output size
                                   size_t* lSize,  // local size
@@ -492,7 +575,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
 
   kernelQueue.push_back(
       new kernelConfig(kernel_name_, globalSize, localSize, workItemOutput,
-                       false, false, true, 4));
+                       false, false, true, ConvType::BASIC));
 
   return true;
 }
@@ -559,7 +642,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
   viennacl::ocl::program & program = ctx.get_program(config->kernelName);
   viennacl::ocl::kernel &kernel = program.get_kernel(config->kernelName);
   cl_int err = CL_SUCCESS;
-  if (config->kernelType == 2) {
+  if (config->kernelType == ConvType::IDLF) {
     swizzleWeights(bottom, top, config->workItem_output[2], false);
     size_t total_bottom_size = this->bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * this->channels_ * M_;
@@ -631,7 +714,74 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     }
     if (err != CL_SUCCESS)
       return err;
-  } else if (config->kernelType == 5) {
+  } else if (config->kernelType == ConvType::WINOGRAD) {
+    winogradWeights();
+    viennacl::ocl::kernel &oclk_data_transform =
+      program.get_kernel(config->kernelName+"_data_transform_4x4");
+
+    size_t num_h_tiles = ALIGN(output_h_,4)/4;
+    size_t num_w_tiles = ALIGN(output_w_,4)/4;
+    int P = num_h_tiles * num_w_tiles;
+    const int_tp output_block_w = config->workItem_output[0];
+    const int_tp output_block_h = config->workItem_output[1];
+    /* Data transform, which calculates V. */
+    size_t global_work_size_V[3] = {(size_t)this->channels_*this->num_, (size_t)num_h_tiles, (size_t)num_w_tiles};
+
+    oclk_data_transform.arg(0, WrapHandle((cl_mem)bottom[index]->gpu_data(), &ctx));
+    oclk_data_transform.arg(1, WrapHandle((cl_mem)this->input_transform_blob_.mutable_gpu_data(), &ctx));
+    oclk_data_transform.arg(2, P);
+    oclk_data_transform.arg(3, height_);
+    oclk_data_transform.arg(4, width_);
+    oclk_data_transform.arg(5, (int)num_h_tiles);
+    oclk_data_transform.arg(6, (int)num_w_tiles);
+
+    cl_uint argIdx = 0;
+    if (IsFusedWithEltwiseReLU())
+      kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
+    if (IsFusedWithReLU())
+      kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
+    kernel.arg(argIdx++, WrapHandle((cl_mem)this->input_transform_blob_.gpu_data(), &ctx));
+    kernel.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
+    kernel.arg(argIdx++, WrapHandle((cl_mem)this->blobs()[1]->gpu_data(), &ctx));
+    kernel.arg(argIdx++, WrapHandle((cl_mem)top[index]->mutable_gpu_data(), &ctx));
+    kernel.arg(argIdx++, (ushort)(ALIGN(output_w_,4)*9));
+    kernel.arg(argIdx++, (ushort)(ALIGN(output_h_,4)/4));
+    kernel.arg(argIdx++, (ushort)output_w_);
+    kernel.arg(argIdx++, (ushort)output_h_);
+
+    /* Compute data transform. */
+    err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+         oclk_data_transform.handle().get(),
+         3,//work_dim,
+         NULL, //global_work_offset
+         global_work_size_V, //global_work_size
+         NULL, //local_work_size
+         0, //num_events_in_wait_list
+         NULL, //event_wait_list
+         NULL //
+         );
+    OCL_CHECK(err);
+    size_t global_size[3] = {ALIGN((size_t)(this->output_w_ + output_block_w - 1)/output_block_w, 1),
+                           ALIGN((size_t)(this->output_h_ + output_block_h - 1)/output_block_h, 1),
+                           (size_t) config->global_work_size[2]
+                           };
+
+    /* Compute the pre-transformed output. */
+    err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+         kernel.handle().get(),
+         3,//work_dim,
+         NULL, //global_work_offset
+         global_size, //global_work_size
+         config->local_work_size, //local_work_size
+         0, //num_events_in_wait_list
+         NULL, //event_wait_list
+         NULL //
+         );
+    OCL_CHECK(err);
+
+    if (err != CL_SUCCESS)
+      return err;
+  } else if (config->kernelType == ConvType::GEMM_LIKE) {
     swizzleWeights(bottom, top, config->workItem_output[1], true);
     size_t total_bottom_size = this->bottom_dim_ * numImages;
     size_t total_kernel_size = kernel_h_ * kernel_w_ * this->channels_ * M_;
@@ -886,18 +1036,20 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
           for (int w = 0; w < output_w_; w++) {
             size_t offset = output_image_offset + out_ch * output_w_ * output_h_
                             + h * output_w_ + w;
-            if (fabs(data[offset] - verify_data[offset]) >
-                       0.1 * fabs(verify_data[offset] * err_factor) &&
-                !(fabs(verify_data[offset]) < 1e-3 * err_factor
-                  && fabs(data[offset] - verify_data[offset]) <
-                     1e-4 * err_factor)) {
-              dbgPrint(printf("test verification failed @ image %d group %d"
-                              "out_ch %d h %d w %d got %G expected %G\n",
-                      n, g, out_ch, h, w,
-                      static_cast<float>(data[offset]),
-                      static_cast<float>(verify_data[offset])));
-              verificationFail = 1;
-              break;
+            if(config->kernelType != ConvType::WINOGRAD) {
+              if (fabs(data[offset] - verify_data[offset]) >
+                         0.1 * fabs(verify_data[offset] * err_factor) &&
+                  !(fabs(verify_data[offset]) < 1e-3 * err_factor
+                    && fabs(data[offset] - verify_data[offset]) <
+                       1e-4 * err_factor)) {
+                dbgPrint(printf("test verification failed @ image %d group %d"
+                                "out_ch %d h %d w %d got %G expected %G\n",
+                        n, g, out_ch, h, w,
+                        static_cast<float>(data[offset]),
+                        static_cast<float>(verify_data[offset])));
+                verificationFail = 1;
+                break;
+              }
             }
           }
       if (verificationFail)
@@ -1000,7 +1152,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   if (err == CL_SUCCESS || err == true) {
     kernelQueue.push_back(
         new kernelConfig(kernel_name_, global_size, local_size, workItemOutput,
-                         false, true, false, 5));
+                         false, true, false, ConvType::GEMM_LIKE));
     return true;
   } else {
     ctx.delete_program(kernel_name_);
@@ -1008,6 +1160,101 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   }
 }
 
+template<typename Dtype>
+bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+    int_tp blockWidth,
+    int_tp blockHeight, int_tp simd_size) {
+  std::stringstream optionsString;
+  const int_tp blockDepth = 1;
+  std::string kernelUKey = generate_specific_key(3, blockWidth, blockHeight,
+                                                 blockDepth);
+  int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
+  const int_tp num_output_maps = M_;
+  int_tp output_block_width = blockWidth;
+  int_tp output_block_height = blockHeight;
+  int_tp num_batches = this->num_;
+
+  kernel_name_ = "WINOGRAD_";
+  std::string data_transform_name = "_data_transform_4x4";
+  kernel_name_ += kernelUKey;
+
+  kernel_name_ += "_SIMD8";
+
+  bool is_large_input = 0;
+  if(this->channels_ >256)
+    is_large_input = 1;
+
+  // Build list of options and defines
+  optionsString.str("");
+  optionsString << "-cl-fast-relaxed-math " << " -D WINOGRAD"
+                << " -D winograd_4x4="
+                << kernel_name_ << " -D data_transform_4x4=" << kernel_name_+data_transform_name;
+
+  size_t global_size[3] = { 0, 0,
+                (size_t) num_batches * ALIGN(num_output_maps, simd_size) };
+
+  size_t local_size[3] = { 1, 1, static_cast<size_t>(simd_size) };
+  int tile_x = output_block_width*9;
+  int tile_y = output_block_height/4;
+
+  optionsString << " -cl-mad-enable" <<" -D SIMD_SIZE=" << simd_size
+                << " -D filter_qualifier=__global" << " -D OUT_BLOCK_WIDTH="
+                << output_block_width << " -D OUT_BLOCK_HEIGHT="
+                << output_block_height
+                << " -D INPUT_DEPTH=" << this->channels_ / this->group_
+                << " -D HALF_INPUT_DEPTH=" << this->channels_/this->group_/2
+                << " -D IS_LARGE_INPUT=" << is_large_input
+                << " -DTOTAL_INPUT_DEPTH_SIZE=" << this->channels_
+                << " -DTOTAL_OUTPUT_DEPTH=" << this->num_output_
+                << " -DNUM_FILTERS=" << M_
+                << " -DTILE_X=" << tile_x
+                << " -DTILE_Y=" << tile_y
+                << " -DALIGNED_NUM_FILTERS=" << ALIGN(M_, simd_size)
+                << " -DTOTAL_NUM_FILTERS=" << (num_batches * ALIGN(num_output_maps, simd_size))
+                << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
+
+  if (IsFusedWithEltwiseReLU()) {
+    optionsString << " -DFUSED_CONV_ELTWISE=1";
+  }
+
+  if (IsFusedWithReLU()) {
+    optionsString << " -DFUSED_CONV_RELU=1";
+  }
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  if (IsBeignet(&ctx))
+    optionsString << " -D__BEIGNET__";
+  string options = optionsString.str();
+  viennacl::ocl::program & program = submit_conv_spatial_program<Dtype>(&ctx,
+                                                                 kernel_name_,
+                                                                 options);
+
+  // ClKernel kernel;
+  size_t workgroupSize_used;
+  viennacl::ocl::kernel & kernel = program.get_kernel(kernel_name_);
+  cl_int err = clGetKernelWorkGroupInfo(
+      kernel.handle().get(), viennacl::ocl::current_device().id(),
+      CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
+      sizeof(size_t), &workgroupSize_used,
+      NULL);
+
+  if (workgroupSize_used != simd_size) {
+    ctx.delete_program(kernel_name_);
+    return false;
+  }
+
+  if (err == CL_SUCCESS || err == true) {
+    kernelQueue.push_back(
+        new kernelConfig(kernel_name_, global_size, local_size, workItemOutput,
+                         false, true, false, ConvType::WINOGRAD));
+    return true;
+  } else {
+    ctx.delete_program(kernel_name_);
+    return false;
+  }
+
+}
 
 template<typename Dtype>
 bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
@@ -1109,7 +1356,7 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   if (err == CL_SUCCESS || err == true) {
     kernelQueue.push_back(
         new kernelConfig(kernel_name_, global_size, local_size, workItemOutput,
-                         false, true, false, 2));
+                         false, true, false, ConvType::IDLF));
     return true;
   } else {
     ctx.delete_program(kernel_name_);
@@ -1207,14 +1454,16 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::create_convolution_kernel(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top,
-    int_tp kernelType,
+    ConvType kernelType,
     int_tp blockWidth, int_tp blockHeight,
     int_tp blockDepth) {
-  if (kernelType == 2)
+  if (kernelType == ConvType::IDLF)
     setup_IDLF(bottom, top, blockWidth, blockHeight, blockDepth);
-  else if (kernelType == 4)
+  else if (kernelType == ConvType::WINOGRAD)
+    create_winograd_conv_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
+  else if (kernelType == ConvType::BASIC)
     create_basic_kernel(bottom, top, blockWidth, blockHeight, blockDepth);
-  else if (kernelType == 5)
+  else if (kernelType == ConvType::GEMM_LIKE)
     create_gemm_like_conv_kernel(
         bottom, top, blockWidth, blockHeight, blockDepth);
   else
@@ -1246,16 +1495,25 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     // Generates static key_
     int max_compute_units = ctx.current_device().max_compute_units();
     int kernelCnt = 0;
+    // Create WINOGRAD Kernels.
+    if (!std::is_same<Dtype, double>::value &&this->group_ == 1 &&
+        this->stride_w_ == 1 && this->stride_h_ == 1 &&
+        this->dilation_w_ == 1 && this->dilation_h_ == 1 &&
+        ALIGN(M_, 8) <= 512 && this->kernel_w_ == 3 && this->kernel_h_ == 3) {
+      int simd_size = 8;
+      create_convolution_kernel(bottom, top, ConvType::WINOGRAD, 4, 4, simd_size);
+    }
+    //Create GEMM like kernels.
     if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
-      create_convolution_kernel(bottom, top, 5, 1, 8, 32);
-      create_convolution_kernel(bottom, top, 5, 2, 8, 32);
+      create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 1, 8, 32);
+      create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 2, 8, 32);
       if ((kernel_w_ < 4 || (!std::is_same<Dtype, float>::value))
           && M_ % 32 == 0)
-        create_convolution_kernel(bottom, top, 5, 1, 16, 32);
+        create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 1, 16, 32);
       if (kernel_w_ < 4 && (!std::is_same<Dtype, float>::value))
-        create_convolution_kernel(bottom, top, 5, 2, 16, 32);
+        create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 2, 16, 32);
     }
-
+    //Create IDLF kernels.
     for (int simd_size = 8; simd_size <= 16; simd_size += 8) {
       if (simd_size == 8
           && !((this->group_ == 1 || M_ % 8 == 0)))
@@ -1297,7 +1555,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
           int tile_y_stride = (4 * simd_size) / tile_x;
 
           if ((tile_y + tile_y_stride - 1) / tile_y_stride < 4) {
-            create_convolution_kernel(bottom, top, 2, width, height, simd_size);
+            create_convolution_kernel(bottom, top, ConvType::IDLF, width, height, simd_size);
             candidate++;
           }
           if (candidate >= 4 && height == 2)
@@ -1309,6 +1567,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
       }
     }
   }
+
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
     if (tune_local_size(bottom, top, kernelQueue[x])) {
       kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
@@ -1406,7 +1665,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
   dbgPrint(std::cout << "Convolution Time:"
                      << kernelQueue[kernel_index_]->executionTime << std::endl);
 
-  if (bestKernelConfig->kernelType != 2 && bestKernelConfig->kernelType != 5)
+  if (bestKernelConfig->kernelType != ConvType::IDLF && bestKernelConfig->kernelType != ConvType::GEMM_LIKE)
     swizzled_weights_ = NULL;
 
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
@@ -1428,7 +1687,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
   outputKernel << bestKernelConfig->workItem_output[0] << " "
                << bestKernelConfig->workItem_output[1] << " "
                << bestKernelConfig->workItem_output[2] << " "
-               << bestKernelConfig->kernelType << " "
+               << static_cast<int>(bestKernelConfig->kernelType) << " "
                << bestKernelConfig->global_work_size[0] << " "
                << bestKernelConfig->global_work_size[1] << " "
                << bestKernelConfig->global_work_size[2] << " "
@@ -1537,7 +1796,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   // Generates static key_
   std::string previous_key = key_;
   generate_key();
-  int prev_kernel_type = 0;
+  ConvType prev_kernel_type = ConvType::BASIC;
   if (tuned_) {
     if (key_.compare(previous_key) == 0)
       return;
@@ -1566,7 +1825,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
         z = 16;
       CHECK_EQ(z == 16 || z == 8, true) << "invalid SIMD size" << std::endl;
     }
-    create_convolution_kernel(bottom, top, type, x, y, z);
+    create_convolution_kernel(bottom, top, static_cast<ConvType>(type), x, y, z);
     kernel_index_ = kernelQueue.size() - 1;
     if (kernel_index_ == -1) {
       std::cerr << "Failed to get kernel from cached configurations."
@@ -1591,10 +1850,6 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> bestKernelConfig->local_work_size[0];
     cachedKernel >> bestKernelConfig->local_work_size[1];
     cachedKernel >> bestKernelConfig->local_work_size[2];
-    if (bestKernelConfig->kernelType == 1)
-      calculate_global_size(1, bestKernelConfig->workItem_output,
-                            bestKernelConfig->local_work_size,
-                            bestKernelConfig->global_work_size);
     cachedKernel >> bestKernelConfig->swizzle_weights;
     cachedKernel >> foo;
     cachedKernel >> bestKernelConfig->use_null_local;
@@ -1602,8 +1857,8 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     // If kernel type changed to type 2 or 4, we need to reset the swizzled
     // weights pointer to invalidate the previous swizzled weights data.
     if (prev_kernel_type != bestKernelConfig->kernelType &&
-        (bestKernelConfig->kernelType == 2 ||
-         bestKernelConfig->kernelType == 5))
+        (bestKernelConfig->kernelType == ConvType::IDLF ||
+         bestKernelConfig->kernelType == ConvType::GEMM_LIKE))
       swizzled_weights_ = NULL;
   }
   return;
