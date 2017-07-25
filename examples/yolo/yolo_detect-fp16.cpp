@@ -261,6 +261,7 @@ int main(int argc, char** argv) {
   timeUsed = detect_timer.MilliSeconds();
   out << "the first detect time=" << timeUsed <<"ms\n";
 
+  img = cv::imread(filename, -1);
   detect_timer.Start();
   detector.Detect(img);
   detect_timer.Stop();
