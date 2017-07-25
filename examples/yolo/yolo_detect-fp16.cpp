@@ -29,9 +29,10 @@ class Detector {
 
   void Preprocess(const cv::Mat& img,
                   std::vector<Dtype *> input_channels);
-
+ 
   shared_ptr<Net<Dtype> > net_;
   cv::Size input_geometry_;
+  cv::Size input_newwh_;  
   int num_channels_;
 };
 
@@ -100,19 +101,32 @@ void Detector::Detect(cv::Mat& img) {
   Blob<Dtype>* result_blob = net_->output_blobs()[0];
   const Dtype* result = result_blob->cpu_data();
   const int num_det = result_blob->height();
-  for (int k = 0; k < num_det * 7; k+=7) {
+  for (int k = 0; k < num_det*7; k+=7) {
 	int imgid = (int)result[k+0];
 	int classid = (int)result[k+1];
 	float confidence = result[k+2];
-    int left = (int)((result[k+3]-result[k+5]/2.0) * w);
-    int right = (int)((result[k+3]+result[k+5]/2.0) * w);
-    int top = (int)((result[k+4]-result[k+6]/2.0) * h);
-    int bot = (int)((result[k+4]+result[k+6]/2.0) * h);
+	int left=0,right,top=0,bot;
+	if(input_newwh_.width==0){
+	    left = (int)((result[k+3]-result[k+5]/2.0) * w);
+	    right = (int)((result[k+3]+result[k+5]/2.0) * w);
+	    top = (int)((result[k+4]-result[k+6]/2.0) * h);
+	    bot = (int)((result[k+4]+result[k+6]/2.0) * h);
+	}
+	else{
+        left =  w*(result[k+3] - (input_geometry_.width - input_newwh_.width)/2./input_geometry_.width)*input_geometry_.width / input_newwh_.width; 
+        top =  h*(result[k+4] - (input_geometry_.height - input_newwh_.height)/2./input_geometry_.height)*input_geometry_.height / input_newwh_.height; 
+        float boxw = result[k+5]*w*input_geometry_.width/input_newwh_.width;
+        float boxh= result[k+6]*h*input_geometry_.height/input_newwh_.height; 
+        left-=(int)(boxw/2);
+        top-=(int)(boxh/2);
+        right = (int)(left+boxw);
+        bot=(int)(top+boxh);
+	}
 	cv::rectangle(img,cvPoint(left,top),cvPoint(right,bot),cv::Scalar(255, 242, 35));
-	std::stringstream ss;
-	ss << classid << "/" << confidence;
-	std::string  text = ss.str();
-	cv::putText(img, text, cvPoint(left,top+20), cv::FONT_HERSHEY_PLAIN, 1.0f, cv::Scalar(0, 255, 255));
+	std::stringstream ss;  
+	ss << classid << "/" << confidence;  
+	std::string  text = ss.str();  
+	cv::putText(img, text, cvPoint(left,top+20), cv::FONT_HERSHEY_PLAIN, 1.0f, cv::Scalar(0, 255, 255));  	
   }
 }
 
@@ -145,12 +159,35 @@ void Detector::Preprocess(const cv::Mat& img,
     cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
   else if (img.channels() == 1 && num_channels_ == 3)
     cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
+//  else if (img.channels() == 3 && num_channels_ == 3)
+//    cv::cvtColor(img, sample, cv::COLOR_RGB2BGR);
   else
     sample = img;
 
   cv::Mat sample_resized;
-  if (sample.size() != input_geometry_)
-    cv::resize(sample, sample_resized, input_geometry_);
+  int dx=0,dy=0;
+  input_newwh_ = input_geometry_;
+  if (sample.size() != input_geometry_){
+    int netw = input_geometry_.width;
+	int neth = input_geometry_.height;
+	int width = sample.cols;
+	int height = sample.rows;
+	if(width!=height){ //if img is not square, must fill the img at center
+	    if ((netw*1.0/width) < (neth*1.0/height)){
+	        input_newwh_.width= netw;
+	        input_newwh_.height = (height * netw)/width;
+	    }
+	    else{
+	        input_newwh_.height = neth;
+	        input_newwh_.width = (width * neth)/height;
+	    }
+	    dx=(netw-input_newwh_.width)/2;
+	    dy=(neth-input_newwh_.height)/2;  
+		cv::resize(sample, sample_resized, input_newwh_);
+	}
+	else
+    	cv::resize(sample, sample_resized, input_geometry_);
+  }
   else
     sample_resized = sample;
 
@@ -162,21 +199,26 @@ void Detector::Preprocess(const cv::Mat& img,
 
   cv::Mat sample_normalized;
   cv::divide(sample_float, 255.0, sample_normalized);
+  if(dx!=0 || dy!=0)   //yolo will set all init with 0.5 , but maybe 0 is also ok
+  	for(int i=0;i< num_channels_;i++)
+  		memset(input_channels[i],0,input_geometry_.width*input_geometry_.height*sizeof(Dtype));
 
-  for( int_tp i = 0; i < input_geometry_.height; i++) {
-    for( int_tp j = 0; j < input_geometry_.width; j++) {
-      int pos = i * input_geometry_.width + j;
+  for( int i = 0; i < input_newwh_.height; i++) {
+    for( int j = 0; j < input_newwh_.width; j++) {
+      int pos = (i+dy) * input_geometry_.width + j+dx;
       if (num_channels_ == 3) {
         cv::Vec3f pixel = sample_normalized.at<cv::Vec3f>(i, j);
-        input_channels[0][pos] = pixel.val[0];
+        input_channels[0][pos] = pixel.val[2];
         input_channels[1][pos] = pixel.val[1];
-        input_channels[2][pos] = pixel.val[2];
+        input_channels[2][pos] = pixel.val[0];  //RGB2BGR
       } else {
         cv::Scalar pixel = sample_normalized.at<float>(i, j);
         input_channels[0][pos] = pixel.val[0];
       }
     }
   }
+  if(dx==0 && dy==0)
+  	input_newwh_.width=0; //clear the flag
 }
 
 int main(int argc, char** argv) {
@@ -193,7 +235,7 @@ int main(int argc, char** argv) {
 
   // Initialize the network.
   Detector detector(model_file, weights_file);
-
+  
   cv::Mat img = cv::imread(filename, -1);
   Timer detect_timer;
   detect_timer.Start();
@@ -201,8 +243,8 @@ int main(int argc, char** argv) {
   detector.Detect(img);
   detect_timer.Stop();
   timeUsed = detect_timer.MilliSeconds();
-  out << "lym time=" << timeUsed/1000 <<"ms\n";
-
+  out << "lym time=" << timeUsed <<"ms\n";
+  
   cv::imwrite(filenameout, img);
 
   return 0;

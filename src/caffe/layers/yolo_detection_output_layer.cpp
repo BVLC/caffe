@@ -83,6 +83,12 @@ void YoloDetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 }
 
 template <typename Dtype>
+bool comp(const PredictionResult<Dtype> &a,const PredictionResult<Dtype> &b)
+{
+    return a.confidence>b.confidence;  //big-little
+}
+
+template <typename Dtype>
 void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int_tp num = bottom[0]->num();
@@ -124,6 +130,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
         }
     
     if(predicts[b].size() > 0){
+      std::sort(predicts[b].begin(),predicts[b].end(),comp<Dtype>);
       ApplyNms(predicts[b], idxes[b], nms_threshold_);
     }
   }

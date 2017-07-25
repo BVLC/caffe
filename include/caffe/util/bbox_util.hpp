@@ -237,13 +237,17 @@ void get_region_box(Dtype* x, PredictionResult<Dtype>& predict, vector<Dtype> bi
 }
 template <typename Dtype>
 void ApplyNms(vector< PredictionResult<Dtype> >& boxes, vector<int_tp>& idxes, Dtype threshold) {
-  map<int_tp, int_tp> idx_map;
+  //map<int_tp, int_tp> idx_map; 
+  int_tp idx_map[boxes.size()];
+  memset(idx_map,0,sizeof(idx_map));
   for (int_tp i = 0; i < boxes.size() - 1; ++i) {
-    if (idx_map.find(i) != idx_map.end()) {
+    //if (idx_map.find(i) != idx_map.end()) {
+    if (idx_map[i] == 1) {
       continue;
     }
     for (int_tp j = i + 1; j < boxes.size(); ++j) {
-      if (idx_map.find(j) != idx_map.end()) {
+      //if (idx_map.find(j) != idx_map.end()) {	
+      if (idx_map[j] == 1) {
         continue;
       }
       NormalizedBBox Bbox1, Bbox2;
@@ -252,13 +256,13 @@ void ApplyNms(vector< PredictionResult<Dtype> >& boxes, vector<int_tp>& idxes, D
 
       float overlap = JaccardOverlap(Bbox1, Bbox2, true);
 
-      if (overlap >= threshold) {
-        idx_map[j] = 1;
-      }
+      if (overlap >= threshold)
+        	idx_map[j] = 1;
     }
   }
   for (int_tp i = 0; i < boxes.size(); ++i) {
-    if (idx_map.find(i) == idx_map.end()) {
+  	//if (idx_map.find(i) == idx_map.end()) {
+    if (idx_map[i] == 0) {
       idxes.push_back(i);
     }
   }
