@@ -96,7 +96,15 @@ void Detector::Detect(cv::Mat& img) {
 
   Preprocess(img, input_channels);
 
+  Timer detect_timer;
+  detect_timer.Start();
+  double timeUsed;
+
   net_->Forward();
+  
+  detect_timer.Stop();
+  timeUsed = detect_timer.MilliSeconds();
+  std::cout << "forward time=" << timeUsed <<"ms\n";
 
   /* Copy the output layer to a std::vector */
   Blob<Dtype>* result_blob = net_->output_blobs()[0];
@@ -123,6 +131,14 @@ void Detector::Detect(cv::Mat& img) {
         right = (int)(left+boxw);
         bot=(int)(top+boxh);
 	}
+    if (left < 0)
+        left = 0;
+    if (right > w)
+        right = w;
+    if (top < 0)
+        top = 0;
+    if (bot > h)
+        bot = h;
 	cv::rectangle(img,cvPoint(left,top),cvPoint(right,bot),cv::Scalar(255, 242, 35));
 	std::stringstream ss;  
 	ss << classid << "/" << confidence;  
@@ -244,7 +260,14 @@ int main(int argc, char** argv) {
   detector.Detect(img);
   detect_timer.Stop();
   timeUsed = detect_timer.MilliSeconds();
-  out << "lym time=" << timeUsed <<"ms\n";
+  out << "the first detect time=" << timeUsed <<"ms\n";
+
+  detect_timer.Start();
+  detector.Detect(img);
+  detect_timer.Stop();
+  timeUsed = detect_timer.MilliSeconds();
+  out << "the second detect time=" << timeUsed <<"ms\n";
+  
   
   cv::imwrite(filenameout, img);
 
