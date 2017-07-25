@@ -420,9 +420,15 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
     history_[i]->ToProto(history_blob);
   }
   string snapshot_filename = Solver<Dtype>::SnapshotFilename(".solverstate");
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
   LOG(INFO)
     << "Snapshotting solver state to binary proto file " << snapshot_filename;
   WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+#ifdef USE_MLSL
+  }
+#endif
 }
 
 template <typename Dtype>
