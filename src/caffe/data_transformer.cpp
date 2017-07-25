@@ -1305,6 +1305,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
+      param_.has_random_resize_param() ||
       (phase_ == TRAIN && param_.crop_size());
 
   if (needs_rand) {
