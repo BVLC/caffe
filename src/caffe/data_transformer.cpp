@@ -1272,8 +1272,11 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   int img_width = cv_img.cols;
   // Check dimensions.
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+
+  if (param_.has_random_resize_param() == false) {
+    CHECK_GE(img_height, crop_size);
+    CHECK_GE(img_width, crop_size);
+  }
 
   if (param_.has_resize_param()) {
     InferNewSize(param_.resize_param(), img_width, img_height,
