@@ -271,7 +271,7 @@ namespace half_float
 	/// ~~~~
 	namespace literal
 	{
-		half operator""_h(long double);
+		half operator "" _h(long double);
 	}
 #endif
 
@@ -1082,7 +1082,7 @@ namespace half_float
 		friend struct std::hash<half>;
 	#endif
 	#if HALF_ENABLE_CPP11_USER_LITERALS
-		friend half literal::operator""_h(long double);
+		friend half literal::operator "" _h(long double);
 	#endif
 
 	public:
@@ -1196,7 +1196,7 @@ namespace half_float
 		/// to rather involved conversions.
 		/// \param value literal value
 		/// \return half with given value (if representable)
-		inline half operator""_h(long double value) { return half(detail::binary, detail::float2half<half::round_style>(value)); }
+		inline half operator "" _h(long double value) { return half(detail::binary, detail::float2half<half::round_style>(value)); }
 	}
 #endif
 

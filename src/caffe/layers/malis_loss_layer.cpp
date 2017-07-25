@@ -390,9 +390,10 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  Dtype loss = 0;
-
+  double loss = 0;
+#ifdef _OPENMP
 #pragma omp parallel for reduction(+:loss)
+#endif
   for (int_tp batch = 0; batch < bottom[0]->shape()[0]; ++batch) {
     Dtype loss_out = 0;
     Dtype classerr_out = 0;
