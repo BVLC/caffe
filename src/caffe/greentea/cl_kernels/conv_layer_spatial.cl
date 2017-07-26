@@ -613,6 +613,11 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         bias_vec = (Dtype4*)bias;
         *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
 
+        // Avoid compiler issue.
+        if (group_x > 0xFFFFFFFEul) {
+          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
+        }
+
         if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
@@ -772,6 +777,10 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         bias_vec = (Dtype4*)bias;
         *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
 
+        // Avoid compiler issue.
+        if (group_x > 0xFFFFFFFEul) {
+          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
+        }
         if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
@@ -1001,6 +1010,9 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
         *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
+        if (group_x > 0xFFFFFFFEul) {
+          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
+        }
 
         if( global_y * TILE_M < output_width * output_height )
         {
@@ -1208,6 +1220,11 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
         *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
+
+        // Avoid compiler issue.
+        if (group_x > 0xFFFFFFFEul) {
+          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
+        }
         if( global_y * TILE_M < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
@@ -1663,7 +1680,10 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         Dtype2 *bias_vec;
         bias_vec = (Dtype2*)bias;
         *bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));
-
+        // Avoid compiler issue.
+        if (group_x > 0xFFFFFFFEul) {
+          dst[0] = bias[0] + bias[1];
+        }
         INTERLEAVED_SIMD16_OUTPUT(dst, out0_offset, 0);
         INTERLEAVED_SIMD16_OUTPUT(dst, out1_offset, 1);
     }

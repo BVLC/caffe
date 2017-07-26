@@ -1280,6 +1280,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
 "",    // NOLINT
+"// Avoid compiler issue.",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
@@ -1439,6 +1444,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
 "",    // NOLINT
+"// Avoid compiler issue.",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
@@ -1658,6 +1667,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
 "if( global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
@@ -1865,6 +1877,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
+"",    // NOLINT
+"// Avoid compiler issue.",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "if( global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
@@ -2230,7 +2247,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
 "*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"",    // NOLINT
+"// Avoid compiler issue.",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1];",    // NOLINT
+"}",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out0_offset, 0);",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out1_offset, 1);",    // NOLINT
 "}",    // NOLINT
