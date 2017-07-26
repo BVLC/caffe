@@ -63,7 +63,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#define CAN_USE_PRV(param) (param->prv_diff() && (param->prv_diff_count() == param->count()))
+#define CAN_USE_PRV_DATA(param) (param->prv_data() && (param->prv_data_count() == param->count()))
+#define CAN_USE_PRV_DIFF(param) (param->prv_diff() && (param->prv_diff_count() == param->count()))
 
   template <typename Dtype>
   class MultiSync : public MultiSolver<Dtype>::Callback {
@@ -114,9 +115,15 @@ namespace caffe {
         mn::Distribution &distrib = layers[i]->GetDistribution();
         for (int j = 0; j < layer_param_ids[i].size(); j++) {
           int layer_param_id = layer_param_ids[i][j];
-          distrib.bcast<Dtype,MLSL::GT_DATA>(
-            net_params[layer_param_id]->mutable_cpu_data(),
-            net_params[layer_param_id]->count());
+          if (CAN_USE_PRV_DATA(net_params[layer_param_id])) {
+            distrib.bcast<Dtype,MLSL::GT_DATA>(
+              net_params[layer_param_id]->mutable_prv_data(),
+              net_params[layer_param_id]->prv_data_count());
+          } else {
+            distrib.bcast<Dtype,MLSL::GT_DATA>(
+              net_params[layer_param_id]->mutable_cpu_data(),
+              net_params[layer_param_id]->count());
+          }
         }
       }
     }
@@ -226,7 +233,7 @@ namespace caffe {
       std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
         if (!layer->ParamNeedReduce(i)) continue;
-        if (CAN_USE_PRV(net_params[param_ids[i]])) {
+        if (CAN_USE_PRV_DIFF(net_params[param_ids[i]])) {
           layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_prv_diff());
         } else {
           layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_cpu_diff());
@@ -266,7 +273,7 @@ namespace caffe {
           assert(is_completed);
           param_ids_finished_flags[layer_id][i] = true;
 #endif
-          if (CAN_USE_PRV(net_params[param_ids[i]])) {
+          if (CAN_USE_PRV_DIFF(net_params[param_ids[i]])) {
             if (delwt_buf != net_params[param_ids[i]]->prv_diff())
               caffe_copy(net_params[param_ids[i]]->count(),
                   delwt_buf,
