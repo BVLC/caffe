@@ -13,6 +13,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   LayerParameter softmax_param(this->layer_param_);
   softmax_param.set_type("Softmax");
+  // no loss weight for the Softmax internal layer.
+  softmax_param.clear_loss_weight();
   softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
@@ -57,14 +59,14 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, Dtype valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
       normalizer = Dtype(outer_num_ * inner_num_);
       break;
     case LossParameter_NormalizationMode_VALID:
-      if (valid_count == -1) {
+      if (valid_count <= 0) {  // valid_count is Dtype, better use <= than ==
         normalizer = Dtype(outer_num_ * inner_num_);
       } else {
         normalizer = Dtype(valid_count);
