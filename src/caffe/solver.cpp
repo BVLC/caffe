@@ -855,12 +855,14 @@ void Solver<Dtype>::Snapshot() {
   default:
     LOG(FATAL) << "Unsupported snapshot format.";
   }
+
+  SnapshotSolverState(model_filename);
+
 #ifdef USE_MLSL
   for (int i = 0; i < callbacks_.size(); ++i) {
     callbacks_[i]->on_after_snapshot();
   }
 #endif
-  SnapshotSolverState(model_filename);
 }
 
 template <typename Dtype>
