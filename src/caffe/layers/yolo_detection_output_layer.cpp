@@ -80,6 +80,8 @@ void YoloDetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
   // [image_id, label, confidence, x, y, w, h]
   top_shape.push_back(7);
   top[0]->Reshape(top_shape);
+  side_ = bottom[0]->width();
+  CHECK_EQ(bottom[0]->width(), bottom[0]->height());
 }
 
 template <typename Dtype>
@@ -93,7 +95,8 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int_tp num = bottom[0]->num();
   Blob<Dtype> swap;
-  swap.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(), num_box_, (bottom[0]->channels() + num_box_ - 1) / num_box_);
+  swap.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(),
+               num_box_, (bottom[0]->channels() + num_box_ - 1) / num_box_);
   //std::cout<<"4"<<std::endl;  
   Dtype* swap_data = swap.mutable_cpu_data();
   int_tp index = 0;
@@ -101,14 +104,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     for (int_tp h = 0; h < bottom[0]->height(); ++h)
       for (int_tp w = 0; w < bottom[0]->width(); ++w)
         for (int_tp c = 0; c < bottom[0]->channels(); ++c)
-        {
           swap_data[index++] = bottom[0]->data_at(b,c,h,w);	
-        }
-    
-    //CHECK_EQ(bottom[0]->data_at(0,4,1,2),swap.data_at(0,15,0,4));
-    //std::cout<<"5"<<std::endl;
-    //*********************************************************Activation********************************************************//
-    //disp(swap);
   vector<vector< PredictionResult<Dtype> > > predicts(swap.num());
   PredictionResult<Dtype> predict;
   vector<vector<int_tp> > idxes(swap.num());
@@ -118,8 +114,9 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     for (int_tp j = 0; j < side_; ++j)
       for (int_tp i = 0; i < side_; ++i)
         for (int_tp n = 0; n < num_box_; ++n){
-          int_tp index = b * swap.channels() * swap.height() * swap.width() + (j * side_ + i) * swap.height() * swap.width() + n * swap.width();
-          //CHECK_EQ(swap_data[index],swap.data_at(b, j * side_ + i, n, 0));
+          int_tp index = b * swap.channels() * swap.height() * swap.width() +
+                        (j * side_ + i) * swap.height() * swap.width() +
+                         n * swap.width();
           get_region_box(swap_data, predict, biases_, n, index, i, j, side_, side_);
           predict.objScore = sigmoid(swap_data[index+4]);
           class_index_and_score(swap_data+index+5, num_classes_, predict);
@@ -128,7 +125,6 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
             predicts[b].push_back(predict);
           }
         }
-    
     if(predicts[b].size() > 0){
       std::sort(predicts[b].begin(),predicts[b].end(),comp<Dtype>);
       ApplyNms(predicts[b], idxes[b], nms_threshold_);
@@ -136,8 +132,8 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
   }
   int_tp num_kept=0;
   for (int_tp b = 0; b < swap.num(); ++b)
-	  num_kept+=idxes[b].size();
-    vector<int_tp> top_shape(2, 1);
+    num_kept+=idxes[b].size();
+  vector<int_tp> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
   top[0]->Reshape(top_shape);
@@ -154,7 +150,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
       top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].w;
       top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].h;
     }
-	start_pos += idxes[b].size()*7;
+    start_pos += idxes[b].size()*7;
   }
  if (visualize_) {
 #ifdef USE_OPENCV
