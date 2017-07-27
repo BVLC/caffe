@@ -189,8 +189,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
-    if (param.engine() != "" && param.layer(layer_id).engine() == "")
-      param.mutable_layer(layer_id)->set_engine(param.engine());
+    if (param.engine() != "") {
+      if (param.layer(layer_id).engine() == "") {
+        param.mutable_layer(layer_id)->set_engine(param.engine());
+      }
+      else {
+        if ((!param.layer(layer_id).engine().compare("MKL2017") && !param.engine().compare("MKLDNN")) 
+           || (!param.layer(layer_id).engine().compare("MKLDNN") && !param.engine().compare("MKL2017"))) {
+          param.mutable_layer(layer_id)->set_engine(param.engine());
+        }
+      }
+    }
+    
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
           layer_param.bottom_size())
@@ -489,8 +499,6 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
-
-
 
   NetParameter param_temp0;
   param_temp0.CopyFrom(param);
