@@ -49,20 +49,8 @@ def find_fused_blob_names(model, cur_conv_index):
     new_top = model.layer[i].bottom[0]
     return new_top, elt_bottom
 
-def str_to_precision_mode(mode):
-    if mode == 'HALF_NONE':
-        return 0
-    if mode == 'HALF_FLOAT_DATA':
-        return 1
-    if mode == 'HALF_HALF_DATA':
-        return 2
-    if mode == 'HALF_ALL':
-        return 3
-
-def set_input(in_model, out_model, half_precision_mode):
+def set_input(in_model, out_model):
     out_model.name = in_model.name
-    if(half_precision_mode != 'HALF_NONE'):
-      out_model.half_precision_mode = str_to_precision_mode(half_precision_mode)
     #For input
     for i in range(len(in_model.input)):
         out_model.input.extend([in_model.input[i]])
@@ -120,9 +108,9 @@ def set_layers(in_model, out_model):
             fuse_lrn_layer(in_model, in_index, out_model, out_index)
             out_index = out_index + 1
 
-def create_new_model(in_model, half_precision_mode):
+def create_new_model(in_model):
     out_model = caffe.proto.caffe_pb2.NetParameter()
-    set_input(in_model, out_model, half_precision_mode)
+    set_input(in_model, out_model)
     set_layers(in_model, out_model)
     return out_model
 
@@ -159,9 +147,6 @@ def define_arguments(parser):
     parser.add_argument('--outmodel', type=str,
                         default='new_bvlc_alexnet.caffemodel',
                        help='output network parameters (caffemodel; will be overwritten)')
-    parser.add_argument('--half_precision_mode', type = str,
-                        default='HALF_NONE',
-                        help='float half precision mode')
     parser.add_argument('--fuse_resnet_block', dest='fuse_resnet_block', action='store_true',
                         default=True,
                         help='indicates whether to fuse conv-(batchnorm-scale)-relu block into the conv')
@@ -281,7 +266,7 @@ def generate_weights(in_model, args):
     out_net.save(args.outmodel);
 
 def generate_prototxt(in_proto, args):
-    out_model = create_new_model(in_proto, args.half_precision_mode)
+    out_model = create_new_model(in_proto)
     save_model(out_model, args.outdefinition)
     print 'New proto done'
 
