@@ -275,6 +275,7 @@ public:
             , kernel_w_(0), kernel_h_(0), stride_w_(0), stride_h_(0)
             , pad_t_(0),pad_b_(0), pad_l_(0), pad_r_(0)
             , global_pooling_(false)
+            , special_exclude_pooling_flag_(false)
             {
               PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
               PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -319,6 +320,7 @@ private:
     int32_t  pad_t_, pad_b_, pad_l_, pad_r_;
     Blob<uint32_t> max_idx_;
     bool global_pooling_;
+    bool special_exclude_pooling_flag_;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);

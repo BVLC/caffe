@@ -129,12 +129,25 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         CHECK_LT((height_out_ - 1) * stride_h_, bottom[0]->height() + pad_t_);
         CHECK_LT((width_out_ - 1) * stride_w_, bottom[0]->width() + pad_l_);
     }
+    else
+    {
+      // If user did not define padding
+      if ((pool_param.pool() == PoolingParameter_PoolMethod_AVE) && 
+        ((bottom[0]->height() < stride_h_ * (height_out_ - 1) + kernel_h_) || (bottom[0]->width() < stride_w_ * (width_out_ - 1) + kernel_w_)))
+      {
+        // average pooling
+        // bottom[0]->height/width() + kernel_h/w_ cannot be exact division by stride_h/w_
+        // use the exclude padding to align with the result of Caffe
+        special_exclude_pooling_flag_ = true;
+      }
+    }
 
+    //Add the pad to make sure h/w + kernel_h/w_ can be exact division by stride_h/w_
     auto h = bottom[0]->height() + pad_t_;
-    while (h + pad_b_ < stride_h_*(height_out_ - 1) + kernel_h_) pad_b_++;
+    while (h + pad_b_ < stride_h_ * (height_out_ - 1) + kernel_h_) pad_b_++;
 
     auto w = bottom[0]->width() + pad_l_;
-    while (w + pad_r_ < stride_w_*(width_out_ - 1) + kernel_w_) pad_r_++;
+    while (w + pad_r_ < stride_w_ * (width_out_ - 1) + kernel_w_) pad_r_++;
 }
 
 template <typename Dtype>
@@ -179,6 +192,13 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
             pooling_algorithm = algorithm::pooling_avg_include_padding;
         }else {
             pooling_algorithm = algorithm::pooling_avg_exclude_padding;
+        }
+        // If user did not define padding
+        // bottom[0]->height/width() + kernel_h/w_ cannot be exact division by stride_h/w_
+        // use the exclude padding to align with the result of Caffe
+        if (special_exclude_pooling_flag_ == true)
+        {
+          pooling_algorithm = algorithm::pooling_avg_exclude_padding;
         }
         break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
@@ -261,7 +281,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
         prv_fwd_top_data_mpd.reset(new MemPD(*init_fwd_top_md, engine));
     }
 
-    // ---- Create priv memory  ---------------------
+    // ---- Create prv memory  ---------------------
 
     // We'll output the mask to top[1] if it's of size >1.
     uint32_t* mask = NULL;  // suppress warnings about uninitalized variables
