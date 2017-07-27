@@ -77,12 +77,12 @@ def fuse_conv_layer(in_model, in_index, out_model, new_index):
         if len(in_model.layer)>in_index+2 and [in_model.layer[in_index+1].type, in_model.layer[in_index+2].type] == ['BatchNorm', 'Scale']:
             out_model.layer[new_index].convolution_param.bias_term = True
         out_model.layer[new_index].convolution_param.fuse_type = fuse_mode
-        if fuse_mode == 3:  # FUSED_CONV_ELTWISE_RELU, need to change top name to orig ReLU's top name
+        if fuse_mode != 0:  # FUSED_CONV_ELTWISE_RELU, need to change top name to orig ReLU's top name
             new_top, elt_bottom = find_fused_blob_names(in_model, in_index)
             out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
             out_model.layer[new_index].top.append(new_top)
-            out_model.layer[new_index].bottom.append(elt_bottom)
-        if fuse_mode != 0:
+            if fuse_mode == 3:
+                out_model.layer[new_index].bottom.append(elt_bottom)
             out_model.layer[new_index].convolution_param.relu_param.negative_slope = negative_slope
 
 def fuse_lrn_layer(in_model, in_index, out_model, out_index):
