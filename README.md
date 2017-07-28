@@ -312,26 +312,11 @@ We have provided the latest models that are trained from different datasets. To 
 * Visual Studio 2015 - Choose to install visual c++ and Windows SDK during the installation.
 * CMake
 * ViennaCL - put it in the same directory as Caffe's source code.
-* MKL
 * Python 2.7
-
-Need to add the following directories to the environment variable Path:
-
-   ```shell
-   C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl
-   C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64
-   ```
-
-Theoritically, we do not need to set the second path, but don't know why the cmake could not find those MKL libraries if we don't add it to the Path variable.
 
 ## How to build
 
   ```Shell
-  Modify the scripts\build_win.cmd to use MKL rather than OpenBLAS.
-   cmake -G"!CMAKE_GENERATOR!" ^
-  -      -DBLAS=Open ^
-  +      -DBLAS=MKL ^
-
   Open a Windows command prompt console (cmd)
   # cd caffe_source_dir
   # set BUILD_PYTHON=0
