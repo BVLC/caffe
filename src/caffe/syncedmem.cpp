@@ -21,6 +21,63 @@ namespace caffe {
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
 
+static
+void CaffeAlignedMallocHost(void **ptr, int_tp size, device *dev) {
+
+  if (dev->backend() == BACKEND_CPU) {
+    #ifdef USE_MKL
+    *ptr = mkl_malloc(size ? size:1, 64);
+    #else
+    *ptr = malloc(size);
+    #endif
+  }
+  #ifdef USE_GREENTEA
+  else if (dev->backend() == BACKEND_OpenCL) {
+    #ifdef USE_MKL
+    #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+    #define ALIGN(x,a)              __ALIGN_MASK(x,(int32_t)(a)-1)
+    *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
+    #undef __ALIGN_MASK
+    #undef ALIGN
+    #else
+    #ifdef _MSC_VER
+    *ptr = _aligned_malloc(((size - 1)/OPENCL_CACHE_ALIGN + 1) *
+                         OPENCL_CACHE_ALIGN, OPENCL_PAGE_ALIGN);
+    #else
+    CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
+            ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
+                << "Host memory allocation error of size: "
+                << size << " B";
+    #endif  // USE_GREENTEA
+    #endif
+  }
+  #endif
+  CHECK(*ptr) << "host allocation of size " << size << " failed";
+}
+
+void CaffeAlignedFreeHost(void *ptr, device *dev) {
+  if (dev->backend() == BACKEND_CPU) {
+    #ifdef USE_MKL
+    mkl_free(ptr);
+    #else
+    free(ptr);
+    #endif
+  }
+  #ifdef USE_GREENTEA
+  else if (dev->backend() == BACKEND_OpenCL) {
+    #ifdef USE_MKL
+    mkl_free(ptr);
+    #else
+    #ifdef _MSC_VER
+    _aligned_free(ptr);
+    #else
+    free(ptr);
+    #endif
+    #endif
+  }
+  #endif
+}
+
 void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
@@ -31,45 +88,12 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
 #endif  // USE_CUDA
     } else {
       // Make sure the memory is zero-copy usable in OpenCL
-#ifdef USE_MKL
-      #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-      #define ALIGN(x,a)              __ALIGN_MASK(x,(int32_t)(a)-1)
-      *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
-      #undef __ALIGN_MASK
-      #undef ALIGN
-#else
-#ifdef _MSC_VER
-      // No aligned allocation support in windows for now.
-      // Using _aligned_malloc will crash due to a bug.
-      *ptr = malloc(((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN);
-#else
-      CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
-              ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
-                  << "Host memory allocation error of size: "
-                  << size << " B";
-#endif  // _MSC_VER
-#endif
+      CaffeAlignedMallocHost(ptr, size, dev);
       return;
     }
   }
 #endif
-#ifdef USE_MKL
-#ifndef USE_GREENTEA
-  *ptr = mkl_malloc(size ? size:1, 64);
-#else
-  #define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-  #define ALIGN(x,a)              __ALIGN_MASK(x,(int32_t)(a)-1)
-  *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) : 64, OPENCL_PAGE_ALIGN);
-  #undef __ALIGN_MASK
-  #undef ALIGN
-#endif
-#else
-  CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
-           ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
-              << "Host memory allocation error of size: "
-              << size << " B";
-#endif  // USE_MKL
-  CHECK(*ptr) << "host allocation of size " << size << " failed";
+  CaffeAlignedMallocHost(ptr, size, dev);
 }
 
 void CaffeFreeHost(void* ptr, device* dev) {
@@ -81,20 +105,12 @@ void CaffeFreeHost(void* ptr, device* dev) {
       return;
 #endif  // USE_CUDA
     } else {
-#ifdef USE_MKL
-      mkl_free(ptr);
-#else
-      free(ptr);
-#endif
+      CaffeAlignedFreeHost(ptr, dev);
       return;
     }
   }
 #endif
-#ifdef USE_MKL
-  mkl_free(ptr);
-#else
-  free(ptr);
-#endif  // USE_MKL
+  CaffeAlignedFreeHost(ptr, dev);
 }
 
 
