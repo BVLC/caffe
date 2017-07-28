@@ -46,7 +46,7 @@ def find_fused_blob_names(model, cur_conv_index):
         if model.layer[i].type == 'Eltwise':
             elt_bottom = model.layer[i].bottom[0]
         i = i + 1
-    new_top = model.layer[i].bottom[0]
+    new_top = model.layer[i-1].top[0]
     return new_top, elt_bottom
 
 def set_input(in_model, out_model):
