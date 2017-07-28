@@ -467,11 +467,12 @@ void MKLBatchNormLayer<Dtype>::Backward_cpu(
   CHECK_EQ(e, E_SUCCESS);
 
   if (use_weight_bias_) {
-    caffe_cpu_copy(this->blobs_[3]->count(),
-                   diffScaleShift_buffer_, this->blobs_[3]->mutable_cpu_diff());
+    caffe_cpu_axpby(this->blobs_[3]->count(), (Dtype)1.,
+                    diffScaleShift_buffer_, (Dtype)1., this->blobs_[3]->mutable_cpu_diff());
     if (bias_term_)
-      caffe_cpu_copy(this->blobs_[4]->count(),
-       diffScaleShift_buffer_ + channels_, this->blobs_[4]->mutable_cpu_diff());
+      caffe_cpu_axpby(this->blobs_[4]->count(), (Dtype)1.,
+                      diffScaleShift_buffer_ + channels_,
+                      (Dtype)1., this->blobs_[4]->mutable_cpu_diff());
     else
       caffe_set(this->blobs_[4]->count(),
                     static_cast<Dtype>(0), this->blobs_[4]->mutable_cpu_diff());

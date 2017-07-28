@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-
+#include "caffe/multinode/mlsl.hpp"
 namespace caffe {
 
 using boost::weak_ptr;
@@ -99,7 +99,7 @@ DataReader::QueuePair::~QueuePair() {
 
 DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
-      new_queue_pairs_() {
+      new_queue_pairs_(), first_read_(true) {
   StartInternalThread();
 }
 
@@ -147,18 +147,17 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
   CHECK(dbw);
   CHECK(qp);
 
-#ifdef CAFFE_MLSL_SHUFFLE
+#ifdef USE_MLSL
   string* data = qp->free_.pop();
-  static int mb=0;
-  if(!mb) { /* move each node’s file position to its node ID – this part can be move to the initialization */
-    for(int i=0;i<MLSL::GetNodeId();i++) {
+  if(first_read_) { /* move each node’s file position to its node ID – this part can be move to the initialization */
+    for(int i=0;i<mn::get_node_id();i++) {
       dbw->Next();
     }
-    mb = 1;
+    first_read_ = false;
   }
   *data = dbw->value();
   qp->full_.push(data);
-  for(int i=0;i<MLSL::GetNumNodes();i++) {
+  for(int i=0;i<mn::get_nodes_count();i++) {
     dbw->Next();
   }
 #else
@@ -191,8 +190,17 @@ DataReader::DBShuffle::DBShuffle(const LayerParameter& param):DBWrapper(param) {
 
   // randomly shuffle data
   LOG(INFO) << "Shuffling data";
+#ifdef USE_MLSL
+  mn::Distribution * distrib = mn::get_distrib();
+  float fetch_seed;
+  fetch_seed = static_cast<float>(caffe_rng_rand() % 15);
+  distrib->bcast<float, MLSL::GT_DATA>(&fetch_seed, 1);
+  LOG(INFO) << "Random seed for shuffling: " << fetch_seed;
+  prefetch_rng_.reset(new Caffe::RNG(static_cast<unsigned int>(fetch_seed)));
+#else
   const unsigned int prefetch_rng_seed = caffe_rng_rand();
   prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+#endif
   ShuffleImages();
 }
 

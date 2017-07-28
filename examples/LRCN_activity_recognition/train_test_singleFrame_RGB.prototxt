@@ -13,7 +13,6 @@ layer {
     mean_value: 103.939
     mean_value: 116.779
     mean_value: 123.68
-    flow: false
   }
   image_data_param {
     source: "ucf101_singleFrame_RGB_train_split1.txt"
@@ -38,7 +37,6 @@ layer {
     mean_value: 103.939
     mean_value: 116.779
     mean_value: 123.68
-    flow: false
   }
   image_data_param {
     source: "ucf101_singleFrame_RGB_test_split1.txt"

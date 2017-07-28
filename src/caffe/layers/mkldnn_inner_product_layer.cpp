@@ -235,18 +235,24 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     }
     
     //Because the inputs of inner product layer always come from user memory, so will not trigger the wrong reorder from extprv to prv
-    fwd_bottom_data->set_mkldnn_primitive(ipFwd);     //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
-    //fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
+    //fwd_bottom_data->set_mkldnn_primitive(ipFwd);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
+    fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
 
-    fwd_top_data->set_mkldnn_primitive(ipFwd);
-    
-    fwd_weights_data->set_mkldnn_primitive(ipFwd);    //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> fwd_weights_data_primitive_transfer(fwd_weights_data_primitive);    
-    //fwd_weights_data->set_mkldnn_primitive(fwd_weights_data_primitive_transfer);
+    //fwd_top_data->set_mkldnn_primitive(ipFwd);        //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_top_data_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 
-    if (this->bias_term_) 
-      fwd_bias_data->set_mkldnn_primitive(ipFwd);
+    //fwd_weights_data->set_mkldnn_primitive(ipFwd);    //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_weights_data_primitive_transfer(fwd_weights_data_primitive);
+    fwd_weights_data->set_mkldnn_primitive(fwd_weights_data_primitive_transfer);
+
+    if (this->bias_term_)
+    {
+      //fwd_bias_data->set_mkldnn_primitive(ipFwd);       //Wrong passed primitive! (TODO: Checking!)
+      MKLDNNPrimitive<Dtype> fwd_bias_data_primitive_transfer(fwd_bias_data_primitive);
+      fwd_bias_data->set_mkldnn_primitive(fwd_bias_data_primitive_transfer);
+    }
 }
 
 template <typename Dtype>
@@ -416,29 +422,37 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
                     , *bwdd_top_diff_primitive, *bwdd_weights_data_primitive
                     , *bwdd_bottom_diff_memory));
 
-    bwdd_bottom_diff->set_mkldnn_primitive(ipBwdData);
+    //bwdd_bottom_diff->set_mkldnn_primitive(ipBwdData);        //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdd_bottom_diff_memory_transfer(bwdd_bottom_diff_memory);
+    bwdd_bottom_diff->set_mkldnn_primitive(bwdd_bottom_diff_memory_transfer);
     
-    bwdd_top_diff->set_mkldnn_primitive(ipBwdData);           //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
-    //bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
+    //bwdd_top_diff->set_mkldnn_primitive(ipBwdData);           //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdd_top_diff_primitive_transfer(bwdd_top_diff_primitive);
+    bwdd_top_diff->set_mkldnn_primitive(bwdd_top_diff_primitive_transfer);
 
-    bwdd_weights_data->set_mkldnn_primitive(ipBwdData);       //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdd_weights_data_primitive_transfer(bwdd_weights_data_primitive);
-    //bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
+    //bwdd_weights_data->set_mkldnn_primitive(ipBwdData);       //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdd_weights_data_primitive_transfer(bwdd_weights_data_primitive);
+    bwdd_weights_data->set_mkldnn_primitive(bwdd_weights_data_primitive_transfer);
 
 
-    bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);     //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
-    //bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
+    //bwdw_bottom_data->set_mkldnn_primitive(ipBwdWeights);     //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_bottom_data_primitive_transfer(bwdw_bottom_data_primitive);
+    bwdw_bottom_data->set_mkldnn_primitive(bwdw_bottom_data_primitive_transfer);
 
-    bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);        //Wrong passed primitive! (TODO: Checking!)
-    //MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
-    //bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
+    //bwdw_top_diff->set_mkldnn_primitive(ipBwdWeights);        //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_top_diff_primitive_transfer(bwdw_top_diff_primitive);
+    bwdw_top_diff->set_mkldnn_primitive(bwdw_top_diff_primitive_transfer);
 
-    bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);
+    //bwdw_weights_diff->set_mkldnn_primitive(ipBwdWeights);    //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> bwdw_weights_diff_memory_transfer(bwdw_weights_diff_memory);
+    bwdw_weights_diff->set_mkldnn_primitive(bwdw_weights_diff_memory_transfer);
 
     if (this->bias_term_)
-        bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);
+    {
+        //bwdw_bias_diff->set_mkldnn_primitive(ipBwdWeights);   //Wrong passed primitive! (TODO: Checking!)
+        MKLDNNPrimitive<Dtype> bwdw_bias_diff_memory_transfer(bwdw_bias_diff_memory);
+        bwdw_bias_diff->set_mkldnn_primitive(bwdw_bias_diff_memory_transfer);
+    }
 }
 
 

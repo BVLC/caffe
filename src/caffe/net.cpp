@@ -267,6 +267,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             batch_size = layer_param.memory_data_param().batch_size();
         else if (!layer_param.type().compare("WindowData"))
             batch_size = layer_param.window_data_param().batch_size();
+        else if (!layer_param.type().compare("Input"))
+            batch_size = layer_param.input_param().shape(0).dim(0);
 
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
@@ -493,7 +495,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   NetParameter param_temp0;
   param_temp0.CopyFrom(param);
   param_temp0.clear_layer();
-  RemoveBNScale(param, &param_temp0);
+  RemoveBNScale<Dtype>(param, &param_temp0);
 
   NetParameter param_temp;  // temporary compiled param
   param_temp.CopyFrom(param_temp0);
@@ -616,26 +618,8 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // then we can remove ReLU layer
     // and rename Convolution top blob after deleted ReLU's top
     // Note: Currently merging of convolution and relu layers is feasible
-    // only for caffe::TEST phase, as there is no Backward primitive of conv Relu
-
     // If current layer is Convolution of MKLDNN engine..
-    /*
-    //Old Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || ((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos)) || ((G == "" && H == 0 && I == string::npos)))))
-    //New tmp Structure:    if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && ((E == 0 && F == string::npos))) || ((G == "" && H == 0 && I == string::npos)))))
-    //New Structure:        if ((A == TEST) && (B == 0) && ((C == ConvolutionParameter_Engine_MKLDNN) || (((D == ConvolutionParameter_Engine_DEFAULT) && (E == 0 && F == string::npos)) || (G == "" && H == 0 && I == string::npos))))
-    //Old Structure:
-    //if ((A == TEST) &&
-    //    (B == 0) &&
-    //   ((C == ConvolutionParameter_Engine_MKLDNN)
-    //   || ((D == ConvolutionParameter_Engine_DEFAULT) &&
-    //        ((E == 0
-    //        && F == string::npos)) ||
-    //        ((G == "" &&
-    //          H == 0 &&
-    //          I == string::npos)))))
-    */
-    if ((param.state().phase() == TEST) &&
-        (layer_param->type().compare("Convolution") == 0) &&
+    if ((layer_param->type().compare("Convolution") == 0) &&
        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
        || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
             (param.engine().compare(0, 6, "MKLDNN") == 0
@@ -652,20 +636,6 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
-      /*
-      //Old Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || ((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos)) || ((F == "" && G == 0 && H == string::npos)))))
-      //New tmp Structure:  if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && ((D == 0 && E == string::npos))) || ((F == "" && G == 0 && H == string::npos)))))
-      //New Structure:      if ((A == 0) && ((B == ReLUParameter_Engine_MKLDNN) || (((C == ReLUParameter_Engine_DEFAULT) && (D == 0 && E == string::npos)) || (F == "" && G == 0 && H == string::npos))))
-      //Old Structure:
-      //if ((A == 0) &&
-      //  ((B == ReLUParameter_Engine_MKLDNN)
-      //  || ((C == ReLUParameter_Engine_DEFAULT) &&
-      //      ((D == 0
-      //      && E == string::npos)) ||
-      //      ((F == "" &&
-      //        G == 0 &&
-      //        H == string::npos)))))
-      */
       if ((consumer_layer_param.type().compare("ReLU") == 0) &&
         ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
         || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
@@ -676,30 +646,43 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
               layer_param->engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
-        const string& scale_top_blob_name = consumer_layer_param.top(0);
-        // Mark Consumer layer (its name) as the one marked for dropping
-        layers_to_drop.insert(consumer_layer_param.name());
 
-        // Replace Convolution top name with ReLU top name
-        convolution_top_blob_name.resize(scale_top_blob_name.size());
-        convolution_top_blob_name.replace(0,
-                                        scale_top_blob_name.size(),
-                                        scale_top_blob_name);
+        if(param.state().phase() == TEST) {
+          const string& scale_top_blob_name = consumer_layer_param.top(0);
+          // Mark Consumer layer (its name) as the one marked for dropping
+          layers_to_drop.insert(consumer_layer_param.name());
+
+          // Replace Convolution top name with ReLU top name
+          convolution_top_blob_name.resize(scale_top_blob_name.size());
+          convolution_top_blob_name.replace(0,
+                                          scale_top_blob_name.size(),
+                                          scale_top_blob_name);
+        }
         // set relu flag in convolution
         layer_param->mutable_convolution_param()->set_relu(true);
         float negative_slope1 =
                   consumer_layer_param.relu_param().negative_slope();
         layer_param->mutable_convolution_param()->
                     set_negative_slope(negative_slope1);
+
+        if(param.state().phase() == TRAIN) {
+          if(i+1 < param.layer_size()) {
+            LayerParameter* relu_layer_param =
+              (const_cast<NetParameter&>(param)).mutable_layer(i+1);
+            relu_layer_param->mutable_relu_param()->set_fuse(true);
+          }
+        }
       }
     }
 
-    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
-      LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
-             << layer_param->name() << std::endl;
-      layer_included = false;
-      // Remove dropped layer from the list of layers to be dropped
-      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+    if(param.state().phase() == TEST) {
+      if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+        LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+               << layer_param->name() << std::endl;
+        layer_included = false;
+        // Remove dropped layer from the list of layers to be dropped
+        layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+      }
     }
 
     if (layer_included) {
@@ -762,107 +745,6 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
   }
   return;
 }
-
-
-template <typename Dtype>
-void Net<Dtype>::RemoveBNScale(const NetParameter& param,
-                             NetParameter* param_compiled) {
-    // - In TEST Phase, if we detect sequential layers conv->batch norm ->scale,
-    // We will merge batch norm and scale layer into conv layer.
-  if(param.state().phase() != TEST) {
-    param_compiled->CopyFrom(param);
-    param_compiled->mutable_compile_net_state()->set_bn_scale_remove(false);
-    return ;
-  }
-
-  bool bn_scale_remove = false;
-  bool is_net_init = param.compile_net_state().is_init();
-  std::set<std::string> layers_to_drop;
-  for (int i = 0; i < param.layer_size(); ++i) {
-    LayerParameter *layer_param = (const_cast<NetParameter&>(param)).mutable_layer(i);
-    bool layer_included = true;
-    bool bn_use_global_stats_set = true;
-    if (layer_param->type().compare("Convolution") == 0) {
-      std::vector<const LayerParameter*> child_layers_params;
-      GetBlobConsumers(child_layers_params, layer_param->top(0), param, i + 1 < param.layer_size() ? i + 1 : i);
-      const LayerParameter &child_layer_param = child_layers_params.size() > 0 ? *(child_layers_params[0]) : *layer_param;
-      // check whether child layer is BatchNorm
-      if (child_layer_param.type().compare("BatchNorm") == 0) {
-        BatchNormParameter bn_param = child_layer_param.batch_norm_param();
-        if (is_net_init) {
-          //Testing Network init process
-          bool bn_use_global_stats = true;
-          if (bn_param.has_use_global_stats()) {
-            bn_use_global_stats = bn_param.use_global_stats();
-          }
-          if (!bn_use_global_stats) {
-            //This bn layer's use_global_stats is set manually! Don't remove it.
-            //remained_bn_layer_names.push_back(child_layer_param.name());
-            param_compiled->mutable_compile_net_state()->add_kept_bn_layers(child_layer_param.name());
-            bn_use_global_stats_set = false;
-          }
-        } else {
-          int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
-          bool in_kept_list = false;
-          for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
-            if (child_layer_param.name().compare(param.compile_net_state().kept_bn_layers(idx)) == 0) {
-              in_kept_list = true;
-              break;
-            }
-          }
-          if (in_kept_list) {
-            bn_use_global_stats_set = false;
-          }
-        }
-
-        if (!bn_use_global_stats_set) {
-          //Even in caffe TEST phase, current batch norm layer has set use_global_stats = false in protxt file, so we won't
-          //merge this layer into convolution layer.
-         param_compiled->add_layer()->CopyFrom(*layer_param);
-          continue;
-        }
-        std::vector<const LayerParameter*> grandchild_layers_params;
-        GetBlobConsumers(grandchild_layers_params, child_layer_param.top(0), param, i + 2 < param.layer_size() ? i + 2 : i);
-        const LayerParameter &grandchild_layer_param = (grandchild_layers_params.size() > 0) ? *(grandchild_layers_params[0]) : child_layer_param;
-        if (grandchild_layer_param.type().compare("Scale") == 0) {
-          MergeLayer(*layer_param, grandchild_layer_param);
-          AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, is_net_init);
-          if (bn_scale_remove == false) bn_scale_remove = true;
-          layers_to_drop.insert(child_layer_param.name());
-          layers_to_drop.insert(grandchild_layer_param.name());
-        } else if (&child_layer_param != &grandchild_layer_param) {
-          //In fact, conv-->batchnorm can also be optimized. In such case, we check the blob size of batch norm layer
-          //if is 3, it means current net hasn't used scale layer, this is equivalent to scale layer with all 1 weights and 0 bias
-          //if is 4 or 5, it means intel caffe compilation rule 1 works here, we can recover the scale layer from batch norm layer
-          MergeLayer(*layer_param, child_layer_param);
-          if (!is_net_init) {
-            shared_ptr<LayerParameter> scale_layer_param(new LayerParameter());
-            RecoverScaleFromBN(child_layer_param, *scale_layer_param, (Dtype)1, (Dtype)0);
-            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, *scale_layer_param, is_net_init);
-          } else {
-            AdjustConvLayer<Dtype>(*layer_param, child_layer_param, grandchild_layer_param, true);
-		  }
-          if (bn_scale_remove == false) bn_scale_remove = true;
-          layers_to_drop.insert(child_layer_param.name());
-        }
-      }
-    }
-    if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
-      LOG_IF(INFO, Caffe::root_solver()) << "Dropped Layer: "<< layer_param->name() << std::endl;
-      layer_included = false;
-      // Remove dropped layer from the list of layers to be dropped
-      layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
-    }
-    if (layer_included) {
-            if (layer_param->type().compare("BatchNorm") == 0) {
-              param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
-            }
-            param_compiled->add_layer()->CopyFrom(*layer_param);
-    }
-  }
-
-  param_compiled->mutable_compile_net_state()->set_bn_scale_remove(bn_scale_remove);
- }
 
 template <typename Dtype>
 void Net<Dtype>::GetBlobConsumers(

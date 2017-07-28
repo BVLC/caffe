@@ -201,9 +201,13 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     
     for (auto i = 0; i < num_bottoms_; i++)
     {
-        fwd_bottom_data[i]->set_mkldnn_primitive(eltwiseFwd);
+        //fwd_bottom_data[i]->set_mkldnn_primitive(eltwiseFwd);   //Wrong passed primitive! (TODO: Checking!)
+        MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitives_[i]);
+        fwd_bottom_data[i]->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
     }
-    fwd_top_data->set_mkldnn_primitive(eltwiseFwd);
+    //fwd_top_data->set_mkldnn_primitive(eltwiseFwd);             //Wrong passed primitive! (TODO: Checking!)
+    MKLDNNPrimitive<Dtype> fwd_top_data_memory_transfer(fwd_top_data_memory);
+    fwd_top_data->set_mkldnn_primitive(fwd_top_data_memory_transfer);
 }
 
 

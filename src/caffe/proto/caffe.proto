@@ -645,6 +645,14 @@ message TransformationParameter {
   optional ExpansionParameter expand_param = 14;
   // Constraint for emitting the annotation after transformation.
   optional EmitConstraint emit_constraint = 10;
+  // Resize the input randomly
+  optional RandomResizeParameter random_resize_param = 15;
+}
+
+message RandomResizeParameter {
+  optional uint32 min_size = 1 [default = 0];
+  optional uint32 max_size = 2 [default = 0];
+  optional ResizeParameter resize_param = 3;
 }
 
 // Message that stores parameters used by data transformer for resize policy
@@ -1626,6 +1634,7 @@ message ReLUParameter {
     MKLDNN = 4;
   }
   optional Engine engine = 2 [default = DEFAULT];
+  optional bool fuse = 3 [default = false];
 }
 
 message ReshapeParameter {

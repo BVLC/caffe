@@ -115,6 +115,17 @@ if(USE_MLSL)
   include_directories(SYSTEM "${MLSL_ROOT}/intel64/include")
   link_directories(SYSTEM "${MLSL_ROOT}/intel64/lib")
   list(APPEND Caffe_LINKER_LIBS mlsl)
+
+  if(CAFFE_PER_LAYER_TIMINGS)
+    add_definitions("-DCAFFE_PER_LAYER_TIMINGS")
+  endif()
+  if(CAFFE_MLSL_SHUFFLE)
+    add_definitions("-DCAFFE_MLSL_SHUFFLE")
+  endif()
+  if(FW_OVERLAP_OPT)
+    message(STATUS "Forward overlapping optimization is enabled!")
+    add_definitions("-DFW_OVERLAP_OPT")
+  endif()
 endif()
 
 # ---[ BLAS

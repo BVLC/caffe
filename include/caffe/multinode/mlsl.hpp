@@ -48,6 +48,8 @@ namespace caffe {
 
 #define MLSL_DEFAULT_COLOR -1
 
+    void init(int* argc, char** argv[]);
+
     inline void free(void *addr) {
       return MLSL::Environment::GetEnv().Free(addr);
     }

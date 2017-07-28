@@ -172,14 +172,24 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 template<bool has_uint8, bool do_mirror, bool has_mean_file,
   bool has_mean_values>
-void DataTransformer<Dtype>::Transform(const Datum& datum,
+void DataTransformer<Dtype>::Transform(const Datum& datum_in,
                                        Dtype* transformed_data,
                                        NormalizedBBox* crop_bbox,
                                        RandNumbers& rand_num) {
-  const string& data = datum.data();
-  const int datum_channels = datum.channels();
-  const int datum_height = datum.height();
-  const int datum_width = datum.width();
+  const Datum *datum = &datum_in;
+  Datum resized_datum;
+  if (param_.has_random_resize_param()) {
+#ifdef USE_OPENCV
+    RandomResizeImage(datum_in, &resized_datum);
+    datum = &resized_datum;
+#else
+    LOG(FATAL) << "Random image resizing requires OpenCV; compile with USE_OPENCV.";
+#endif
+  }
+  const string& data = datum->data();
+  const int datum_channels = datum->channels();
+  const int datum_height = datum->height();
+  const int datum_width = datum->width();
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
@@ -245,7 +255,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           datum_element =
             static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
         } else {
-          datum_element = datum.float_data(data_index);
+          datum_element = datum->float_data(data_index);
         }
         if (has_mean_file) {
           transformed_data[top_index] =
@@ -756,10 +766,20 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
 template<typename Dtype>
 template<bool do_mirror, bool has_mean_file, bool has_mean_values>
-void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
         Blob<Dtype>* transformed_blob, NormalizedBBox* crop_bbox, RandNumbers& rand_num) {
+  const cv::Mat *cv_img = &cv_img_in;
+  cv::Mat resized_img;
+  if (param_.has_random_resize_param()) {
+#ifdef USE_OPENCV
+    RandomResizeImage(cv_img_in, &resized_img);
+    cv_img = &resized_img;
+#else
+    LOG(FATAL) << "Random image resizing requires OpenCV; compile with USE_OPENCV.";
+#endif
+  }
   const int crop_size = param_.crop_size();
-  const int img_channels = cv_img.channels();
+  const int img_channels = cv_img->channels();
 
   // Check dimensions.
   const int channels = transformed_blob->channels();
@@ -770,7 +790,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_EQ(channels, img_channels);
   CHECK_GE(num, 1);
 
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  CHECK(cv_img->depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const Dtype scale = param_.scale();
 
@@ -793,9 +813,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   }
   cv::Mat cv_resized_img, cv_noised_img;
   if (param_.has_resize_param()) {
-    cv_resized_img = ApplyResize(cv_img, param_.resize_param());
+    cv_resized_img = ApplyResize(*cv_img, param_.resize_param());
   } else {
-    cv_resized_img = cv_img;
+    cv_resized_img = *cv_img;
   }
   if (param_.has_noise_param()) {
     cv_noised_img = ApplyNoise(cv_resized_img, param_.noise_param());
@@ -809,7 +829,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   int h_off = 0;
   int w_off = 0;
-  cv::Mat cv_cropped_img = cv_img;
+  cv::Mat cv_cropped_img = *cv_img;
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
@@ -822,7 +842,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       w_off = (img_width - crop_size) / 2;
     }
     cv::Rect roi(w_off, h_off, crop_size, crop_size);
-    cv_cropped_img = cv_img(roi);
+    cv_cropped_img = (*cv_img)(roi);
   } else {
     cv_cropped_img = cv_noised_img;
   }
@@ -1033,6 +1053,42 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
 
   cv::Rect bbox_roi(w_off, h_off, img_width, img_height);
   img.copyTo((*expand_img)(bbox_roi));
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RandomResizeImage(const Datum& datum, Datum *resized_datum) {
+  shared_ptr<cv::Mat> img;
+  if (datum.encoded()) {
+    img = shared_ptr<cv::Mat>(new cv::Mat(DecodeDatumToCVMatNative(datum)));
+  } else {
+    img = shared_ptr<cv::Mat>(new cv::Mat(
+                                cv::Size(datum.width(), datum.height()),
+                                CV_8UC(datum.channels()),
+                                (void*)datum.data().data()));
+  }
+  cv::Mat resized_img;
+  RandomResizeImage(*img, &resized_img);
+  CVMatToDatum(resized_img, resized_datum);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RandomResizeImage(const cv::Mat& img, cv::Mat *resized_img) {
+  int h = img.size().height;
+  int w = img.size().width;
+  int min_size = param_.random_resize_param().min_size();
+  int max_size = param_.random_resize_param().max_size();
+  ResizeParameter resize_param = param_.random_resize_param().resize_param();
+  if (min_size == 0) min_size = std::min(h,w);
+  if (max_size == 0) max_size = std::max(h,w);
+  int shorter_size = rand_num_(max_size - min_size + 1) + min_size;
+  resize_param.set_height(shorter_size);
+  resize_param.set_width(shorter_size);
+  if (h < w) {
+    resize_param.set_width(int(float(w) / h * shorter_size));
+  } else {
+    resize_param.set_height(int(float(h) / w * shorter_size));
+  }
+  *resized_img = ApplyResize(img, resize_param);
 }
 
 #endif  // USE_OPENCV

@@ -63,7 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
-#define CAN_USE_PRV(param) false //(param->prv_diff() && (param->prv_diff_count() == param->count()))
+#define CAN_USE_PRV(param) (param->prv_diff() && (param->prv_diff_count() == param->count()))
 
   template <typename Dtype>
   class MultiSync : public MultiSolver<Dtype>::Callback {
@@ -74,6 +74,10 @@ namespace caffe {
     shared_ptr<Net<Dtype>> net;
     const vector<Blob<Dtype> *> &net_params;
     vector<vector<int>> layer_param_ids;
+#ifdef FW_OVERLAP_OPT
+    vector<vector<bool>> param_ids_finished_flags;
+#endif
+
     // layer_id -> blob_id -> cached blob to restore
     // statistics
     vector<vector<shared_ptr<Blob<Dtype>>>> cached_stats;
@@ -161,6 +165,12 @@ namespace caffe {
 #else
                    << " DISABLED"
 #endif
+                   << ", FORWARD OVERLAP OPTIMIZATION IS"
+#ifdef FW_OVERLAP_OPT
+                   << " ENABLED"
+#else
+                   << " DISABLED"
+#endif
                    << ", SINGLE DB SPLITTING IS"
 #ifdef CAFFE_MLSL_SHUFFLE
                    << " ENABLED";
@@ -172,15 +182,15 @@ namespace caffe {
       mn::train::commit();
 
 #ifdef PERFORMANCE_MONITORING
-  statsIterResult.resize(caffe::mn::train::get_session().get_operation_count());
-  caffe::mn::train::stats::start();
+      statsIterResult.resize(caffe::mn::train::get_session().get_operation_count());
+      caffe::mn::train::stats::start();
 #endif
 
       solver->add_callback(this);
       solver->Solve();
 
 #ifdef PERFORMANCE_MONITORING
-    dump_stats_to_file();
+      dump_stats_to_file();
 #endif
     }
 
@@ -196,14 +206,24 @@ namespace caffe {
     }
 
     void on_iter_finished(int layer_id) {
+#ifdef FW_OVERLAP_OPT
+      solver->set_layer_finished_flag(layer_id, false);
+#endif
+
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
       if (layer->layerOp == nullptr) {
         return;
       }
 
+#ifdef FW_OVERLAP_OPT
+      std::fill(param_ids_finished_flags[layer_id].begin(),
+          param_ids_finished_flags[layer_id].end(),
+          false);
+#endif
+
       std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
-        if (!layer->ParamNeedReduce(param_ids[i])) continue;
+        if (!layer->ParamNeedReduce(i)) continue;
         if (CAN_USE_PRV(net_params[param_ids[i]])) {
           layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_prv_diff());
         } else {
@@ -215,15 +235,35 @@ namespace caffe {
     void on_delwt_wait(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
       if (layer->layerOp == nullptr) {
+#ifdef FW_OVERLAP_OPT
+        solver->set_layer_finished_flag(layer_id, true);
+#endif
         return;
       }
 
       std::vector<int> &param_ids = layer_param_ids[layer_id];
-
       for (int i=0; i<param_ids.size(); i++) {
-        if (!layer->ParamNeedReduce(param_ids[i])) continue;
+        if (!layer->ParamNeedReduce(i)
+#ifdef FW_OVERLAP_OPT
+            || (param_ids_finished_flags[layer_id][i] == true)) {
+          param_ids_finished_flags[layer_id][i] = true;
+#else
+          ) {
+#endif
+          continue;
+        }
+
+#ifdef FW_OVERLAP_OPT
+        bool is_completed = false;
+        Dtype *delwt_buf{(Dtype *) layer->layerOp->GetParameterSet(i)->TestGradientComm(&is_completed)};
+#else
         Dtype *delwt_buf{(Dtype *) layer->layerOp->GetParameterSet(i)->WaitGradientComm()};
+#endif
         if (delwt_buf) {
+#ifdef FW_OVERLAP_OPT
+          assert(is_completed);
+          param_ids_finished_flags[layer_id][i] = true;
+#endif
           if (CAN_USE_PRV(net_params[param_ids[i]])) {
             if (delwt_buf != net_params[param_ids[i]]->prv_diff())
               caffe_copy(net_params[param_ids[i]]->count(),
@@ -235,6 +275,14 @@ namespace caffe {
                 net_params[param_ids[i]]->mutable_cpu_diff());
         }
       }
+
+#ifdef FW_OVERLAP_OPT
+      int finished_count = std::count(param_ids_finished_flags[layer_id].begin(),
+            param_ids_finished_flags[layer_id].end(), true);
+      if (finished_count == param_ids.size()) {
+        solver->set_layer_finished_flag(layer_id, true);
+      }
+#endif
     }
 
     void on_gradients_ready() {

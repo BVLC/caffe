@@ -69,5 +69,7 @@ void AdjustConvLayer(LayerParameter &conv_layer,
 template <typename Dtype>
 void RecoverBNScaleMergedNet(NetParameter * net_param, NetParameter* recovered_net_param);
 
+template <typename Dtype>
+void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled);
 }
 #endif

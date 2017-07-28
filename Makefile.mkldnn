@@ -32,7 +32,7 @@ mkldnn_download:
 
 mkldnn_build: mkldnn_download
 	cmake $(MKLDNN_CMAKE_FLAGS)
-	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR)
+	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -j$(shell cat /proc/cpuinfo |grep 'processor'|wc -l)
 	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) install
 else
 mkldnn_download:

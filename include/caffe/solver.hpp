@@ -165,10 +165,18 @@ class Solver {
   std::vector<double> forward_time_per_layer;
   std::vector<double> backward_time_per_layer;
   std::vector<double> update_time_per_layer;
+#ifdef USE_MLSL
+  std::vector<double> startcomm_time_per_layer;
+  std::vector<double> waitcomm_time_per_layer;
+#endif
 
   std::vector<double> forward_time_per_layer_total;
   std::vector<double> backward_time_per_layer_total;
   std::vector<double> update_time_per_layer_total;
+#ifdef USE_MLSL
+  std::vector<double> startcomm_time_per_layer_total;
+  std::vector<double> waitcomm_time_per_layer_total;
+#endif
 
   void InitTimers();
   void ResetTimers();

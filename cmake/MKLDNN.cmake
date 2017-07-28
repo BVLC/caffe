@@ -8,7 +8,14 @@ function(Download_MKLDNN)
   execute_process(COMMAND cat mkldnn.commit
   		  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		  OUTPUT_VARIABLE MKLDNN_COMMIT)
-  
+
+  include(ProcessorCount)
+  ProcessorCount(NCORE)
+  if(NOT NCORE EQUAL 0)
+      set(CTEST_BUILD_FLAGS -j${NCORE})
+      set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${NCORE})
+  endif()
+ 
   ExternalProject_add(MKLDNN_Build
                       SOURCE_DIR ${MKLDNN_SOURCE_DIR}
                       CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
@@ -20,7 +27,7 @@ function(Download_MKLDNN)
                       BUILD_COMMAND cmake ${MKLDNN_SOURCE_DIR}
 #--Install step
                       INSTALL_DIR ${MKLDNN_INSTALL_DIR}
-                      INSTALL_COMMAND make install
+                      INSTALL_COMMAND make install -j${NCORE}
                       LOG_CONFIGURE 1
                       LOG_BUILD 1
                       LOG_INSTALL 1
