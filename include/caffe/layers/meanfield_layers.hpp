@@ -56,14 +56,16 @@ namespace caffe {
          * Forward pass - to be called during inference.
          */
         void Forward_cpu();
+#ifndef CPU_ONLY
         void Forward_gpu();
-
+#endif
         /**
          * Backward pass - to be called during training.
          */
         void Backward_cpu();
+#ifndef CPU_ONLY
         void Backward_gpu();
-
+#endif
         // A quick hack. This should be properly encapsulated.
         vector<shared_ptr<Blob<Dtype> > >& blobs() {
             return blobs_;
@@ -131,14 +133,15 @@ namespace caffe {
     protected:
         virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                  const vector<Blob<Dtype>*>& top);
+
         virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
                                   const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
+#ifndef CPU_ONLY
         virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                  const vector<Blob<Dtype>*>& top);
         virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
                                   const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
+#endif
     private:
         void compute_spatial_kernel(float* const output_kernel);
         void compute_bilateral_kernel(const Blob<Dtype>* const rgb_blob, const int n, float* const output_kernel);

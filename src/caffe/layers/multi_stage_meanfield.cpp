@@ -123,7 +123,7 @@ void MultiStageMeanfieldLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
 template <typename Dtype>
 void MultiStageMeanfieldLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-	// Do nothing.
+    // Do nothing.
 }
 
 /**
@@ -261,7 +261,6 @@ void MultiStageMeanfieldLayer<Dtype>::init_spatial_lattice(void) {
   bool force_cpu = this->layer_param().multi_stage_meanfield_param().force_cpu();
   spatial_lattice_.reset(new ModifiedPermutohedral());
   spatial_norm_.Reshape(1, 1, height_, width_);
-
   if ( Caffe::mode() == Caffe::CPU || force_cpu) {
     spatial_lattice_->init_cpu(spatial_kernel, 2, num_pixels_);
 
@@ -273,8 +272,9 @@ void MultiStageMeanfieldLayer<Dtype>::init_spatial_lattice(void) {
 
     delete[] spatial_kernel;
     init_cpu_ = true;
-
-  }else if( Caffe::mode() == Caffe::GPU){
+  }
+#ifndef CPU_ONLY
+  else if( Caffe::mode() == Caffe::GPU){
     float* spatial_kernel_gpu;
     Dtype* norm_data_gpu;
 
@@ -290,6 +290,7 @@ void MultiStageMeanfieldLayer<Dtype>::init_spatial_lattice(void) {
 
     init_gpu_ = true;
   }
+ #endif
   else{
     LOG(FATAL) << "Unknown Caffe mode. Neither CPU nor GPU";
   }
@@ -303,12 +304,14 @@ void MultiStageMeanfieldLayer<Dtype>::init_spatial_lattice(void) {
 template<typename Dtype>
 void MultiStageMeanfieldLayer<Dtype>::init_bilateral_buffers(void) {
 
-  if (init_cpu_) {
+  if (init_cpu_ || Caffe::mode() == Caffe::CPU) {
     bilateral_kernel_buffer_ = new float[5 * num_pixels_];
   }
-  else if (init_gpu_){
+#ifndef CPU_ONLY
+  else if (init_gpu_ || Caffe::mode() == Caffe::GPU){
     CUDA_CHECK( cudaMalloc( (void**)&bilateral_kernel_buffer_, 5 * num_pixels_ * sizeof(float) ) );
   }
+#endif
   else{
     LOG(FATAL) << "Should not have been able to get here";
   }
