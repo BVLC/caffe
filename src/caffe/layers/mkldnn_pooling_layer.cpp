@@ -132,7 +132,7 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     else
     {
       // If user did not define padding, just use the exclude padding
-      special_exclude_padding_flag_ = true;
+      force_exclude_padding_flag_ = true;
     }
 
     //Add the pad to make sure h/w + kernel_h/w_ can be exact division by stride_h/w_
@@ -190,7 +190,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
         // bottom[0]->height/width() + kernel_h/w_ cannot be exact division by stride_h/w_
         // use the exclude padding to align with the result of Caffe
         // for exact division situation, exclude padding and include padding will have the same results
-        if (special_exclude_padding_flag_ == true)
+        if (force_exclude_padding_flag_ == true)
         {
           pooling_algorithm = algorithm::pooling_avg_exclude_padding;
         }

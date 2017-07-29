@@ -130,7 +130,7 @@ void MKLPoolingLayer<Dtype>::Init(
       bottom[0]->height() + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
   pooled_width_ = static_cast<int>(ceil(static_cast<float>(
       bottom[0]->width() + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
-  bool special_exclude_padding_flag_ = false;
+  bool force_exclude_padding_flag_ = false;
   if (pad_h_ || pad_w_) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
@@ -145,7 +145,7 @@ void MKLPoolingLayer<Dtype>::Init(
   }
   else
   {
-    special_exclude_padding_flag_ = true;
+    force_exclude_padding_flag_ = true;
   }
 
   top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
@@ -181,7 +181,7 @@ void MKLPoolingLayer<Dtype>::Init(
     // bottom[0]->height/width() + kernel_h/w_ cannot be exact division by stride_h/w_
     // use the exclude padding to align with the result of Caffe
     // for exact division situation, exclude padding and include padding will have the same results
-    if (special_exclude_padding_flag_ == true)
+    if (force_exclude_padding_flag_ == true)
     {
         this->algorithm = dnnAlgorithmPoolingAvgExcludePadding;
     }
