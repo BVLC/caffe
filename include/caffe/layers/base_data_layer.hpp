@@ -4,14 +4,28 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+// DataTransformer类实现了一些常用的数据预处理操作，如尺度变换，减均值，镜像变换等
 #include "caffe/data_transformer.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+// 与多线程有关
 #include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
 
+/**
+ *                       Layer
+ *                         |
+ *                    BaseDataLayer
+ *               __________|_____________
+ *              |                       |
+ * BasePrefetchingDataLayer       MemoryDataLayer
+ *     _________|_______________________
+ *     |             |                 | 
+ * DataLayer   ImageDataLayer   WindowDataLayer
+ * 
+ */
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
  *

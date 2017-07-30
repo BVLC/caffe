@@ -136,6 +136,7 @@ class Layer {
    *     the output blobs, whose diff fields store the gradient of the error
    *     with respect to themselves
    * @param propagate_down
+   * //Backward里面有个propagate_down参数，用来表示该Layer是否反向传播参数
    *     a vector with equal length to bottom, with each index indicating
    *     whether to propagate the error gradients down to the bottom blob at
    *     the corresponding index
@@ -304,10 +305,12 @@ class Layer {
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
+   // 这个bool表示是否计算各个blob参数的diff，即传播误差
   vector<bool> param_propagate_down_;
 
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
+  //每一层又有一个loss_值，只不多大多数Layer都是0，只有LossLayer才可能产生非0的loss_
   vector<Dtype> loss_;
 
   /** @brief Using the CPU device, compute the layer output. */

@@ -9,6 +9,17 @@
 
 namespace caffe {
 
+/*
+  v for vector, m for matrix
+  caffe_cpu_gemm: matrix
+  caffe_cpu_gemv: vector
+ */
+/*
+ *C = alpha*op( A )*op( B ) + beta*C
+ *const int M，矩阵A的行，矩阵C的行
+ *const int N，矩阵B的列，矩阵C的列
+ *const int K，矩阵A的列，矩阵B的行
+ */
 template<>
 void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -31,6 +42,9 @@ void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       ldb, beta, C, N);
 }
 
+/*
+ *C = alpha*op( A )* x + beta*C
+ */
 template <>
 void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
