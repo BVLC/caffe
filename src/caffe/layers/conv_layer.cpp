@@ -2,6 +2,8 @@
 
 #include "caffe/layers/conv_layer.hpp"
 
+
+
 namespace caffe {
 
 template <typename Dtype>
@@ -21,6 +23,10 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
   }
 }
 
+/* 
+ConvolutionLayer调用了forward_cpu_gemm，而这个函数内部又调用了math_function里面的caffe_cpu_gemm的通用矩 
+阵相乘接口，GEMM的全称是General Matrix Matrix Multiply。其基本形式如下：C=alpha∗op(A)∗op(B)+beta∗C, 
+*/
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -28,7 +34,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
+    // num_ = batchsize 
     for (int n = 0; n < this->num_; ++n) {
+      // 输入的是一幅图像的数据，对应的是这幅图像卷积之后的位置
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
@@ -56,14 +64,17 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
+      //param_propagate_down_、propagate_down只要满足一个就要计算
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
+          //主要用来计算权重的增量
           this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
               top_diff + n * this->top_dim_, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
+          //卷积层后向传播过程的矩阵乘法
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);
         }

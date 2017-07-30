@@ -15,6 +15,7 @@ inline bool is_a_ge_zero_and_a_lt_b(int a, int b) {
   return static_cast<unsigned>(a) < static_cast<unsigned>(b);
 }
 
+//dilation是扩张倍数 
 template <typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int channels,
     const int height, const int width, const int kernel_h, const int kernel_w,
@@ -22,10 +23,12 @@ void im2col_cpu(const Dtype* data_im, const int channels,
     const int stride_h, const int stride_w,
     const int dilation_h, const int dilation_w,
     Dtype* data_col) {
+  //最终输出的长宽
   const int output_h = (height + 2 * pad_h -
     (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   const int output_w = (width + 2 * pad_w -
     (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  //单通道图片大小
   const int channel_size = height * width;
   for (int channel = channels; channel--; data_im += channel_size) {
     for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {

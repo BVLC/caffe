@@ -115,6 +115,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
+// CPU正向传导 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -123,10 +124,12 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   }
   prefetch_current_ = prefetch_full_.pop("Waiting for data");
   // Reshape to loaded data.
+  // Reshape成与batch数据同一维度  
   top[0]->ReshapeLike(prefetch_current_->data_);
   top[0]->set_cpu_data(prefetch_current_->data_.mutable_cpu_data());
-  if (this->output_labels_) {
+  if (this->output_labels_) { //如果存在label层，则输出大于一
     // Reshape to loaded labels.
+    // 将batch标签拷贝至top层blob[1]  
     top[1]->ReshapeLike(prefetch_current_->label_);
     top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
   }

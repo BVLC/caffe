@@ -6,6 +6,17 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 
+/*                                out_x * out_y 
+ *      ker_x * ker_y * chan         24 * 24
+ *              5*5*1               _________         24 * 24  
+ *           ____________           |       |       _________
+ *          |            |          |       |       |       |
+ *    20    |  weight    |          | bottom|       |  out  |
+ *   (ker)  |            |    X     |       |   = 20|       |
+ *          |____________|          |       |       |_______|
+ *                                  |_______|
+ */
+
 namespace caffe {
 
 template <typename Dtype>
@@ -187,6 +198,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const int first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
       << "bottom num_axes may not change.";
+  //num_输入batch大小
   num_ = bottom[0]->count(0, channel_axis_);
   CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
       << "Input size incompatible with convolution kernel.";
@@ -196,11 +208,15 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         << "All inputs must have the same shape.";
   }
   // Shape the tops.
+  // bottom_shape_输入的大小，在mnist中是(64,1,28,28)
   bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
+  //top_shape中压入batch数量(64,,,)
   vector<int> top_shape(bottom[0]->shape().begin(),
       bottom[0]->shape().begin() + channel_axis_);
+  //top_shape中压入num_output_数量(64,20,,) 滤波器数量
   top_shape.push_back(num_output_);
+  //top_shape中压入输出图像的大小(64,20,24,24)
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape.push_back(output_shape_[i]);
   }
@@ -252,17 +268,30 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+// 卷积层前向传递过程中的矩阵乘法
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
   const Dtype* col_buff = input;
+  /*** 图片转为col，转为矩阵，便于矩阵乘 ***/
   if (!is_1x1_) {
     if (!skip_im2col) {
       conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
     }
     col_buff = col_buffer_.cpu_data();
   }
+  /*** 做矩阵乘法 ***/
   for (int g = 0; g < group_; ++g) {
+    //调用了math_function.cpp基础矩阵相乘操作，内部调用BLAS中的函数，
+    //gemm－General Matrix Matrix Multiply, C=alpha∗op(A)∗op(B)+beta∗C
+    /*
+     * C = alpha*op( A )*op( B ) + beta*C
+     * conv_out_channels_group_ ，矩阵A的行，矩阵C的行
+     * conv_out_spatial_dim_ ，矩阵B的列，矩阵C的列
+     * kernel_dim_, 矩阵A的列，矩阵B的行
+     * weight_offset_ , 单通道weight大小(即A的大小)(= 500 = 5*5*20)
+     * col_offset_ , 单通道输入图像大小(即B的大小)(= 14400 = 24*24*5*5)
+     */
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
         group_, conv_out_spatial_dim_, kernel_dim_,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
@@ -296,6 +325,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
   }
 }
 
+//主要用来计算权重的增量
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {

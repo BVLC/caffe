@@ -12,6 +12,22 @@
 namespace caffe {
 
 #ifdef USE_CUDNN
+/**
+ *  
+ *           _________Layer_________
+ *           |                     |
+ *  BaseConvolutionLayer      PoolingLayer
+ *      |                          |
+ *ConvolutionLayer           CuDNNPoolingLayer
+ *      |
+ *CuDNNConvolutionLayer
+ *
+ *实际卷积操作使用矩阵相乘，把卷积核和图片拉平为向量，
+ *图片地址，详细介绍卷积转为矩阵相乘的过程
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232524672-523353998.png 
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232535187-271920827.png
+ */ 
+
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
  *        Fallback to ConvolutionLayer for CPU mode.

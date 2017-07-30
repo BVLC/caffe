@@ -32,9 +32,11 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.data_param().batch_size();
   // Read a data point, and use it to initialize the top blob.
+  // 读取一个dataum，用来初始化top blob维度  
   Datum datum;
   datum.ParseFromString(cursor_->value());
 
+  // 从datum获取单个数据维度  
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
@@ -44,6 +46,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < this->prefetch_.size(); ++i) {
     this->prefetch_[i]->data_.Reshape(top_shape);
   }
+  //终端打印数据层，数据大小
   LOG_IF(INFO, Caffe::root_solver())
       << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -53,6 +56,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     vector<int> label_shape(1, batch_size);
     top[1]->Reshape(label_shape);
     for (int i = 0; i < this->prefetch_.size(); ++i) {
+       // Reshape
       this->prefetch_[i]->label_.Reshape(label_shape);
     }
   }
@@ -80,6 +84,7 @@ void DataLayer<Dtype>::Next() {
 }
 
 // This function is called on prefetch thread
+// 加载batch，重载虚函数  
 template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -92,6 +97,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int batch_size = this->layer_param_.data_param().batch_size();
 
   Datum datum;
+  // 循环加载batch
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     while (Skip()) {
@@ -115,7 +121,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     int offset = batch->data_.offset(item_id);
     Dtype* top_data = batch->data_.mutable_cpu_data();
+    //取得top_data中的数据，放入transformed_data中
     this->transformed_data_.set_cpu_data(top_data + offset);
+    // 将transformed_data数据ransform后，放到datum中  
     this->data_transformer_->Transform(datum, &(this->transformed_data_));
     // Copy label.
     if (this->output_labels_) {
@@ -127,9 +135,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   }
   timer.Stop();
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  //DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  //DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  //DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);

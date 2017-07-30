@@ -8,7 +8,34 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/im2col.hpp"
 
-namespace caffe {
+/**
+ *  
+ *           _________Layer_________
+ *           |                     |
+ *  BaseConvolutionLayer      PoolingLayer
+ *      |                          |
+ *ConvolutionLayer           CuDNNPoolingLayer
+ *      |
+ *CuDNNConvolutionLayer
+ *
+ *实际卷积操作使用矩阵相乘，把卷积核和图片拉平为向量，
+ *图片地址，详细介绍卷积转为矩阵相乘的过程
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232524672-523353998.png 
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232535187-271920827.png
+ */
+
+ /*                                out_x * out_y 
+ *      ker_x * ker_y * chan         24 * 24
+ *              5*5*1               _________         24 * 24  
+ *           ____________           |       |       _________
+ *          |            |          |       |       |       |
+ *    20    |  weight    |          | bottom|       |  out  |
+ *   (ker)  |            |    X     |       |   = 20|       |
+ *          |____________|          |       |       |_______|
+ *                                  |_______|
+ */
+   
+ namespace caffe {
 
 /**
  * @brief Abstract base class that factors out the BLAS code common to
@@ -32,13 +59,19 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
   // we just called weight_cpu_gemm with the same input.
+  
+  // 卷积层前向传递过程中的矩阵乘法
   void forward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
+  //加入偏置
   void forward_cpu_bias(Dtype* output, const Dtype* bias);
+  //卷积层后向传播过程的矩阵乘法
   void backward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output);
+  //主要用来计算权重的增量
   void weight_cpu_gemm(const Dtype* input, const Dtype* output, Dtype*
       weights);
+  //偏置的更新
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #ifndef CPU_ONLY
@@ -88,8 +121,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int group_;
   int out_spatial_dim_;
   int weight_offset_;
-  int num_output_;
-  bool bias_term_;
+  int num_output_;  //滤波器数量
+  bool bias_term_;  //滤波器的初始bias参数
   bool is_1x1_;
   bool force_nd_im2col_;
 
