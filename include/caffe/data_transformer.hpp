@@ -400,6 +400,8 @@ class DataTransformer {
 #ifdef USE_OPENCV
   void RandomResizeImage(const Datum& datum, Datum *resized_datum);
   void RandomResizeImage(const cv::Mat& img, cv::Mat *resized_img);
+  void RandomAlterAspectRatio(const Datum& datum, Datum *resized_datum);
+  void RandomAlterAspectRatio(const cv::Mat& img, cv::Mat *resized_img);
 #endif
 };
 
