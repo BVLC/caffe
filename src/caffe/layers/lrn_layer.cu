@@ -95,7 +95,6 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
   viennacl::ocl::program &program = this->device_->program();
-
   if (use_fuse) {
     viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
         CL_KERNEL_SELECT("lrn_fuse_pool_max"));
@@ -111,6 +110,8 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
       (height_ + tile_pooled_block_h * pool_stride_h_ - 1)
        / (tile_pooled_block_h * pool_stride_h_);
     int_tp n_threads = num_ * tiled_width * tiled_height;
+    if (n_threads == 0)
+      return;
     size_t global_work_size_[2] = {(size_t)n_threads, simd_size};
     size_t local_work_size[2] = {1, simd_size};
     oclk_lrn_fill.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
@@ -141,6 +142,8 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     // Do LRN firstly.
     cl_uint argIdx = 0;
     int_tp n_threads = num_ * height_ * width_;
+    if (n_threads == 0)
+      return;
     size_t global_work_size_[1] = {(size_t)n_threads};
     viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
         CL_KERNEL_SELECT("lrn_full_no_scale"));

@@ -760,6 +760,8 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
+  if (M_ == 0)
+    return;
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (M_ == 1) {

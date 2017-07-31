@@ -142,6 +142,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
   } else {
 #ifdef USE_GREENTEA
+    if (outer_num_ == 0)
+      return;
     viennacl::ocl::context &ctx = viennacl::ocl::get_context
                                     (this->device_->id());
     if (this->device_->CheckCapability("cl_intel_subgroups")

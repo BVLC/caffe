@@ -126,6 +126,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       size_t global_work_size_[3] = {(size_t)num,
                                      (size_t)channels_,
                                      (size_t)spatial_dim};
+      if (num == 0 || channels_ == 0 || spatial_dim == 0)
+        return;
       if (bottom[0] == top[0]) {
         if (fused_relu) {
          viennacl::ocl::kernel &oclk_bn_use_global_stats = program.get_kernel(
