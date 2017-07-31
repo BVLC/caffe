@@ -154,7 +154,9 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   if (!std::is_same<Dtype, double>::value) {
     this->num_ = bottom[0]->count(0, this->channel_axis_);
-    SetUp(bottom, top, Caffe::GetDefaultDevice()->backend());
+    SetUp(bottom, top,
+          Caffe::mode() == Caffe::GPU ?
+          this->device_->backend() : caffe::BACKEND_CPU);
   }
 }
 
@@ -227,6 +229,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 // to feed al the EUs.
 
 #define TUNING_SIZE(x) ((x) > 256 ? 256 : (ALIGN(x, 16)))
+#define TUNING_BATCH_SIZE(x) ((x) > 32 ? 32 : (ALIGN(x, 4)))
 
 
 template<typename Dtype>
@@ -251,7 +254,7 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
              << TUNING_SIZE(height_) << "_"
              << pad_w_ << "_"
              << pad_h_ << "_"
-             << this->num_ << "_"
+             << TUNING_BATCH_SIZE(this->num_) << "_"
              << M_;
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context
@@ -613,7 +616,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
         const int_tp output_block_h = config->workItem_output[1];
         size_t global_size[3] = { (size_t) (output_w_ + output_block_w - 1)
              / output_block_w, (size_t) (output_h_ + output_block_h - 1)
-             / output_block_h, (size_t) config->global_work_size[2]};
+             / output_block_h, (size_t) this->num_ * ALIGN(M_, config->workItem_output[2])};
 
         err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                      kernel.handle().get(), 3,
@@ -705,7 +708,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
         size_t gy = (size_t) ceil( (float) sgemm_m /
                                    (float) globalWorkSizeDY );
         gy = ALIGN(gy, blockK);
-        size_t global_size[3] = { gx, gy, config->global_work_size[2] };
+        size_t global_size[3] = { gx, gy, size_t(this->num_) };
 
         viennacl::ocl::context &ctx =
           viennacl::ocl::get_context(this->device_->id());
@@ -1446,6 +1449,9 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+  if (this->num_ == 0)
+    return;
   weight = this->blobs_[0]->gpu_data();
   weight_cpu = static_cast<const Dtype*>(this->blobs_[0]->cpu_data());
   if (this->bias_term_)
