@@ -484,6 +484,9 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+    }
   }
 }
 layer {
@@ -518,12 +521,24 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+    }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'score-pool4' bottom: 'score2'
-  top: 'score-pool4c' }
 layer {
-  name: "fuse"
+	type: 'Crop'
+	name: 'score-pool4c'
+	bottom: 'score-pool4'
+	bottom: 'score2'
+  	top: 'score-pool4c'
+	crop_param {
+	  axis: 2
+	  offset: 5
+	}
+}
+layer {
+  name: "fuse-pool4"
   type: "Eltwise"
   bottom: "score2"
   bottom: "score-pool4c"
@@ -566,12 +581,23 @@ layer {
     num_output: 21
     kernel_size: 1
     engine: CAFFE
+    weight_filler {
+      type: "msra"
+    }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'score-pool3' bottom: 'score4'
-  top: 'score-pool3c' }
+layer { type: 'Crop'
+	name: 'score-pool3c'
+	bottom: 'score-pool3'
+	bottom: 'score4'
+  top: 'score-pool3c'
+  crop_param {
+	     axis: 2
+	     offset: 9
+  }
+}
 layer {
-  name: "fuse"
+  name: "fuse_pool3"
   type: "Eltwise"
   bottom: "score4"
   bottom: "score-pool3c"
@@ -596,38 +622,60 @@ layer {
     weight_filler: { type: "bilinear" }
   }
 }
-layer { type: 'Crop' name: 'crop' bottom: 'bigscore' bottom: 'data' top: 'coarse' }
+layer {
+	type: 'Crop'
+	name: 'crop'
+	bottom: 'bigscore'
+	bottom: 'data'
+	top: 'coarse'
+	crop_param {
+	  axis: 2
+	  offset: 31
+	}
+}
 
 layer { type: 'Split' name: 'splitting'
   bottom: 'coarse' top: 'unary' top: 'Q0'
 }
 
-
-
 layer {
-  name: "inference1"
+  name: "inference1"#if you set name "inference1", code will load parameters from caffemodel.
   type: "MultiStageMeanfield"
   bottom: "unary"
   bottom: "Q0"
   bottom: "data"
-  top: "crfscore"
+  top: "pred"
   param {
-    lr_mult: 1000
+    lr_mult: 10000#learning rate for W_G
   }
   param {
-    lr_mult: 1000
+  lr_mult: 10000#learning rate for W_B
   }
   param {
-   lr_mult: 1000
+  lr_mult: 1000 #learning rate for compatiblity transform matrix
   }
   multi_stage_meanfield_param {
-    spatial_filter_weights_str: "3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3"
-    bilateral_filter_weights_str: "5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5"
-    num_iterations: 5
-    compatibility_mode: POTTS
-    threshold: 2
-    theta_alpha: 160
-    theta_beta: 3
-    theta_gamma: 3
-   }
+   num_iterations: 10
+   compatibility_mode: POTTS#Initialize the compatilibity transform matrix with a matrix whose diagonal is -1.
+   threshold: 2
+   theta_alpha: 160
+   theta_beta: 3
+   theta_gamma: 3
+   spatial_filter_weights_str: "3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3"
+   bilateral_filter_weights_str: "5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5"
+  }
 }
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "pred"
+  bottom: "label"
+  top: "loss"
+  loss_param {
+    ignore_label: 255
+    normalize: false
+  }
+  include: { phase: TRAIN }
+}
+Contact GitHub API Training Shop Blog About
+
