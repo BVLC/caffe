@@ -628,13 +628,24 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // Note: Currently merging of convolution and relu layers is feasible
     // If current layer is Convolution of MKLDNN engine..
     if ((layer_param->type().compare("Convolution") == 0) &&
-       ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
-       || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
-            (param.engine().compare(0, 6, "MKLDNN") == 0
-            && param.engine().find(":DLA", 6) == string::npos)) ||
-            (param.engine() == "" &&
-              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos)))) {
+        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine().compare(0, 6, "MKLDNN") == 0) &&
+          (layer_param->engine().find(":DLA", 6) == string::npos)) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine() == "") &&
+          (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+           param.engine().find(":DLA", 6) == string::npos)))) {
+      // check if Dialation is larger than 1. if yes, don't fuse the following Relu layer with this conv layer
+      // as MKLDNN doesn't support dilation convolution yet.
+      bool dilation = false;
+      for (int i = 0; i < layer_param->convolution_param().dilation_size(); ++i) {
+        if (layer_param->convolution_param().dilation(i) > 1) {
+          dilation = true;
+          break;
+        }
+      }
+
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -644,14 +655,16 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
-      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
-        ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
-        || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
-            (param.engine().compare(0, 6, "MKLDNN") == 0
-            && param.engine().find(":DLA", 6) == string::npos)) ||
-            (param.engine() == "" &&
-              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos)))) {
+      if (!dilation &&
+          (consumer_layer_param.type().compare("ReLU") == 0) &&
+          ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             consumer_layer_param.engine().find(":DLA", 6) == string::npos)) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine() == "") &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             param.engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
 
