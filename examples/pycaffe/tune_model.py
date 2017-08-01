@@ -23,7 +23,7 @@ def tuneModelDefinition(model_path, iteration):
     caffe_path = os.path.join(working_dir, "..", "..", "build", "tools", "caffe")
     if not os.path.exists(caffe_path):
         print "Caffe binary does not exist; please build Caffe binary first."
-        sys,exit(1)
+        sys.exit(1)
 
     base_model_name = os.path.basename(model_path)
     model_dir = os.path.dirname(model_path)
