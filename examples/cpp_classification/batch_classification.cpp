@@ -422,6 +422,10 @@ int main(int argc, char** argv) {
         cout<<"Use mean file: "<<FLAGS_mean_file<<endl;
     }
 
+#ifdef USE_MLSL
+    caffe::mn::init(&argc,&argv);
+#endif
+
     Classifier classifier(FLAGS_model, FLAGS_weights, FLAGS_mean_file,
             FLAGS_mean_value, FLAGS_label_file, FLAGS_engine, FLAGS_batch_size);
 
