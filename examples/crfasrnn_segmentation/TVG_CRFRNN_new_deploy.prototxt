@@ -665,17 +665,3 @@ layer {
    bilateral_filter_weights_str: "5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5"
   }
 }
-layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
-  bottom: "pred"
-  bottom: "label"
-  top: "loss"
-  loss_param {
-    ignore_label: 255
-    normalize: false
-  }
-  include: { phase: TRAIN }
-}
-Contact GitHub API Training Shop Blog About
-
