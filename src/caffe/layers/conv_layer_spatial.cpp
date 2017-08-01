@@ -229,7 +229,7 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 // to feed al the EUs.
 
 #define TUNING_SIZE(x) ((x) > 256 ? 256 : (ALIGN(x, 16)))
-#define TUNING_BATCH_SIZE(x) ((x) > 32 ? 32 : (ALIGN(x, 4)))
+#define TUNING_BATCH_SIZE(x) ((x) > 32 ? 32 : ((x < 4) ? x : (ALIGN(x, 4))))
 
 
 template<typename Dtype>
