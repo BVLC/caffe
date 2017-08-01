@@ -2,7 +2,16 @@
 
 #include "caffe/layers/conv_layer.hpp"
 
-
+/*                                out_x * out_y 
+ *      ker_x * ker_y * chan         24 * 24
+ *              5*5*1               _________         24 * 24  
+ *           ____________           |       |       _________
+ *          |            |          |       |       |       |
+ *    20    |  weight    |          | bottom|       |  out  |
+ *   (ker)  |            |    X     |       |   = 20|       |
+ *          |____________|          |       |       |_______|
+ *                                  |_______|
+ */
 
 namespace caffe {
 

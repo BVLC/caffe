@@ -229,6 +229,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     conv_out_spatial_dim_ = top[0]->count(first_spatial_axis);
   }
   col_offset_ = kernel_dim_ * conv_out_spatial_dim_;
+  //output_offset_ 单通道输出图像的大小
   output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
   // Setup input dimensions (conv_input_shape_).
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
@@ -291,6 +292,7 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
      * kernel_dim_, 矩阵A的列，矩阵B的行
      * weight_offset_ , 单通道weight大小(即A的大小)(= 500 = 5*5*20)
      * col_offset_ , 单通道输入图像大小(即B的大小)(= 14400 = 24*24*5*5)
+     * output_offset_ 单通道输出图像的大小
      */
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
         group_, conv_out_spatial_dim_, kernel_dim_,
