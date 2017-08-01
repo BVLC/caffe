@@ -2634,7 +2634,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {",    // NOLINT
 "uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"#else",    // NOLINT
+"Dtype bias = 0.",    // NOLINT
+"#endif",    // NOLINT
 "/*",    // NOLINT
 "A^T = {1, 1, 1, 1, 1, 0,",    // NOLINT
 "0, 1, -1,2,-2,0,",    // NOLINT

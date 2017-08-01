@@ -2055,7 +2055,11 @@ winograd_4x4(
   if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {
     uint_tp out_addr = fm * output_width * output_height;
     out_addr += or * output_width + oc;
+#if APPLY_BIAS
     Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];
+#else
+    Dtype bias = 0.
+#endif
       /*
       A^T = {1, 1, 1, 1, 1, 0,
              0, 1, -1,2,-2,0,

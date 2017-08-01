@@ -1241,6 +1241,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
                 << " -D IS_LARGE_INPUT=" << is_large_input
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << this->channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << this->num_output_
+                << " -D APPLY_BIAS=" << this->bias_term_
                 << " -DNUM_FILTERS=" << M_
                 << " -DTILE_X=" << tile_x
                 << " -DTILE_Y=" << tile_y
