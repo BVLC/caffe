@@ -15,7 +15,7 @@ from pdb import set_trace
 def resnet_block_to_fuse_type(model, cur_conv_index):
     maxindex = len(model.layer)-1
     if cur_conv_index+1>maxindex:
-        return 0 #UNFUSED
+        return 0,0 #UNFUSED
     elif  cur_conv_index+2>maxindex:
         actual = [model.layer[cur_conv_index+1].type, 'xxx', 'xxx', 'xxx']
     elif  cur_conv_index+3>maxindex:
