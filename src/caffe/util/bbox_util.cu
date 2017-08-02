@@ -326,6 +326,65 @@ template void PermuteDataGPU(const int nthreads,
 
 #ifdef USE_CUDA
 template <typename Dtype>
+__global__ void PermuteData24Kernel(const int nthreads,
+          const Dtype* data, const int num_channels, const int num_height,
+          const int num_width, Dtype* new_data) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    const int c = index % num_channels;
+    const int w = (index / num_channels) % num_width;
+    const int h = (index / num_channels / num_width) % num_height;
+    const int n = index / num_width / num_height / num_channels;
+    const int new_index = ((n * num_channels + c) * num_height + h) * num_width + w;
+    new_data[index] = data[new_index];
+  }
+}
+#endif //USE_CUDA
+
+template <typename Dtype>
+void PermuteData24GPU(const int nthreads,
+          const Dtype* data, const int num_channels, const int num_height,
+          const int num_width, Dtype* new_data) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PermuteData24Kernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS>>>(nthreads, data, num_channels, num_height,
+        num_width, new_data);
+    CUDA_POST_KERNEL_CHECK;
+#endif //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        Caffe::GetDefaultDevice()->id());
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    viennacl::ocl::kernel &oclk_permute_data =
+        program.get_kernel(CL_KERNEL_SELECT("PermuteData24"));
+    viennacl::ocl::enqueue(
+        oclk_permute_data(nthreads,
+        WrapHandle((cl_mem)data, &ctx),
+        num_channels,
+        num_height,
+        num_width,
+        WrapHandle((cl_mem)new_data, &ctx)),
+        ctx.get_queue());
+#endif //USE_GREENTEA
+  }
+}
+
+#ifdef HAS_HALF_SUPPORT
+template void PermuteData24GPU(const int nthreads,
+          const half* data, const int num_classes, const int num_data,
+          const int num_dim, half* new_data);
+#endif
+template void PermuteData24GPU(const int nthreads,
+          const float* data, const int num_classes, const int num_data,
+          const int num_dim, float* new_data);
+template void PermuteData24GPU(const int nthreads,
+          const double* data, const int num_classes, const int num_data,
+          const int num_dim, double* new_data);
+
+#ifdef USE_CUDA
+template <typename Dtype>
 __global__ void kernel_channel_max(const int num, const int channels,
     const int spatial_dim, const Dtype* data, Dtype* out) {
   CUDA_KERNEL_LOOP(index, num * spatial_dim) {

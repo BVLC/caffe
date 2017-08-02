@@ -440,6 +440,18 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(PermuteData24, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* data, const int num_channels, const int num_height,",    // NOLINT
+"const int num_width, __global Dtype* new_data) {",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"const int c = index % num_channels;",    // NOLINT
+"const int w = (index / num_channels) % num_width;",    // NOLINT
+"const int h = (index / num_channels / num_width) % num_height;",    // NOLINT
+"const int n = index / num_width / num_height / num_channels;",    // NOLINT
+"const int new_index = ((n * num_channels + c) * num_height + h) * num_width + w;",    // NOLINT
+"new_data[index] = data[new_index];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
 "",    // NOLINT
 "",    // NOLINT
 "",    // NOLINT

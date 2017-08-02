@@ -87,7 +87,7 @@ void YoloDetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 template <typename Dtype>
 bool comp(const PredictionResult<Dtype> &a,const PredictionResult<Dtype> &b)
 {
-    return a.confidence>b.confidence;  //big-little
+    return a.confidence>b.confidence;  //sort from big to little
 }
 
 template <typename Dtype>
@@ -107,7 +107,11 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
           swap_data[index++] = bottom[0]->data_at(b,c,h,w);	
   vector<vector< PredictionResult<Dtype> > > predicts(swap.num());
   PredictionResult<Dtype> predict;
+  int_tp num_kept=0;
   vector<vector<int_tp> > idxes(swap.num());
+#ifdef _OPENMP  //liyuming mark: it only optimizes for batch>1, add -fopenmp in CMakeLists.txt CMAKE_CXX_FLAGS
+   #pragma omp parallel for reduction(+:num_kept)
+#endif
   for (int_tp b = 0; b < swap.num(); ++b){
     predicts[b].clear(); 
     idxes[b].clear();
@@ -125,14 +129,14 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
             predicts[b].push_back(predict);
           }
         }
+    
     if(predicts[b].size() > 0){
       std::sort(predicts[b].begin(),predicts[b].end(),comp<Dtype>);
       ApplyNms(predicts[b], idxes[b], nms_threshold_);
     }
+	num_kept+=idxes[b].size();
   }
-  int_tp num_kept=0;
-  for (int_tp b = 0; b < swap.num(); ++b)
-    num_kept+=idxes[b].size();
+  
   vector<int_tp> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
@@ -164,7 +168,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
 }
 
 #ifdef CPU_ONLY
-//STUB_GPU_FORWARD(YoloDetectionOutputLayer, Forward);
+STUB_GPU_FORWARD(YoloDetectionOutputLayer, Forward);
 #endif
 
 INSTANTIATE_CLASS(YoloDetectionOutputLayer);

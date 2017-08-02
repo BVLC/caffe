@@ -157,7 +157,6 @@ void Detector::WrapInputLayer(std::vector<Dtype *> &input_channels) {
   int width = input_layer->width();
   int height = input_layer->height();
   Dtype* input_data = input_layer->mutable_cpu_data();
-  memset(input_data,0,width*height*input_layer->channels()*sizeof(Dtype));
   for (int i = 0; i < input_layer->channels(); ++i) {
     input_channels.push_back(input_data);
     input_data += width * height;

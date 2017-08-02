@@ -163,6 +163,18 @@ __kernel void TEMPLATE(PermuteData, Dtype)(const int nthreads,
   }
 }
 
+__kernel void TEMPLATE(PermuteData24, Dtype)(const int nthreads,
+          __global const Dtype* data, const int num_channels, const int num_height,
+          const int num_width, __global Dtype* new_data) {
+  for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
+    const int c = index % num_channels;
+    const int w = (index / num_channels) % num_width;
+    const int h = (index / num_channels / num_width) % num_height;
+    const int n = index / num_width / num_height / num_channels;
+    const int new_index = ((n * num_channels + c) * num_height + h) * num_width + w;
+    new_data[index] = data[new_index];
+  }
+}
 
 
 
