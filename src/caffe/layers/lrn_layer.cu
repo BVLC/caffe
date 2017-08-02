@@ -82,6 +82,7 @@ __global__ void LRNComputeOutput(const int_tp nthreads, const Dtype* const in,
 }
 #endif  // USE_CUDA
 
+#ifdef USE_GREENTEA
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
     const vector<Blob<Dtype>*>& bottom,
@@ -177,6 +178,7 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
       ctx.get_queue());
   }
 }
+#endif
 
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelForward_gpu(
@@ -296,19 +298,22 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
 #ifdef HAS_HALF_SUPPORT
 template void LRNLayer<half>::CrossChannelForward_gpu(
     const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top);
+#ifdef USE_GREENTEA
 template void LRNLayer<half>::CrossChannelForward_fuse_pooling_gpu(
     const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top, bool);
+#endif
 #endif
 template void LRNLayer<float>::CrossChannelForward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
 template void LRNLayer<double>::CrossChannelForward_gpu(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top);
-
+#ifdef USE_GREENTEA
 template void LRNLayer<float>::CrossChannelForward_fuse_pooling_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top, bool);
 template void LRNLayer<double>::CrossChannelForward_fuse_pooling_gpu(
     const vector<Blob<double>*>& bottom,
     const vector<Blob<double>*>& top, bool);
+#endif
 
 template<typename Dtype>
 void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,

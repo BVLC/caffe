@@ -53,9 +53,10 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+#ifdef USE_GREENTEA
   copied_weight_data_ = NULL;
-
   test_only_ = this->phase_ == TEST;
+#endif
 }
 
 template<typename Dtype>

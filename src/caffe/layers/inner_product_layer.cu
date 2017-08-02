@@ -12,6 +12,7 @@
 
 namespace caffe {
 
+#ifdef USE_GREENTEA
 struct gemm_callback_arg {
   std::vector<cl_event> evs;
   std::vector<cl_mem> imgs;
@@ -753,6 +754,7 @@ template void InnerProductLayer<double>::tune_innerprod_type(
                               const CBLAS_TRANSPOSE TransB, const cl_mem A,
                               const cl_mem B, const cl_mem B_image,
                               const size_t max_image_size);
+#endif
 
 template<typename Dtype>
 void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -873,7 +875,6 @@ void InnerProductLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
 
-  test_only_ = false;
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->param_propagate_down_[0]) {
@@ -915,6 +916,7 @@ void InnerProductLayer<Dtype>::Backward_gpu(
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    test_only_ = false;
     if (this->param_propagate_down_[0]) {
       const Dtype* top_diff = top[0]->gpu_diff();
       const Dtype* bottom_data = bottom[0]->gpu_data();

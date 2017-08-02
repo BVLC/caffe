@@ -66,10 +66,12 @@ class LRNLayer : public Layer<Dtype> {
   virtual void WithinChannelBackward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+#ifdef USE_GREENTEA
   virtual void CrossChannelForward_fuse_pooling_gpu(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top,
       bool use_fuse);
+#endif
 
   int_tp size_;
   int_tp pre_pad_;
