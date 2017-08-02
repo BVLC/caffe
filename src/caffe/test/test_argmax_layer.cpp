@@ -12,6 +12,25 @@
 
 namespace caffe {
 
+/* Known issue: the following cases failed with half float
+[ FAILED ] ArgMaxLayerTest/0.TestCPU, where TypeParam = half_float::half
+[ FAILED ] ArgMaxLayerTest/0.TestCPUMaxVal, where TypeParam = half_float::half
+[ FAILED ] ArgMaxLayerTest/0.TestCPUMaxValTopK, where TypeParam = half_float::half
+[ FAILED ] ArgMaxLayerTest/0.TestCPUAxisMaxValTopK, where TypeParam = half_float::half
+[ FAILED ] ArgMaxLayerTest/0.TestCPUAxisTopK, where TypeParam = half_float::half
+[ FAILED ] ArgMaxLayerTest/0.TestCPUTopK, where TypeParam = half_float::half
+
+The root cause is the half precision issue, for example, it is unable
+to tell the diffence of value 2574 and 2575. In caffe implementaion,
+the data type of the output of ArgMaxLayer is always the same as that
+of the input data. For the half float case, when the returned index is
+too large to be represented exactly by half float, the issue happens.
+
+There might be huge side effects to change the data type of the output
+of ArgMaxLayer to be uint, etc. So, we just pending the fix and consider
+it as known issue.
+*/
+
 template <typename Dtype>
 class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
  protected:
