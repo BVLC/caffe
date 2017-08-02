@@ -689,6 +689,11 @@ void PermuteDataGPU(const int nthreads,
           const int num_dim, Dtype* new_data);
 
 template <typename Dtype>
+void PermuteData24GPU(const int nthreads,
+		  const Dtype* data, const int num_channels, const int num_height,
+		  const int num_width, Dtype* new_data);
+
+template <typename Dtype>
 void SoftMaxGPU(const Dtype* data, const int outer_num, const int channels,
     const int inner_num, Dtype* prob);
 
