@@ -122,7 +122,9 @@ Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
   }
 }
 
+#ifdef HAS_FACET
 template half BBoxSize(const half* bbox, const bool normalized);
+#endif
 template float BBoxSize(const float* bbox, const bool normalized);
 template double BBoxSize(const double* bbox, const bool normalized);
 
@@ -322,7 +324,9 @@ Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2) {
   }
 }
 
+#ifdef HAS_FACET
 template half JaccardOverlap(const half* bbox1, const half* bbox2);
+#endif
 template float JaccardOverlap(const float* bbox1, const float* bbox2);
 template double JaccardOverlap(const double* bbox1, const double* bbox2);
 
