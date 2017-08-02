@@ -728,11 +728,12 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
     // If current layer is BatchNorm of MKL2017 engine..
     if (((layer_param->type().compare("BatchNorm") == 0) &&
         ((layer_param->batch_norm_param().engine() ==
-         BatchNormParameter_Engine_MKL2017)
+         BatchNormParameter_Engine_MKL2017 || layer_param->batch_norm_param().engine() ==
+         BatchNormParameter_Engine_MKLDNN)
         || ((layer_param->batch_norm_param().engine() ==
            BatchNormParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKL2017") == 0))) &&
-        (layer_param->top(0) == layer_param->bottom(0) )) {
+            (param.engine().compare("MKL2017") == 0 || param.engine().compare("MKLDNN") == 0)))) &&
+        (layer_param->top(0) == layer_param->bottom(0))) {
       std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,
