@@ -369,7 +369,13 @@ Dtype Blob<Dtype>::asum_diff() const {
   switch (diff_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
-    return caffe_cpu_asum( prv_diff_count(), prv_diff());
+    {
+      const Dtype* prv_ptr = prv_diff();
+      if (prv_ptr == NULL)
+        return caffe_cpu_asum(count_, cpu_diff());
+      else
+        return caffe_cpu_asum(prv_diff_count(), prv_diff());
+    }
   case SyncedMemory::HEAD_AT_CPU:
     return caffe_cpu_asum(count_, cpu_diff());
   case SyncedMemory::HEAD_AT_GPU:
@@ -462,7 +468,11 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
       diff = prv_diff();
-      sumsq = caffe_cpu_dot(prv_diff_count(), diff, diff);
+      if (diff == NULL) {
+        diff = cpu_diff();
+        sumsq = caffe_cpu_dot(count_, diff, diff); 
+      } else
+        sumsq = caffe_cpu_dot(prv_diff_count(), diff, diff);
       break;
   case SyncedMemory::HEAD_AT_CPU:
     diff = cpu_diff();
