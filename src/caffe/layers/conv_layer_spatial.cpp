@@ -128,8 +128,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   output_h_ = (height_ + 2 * pad_h_ - kernel_extent_h) / stride_h_ + 1;
   output_w_ = (width_ + 2 * pad_w_ - kernel_extent_w) / stride_w_ + 1;
 
-  input_transform_blob_.Reshape(this->channels_ * this->num_, (output_h_+3)/4,
-                                (output_w_+3)/4, 36);
   // Shape the tops.
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
                            bottom[0]->shape().begin() + this->channel_axis_);
@@ -718,6 +716,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     if (err != CL_SUCCESS)
       return err;
   } else if (config->kernelType == ConvType::WINOGRAD) {
+    input_transform_blob_.Reshape(this->channels_ * this->num_, (output_h_+3)/4,
+                                  (output_w_+3)/4, 36);
     winogradWeights();
     viennacl::ocl::kernel &oclk_data_transform =
       program.get_kernel(config->kernelName+"_data_transform_4x4");
