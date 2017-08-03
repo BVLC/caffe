@@ -926,7 +926,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp reg = 0;",    // NOLINT
 "LOOP(INVEC_SIZE, reg,",    // NOLINT
 "{",    // NOLINT
-"if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE == TILE_Y || reg < INVEC_SIZE - 1) {",    // NOLINT
+"if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE <= (TILE_Y + 2) || reg < INVEC_SIZE - 1) {",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {",    // NOLINT
 "if (curr_x < INPUT_PAD_W) {",    // NOLINT

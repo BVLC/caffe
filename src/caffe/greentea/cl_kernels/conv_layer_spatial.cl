@@ -223,7 +223,7 @@ convolve_simd(
     int_tp reg = 0;
     LOOP(INVEC_SIZE, reg,
       {
-        if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE == TILE_Y || reg < INVEC_SIZE - 1) {
+        if (curr_local_y + reg * TILE_Y_STRIDE < TILE_Y || INVEC_SIZE * TILE_Y_STRIDE <= (TILE_Y + 2) || reg < INVEC_SIZE - 1) {
 #if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
         if (curr_y >= INPUT_PAD_H && curr_y < input_height + INPUT_PAD_H && curr_x + 3 >= INPUT_PAD_W && curr_x < input_width + INPUT_PAD_W) {
           if (curr_x < INPUT_PAD_W) {
