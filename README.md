@@ -10,5 +10,6 @@ Improvements and new features include:
 - Sparse inputs and CPU/GPU computations
 - Support for class weights applied to Softmax loss, useful for training over imbalanced datasets
 - SSD: Single Shot MultiBox Detector for object detection in images
+- Support for lightweight nets via accelerated depthwise convolutions (https://github.com/BVLC/caffe/pull/5665) and shufflenet layer (https://github.com/farmingyard/ShuffleNet).
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors, train from text or sparse data, need built-in image detection.
