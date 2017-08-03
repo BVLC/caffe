@@ -13,7 +13,7 @@
 #include "caffe/layers/base_conv_layer.hpp"
 
 namespace caffe {
-
+enum class ConvType: int_tp {IDLF = 2, WINOGRAD = 3, BASIC = 4, GEMM_LIKE = 5};
 template<typename Dtype>
 class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
  public:
@@ -67,6 +67,13 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return IsFusedWithEltwiseReLU() ? false : true;
   }
 
+#ifdef USE_GREENTEA
+  ~ConvolutionLayerSpatial() {
+    if (winograd_weights_image_)
+      clReleaseMemObject(winograd_weights_image_);
+    winograd_weights_image_ = NULL;
+  }
+#endif
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
@@ -98,14 +105,14 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     bool tested;
     bool swizzle_weights;
     bool use_null_local;
-    int_tp kernelType;
+    ConvType kernelType;
 
     kernelConfig() {
     }
     kernelConfig(string name, size_t* global_size, size_t* local_size,
     int_tp* workItem,
                  bool tune, bool swizzle, bool null_local,
-                 int_tp type = 0) {
+                 ConvType type = ConvType::BASIC) {
       kernelName = name;
       for (int_tp x = 0; x < 3; x++) {
         local_work_size[x] = local_size[x];
@@ -128,7 +135,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                  const Blob<Dtype> &verify_blob);
   virtual void create_convolution_kernel(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top,
-                                         int_tp kernelType,
+                                         ConvType kernelType,
                                          int_tp blockWidth,
                                          int_tp blockHeight,
                                          int_tp blockDepth);
@@ -142,6 +149,11 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                    int_tp blockHeight,
                                    int_tp blockDepth);
   virtual bool create_gemm_like_conv_kernel(const vector<Blob<Dtype>*>& bottom,
+                                   const vector<Blob<Dtype>*>& top,
+                                   int_tp blockWidth,
+                                   int_tp blockHeight,
+                                   int_tp blockDepth);
+  virtual bool create_winograd_conv_kernel(const vector<Blob<Dtype>*>& bottom,
                                    const vector<Blob<Dtype>*>& top,
                                    int_tp blockWidth,
                                    int_tp blockHeight,
@@ -165,6 +177,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                               const vector<Blob<Dtype>*>& top,
                               int_tp swizzle_factor,
                               bool interleave = false);
+  virtual void winogradWeights();
   virtual void generate_key();
   virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
   int_tp blockHeight,
@@ -252,6 +265,9 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   std::string short_key_;
   std::string kernel_name_;
   std::stringstream cache_path_;
+
+  Blob<Dtype> input_transform_blob_;
+  cl_mem winograd_weights_image_;
 
   Blob<Dtype> swizzled_weights_blob_;
   Blob<Dtype> bias_multiplier_;
