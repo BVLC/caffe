@@ -59,11 +59,12 @@
 <p>Caffe packages are available for several Debian versions, as shown in the
 following chart:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Your Distro     |  CPU_ONLY  |  CUDA  |     Alias
+<div class="highlighter-rouge"><pre class="highlight"><code>Your Distro     |  CPU_ONLY  |  CUDA  | Codename
 ----------------+------------+--------+-------------------
-Debian/stable   |     ✘      |   ✘    | Debian Jessie
-Debian/testing  |     ✔      |   ✔    | Debian Stretch/Sid
-Debian/unstable |     ✔      |   ✔    | Debian Sid
+Debian/oldstable|     ✘      |   ✘    | Jessie (8.0)
+Debian/stable   |     ✔      |   ✔    | Stretch (9.0)
+Debian/testing  |     ✔      |   ✔    | Buster
+Debian/unstable |     ✔      |   ✔    | Buster
 </code></pre>
 </div>
 
@@ -74,15 +75,20 @@ Debian/unstable |     ✔      |   ✔    | Debian Sid
   <li>
     <p><code class="highlighter-rouge">✔ </code> You can install caffe with a single command line following this guide.</p>
   </li>
+  <li>
+    <p><a href="https://tracker.debian.org/pkg/caffe">Package status of CPU-only version</a></p>
+  </li>
+  <li>
+    <p><a href="https://tracker.debian.org/pkg/caffe-contrib">Package status of CUDA version</a></p>
+  </li>
 </ul>
 
-<p>Last update: 2017-02-01</p>
+<p>Last update: 2017-07-08</p>
 
 <h2 id="binary-installation-with-apt">Binary installation with APT</h2>
 
-<p>Apart from the installation methods based on source, Debian/unstable
-and Debian/testing users can install pre-compiled Caffe packages from
-the official archive.</p>
+<p>Apart from the installation methods based on source, Debian users can install
+pre-compiled Caffe packages from the official archive with APT.</p>
 
 <p>Make sure that your <code class="highlighter-rouge">/etc/apt/sources.list</code> contains <code class="highlighter-rouge">contrib</code> and <code class="highlighter-rouge">non-free</code>
 sections if you want to install the CUDA version, for instance:</p>
@@ -101,7 +107,8 @@ $ python3 -c 'import caffe; print(caffe.__path__)'   # python3 interface working
 </code></pre>
 </div>
 
-<p>These Caffe packages should work for you out of box.</p>
+<p>These Caffe packages should work for you out of box. However, the CUDA version
+may break if your NVIDIA driver and CUDA toolkit are not installed with APT.</p>
 
 <h4 id="customizing-caffe-packages">Customizing caffe packages</h4>
 
@@ -152,18 +159,22 @@ here is a more elegant way to pull caffe build dependencies:</p>
 
 <p>Some users may find their favorate compiler doesn’t work with CUDA.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>CXX compiler |  CUDA 7.5  |  CUDA 8.0  |
--------------+------------+------------+-
-GCC-7        |     ?      |     ?      |
-GCC-6        |     ✘      |     ✘      |
-GCC-5        |     ✔ [1]  |     ✔      |
-CLANG-4.0    |     ?      |     ?      |
-CLANG-3.9    |     ✘      |     ✘      |
-CLANG-3.8    |     ?      |     ✔      |
+<div class="highlighter-rouge"><pre class="highlight"><code>CXX compiler |  CUDA 7.5  |  CUDA 8.0  |  CUDA 9.0  |
+-------------+------------+------------+------------+
+GCC-8        |     ?      |     ?      |     ?      |
+GCC-7        |     ?      |     ?      |     ?      |
+GCC-6        |     ✘      |     ✘      |     ✔      |
+GCC-5        |     ✔ [1]  |     ✔      |     ✔      |
+-------------+------------+------------+------------+
+CLANG-4.0    |     ?      |     ?      |     ?      |
+CLANG-3.9    |     ✘      |     ✘      |     ✔      |
+CLANG-3.8    |     ?      |     ✔      |     ✔      |
 </code></pre>
 </div>
 
 <p><code class="highlighter-rouge">[1]</code> CUDA 7.5 ‘s <code class="highlighter-rouge">host_config.h</code> must be patched before working with GCC-5.</p>
+
+<p><code class="highlighter-rouge">[2]</code> CUDA 9.0: https://devblogs.nvidia.com/parallelforall/cuda-9-features-revealed/</p>
 
 <p>BTW, please forget the GCC-4.X series, since its <code class="highlighter-rouge">libstdc++</code> ABI is not compatible with GCC-5’s.
 You may encounter failure linking GCC-4.X object files against GCC-5 libraries.
@@ -221,15 +232,6 @@ and hack the packaging scripts, then build your customized package.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt install caffe-doc
 $ dpkg -L caffe-doc
-</code></pre>
-</div>
-
-<ul>
-  <li>Where can I find the Debian package status?</li>
-</ul>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>https://tracker.debian.org/pkg/caffe          (for the CPU_ONLY version)
-https://tracker.debian.org/pkg/caffe-contrib  (for the CUDA version)
 </code></pre>
 </div>
 

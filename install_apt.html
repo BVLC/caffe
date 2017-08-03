@@ -56,6 +56,44 @@
 
       <h1 id="ubuntu-installation">Ubuntu Installation</h1>
 
+<h3 id="for-ubuntu--1704">For Ubuntu (&gt;= 17.04)</h3>
+
+<p><strong>Installing pre-compiled Caffe</strong></p>
+
+<p>Everything including caffe itself is packaged in 17.04 and higher versions.
+To install pre-compiled Caffe package, just do it by</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt install caffe-cpu
+</code></pre>
+</div>
+
+<p>for CPU-only version, or</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt install caffe-cuda
+</code></pre>
+</div>
+
+<p>for CUDA version. Note, the cuda version may break if your NVIDIA driver
+and CUDA toolkit are not installed by APT.</p>
+
+<p><a href="https://launchpad.net/ubuntu/+source/caffe">Package status of CPU-only version</a></p>
+
+<p><a href="https://launchpad.net/ubuntu/+source/caffe-contrib">Package status of CUDA version</a></p>
+
+<p><strong>Installing Caffe from source</strong></p>
+
+<p>We may install the dependencies by merely one line</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo apt build-dep caffe-cpu        # dependencies for CPU-only version
+sudo apt build-dep caffe-cuda       # dependencies for CUDA version
+</code></pre>
+</div>
+
+<p>It requires a <code class="highlighter-rouge">deb-src</code> line in your <code class="highlighter-rouge">sources.list</code>.
+Continue with <a href="installation.html#compilation">compilation</a>.</p>
+
+<h3 id="for-ubuntu--1704-1">For Ubuntu (&lt; 17.04)</h3>
+
 <p><strong>General dependencies</strong></p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
