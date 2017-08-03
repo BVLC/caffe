@@ -150,7 +150,7 @@ void caffe_powx<half>(const int_tp n, const half* a, const half b,
 
 void vhSqr(const int_tp n, const half *a, half* y) {
   for (int i = 0; i < n; i++) {
-    y[i] = sqrt(a[i]);
+    y[i] = a[i] * a[i];
   }
 }
 
