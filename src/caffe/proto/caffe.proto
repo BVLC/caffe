@@ -452,6 +452,9 @@ message LayerParameter {
   repeated string bottom = 3; // the name of each bottom blob
   repeated string top = 4; // the name of each top blob
 
+  // for shufflenet
+  optional ShuffleChannelParameter shuffle_channel_param = 164;
+
   // The train / test phase for computation.
   optional Phase phase = 10;
 
@@ -1965,4 +1968,8 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+
+message ShuffleChannelParameter {
+  optional uint32 group = 1[default = 1]; // The number of group
 }
