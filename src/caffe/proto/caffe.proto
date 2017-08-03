@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: pad_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -387,6 +387,7 @@ message LayerParameter {
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
+  optional PadParameter pad_param = 147;
   optional ParameterParameter parameter_param = 145;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
@@ -888,6 +889,29 @@ message MVNParameter {
 
   // Epsilon for not dividing by zero while normalizing variance
   optional float eps = 3 [default = 1e-9];
+}
+
+message PadParameter {
+  // To pad, the bottom is copied to the middle of the top, which is larger on
+  // all four sides (ignoring dimensions before the last two) by the pad width.
+  // Those surrounding elements are set to some value, determined by the
+  // padtype. The restriction to the last two dimensions was for simplicity.
+  // Lifting that is a future project. Also, allowing the pad width to depend
+  // on the side would be a nice generaliztion.
+  // The pad is configured by
+  // - the pad `type` to choose how the padding is done
+  // - the pad `pad` to set the width of the padding. It's the same for all four
+  //   sides.
+  enum PadType {
+    ZERO = 0;
+    REPLICATE = 1;
+    // PAD_REFLECT = 2;
+    // PAD_REFLECT_101 = 3;
+    // PAD_ODD = 4;
+    // PAD_ODD_101 = 5;
+  }
+  optional PadType padtype = 1 [default = ZERO]; // The pooling method
+  optional uint32 pad = 2 [default = 0]; // Width of padding
 }
 
 message ParameterParameter {
