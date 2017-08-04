@@ -55,7 +55,6 @@ void Timer::Start() {
         clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
                         NULL, &start_gpu_cl_);
-        clFinish(ctx.get_queue().handle().get());
       }
 #endif
 #else
@@ -90,7 +89,6 @@ void Timer::Stop() {
         clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
                         NULL, &stop_gpu_cl_);
-        clFinish(ctx.get_queue().handle().get());
       }
 #endif
 #else
@@ -162,6 +160,9 @@ float Timer::MilliSeconds() {
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
     if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          Caffe::GetDefaultDevice()->id());
+      clFinish(ctx.get_queue().handle().get());
       cl_ulong startTime = 0, stopTime = 0;
       clGetEventProfilingInfo(start_gpu_cl_, CL_PROFILING_COMMAND_END,
           sizeof startTime, &startTime, NULL);
