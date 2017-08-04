@@ -128,6 +128,15 @@ echo "};" >> $SOURCE
 
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
+echo "  std::stringstream int64_base_atomics;" >> $SOURCE
+echo "  int64_base_atomics << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  int64_base_atomics << \"#if defined(cl_khr_int64_base_atomics)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  int64_base_atomics << \"#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  int64_base_atomics << \"#define ATOMICS_64_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  int64_base_atomics << \"#endif\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  if(ctx->devices()[0].extensions().find(\"cl_khr_int64_base_atomics\")!= std::string::npos) {" >> $SOURCE
+echo "    header += int64_base_atomics.str();" >> $SOURCE
+echo "  }" >> $SOURCE
 
 echo "#ifdef USE_INDEX_64" >> $SOURCE
 shopt -s nullglob
