@@ -11,7 +11,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
-#if defined(USE_GREENTEA) && defined(USE_INTEL_SPATIAL)
+#if defined(USE_OPENCL) && defined(USE_INTEL_SPATIAL)
 
 namespace caffe {
 
@@ -19,7 +19,7 @@ namespace caffe {
 // accumulate through explicit loops over input, output, and filters.
 template <typename Dtype>
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
-    const vector<shared_ptr<Blob<Dtype> > >& weights,
+    const vector<std::shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
@@ -136,19 +136,19 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     }
   }
 }
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void caffe_conv(const Blob<half>* in,
     ConvolutionParameter* conv_param,
-    const vector<shared_ptr<Blob<half> > >& weights,
+    const vector<std::shared_ptr<Blob<half> > >& weights,
     Blob<half>* out);
 #endif
 template void caffe_conv(const Blob<float>* in,
     ConvolutionParameter* conv_param,
-    const vector<shared_ptr<Blob<float> > >& weights,
+    const vector<std::shared_ptr<Blob<float> > >& weights,
     Blob<float>* out);
 template void caffe_conv(const Blob<double>* in,
     ConvolutionParameter* conv_param,
-    const vector<shared_ptr<Blob<double> > >& weights,
+    const vector<std::shared_ptr<Blob<double> > >& weights,
     Blob<double>* out);
 
 template <typename TypeParam>
@@ -189,7 +189,7 @@ class ConvolutionLayerTest_Spatial : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  shared_ptr<Blob<Dtype> > ref_blob_top_;
+  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -197,7 +197,7 @@ class ConvolutionLayerTest_Spatial : public MultiDeviceTest<TypeParam> {
 TYPED_TEST_CASE(ConvolutionLayerTest_Spatial, TestFloatAndDevices);
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -209,7 +209,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
     convolution_param->set_num_output(4);
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(this->blob_top_->num(), 2);
@@ -237,7 +237,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -252,7 +252,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -279,7 +279,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -294,7 +294,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -323,7 +323,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3xPad1) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -339,7 +339,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -366,7 +366,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestDilatedConvolution) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL) {
     typedef typename TypeParam::Dtype Dtype;
     vector<int_tp> bottom_shape;
     bottom_shape.push_back(2);
@@ -394,7 +394,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestDilatedConvolution) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -421,7 +421,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestDilatedConvolution) {
 }
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial11x11x1x2_caffenet_Conv1) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -438,7 +438,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -467,7 +467,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial5x5x1x2_caffenet_Conv2) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -484,7 +484,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -512,7 +512,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x1_caffenet_Conv3) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -529,7 +529,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -557,7 +557,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x1_caffenet_Conv4) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -574,7 +574,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -602,7 +602,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 
 TYPED_TEST(ConvolutionLayerTest_Spatial,
     TestSimpleConvolution_Spatial3x3x2_caffenet_Conv5) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -619,7 +619,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -646,7 +646,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -663,7 +663,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -690,7 +690,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -703,7 +703,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -723,7 +723,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -737,7 +737,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -757,7 +757,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     // Test separable convolution by computing the Sobel operator
@@ -765,7 +765,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
     // as the convolution of two rectangular filters.
     typedef typename TypeParam::Dtype Dtype;
     // Fill bottoms with identical Gaussian noise.
-    shared_ptr<GaussianFiller<Dtype> > filler;
+    std::shared_ptr<GaussianFiller<Dtype> > filler;
     FillerParameter filler_param;
     filler_param.set_value(1.);
     filler.reset(new GaussianFiller<Dtype>(filler_param));
@@ -779,7 +779,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
     convolution_param->add_stride(2);
     convolution_param->set_num_output(1);
     convolution_param->set_bias_term(false);
-    shared_ptr<Layer<Dtype> > layer(
+    std::shared_ptr<Layer<Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->blobs().resize(1);
     layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
@@ -803,7 +803,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
     // (1) the [1 2 1] column filter
     vector<Blob<Dtype>*> sep_blob_bottom_vec;
     vector<Blob<Dtype>*> sep_blob_top_vec;
-    shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
+    std::shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
     sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
     sep_blob_top_vec.push_back(this->blob_top_2_);
     convolution_param->clear_kernel_size();
@@ -857,7 +857,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradient_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -879,7 +879,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradient_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Gradient_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;
@@ -901,7 +901,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Gradient_Spatial) {
 }
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradientGroup_Spatial) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL &&
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL &&
       Caffe::GetDefaultDevice()->CheckVendor("Intel") &&
       Caffe::GetDefaultDevice()->CheckType("GPU")) {
     typedef typename TypeParam::Dtype Dtype;

@@ -38,7 +38,7 @@ class SolverTest : public MultiDeviceTest<TypeParam> {
     solver_.reset(new SGDSolver<Dtype>(param));
   }
 
-  shared_ptr<Solver<Dtype> > solver_;
+  std::shared_ptr<Solver<Dtype> > solver_;
 };
 
 TYPED_TEST_CASE(SolverTest, TestDtypesAndDevices);

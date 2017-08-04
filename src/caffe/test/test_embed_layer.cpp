@@ -41,7 +41,7 @@ TYPED_TEST(EmbedLayerTest, TestSetUp) {
   EmbedParameter* embed_param = layer_param.mutable_embed_param();
   embed_param->set_num_output(10);
   embed_param->set_input_dim(5);
-  shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
+  std::shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_top_->num_axes(), 5);
   EXPECT_EQ(this->blob_top_->shape(0), 4);
@@ -63,7 +63,7 @@ TYPED_TEST(EmbedLayerTest, TestForward) {
   embed_param->mutable_weight_filler()->set_min(-10);
   embed_param->mutable_weight_filler()->set_max(10);
   embed_param->set_bias_term(false);
-  shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
+  std::shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(1, layer->blobs().size());
   vector<int_tp> weight_shape(2);
@@ -103,7 +103,7 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
   embed_param->mutable_weight_filler()->set_max(10);
   embed_param->mutable_bias_filler()->CopyFrom(embed_param->weight_filler());
   embed_param->set_bias_term(true);
-  shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
+  std::shared_ptr<EmbedLayer<Dtype> > layer(new EmbedLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(2, layer->blobs().size());
   vector<int_tp> weight_shape(2);

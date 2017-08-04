@@ -118,7 +118,7 @@ function(caffe_pickup_caffe_sources root)
 
 
   # OpenCL but not CUDA backend tweak
-  if(USE_GREENTEA AND NOT USE_CUDA)
+  if(USE_OPENCL AND NOT USE_CUDA)
     SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES LANGUAGE CXX)
     SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES LANGUAGE CXX)
 	

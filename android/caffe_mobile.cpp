@@ -244,7 +244,7 @@ CaffeMobile::ExtractFeatures(const cv::Mat &img,
 
   vector<vector<float>> features;
   for (size_t i = 0; i < num_features; i++) {
-    const shared_ptr<Blob<float>> &feat = net_->blob_by_name(blob_names[i]);
+    const std::shared_ptr<Blob<float>> &feat = net_->blob_by_name(blob_names[i]);
     features.push_back(
         vector<float>(feat->cpu_data(), feat->cpu_data() + feat->count()));
   }

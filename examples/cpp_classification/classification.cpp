@@ -38,7 +38,7 @@ class Classifier {
                   std::vector<cv::Mat>* input_channels);
 
  private:
-  shared_ptr<Net<float> > net_;
+  std::shared_ptr<Net<float> > net_;
   cv::Size input_geometry_;
   int_tp num_channels_;
   cv::Mat mean_;

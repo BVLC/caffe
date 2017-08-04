@@ -5,7 +5,7 @@
   #include "caffe_config.h"
 #endif
 
-#include <boost/shared_ptr.hpp>
+#include <boost/std::shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -15,6 +15,7 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <map>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <string>
@@ -22,14 +23,24 @@
 #include <vector>
 
 #include "caffe/definitions.hpp"
-#include "caffe/greentea/greentea.hpp"
 
 #ifdef CMAKE_WINDOWS_BUILD
   #include "caffe/export.hpp"
 #endif
 
-#include "caffe/util/device_alternate.hpp"
 #include "caffe/util/fp16.hpp"
+
+#ifdef USE_CUDA
+#include "caffe/backend/cuda/caffe_cuda.hpp"
+#endif
+
+#ifdef USE_OPENCL
+#include "caffe/backend/opencl/caffe_opencl.hpp"
+#endif
+
+#ifdef USE_HIP
+#include "caffe/backend/hip/caffe_hip.hpp"
+#endif
 
 // Convert macro to string
 #define STRINGIFY(m) #m
@@ -50,51 +61,40 @@ private:\
   classname(const classname&);\
   classname& operator=(const classname&)
 
-// Instantiate a class with float and double specifications.
-#ifdef HAS_HALF_SUPPORT
-#define INSTANTIATE_CLASS(classname) \
+// Instantiate a pointer class
+#define INSTANTIATE_POINTER_CLASS(classname) \
   char gInstantiationGuard##classname; \
-  template class classname<half>; \
+  template class classname<int8_t>; \
+  template class classname<uint8_t>; \
+  template class classname<int16_t>; \
+  template class classname<uint16_t>; \
+  template class classname<int32_t>; \
+  template class classname<uint32_t>; \
+  template class classname<int64_t>; \
+  template class classname<uint64_t>; \
+  template class classname<half_float::half>; \
+  template class classname<float>; \
+  template class classname<double>; \
+  template class classname<void>;
+
+// Instantiate a class with float and double specifications.
+#define INSTANTIATE_CLASS_1T(classname) \
+  char gInstantiationGuard##classname; \
   template class classname<float>; \
   template class classname<double>;
 
-#define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<half>::Forward_gpu( \
-      const std::vector<Blob<half>*>& bottom, \
-      const std::vector<Blob<half>*>& top); \
-  template void classname<float>::Forward_gpu( \
-      const std::vector<Blob<float>*>& bottom, \
-      const std::vector<Blob<float>*>& top); \
-  template void classname<double>::Forward_gpu( \
-      const std::vector<Blob<double>*>& bottom, \
-      const std::vector<Blob<double>*>& top);
-
-#define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
-  template void classname<half>::Backward_gpu( \
-      const std::vector<Blob<half>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<half>*>& bottom); \
-  template void classname<float>::Backward_gpu( \
-      const std::vector<Blob<float>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<float>*>& bottom); \
-  template void classname<double>::Backward_gpu( \
-      const std::vector<Blob<double>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<double>*>& bottom)
-#else
-#define INSTANTIATE_CLASS(classname) \
+#define INSTANTIATE_CLASS_2T(classname) \
   char gInstantiationGuard##classname; \
-  template class classname<float>; \
-  template class classname<double>; \
+  template class classname<float, float>; \
+  template class classname<double, double>;
 
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<float>::Forward_gpu( \
-      const std::vector<Blob<float>*>& bottom, \
-      const std::vector<Blob<float>*>& top); \
-  template void classname<double>::Forward_gpu( \
-      const std::vector<Blob<double>*>& bottom, \
-      const std::vector<Blob<double>*>& top);
+  template void classname<float, float, float, float>::Forward_gpu( \
+      const std::vector<Blob<float, float>*>& bottom, \
+      const std::vector<Blob<float, float>*>& top); \
+  template void classname<double, double, double, double>::Forward_gpu( \
+      const std::vector<Blob<double, double>*>& bottom, \
+      const std::vector<Blob<double, double>*>& top);
 
 #define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
   template void classname<float>::Backward_gpu( \
@@ -105,7 +105,6 @@ private:\
       const std::vector<Blob<double>*>& top, \
       const std::vector<bool>& propagate_down, \
       const std::vector<Blob<double>*>& bottom)
-#endif
 
 #define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
   INSTANTIATE_LAYER_GPU_FORWARD(classname); \
@@ -115,19 +114,37 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+#ifdef CPU_ONLY  // CPU-only Caffe.
+// Stub out GPU calls as unavailable.
+#define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
+
+#define STUB_GPU(classname) \
+template <typename Dtype> \
+void classname<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, \
+    const vector<Blob<Dtype>*>& top) { NO_GPU; } \
+template <typename Dtype> \
+void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
+    const vector<bool>& propagate_down, \
+    const vector<Blob<Dtype>*>& bottom) { NO_GPU; } \
+
+#define STUB_GPU_FORWARD(classname, funcname) \
+template <typename Dtype> \
+void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
+    const vector<Blob<Dtype>*>& top) { NO_GPU; } \
+
+#define STUB_GPU_BACKWARD(classname, funcname) \
+template <typename Dtype> \
+void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
+    const vector<bool>& propagate_down, \
+    const vector<Blob<Dtype>*>& bottom) { NO_GPU; }
+#endif
+
 // See PR #1236
 namespace cv {class Mat;}
 
 namespace caffe {
 
-size_t dtsizeof(DataType data_type);
-template<typename Itype> DataType dtypeof();
-
 class device;
-
-// We will use the boost shared_ptr instead of the new C++11 one mainly
-// because cuda does not work (at least now) well with C++11 features.
-using boost::shared_ptr;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
@@ -143,6 +160,7 @@ using std::set;
 using std::string;
 using std::stringstream;
 using std::vector;
+using std::shared_ptr;
 
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
@@ -174,7 +192,7 @@ class Caffe {
     void* generator();
    private:
     class Generator;
-    shared_ptr<Generator> generator_;
+    std::shared_ptr<Generator> generator_;
   };
 
   // Getters for boost rng, curand, and cublas handles
@@ -194,9 +212,9 @@ class Caffe {
     return Get().curand_generator64_;
   }
 #endif  // USE_CUDA
-#if defined(USE_GREENTEA) && defined(USE_FFT)
+#if defined(USE_OPENCL) && defined(USE_FFT)
   inline static ClFFTState& cl_fft_state() { return Get().cl_fft_state_; }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.
@@ -255,17 +273,17 @@ class Caffe {
   curandGenerator_t curand_generator_;
   curandGenerator_t curand_generator64_;
 #endif  // USE_CUDA
-#if defined(USE_GREENTEA) && defined(USE_FFT)
+#if defined(USE_OPENCL) && defined(USE_FFT)
   ClFFTState cl_fft_state_;
 #endif
 #endif  // !CPU_ONLY
-  shared_ptr<RNG> random_generator_;
+  std::shared_ptr<RNG> random_generator_;
   Brew mode_;
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
-  shared_ptr<device> cpu_device_;
+  std::shared_ptr<device> cpu_device_;
   device* default_device_;
-  static vector<shared_ptr< device> > devices_;
+  static vector<std::shared_ptr< device> > devices_;
 
   // Parallel training
   int solver_count_;

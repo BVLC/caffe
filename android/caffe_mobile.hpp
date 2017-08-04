@@ -45,7 +45,7 @@ private:
 
   vector<float> Forward(const cv::Mat &img);
 
-  shared_ptr<Net<float>> net_;
+  std::shared_ptr<Net<float>> net_;
   cv::Size input_geometry_;
   int num_channels_;
   cv::Mat mean_;

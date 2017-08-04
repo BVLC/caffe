@@ -112,14 +112,14 @@ elseif(NOT HAVE_CUDA)
 endif()
 
 # ---[ ViennaCL
-if (USE_GREENTEA)
+if (USE_OPENCL)
   find_package(ViennaCL)
   if (NOT ViennaCL_FOUND)
     message(FATAL_ERROR "ViennaCL required for GREENTEA but not found.")
   endif()
   list(APPEND Caffe_INCLUDE_DIRS PUBLIC "${ViennaCL_INCLUDE_DIRS}")
   list(APPEND Caffe_LINKER_LIBS PUBLIC "${ViennaCL_LIBRARIES}")
-  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GREENTEA)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_OPENCL)
   if(ViennaCL_WITH_OPENCL)
     list(APPEND Caffe_DEFINITIONS PUBLIC -DVIENNACL_WITH_OPENCL)
   endif()
@@ -158,13 +158,26 @@ if (USE_GREENTEA)
   endif()
 endif()
 
-if (NOT USE_GREENTEA AND NOT USE_CUDA)
+if (NOT USE_OPENCL AND NOT USE_CUDA)
   if (NOT CPU_ONLY)
     set(CPU_ONLY ON)
     message(STATUS "-- NO GPU enabled by cmake. Buildign with CPU_ONLY...")
   endif()
   list(APPEND Caffe_DEFINITIONS PUBLIC -DCPU_ONLY)
 endif()
+
+if(USE_GPU_HALF)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GPU_HALF)
+endif()
+
+if(USE_GPU_SINGLE)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GPU_SINGLE)
+endif()
+
+if(USE_GPU_DOUBLE)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GPU_DOUBLE)
+endif()
+
 
 # ---[ clBLAS
 if (USE_CLBLAS AND NOT USE_ISAAC)
@@ -185,10 +198,6 @@ if (USE_ISAAC)
   endif()
   list(APPEND Caffe_LINKER_LIBS PUBLIC ${ISAAC_LIBRARY})
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAS)
-  if (USE_GREENTEA AND NOT USE_CUDA)
-    message(STATUS "Enable half floating point supprot.")
-    list(APPEND Caffe_DEFINITIONS PUBLIC -DHAS_HALF_SUPPORT)
-  endif()
 endif()
 
 # ---[ CLBlast

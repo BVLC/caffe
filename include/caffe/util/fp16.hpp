@@ -1,9 +1,8 @@
-#ifndef CAFFE_UTIL_FP16_H_
-#define CAFFE_UTIL_FP16_H_
+#ifndef CAFFE_UTIL_FP16_HPP_
+#define CAFFE_UTIL_FP16_HPP_
 
-#include <boost/shared_ptr.hpp>
+#include <boost/std::shared_ptr.hpp>
 #include "3rdparty/half/half.hpp"
-using half_float::half;
 
 #define HALF_MAX  0x1.ffcp15f
 #define HALF_MIN  0x1.0p-14f
@@ -48,8 +47,8 @@ inline float fixup_arg_type(const half_float::detail::expr& expr) {
   return static_cast<float>(expr);
 }
 
-inline const void * fixup_arg_type(const boost::shared_ptr<void>& share_ptr) {
+inline const void * fixup_arg_type(const boost::std::shared_ptr<void>& share_ptr) {
   return (const void*)share_ptr.get();
 }
 
-#endif   // CAFFE_UTIL_HDF5_H_
+#endif   // CAFFE_UTIL_FP16_HPP_

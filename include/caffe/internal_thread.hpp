@@ -53,7 +53,7 @@ class InternalThread {
   void entry(device* dev, Caffe::Brew mode, int_tp rand_seed,
       int_tp solver_count, int_tp solver_rank, bool multiprocess);
 
-  shared_ptr<boost::thread> thread_;
+  std::shared_ptr<boost::thread> thread_;
 };
 
 }  // namespace caffe

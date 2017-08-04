@@ -1,4 +1,4 @@
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 #ifdef WITH_PYTHON_LAYER
 #include "boost/python.hpp"
 namespace bp = boost::python;
@@ -14,7 +14,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/util/signal_handler.h"
 
 #ifdef USE_LIBDNN
@@ -26,7 +26,7 @@ using caffe::Caffe;
 using caffe::Net;
 using caffe::Layer;
 using caffe::Solver;
-using caffe::shared_ptr;
+using caffe::std::shared_ptr;
 using caffe::string;
 using caffe::Timer;
 using caffe::vector;
@@ -159,14 +159,14 @@ int device_query() {
       caffe::Caffe::SetDevice(gpus[i]);
       caffe::Caffe::DeviceQuery();
     }
-#ifdef USE_GREENTEA
-  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OpenCL) {
+#ifdef USE_OPENCL
+  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OPENCL) {
     if (gpus.size() > 0 && gpus[0] >= 0) {
       // Explicitly call for OCL + FFT
       caffe::Caffe::TeardownDevice(gpus[0]);
     }
   }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  // !CPU_ONLY
   }
   return 0;
@@ -260,7 +260,7 @@ int train() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  shared_ptr<caffe::Solver<half> >
+  std::shared_ptr<caffe::Solver<half> >
       solver(caffe::SolverRegistry<half>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
@@ -287,8 +287,8 @@ int train() {
   }
   LOG(INFO) << "Optimization Done.";
 
-#ifdef USE_GREENTEA
-  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OpenCL) {
+#ifdef USE_OPENCL
+  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OPENCL) {
     if (gpus.size() > 0 && gpus[0] >= 0) {
       // Explicitly call for OCL + FFT
       caffe::Caffe::TeardownDevice(gpus[0]);
@@ -366,8 +366,8 @@ int test() {
     }
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
-#ifdef USE_GREENTEA
-  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OpenCL) {
+#ifdef USE_OPENCL
+  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OPENCL) {
     if (gpus.size() > 0 && gpus[0] >= 0) {
       // Explicitly call for OCL + FFT
       caffe::Caffe::TeardownDevice(gpus[0]);
@@ -417,7 +417,7 @@ int time() {
     caffe_net.Backward();
   }
 
-  const vector<shared_ptr<Layer<half> > >& layers = caffe_net.layers();
+  const vector<std::shared_ptr<Layer<half> > >& layers = caffe_net.layers();
   const vector<vector<Blob<half>*> >& bottom_vecs = caffe_net.bottom_vecs();
   const vector<vector<Blob<half>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
@@ -489,8 +489,8 @@ int time() {
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
 
-#ifdef USE_GREENTEA
-  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OpenCL) {
+#ifdef USE_OPENCL
+  if (Caffe::GetDefaultDevice()->backend() == caffe::BACKEND_OPENCL) {
     if (gpus.size() > 0 && gpus[0] >= 0) {
       // Explicitly call for OCL + FFT
       caffe::Caffe::TeardownDevice(gpus[0]);
@@ -535,7 +535,7 @@ int autotune() {
 
   for (int i = 0; i < net.layers().size(); ++i) {
 #ifdef USE_LIBDNN
-    shared_ptr<caffe::LibDNNConvolutionLayer<half> > layer =
+    std::shared_ptr<caffe::LibDNNConvolutionLayer<half> > layer =
         boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<half> >
                 (net.layers()[i]);
     if (layer.get() != nullptr) {

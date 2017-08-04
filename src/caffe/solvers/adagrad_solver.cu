@@ -1,7 +1,7 @@
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
@@ -31,7 +31,7 @@ void adagrad_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype delta,
     CUDA_POST_KERNEL_CHECK;
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev->id());
     viennacl::ocl::program &program = dev->program();
     viennacl::ocl::kernel &oclk_ada_grad_update = program.get_kernel(
@@ -42,11 +42,11 @@ void adagrad_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype delta,
                              fixup_arg_type(delta),
                              fixup_arg_type(local_rate)),
         ctx.get_queue());
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 }
 
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void adagrad_update_gpu<half>(device*, int_tp, half*, half*, half,
                                        half);
 #endif

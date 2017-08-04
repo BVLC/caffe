@@ -22,19 +22,6 @@
 #define uint_tpc unsigned int  // NOLINT
 #endif
 
-enum DataType {
-  DFP16,
-  DFP32,
-  DFP64,
-  DINT8,
-  DINT16,
-  DINT32,
-  DINT64,
-  DUINT8,
-  DUINT16,
-  DUINT32,
-  DUINT64
-};
 
 
 #endif /* CAFFE_DEFINITIONS_HPP_ */

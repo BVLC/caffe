@@ -3,10 +3,6 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "caffe/util/device_alternate.hpp"
-#ifdef USE_GREENTEA
-#include "caffe/greentea/greentea.hpp"
-#endif
 namespace caffe {
 
 class Timer {
@@ -34,10 +30,10 @@ class Timer {
   cudaEvent_t start_gpu_cuda_;
   cudaEvent_t stop_gpu_cuda_;
 #endif  // USE_CUDA
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
   cl_event start_gpu_cl_;
   cl_event stop_gpu_cl_;
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  // !CPU_ONLY
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;

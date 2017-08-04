@@ -9,7 +9,7 @@
 
 namespace caffe {
 
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template<>
 void caffe_add_scalar(const int_tp N, const half alpha, half* Y) {
   for (int_tp i = 0; i < N; ++i) {
@@ -366,7 +366,7 @@ template void caffe_set<uint32_t>(const int_tp N, const uint32_t alpha,
 template void caffe_set<int64_t>(const int_tp N, int64_t alpha, int64_t* Y);
 template void caffe_set<uint64_t>(const int_tp N, const uint64_t alpha,
                                   uint64_t* Y);
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void caffe_set<half>(const int_tp N, const half alpha, half* Y);
 #endif
 template void caffe_set<float>(const int_tp N, const float alpha, float* Y);
@@ -397,7 +397,7 @@ template void caffe_cpu_copy<int_tp>(const int_tp N, const int_tp* X,
                                      int_tp* Y);
 template void caffe_cpu_copy<uint_tp>(const int_tp N, const uint_tp* X,
 uint_tp* Y);
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void caffe_cpu_copy<half>(const int_tp N, const half* X, half* Y);
 #endif
 template void caffe_cpu_copy<float>(const int_tp N, const float* X, float* Y);
@@ -425,7 +425,7 @@ void caffe_copy(const int_tp N, const Dtype* X, Dtype* Y) {
 template void caffe_copy<int_tp>(const int_tp N, const int_tp* X, int_tp* Y);
 template void caffe_copy<uint_tp>(const int_tp N, const uint_tp* X,
 uint_tp* Y);
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void caffe_copy<half>(const int_tp N, const half* X, half* Y);
 #endif
 template void caffe_copy<float>(const int_tp N, const float* X, float* Y);
@@ -698,7 +698,7 @@ Dtype caffe_cpu_dot(const int_tp n, const Dtype* x, const Dtype* y) {
   return caffe_cpu_strided_dot(n, x, 1, y, 1);
 }
 
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template
 half caffe_cpu_dot<half>(const int_tp n, const half* x, const half* y);
 #endif

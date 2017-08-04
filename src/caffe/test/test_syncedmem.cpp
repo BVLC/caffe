@@ -9,7 +9,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "gtest/gtest.h"
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
@@ -94,10 +94,10 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
     caffe_gpu_memcpy(10, gpu_data, recovered_value);
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dc->id());
     greentea_gpu_memcpy(10, (cl_mem) gpu_data, 0, recovered_value, &ctx);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   for (int_tp i = 0; i < mem.size(); ++i) {
@@ -119,10 +119,10 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
     caffe_gpu_memcpy(10, gpu_data, recovered_value);
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dc->id());
     greentea_gpu_memcpy(10, (cl_mem) gpu_data, 0, recovered_value, &ctx);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   for (int_tp i = 0; i < mem.size(); ++i) {
@@ -143,9 +143,9 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
     caffe_gpu_memset(mem.size(), 1, gpu_data);
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     greentea_memset(dc->id(), mem.size(), 1, (cl_mem) gpu_data, 0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   const void* cpu_data = mem.cpu_data();
@@ -162,9 +162,9 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
     caffe_gpu_memset(mem.size(), 2, gpu_data);
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     greentea_memset(dc->id(), mem.size(), 2, (cl_mem) gpu_data, 0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   cpu_data = mem.cpu_data();

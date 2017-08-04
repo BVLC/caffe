@@ -37,7 +37,7 @@ TYPED_TEST(SolverFactoryTest, TestCreateSolver) {
   typedef typename TypeParam::Dtype Dtype;
   typename SolverRegistry<Dtype>::CreatorRegistry& registry =
       SolverRegistry<Dtype>::Registry();
-  shared_ptr<Solver<Dtype> > solver;
+  std::shared_ptr<Solver<Dtype> > solver;
   SolverParameter solver_param = this->simple_solver_param();
   for (typename SolverRegistry<Dtype>::CreatorRegistry::iterator iter =
        registry.begin(); iter != registry.end(); ++iter) {

@@ -4,8 +4,8 @@
 #include <cstring>
 #include "caffe/common.hpp"
 #ifndef CPU_ONLY
-#if defined(USE_GREENTEA) && defined(USE_FFT)
-#include "caffe/device.hpp"
+#if defined(USE_OPENCL) && defined(USE_FFT)
+#include "caffe/backend/device.hpp"
 #include "caffe/greentea/cl_kernels.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/util/fft.hpp"
@@ -875,5 +875,5 @@ template void reshape_weights<double>(DtypeComplex<double>* dst,
     const int size, const int num_output, const int ch_gr);
 
 }  // namespace caffe
-#endif  // USE_GREENTEA && USE_FFT
+#endif  // USE_OPENCL && USE_FFT
 #endif  // !CPU_ONLY

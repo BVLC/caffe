@@ -14,9 +14,9 @@ echo "// AUTOMATICALLY GENERATED FILE, DO NOT EDIT" > $HEADER
 echo "// AUTOMATICALLY GENERATED FILE, DO NOT EDIT" > $SOURCE
 echo "#include <string>" >> $HEADER
 echo "#include \"caffe/common.hpp\"" >> $HEADER
-echo "#ifdef USE_GREENTEA" >> $HEADER
+echo "#ifdef USE_OPENCL" >> $HEADER
 echo "#include \"caffe/common.hpp\"" >> $SOURCE
-echo "#ifdef USE_GREENTEA" >> $SOURCE
+echo "#ifdef USE_OPENCL" >> $SOURCE
 
 echo "#ifndef GREENTEA_CL_KERNELS_HPP_" >> $HEADER
 echo "#define GREENTEA_CL_KERNELS_HPP_" >> $HEADER
@@ -210,7 +210,7 @@ echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
-echo "  ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(USE_GPU_HALF)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -257,8 +257,8 @@ echo "  string options;" >> $SOURCE
 echo "#ifdef USE_FFT" >> $SOURCE
 echo "  options = \" -DFFT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
-echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
-echo "  options += \" -DHAS_HALF_SUPPORT \";" >> $SOURCE
+echo "#ifdef USE_GPU_HALF" >> $SOURCE
+echo "  options += \" -DUSE_GPU_HALF \";" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
 echo "                    != std::string::npos;" >> $SOURCE
@@ -387,7 +387,7 @@ echo "    ss << \"#define KERNEL_ARG_DTYPE double\" << \"\n\n\";  // NOLINT" >> 
 echo "    ss << \"#define DTYPE_MAX FLT_MAX\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define DTYPE_MIN FLT_MIN\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "  } else {" >> $SOURCE
-echo "    ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(USE_GPU_HALF)\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype half\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype2 half2\" << \"\n\n\";  // NOLINT" >> $SOURCE
 echo "    ss << \"#define Dtype4 half4\" << \"\n\n\";  // NOLINT" >> $SOURCE

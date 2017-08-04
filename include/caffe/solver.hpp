@@ -3,8 +3,9 @@
 #include <boost/function.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 #include "caffe/util/benchmark.hpp"
@@ -75,8 +76,8 @@ class Solver {
   void Snapshot();
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
-  inline shared_ptr<Net<Dtype> > net() { return net_; }
-  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
+  inline std::shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const vector<std::shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
 
@@ -135,8 +136,8 @@ class Solver {
   SolverParameter param_;
   int_tp iter_;
   int_tp current_step_;
-  shared_ptr<Net<Dtype> > net_;
-  vector<shared_ptr<Net<Dtype> > > test_nets_;
+  std::shared_ptr<Net<Dtype> > net_;
+  vector<std::shared_ptr<Net<Dtype> > > test_nets_;
   device* device_;
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;

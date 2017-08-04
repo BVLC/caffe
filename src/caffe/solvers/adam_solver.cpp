@@ -12,7 +12,7 @@ void AdamSolver<Dtype>::AdamPreSolve() {
   for (uint_tp i = 0; i < net_params.size(); ++i) {
     const vector<int_tp>& shape = net_params[i]->shape();
     this->history_.push_back(
-            shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
+            std::shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
   }
 }
 

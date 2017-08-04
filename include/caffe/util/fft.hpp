@@ -5,7 +5,7 @@
 #endif
 #ifdef USE_FFT
 #ifndef CPU_ONLY
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include <clFFT.h>
 #endif
 #endif
@@ -66,7 +66,7 @@ template <typename Dtype> void caffe_cpu_fft_execute_dft_c2r(const void* plan,
 // --- GPU ---
 
 #ifndef CPU_ONLY
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 template <typename T>
 struct DtypeComplex {
   T x, y;
@@ -154,7 +154,7 @@ void caffe_gpu_fft_execute_c2r(clfftPlanHandle plan,
 template <typename Dtype>
 void reshape_weights(DtypeComplex<Dtype>* dst, DtypeComplex<Dtype>* src,
     const int size, const int num_output, const int ch_gr);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  // CPU_ONLY
 
 }  // namespace caffe

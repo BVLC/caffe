@@ -2,18 +2,32 @@ syntax = "proto2";
 
 package caffe;
 
+enum DataType {
+	FLOAT = 0;
+	HALF = 1;
+	DOUBLE = 2;
+	PACKED_BINARY = 3;
+	INT8 = 4;
+	INT16 = 5;
+	INT32 = 6;
+}
+
 // Specifies the shape (dimensions) of a Blob.
 message BlobShape {
   repeated int64 dim = 1 [packed = true];
 }
 
 message BlobProto {
+  optional DataType data_type = 13 [default = FLOAT];
   optional BlobShape shape = 7;
+  optional BlobShape shape_stride = 10;
   repeated float data = 5 [packed = true];
   repeated float diff = 6 [packed = true];
   repeated double double_data = 8 [packed = true];
   repeated double double_diff = 9 [packed = true];
-
+  optional bytes packed_data = 11;
+  optional bytes packed_diff = 12;
+  
   // 4D dimensions -- deprecated.  Use "shape" instead.
   optional int64 num = 1 [default = 0];
   optional int64 channels = 2 [default = 0];
@@ -62,6 +76,7 @@ message FillerParameter {
 }
 
 message NetParameter {
+  optional DataType data_type = 42 [default = FLOAT];
   optional string name = 1; // consider giving the network a name
   // DEPRECATED. See InputParameter. The input blobs to the network.
   repeated string input = 3;
@@ -96,7 +111,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 42 (last added: layer_wise_reduce)
+// SolverParameter next available ID: 43 (last added: datatype)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -308,6 +323,10 @@ message ParamSpec {
 //
 // LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
 message LayerParameter {
+  optional DataType cpu_data_type = 12 [default = FLOAT];
+  optional DataType gpu_compute_data_type = 13 [default = FLOAT];
+  optional DataType gpu_top_data_type = 14 [default = FLOAT];
+
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
   repeated string bottom = 3; // the name of each bottom blob

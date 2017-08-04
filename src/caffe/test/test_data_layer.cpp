@@ -366,7 +366,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual ~DataLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
   DataParameter_DB backend_;
-  shared_ptr<string> filename_;
+  std::shared_ptr<string> filename_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;

@@ -15,76 +15,21 @@
 
 #include "caffe/common.hpp"
 
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
+#include "caffe/backend/cuda/cuda_device.hpp"
+#include "caffe/backend/hip/hip_device.hpp"
+#include "caffe/backend/opencl/ocl_device.hpp"
 #include "caffe/util/rng.hpp"
 
-#if defined(USE_GREENTEA)
-  #include "caffe/greentea/cl_kernels.hpp"  // NOLINT
+#if defined(USE_OPENCL)
   #if defined(USE_CLBLAS)
     #include <clBLAS.h>                     // NOLINT
   #elif defined(USE_CLBLAST)
     #include <clblast.h>                    // NOLINT
   #endif  // USE_CLBLAS or USE_CLBLAST
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 
 namespace caffe {
-
-
-size_t dtsizeof(DataType data_type) {
-  switch (data_type) {
-    case DINT8:
-    case DUINT8:
-      return 1;
-    case DFP16:
-    case DINT16:
-    case DUINT16:
-      return 2;
-    case DFP32:
-    case DINT32:
-    case DUINT32:
-      return 4;
-    case DFP64:
-    case DINT64:
-    case DUINT64:
-      return 8;
-    default:
-      return 1;
-  }
-}
-
-template<> DataType dtypeof<half_float::half>() {
-  return DFP16;
-}
-template<> DataType dtypeof<float>() {
-  return DFP32;
-}
-template<> DataType dtypeof<double>() {
-  return DFP64;
-}
-template<> DataType dtypeof<int8_t>() {
-  return DINT8;
-}
-template<> DataType dtypeof<int16_t>() {
-  return DINT16;
-}
-template<> DataType dtypeof<int32_t>() {
-  return DINT32;
-}
-template<> DataType dtypeof<int64_t>() {
-  return DINT64;
-}
-template<> DataType dtypeof<uint8_t>() {
-  return DUINT8;
-}
-template<> DataType dtypeof<uint16_t>() {
-  return DUINT16;
-}
-template<> DataType dtypeof<uint32_t>() {
-  return DUINT32;
-}
-template<> DataType dtypeof<uint64_t>() {
-  return DUINT64;
-}
 
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
@@ -94,7 +39,7 @@ static Caffe* global_instance_;
 static std::atomic<bool> first(true);
 
 // Device contexts are initialized once and shared on all threads
-std::vector< shared_ptr<device> > Caffe::devices_;
+std::vector< std::shared_ptr<device> > Caffe::devices_;
 
 Caffe& Caffe::Get() {
   if (first.exchange(false)) {
@@ -232,12 +177,12 @@ void Caffe::SelectDevice(device* device_context) {
     }
 
 #endif  // USE_CUDA
-  } else if (device_context->backend() == Backend::BACKEND_OpenCL) {
-#ifdef USE_GREENTEA
+  } else if (device_context->backend() == Backend::BACKEND_OPENCL) {
+#ifdef USE_OPENCL
 #ifdef USE_CLBLAS
     clblasSetup();
 #endif  // USE_CLBLAS
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 #endif  // !CPU_ONLY
 }
@@ -291,7 +236,7 @@ class Caffe::RNG::Generator {
   explicit Generator(size_t seed) : rng_(new caffe::rng_t(seed)) {}
   caffe::rng_t* rng() {return rng_.get();}
  private:
-  shared_ptr<caffe::rng_t> rng_;
+  std::shared_ptr<caffe::rng_t> rng_;
 };
 
 Caffe::RNG::RNG() : generator_(new Generator()) {}
@@ -371,9 +316,9 @@ void Caffe::set_random_seed(const size_t seed, device* device_context) {
     }
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 // TODO: Proper RNG and Seed for OpenCL
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
@@ -387,11 +332,11 @@ void Caffe::Synchronize(int device_id) {
       cudaDeviceSynchronize();
 #endif  // USE_CUDA
     } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           GetDevice(device_id, true)->id());
       ctx.get_queue().finish();
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
     }
   }
 }
@@ -404,7 +349,7 @@ int Caffe::EnumerateDevices(bool silent) {
   cudaGetDeviceCount(&cuda_device_count);
 #endif  // USE_CUDA
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
   typedef std::vector<viennacl::ocl::platform> platforms_type;
   platforms_type platforms = viennacl::ocl::get_platforms();
 
@@ -430,7 +375,7 @@ int Caffe::EnumerateDevices(bool silent) {
       }
     }
   }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 
   if (!silent) {
     LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
@@ -457,7 +402,7 @@ int Caffe::EnumerateDevices(bool silent) {
     }
 #endif  // USE_CUDA
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     for (int i = 0; i < greentea_device_count; ++i) {
       LOG(INFO)<< "Device id:                     "
       << cuda_device_count + i;
@@ -472,7 +417,7 @@ int Caffe::EnumerateDevices(bool silent) {
       LOG(INFO)<< "Total global memory:           "
       << std::get<1>(platform_devices[i]).global_mem_size();
     }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   return cuda_device_count + greentea_device_count;
@@ -488,8 +433,8 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   for (int i = 0; i < cuda_device_count; ++i) {
     for (int j = 0; j < device_ids.size(); ++j) {
       if (device_ids[j] == i) {
-        shared_ptr<device> dev(
-            new device(i, initcount, Backend::BACKEND_CUDA));
+        std::shared_ptr<device> dev(
+            new cuda_device(i, initcount));
         Get().devices_.emplace_back(dev);
         dev->Init();
         ++initcount;
@@ -498,7 +443,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   }
 
   // Initialize GreenTea devices
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
   int greentea_device_count = 0;
 
   typedef std::vector<viennacl::ocl::platform> platforms_type;
@@ -526,9 +471,8 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
                 device_id,
                 std::get<1>(platform_devices[greentea_device_count]));
 
-            shared_ptr<device> dev(
-                new device(device_id,
-                                  initcount, Backend::BACKEND_OpenCL));
+            std::shared_ptr<device> dev(
+                new ocl_device(device_id, initcount));
             Get().devices_.emplace_back(dev);
             dev->Init();
             ++initcount;
@@ -542,7 +486,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
       << " does not work correctly.";
     }
   }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 
   Get().default_device_ = GetDevice(0, true);
   Caffe::SelectDevice(Get().default_device_);
@@ -557,14 +501,14 @@ void Caffe::SetDevice(const int device_id) {
   }
 
   Get().default_device_ = GetDevice(0, true);
-#if defined(USE_GREENTEA) && defined(USE_FFT)
+#if defined(USE_OPENCL) && defined(USE_FFT)
   Get().cl_fft_state_.setup();
 #endif
 }
 
 // Should call explicitly for OCL + FFT
 void Caffe::TeardownDevice(const int device_id) {
-#if defined(USE_GREENTEA) &&defined(USE_FFT)
+#if defined(USE_OPENCL) &&defined(USE_FFT)
   Get().cl_fft_state_.teardown();
 #endif
 }
@@ -606,9 +550,9 @@ void Caffe::DeviceQuery() {
     }
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     // TODO: Complete OpenCL device information of current device
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 
   return;
@@ -670,7 +614,7 @@ class Caffe::RNG::Generator {
     return rng_.get();
   }
  private:
-  shared_ptr<caffe::rng_t> rng_;
+  std::shared_ptr<caffe::rng_t> rng_;
 };
 
 Caffe::RNG::RNG()

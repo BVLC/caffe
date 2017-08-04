@@ -357,7 +357,7 @@ void Solver<Dtype>::Test(const int_tp test_net_id) {
   ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<int_tp> test_score_output_id;
-  const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
+  const std::shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int_tp i = 0; i < param_.test_iter(test_net_id); ++i) {
     SolverAction::Enum request = GetRequestedAction();

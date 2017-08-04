@@ -10,14 +10,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
-#ifdef USE_CUDA
-#include "caffe/util/math_functions.hpp"
-#endif
-
-#ifdef USE_GREENTEA
-#include "caffe/greentea/greentea_math_functions.hpp"
-#endif
-
 const int_tp kMaxBlobAxes = 32;
 
 namespace caffe {
@@ -31,7 +23,7 @@ class device;
  *
  * TODO(dox): more thorough description.
  */
-template<typename Dtype>
+template<typename Dtype, typename Mtype>
 class Blob {
  public:
   Blob()
@@ -51,7 +43,12 @@ class Blob {
   explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
                 const int_tp width, device *device_context =
                     Caffe::GetDefaultDevice());
-  explicit Blob(const vector<int_tp>& shape, device *device_context =
+  explicit Blob(const vector<int_tp>& shape,
+                device *device_context =
+                    Caffe::GetDefaultDevice());
+  explicit Blob(const vector<int_tp>& shape,
+                const vector<int_tp>& shape_stride,
+                device *device_context =
                     Caffe::GetDefaultDevice());
 
   /**
@@ -71,7 +68,9 @@ class Blob {
    * Reshape returns true if new memory was allocated.
    */
   bool Reshape(const vector<int_tp>& shape);
+  bool Reshape(const vector<int_tp>& shape, const vector<int_tp>& shape_stride);
   bool Reshape(const BlobShape& shape);
+  bool Reshape(const BlobShape& shape, const BlobShape& shape_stride);
   bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
                const int_tp width);
   bool ReshapeLike(const Blob& other);
@@ -86,6 +85,9 @@ class Blob {
   inline const vector<int_tp>& shape() const {
     return shape_;
   }
+  inline const vector<int_tp>& shape_stride() const {
+    return shape_stride_;
+  }
   /**
    * @brief Returns the dimension of the index-th axis (or the negative index-th
    *        axis from the end, if index is negative).
@@ -96,6 +98,9 @@ class Blob {
    */
   inline int_tp shape(int_tp index) const {
     return shape_[CanonicalAxisIndex(index)];
+  }
+  inline int_tp shape_stride(int_tp index) const {
+    return shape_stride_[CanonicalAxisIndex(index)];
   }
   inline int_tp num_axes() const {
     return shape_.size();
@@ -124,6 +129,20 @@ class Blob {
     }
     return count;
   }
+
+  inline int_tp count_stride(int_tp start_axis, int_tp end_axis) const {
+    CHECK_LE(start_axis, end_axis);
+    CHECK_GE(start_axis, 0);
+    CHECK_GE(end_axis, 0);
+    CHECK_LE(start_axis, num_axes());
+    CHECK_LE(end_axis, num_axes());
+    int_tp count = 1;
+    for (int_tp i = start_axis; i < end_axis; ++i) {
+      count *= shape_stride(i);
+    }
+    return count;
+  }
+
   /**
    * @brief Compute the volume of a slice spanning from a particular first
    *        axis to the final axis.
@@ -215,7 +234,7 @@ class Blob {
    *        of other (and die otherwise); if true, Reshape this Blob to other's
    *        shape if necessary
    */
-  void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
+  void CopyFrom(const Blob<Dtype, Mtype>& source, bool copy_diff = false,
       bool reshape = false);
 
   inline Dtype data_at(const int_tp n, const int_tp c, const int_tp h,
@@ -236,12 +255,12 @@ class Blob {
     return cpu_diff()[offset(index)];
   }
 
-  inline const shared_ptr<SyncedMemory>& data() const {
+  inline const std::shared_ptr<SyncedMemory<Dtype, Mtype> >& data() const {
     CHECK(data_);
     return data_;
   }
 
-  inline const shared_ptr<SyncedMemory>& diff() const {
+  inline const std::shared_ptr<SyncedMemory<Dtype, Mtype> >& diff() const {
     CHECK(diff_);
     return diff_;
   }
@@ -276,21 +295,21 @@ class Blob {
   void scale_diff(Dtype scale_factor);
 
   /**
-   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   * @brief Set the data_ std::shared_ptr to point to the SyncedMemory holding the
    *        data_ of Blob other -- useful in Layer&s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
-   * shared_ptr calls its destructor when reset with the "=" operator.
+   * std::shared_ptr calls its destructor when reset with the "=" operator.
    */
   void ShareData(const Blob& other);
   /**
-   * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
+   * @brief Set the diff_ std::shared_ptr to point to the SyncedMemory holding the
    *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as
-   * shared_ptr calls its destructor when reset with the "=" operator.
+   * std::shared_ptr calls its destructor when reset with the "=" operator.
    */
   void ShareDiff(const Blob& other);
 
@@ -302,10 +321,13 @@ class Blob {
   device *get_device();
 
  protected:
-  shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> diff_;
-  shared_ptr<SyncedMemory> shape_data_;
+  std::shared_ptr<SyncedMemory<Dtype, Mtype>> data_;
+  std::shared_ptr<SyncedMemory<Dtype, Mtype>> diff_;
+  std::shared_ptr<SyncedMemory<uint_tp, uint_tp>> shape_data_;
+  std::shared_ptr<SyncedMemory<uint_tp, uint_tp>> shape_stride_data_;
   vector<int_tp> shape_;
+  vector<int_tp> shape_stride_;
+  vector<int_tp> offset_shape_;
   uint_tp count_;
   uint_tp capacity_;
   device *device_;

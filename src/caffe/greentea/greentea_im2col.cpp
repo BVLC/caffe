@@ -5,7 +5,7 @@
  *      Author: Fabian Tschopp
  */
 #include "caffe/common.hpp"
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/greentea_im2col.hpp"
 
 namespace caffe {
@@ -37,7 +37,7 @@ void greentea_im2col_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void greentea_im2col_gpu<half>(viennacl::ocl::program *prog,
                                         viennacl::ocl::context *ctx,
                                         const cl_mem data_im,
@@ -116,7 +116,7 @@ void greentea_col2im_gpu(viennacl::ocl::program *prog,
       ctx->get_queue());
 }
 
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void greentea_col2im_gpu<half>(viennacl::ocl::program *prog,
                                         viennacl::ocl::context *ctx,
                                         const cl_mem data_col,
@@ -194,7 +194,7 @@ void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void greentea_im2col_nd_gpu<half>(viennacl::ocl::program *prog,
                                            viennacl::ocl::context *ctx,
                                            cl_mem data_im,
@@ -260,7 +260,7 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
 }
 
 // Explicit instantiation
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template void greentea_col2im_nd_gpu<half>(viennacl::ocl::program *prog,
                                            viennacl::ocl::context *ctx,
                                            cl_mem data_col,
