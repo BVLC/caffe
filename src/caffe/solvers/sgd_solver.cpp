@@ -44,7 +44,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/upgrade_proto.hpp"
 
 namespace caffe {
-
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::GetWarmUpLR(int cur_iter, int warmup_iter, Dtype warmup_start_lr) {
+  if (cur_iter < 0) {
+    cur_iter = 0;
+  }
+  return (cur_iter * this->param_.base_lr() +
+          (warmup_iter - cur_iter) * warmup_start_lr) / warmup_iter;
+}
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
 //    - fixed: always return base_lr.
@@ -64,7 +71,13 @@ template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
-  if (lr_policy == "fixed") {
+
+
+  if (this->param_.warmup_iter() > 0 &&
+      this->iter_ < this->param_.warmup_iter()) {
+    rate = GetWarmUpLR(this->iter_, this->param_.warmup_iter(),
+                       this->param_.warmup_start_lr());
+  } else if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
     this->current_step_ = this->iter_ / this->param_.stepsize();
@@ -349,6 +362,14 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * net_params_lr[param_id];
+
+  if (this->param_.warmup_iter() > 0 &&
+      this->iter_ < this->param_.warmup_iter()) {
+    // Momentum correction during warmup stage
+    Dtype prev_rate = GetWarmUpLR(this->iter_ - 1, this->param_.warmup_iter(),
+                                  this->param_.warmup_start_lr());
+    momentum = momentum * (rate / prev_rate);
+  }
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
@@ -420,9 +441,15 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
     history_[i]->ToProto(history_blob);
   }
   string snapshot_filename = Solver<Dtype>::SnapshotFilename(".solverstate");
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
   LOG(INFO)
     << "Snapshotting solver state to binary proto file " << snapshot_filename;
   WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+#ifdef USE_MLSL
+  }
+#endif
 }
 
 template <typename Dtype>

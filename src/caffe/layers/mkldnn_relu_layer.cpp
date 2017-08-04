@@ -129,6 +129,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
 
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_data_mpd, prv_data_mpd, top[0], this));
     fwd_top_data->name = "fwd_top_data   @ " + this->layer_param_.name();
+
     fwd_top_data_memory = fwd_top_data->create_output_memory(inplace);
 
     reluFwd.reset(new relu_forward(*reluFwd_pd, *fwd_bottom_data_primitive, *fwd_top_data_memory));
@@ -303,7 +304,7 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     LOG(INFO) << "MKLDNNReLULayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-    bool inplace = (bottom[0] == top[0]);
+    //bool inplace = (bottom[0] == top[0]);
     if (!propagate_down[0]) {
         return;
     }
@@ -312,7 +313,11 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     }
 
     bwd_top_diff->sync_before_read();
-    bwd_bottom_diff->sync_before_write(inplace);
+    //For MKLDNN, it always create two memory for input and output
+    //For Intel Caffe, if we set the inplace flag to true, input and output will use one same buffer
+    //Then the update of output will not pass to MKLDNN
+    //bwd_bottom_diff->sync_before_write(inplace);   //Wrong due to the MKLDNN API design.
+    bwd_bottom_diff->sync_before_write();
 
     PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
     PERFORMANCE_MEASUREMENT_BEGIN();

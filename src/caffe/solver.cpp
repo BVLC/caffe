@@ -892,10 +892,16 @@ string Solver<Dtype>::SnapshotFilename(const string extension) {
 template <typename Dtype>
 string Solver<Dtype>::SnapshotToBinaryProto() {
   string model_filename = SnapshotFilename(".caffemodel");
-  LOG(INFO) << "Snapshotting to binary proto file " << model_filename;
   NetParameter net_param;
   net_->ToProto(&net_param, param_.snapshot_diff());
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
+  LOG(INFO) << "Snapshotting to binary proto file " << model_filename;
   WriteProtoToBinaryFile(net_param, model_filename);
+#ifdef USE_MLSL
+  }
+#endif
   return model_filename;
 }
 

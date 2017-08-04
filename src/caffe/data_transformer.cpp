@@ -185,6 +185,13 @@ void DataTransformer<Dtype>::Transform(const Datum& datum_in,
 #else
     LOG(FATAL) << "Random image resizing requires OpenCV; compile with USE_OPENCV.";
 #endif
+  } else if (param_.has_random_aspect_ratio_param()) {
+#ifdef USE_OPENCV
+    RandomAlterAspectRatio(datum_in, &resized_datum);
+    datum = &resized_datum;
+#else
+    LOG(FATAL) << "Aspect ratio changes require OpenCV; compile with USE_OPENCV.";
+#endif
   }
   const string& data = datum->data();
   const int datum_channels = datum->channels();
@@ -777,6 +784,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
 #else
     LOG(FATAL) << "Random image resizing requires OpenCV; compile with USE_OPENCV.";
 #endif
+  } else if (param_.has_random_aspect_ratio_param()) {
+#ifdef USE_OPENCV
+    RandomAlterAspectRatio(cv_img_in, &resized_img);
+    cv_img = &resized_img;
+#else
+    LOG(FATAL) << "Aspect ratio changes require OpenCV; compile with USE_OPENCV.";
+#endif
   }
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img->channels();
@@ -1055,6 +1069,19 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
   img.copyTo((*expand_img)(bbox_roi));
 }
 
+static cv::Mat ResizeImagePerShorterSize(const cv::Mat& img, int shorter_size, ResizeParameter resize_param) {
+  int h = img.size().height;
+  int w = img.size().width;
+  resize_param.set_height(shorter_size);
+  resize_param.set_width(shorter_size);
+  if (h < w) {
+    resize_param.set_width(int(float(w) / h * shorter_size));
+  } else {
+    resize_param.set_height(int(float(h) / w * shorter_size));
+  }
+  return ApplyResize(img, resize_param);
+}
+
 template<typename Dtype>
 void DataTransformer<Dtype>::RandomResizeImage(const Datum& datum, Datum *resized_datum) {
   shared_ptr<cv::Mat> img;
@@ -1081,14 +1108,65 @@ void DataTransformer<Dtype>::RandomResizeImage(const cv::Mat& img, cv::Mat *resi
   if (min_size == 0) min_size = std::min(h,w);
   if (max_size == 0) max_size = std::max(h,w);
   int shorter_size = rand_num_(max_size - min_size + 1) + min_size;
-  resize_param.set_height(shorter_size);
-  resize_param.set_width(shorter_size);
-  if (h < w) {
-    resize_param.set_width(int(float(w) / h * shorter_size));
+  *resized_img = ResizeImagePerShorterSize(img, shorter_size, resize_param);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RandomAlterAspectRatio(const Datum& datum, Datum *resized_datum) {
+  shared_ptr<cv::Mat> img;
+  if (datum.encoded()) {
+    img = shared_ptr<cv::Mat>(new cv::Mat(DecodeDatumToCVMatNative(datum)));
   } else {
-    resize_param.set_height(int(float(h) / w * shorter_size));
+    img = shared_ptr<cv::Mat>(new cv::Mat(
+                                cv::Size(datum.width(), datum.height()),
+                                CV_8UC(datum.channels()),
+                                (void*)datum.data().data()));
   }
-  *resized_img = ApplyResize(img, resize_param);
+  cv::Mat resized_img;
+  RandomAlterAspectRatio(*img, &resized_img);
+  CVMatToDatum(resized_img, resized_datum);
+}
+
+static float RandRatio(float min, float max, RandNumbers& rand_num) {
+  return (rand_num(int((max - min) * 1000 + 1)) + min * 1000) / 1000;
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RandomAlterAspectRatio(const cv::Mat& img, cv::Mat *resized_img) {
+  const int crop_size = param_.crop_size();
+  const int h = img.size().height;
+  const int w = img.size().width;
+  const float area = h * w;
+  const float min_area_ratio = param_.random_aspect_ratio_param().min_area_ratio();
+  const float max_area_ratio = param_.random_aspect_ratio_param().max_area_ratio();
+  const float min_aspect_ratio_change =
+    param_.random_aspect_ratio_param().aspect_ratio_change();
+  CHECK(crop_size > 0);
+  CHECK(max_area_ratio >= min_area_ratio);
+  ResizeParameter resize_param = param_.random_aspect_ratio_param().resize_param();
+  int attempt = 0;
+  while (attempt++ < 10) {
+    float area_ratio = RandRatio(min_area_ratio, max_area_ratio, rand_num_);
+    float aspect_ratio_change =
+      RandRatio(min_aspect_ratio_change, 1 / min_aspect_ratio_change, rand_num_);
+    float new_area = area_ratio * area;
+    int new_h = int(sqrt(new_area) * aspect_ratio_change);
+    int new_w = int(sqrt(new_area) / aspect_ratio_change);
+    if (RandRatio(0, 1, rand_num_) < 0.5) {
+      int tmp = new_h; new_h = new_w; new_w = tmp;
+    }
+    if (new_h <= h && new_w <= w) {
+      int y = rand_num_(h - new_h + 1);
+      int x = rand_num_(w - new_w + 1);
+      cv::Rect roi(x, y, new_w, new_h);
+      cv::Mat croppedImg = img(roi);
+      resize_param.set_height(crop_size);
+      resize_param.set_width(crop_size);
+      *resized_img = ApplyResize(croppedImg, resize_param);
+      return;
+    }
+  }
+  *resized_img = ResizeImagePerShorterSize(img, crop_size, resize_param);
 }
 
 #endif  // USE_OPENCV
@@ -1272,8 +1350,13 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   int img_width = cv_img.cols;
   // Check dimensions.
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+
+  if (param_.has_random_resize_param() || param_.has_random_aspect_ratio_param()) {
+    CHECK_GT(crop_size, 0);
+  } else {
+    CHECK_GE(img_height, crop_size);
+    CHECK_GE(img_width, crop_size);
+  }
 
   if (param_.has_resize_param()) {
     InferNewSize(param_.resize_param(), img_width, img_height,
@@ -1305,6 +1388,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
+      param_.has_random_resize_param() ||
+      param_.has_random_aspect_ratio_param() ||
       (phase_ == TRAIN && param_.crop_size());
 
   if (needs_rand) {

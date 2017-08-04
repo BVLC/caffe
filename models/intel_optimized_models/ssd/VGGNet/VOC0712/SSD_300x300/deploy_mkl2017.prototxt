@@ -948,6 +948,7 @@ layer {
       value: 0
     }
   }
+  engine: "CAFFE"
 }
 layer {
   name: "conv4_3_norm_mbox_conf_perm"
@@ -1065,6 +1066,7 @@ layer {
       value: 0
     }
   }
+  engine: "CAFFE"
 }
 layer {
   name: "fc7_mbox_conf_perm"
@@ -1183,6 +1185,7 @@ layer {
       value: 0
     }
   }
+  engine: "CAFFE"
 }
 layer {
   name: "conv6_2_mbox_conf_perm"

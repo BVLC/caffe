@@ -586,7 +586,7 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientMaxTopMask) {
 #endif
   
 // Average Pooling
-TYPED_TEST(MKLDNNPoolingLayerTest, DISABLED_TestForwardAve) {
+TYPED_TEST(MKLDNNPoolingLayerTest, TestForwardAve) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -607,18 +607,45 @@ TYPED_TEST(MKLDNNPoolingLayerTest, DISABLED_TestForwardAve) {
   EXPECT_EQ(this->blob_top_->width(), 3);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Dtype epsilon = 1e-5;
+#if 0
+  //For debugging usage
+  cout << "bottom blob [0]: " << this->blob_bottom_->cpu_data()[0] << endl;
+  cout << "bottom blob [1]: " << this->blob_bottom_->cpu_data()[1] << endl;
+  cout << "bottom blob [2]: " << this->blob_bottom_->cpu_data()[2] << endl;
+  cout << "bottom blob [3]: " << this->blob_bottom_->cpu_data()[3] << endl;
+  cout << "bottom blob [4]: " << this->blob_bottom_->cpu_data()[4] << endl;
+  cout << "bottom blob [5]: " << this->blob_bottom_->cpu_data()[5] << endl;
+  cout << "bottom blob [6]: " << this->blob_bottom_->cpu_data()[6] << endl;
+  cout << "bottom blob [7]: " << this->blob_bottom_->cpu_data()[7] << endl;
+  cout << "bottom blob [8]: " << this->blob_bottom_->cpu_data()[8] << endl;
+  cout << "top blob [0]: " << this->blob_top_->cpu_data()[0] << endl;
+  cout << "top blob [1]: " << this->blob_top_->cpu_data()[1] << endl;
+  cout << "top blob [2]: " << this->blob_top_->cpu_data()[2] << endl;
+  cout << "top blob [3]: " << this->blob_top_->cpu_data()[3] << endl;
+  cout << "top blob [4]: " << this->blob_top_->cpu_data()[4] << endl;
+  cout << "top blob [5]: " << this->blob_top_->cpu_data()[5] << endl;
+  cout << "top blob [6]: " << this->blob_top_->cpu_data()[6] << endl;
+  cout << "top blob [7]: " << this->blob_top_->cpu_data()[7] << endl;
+  cout << "top blob [8]: " << this->blob_top_->cpu_data()[8] << endl;
+#endif
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 12.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[2], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4.0 / 3, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 12.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0    , epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4.0 / 3, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 12.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[6], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4.0 / 3, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 12.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 8.0 / 9, epsilon);
 }
 
-TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAve) {
+#if 0
+// This unit test is commented because when user do not define padding
+// bottom[0]->height/width() + kernel_h/w_ cannot be exact division by stride_h/w_
+// use the exclude padding to align with the result of Caffe
+// but when bottom[0]->height/width() + kernel_h/w_ can be exact division by stride_h/w_
+// use the include padding
+TYPED_TEST(MKLDNNPoolingLayerTest, DISABLED_TestGradientAve) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
@@ -635,8 +662,8 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAve) {
     }
   }
 }
+#endif
 
-#if 0
 TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAvePadded) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -655,6 +682,6 @@ TYPED_TEST(MKLDNNPoolingLayerTest, TestGradientAvePadded) {
     }
   }
 }
-#endif
+
 }  // namespace caffe
 #endif  // #ifdef MKLDNN_SUPPORTED

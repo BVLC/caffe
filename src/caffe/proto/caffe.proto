@@ -251,7 +251,7 @@ message SolverBatchSizePair {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 47 (last added: engine)
+// SolverParameter next available ID: 50 (last added: warm_up_start_lr)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -410,6 +410,8 @@ message SolverParameter {
 
   optional bool disabled_update = 46 [default = false];
   optional string engine = 47 [default = ""];
+  optional int32 warmup_iter = 48 [default = 0];
+  optional float warmup_start_lr = 49 [default = 0];
 }
 
 // A message that stores the solver snapshots
@@ -647,12 +649,20 @@ message TransformationParameter {
   optional EmitConstraint emit_constraint = 10;
   // Resize the input randomly
   optional RandomResizeParameter random_resize_param = 15;
+  optional RandomAspectRatioParameter random_aspect_ratio_param = 16;
 }
 
 message RandomResizeParameter {
   optional uint32 min_size = 1 [default = 0];
   optional uint32 max_size = 2 [default = 0];
   optional ResizeParameter resize_param = 3;
+}
+
+message RandomAspectRatioParameter {
+  optional float min_area_ratio = 1 [default = 0.5];
+  optional float max_area_ratio = 2 [default = 1];
+  optional float aspect_ratio_change = 3 [default = 1];
+  optional ResizeParameter resize_param = 5;
 }
 
 // Message that stores parameters used by data transformer for resize policy
