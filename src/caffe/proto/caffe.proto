@@ -892,25 +892,24 @@ message MVNParameter {
 }
 
 message PadParameter {
-  // To pad, the bottom is copied to the middle of the top, which is larger on
-  // all four sides (ignoring dimensions before the last two) by the pad width.
-  // Those surrounding elements are set to some value, determined by the
-  // padtype. The restriction to the last two dimensions was for simplicity.
-  // Lifting that is a future project. Also, allowing the pad width to depend
-  // on the side would be a nice generaliztion.
+  // To pad, the bottom blob is copied to the middle of the top blob, which is
+  // larger on all four sides (ignoring dimensions before the last two) by the
+  // pad width. Those surrounding elements are set to some value, determined by
+  // the padtype. The restriction to the last two dimensions was for simplicity.
+  // Lifting that is a future project. Another generalization would be to allow
+  // the pad width to depend on the side of the image.
   // The pad is configured by
-  // - the pad `type` to choose how the padding is done
-  // - the pad `pad` to set the width of the padding. It's the same for all four
-  //   sides.
+  // - `padtype` to choose how the padding is done
+  // - `pad` to set the width of the padding. It's the same for all four sides.
   enum PadType {
     ZERO = 0;
     REPLICATE = 1;
-    // PAD_REFLECT = 2;
-    // PAD_REFLECT_101 = 3;
-    // PAD_ODD = 4;
-    // PAD_ODD_101 = 5;
+    REFLECT = 2;
+    // REFLECT_101 = 3;
+    // ODD = 4;
+    // ODD_101 = 5;
   }
-  optional PadType padtype = 1 [default = ZERO]; // The pooling method
+  optional PadType padtype = 1 [default = ZERO]; // The padding method
   optional uint32 pad = 2 [default = 0]; // Width of padding
 }
 

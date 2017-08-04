@@ -270,6 +270,84 @@ TYPED_TEST(PadLayerTest, ForwardReplPad2) {
   } // n
 }
 
+TYPED_TEST(PadLayerTest, ForwardReflectPad1) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  // Pad width of 1
+  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_pad(1);
+  PadLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+	  // If one fails, don't continue with a bazillion messages
+	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
+		    this->blob_bottom_->data_at(n, c, h, w));
+        } // w
+	// Horizontal padding
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
+		  this->blob_bottom_->data_at(n, c, h, 0));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, this->blob_top_->width()-1),
+		  this->blob_bottom_->data_at(n, c, h, this->blob_bottom_->width()-1));
+      } // h
+      // Vertical padding
+      for (int w = 0; w < this->blob_top_->width(); ++w) {
+	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+		  this->blob_top_->data_at(n, c, 1, w));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
+		  this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w));
+      } // w
+    } // c
+  } // n
+}
+
+TYPED_TEST(PadLayerTest, ForwardReflectPad2) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  // Pad width of 2
+  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_pad(2);
+  PadLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+	  // If one fails, don't continue with a bazillion messages
+	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
+		    this->blob_bottom_->data_at(n, c, h, w));
+        } // w
+	// Horizontal padding
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
+		  this->blob_bottom_->data_at(n, c, h, 1));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
+		  this->blob_bottom_->data_at(n, c, h, 0));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-1),
+		  this->blob_bottom_->data_at(n, c, h, this->blob_bottom_->width()-2));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-2),
+		  this->blob_bottom_->data_at(n, c, h, this->blob_bottom_->width()-1));
+      } // h
+      // Vertical padding
+      for (int w = 0; w < this->blob_top_->width(); ++w) {
+	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+		  this->blob_top_->data_at(n, c, 3, w));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
+		  this->blob_top_->data_at(n, c, 2, w));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
+		  this->blob_top_->data_at(n, c, this->blob_top_->height()-4, w));
+	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w),
+		  this->blob_top_->data_at(n, c, this->blob_top_->height()-3, w));
+      } // w
+    } // c
+  } // n
+}
+
 TYPED_TEST(PadLayerTest, GradientZeroPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -289,6 +367,20 @@ TYPED_TEST(PadLayerTest, GradientReplPad1) {
   LayerParameter layer_param;
   // Pad width of 1
   layer_param.mutable_pad_param()->set_padtype(PadParameter::REPLICATE);
+  layer_param.mutable_pad_param()->set_pad(1);
+  PadLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(PadLayerTest, GradientReflectPad1) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  // Pad width of 1
+  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -326,4 +418,17 @@ TYPED_TEST(PadLayerTest, GradientReplPad2) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(PadLayerTest, GradientReflectPad2) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  // Pad width of 2
+  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_pad(2);
+  PadLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 }  // namespace caffe

@@ -65,9 +65,6 @@ __global__ void PadForwardPadLeftAndRightReplicate(const int count, Dtype* out,
     if (w < pad || w > width_out-1-pad) {
       out[index] = out[index + off];
     }
-    // NOTE: Maybe there is an easy way to compute the index of the
-    // nearest edge pixel, so only one of the above tests would be
-    // needed.
   }
 }
 
@@ -90,9 +87,57 @@ __global__ void PadForwardPadTopAndBottomReplicate(const int count, Dtype* out,
     if (h < pad || h > height_out-1-pad) {
       out[index] = out[index + off];
     }
-    // NOTE: Maybe there is an easy way to compute the index of the
-    // nearest edge pixel, so only one of the above tests would be
-    // needed.
+  }
+}
+
+template <typename Dtype>
+__global__ void PadForwardPadLeftAndRightReflect(const int count, Dtype* out,
+    const int num, const int channel, const int height_out, const int width_out,
+    const int pad) {
+
+  CUDA_KERNEL_LOOP(index, count) {
+    int i = index;
+    int w = i % width_out;
+    i /= width_out;
+    int h = i % height_out;
+
+    // Don't do top or bottom padding
+    if (h < pad || h > height_out-1-pad) {
+      return;
+    }
+
+    int off = 0;
+    if (w < pad) {
+      off = 2*(pad - w) - 1;
+    } else {
+      off = 2*(width_out - pad - w) - 1;
+    }
+
+    if (w < pad || w > width_out-1-pad) {
+      out[index] = out[index + off];
+    }
+  }
+}
+
+template <typename Dtype>
+__global__ void PadForwardPadTopAndBottomReflect(const int count, Dtype* out,
+    const int num, const int channel, const int height_out, const int width_out,
+    const int pad) {
+  CUDA_KERNEL_LOOP(index, count) {
+    int i = index / width_out;
+    int h = i % height_out;
+
+    int off = 0;
+    if (h < pad) {
+      off = 2*(pad - h) - 1;
+    } else {
+      off = 2*(height_out - pad - h) - 1;
+    }
+    off *= width_out;
+
+    if (h < pad || h > height_out-1-pad) {
+      out[index] = out[index + off];
+    }
   }
 }
 
@@ -125,6 +170,16 @@ void PadLayer<Dtype>::Forward_gpu(const std::vector<Blob<Dtype>*>& bottom,
       <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
         top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
     PadForwardPadTopAndBottomReplicate<Dtype>
+      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    break;
+  case PadParameter::REFLECT:
+    // Left and right first, only in the "body", i.e., not in the
+    // vertical padding, then vertical across entire rows.
+    PadForwardPadLeftAndRightReflect<Dtype>
+      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    PadForwardPadTopAndBottomReflect<Dtype>
       <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
         top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
     break;
@@ -188,6 +243,64 @@ __global__ void PadBackwardPadTopAndBottomReplicate(const int count, Dtype* out,
 }
 
 template <typename Dtype>
+__global__ void PadBackwardPadLeftAndRightReflect(const int count, Dtype* out,
+    const int num, const int channel, const int height_out, const int width_out,
+    const int pad) {
+  CUDA_KERNEL_LOOP(index, count) {
+    int i = index;
+    int w = i % width_out;
+    i /= width_out;
+    int h = i % height_out;
+
+    // Don't do top or bottom padding
+    if (h < pad || h > height_out-1-pad) {
+      return;
+    }
+
+    // Padding comes from a border of width pad within the main image body
+    if ((w < pad || w > 2*pad-1) &&
+	(w > width_out - 1 - pad || w < width_out - 2*pad)) {
+      return;
+    }
+
+    int off;
+    if (w < 2*pad) {
+      off = 2*(pad - w) - 1;
+    } else {
+      off = 2*(width_out - pad - w) - 1;
+    }
+
+    out[index] += out[index + off];
+  }
+}
+
+template <typename Dtype>
+__global__ void PadBackwardPadTopAndBottomReflect(const int count, Dtype* out,
+    const int num, const int channel, const int height_out, const int width_out,
+    const int pad) {
+  CUDA_KERNEL_LOOP(index, count) {
+    int i = index / width_out;
+    int h = i % height_out;
+
+    // Padding comes from a border of width pad within the main image body
+    if ((h < pad || h > 2*pad-1) &&
+	(h > height_out - 1 - pad || h < height_out - 2*pad)) {
+      return;
+    }
+
+    int off;
+    if (h < 2*pad) {
+      off = 2*(pad - h) - 1;
+    } else {
+      off = 2*(height_out - pad - h) - 1;
+    }
+    off *= width_out;
+
+    out[index] += out[index + off];
+  }
+}
+
+template <typename Dtype>
 __global__ void PadBackward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
@@ -230,6 +343,14 @@ void PadLayer<Dtype>::Backward_gpu(const std::vector<Blob<Dtype>*>& top,
 	<<<CAFFE_GET_BLOCKS(tcount), CAFFE_CUDA_NUM_THREADS>>>(
        	    tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
       break;
+  case PadParameter::REFLECT:
+    PadBackwardPadTopAndBottomReflect<Dtype>
+      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    PadBackwardPadLeftAndRightReflect<Dtype>
+      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    break;
     }
     // Copy into place
     // NOLINT_NEXT_LINE(whitespace/operators)
