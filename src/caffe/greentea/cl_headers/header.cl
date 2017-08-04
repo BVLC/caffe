@@ -50,11 +50,6 @@
 #define HALF_SUPPORT_AVAILABLE
 #endif
 
-#if defined(cl_khr_int64_base_atomics)
-#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable
-#define ATOMICS_64_AVAILABLE
-#endif
-
 #if defined(cl_khr_int32_base_atomics)
 #pragma OPENCL EXTENSION cl_khr_int32_base_atomics : enable
 #define ATOMICS_32_AVAILABLE
