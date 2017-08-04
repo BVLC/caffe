@@ -959,7 +959,17 @@ float ConvolutionLayerSpatial<Dtype>::timed_convolve(
   dbgPrint(std::cout << "Bechmarking kernel: " << config->kernelName
            << std::endl);
   tuned_ = true;
-  int loop_cnt = 4;
+  double out_w = output_w_;
+  double out_h = output_h_;
+  double out_z = M_;
+  double k_w = kernel_w_;
+  double k_h = kernel_h_;
+  double k_z = this->channels_;
+  double totalFlops = ((k_w*k_h*k_z -1)*2)*(out_w*out_h*out_z) * this->num_;
+
+  // For total flops less than 0.5 GOPS, we increase the loop count to 4
+  // to increase tuning result stability.
+  int loop_cnt = totalFlops > 5e8 ? 1 : 4;
   for (int i = 0; i < loop_cnt; i++) {
     err = convolve(bottom, top, index, this->num_, config);
     if (err != CL_SUCCESS)
@@ -977,22 +987,10 @@ float ConvolutionLayerSpatial<Dtype>::timed_convolve(
 
   float elapsedTime = timer.MilliSeconds() / loop_cnt;
 #ifdef dbg
-  double out_w = output_w_;
-  double out_h = output_h_;
-  double out_z = M_;
-  double k_w = kernel_w_;
-  double k_h = kernel_h_;
-  double k_z = this->channels_;
-  double totalFlops = ((k_w*k_h*k_z -1)*2)*(out_w*out_h*out_z) * this->num_;
   std::cout << "\tEstimated Gflops:" << ((totalFlops/1000)/1000)/1000
   << std::endl;
   std::cout << "\tEstimated GFLOPS/S: " <<
   (((totalFlops/1000)/1000)/1000)*(1000.0/elapsedTime) << std::endl;
-#if 0
-  std::cout << "Estimated utilization: " <<
-  ((((totalFlops/1000)/1000)/1000)*(1000.0/elapsedTime))/880.0
-  << std::endl;
-#endif
 #endif
   return elapsedTime;
 }
