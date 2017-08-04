@@ -8,7 +8,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
@@ -193,10 +193,10 @@ class RandomNumberGeneratorTest : public ::testing::Test {
       caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
 #endif  // USE_CUDA
     } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
       greentea_gpu_rng_gaussian<Dtype>(dc->id(), sample_size_,
                                        mu, sigma, (cl_mem)rng_data, 0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
     }
   }
 
@@ -211,10 +211,10 @@ class RandomNumberGeneratorTest : public ::testing::Test {
       caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
 #endif  // USE_CUDA
     } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
       greentea_gpu_rng_uniform<Dtype>(dc->id(), sample_size_,
                                       lower, upper, (cl_mem)rng_data, 0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
     }
   }
 
@@ -229,9 +229,9 @@ class RandomNumberGeneratorTest : public ::testing::Test {
       caffe_gpu_rng_uniform(sample_size_, (uint_tpc*)rng_data);  // NOLINT
 #endif  // USE_CUDA
     } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
       greentea_gpu_rng_uniform(dc->id(), sample_size_, (cl_mem)rng_data, 0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
     }
 }
 
@@ -245,10 +245,10 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   uint_tp sample_size_;
   uint32_t seed_;
 
-  shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> data_2_;
-  shared_ptr<SyncedMemory> int_data_;
-  shared_ptr<SyncedMemory> int_data_2_;
+  std::shared_ptr<SyncedMemory> data_;
+  std::shared_ptr<SyncedMemory> data_2_;
+  std::shared_ptr<SyncedMemory> int_data_;
+  std::shared_ptr<SyncedMemory> int_data_2_;
 };
 
 TYPED_TEST_CASE(RandomNumberGeneratorTest, TestDtypes);

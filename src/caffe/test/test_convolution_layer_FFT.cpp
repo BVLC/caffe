@@ -18,7 +18,7 @@ namespace caffe {
 // accumulate through explicit loops over input, output, and filters.
 template <typename Dtype> static
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
-                const vector<shared_ptr<Blob<Dtype> > >& weights,
+                const vector<std::shared_ptr<Blob<Dtype> > >& weights,
                 Blob<Dtype>* out) {
   // Kernel size, stride, and pad
   int kernel_h, kernel_w;
@@ -112,11 +112,11 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 
 template void caffe_conv(const Blob<float>* in,
                          ConvolutionParameter* conv_param,
-                         const vector<shared_ptr<Blob<float> > >& weights,
+                         const vector<std::shared_ptr<Blob<float> > >& weights,
                          Blob<float>* out);
 template void caffe_conv(const Blob<double>* in,
                          ConvolutionParameter* conv_param,
-                         const vector<shared_ptr<Blob<double> > >& weights,
+                         const vector<std::shared_ptr<Blob<double> > >& weights,
                          Blob<double>* out);
 // test FFT
 
@@ -158,7 +158,7 @@ class ConvolutionLayerTest_FFT : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  shared_ptr<Blob<Dtype> > ref_blob_top_;
+  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -175,7 +175,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSetup_FFT) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<Layer<Dtype> > layer(
+  std::shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -214,7 +214,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSimpleConvolution_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<Dtype> > layer(
+  std::shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -252,7 +252,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, Test1x1Convolution_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<Dtype> > layer(
+  std::shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -282,7 +282,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSimpleConvolutionGroup_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<Dtype> > layer(
+  std::shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -304,7 +304,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   // as the convolution of two rectangular filters.
   typedef typename TypeParam::Dtype Dtype;
   // Fill bottoms with identical Gaussian noise.
-  shared_ptr<GaussianFiller<Dtype> > filler;
+  std::shared_ptr<GaussianFiller<Dtype> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<Dtype>(filler_param));
@@ -319,7 +319,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
 
-  shared_ptr<Layer<Dtype> > layer(
+  std::shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
@@ -342,7 +342,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   // (1) the [1 2 1] column filter
   vector<Blob<Dtype>*> sep_blob_bottom_vec;
   vector<Blob<Dtype>*> sep_blob_top_vec;
-  shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
+  std::shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
   sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
   sep_blob_top_vec.push_back(this->blob_top_2_);
   convolution_param->clear_kernel_size();

@@ -136,11 +136,11 @@ class Net {
     return blob_names_;
   }
   /// @brief returns the blobs
-  inline const vector<shared_ptr<Blob<Dtype> > >& blobs() const {
+  inline const vector<std::shared_ptr<Blob<Dtype> > >& blobs() const {
     return blobs_;
   }
   /// @brief returns the layers
-  inline const vector<shared_ptr<Layer<Dtype> > >& layers() const {
+  inline const vector<std::shared_ptr<Layer<Dtype> > >& layers() const {
     return layers_;
   }
   /// @brief returns the phase: TRAIN or TEST
@@ -183,7 +183,7 @@ class Net {
     return layer_need_backward_;
   }
   /// @brief returns the parameters
-  inline const vector<shared_ptr<Blob<Dtype> > >& params() const {
+  inline const vector<std::shared_ptr<Blob<Dtype> > >& params() const {
     return params_;
   }
   inline const vector<Blob<Dtype>*>& learnable_params() const {
@@ -228,9 +228,9 @@ class Net {
     return net_output_blob_indices_;
   }
   bool has_blob(const string& blob_name) const;
-  const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
+  const std::shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
-  const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
+  const std::shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
 
   void set_debug_info(const bool value) {
     debug_info_ = value;
@@ -298,12 +298,12 @@ class Net {
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
   /// @brief Individual layers in the net
-  vector<shared_ptr<Layer<Dtype> > > layers_;
+  vector<std::shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
   map<string, int_tp> layer_names_index_;
   vector<bool> layer_need_backward_;
   /// @brief the blobs storing intermediate results between the layer.
-  vector<shared_ptr<Blob<Dtype> > > blobs_;
+  vector<std::shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
   map<string, int_tp> blob_names_index_;
   vector<bool> blob_need_backward_;
@@ -330,7 +330,7 @@ class Net {
   vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
   /// The parameters in the network.
-  vector<shared_ptr<Blob<Dtype> > > params_;
+  vector<std::shared_ptr<Blob<Dtype> > > params_;
   vector<Blob<Dtype>*> learnable_params_;
   /**
    * The mapping from params_ -> learnable_params_: we have

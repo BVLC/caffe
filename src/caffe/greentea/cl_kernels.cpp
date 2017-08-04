@@ -1,6 +1,6 @@
 // AUTOMATICALLY GENERATED FILE, DO NOT EDIT
 #include "caffe/common.hpp"
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/cl_kernels.hpp"
 #include <sstream>
 #include <string>
@@ -7691,7 +7691,7 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
     }
   }
   ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
-  ss << "#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)" << "\n\n";  // NOLINT
+  ss << "#if defined(HALF_SUPPORT_AVAILABLE) && defined(USE_GPU_HALF)" << "\n\n";  // NOLINT
   ss << "#undef Dtype" << "\n\n";  // NOLINT
   ss << "#undef Dtype2" << "\n\n";  // NOLINT
   ss << "#undef Dtype4" << "\n\n";  // NOLINT
@@ -7734,8 +7734,8 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
 #ifdef USE_FFT
   options = " -DFFT ";
 #endif
-#ifdef HAS_HALF_SUPPORT
-  options += " -DHAS_HALF_SUPPORT ";
+#ifdef USE_GPU_HALF
+  options += " -DUSE_GPU_HALF ";
 #endif
   bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
                     != std::string::npos;
@@ -7861,7 +7861,7 @@ std::string getKernelBundleSource(int index) {
     ss << "#define DTYPE_MAX FLT_MAX" << "\n\n";  // NOLINT
     ss << "#define DTYPE_MIN FLT_MIN" << "\n\n";  // NOLINT
   } else {
-    ss << "#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)" << "\n\n";  // NOLINT
+    ss << "#if defined(HALF_SUPPORT_AVAILABLE) && defined(USE_GPU_HALF)" << "\n\n";  // NOLINT
     ss << "#define Dtype half" << "\n\n";  // NOLINT
     ss << "#define Dtype2 half2" << "\n\n";  // NOLINT
     ss << "#define Dtype4 half4" << "\n\n";  // NOLINT

@@ -19,7 +19,7 @@ class ConstantFillerTest : public ::testing::Test {
   virtual ~ConstantFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<ConstantFiller<Dtype> > filler_;
+  std::shared_ptr<ConstantFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(ConstantFillerTest, TestDtypes);
@@ -48,7 +48,7 @@ class UniformFillerTest : public ::testing::Test {
   virtual ~UniformFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<UniformFiller<Dtype> > filler_;
+  std::shared_ptr<UniformFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(UniformFillerTest, TestDtypes);
@@ -75,7 +75,7 @@ class PositiveUnitballFillerTest : public ::testing::Test {
   virtual ~PositiveUnitballFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
+  std::shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypes);
@@ -114,7 +114,7 @@ class GaussianFillerTest : public ::testing::Test {
   virtual ~GaussianFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<GaussianFiller<Dtype> > filler_;
+  std::shared_ptr<GaussianFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(GaussianFillerTest, TestDtypes);
@@ -171,7 +171,7 @@ class XavierFillerTest : public ::testing::Test {
   virtual ~XavierFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<XavierFiller<Dtype> > filler_;
+  std::shared_ptr<XavierFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(XavierFillerTest, TestDtypes);
@@ -220,7 +220,7 @@ class MSRAFillerTest : public ::testing::Test {
   virtual ~MSRAFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<MSRAFiller<Dtype> > filler_;
+  std::shared_ptr<MSRAFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(MSRAFillerTest, TestDtypes);

@@ -15,7 +15,7 @@ cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif
 }
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 template <typename Dtype>
 bool caffe::isSupported(void) {
   return true;
@@ -33,13 +33,13 @@ bool caffe::isSupported<caffe::GPUDevice<float>>(void) {
 
 template <>
 bool caffe::isSupported<double>(void) {
-  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OpenCL ||
+  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
          caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp64");
 }
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 template <>
 bool caffe::isSupported<half>(void) {
-  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OpenCL ||
+  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
          caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp16");
 }
 
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 #endif
   // invoke the test.
   int r =  RUN_ALL_TESTS();
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
   // Call explicitly for OCL + FFT
   caffe::Caffe::TeardownDevice(device);
 #endif

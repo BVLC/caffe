@@ -4,7 +4,7 @@
 #include <caffe_config.h>
 #endif
 #ifndef CPU_ONLY
-#if defined(USE_GREENTEA) && defined(USE_FFT)
+#if defined(USE_OPENCL) && defined(USE_FFT)
 #include <clFFT.h>
 #include <map>
 #include <utility>
@@ -50,7 +50,7 @@ class ClFFTState {
 
 }  // namespace caffe
 
-#endif  // USE_GREENTEA && USE_FFT
+#endif  // USE_OPENCL && USE_FFT
 #endif  // CPU_ONLY
 #endif  // CAFFE_UTIL_CL_FFT_HELPER_H_
 

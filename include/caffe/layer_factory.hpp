@@ -44,7 +44,7 @@
 #include <vector>
 
 #include "caffe/common.hpp"
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -56,7 +56,7 @@ class Layer;
 template <typename Dtype>
 class LayerRegistry {
  public:
-  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+  typedef std::shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 
   static CreatorRegistry& Registry();
@@ -65,7 +65,7 @@ class LayerRegistry {
   static void AddCreator(const string& type, Creator creator);
 
   // Get a layer using a LayerParameter.
-  static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param);
+  static std::shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param);
 
   static vector<string> LayerTypeList();
 
@@ -81,24 +81,21 @@ template <typename Dtype>
 class LayerRegisterer {
  public:
   LayerRegisterer(const string& type,
-                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&));
+                  std::shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&));
 };
-#ifdef HAS_HALF_SUPPORT
+
 #define REGISTER_LAYER_CREATOR(type, creator)                                  \
-  static LayerRegisterer<half> g_creator_h_##type(#type, creator<half>);     \
+  static LayerRegisterer<half> g_creator_h_##type(#type, creator<half>);       \
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
   static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)
-#else
-#define REGISTER_LAYER_CREATOR(type, creator)                                  \
-  static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
-  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)
-#endif
 
 #define REGISTER_LAYER_CLASS(type)                                             \
-  template <typename Dtype>                                                    \
-  shared_ptr<Layer<Dtype> > Creator_##type##Layer(const LayerParameter& param) \
+  template <typename Dtype, typename Ctype, typename MItype, typename MOtype>  \
+  std::shared_ptr<Layer<Dtype, Ctype, MItype, MOtype> >                             \
+                Creator_##type##Layer(const LayerParameter& param)             \
   {                                                                            \
-    return shared_ptr<Layer<Dtype> >(new type##Layer<Dtype>(param));           \
+    return std::shared_ptr<Layer<Dtype, Ctype, MItype, MOtype> >                    \
+             (new type##Layer<Dtype, Ctype, MItype, MOtype>(param));           \
   }                                                                            \
   REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)
 

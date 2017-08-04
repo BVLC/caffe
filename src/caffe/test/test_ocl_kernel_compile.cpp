@@ -10,7 +10,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 #ifndef CPU_ONLY  // CPU-GPU test
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 
 #include "caffe/greentea/cl_kernels.hpp"
 #include "caffe/greentea/greentea.hpp"
@@ -36,7 +36,7 @@ TYPED_TEST_CASE(OpenCLKernelCompileTest, TestDtypes);
 TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
   device* dev = Caffe::GetDefaultDevice();
   bool failure = false;
-  if (dev->backend() == BACKEND_OpenCL) {
+  if (dev->backend() == BACKEND_OPENCL) {
     int kcount = getKernelBundleCount();
     for (int i = 0; i < kcount; ++i) {
       std::string kernel = getKernelBundleSource<TypeParam>(i);
@@ -81,5 +81,5 @@ TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
 }
 
 }  // namespace caffe
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  // !CPU_ONLY

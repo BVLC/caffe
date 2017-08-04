@@ -72,13 +72,13 @@ void SGDSolver<Dtype>::PreSolve() {
   for (uint_tp i = 0; i < net_params.size(); ++i) {
     const vector<int_tp>& shape = net_params[i]->shape();
     history_.push_back(
-        shared_ptr<Blob<Dtype>>(
+        std::shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
     update_.push_back(
-        shared_ptr<Blob<Dtype>>(
+        std::shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
     temp_.push_back(
-        shared_ptr<Blob<Dtype>>(
+        std::shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
   }
 }
@@ -143,12 +143,12 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
                        net_params[param_id]->mutable_gpu_diff());
 #endif  // USE_CUDA
       } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         greentea_gpu_scal(this->device_->id(),
                           net_params[param_id]->count(), accum_normalization,
                           (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
                           0);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
       }
 #else
       NO_GPU;
@@ -215,7 +215,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
         }
 #endif  // USE_CUDA
       } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         if (local_decay) {
           if (regularization_type == "L2") {
             // add weight decay
@@ -239,7 +239,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
                 << regularization_type;
           }
         }
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
       }
 #else
       NO_GPU;

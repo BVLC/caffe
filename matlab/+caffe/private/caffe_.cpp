@@ -42,8 +42,8 @@ void mxCHECK_FILE_EXIST(const char* file) {
 }
 
 // The pointers to caffe::Solver and caffe::Net instances
-static vector<shared_ptr<Solver<float> > > solvers_;
-static vector<shared_ptr<Net<float> > > nets_;
+static vector<std::shared_ptr<Solver<float> > > solvers_;
+static vector<std::shared_ptr<Net<float> > > nets_;
 // init_key is generated at the beginning and every time you call reset
 #ifndef _MSC_VER  // We are not using MSVC.
 static double init_key = static_cast<double>(caffe_rng_rand());
@@ -176,9 +176,9 @@ static mxArray* ptr_to_handle(const T* ptr) {
   return mx_handle;
 }
 
-// Convert a vector of shared_ptr in C++ to handle struct vector
+// Convert a vector of std::shared_ptr in C++ to handle struct vector
 template <typename T>
-static mxArray* ptr_vec_to_handle_vec(const vector<shared_ptr<T> >& ptr_vec) {
+static mxArray* ptr_vec_to_handle_vec(const vector<std::shared_ptr<T> >& ptr_vec) {
   mxArray* mx_handle_vec = create_handle_vec<T>(ptr_vec.size());
   for (int_tp i = 0; i < ptr_vec.size(); i++) {
     setup_handle(ptr_vec[i].get(), i, mx_handle_vec);
@@ -195,7 +195,7 @@ static void get_solver(MEX_ARGS) {
       "Usage: caffe_('get_solver', solver_file)");
   char* solver_file = mxArrayToString(prhs[0]);
   mxCHECK_FILE_EXIST(solver_file);
-  shared_ptr<Solver<float> > solver(new caffe::SGDSolver<float>(solver_file));
+  std::shared_ptr<Solver<float> > solver(new caffe::SGDSolver<float>(solver_file));
   solvers_.push_back(solver);
   plhs[0] = ptr_to_handle<Solver<float> >(solver.get());
   mxFree(solver_file);
@@ -207,7 +207,7 @@ static void delete_solver(MEX_ARGS) {
       "Usage: caffe_('delete_solver', hSolver)");
   Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
   solvers_.erase(std::remove_if(solvers_.begin(), solvers_.end(),
-      [solver] (const shared_ptr< Solver<float> > &solverPtr) {
+      [solver] (const std::shared_ptr< Solver<float> > &solverPtr) {
       return solverPtr.get() == solver;
   }), solvers_.end());
 }
@@ -279,7 +279,7 @@ static void get_net(MEX_ARGS) {
   } else {
     mxERROR("Unknown phase");
   }
-  shared_ptr<Net<float> > net(new caffe::Net<float>(model_file, phase));
+  std::shared_ptr<Net<float> > net(new caffe::Net<float>(model_file, phase));
   nets_.push_back(net);
   plhs[0] = ptr_to_handle<Net<float> >(net.get());
   mxFree(model_file);
@@ -292,7 +292,7 @@ static void delete_net(MEX_ARGS) {
       "Usage: caffe_('delete_solver', hNet)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
   nets_.erase(std::remove_if(nets_.begin(), nets_.end(),
-      [net] (const shared_ptr< Net<float> > &netPtr) {
+      [net] (const std::shared_ptr< Net<float> > &netPtr) {
       return netPtr.get() == net;
   }), nets_.end());
 }

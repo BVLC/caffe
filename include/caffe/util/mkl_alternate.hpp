@@ -86,7 +86,7 @@ DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i])
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
-#ifdef HAS_HALF_SUPPORT
+#ifdef USE_GPU_HALF
 inline void cblas_haxpby(const int_tp N, const half alpha, const half* X,
                          const int_tp incX, const half beta, half* Y,
                          const int_tp incY) {

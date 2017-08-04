@@ -5,9 +5,10 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template <typename Dtype, typename Ctype, typename MItype, typename MOtype>
+void DummyDataLayer<Dtype, Ctype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<Dtype, MItype>*>& bottom,
+      const vector<Blob<Dtype, MOtype>*>& top) {
   const int_tp num_top = top.size();
   const DummyDataParameter& param = this->layer_param_.dummy_data_param();
   const int_tp num_data_filler = param.data_filler_size();
@@ -108,7 +109,7 @@ void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-INSTANTIATE_CLASS(DummyDataLayer);
+INSTANTIATE_CLASS_T4(DummyDataLayer);
 REGISTER_LAYER_CLASS(DummyData);
 
 }  // namespace caffe

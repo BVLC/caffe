@@ -102,7 +102,7 @@ if DEFINED APPVEYOR (
     :: Use cuDNN acceleration with CUDA backend
     if NOT DEFINED USE_CUDNN set USE_CUDNN=0
     :: Use OpenCL backend
-    if NOT DEFINED USE_GREENTEA set USE_GREENTEA=1
+    if NOT DEFINED USE_OPENCL set USE_OPENCL=1
     :: Use LibDNN acceleration with OpenCL and/or CUDA backend
     if NOT DEFINED USE_LIBDNN set USE_LIBDNN=1
     :: Use OpenMP (disable this on systems with #NUMA > 1)
@@ -143,7 +143,7 @@ echo INFO: CPU_ONLY                   = !CPU_ONLY!
 echo INFO: USE_CUDA                   = !USE_CUDA!
 echo INFO: CUDA_ARCH_NAME             = !CUDA_ARCH_NAME!
 echo INFO: USE_CUDNN                  = !USE_CUDNN!
-echo INFO: USE_GREENTEA               = !USE_GREENTEA!
+echo INFO: USE_OPENCL               = !USE_OPENCL!
 echo INFO: USE_LIBDNN                 = !USE_LIBDNN!
 echo INFO: USE_OPENMP                 = !USE_OPENMP!
 echo INFO: USE_INDEX64                = !USE_INDEX_64!
@@ -192,7 +192,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_CUDA:BOOL=%USE_CUDA% ^
       -DUSE_CUDNN:BOOL=%USE_CUDNN% ^
 	  -DUSE_LIBDNN:BOOL=%USE_LIBDNN% ^
-	  -DUSE_GREENTEA:BOOL=%USE_GREENTEA% ^
+	  -DUSE_OPENCL:BOOL=%USE_OPENCL% ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
       -DUSE_INDEX64:BOOL=%USE_INDEX64% ^
       -DUSE_INTEL_SPATIAL:BOOL=%USE_INTEL_SPATIAL% ^

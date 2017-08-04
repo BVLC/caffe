@@ -1,9 +1,8 @@
 #ifndef GREENTEA_IM2COL_HPP_
 #define GREENTEA_IM2COL_HPP_
-#ifdef USE_GREENTEA
 
-#include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
+#ifdef USE_OPENCL
+
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/ocl/context.hpp"
 #include "viennacl/ocl/device.hpp"
@@ -60,5 +59,5 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
 
 }  // namespace caffe
 
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
 #endif  /* GREENTEA_IM2COL_HPP_ */

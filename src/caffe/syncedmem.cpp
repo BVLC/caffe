@@ -1,13 +1,11 @@
 #include "caffe/common.hpp"
-#include "caffe/greentea/greentea.hpp"
 #include "caffe/syncedmem.hpp"
 
-#include "caffe/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
 #include "caffe/greentea/greentea_im2col.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 
 #define ZEROCOPY_SUPPORTED(device, ptr, size) \
              (device->is_host_unified())
@@ -46,7 +44,7 @@ void CaffeMallocHost(void** ptr, int_tp size, device* dev) {
   }
 #endif
 #ifdef USE_MKL
-#ifndef USE_GREENTEA
+#ifndef USE_OPENCL
   *ptr = mkl_malloc(size ? size:1, 64);
 #else
   *ptr = mkl_malloc(size ? ALIGN(size, OPENCL_CACHE_ALIGN) :
@@ -101,7 +99,7 @@ SyncedMemory::~SyncedMemory() {
       device_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
     } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
       // Free device memory
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           device_->id());
@@ -116,7 +114,7 @@ SyncedMemory::~SyncedMemory() {
         cpu_ptr_ = nullptr;
       }
       device_->DecreaseMemoryUsage(size_);
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
     }
   }
 #endif  // !CPU_ONLY
@@ -155,7 +153,7 @@ inline void SyncedMemory::to_cpu() {
       if (cpu_ptr_ == nullptr) {
         CaffeMallocHost(&cpu_ptr_, size_, device_);
         own_cpu_data_ = true;
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         CHECK_EQ(own_zero_copy_data_, false)
            << "Allocate host memory for a zero copy buffer.";
 #endif
@@ -166,7 +164,7 @@ inline void SyncedMemory::to_cpu() {
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
 #endif  // USE_CUDA
       } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
         if (!own_zero_copy_data_) {
@@ -225,7 +223,7 @@ inline void SyncedMemory::to_gpu() {
         own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
         cl_int err;
@@ -299,7 +297,7 @@ inline void SyncedMemory::to_gpu() {
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         own_gpu_data_ = true;
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
       }
       head_ = HEAD_AT_GPU;
       break;
@@ -315,7 +313,7 @@ inline void SyncedMemory::to_gpu() {
         own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             device_->id());
         if (gpu_ptr_ == nullptr) {
@@ -358,7 +356,7 @@ inline void SyncedMemory::to_gpu() {
           ctx.get_queue().finish();
         }
         own_gpu_data_ = true;
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
       }
       head_ = SYNCED;
       break;
@@ -414,9 +412,9 @@ void SyncedMemory::set_gpu_data(void* data) {
   own_gpu_data_ = false;
 #endif  // USE_CUDA
   } else {
-#ifdef USE_GREENTEA
+#ifdef USE_OPENCL
     // TODO: Implement OpenCL - OpenCL and OpenCL - CUDA data sharing
-#endif  // USE_GREENTEA
+#endif  // USE_OPENCL
   }
 #else
   NO_GPU;
@@ -474,5 +472,8 @@ void SyncedMemory::check_device() {
 #endif
 #endif
 }
+
+INSTANTIATE_CLASS(SyncedMemory)
+
 }  // namespace caffe
 
