@@ -14,8 +14,10 @@ layer {
     mean_value: 104
     mean_value: 117
     mean_value: 123
-    random_resize_param {
-      min_size: 256 max_size: 480
+    random_aspect_ratio_param {
+      min_area_ratio: 0.08
+      max_area_ratio: 1
+      aspect_ratio_change: 0.75
       resize_param {
         interp_mode: CUBIC
       }
@@ -44,6 +46,13 @@ layer {
     mean_value: 104
     mean_value: 117
     mean_value: 123
+    random_resize_param {
+      min_size: 256
+      max_size: 256
+      resize_param {
+        interp_mode: CUBIC
+      }
+    }
   }
   data_param {
     source: "examples/imagenet/ilsvrc12_val_lmdb"
