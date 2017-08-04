@@ -427,8 +427,6 @@ int time() {
   Timer total_timer;
   total_timer.Start();
   Timer forward_timer;
-  Timer backward_timer;
-  Timer timer;
   std::vector<double> forward_time_per_layer(layers.size(), 0.0);
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
@@ -436,32 +434,43 @@ int time() {
 
   for (int_tp j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
+    std::vector<Timer> layer_timers(layers.size());
     iter_timer.Start();
     forward_timer.Start();
     for (int_tp i = 0; i < layers.size(); ++i) {
       if (FLAGS_lt) {
-        timer.Start();
+        layer_timers[i].Start();
       }
-
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-
       if (FLAGS_lt) {
-        Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
-        forward_time_per_layer[i] += timer.MicroSeconds();
+        layer_timers[i].Stop();
       }
     }
     Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
     forward_time += forward_timer.MicroSeconds();
+    if (FLAGS_lt) {
+      for (int_tp i = 0; i < layers.size(); ++i) {
+        forward_time_per_layer[i] += layer_timers[i].MicroSeconds();
+      }
+    }
     if (phase == caffe::TRAIN) {
-      backward_timer.Start();
       for (int_tp i = layers.size() - 1; i >= 0; --i) {
-        timer.Start();
+        if (FLAGS_lt) {
+          layer_timers[i].Start();
+        }
         layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                             bottom_vecs[i]);
-        Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
-        backward_time_per_layer[i] += timer.MicroSeconds();
+        if (FLAGS_lt) {
+          layer_timers[i].Stop();
+        }
       }
-      backward_time += backward_timer.MicroSeconds();
+      Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
+      if (FLAGS_lt) {
+        for (int_tp i = 0; i < layers.size(); ++i) {
+          backward_time_per_layer[i] += layer_timers[i].MicroSeconds();
+          backward_time += backward_time_per_layer[i];
+        }
+      }
     }
     LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
       << iter_timer.MilliSeconds() << " ms.";
