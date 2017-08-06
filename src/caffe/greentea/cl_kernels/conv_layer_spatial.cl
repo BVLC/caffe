@@ -101,31 +101,83 @@ __kernel void CFMultiNoPadding(
       image_dataPtrFloat += imageSize - input_width*KERNEL_H*DILATION_Y;
     }
 
-    if(APPLY_BIAS == 1)
+    #if APPLY_BIAS
+    for(int_tp kern = 0; kern < ZPAR; kern++)
     {
-      for(int_tp kern = 0; kern < ZPAR; kern++)
+      if(kernelNum+kern < OUTPUT_Z)
       {
-        if(kernelNum+kern < OUTPUT_Z)
-        {
-            int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
-            ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);
-        }
+        int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
+        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);
       }
     }
-    else
+    #else
+    for(int_tp kern = 0; kern < ZPAR; kern++)
     {
-        for(int_tp kern = 0; kern < ZPAR; kern++)
-        {
-            if(kernelNum+kern < OUTPUT_Z)
-            {
-                int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
-                ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);
-            }
-        }
+      if(kernelNum+kern < OUTPUT_Z)
+      {
+        int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
+        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);
+      }
     }
+    #endif
   }
 }
 
+#endif
+
+#ifdef DWCONV
+__kernel void DWCONV(
+    ELTWISE_DATA_ARG
+    NEGATIVE_SLOPE_ARG
+    __global Dtype* image_data,
+    __global Dtype* kernel_data,
+    __global Dtype* bias,
+    __global Dtype* convolved_image,
+    const ushort input_width,
+    const ushort input_height,
+    const ushort output_width,
+    const ushort output_height) {
+
+  const int_tp outputX = get_global_id(0);
+  const int_tp outputY = get_global_id(1);
+  const int_tp outputZ = get_global_id(2);
+  if(outputX < output_width && outputY < output_height)
+  {
+    Dtype sum = 0.;
+
+    const int_tp org_y = outputY * STRIDE_H - PAD_H;
+    const int_tp org_x = outputX * STRIDE_W - PAD_W;
+    const int_tp currentKernelOffset = KERNELSIZE*(outputZ%CHANNELS);
+    const int_tp biasIndex=outputZ%CHANNELS;
+    const int_tp local_image_offset = org_y*input_width + org_x;
+    const int_tp imageSize = input_width*input_height;
+
+    __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
+    __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
+
+    for(int_tp y = 0; y < KERNEL_H; y++)
+    {
+      for(int_tp x = 0; x < KERNEL_W; x++)
+      {
+        if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))
+        {
+          continue;
+        }
+        sum += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[x];
+      }
+      image_dataPtrFloat += input_width * DILATION_Y;
+      kernel_dataPtrFloat += KERNEL_W;
+    }
+
+    #if APPLY_BIAS
+    int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
+    ACTIVATION_FUNCTION(convolved_image, offset, sum + bias[biasIndex]);
+    #else
+    int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
+    ACTIVATION_FUNCTION(convolved_image, offset, sum);
+    #endif
+  }
+}
 #endif
 
 #if defined(convolve_simd) || defined(Conv_Interleaved)
@@ -2003,7 +2055,11 @@ winograd_4x4(
   if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {
     uint_tp out_addr = fm * output_width * output_height;
     out_addr += or * output_width + oc;
+#if APPLY_BIAS
     Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];
+#else
+    Dtype bias = 0.
+#endif
       /*
       A^T = {1, 1, 1, 1, 1, 0,
              0, 1, -1,2,-2,0,

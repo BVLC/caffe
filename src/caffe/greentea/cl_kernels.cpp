@@ -804,8 +804,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "image_dataPtrFloat += imageSize - input_width*KERNEL_H*DILATION_Y;",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
-"if(APPLY_BIAS == 1)",    // NOLINT
-"{",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
 "{",    // NOLINT
 "if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
@@ -814,9 +813,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"}",    // NOLINT
-"else",    // NOLINT
-"{",    // NOLINT
+"#else",    // NOLINT
 "for(int_tp kern = 0; kern < ZPAR; kern++)",    // NOLINT
 "{",    // NOLINT
 "if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
@@ -825,10 +822,65 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
-"}",    // NOLINT
+"#endif",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#ifdef DWCONV",    // NOLINT
+"__kernel void DWCONV(",    // NOLINT
+"ELTWISE_DATA_ARG",    // NOLINT
+"NEGATIVE_SLOPE_ARG",    // NOLINT
+"__global Dtype* image_data,",    // NOLINT
+"__global Dtype* kernel_data,",    // NOLINT
+"__global Dtype* bias,",    // NOLINT
+"__global Dtype* convolved_image,",    // NOLINT
+"const ushort input_width,",    // NOLINT
+"const ushort input_height,",    // NOLINT
+"const ushort output_width,",    // NOLINT
+"const ushort output_height) {",    // NOLINT
+"",    // NOLINT
+"const int_tp outputX = get_global_id(0);",    // NOLINT
+"const int_tp outputY = get_global_id(1);",    // NOLINT
+"const int_tp outputZ = get_global_id(2);",    // NOLINT
+"if(outputX < output_width && outputY < output_height)",    // NOLINT
+"{",    // NOLINT
+"Dtype sum = 0.;",    // NOLINT
+"",    // NOLINT
+"const int_tp org_y = outputY * STRIDE_H - PAD_H;",    // NOLINT
+"const int_tp org_x = outputX * STRIDE_W - PAD_W;",    // NOLINT
+"const int_tp currentKernelOffset = KERNELSIZE*(outputZ%CHANNELS);",    // NOLINT
+"const int_tp biasIndex=outputZ%CHANNELS;",    // NOLINT
+"const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
+"const int_tp imageSize = input_width*input_height;",    // NOLINT
+"",    // NOLINT
+"__global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
+"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
+"",    // NOLINT
+"for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
+"{",    // NOLINT
+"for(int_tp x = 0; x < KERNEL_W; x++)",    // NOLINT
+"{",    // NOLINT
+"if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))",    // NOLINT
+"{",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"sum += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[x];",    // NOLINT
+"}",    // NOLINT
+"image_dataPtrFloat += input_width * DILATION_Y;",    // NOLINT
+"kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
+"int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum + bias[biasIndex]);",    // NOLINT
+"#else",    // NOLINT
+"int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum);",    // NOLINT
+"#endif",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "#if defined(convolve_simd) || defined(Conv_Interleaved)",    // NOLINT
@@ -2582,7 +2634,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {",    // NOLINT
 "uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"#else",    // NOLINT
+"Dtype bias = 0.",    // NOLINT
+"#endif",    // NOLINT
 "/*",    // NOLINT
 "A^T = {1, 1, 1, 1, 1, 0,",    // NOLINT
 "0, 1, -1,2,-2,0,",    // NOLINT

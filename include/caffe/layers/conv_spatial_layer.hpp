@@ -13,7 +13,7 @@
 #include "caffe/layers/base_conv_layer.hpp"
 
 namespace caffe {
-enum class ConvType: int_tp {IDLF = 2, WINOGRAD = 3, BASIC = 4, GEMM_LIKE = 5};
+enum class ConvType: int_tp {IDLF = 2, WINOGRAD = 3, BASIC = 4, GEMM_LIKE = 5, DWCONV = 6};
 template<typename Dtype>
 class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
  public:
@@ -158,6 +158,11 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                    int_tp blockWidth,
                                    int_tp blockHeight,
                                    int_tp blockDepth);
+  virtual bool create_dw_conv_kernel(const vector<Blob<Dtype>*>& bottom,
+                                   const vector<Blob<Dtype>*>& top,
+                                   int_tp blockWidth,
+                                   int_tp blockHeight,
+                                   int_tp blockDepth);
 
   virtual cl_int convolve(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top, int_tp index,
@@ -179,7 +184,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                               bool interleave = false);
   virtual void winogradWeights();
   virtual void generate_key();
-  virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
+  virtual std::string generate_specific_key(ConvType type, int_tp blockWidth,
   int_tp blockHeight,
                                             int_tp blockDepth);
   virtual void calculate_global_size(int_tp batch, int_tp* workItemOutput,
@@ -260,6 +265,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int_tp N_;
 
   bool tuned_;
+  bool dwconv_;
 
   std::string key_;
   std::string short_key_;

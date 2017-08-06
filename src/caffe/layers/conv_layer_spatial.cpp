@@ -73,6 +73,8 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   bias_ = NULL;
   winograd_weights_image_ = NULL;
 
+  dwconv_ = (this->num_output_ == this->channels_ && this->channels_ == this->group_);
+
   if (IsFusedWithEltwiseReLU()) {
     CHECK_EQ(
       this->layer_param().convolution_param().eltwise_param().coeff_size(),
@@ -127,7 +129,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const int_tp kernel_extent_w = dilation_w_ * (kernel_w_ - 1) + 1;
   output_h_ = (height_ + 2 * pad_h_ - kernel_extent_h) / stride_h_ + 1;
   output_w_ = (width_ + 2 * pad_w_ - kernel_extent_w) / stride_w_ + 1;
-
   // Shape the tops.
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
                            bottom[0]->shape().begin() + this->channel_axis_);
@@ -270,11 +271,11 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
 
 template<typename Dtype>
 std::string ConvolutionLayerSpatial<Dtype>::generate_specific_key(
-    int_tp type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
+    ConvType type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
   std::stringstream keyBuilder;
   keyBuilder << short_key_
-             << "_" << type
+             << "_" << static_cast<int_tp>(type)
              << "_" << blockWidth
              << "_" << blockHeight
              << "_" << blockDepth;
@@ -525,7 +526,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
   std::string stringBuilder;
   std::stringstream optionsString;
   std::string kernelDef = "MULTI";
-  std::string kernelUKey = generate_specific_key(4, blockWidth, blockHeight,
+  std::string kernelUKey = generate_specific_key(ConvType::BASIC, blockWidth, blockHeight,
                                                  blockDepth);
   int_tp workItemOutput[3];
   workItemOutput[0] = 1;
@@ -879,6 +880,37 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     }
     if (err != CL_SUCCESS)
       return err;
+  } else if (config->kernelType == ConvType::DWCONV) {
+
+      cl_uint argIdx = 0;
+      if (IsFusedWithEltwiseReLU())
+        kernel.arg(argIdx++,
+                     WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
+      if (IsFusedWithReLU())
+        kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
+
+      kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
+      kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
+      kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
+      kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
+      kernel.arg(argIdx++, (uint16_t)width_);
+      kernel.arg(argIdx++, (uint16_t)height_);
+      kernel.arg(argIdx++, (uint16_t)output_w_);
+      kernel.arg(argIdx++, (uint16_t)output_h_);
+
+      size_t globalSize[3];
+      globalSize[0] = output_w_;
+      globalSize[1] = output_h_;
+      globalSize[2] = this->num_output_*this->num_;
+      err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                       kernel.handle().get(), 3,
+                                       NULL,
+                                       globalSize, NULL, 0, NULL,
+                                       NULL);
+
+      if (err != CL_SUCCESS)
+        return err;
+
   } else {
     for (int_tp n = 0; n < numImages; ++n) {
       for (int_tp g = 0; g < this->group_; ++g) {
@@ -1015,8 +1047,7 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
                   0xff,
                   (cl_mem)top[index]->mutable_gpu_data(),
                   0);
-  config->executionTime = timed_convolve(bottom, top, index, numImages,
-                                         config);
+  convolve(bottom, top, index, numImages, config);
   // Currently we can't do verification when conv is fused because the results
   // won't match the results of forward_gpu_gemm. Need more work to fix it.
   // FP16 verification may fail due to the natrue accuracy lost between FP16 and FP32.
@@ -1070,7 +1101,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   std::stringstream multFunctionBuilder;
   std::string stringBuilder;
   std::stringstream optionsString;
-  std::string kernelUKey = generate_specific_key(5, blockM, blockK,
+  std::string kernelUKey = generate_specific_key(ConvType::GEMM_LIKE, blockM, blockK,
                                                  blockN);
   int_tp workItemOutput[3] = { blockM, blockK, blockN };
 
@@ -1168,7 +1199,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
     int_tp blockHeight, int_tp simd_size) {
   std::stringstream optionsString;
   const int_tp blockDepth = 1;
-  std::string kernelUKey = generate_specific_key(3, blockWidth, blockHeight,
+  std::string kernelUKey = generate_specific_key(ConvType::WINOGRAD, blockWidth, blockHeight,
                                                  blockDepth);
   int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
   const int_tp num_output_maps = M_;
@@ -1208,6 +1239,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
                 << " -D IS_LARGE_INPUT=" << is_large_input
                 << " -DTOTAL_INPUT_DEPTH_SIZE=" << this->channels_
                 << " -DTOTAL_OUTPUT_DEPTH=" << this->num_output_
+                << " -D APPLY_BIAS=" << this->bias_term_
                 << " -DNUM_FILTERS=" << M_
                 << " -DTILE_X=" << tile_x
                 << " -DTILE_Y=" << tile_y
@@ -1254,7 +1286,79 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
     ctx.delete_program(kernel_name_);
     return false;
   }
+}
 
+template<typename Dtype>
+bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+    int_tp blockWidth,
+    int_tp blockHeight, int_tp blockDepth) {
+  CHECK_EQ((std::is_same<Dtype, double>::value), false);
+  // Standard spatial setup is done here
+  std::stringstream keyBuilder;
+  std::stringstream multFunctionBuilder;
+  std::string stringBuilder;
+  std::stringstream optionsString;
+  std::string kernelDef = "DWCONV";
+  std::string kernelUKey = generate_specific_key(ConvType::DWCONV, blockWidth, blockHeight,
+                                                 blockDepth);
+  int_tp workItemOutput[3];
+  workItemOutput[0] = 1;
+  workItemOutput[1] = 1;
+  workItemOutput[2] = 1;
+
+  kernel_name_ = "DWCONV_";
+  kernel_name_ += kernelUKey.c_str();
+
+  // Build list of options and defines
+  optionsString.str("");
+  optionsString << "-cl-fast-relaxed-math "
+                << " -D KERNELSIZE=" << kernel_w_ * kernel_h_
+                << " -D KERNEL_W=" << kernel_w_
+                << " -D KERNEL_H=" << kernel_h_
+                << " -D STRIDE_H=" << stride_h_
+                << " -DDILATION_X=" << dilation_w_
+                << " -DDILATION_Y=" << dilation_h_
+                << " -D STRIDE_W=" << stride_w_
+                << " -D PAD_W=" << pad_w_
+                << " -D PAD_H=" << pad_h_
+                << " -D APPLY_BIAS=" << this->bias_term_
+                << " -D OUTPUT_Z=" << this->num_output_*this->num_
+                << " -D CHANNELS=" << this->num_output_
+                << " -D XPAR=" << workItemOutput[0]
+                << " -D YPAR=" << workItemOutput[1]
+                << " -D ZPAR=" << workItemOutput[2]
+                << " -D " << kernelDef.c_str() << " -D DWCONV="
+                << kernel_name_;
+
+  if (IsFusedWithEltwiseReLU()) {
+    optionsString << " -DFUSED_CONV_ELTWISE=1";
+  }
+
+  if (IsFusedWithReLU()) {
+    optionsString << " -DFUSED_CONV_RELU=1";
+  }
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
+  if (IsBeignet(&ctx))
+    optionsString << " -D__BEIGNET__";
+  string options = optionsString.str();
+  try {
+    submit_conv_spatial_program<Dtype>(&ctx, kernel_name_, options);
+  } catch (std::exception& e) {
+    dbgPrint(std::cout << "dwconv kernel generation failed" << std::endl);
+    return false;
+  }
+
+  size_t localSize[3] = { 1, 1, 1 };
+  size_t globalSize[3];
+  calculate_global_size(1, workItemOutput, localSize, globalSize);
+
+  kernelQueue.push_back(
+      new kernelConfig(kernel_name_, globalSize, localSize, workItemOutput,
+                       false, false, true, ConvType::DWCONV));
+
+  return true;
 }
 
 template<typename Dtype>
@@ -1268,7 +1372,7 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   std::string stringBuilder;
   std::stringstream optionsString;
   const int_tp blockDepth = 1;
-  std::string kernelUKey = generate_specific_key(2, blockWidth, blockHeight,
+  std::string kernelUKey = generate_specific_key(ConvType::IDLF, blockWidth, blockHeight,
                                                  blockDepth);
   int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
   const int_tp num_output_maps = M_;
@@ -1467,6 +1571,9 @@ void ConvolutionLayerSpatial<Dtype>::create_convolution_kernel(
   else if (kernelType == ConvType::GEMM_LIKE)
     create_gemm_like_conv_kernel(
         bottom, top, blockWidth, blockHeight, blockDepth);
+  else if (kernelType == ConvType::DWCONV)
+    create_dw_conv_kernel(
+        bottom, top, blockWidth, blockHeight, blockDepth);
   else
     assert(0);
 }
@@ -1496,6 +1603,10 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     // Generates static key_
     int max_compute_units = ctx.current_device().max_compute_units();
     int kernelCnt = 0;
+    if(dwconv_) {
+      create_convolution_kernel(bottom, top, ConvType::DWCONV, 1, 1, 1);
+    }
+
     // Create WINOGRAD Kernels.
     if (!std::is_same<Dtype, double>::value &&this->group_ == 1 &&
         this->stride_w_ == 1 && this->stride_h_ == 1 &&
@@ -1858,7 +1969,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> foo;
     cachedKernel >> bestKernelConfig->use_null_local;
     tuned_ = true;
-    // If kernel type changed to type 2 or 4, we need to reset the swizzled
+    // If kernel type changed to type IDLF or GEMMLIKE, we need to reset the swizzled
     // weights pointer to invalidate the previous swizzled weights data.
     if (prev_kernel_type != bestKernelConfig->kernelType &&
         (bestKernelConfig->kernelType == ConvType::IDLF ||
