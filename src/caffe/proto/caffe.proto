@@ -445,7 +445,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: smooth_l1_loss_param)
+// LayerParameter next available layer-specific ID: 152 (last added: selu_dropout_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -551,6 +551,8 @@ message LayerParameter {
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
+  optional SeLuParameter selu_param = 149;
+  optional SeLuDropoutParameter selu_dropout_param = 150;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional VideoDataParameter video_data_param = 207;
@@ -1534,6 +1536,16 @@ message ReLUParameter {
   optional Engine engine = 2 [default = DEFAULT];
 }
 
+message SeLuParameter {
+  optional float lambda = 1 [default = 1.050700987];
+  optional float alpha = 2 [default = 1.67326324];
+}
+
+message SeLuDropoutParameter {
+  optional float dropout_ratio = 1 [default = 0.1]; // dropout ratio  recommend 0.05 or 0.1
+  optional float alpha = 2 [default = -1.75809934];
+}
+
 message ReshapeParameter {
   // Specify the output dimensions. If some of the dimensions are set to 0,
   // the corresponding dimension from the bottom layer is used (unchanged).
@@ -1821,6 +1833,8 @@ message V1LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+    SELU = 34;
+    SELU_DROPOUT = 35;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;
