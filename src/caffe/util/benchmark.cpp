@@ -122,6 +122,9 @@ float Timer::MicroSeconds() {
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
     if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          Caffe::GetDefaultDevice()->id());
+      clFinish(ctx.get_queue().handle().get());
       cl_ulong startTime, stopTime;
       clWaitForEvents(1, &stop_gpu_cl_);
       clGetEventProfilingInfo(start_gpu_cl_, CL_PROFILING_COMMAND_END,
