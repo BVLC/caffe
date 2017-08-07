@@ -42,6 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include <immintrin.h>
+
 
 namespace caffe {
 template <typename Dtype>
@@ -208,13 +210,38 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
     return;
   }
 
+#ifdef ENABLE_SGD_FUSION
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+    Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    //VLOG(1) << "Currently we do not support use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD in GPU mode.";
+    //LOG(INFO) << "Currently we do not support use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD in GPU mode.";
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+#else /* !ENABLE_SGD_FUSION */
+  //LOG(INFO) << "No Fusion: Param_id: " << param_id;
   Normalize(param_id);
+  
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Normalize:");
 
   Regularize(param_id);
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Regularize:");
 
   ComputeUpdateValue(param_id, rate);
+#endif /* ENABLE_SGD_FUSION */
+
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: wtinc:");
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight before update:");
@@ -224,12 +251,359 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight after update:");
 }
 
+#ifdef ENABLE_SGD_FUSION
+//Math function for fusion
 template <typename Dtype>
-void SGDSolver<Dtype>::Normalize(int param_id) {
-  if (this->param_.iter_size() == 1) { return; }
+void axpy_axpby_copy(size_t count, const Dtype decay, const Dtype* net_params_data, Dtype *net_params_diff,
+                     const Dtype rate, const Dtype momentum, Dtype* history_data);
+
+template <>
+void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_params_data, float *net_params_diff,
+                            const float rate, const float momentum, float* history_data)
+{
+  float temp_result = 0.;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif  
+  for (size_t i = 0; i < count; ++i) {
+    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    history_data[i] =  temp_result;
+    net_params_diff[i] =  temp_result;
+  }
+}
+
+template <>
+void axpy_axpby_copy<double>(size_t count, const double decay, const double* net_params_data, double *net_params_diff,
+                             const double rate, const double momentum, double* history_data)
+{
+  double temp_result = 0.;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif  
+  for (size_t i = 0; i < count; ++i) {
+    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    history_data[i] =  temp_result;
+    net_params_diff[i] =  temp_result;
+  }
+}
+
+template <typename Dtype>
+void avx512_axpy_axpby_copy(size_t count, const Dtype decay, const Dtype* net_params_data, Dtype *net_params_diff,
+                            const Dtype rate, const Dtype momentum, Dtype* history_data);
+
+template <>
+void avx512_axpy_axpby_copy<float>(size_t count, const float decay, const float* net_params_data, float *net_params_diff,
+                                  const float rate, const float momentum, float* history_data)
+{
+    // If count is smaller than 16 we use non-avx512 implementation
+    // 16 is the element number which one avx512 register can hold
+    if (count < 16) {
+        return axpy_axpby_copy(count, decay, net_params_data, net_params_diff,
+                                     rate, momentum, history_data);
+    }
+
+    // If count can't be divided by 16, we handle tailing remainder
+    // with non-avx512 imeplementation
+    if (count % 16 != 0) {
+        size_t remainder = count % 16;
+        count -= remainder;
+        axpy_axpby_copy(remainder, decay, net_params_data+count, net_params_diff+count,
+                              rate, momentum, history_data+count);
+    }
+
+    size_t group_size = 16;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (size_t idx = 0; idx < count; idx += group_size) {
+        const float *fnet_params_data  = net_params_data + idx;
+        float *fnet_params_diff        = net_params_diff + idx;
+        float *fhistory_data           = history_data    + idx;
+        __m512 operand1_v              = _mm512_loadu_ps(fnet_params_data);
+        __m512 operand2_v              = _mm512_loadu_ps(fnet_params_diff);
+        __m512 operand3_v              = _mm512_loadu_ps(fhistory_data);
+        __m512 decay_operand_v         = _mm512_set1_ps(decay);
+        __m512 rate_operand_v          = _mm512_set1_ps(rate);
+        __m512 momentum_operand_v      = _mm512_set1_ps(momentum);
+        __m512 decay_result            = _mm512_mul_ps(decay_operand_v, operand1_v);
+        __m512 axpy_result             = _mm512_add_ps(decay_result, operand2_v);
+        __m512 rate_result             = _mm512_mul_ps(rate_operand_v, axpy_result);
+        __m512 momentum_result         = _mm512_mul_ps(momentum_operand_v, operand3_v);
+        __m512 axpby_result            = _mm512_add_ps(rate_result, momentum_result);
+        _mm512_storeu_ps(fhistory_data, axpby_result);
+        _mm512_storeu_ps(fnet_params_diff, axpby_result);
+    }
+}
+
+template <>
+void avx512_axpy_axpby_copy<double>(size_t count, const double decay, const double* net_params_data, double* net_params_diff,
+                                    const double rate, const double momentum, double* history_data)
+{
+    // If count is smaller than 8 we use non-avx512 implementation
+    // 8 is the element number which one avx512 register can hold
+    if (count < 8) {
+        return axpy_axpby_copy(count, decay, net_params_data, net_params_diff,
+                               rate, momentum, history_data);
+    }
+
+    // If count can't be divided by 8, we handle tailing remainder
+    // with non-avx512 imeplementation
+    if (count % 8 != 0) {
+        size_t remainder = count % 8;
+        count -= remainder;
+        axpy_axpby_copy(remainder, decay, net_params_data+count, net_params_diff+count,
+                        rate, momentum, history_data+count);
+    }
+
+    size_t group_size = 8;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (size_t idx = 0; idx < count; idx += group_size) {
+        const double *fnet_params_data  = net_params_data + idx;
+        double *fnet_params_diff        = net_params_diff + idx;
+        double *fhistory_data           = history_data    + idx;
+        __m512 operand1_v               = _mm512_loadu_pd(fnet_params_data);
+        __m512 operand2_v               = _mm512_loadu_pd(fnet_params_diff);
+        __m512 operand3_v               = _mm512_loadu_pd(fhistory_data);
+        __m512 decay_operand_v          = _mm512_set1_pd(decay);
+        __m512 rate_operand_v           = _mm512_set1_pd(rate);
+        __m512 momentum_operand_v       = _mm512_set1_pd(momentum);
+        __m512 decay_result             = _mm512_mul_pd(decay_operand_v, operand1_v);
+        __m512 axpy_result              = _mm512_add_pd(decay_result, operand2_v);
+        __m512 rate_result              = _mm512_mul_pd(rate_operand_v, axpy_result);
+        __m512 momentum_result          = _mm512_mul_pd(momentum_operand_v, operand3_v);
+        __m512 axpby_result             = _mm512_add_pd(rate_result, momentum_result);
+        _mm512_storeu_pd(fhistory_data, axpby_result);
+        _mm512_storeu_pd(fnet_params_diff, axpby_result);
+    }
+}
+
+
+template <typename Dtype>
+void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_id, Dtype rate) {
+//LOG(INFO) << "Fusion: Param_id: " << param_id;
+
+//#pragma region 1. Common initialization
+  //Normalize initialization
+  bool skip_Normalize_stage_flag = false;
+  if (this->param_.iter_size() == 1) { skip_Normalize_stage_flag = true; }
 
   // Scale gradient to counterbalance accumulation.
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+
+  //Regularize initialization
+  const vector<float>& net_params_weight_decay =
+    this->net_->params_weight_decay();
+  Dtype weight_decay = this->param_.weight_decay();
+  string regularization_type = this->param_.regularization_type();
+  Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+  //ComputeUpdateValue  initialization
+  const vector<float>& net_params_lr = this->net_->params_lr();
+  Dtype momentum = this->param_.momentum();
+  Dtype local_rate = rate * net_params_lr[param_id];
+//#pragma endregion
+
+//#pragma region 2. Common condition judgement
+  bool prv_diff_condition_flag = false;
+  if (net_params[param_id]->prv_diff()
+    && (net_params[param_id]->prv_diff_count()
+    == net_params[param_id]->count())) {
+      prv_diff_condition_flag = true;
+      //LOG(INFO) << "Common condition judgement: prv_diff_condition_flag = true.";
+  }
+  else
+  {
+    //LOG(INFO) << "Common condition judgement: prv_diff_condition_flag = false.";
+  }
+//#pragma endregion
+
+//#pragma region 3. Normalize stage    
+  if (skip_Normalize_stage_flag == false)
+  {
+    //LOG(INFO) << "Normalize stage: Normalize stage is not skipped.";
+
+    const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
+      
+    if (prv_diff_condition_flag) {
+      //LOG(INFO) << "Normalize stage: prv_diff_condition_flag = true.";
+      caffe_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_prv_diff());
+    }
+    else {
+      //LOG(INFO) << "Normalize stage: prv_diff_condition_flag = false.";
+      caffe_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_cpu_diff());
+    }
+  }
+  else
+  {
+    //LOG(INFO) << "Normalize stage: Normalize stage is skipped.";
+  }
+//#pragma endregion
+
+//For POR topologies from BVLC, all skipped the Normalize stage, and use L2 regularization
+//If prv_diff_condition_flag == true, then prv_data_condition_flag == true    (1)
+//If prv_diff_condition_flag == false, then prv_data_condition_flag == false  (2)
+//Another case is local_decay == 0, prv_diff_condition_flag == false          (3)
+//So only need to consider the fusion in situations (1) and (2), set execute_separate_ComputeUpdateValue_stage_flag to false value
+  bool execute_separate_ComputeUpdateValue_stage_flag = true;
+  //Regularize stage (Fused ComputeUpdateValue_stage in some situations)
+  if (local_decay) {
+    if (regularization_type == "L2") {
+      //LOG(INFO) << "Regularize stage: regularization_type == L2.";
+      // add weight decay
+      if (net_params[param_id]->prv_data()
+        && (net_params[param_id]->prv_data_count()
+        == net_params[param_id]->count())) {
+        //LOG(INFO) << "Regularize stage: prv_data_condition_flag = true.";
+          CHECK_EQ(true,
+            net_params[param_id]->get_prv_data_descriptor()->layout_compare(
+            net_params[param_id]->get_prv_diff_descriptor()));
+          /*  
+          caffe_axpy(net_params[param_id]->count(), 
+                      local_decay,
+                      net_params[param_id]->prv_data(),
+                      net_params[param_id]->mutable_prv_diff());
+          */
+          if (prv_diff_condition_flag) {
+            //situation (1)
+            //LOG(INFO) << "Fused ComputeUpdateValue stage: prv_diff_condition_flag = true.";
+            /*
+            caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                            net_params[param_id]->prv_diff(), momentum,
+                            history_[param_id]->mutable_cpu_data());
+
+            caffe_copy(net_params[param_id]->count(),
+                        history_[param_id]->cpu_data(),
+                        net_params[param_id]->mutable_prv_diff());
+            */
+
+            avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+                                net_params[param_id]->prv_data(), net_params[param_id]->mutable_prv_diff(),
+                                local_rate, momentum, history_[param_id]->mutable_cpu_data());
+
+            execute_separate_ComputeUpdateValue_stage_flag = false;
+          }
+          else
+          {
+            //Will not happen!
+            //LOG(INFO) << "Cannot Fused ComputeUpdateValue stage: prv_diff_condition_flag = false.";
+            caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->cpu_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+
+            caffe_copy(net_params[param_id]->count(),
+                        history_[param_id]->cpu_data(),
+                        net_params[param_id]->mutable_cpu_diff());
+
+            execute_separate_ComputeUpdateValue_stage_flag = false;
+            //You can set the flag to true value, and not execute caffe_cpu_axpby and caffe_copy
+            //But set to false value and execute caffe_cpu_axpby and caffe_copy inside will save one condition judgement time
+          }
+      } else {
+        //LOG(INFO) << "Regularize stage: prv_data_condition_flag = false.";
+        /*
+        caffe_axpy(net_params[param_id]->count(),
+                    local_decay,
+                    net_params[param_id]->cpu_data(),
+                    net_params[param_id]->mutable_cpu_diff());
+        */
+        if (!prv_diff_condition_flag)
+        {
+          //situation (2)
+          //LOG(INFO) << "Fused ComputeUpdateValue stage: prv_diff_condition_flag = false.";
+          /*
+          caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                    net_params[param_id]->cpu_diff(), momentum,
+                    history_[param_id]->mutable_cpu_data());
+
+          caffe_copy(net_params[param_id]->count(),
+                      history_[param_id]->cpu_data(),
+                      net_params[param_id]->mutable_cpu_diff());
+          */
+
+          avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+                                net_params[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
+                                local_rate, momentum, history_[param_id]->mutable_cpu_data());
+
+          execute_separate_ComputeUpdateValue_stage_flag = false;
+        }
+        else
+        {
+          //Will not happen!
+          //LOG(INFO) << "Cannot Fused ComputeUpdateValue stage: prv_diff_condition_flag = true.";
+          caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                          net_params[param_id]->prv_diff(), momentum,
+                          history_[param_id]->mutable_cpu_data());
+
+          caffe_copy(net_params[param_id]->count(),
+                      history_[param_id]->cpu_data(),
+                      net_params[param_id]->mutable_prv_diff());
+
+          execute_separate_ComputeUpdateValue_stage_flag = false;
+          //You can set the flag to true value, and not execute caffe_cpu_axpby and caffe_copy
+          //But set to false value and execute caffe_cpu_axpby and caffe_copy inside will save one condition judgement time
+        }        
+      }
+    } else if (regularization_type == "L1") {
+      //LOG(INFO) << "Regularize stage: regularization_type == L1.";
+      caffe_cpu_sign(net_params[param_id]->count(),
+                      net_params[param_id]->cpu_data(),
+                      temp_[param_id]->mutable_cpu_data());
+      caffe_axpy(net_params[param_id]->count(),
+                  local_decay,
+                  temp_[param_id]->cpu_data(),
+                  net_params[param_id]->mutable_cpu_diff());
+    } else {
+      LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+    }
+  }
+  
+  //ComputeUpdateValue stage (separate)
+  if (execute_separate_ComputeUpdateValue_stage_flag == true)
+  {
+    //Include the situation: regularization_type == "L1"/"Unknown"
+    //Include situations (3): local_decay == 0
+    //No Regularize stage, only ComputeUpdateValue stage
+    //ComputeUpdateValue stage
+    if (prv_diff_condition_flag) {
+      //LOG(INFO) << "ComputeUpdateValue stage: prv_diff_condition_flag = true.";
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->prv_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+
+      caffe_copy(net_params[param_id]->count(),
+                  history_[param_id]->cpu_data(),
+                  net_params[param_id]->mutable_prv_diff());
+    } else {
+      //LOG(INFO) << "ComputeUpdateValue stage: prv_diff_condition_flag = false.";
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->cpu_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+
+      caffe_copy(net_params[param_id]->count(),
+                  history_[param_id]->cpu_data(),
+                  net_params[param_id]->mutable_cpu_diff());
+    }
+  }
+
+}
+#endif /* ENABLE_SGD_FUSION */
+
+template <typename Dtype>
+void SGDSolver<Dtype>::Normalize(int param_id) {
+
+  if (this->param_.iter_size() == 1) { 
+    //LOG(INFO) << "Normalize stage: Normalize stage is skipped.";
+    return;
+  }
+
+  //LOG(INFO) << "Normalize stage: Normalize stage is not skipped.";
+  // Scale gradient to counterbalance accumulation.
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  
   const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
 
   switch (Caffe::mode()) {
@@ -238,11 +612,12 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     if (net_params[param_id]->prv_diff()
         && (net_params[param_id]->prv_diff_count()
             == net_params[param_id]->count())) {
-
+        //LOG(INFO) << "Normalize stage: prv_diff_condition_flag = true.";
         caffe_scal(net_params[param_id]->count(), accum_normalization,
             net_params[param_id]->mutable_prv_diff());
     }
     else {
+        //LOG(INFO) << "Normalize stage: prv_diff_condition_flag = false.";
         caffe_scal(net_params[param_id]->count(), accum_normalization,
             net_params[param_id]->mutable_cpu_diff());
     }
@@ -275,10 +650,12 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
   case Caffe::CPU: {
     if (local_decay) {
       if (regularization_type == "L2") {
+        //LOG(INFO) << "Regularize stage: regularization_type == L2.";
         // add weight decay
         if (net_params[param_id]->prv_data()
              && (net_params[param_id]->prv_data_count()
                  == net_params[param_id]->count())) {
+          //LOG(INFO) << "Regularize stage: prv_data_condition_flag = true.";
           CHECK_EQ(true,
             net_params[param_id]->get_prv_data_descriptor()->layout_compare(
             net_params[param_id]->get_prv_diff_descriptor()));
@@ -288,12 +665,14 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
                      net_params[param_id]->prv_data(),
                      net_params[param_id]->mutable_prv_diff());
         } else {
+          //LOG(INFO) << "Regularize stage: prv_data_condition_flag = false.";
           caffe_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->cpu_data(),
               net_params[param_id]->mutable_cpu_diff());
         }
       } else if (regularization_type == "L1") {
+        //LOG(INFO) << "Regularize stage: regularization_type == L1.";
         caffe_cpu_sign(net_params[param_id]->count(),
             net_params[param_id]->cpu_data(),
             temp_[param_id]->mutable_cpu_data());
@@ -364,7 +743,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     if (net_params[param_id]->prv_diff()
         && (net_params[param_id]->prv_diff_count()
             == net_params[param_id]->count())) {
-
+      //LOG(INFO) << "ComputeUpdateValue stage: prv_diff_condition_flag = true.";
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                       net_params[param_id]->prv_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
@@ -373,6 +752,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_prv_diff());
     } else {
+      //LOG(INFO) << "ComputeUpdateValue stage: prv_diff_condition_flag = false.";
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                      net_params[param_id]->cpu_diff(), momentum,
                      history_[param_id]->mutable_cpu_data());

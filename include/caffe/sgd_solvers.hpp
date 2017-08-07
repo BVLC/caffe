@@ -81,6 +81,11 @@ class SGDSolver : public Solver<Dtype> {
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
+#ifdef ENABLE_SGD_FUSION
+  //Fuse the Normalize, Regularize and ComputeUpdateValue process together
+  void Normalize_Regularize_ComputeUpdateValue_Fusion(int param_id, Dtype rate);
+#endif /* ENABLE_SGD_FUSION */
+
   // loss history for 'plateau' LR policy (should be stored in snapshots)
   Dtype minimum_loss_;
   int iter_last_event_;

@@ -547,6 +547,12 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
+##########SGD FUSION#######################
+ifeq ($(ENABLE_SGD_FUSION), 1)
+        COMMON_FLAGS += -DENABLE_SGD_FUSION
+endif
+###########################################
+#
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -std=c++11 -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
