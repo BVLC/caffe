@@ -58,9 +58,8 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int h = 0; h < HEIGHT_IN_; ++h) {
         // copy the width part
 	caffe_copy(WIDTH_IN_,
-		   bottom_data + ((n * CHANNEL_ + c) * HEIGHT_IN_ + h) * WIDTH_IN_,
-		   top_data + ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h + PAD_)
-		   * WIDTH_OUT_ + PAD_);
+		   bottom_data + bottom[0]->offset(n, c, h, 0),
+		   top_data + top[0]->offset(n, c, h + PAD_, PAD_));
       }
 
       // Now pad, first width, then height. This order may affect the
@@ -71,7 +70,7 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  // Left and right. Loop over the rows not in the vertical padding
 	  for (int h = PAD_; h < HEIGHT_OUT_ - PAD_; ++h) {
 	    // Offset to current row start (in padding of this row)
-	    int off = ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h) * WIDTH_OUT_;
+	    int off = top[0]->offset(n, c, h, 0);
 	    // Left pad
 	    for (int wdst = 0; wdst < PAD_; ++wdst) {
 	      *(top_data + off + wdst) = static_cast<Dtype>(0);
@@ -83,13 +82,12 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  }
 	  // Top
 	  for (int h = 0; h < PAD_; ++h) {
-	    int off = ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h)
-	      * WIDTH_OUT_;
+	    int off = top[0]->offset(n, c, h, 0);
 	    std::fill(top_data+off, top_data+off+WIDTH_OUT_, static_cast<Dtype>(0));
 	  }
 	  // Bottom
 	  for (int h = HEIGHT_OUT_-PAD_; h < HEIGHT_OUT_; ++h) {
-	    int off = ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h) * WIDTH_OUT_;
+	    int off = top[0]->offset(n, c, h, 0);
 	    std::fill(top_data+off, top_data+off+WIDTH_OUT_, static_cast<Dtype>(0));
 	  }
 	}
@@ -99,7 +97,7 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  // Left and right. Loop over the rows not in the vertical padding
 	  for (int h = PAD_; h < HEIGHT_OUT_ - PAD_; ++h) {
 	    // Offset to current row start (in padding of this row)
-	    int off = ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h) * WIDTH_OUT_;
+	    int off = top[0]->offset(n, c, h, 0);
 	    const Dtype lval = *(top_data + off + PAD_),
 	      rval = *(top_data + off + WIDTH_OUT_ - 1 - PAD_);
 	    // Left
@@ -113,7 +111,7 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  }
 	  // Top
 	  // Beginning of this image's data, including padding
-	  Dtype * dstptr = top_data + ((n * CHANNEL_ + c) * HEIGHT_OUT_) * WIDTH_OUT_;
+	  Dtype * dstptr = top_data + top[0]->offset(n, c, 0, 0);
 	  // First row not in the vertical padding
 	  Dtype * srcptr = dstptr + PAD_ * WIDTH_OUT_;
 	  for (int h = 0; h < PAD_; ++h) {
@@ -122,8 +120,7 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  }
 	  // Bottom
 	  // Start of last row not in the vertical padding
-	  srcptr = top_data + ((n * CHANNEL_ + c) * HEIGHT_OUT_ +
-			       HEIGHT_OUT_ - 1 - PAD_) * WIDTH_OUT_;
+	  srcptr = top_data + top[0]->offset(n, c, HEIGHT_OUT_ - 1 - PAD_, 0);
 	  // Start of first row in bottom padding
 	  dstptr = srcptr + WIDTH_OUT_;
 	  for (int h = 0; h < PAD_; ++h) {
@@ -164,6 +161,38 @@ void PadLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  }
 	}
 	break;
+      case PadParameter::REFLECT_101:
+	{
+	  // Left and right. Loop over the rows not in the vertical padding
+	  for (int h = PAD_; h < HEIGHT_OUT_ - PAD_; ++h) {
+	    // Offset to current row start (in padding of this row)
+	    int off = top[0]->offset(n, c, h, 0);
+	    // Left
+	    for (int wdst = PAD_-1, wsrc = PAD_+1; wdst >= 0; --wdst, ++wsrc) {
+	      *(top_data + off + wdst) = *(top_data + off + wsrc);
+	    }
+	    // Right
+	    for (int wdst = WIDTH_OUT_-PAD_, wsrc = wdst-2; wdst < WIDTH_OUT_;
+		 ++wdst, --wsrc) {
+	      *(top_data + off + wdst) = *(top_data + off + wsrc);
+	    }
+	  }
+	
+	  // Top
+	  for (int hdst = PAD_-1, hsrc = PAD_+1; hdst >= 0; --hdst, ++hsrc) {
+	    caffe_copy(WIDTH_OUT_,
+		       top_data + top[0]->offset(n, c, hsrc,0),
+		       top_data + top[0]->offset(n, c, hdst,0));
+	  }
+	  // Bottom
+	  for (int hdst = HEIGHT_OUT_-PAD_, hsrc = hdst-2; hdst < HEIGHT_OUT_;
+	       ++hdst, --hsrc) {
+	    caffe_copy(WIDTH_OUT_,
+		       top_data + top[0]->offset(n, c, hsrc,0),
+		       top_data + top[0]->offset(n, c, hdst,0));
+	  }
+	}
+	break;
       }
     }
   }
@@ -191,7 +220,7 @@ void PadLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 	{
 	  // Top
 	  // Beginning of this image's diff, including padding (h, w = 0)
-	  Dtype * srcptr = top_diff + ((n * CHANNEL_ + c) * HEIGHT_OUT_) * WIDTH_OUT_,
+	  Dtype * srcptr = top_diff + top[0]->offset(n, c, 0, 0),
 	    // First row in top not in the vertical padding
 	    *dstptr =  srcptr + PAD_ * WIDTH_OUT_;
 	  for (int h = 0; h < PAD_; ++h) {
@@ -200,8 +229,7 @@ void PadLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 	  }
 	  // Bottom
 	  // Start of last row not in the vertical padding
-	  dstptr = top_diff + ((n * CHANNEL_ + c) * HEIGHT_OUT_ +
-			       HEIGHT_OUT_ - 1 - PAD_) * WIDTH_OUT_;
+	  dstptr = top_diff + top[0]->offset(n, c, HEIGHT_OUT_ - 1 - PAD_, 0);
 	  // Start of first row in bottom padding
 	  srcptr = dstptr + WIDTH_OUT_;
 	  for (int h = 0; h < PAD_; ++h) {
@@ -211,7 +239,7 @@ void PadLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 	  // Left and right. Loop over the rows not in the vertical padding
 	  for (int h = PAD_; h < HEIGHT_OUT_ - PAD_; ++h) {
 	    // Offset to current row start (in padding of this row)
-	    int off = ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h) * WIDTH_OUT_;
+	    int off = top[0]->offset(n, c, h, 0);
 	    Dtype *lptr = top_diff + off + PAD_,
 	      *rptr = top_diff + off + WIDTH_OUT_ - 1 - PAD_;
 	    // Left
@@ -262,16 +290,51 @@ void PadLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 	  }
 	}
 	break;
+      case PadParameter::REFLECT_101:
+	{
+	  // Bottom. I'm keeping the "dst" and "src" labels from
+	  // forward, even though the information is flowing the other
+	  // way.
+	  for (int hdst = HEIGHT_OUT_-PAD_, hsrc = hdst-2; hdst < HEIGHT_OUT_;
+	       ++hdst, --hsrc) {
+	    Dtype * const dstptr = top_diff + top[0]->offset(n, c, hdst,0);
+	    Dtype * const srcptr = top_diff + top[0]->offset(n, c, hsrc,0);
+	    std::transform(dstptr, dstptr + WIDTH_OUT_,
+			   srcptr, srcptr, std::plus<Dtype>());
+	  }
+	
+	  // Top
+	  for (int hdst = PAD_-1, hsrc = PAD_+1; hdst >= 0; --hdst, ++hsrc) {
+	    Dtype * const dstptr = top_diff + top[0]->offset(n, c, hdst,0);
+	    Dtype * const srcptr = top_diff + top[0]->offset(n, c, hsrc,0);
+	    std::transform(dstptr, dstptr + WIDTH_OUT_,
+			   srcptr, srcptr, std::plus<Dtype>());
+	  }
+
+	  // Left and right. Loop over the rows not in the vertical padding
+	  for (int h = PAD_; h < HEIGHT_OUT_ - PAD_; ++h) {
+	    // Offset to current row start (in padding of this row)
+	    int off = top[0]->offset(n, c, h, 0);
+	    // Left
+	    for (int wdst = PAD_-1, wsrc = PAD_+1; wdst >= 0; --wdst, ++wsrc) {
+	      *(top_diff + off + wsrc) += *(top_diff + off + wdst);
+	    }
+	    // Right
+	    for (int wdst = WIDTH_OUT_-PAD_, wsrc = wdst-2; wdst < WIDTH_OUT_;
+		 ++wdst, --wsrc) {
+	      *(top_diff + off + wsrc) += *(top_diff + off + wdst);
+	    }
+	  }
+	}
+	break;
       } // switch over types
 
       // Now copy the main body into place
       for (int h = 0; h < HEIGHT_IN_; ++h) {
         // copy the width part
 	caffe_copy(WIDTH_IN_,
-		   top_diff +
-		   ((n * CHANNEL_ + c) * HEIGHT_OUT_ + h + PAD_) * WIDTH_OUT_ +
-		   PAD_,
-		   bottom_diff + ((n * CHANNEL_ + c) * HEIGHT_IN_ + h) * WIDTH_IN_);
+		   top_diff + top[0]->offset(n, c, h+PAD_, PAD_),
+		   bottom_diff + bottom[0]->offset(n, c, h, 0));
       }
     } // c
   } // n

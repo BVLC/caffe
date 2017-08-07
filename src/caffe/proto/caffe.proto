@@ -905,7 +905,7 @@ message PadParameter {
     ZERO = 0;
     REPLICATE = 1;
     REFLECT = 2;
-    // REFLECT_101 = 3;
+    REFLECT_101 = 3;
     // ODD = 4;
     // ODD_101 = 5;
   }
