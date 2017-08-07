@@ -47,6 +47,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
    */
   explicit ConvolutionLayerSpatial(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {
+    winograd_weights_image_ = NULL;
   }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
