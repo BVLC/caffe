@@ -26,9 +26,8 @@ namespace caffe {
  *      i p[-i] is set to p[0].
  *   'reflect': Reflect interior pixel values into the padding. For
  *      index i >= 0. p[-i] is set to p[i-1].
- *   'reflect_101': (Not yet implemented.) Reflect interior pixel
- *      values into the padding. For index i >= 0. p[-i] is set to
- *      p[i].
+ *   'reflect_101': Reflect interior pixel values into the
+ *      padding. For index i >= 0. p[-i] is set to p[i].
  *   'odd': (Not yet implemented.) Reflect both spatially and in
  *      value.  For positive index i p[-i] is set to p[0] -
  *      (p[i-1]-p[0]) = 2*p[0] - p[i-1]. This give the padding zero
