@@ -1833,8 +1833,8 @@ message V1LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
-    SELU = 34;
-    SELU_DROPOUT = 35;
+    SELU = 40;
+    SELU_DROPOUT = 41;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;
