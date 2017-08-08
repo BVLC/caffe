@@ -42,8 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#include <immintrin.h>
 
+#ifdef ENABLE_SGD_FUSION
+#include <immintrin.h>
+#endif /* ENABLE_SGD_FUSION */
 
 namespace caffe {
 template <typename Dtype>
@@ -443,11 +445,12 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
   }
 //#pragma endregion
 
-//For POR topologies from BVLC, all skipped the Normalize stage, and use L2 regularization
+//For most common topologies from BVLC, all skipped the Normalize stage, and use L2 regularization
 //If prv_diff_condition_flag == true, then prv_data_condition_flag == true    (1)
 //If prv_diff_condition_flag == false, then prv_data_condition_flag == false  (2)
 //Another case is local_decay == 0, prv_diff_condition_flag == false          (3)
 //So only need to consider the fusion in situations (1) and (2), set execute_separate_ComputeUpdateValue_stage_flag to false value
+//We can extend the fusion in L1 regularization
   bool execute_separate_ComputeUpdateValue_stage_flag = true;
   //Regularize stage (Fused ComputeUpdateValue_stage in some situations)
   if (local_decay) {
@@ -552,10 +555,19 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
       caffe_cpu_sign(net_params[param_id]->count(),
                       net_params[param_id]->cpu_data(),
                       temp_[param_id]->mutable_cpu_data());
+
+      /*
       caffe_axpy(net_params[param_id]->count(),
                   local_decay,
                   temp_[param_id]->cpu_data(),
                   net_params[param_id]->mutable_cpu_diff());
+      */
+
+      avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+                                temp_[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
+                                local_rate, momentum, history_[param_id]->mutable_cpu_data());
+      
+      execute_separate_ComputeUpdateValue_stage_flag = false;
     } else {
       LOG(FATAL) << "Unknown regularization type: " << regularization_type;
     }
@@ -564,7 +576,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
   //ComputeUpdateValue stage (separate)
   if (execute_separate_ComputeUpdateValue_stage_flag == true)
   {
-    //Include the situation: regularization_type == "L1"/"Unknown"
+    //Include the situation: regularization_type == "Unknown"
     //Include situations (3): local_decay == 0
     //No Regularize stage, only ComputeUpdateValue stage
     //ComputeUpdateValue stage
