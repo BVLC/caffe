@@ -63,7 +63,7 @@ __kernel void TEMPLATE(copyWeightsSwizzled, Dtype)
 }
 
 /*------------------------------------------------------------------------
-/*Below is winograd functions for weights transform.*/
+  Below is winograd functions for weights transform.*/
  
 #if TYPE != TYPE_DOUBLE
 #if TYPE == TYPE_HALF

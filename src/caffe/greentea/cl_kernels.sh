@@ -269,6 +269,9 @@ echo "#endif" >> $SOURCE
 echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
 echo "  options += \" -DHAS_HALF_SUPPORT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
+echo "  if(ctx->devices()[0].extensions().find(\"cl_khr_int64_base_atomics\")!= std::string::npos) {" >> $SOURCE
+echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
 echo "                    != std::string::npos;" >> $SOURCE
 echo "  if (!is_beignet)" >> $SOURCE
@@ -337,6 +340,9 @@ echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")
 echo "                    != std::string::npos;" >> $SOURCE
 echo "  if (!is_beignet)" >> $SOURCE
 echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
+echo "  if(ctx->devices()[0].extensions().find(\"cl_khr_int64_base_atomics\")!= std::string::npos) {" >> $SOURCE
+echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(ss.str(), name);" >> $SOURCE
 echo "  return program;" >> $SOURCE

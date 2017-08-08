@@ -59,3 +59,9 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #define ATOMICS_32_AVAILABLE
 #endif
+
+#ifdef cl_intel_subgroups
+#ifndef HAS_INTEL_SUBGROUPS
+#undef cl_intel_subgroups
+#endif
+#endif
