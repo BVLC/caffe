@@ -2637,7 +2637,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#if APPLY_BIAS",    // NOLINT
 "Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
 "#else",    // NOLINT
-"Dtype bias = 0.",    // NOLINT
+"Dtype bias = 0.;",    // NOLINT
 "#endif",    // NOLINT
 "/*",    // NOLINT
 "A^T = {1, 1, 1, 1, 1, 0,",    // NOLINT

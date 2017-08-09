@@ -2058,7 +2058,7 @@ winograd_4x4(
 #if APPLY_BIAS
     Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];
 #else
-    Dtype bias = 0.
+    Dtype bias = 0.;
 #endif
       /*
       A^T = {1, 1, 1, 1, 1, 0,
