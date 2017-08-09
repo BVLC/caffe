@@ -18405,6 +18405,22 @@ class EqHelper {
                        actual);
   }
 
+  template <typename T1>
+  static AssertionResult Compare(const char* expected_expression,
+                                 const char* actual_expression,
+                                 const T1& expected,
+                                 const half& actual) {
+    AssertionResult ret = CmpHelperEQ(expected_expression, actual_expression,
+                             half_float::detail::half_cast<half,std::round_toward_infinity>(expected),
+                             actual);
+    if (ret)
+      return ret;
+
+    return CmpHelperEQ(expected_expression, actual_expression,
+                             half_float::detail::half_cast<half,std::round_toward_neg_infinity>(expected),
+                             actual);
+  }
+
   // With this overloaded version, we allow anonymous enums to be used
   // in {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous
   // enums can be implicitly cast to BiggestInt.
