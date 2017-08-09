@@ -94,10 +94,15 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
 
   // Dimensions of bottom and top blobs. There is a number of
   // top blobs each of the same size as the bottom one
-  memory::dims bottom_tz = {static_cast<int>(this->sizes_src_[0]),
-                            static_cast<int>(this->sizes_src_[1]),
-                            static_cast<int>(this->sizes_src_[2]),
-                            static_cast<int>(this->sizes_src_[3])};
+  memory::dims bottom_tz;
+  bottom_tz.resize(4);
+  for(int i=0; i<4; i++) {
+    if(i < this->sizes_src_.size()) {
+      bottom_tz[i] = static_cast<int>(this->sizes_src_[i]);
+    } else {
+      bottom_tz[i] = 1;
+    }
+  }
 
   shared_ptr<memory::primitive_desc> prv_diff_dst_mpd;
   shared_ptr<memory::primitive_desc> usr_diff_dst_mpd(
