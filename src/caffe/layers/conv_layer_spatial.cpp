@@ -748,10 +748,10 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     kernel.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
     kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
     kernel.arg(argIdx++, WrapHandle((cl_mem)top[index]->mutable_gpu_data(), &ctx));
-    kernel.arg(argIdx++, (ushort)(ALIGN(output_w_,4)*9));
-    kernel.arg(argIdx++, (ushort)(ALIGN(output_h_,4)/4));
-    kernel.arg(argIdx++, (ushort)output_w_);
-    kernel.arg(argIdx++, (ushort)output_h_);
+    kernel.arg(argIdx++, (uint16_t)(ALIGN(output_w_,4)*9));
+    kernel.arg(argIdx++, (uint16_t)(ALIGN(output_h_,4)/4));
+    kernel.arg(argIdx++, (uint16_t)output_w_);
+    kernel.arg(argIdx++, (uint16_t)output_h_);
 
     /* Compute data transform. */
     err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
