@@ -131,7 +131,7 @@ echo "};" >> $SOURCE
 echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
-echo "    if (cl_kernel_names[i] == std::string(\"benchmark\")) {" >> $SOURCE
+echo "    if (cl_kernel_names[i] == std::string(\"common\")) {" >> $SOURCE
 echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
 echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
 echo "      }" >> $SOURCE

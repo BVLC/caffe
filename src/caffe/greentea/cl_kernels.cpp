@@ -461,14 +461,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
-"__kernel void null_kernel(float arg) {",    // NOLINT
-"float out = arg;",    // NOLINT
-"}",    // NOLINT
-""},   // NOLINT
-    {"#ifndef __OPENCL_VERSION__",    // NOLINT
-"#include \"header.cl\"",    // NOLINT
-"#endif",    // NOLINT
-"",    // NOLINT
 "__kernel void TEMPLATE(bias_forward,Dtype)(const int_tp n,",    // NOLINT
 "__global const Dtype* in,",    // NOLINT
 "__global const Dtype* bias,",    // NOLINT
@@ -622,6 +614,23 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "channel_dot[index] = dot;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"__kernel void null_kernel(float arg) {",    // NOLINT
+"float out = arg;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void fillbuffer(const int n, const char alpha, __global char* x,",    // NOLINT
+"const int offx) {",    // NOLINT
+"for (int index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
+"x[index + offx] = alpha;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
@@ -4108,13 +4117,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
-"",    // NOLINT
-"__kernel void TEMPLATE(fillbuffer,Dtype)(const int_tp n, const char alpha, __global char* x,",    // NOLINT
-"const int_tp offx) {",    // NOLINT
-"for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {",    // NOLINT
-"x[index + offx] = alpha;",    // NOLINT
-"}",    // NOLINT
-"}",    // NOLINT
 "",    // NOLINT
 "__kernel void TEMPLATE(fill,Dtype)(const int_tp n, const KERNEL_ARG_DTYPE alpha, __global Dtype* x,",    // NOLINT
 "const int_tp offx) {",    // NOLINT
@@ -8556,10 +8558,10 @@ static std::string cl_kernel_names[] = {
     "batch_norm",   // NOLINT
     "batch_reindex",   // NOLINT
     "bbox_util",   // NOLINT
-    "benchmark",   // NOLINT
     "bias",   // NOLINT
     "bnll",   // NOLINT
     "channel",   // NOLINT
+    "common",   // NOLINT
     "concat",   // NOLINT
     "contrastive_loss",   // NOLINT
     "conv_layer_spatial",   // NOLINT
@@ -8593,7 +8595,7 @@ static std::string cl_kernel_names[] = {
 viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {
   std::stringstream ss;
   for (int i = 0; i < cl_kernels.size(); ++i) {
-    if (cl_kernel_names[i] == std::string("benchmark")) {
+    if (cl_kernel_names[i] == std::string("common")) {
       for (int j = 0; j < cl_kernels[i].size(); ++j) {
         ss << cl_kernels[i][j] << "\n\n";
       }

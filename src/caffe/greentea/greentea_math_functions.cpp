@@ -64,18 +64,16 @@ namespace caffe {
 
 void greentea_memset(const int_tp ctx_id, const uint_tp N, const int_tp alpha,
                      cl_mem X, const int_tp offX) {
-  typedef float Dtype;
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->template program<Dtype>();
+      ->common_program();
 
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
   //  X, &alpha, sizeof(int_tp),
   //                     offX, N, 0, NULL, NULL);
   // OpenCL Version < 1.2 fallback
-  viennacl::ocl::kernel &oclk_fill = program.get_kernel(
-      CL_KERNEL_SELECT("fillbuffer"));
+  viennacl::ocl::kernel &oclk_fill = program.get_kernel("fillbuffer");
   viennacl::ocl::enqueue(
       oclk_fill(static_cast<int_tp>(N), static_cast<unsigned char>(alpha),
                 WrapHandle(X, &ctx), offX),
