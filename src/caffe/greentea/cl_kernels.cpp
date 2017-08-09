@@ -6305,7 +6305,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp head = 0;",    // NOLINT
 "const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
 "const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
-"Dtype accum_scale = 0;",    // NOLINT
+"KERNEL_ARG_DTYPE accum_scale = 0;",    // NOLINT
 "// fill the scale at [n, :, h, w]",    // NOLINT
 "// accumulate values",    // NOLINT
 "while (head < post_pad && head < channels) {",    // NOLINT
@@ -6438,7 +6438,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp head = 0;",    // NOLINT
 "const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
 "const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
-"Dtype accum_scale[TILE_H] = {0};",    // NOLINT
+"KERNEL_ARG_DTYPE accum_scale[TILE_H] = {0};",    // NOLINT
 "if (w + get_local_id(1) >= width)",    // NOLINT
 "return;",    // NOLINT
 "",    // NOLINT
@@ -6528,7 +6528,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp head = 0;",    // NOLINT
 "const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
 "const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
-"Dtype accum_scale = 0;",    // NOLINT
+"KERNEL_ARG_DTYPE accum_scale = 0;",    // NOLINT
 "// fill the scale at [n, :, h, w]",    // NOLINT
 "// accumulate values",    // NOLINT
 "while (head < post_pad && head < channels) {",    // NOLINT
@@ -6581,7 +6581,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "int_tp head = 0;",    // NOLINT
 "const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
 "const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
-"Dtype accum_scale = 0;",    // NOLINT
+"KERNEL_ARG_DTYPE accum_scale = 0;",    // NOLINT
 "// fill the scale at [n, :, h, w]",    // NOLINT
 "// accumulate values",    // NOLINT
 "while (head < post_pad && head < channels) {",    // NOLINT
@@ -8719,12 +8719,12 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   return program;
 }
 #ifdef HAS_HALF_SUPPORT
-template 
+template
 viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx);
 #endif
-template 
+template
 viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx);
-template 
+template
 viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx);
 template<typename Dtype>
 viennacl::ocl::program & submit_conv_spatial_program(

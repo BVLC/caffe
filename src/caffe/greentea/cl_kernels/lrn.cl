@@ -31,7 +31,7 @@ __kernel void TEMPLATE(lrn_fill_scale,Dtype)(const int_tp nthreads, __global con
     int_tp head = 0;
     const int_tp pre_pad = (size - 1) / 2;
     const int_tp post_pad = size - pre_pad - 1;
-    Dtype accum_scale = 0;
+    KERNEL_ARG_DTYPE accum_scale = 0;
     // fill the scale at [n, :, h, w]
     // accumulate values
     while (head < post_pad && head < channels) {
@@ -164,7 +164,7 @@ __kernel void TEMPLATE(lrn_fuse_pool_max,Dtype)(
   int_tp head = 0;
   const int_tp pre_pad = (size - 1) / 2;
   const int_tp post_pad = size - pre_pad - 1;
-  Dtype accum_scale[TILE_H] = {0};
+  KERNEL_ARG_DTYPE accum_scale[TILE_H] = {0};
   if (w + get_local_id(1) >= width)
     return;
 
@@ -254,7 +254,7 @@ __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global 
     int_tp head = 0;
     const int_tp pre_pad = (size - 1) / 2;
     const int_tp post_pad = size - pre_pad - 1;
-    Dtype accum_scale = 0;
+    KERNEL_ARG_DTYPE accum_scale = 0;
     // fill the scale at [n, :, h, w]
     // accumulate values
     while (head < post_pad && head < channels) {
@@ -307,7 +307,7 @@ __kernel void TEMPLATE(lrn_full,Dtype)(const int_tp nthreads, __global const Dty
     int_tp head = 0;
     const int_tp pre_pad = (size - 1) / 2;
     const int_tp post_pad = size - pre_pad - 1;
-    Dtype accum_scale = 0;
+    KERNEL_ARG_DTYPE accum_scale = 0;
     // fill the scale at [n, :, h, w]
     // accumulate values
     while (head < post_pad && head < channels) {
