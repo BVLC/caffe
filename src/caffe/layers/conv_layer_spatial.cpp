@@ -746,7 +746,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
     kernel.arg(argIdx++, WrapHandle((cl_mem)this->input_transform_blob_.gpu_data(), &ctx));
     kernel.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
-    kernel.arg(argIdx++, WrapHandle((cl_mem)this->blobs()[1]->gpu_data(), &ctx));
+    kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
     kernel.arg(argIdx++, WrapHandle((cl_mem)top[index]->mutable_gpu_data(), &ctx));
     kernel.arg(argIdx++, (ushort)(ALIGN(output_w_,4)*9));
     kernel.arg(argIdx++, (ushort)(ALIGN(output_h_,4)/4));
