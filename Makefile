@@ -80,7 +80,7 @@ ifeq ($(CAFFE_MLSL_SHUFFLE), 1)
 	COMMON_FLAGS += -DCAFFE_MLSL_SHUFFLE
 endif
 
-ifeq ($(FW_OVERLAP_OPT), 1)
+ifneq ($(FW_OVERLAP_OPT), 0)
 	COMMON_FLAGS += -DFW_OVERLAP_OPT
 endif
 endif
