@@ -213,36 +213,36 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   }
 
 #ifdef ENABLE_SGD_FUSION
-  switch (Caffe::mode()) {
-  case Caffe::CPU: {
-    //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-    Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
-    break;
+  if (Caffe::mode() == Caffe::CPU) 
+  {
+    const unsigned long avx512_features = (_FEATURE_AVX512F | _FEATURE_AVX512CD);
+    bool avx512_enabled_ = _may_i_use_cpu_feature(avx512_features);
+    if (avx512_enabled_)
+    {
+      //LOG(INFO) << "Avx512 command is supported!";
+      //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+      //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+      Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
+      this->net_->learnable_params()[param_id]->Update();
+      return;
+    }
+    else
+    {
+      //LOG(INFO) << "Avx512 command is not supported, so cannot use the SGD fusion!";
+    }
   }
-  case Caffe::GPU: {
-#ifndef CPU_ONLY
-    //VLOG(1) << "Currently we do not support use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD in GPU mode.";
-    //LOG(INFO) << "Currently we do not support use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD in GPU mode.";
-#else
-    NO_GPU;
-#endif
-    break;
-  }
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-  }
-#else /* !ENABLE_SGD_FUSION */
+#endif /* ENABLE_SGD_FUSION */
+
   //LOG(INFO) << "No Fusion: Param_id: " << param_id;
   Normalize(param_id);
   
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Normalize:");
 
   Regularize(param_id);
+
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Regularize:");
 
   ComputeUpdateValue(param_id, rate);
-#endif /* ENABLE_SGD_FUSION */
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: wtinc:");
 
