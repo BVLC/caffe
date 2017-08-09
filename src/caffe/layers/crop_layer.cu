@@ -90,7 +90,7 @@ void CropLayer<Dtype>::crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
       viennacl::ocl::kernel &oclk_copy_crop = program.get_kernel(
           CL_KERNEL_SELECT("crop_copy"));
 

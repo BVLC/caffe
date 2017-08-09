@@ -367,7 +367,7 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
   if (!interleave) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
     viennacl::ocl::kernel &oclk_copy_weight = program.get_kernel(
         CL_KERNEL_SELECT("copyWeightsSwizzled"));
     cl_uint argIdx = 0;
@@ -430,7 +430,7 @@ void ConvolutionLayerSpatial<Dtype>::winogradWeights() {
 
   cl_int err;
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
-  viennacl::ocl::program &program = this->device_->program();
+  viennacl::ocl::program &program = this->device_->template program<Dtype>();
   if(!std::is_same<Dtype, double>::value) {
     cl_image_format format;
     cl_image_desc desc;
@@ -1047,7 +1047,7 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
                   0xff,
                   (cl_mem)top[index]->mutable_gpu_data(),
                   0);
-  convolve(bottom, top, index, numImages, config);
+  config->executionTime = timed_convolve(bottom, top, index, numImages, config);
   // Currently we can't do verification when conv is fused because the results
   // won't match the results of forward_gpu_gemm. Need more work to fix it.
   // FP16 verification may fail due to the natrue accuracy lost between FP16 and FP32.

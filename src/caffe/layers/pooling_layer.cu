@@ -940,7 +940,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     if (num_spatial_axes_ == 2) {
       int_tp kernel_h_ = kernel_shape_.cpu_data()[0];
@@ -1283,7 +1283,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       greentea_gpu_set(this->device_->id(), count, Dtype(0.),
           (cl_mem) bottom_diff, 0);

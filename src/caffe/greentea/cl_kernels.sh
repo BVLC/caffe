@@ -41,6 +41,8 @@ echo "#endif  // DISABLE_DOUBLE_SUPPORT" >> $SOURCE
 
 echo "namespace caffe {" >> $SOURCE
 
+echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx);" >> $HEADER
+echo "template <typename Dtype>" >> $HEADER
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
 echo "template <typename Dtype>" >> $HEADER
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $HEADER
@@ -126,6 +128,25 @@ do
 done
 echo "};" >> $SOURCE
 
+echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
+echo "  std::stringstream ss;" >> $SOURCE
+echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
+echo "    if (cl_kernel_names[i] == std::string(\"benchmark\")) {" >> $SOURCE
+echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
+echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
+echo "      }" >> $SOURCE
+echo "    }" >> $SOURCE
+echo "  }" >> $SOURCE
+echo "  std::string kernel_string = ss.str();" >> $SOURCE
+echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
+echo "  string options;" >> $SOURCE
+echo "  ctx->build_options(options);" >> $SOURCE
+echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
+echo "      \"kernel_program\");" >> $SOURCE
+echo "  return program;" >> $SOURCE
+echo "}" >> $SOURCE
+
+echo "template <typename Dtype>" >> $SOURCE
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 echo "  std::stringstream int64_base_atomics;" >> $SOURCE
@@ -159,6 +180,7 @@ done
 echo "#endif" >> $SOURCE
 
 shopt -s nullglob
+echo "  if (std::is_same<Dtype, float>::value) { // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype2 float2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 float4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -178,34 +200,22 @@ echo "    for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
 echo "      ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
+echo "  }" >> $SOURCE
 
+echo "  if (std::is_same<Dtype, double>::value) { // NOLINT" >> $SOURCE
 echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype2 double2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 double4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype8 double8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype16 double16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype as_double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype2 as_double2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype4 as_double4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype8 as_double8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype16 as_double16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef KERNEL_ARG_DTYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define KERNEL_ARG_DTYPE double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef DTYPE_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef DTYPE_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define DTYPE_MAX FLT_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define DTYPE_MIN FLT_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
@@ -218,33 +228,21 @@ echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  }" >> $SOURCE
 
+echo "  if (std::is_same<Dtype, half_float::half>::value) { // NOLINT" >> $SOURCE
 echo "  ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype half\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype2 half2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 half4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype8 half8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype16 half16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef as_Dtype16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype as_half\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype2 as_half2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype4 as_half4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype8 as_half8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define as_Dtype16 as_half16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define TYPE TYPE_HALF\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef KERNEL_ARG_DTYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef DTYPE_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-echo "  ss << \"#undef DTYPE_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define DTYPE_MAX HALF_MAX\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define DTYPE_MIN HALF_MIN\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define KERNEL_ARG_DTYPE float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -258,7 +256,7 @@ echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // HALF_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
-
+echo "  }" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
@@ -269,7 +267,7 @@ echo "#endif" >> $SOURCE
 echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
 echo "  options += \" -DHAS_HALF_SUPPORT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
-echo "  if(ctx->devices()[0].extensions().find(\"cl_khr_int64_base_atomics\")!= std::string::npos) {" >> $SOURCE
+echo "  if(ctx->devices()[0].extensions().find(\"cl_intel_subgroups\")!= std::string::npos) {" >> $SOURCE
 echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
@@ -281,6 +279,14 @@ echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $
 echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
+echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx);" >> $SOURCE
+echo "#endif" >> $SOURCE
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx);" >> $SOURCE
+echo "template" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx);" >> $SOURCE
 echo "template<typename Dtype>" >> $SOURCE
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $SOURCE
 echo "viennacl::ocl::context *ctx, string name, string options) {" >> $SOURCE
@@ -340,7 +346,7 @@ echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")
 echo "                    != std::string::npos;" >> $SOURCE
 echo "  if (!is_beignet)" >> $SOURCE
 echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
-echo "  if(ctx->devices()[0].extensions().find(\"cl_khr_int64_base_atomics\")!= std::string::npos) {" >> $SOURCE
+echo "  if(ctx->devices()[0].extensions().find(\"cl_intel_subgroups\")!= std::string::npos) {" >> $SOURCE
 echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE

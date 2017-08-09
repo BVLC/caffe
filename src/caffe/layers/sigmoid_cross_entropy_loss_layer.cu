@@ -85,7 +85,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
     viennacl::ocl::kernel &oclk_sce_loss_forward =
         program.get_kernel(
             CL_KERNEL_SELECT("sce_loss_forward"));
@@ -147,7 +147,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       // First, compute the diff
       greentea_copy<Dtype>(count, (cl_mem)sigmoid_output_data, 0,

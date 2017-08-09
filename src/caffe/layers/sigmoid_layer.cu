@@ -33,7 +33,7 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
         CL_KERNEL_SELECT("sigmoid_forward"));
@@ -84,7 +84,7 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
           CL_KERNEL_SELECT("sigmoid_backward"));

@@ -118,7 +118,7 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           this->blobs_[2]->cpu_data()[0] == 0 ?
               0 : 1 / this->blobs_[2]->cpu_data()[0];
 
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       bool fused_relu = this->layer_param_.batch_norm_param().fused_relu();
 

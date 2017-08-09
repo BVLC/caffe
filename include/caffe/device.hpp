@@ -33,8 +33,9 @@ class device {
   int workgroup_size(int id);
 
 #ifdef USE_GREENTEA
+  template<typename Dtype>
   viennacl::ocl::program &program();
-  void SetProgram();
+  viennacl::ocl::program &common_program();
   bool is_host_unified();
 #endif  // USE_GREENTEA
 
@@ -71,7 +72,13 @@ class device {
   bool host_unified_;
   std::string name_;
 #ifdef USE_GREENTEA
-  viennacl::ocl::program ocl_program_;
+  bool fp16_program_ready_;
+  viennacl::ocl::program fp16_ocl_program_;
+  bool fp32_program_ready_;
+  viennacl::ocl::program fp32_ocl_program_;
+  bool fp64_program_ready_;
+  viennacl::ocl::program fp64_ocl_program_;
+  viennacl::ocl::program common_ocl_program_;
 #endif  // USE_GREENTEA
 };
 }  // namespace caffe

@@ -65,7 +65,7 @@ void ScaleLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     if (bottom[0] == top[0]) {
       greentea_copy<Dtype>(bottom[0]->count(), (cl_mem) (bottom[0]->gpu_data()),
@@ -179,7 +179,7 @@ void ScaleLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     if ((!scale_param && propagate_down[1])
         || (scale_param && this->param_propagate_down_[0])) {

@@ -182,7 +182,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int_tp col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
@@ -216,7 +216,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int_tp data_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       greentea_col2im_gpu<Dtype>(&program, &ctx,

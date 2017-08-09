@@ -49,8 +49,8 @@ void Timer::Start() {
         clReleaseEvent(start_gpu_cl_);
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             Caffe::GetDefaultDevice()->id());
-        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
-        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
+        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->common_program();
+        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel");
         float arg = 0;
         clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
@@ -83,8 +83,8 @@ void Timer::Stop() {
         clReleaseEvent(stop_gpu_cl_);
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             Caffe::GetDefaultDevice()->id());
-        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
-        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
+        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->common_program();
+        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel");
         float arg = 0;
         clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,

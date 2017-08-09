@@ -42,7 +42,7 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     viennacl::ocl::kernel &oclk_br = program.get_kernel(
         CL_KERNEL_SELECT("br_forward"));
@@ -132,7 +132,7 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     viennacl::ocl::kernel &oclk_br = program.get_kernel(
         CL_KERNEL_SELECT("br_backward"));

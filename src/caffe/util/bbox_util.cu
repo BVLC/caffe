@@ -211,7 +211,7 @@ void DecodeBBoxesGPU(const int nthreads,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         Caffe::GetDefaultDevice()->id());
-    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->template program<Dtype>();
     std::string kernel_name{};
     switch(code_type) {
     case PriorBoxParameter_CodeType_CORNER:
@@ -297,7 +297,7 @@ void PermuteDataGPU(const int nthreads,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         Caffe::GetDefaultDevice()->id());
-    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->template program<Dtype>();
     viennacl::ocl::kernel &oclk_permute_data =
         program.get_kernel(CL_KERNEL_SELECT("PermuteData"));
     viennacl::ocl::enqueue(
@@ -356,7 +356,7 @@ void PermuteData24GPU(const int nthreads,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         Caffe::GetDefaultDevice()->id());
-    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+    viennacl::ocl::program &program = Caffe::GetDefaultDevice()->template program<Dtype>();
     viennacl::ocl::kernel &oclk_permute_data =
         program.get_kernel(CL_KERNEL_SELECT("PermuteData24"));
     viennacl::ocl::enqueue(

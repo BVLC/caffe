@@ -47,7 +47,7 @@ static void greentea_gpu_gemm_copy_buffer_to_image(int_tp ctx_id,
                  cl_event *event) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-  ->program();
+  ->template program<Dtype>();
   cl_image_desc desc;
   cl_image_format format;
 
@@ -218,7 +218,7 @@ static void greentea_gpu_fast_image_gemm(const int_tp ctx_id,
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-                                     ->program();
+                                     ->template program<Dtype>();
 
   cl_mem ImA = NULL;
   cl_mem ImB = NULL;
@@ -473,7 +473,7 @@ static void greentea_gpu_fast_buffer_gemm(const int_tp ctx_id,
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
     viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-                                       ->program();
+                                       ->template program<Dtype>();
     bool halfPrecisionMode = !std::is_same<Dtype, float>::value;
 
     size_t sub_group_size = 8;

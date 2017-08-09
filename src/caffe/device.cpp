@@ -22,13 +22,23 @@ namespace caffe {
 device::device()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0), list_id_(0),
       backend_(Backend::BACKEND_CPU), memory_usage_(0), peak_memory_usage_(0),
-      host_unified_(false), name_("") {
+      host_unified_(false), name_(""){
+#ifdef USE_GREENTEA
+  fp16_program_ready_ = false;
+  fp32_program_ready_ = false;
+  fp64_program_ready_ = false;
+#endif
 }
 
 device::device(int id, int list_id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id), list_id_(list_id),
       backend_(backend), memory_usage_(0), peak_memory_usage_(0),
       host_unified_(false), name_("") {
+#ifdef USE_GREENTEA
+  fp16_program_ready_ = false;
+  fp32_program_ready_ = false;
+  fp64_program_ready_ = false;
+#endif
 }
 
 void device::Init() {
@@ -62,11 +72,12 @@ void device::Init() {
     LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: " << host_unified;
     host_unified_ = host_unified;
 #endif  // DISABLE_DEVICE_HOST_UNIFIED_MEMORY
-    SetProgram();
 
     for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
       ctx.add_queue(ctx.devices()[0]);
     }
+    common_ocl_program_ = RegisterCommonKernels(
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
 #endif  // USE_GREENTEA
   }
 #endif  // !CPU_ONLY
@@ -286,13 +297,45 @@ bool device::CheckType(std::string type) {
 }
 
 #ifdef USE_GREENTEA
-viennacl::ocl::program &device::program() {
-  return ocl_program_;
+#ifdef HAS_HALF_SUPPORT
+template <>
+viennacl::ocl::program &device::program<half>() {
+  if (!fp16_program_ready_) {
+    fp16_ocl_program_ = RegisterKernels<half>(
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+    fp16_program_ready_ = true;
+  }
+  return fp16_ocl_program_;
+}
+#endif
+
+template <>
+viennacl::ocl::program &device::program<float>() {
+  if (!fp32_program_ready_) {
+    fp32_ocl_program_ = RegisterKernels<float>(
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+    fp32_program_ready_ = true;
+  }
+  return fp32_ocl_program_;
 }
 
-void device::SetProgram() {
-  ocl_program_ = RegisterKernels(
+template <>
+viennacl::ocl::program &device::program<int>() {
+  return program<float>();
+}
+
+template <>
+viennacl::ocl::program &device::program<double>() {
+  if (!fp64_program_ready_) {
+    fp64_ocl_program_ = RegisterKernels<double>(
       &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+    fp64_program_ready_ = true;
+  }
+  return fp64_ocl_program_;
+}
+
+viennacl::ocl::program &device::common_program() {
+  return common_ocl_program_;
 }
 
 bool device::is_host_unified() {

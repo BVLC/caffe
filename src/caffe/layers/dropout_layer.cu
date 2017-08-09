@@ -45,7 +45,7 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
     if (this->phase_ == TRAIN) {
       cl_mem mask = (cl_mem) (rand_vec_.mutable_gpu_data());
       greentea_gpu_rng_uniform(this->device_->id(), count, mask, 0);
@@ -105,7 +105,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       if (this->phase_ == TRAIN) {
         cl_mem mask = (cl_mem) (rand_vec_.gpu_data());

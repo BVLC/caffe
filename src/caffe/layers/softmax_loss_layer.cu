@@ -79,7 +79,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
 #ifdef USE_GREENTEA //TODO: should update to align with the CUDA implememtation
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     cl_mem prob_data = (cl_mem) (prob_.gpu_data());
     cl_mem label = (cl_mem) (bottom[1]->gpu_data());
@@ -212,7 +212,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
 #ifdef USE_GREENTEA //TODO: should update to align with the CUDA implementation
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
       cl_mem bottom_diff = (cl_mem)(bottom[0]->mutable_gpu_diff());
       cl_mem prob_data = (cl_mem)(prob_.gpu_data());

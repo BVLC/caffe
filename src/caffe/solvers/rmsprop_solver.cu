@@ -33,7 +33,7 @@ void rmsprop_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev->id());
-    viennacl::ocl::program &program = dev->program();
+    viennacl::ocl::program &program = dev->template program<Dtype>();
     viennacl::ocl::kernel &oclk_rms_prop_update = program.get_kernel(
         CL_KERNEL_SELECT("rms_prop_update"));
     viennacl::ocl::enqueue(

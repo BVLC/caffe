@@ -95,7 +95,7 @@ void LRNLayer<Dtype>::CrossChannelForward_fuse_pooling_gpu(
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
-  viennacl::ocl::program &program = this->device_->program();
+  viennacl::ocl::program &program = this->device_->template program<Dtype>();
   if (use_fuse) {
     viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
         CL_KERNEL_SELECT("lrn_fuse_pool_max"));
@@ -212,7 +212,7 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
 
     if (this->phase_ == caffe::TRAIN) {
@@ -414,7 +414,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     viennacl::ocl::kernel &oclk_lrn = program.get_kernel(
         CL_KERNEL_SELECT("lrn_compute_diff"));

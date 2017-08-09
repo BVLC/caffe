@@ -65,3 +65,7 @@
 #undef cl_intel_subgroups
 #endif
 #endif
+
+#ifndef NULL
+#define NULL (void*)0
+#endif

@@ -148,7 +148,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                     (this->device_->id());
     if (this->device_->CheckCapability("cl_intel_subgroups")
         && inner_num_ < 128) {
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
       viennacl::ocl::kernel *oclk_softmax_forward_kernel;
       if (use_slm_)
         oclk_softmax_forward_kernel = &program.get_kernel(
@@ -185,7 +185,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     } else {
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
       greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
                            &ctx);
       viennacl::ocl::kernel &oclk_channel_max = program.get_kernel(
@@ -261,7 +261,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     greentea_copy<Dtype>(top[0]->count(), (cl_mem)top_diff,
                          0, (cl_mem)bottom_diff, 0, &ctx);

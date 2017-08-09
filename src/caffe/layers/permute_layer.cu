@@ -51,7 +51,7 @@ void PermuteLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
 
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     viennacl::ocl::kernel &oclk_permute = program.get_kernel(
         CL_KERNEL_SELECT("PermuteKernel"));

@@ -135,7 +135,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             this->device_->id());
-        viennacl::ocl::program &program = this->device_->program();
+        viennacl::ocl::program &program = this->device_->template program<Dtype>();
         viennacl::ocl::kernel &oclk_cll = program.get_kernel(
             legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
                 CL_KERNEL_SELECT("cll_backward"));

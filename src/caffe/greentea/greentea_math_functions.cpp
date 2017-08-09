@@ -64,16 +64,16 @@ namespace caffe {
 
 void greentea_memset(const int_tp ctx_id, const uint_tp N, const int_tp alpha,
                      cl_mem X, const int_tp offX) {
+  typedef float Dtype;
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
   //  X, &alpha, sizeof(int_tp),
   //                     offX, N, 0, NULL, NULL);
   // OpenCL Version < 1.2 fallback
-  typedef float Dtype;
   viennacl::ocl::kernel &oclk_fill = program.get_kernel(
       CL_KERNEL_SELECT("fillbuffer"));
   viennacl::ocl::enqueue(
@@ -413,7 +413,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
       if (!std::is_same<Dtype, double>::value && TransA == CblasNoTrans) {
         viennacl::ocl::program &program =
             (Caffe::Get().GetDevice(ctx_id, false))
-                  ->program();
+                  ->template program<Dtype>();
         bool isTransA = (TransA == CblasTrans);
         viennacl::ocl::kernel &k = (isTransA ?
              program.get_kernel(CL_KERNEL_SELECT("trans_matvec_mul")) :
@@ -673,7 +673,7 @@ void greentea_gpu_mul(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_mul = program.get_kernel(CL_KERNEL_SELECT("mul"));
   viennacl::ocl::enqueue(
@@ -703,7 +703,7 @@ void greentea_gpu_div(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_div = program.get_kernel(CL_KERNEL_SELECT("div"));
   viennacl::ocl::enqueue(
@@ -1186,7 +1186,7 @@ void greentea_gpu_set(const int_tp ctx_id, const int_tp N, const Dtype alpha,
                       cl_mem Y, const int_tp offY) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
   //                  Y, &alpha, sizeof(Dtype),
@@ -1220,7 +1220,7 @@ void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N,
                              const Dtype alpha, cl_mem Y, const int_tp offY) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_add_scalar = program.get_kernel(
       CL_KERNEL_SELECT("add_scalar"));
@@ -1248,7 +1248,7 @@ void greentea_gpu_add(const int_tp ctx_id, const int_tp n, const cl_mem a,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_add = program.get_kernel(CL_KERNEL_SELECT("add"));
   viennacl::ocl::enqueue(
@@ -1278,7 +1278,7 @@ void greentea_gpu_sub(const int_tp ctx_id, const int_tp n, const cl_mem a,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_sub = program.get_kernel(CL_KERNEL_SELECT("sub"));
   viennacl::ocl::enqueue(
@@ -1307,7 +1307,7 @@ void greentea_gpu_abs(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_abs = program.get_kernel(CL_KERNEL_SELECT("abs"));
   viennacl::ocl::enqueue(
@@ -1332,7 +1332,7 @@ void greentea_gpu_exp(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_exp = program.get_kernel(CL_KERNEL_SELECT("exp"));
   viennacl::ocl::enqueue(
@@ -1358,7 +1358,7 @@ void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
                        const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_powx = program.get_kernel(
       CL_KERNEL_SELECT("powx"));
@@ -1388,7 +1388,7 @@ void greentea_gpu_log(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_log = program.get_kernel(CL_KERNEL_SELECT("log"));
   viennacl::ocl::enqueue(
@@ -1414,7 +1414,7 @@ int_tp offx,
                        cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_sign = program.get_kernel(
       CL_KERNEL_SELECT("sign"));
@@ -1441,7 +1441,7 @@ int_tp offx,
                          cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
-      ->program();
+      ->template program<Dtype>();
 
   viennacl::ocl::kernel &oclk_sgnbit = program.get_kernel(
       CL_KERNEL_SELECT("sgnbit"));

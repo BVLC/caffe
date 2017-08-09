@@ -58,7 +58,7 @@ void ReorgLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = this->device_->program();
+    viennacl::ocl::program &program = this->device_->template program<Dtype>();
 
     // Execute kernel
     viennacl::ocl::kernel &oclk_reorg_forward = program.get_kernel(
@@ -91,7 +91,7 @@ void ReorgLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top, const vec
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = this->device_->program();
+      viennacl::ocl::program &program = this->device_->template program<Dtype>();
       viennacl::ocl::kernel &oclk_reorg_backward = program.get_kernel(
           CL_KERNEL_SELECT("reorg"));
       viennacl::ocl::enqueue(
