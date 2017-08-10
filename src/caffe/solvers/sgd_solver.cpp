@@ -212,21 +212,11 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
 #ifdef ENABLE_SGD_FUSION
   if (Caffe::mode() == Caffe::CPU) 
   {
-    const unsigned long avx512_features = (_FEATURE_AVX512F | _FEATURE_AVX512CD);
-    bool avx512_enabled_ = _may_i_use_cpu_feature(avx512_features);
-    if (avx512_enabled_)
-    {
-      //LOG(INFO) << "Avx512 command is supported!";
-      //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-      //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-      Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
-      this->net_->learnable_params()[param_id]->Update();
-      return;
-    }
-    else
-    {
-      //LOG(INFO) << "Avx512 command is not supported, so cannot use the SGD fusion!";
-    }
+    //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
+    Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
+    this->net_->learnable_params()[param_id]->Update();
+    return;
   }
 #endif /* ENABLE_SGD_FUSION */
 
@@ -262,8 +252,9 @@ void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_pa
 {
   float temp_result = 0.;
 #ifdef _OPENMP
-//#pragma omp parallel for
-#pragma omp parallel for simd schedule(static)
+//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
+#pragma omp parallel for schedule(static)
+#pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
@@ -278,8 +269,9 @@ void axpy_axpby_copy<double>(size_t count, const double decay, const double* net
 {
   double temp_result = 0.;
 #ifdef _OPENMP
-//#pragma omp parallel for
-#pragma omp parallel for simd schedule(static)
+//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
+#pragma omp parallel for schedule(static)
+#pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
