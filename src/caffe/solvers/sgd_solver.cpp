@@ -43,9 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#ifdef ENABLE_SGD_FUSION
-#include <immintrin.h>
-#endif /* ENABLE_SGD_FUSION */
 
 namespace caffe {
 template <typename Dtype>
@@ -265,7 +262,8 @@ void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_pa
 {
   float temp_result = 0.;
 #ifdef _OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
@@ -280,105 +278,14 @@ void axpy_axpby_copy<double>(size_t count, const double decay, const double* net
 {
   double temp_result = 0.;
 #ifdef _OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
     history_data[i] =  temp_result;
     net_params_diff[i] =  temp_result;
   }
-}
-
-template <typename Dtype>
-void avx512_axpy_axpby_copy(size_t count, const Dtype decay, const Dtype* net_params_data, Dtype *net_params_diff,
-                            const Dtype rate, const Dtype momentum, Dtype* history_data);
-
-template <>
-void avx512_axpy_axpby_copy<float>(size_t count, const float decay, const float* net_params_data, float *net_params_diff,
-                                  const float rate, const float momentum, float* history_data)
-{
-    // If count is smaller than 16 we use non-avx512 implementation
-    // 16 is the element number which one avx512 register can hold
-    if (count < 16) {
-        return axpy_axpby_copy(count, decay, net_params_data, net_params_diff,
-                                     rate, momentum, history_data);
-    }
-
-    // If count can't be divided by 16, we handle tailing remainder
-    // with non-avx512 imeplementation
-    if (count % 16 != 0) {
-        size_t remainder = count % 16;
-        count -= remainder;
-        axpy_axpby_copy(remainder, decay, net_params_data+count, net_params_diff+count,
-                              rate, momentum, history_data+count);
-    }
-
-    size_t group_size = 16;
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (size_t idx = 0; idx < count; idx += group_size) {
-        const float *fnet_params_data  = net_params_data + idx;
-        float *fnet_params_diff        = net_params_diff + idx;
-        float *fhistory_data           = history_data    + idx;
-        __m512 operand1_v              = _mm512_loadu_ps(fnet_params_data);
-        __m512 operand2_v              = _mm512_loadu_ps(fnet_params_diff);
-        __m512 operand3_v              = _mm512_loadu_ps(fhistory_data);
-        __m512 decay_operand_v         = _mm512_set1_ps(decay);
-        __m512 rate_operand_v          = _mm512_set1_ps(rate);
-        __m512 momentum_operand_v      = _mm512_set1_ps(momentum);
-        __m512 decay_result            = _mm512_mul_ps(decay_operand_v, operand1_v);
-        __m512 axpy_result             = _mm512_add_ps(decay_result, operand2_v);
-        __m512 rate_result             = _mm512_mul_ps(rate_operand_v, axpy_result);
-        __m512 momentum_result         = _mm512_mul_ps(momentum_operand_v, operand3_v);
-        __m512 axpby_result            = _mm512_add_ps(rate_result, momentum_result);
-        _mm512_storeu_ps(fhistory_data, axpby_result);
-        _mm512_storeu_ps(fnet_params_diff, axpby_result);
-    }
-}
-
-template <>
-void avx512_axpy_axpby_copy<double>(size_t count, const double decay, const double* net_params_data, double* net_params_diff,
-                                    const double rate, const double momentum, double* history_data)
-{
-    // If count is smaller than 8 we use non-avx512 implementation
-    // 8 is the element number which one avx512 register can hold
-    if (count < 8) {
-        return axpy_axpby_copy(count, decay, net_params_data, net_params_diff,
-                               rate, momentum, history_data);
-    }
-
-    // If count can't be divided by 8, we handle tailing remainder
-    // with non-avx512 imeplementation
-    if (count % 8 != 0) {
-        size_t remainder = count % 8;
-        count -= remainder;
-        axpy_axpby_copy(remainder, decay, net_params_data+count, net_params_diff+count,
-                        rate, momentum, history_data+count);
-    }
-
-    size_t group_size = 8;
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (size_t idx = 0; idx < count; idx += group_size) {
-        const double *fnet_params_data  = net_params_data + idx;
-        double *fnet_params_diff        = net_params_diff + idx;
-        double *fhistory_data           = history_data    + idx;
-        __m512 operand1_v               = _mm512_loadu_pd(fnet_params_data);
-        __m512 operand2_v               = _mm512_loadu_pd(fnet_params_diff);
-        __m512 operand3_v               = _mm512_loadu_pd(fhistory_data);
-        __m512 decay_operand_v          = _mm512_set1_pd(decay);
-        __m512 rate_operand_v           = _mm512_set1_pd(rate);
-        __m512 momentum_operand_v       = _mm512_set1_pd(momentum);
-        __m512 decay_result             = _mm512_mul_pd(decay_operand_v, operand1_v);
-        __m512 axpy_result              = _mm512_add_pd(decay_result, operand2_v);
-        __m512 rate_result              = _mm512_mul_pd(rate_operand_v, axpy_result);
-        __m512 momentum_result          = _mm512_mul_pd(momentum_operand_v, operand3_v);
-        __m512 axpby_result             = _mm512_add_pd(rate_result, momentum_result);
-        _mm512_storeu_pd(fhistory_data, axpby_result);
-        _mm512_storeu_pd(fnet_params_diff, axpby_result);
-    }
 }
 
 
@@ -483,7 +390,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                         net_params[param_id]->mutable_prv_diff());
             */
 
-            avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+            axpy_axpby_copy(net_params[param_id]->count(), local_decay,
                                 net_params[param_id]->prv_data(), net_params[param_id]->mutable_prv_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data());
 
@@ -527,7 +434,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                       net_params[param_id]->mutable_cpu_diff());
           */
 
-          avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+          axpy_axpby_copy(net_params[param_id]->count(), local_decay,
                                 net_params[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data());
 
@@ -563,7 +470,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                   net_params[param_id]->mutable_cpu_diff());
       */
 
-      avx512_axpy_axpby_copy(net_params[param_id]->count(), local_decay,
+      axpy_axpby_copy(net_params[param_id]->count(), local_decay,
                                 temp_[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data());
       
