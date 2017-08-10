@@ -250,7 +250,7 @@ __kernel void TEMPLATE(lrn_full_no_scale,Dtype)(const int_tp nthreads, __global 
     const int_tp step = height * width;
     __global const Dtype* in_off = in + offset;
     __global Dtype* out_off = out + offset;
-    Dtype scale_val;
+    KERNEL_ARG_DTYPE scale_val;
     int_tp head = 0;
     const int_tp pre_pad = (size - 1) / 2;
     const int_tp post_pad = size - pre_pad - 1;

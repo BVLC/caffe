@@ -6526,7 +6526,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const int_tp step = height * width;",    // NOLINT
 "__global const Dtype* in_off = in + offset;",    // NOLINT
 "__global Dtype* out_off = out + offset;",    // NOLINT
-"Dtype scale_val;",    // NOLINT
+"KERNEL_ARG_DTYPE scale_val;",    // NOLINT
 "int_tp head = 0;",    // NOLINT
 "const int_tp pre_pad = (size - 1) / 2;",    // NOLINT
 "const int_tp post_pad = size - pre_pad - 1;",    // NOLINT
