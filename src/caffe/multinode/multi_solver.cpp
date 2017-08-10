@@ -198,7 +198,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 template <typename Dtype>
 Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
-  root_solver_->net()->ClearParamDiffs();
   for (int i = 0; i < iter_size; ++i) {
     loss += ForwardBackwardImpl(
       (i == 0), (i + 1 == iter_size));
