@@ -107,6 +107,14 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
         }
       }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+      if (this->device_->backend() == BACKEND_OpenCL) {
+        batch->data_.data().get()->async_gpu_push();
+        if (this->output_labels_) {
+          batch->label_.data().get()->async_gpu_push();
+        }
+      }
+#endif
 #endif  // !CPU_ONLY
       prefetch_full_.push(batch);
     }

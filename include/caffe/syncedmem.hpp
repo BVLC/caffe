@@ -98,6 +98,9 @@ class SyncedMemory {
 #ifdef USE_CUDA
   void async_gpu_push(const cudaStream_t& stream);
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+  void async_gpu_push();
+#endif //USE_GREENTEA
 #endif  // !CPU_ONLY
 
  private:
