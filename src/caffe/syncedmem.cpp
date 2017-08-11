@@ -397,8 +397,6 @@ void SyncedMemory::set_gpu_data(void* data) {
 #ifdef USE_GREENTEA
     CHECK(data);
     if (own_gpu_data_) {
-      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          device_->id());
       CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
           << "OpenCL memory corruption";
     }
