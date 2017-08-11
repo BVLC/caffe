@@ -675,11 +675,12 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
                            kernel_offset,
                            total_kernel_size - kernel_offset,
                            true, true);
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
-                           (cl_mem) bias_,
-                           bias_offset_,
-                           total_bias_size - bias_offset_,
-                           true, true);
+        if (this->bias_term_)
+          setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                             (cl_mem) bias_,
+                             bias_offset_,
+                             total_bias_size - bias_offset_,
+                             true, true);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) top_data,
                            output_image_offset,
@@ -746,7 +747,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
     kernel.arg(argIdx++, WrapHandle((cl_mem)this->input_transform_blob_.gpu_data(), &ctx));
     kernel.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
-    kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
+    if (this->bias_term_)
+      kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
     kernel.arg(argIdx++, WrapHandle((cl_mem)top[index]->mutable_gpu_data(), &ctx));
     kernel.arg(argIdx++, (uint16_t)(ALIGN(output_w_,4)*9));
     kernel.arg(argIdx++, (uint16_t)(ALIGN(output_h_,4)/4));
@@ -816,11 +818,12 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
                            kernel_offset,
                            total_kernel_size - kernel_offset,
                            true, true);
-        setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
-                           (cl_mem) bias_,
-                           bias_offset_,
-                           total_bias_size - bias_offset_,
-                           true, true);
+        if (this->bias_term_)
+          setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
+                             (cl_mem) bias_,
+                             bias_offset_,
+                             total_bias_size - bias_offset_,
+                             true, true);
         setBufferKernelArg(bottom, top, &kernel, argIdx++, &ctx,
                            (cl_mem) top_data,
                            output_image_offset,
@@ -891,7 +894,8 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
 
       kernel.arg(argIdx++, WrapHandle((cl_mem) bottom_data, &ctx));
       kernel.arg(argIdx++, WrapHandle((cl_mem) weight, &ctx));
-      kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
+      if (this->bias_term_)
+        kernel.arg(argIdx++, WrapHandle((cl_mem) bias_, &ctx));
       kernel.arg(argIdx++, WrapHandle((cl_mem) top_data, &ctx));
       kernel.arg(argIdx++, (uint16_t)width_);
       kernel.arg(argIdx++, (uint16_t)height_);
@@ -1145,7 +1149,8 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
         " -DKERNEL_WIDTH_DIV2=" << kernel_w_ / 2 <<
         " -DKERNEL_SLICE_DIV2=" << (kernel_w_ * kernel_h_) / 2 <<
         " -DTILE_N_LAST=" << M_ % 32 <<
-        " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8;
+        " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8 <<
+        " -D APPLY_BIAS=" << this->bias_term_;
 
   if (IsFusedWithEltwiseReLU()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
@@ -1424,7 +1429,8 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
                 << " -DTILE_Y=" << tile_y
                 << " -DTILE_Y_STRIDE=" << tile_y_stride
                 << " -DINVEC_SIZE=" << invec_size
-                << " -DALIGNED_NUM_FILTERS=" << ALIGN(M_, simd_size);
+                << " -DALIGNED_NUM_FILTERS=" << ALIGN(M_, simd_size)
+                << " -D APPLY_BIAS=" << this->bias_term_;
 
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
 

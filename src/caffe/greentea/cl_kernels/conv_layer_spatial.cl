@@ -22,6 +22,12 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(KERNEL_ARG_DTYPE arg) {
 #define ELTWISE_DATA_ARG
 #endif
 
+#if APPLY_BIAS
+#define BIAS_KERNEL_ARG __global Dtype * biases_base,
+#else
+#define BIAS_KERNEL_ARG
+#endif
+
 #define __CAT(x, y) x##y
 #define CAT(x, y) __CAT(x, y)
 #define LOOP0(VAR, STMT)
@@ -131,7 +137,7 @@ __kernel void DWCONV(
     NEGATIVE_SLOPE_ARG
     __global Dtype* image_data,
     __global Dtype* kernel_data,
-    __global Dtype* bias,
+    BIAS_KERNEL_ARG
     __global Dtype* convolved_image,
     const ushort input_width,
     const ushort input_height,
@@ -171,7 +177,7 @@ __kernel void DWCONV(
 
     #if APPLY_BIAS
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum + bias[biasIndex]);
+    ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex]);
     #else
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
     ACTIVATION_FUNCTION(convolved_image, offset, sum);
@@ -221,7 +227,7 @@ convolve_simd(
     NEGATIVE_SLOPE_ARG
     __global Dtype* inputs_base,
     filter_qualifier Dtype* weights_base,
-    __global Dtype* biases_base,
+    BIAS_KERNEL_ARG
     __global Dtype* outputs_base,
     const ushort input_width,
     const ushort input_height,
@@ -231,8 +237,6 @@ convolve_simd(
   __global Dtype* outputs = outputs_base;
   __global Dtype* inputs = inputs_base;
   filter_qualifier Dtype* weights = weights_base;
-  __global Dtype* biases = biases_base;
-
   uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row
   uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
@@ -390,7 +394,11 @@ convolve_simd(
   uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
   out_addr += or * output_width + oc;
   // we need this address calculation for biases because we support views and batching
-  Dtype bias = biases[fm];
+#if APPLY_BIAS
+  Dtype bias = biases_base[fm];
+#else
+  Dtype bias = 0;
+#endif
     for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {
       if (r + or >= output_height) break;
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
@@ -472,7 +480,7 @@ typedef struct half0 { half s0; } half0; //never used but makes compiler happy.
     NEGATIVE_SLOPE_ARG            \
     const __global Dtype *src0,   \
     const __global Dtype *src1,   \
-    const __global Dtype *biases, \
+    BIAS_KERNEL_ARG               \
     __global Dtype *dst,          \
     const ushort input_width,     \
     const ushort input_height,    \
@@ -660,16 +668,14 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
          + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
         __global Dtype *out = dst + out_offset;
+#if APPLY_BIAS
         Dtype bias[4];
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
-        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
-
-        // Avoid compiler issue.
-        if (group_x > 0xFFFFFFFEul) {
-          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
-        }
-
+        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+        const Dtype bias[4] = {0, 0, 0, 0};
+#endif
         if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
@@ -824,15 +830,14 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
          + ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset
          + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
         __global Dtype *out = dst + out_offset;
+#if APPLY_BIAS
         Dtype bias[4];
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
-        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
-
-        // Avoid compiler issue.
-        if (group_x > 0xFFFFFFFEul) {
-          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
-        }
+        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+        const Dtype bias[4] = {0, 0, 0, 0};
+#endif
         if (global_y * TILE_M < output_width * output_height )
         {
             for (int i = 0; i < 8; i++)
@@ -1058,13 +1063,14 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
          + ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
          + ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
+#if APPLY_BIAS
         Dtype bias[4];
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
-        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
-        if (group_x > 0xFFFFFFFEul) {
-          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
-        }
+        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+        const Dtype bias[4] = {0, 0, 0, 0};
+#endif
 
         if( global_y * TILE_M < output_width * output_height )
         {
@@ -1268,15 +1274,15 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
          + ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
         __global Dtype *out1 = dst + out1_offset;
 
+#if APPLY_BIAS
         Dtype bias[4];
         Dtype4 *bias_vec;
         bias_vec = (Dtype4*)bias;
-        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));
+        *bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+        const Dtype bias[4] = {0, 0, 0, 0};
+#endif
 
-        // Avoid compiler issue.
-        if (group_x > 0xFFFFFFFEul) {
-          dst[0] = bias[0] + bias[1] + bias[2] + bias[3];
-        }
         if( global_y * TILE_M < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
@@ -1521,14 +1527,15 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
      + ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset
     __global Dtype *out = dst + out_offset;
 
+#if APPLY_BIAS
     Dtype bias[2];
     Dtype2 *bias_vec;
     bias_vec = (Dtype2*)bias;
-    *bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));
-    // Work around a potential compiler bug.
-    if (group_x > 0xFFFFFFFEul) {
-      out[0] = bias[0] + bias[1];
-    }
+    *bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+    const Dtype bias[4] = {0, 0, 0, 0};
+#endif
+
     INTERLEAVED_SIMD16_OUTPUT(dst, out_offset, 0);
 }
 #endif
@@ -1728,14 +1735,14 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
          + ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset
          + ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset
 
+#if APPLY_BIAS
         Dtype bias[2];
         Dtype2 *bias_vec;
         bias_vec = (Dtype2*)bias;
-        *bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));
-        // Avoid compiler issue.
-        if (group_x > 0xFFFFFFFEul) {
-          dst[0] = bias[0] + bias[1];
-        }
+        *bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));
+#else
+        const Dtype bias[4] = {0, 0, 0, 0};
+#endif
         INTERLEAVED_SIMD16_OUTPUT(dst, out0_offset, 0);
         INTERLEAVED_SIMD16_OUTPUT(dst, out1_offset, 1);
     }
@@ -1871,7 +1878,7 @@ winograd_4x4(
     NEGATIVE_SLOPE_ARG
     __global Dtype* inputs_base,
     __read_only image2d_t weights_base,
-    __global Dtype* biases_base,
+    BIAS_KERNEL_ARG
     __global Dtype* outputs_base,
     const ushort input_width,
     const ushort input_height,
@@ -1880,7 +1887,6 @@ winograd_4x4(
 {
   __global Dtype* outputs = outputs_base;
   __global Dtype* inputs = inputs_base;
-  __global Dtype* biases = biases_base;
   uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column
   uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row
   uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth
@@ -2056,7 +2062,7 @@ winograd_4x4(
     uint_tp out_addr = fm * output_width * output_height;
     out_addr += or * output_width + oc;
 #if APPLY_BIAS
-    Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];
+    Dtype bias = biases_base[(fm % ALIGNED_NUM_FILTERS)];
 #else
     Dtype bias = 0.;
 #endif

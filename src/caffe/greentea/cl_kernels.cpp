@@ -734,6 +734,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define ELTWISE_DATA_ARG",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
+"#define BIAS_KERNEL_ARG __global Dtype * biases_base,",    // NOLINT
+"#else",    // NOLINT
+"#define BIAS_KERNEL_ARG",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "#define __CAT(x, y) x##y",    // NOLINT
 "#define CAT(x, y) __CAT(x, y)",    // NOLINT
 "#define LOOP0(VAR, STMT)",    // NOLINT
@@ -843,7 +849,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "NEGATIVE_SLOPE_ARG",    // NOLINT
 "__global Dtype* image_data,",    // NOLINT
 "__global Dtype* kernel_data,",    // NOLINT
-"__global Dtype* bias,",    // NOLINT
+"BIAS_KERNEL_ARG",    // NOLINT
 "__global Dtype* convolved_image,",    // NOLINT
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
@@ -883,7 +889,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum + bias[biasIndex]);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex]);",    // NOLINT
 "#else",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
 "ACTIVATION_FUNCTION(convolved_image, offset, sum);",    // NOLINT
@@ -933,7 +939,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "NEGATIVE_SLOPE_ARG",    // NOLINT
 "__global Dtype* inputs_base,",    // NOLINT
 "filter_qualifier Dtype* weights_base,",    // NOLINT
-"__global Dtype* biases_base,",    // NOLINT
+"BIAS_KERNEL_ARG",    // NOLINT
 "__global Dtype* outputs_base,",    // NOLINT
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
@@ -943,8 +949,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype* outputs = outputs_base;",    // NOLINT
 "__global Dtype* inputs = inputs_base;",    // NOLINT
 "filter_qualifier Dtype* weights = weights_base;",    // NOLINT
-"__global Dtype* biases = biases_base;",    // NOLINT
-"",    // NOLINT
 "uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column",    // NOLINT
 "uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row",    // NOLINT
 "uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth",    // NOLINT
@@ -1102,7 +1106,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "// we need this address calculation for biases because we support views and batching",    // NOLINT
-"Dtype bias = biases[fm];",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
+"Dtype bias = biases_base[fm];",    // NOLINT
+"#else",    // NOLINT
+"Dtype bias = 0;",    // NOLINT
+"#endif",    // NOLINT
 "for(uint_tp r = 0; r < OUT_BLOCK_HEIGHT; r++) {",    // NOLINT
 "if (r + or >= output_height) break;",    // NOLINT
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
@@ -1179,7 +1187,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define ROW_PITCH input_width",    // NOLINT
 "",    // NOLINT
 "",    // NOLINT
-"#define GEMM_LIKE_KERNEL_ARGS         ELTWISE_DATA_ARG                  NEGATIVE_SLOPE_ARG                const __global Dtype *src0,       const __global Dtype *src1,       const __global Dtype *biases,     __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
+"#define GEMM_LIKE_KERNEL_ARGS         ELTWISE_DATA_ARG                  NEGATIVE_SLOPE_ARG                const __global Dtype *src0,       const __global Dtype *src1,       BIAS_KERNEL_ARG                   __global Dtype *dst,              const ushort input_width,         const ushort input_height,        const ushort output_width,        const ushort output_height,       const int_tp out_pitch_y,         const int_tp out_pitch_z,         const int_tp aligned_input_size,     const int_tp slice_pitch",    // NOLINT
 "",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
@@ -1348,16 +1356,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
 "__global Dtype *out = dst + out_offset;",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[4];",    // NOLINT
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
-"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"",    // NOLINT
-"// Avoid compiler issue.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
-"}",    // NOLINT
-"",    // NOLINT
+"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
@@ -1512,15 +1518,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M ) / output_width + OUT_PADDING_HEIGHT) * OUT_PITCH_X  // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "__global Dtype *out = dst + out_offset;",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[4];",    // NOLINT
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
-"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"",    // NOLINT
-"// Avoid compiler issue.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
-"}",    // NOLINT
+"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
 "if (global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
@@ -1736,13 +1741,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[4];",    // NOLINT
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
-"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
-"}",    // NOLINT
+"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
 "if( global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
@@ -1946,15 +1952,15 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "__global Dtype *out1 = dst + out1_offset;",    // NOLINT
 "",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[4];",    // NOLINT
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
-"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
+"*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
 "",    // NOLINT
-"// Avoid compiler issue.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
-"}",    // NOLINT
 "if( global_y * TILE_M < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
@@ -2127,14 +2133,15 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "__global Dtype *out = dst + out_offset;",    // NOLINT
 "",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[2];",    // NOLINT
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
-"*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"// Work around a potential compiler bug.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"out[0] = bias[0] + bias[1];",    // NOLINT
-"}",    // NOLINT
+"*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out_offset, 0);",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
@@ -2316,14 +2323,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "+ ( ( global_y * TILE_M + 1 ) / output_width + OUT_PADDING_HEIGHT ) * OUT_PITCH_X // y offset",    // NOLINT
 "+ ( ( global_y * TILE_M + 1 ) % output_width ) + OUT_PADDING_LEFT;               // x offset",    // NOLINT
 "",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
 "Dtype bias[2];",    // NOLINT
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
-"*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases + group_x * TILE_N));",    // NOLINT
-"// Avoid compiler issue.",    // NOLINT
-"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
-"dst[0] = bias[0] + bias[1];",    // NOLINT
-"}",    // NOLINT
+"*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"#else",    // NOLINT
+"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"#endif",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out0_offset, 0);",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out1_offset, 1);",    // NOLINT
 "}",    // NOLINT
@@ -2459,7 +2466,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "NEGATIVE_SLOPE_ARG",    // NOLINT
 "__global Dtype* inputs_base,",    // NOLINT
 "__read_only image2d_t weights_base,",    // NOLINT
-"__global Dtype* biases_base,",    // NOLINT
+"BIAS_KERNEL_ARG",    // NOLINT
 "__global Dtype* outputs_base,",    // NOLINT
 "const ushort input_width,",    // NOLINT
 "const ushort input_height,",    // NOLINT
@@ -2468,7 +2475,6 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "__global Dtype* outputs = outputs_base;",    // NOLINT
 "__global Dtype* inputs = inputs_base;",    // NOLINT
-"__global Dtype* biases = biases_base;",    // NOLINT
 "uint_tp oc = get_global_id(0) * OUT_BLOCK_WIDTH;  // oc = Output Column",    // NOLINT
 "uint_tp or = get_global_id(1) * OUT_BLOCK_HEIGHT;// or = Output Row",    // NOLINT
 "uint_tp fm = get_global_id(2);// fm = Feature Map = od = Output Depth",    // NOLINT
@@ -2644,7 +2650,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
-"Dtype bias = biases[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"Dtype bias = biases_base[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
 "#else",    // NOLINT
 "Dtype bias = 0.;",    // NOLINT
 "#endif",    // NOLINT
