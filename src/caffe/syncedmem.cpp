@@ -395,7 +395,16 @@ void SyncedMemory::set_gpu_data(void* data) {
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    // TODO: Implement OpenCL - OpenCL and OpenCL - CUDA data sharing
+    CHECK(data);
+    if (own_gpu_data_) {
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          device_->id());
+      CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
+          << "OpenCL memory corruption";
+    }
+    gpu_ptr_ = data;
+    head_ = HEAD_AT_GPU;
+    own_gpu_data_ = false;
 #endif  // USE_GREENTEA
   }
 #else
@@ -438,6 +447,29 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   head_ = SYNCED;
 }
 #endif  // USE_CUDA
+
+#ifdef USE_GREENTEA
+void SyncedMemory::async_gpu_push() {
+  check_device();
+  CHECK(head_ == HEAD_AT_CPU);
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+      device_->id());
+  if (cl_gpu_mem_ == nullptr) {
+    cl_int err;
+    cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                 size_, nullptr, &err);
+    CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                  << size_ << " failed.";
+      own_gpu_data_ = true;
+      device_->IncreaseMemoryUsage(size_);
+      gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
+  }
+  greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
+  ctx.get_queue().finish();
+  head_ = SYNCED;
+
+}
+#endif
 #endif  // !CPU_ONLY
 
 void SyncedMemory::check_device() {
