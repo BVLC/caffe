@@ -105,8 +105,10 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef FW_OVERLAP_OPT
-    if (first && (IsSkipWaitGradient(i) == false)) {
+    if (first) {
       while (layer_finished_flags_[i] == false) {
+        if (IsSkipWaitGradient(i))
+         break;
         WaitAndUpdateGradient(i);
         if (layer_finished_flags_[i])
           break;
@@ -167,6 +169,10 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   if (last) {
 #endif
       for (int i = 0; i < layers.size(); ++i) {
+#ifdef FW_OVERLAP_OPT
+        if (layer_finished_flags_[i])
+          continue;
+#endif
         if (IsSkipWaitGradient(i)) {
 #ifdef FW_OVERLAP_OPT
           finished_count++;
@@ -174,10 +180,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #endif
           continue;
         }
-#ifdef FW_OVERLAP_OPT
-        if (layer_finished_flags_[i])
-          continue;
-#endif
 
         WaitAndUpdateGradient(i);
 #ifdef FW_OVERLAP_OPT
