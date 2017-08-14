@@ -547,6 +547,22 @@ int time() {
   const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
+
+  // Warm up 5 iterations here, because the first several iteration times
+  // have huge variance in some machines.
+  int warmup_iterations = 5;
+  for (int j = 0; j < warmup_iterations; ++j) {
+    for (int i = 0; i < layers.size(); ++i) {
+      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+    }
+    if (!FLAGS_forward_only) {
+      for (int i = layers.size() - 1; i >= 0; --i) {
+        layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
+                            bottom_vecs[i]);
+      }
+    }
+  }
+
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;
