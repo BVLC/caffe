@@ -1,3 +1,6 @@
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"

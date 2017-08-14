@@ -10,6 +10,9 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#define HDF5_DATA_DATASET_NAME "data"
+#define HDF5_DATA_LABEL_NAME "label"
+
 namespace caffe {
 
 /**
@@ -798,6 +801,46 @@ class PReLULayer : public NeuronLayer<Dtype> {
   bool channel_shared_;
   Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
   Blob<Dtype> backward_buff_;  // temporary buffer for backward computation
+  Blob<Dtype> bottom_memory_;  // memory for in-place computation
+};
+
+template <typename Dtype>
+class SReLULayer : public NeuronLayer<Dtype> {
+ public:
+
+  explicit SReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "SReLU"; }
+
+ protected:
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool thresh_channel_shared_;
+  bool pslope_channel_shared_;
+  bool nslope_channel_shared_;
+  bool nthresh_channel_shared_;
+  Dtype negative_slope_;
+  Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
+  Blob<Dtype> thresh_backward_buff_;  // temporary buffer for backward computation
+  Blob<Dtype> pslope_backward_buff_;
+  Blob<Dtype> nslope_backward_buff_;
+  Blob<Dtype> nthresh_backward_buff_;
   Blob<Dtype> bottom_memory_;  // memory for in-place computation
 };
 

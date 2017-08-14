@@ -2,10 +2,8 @@
 
 SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   /usr/include
-  /usr/include/openblas
   /usr/include/openblas-base
   /usr/local/include
-  /usr/local/include/openblas
   /usr/local/include/openblas-base
   /opt/OpenBLAS/include
   $ENV{OpenBLAS_HOME}

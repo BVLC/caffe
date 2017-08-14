@@ -6,6 +6,15 @@
 
 namespace caffe {
 
+InternalThread::InternalThread()
+    : thread_(),
+      device_(),
+      mode_(),
+      rand_seed_(),
+      solver_count_(),
+      root_solver_() {
+}
+
 InternalThread::~InternalThread() {
   StopInternalThread();
 }
@@ -19,34 +28,34 @@ bool InternalThread::must_stop() {
 }
 
 void InternalThread::StartInternalThread() {
-  CHECK(!is_started()) << "Threads should persist and not be restarted.";
+  // TODO switch to failing once Caffe prefetch thread is persistent.
+  // Threads should not be started and stopped repeatedly.
+  // CHECK(!is_started());
+  StopInternalThread();
 
-  int device = 0;
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaGetDevice(&device));
+  CUDA_CHECK(cudaGetDevice(&device_));
 #endif
-  Caffe::Brew mode = Caffe::mode();
-  int rand_seed = caffe_rng_rand();
-  int solver_count = Caffe::solver_count();
-  bool root_solver = Caffe::root_solver();
+  mode_ = Caffe::mode();
+  rand_seed_ = caffe_rng_rand();
+  solver_count_ = Caffe::solver_count();
+  root_solver_ = Caffe::root_solver();
 
   try {
-    thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
-          rand_seed, solver_count, root_solver));
+    thread_.reset(new boost::thread(&InternalThread::entry, this));
   } catch (std::exception& e) {
-    LOG(FATAL) << "Thread exception: " << e.what();
+    CHECK(false) << e.what();
   }
 }
 
-void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
-    int solver_count, bool root_solver) {
+void InternalThread::entry() {
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaSetDevice(device));
+  CUDA_CHECK(cudaSetDevice(device_));
 #endif
-  Caffe::set_mode(mode);
-  Caffe::set_random_seed(rand_seed);
-  Caffe::set_solver_count(solver_count);
-  Caffe::set_root_solver(root_solver);
+  Caffe::set_mode(mode_);
+  Caffe::set_random_seed(rand_seed_);
+  Caffe::set_solver_count(solver_count_);
+  Caffe::set_root_solver(root_solver_);
 
   InternalThreadEntry();
 }
@@ -58,7 +67,7 @@ void InternalThread::StopInternalThread() {
       thread_->join();
     } catch (boost::thread_interrupted&) {
     } catch (std::exception& e) {
-      LOG(FATAL) << "Thread exception: " << e.what();
+      CHECK(false) << e.what();
     }
   }
 }

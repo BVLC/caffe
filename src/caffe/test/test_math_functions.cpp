@@ -1,6 +1,8 @@
 #include <stdint.h>  // for uint32_t & uint64_t
 #include <time.h>
+#include <climits>
 #include <cmath>  // for std::fabs
+#include <cstdlib>  // for rand_r
 
 #include "gtest/gtest.h"
 

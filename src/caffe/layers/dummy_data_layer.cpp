@@ -1,7 +1,8 @@
 #include <vector>
 
-#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 

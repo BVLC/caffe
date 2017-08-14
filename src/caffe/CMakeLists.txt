@@ -15,6 +15,7 @@ caffe_pickup_caffe_sources(${PROJECT_SOURCE_DIR})
 if(HAVE_CUDA)
   caffe_cuda_compile(cuda_objs ${cuda})
   list(APPEND srcs ${cuda_objs} ${cuda})
+  list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20; -std=c++11")
 endif()
 
 add_library(caffe ${srcs})

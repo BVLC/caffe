@@ -7,19 +7,6 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
-# uncomment to disable IO dependencies and corresponding data layers
-# USE_OPENCV := 0
-# USE_LEVELDB := 0
-# USE_LMDB := 0
-
-# uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
-#	You should not set this flag if you will be reading LMDBs with any
-#	possibility of simultaneous read and write
-# ALLOW_LMDB_NOLOCK := 1
-
-# Uncomment if you're using OpenCV 3
-# OPENCV_VERSION := 3
-
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
@@ -56,7 +43,7 @@ BLAS := atlas
 
 # This is required only if you will compile the matlab interface.
 # MATLAB directory should contain the mex binary in /bin.
-# MATLAB_DIR := /usr/local
+MATLAB_DIR := /home/jinxiaojie/matlab/R2013a/bin
 # MATLAB_DIR := /Applications/MATLAB_R2012b.app
 
 # NOTE: this is required only if you will compile the python interface.
@@ -104,3 +91,7 @@ TEST_GPUID := 0
 
 # enable pretty build (comment to see full commands)
 Q ?= @
+
+# Adds timing info in logs
+# BENCHMARK_DATA := 1
+# BENCHMARK_SOLVER := 1

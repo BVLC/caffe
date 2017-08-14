@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -38,11 +39,7 @@ class AccuracyLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "Accuracy"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-
-  // If there are two top blobs, then the second blob will contain
-  // accuracies per class.
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -89,8 +86,6 @@ class AccuracyLayer : public Layer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
-  /// Keeps counts of the number of samples per class.
-  Blob<Dtype> nums_buffer_;
 };
 
 /**
@@ -132,10 +127,10 @@ class LossLayer : public Layer<Dtype> {
 
 /**
  * @brief Computes the contrastive loss @f$
- *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
- *              \left(1-y\right) \max \left(margin-d, 0\right)^2
+ *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
+ *              \left(1-y\right) \max \left(margin-d, 0\right)
  *          @f$ where @f$
- *          d = \left| \left| a_n - b_n \right| \right|_2 @f$. This can be
+ *          d = \left| \left| a_n - b_n \right| \right|_2^2 @f$. This can be
  *          used to train siamese networks.
  *
  * @param bottom input Blob vector (length 3)
@@ -148,10 +143,10 @@ class LossLayer : public Layer<Dtype> {
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed contrastive loss: @f$ E =
- *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
- *          \left(1-y\right) \max \left(margin-d, 0\right)^2
+ *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
+ *          \left(1-y\right) \max \left(margin-d, 0\right)
  *          @f$ where @f$
- *          d = \left| \left| a_n - b_n \right| \right|_2 @f$.
+ *          d = \left| \left| a_n - b_n \right| \right|_2^2 @f$.
  * This can be used to train siamese networks.
  */
 template <typename Dtype>
@@ -711,6 +706,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+  /// @copydoc SoftmaxWithLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -747,12 +743,6 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  /// Read the normalization mode parameter and compute the normalizer based
-  /// on the blob size.  If normalization_mode is VALID, the count of valid
-  /// outputs will be read from valid_count, unless it is -1 in which case
-  /// all outputs are assumed to be valid.
-  virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
@@ -766,8 +756,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
-  /// How to normalize the output loss.
-  LossParameter_NormalizationMode normalization_;
+  /// Whether to normalize the loss by the total number of values present
+  /// (otherwise just by the batch size).
+  bool normalize_;
 
   int softmax_axis_, outer_num_, inner_num_;
 };

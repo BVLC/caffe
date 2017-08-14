@@ -3,7 +3,11 @@
 #endif
 #include <glog/logging.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
+#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -23,7 +27,7 @@ enum Op {
 };
 
 template<typename Dtype>
-static void apply_buffers(const vector<Blob<Dtype>*>& blobs,
+static void apply_buffers(const vector<shared_ptr<Blob<Dtype> > >& blobs,
                           Dtype* buffer, size_t total_size, Op op) {
   Dtype* ptr = buffer;
   for (int i = 0; i < blobs.size(); ++i) {
@@ -51,24 +55,21 @@ static void apply_buffers(const vector<Blob<Dtype>*>& blobs,
     }
     ptr += size;
   }
-  // total_size is at least one byte
-  CHECK_EQ(total_size, (ptr == buffer ? 1 : ptr - buffer));
+  CHECK_EQ(total_size, ptr - buffer);
 }
 
 // Buffer size necessary to store given blobs
 template<typename Dtype>
-static size_t total_size(const vector<Blob<Dtype>*>& params) {
+static size_t total_size(const vector<shared_ptr<Blob<Dtype> > >& params) {
   size_t size = 0;
   for (int i = 0; i < params.size(); ++i)
     size += params[i]->count();
-  // Size have at least one byte, otherwise cudaMalloc fails if net has no
-  // learnable parameters.
-  return (size > 0) ? size : 1;
+  return size;
 }
 
 template<typename Dtype>
 Params<Dtype>::Params(shared_ptr<Solver<Dtype> > root_solver)
-    : size_(total_size<Dtype>(root_solver->net()->learnable_params())),
+    : size_(total_size<Dtype>(root_solver->net()->params())),
       data_(),
       diff_() {
 }
@@ -85,8 +86,7 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   CUDA_CHECK(cudaMalloc(&data_, size_ * sizeof(Dtype)));
 
   // Copy blob values
-  const vector<Blob<Dtype>*>& net =
-      root_solver->net()->learnable_params();
+  const vector<shared_ptr<Blob<Dtype> > >& net = root_solver->net()->params();
   apply_buffers(net, data_, size_, copy);
 
   CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
@@ -108,33 +108,29 @@ GPUParams<Dtype>::~GPUParams() {
 
 template<typename Dtype>
 void GPUParams<Dtype>::configure(Solver<Dtype>* solver) const {
-  const vector<Blob<Dtype>*>& net =
-      solver->net()->learnable_params();
+  const vector<shared_ptr<Blob<Dtype> > >& net = solver->net()->params();
   apply_buffers(net, data_, size_, replace_gpu);
   apply_buffers(net, diff_, size_, replace_gpu_diff);
 }
+
+//
 
 void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
   vector<int> remaining(devices);
 
-  // Depth for reduction tree
-  int remaining_depth = static_cast<int>(ceil(log2(remaining.size())));
-
   // Group GPUs by board
-  for (int d = 0; d < remaining_depth; ++d) {
-    for (int i = 0; i < remaining.size(); ++i) {
-      for (int j = i + 1; j < remaining.size(); ++j) {
-        cudaDeviceProp a, b;
-        CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
-        CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
-        if (a.isMultiGpuBoard && b.isMultiGpuBoard) {
-          if (a.multiGpuBoardGroupID == b.multiGpuBoardGroupID) {
-            pairs->push_back(DevicePair(remaining[i], remaining[j]));
-            DLOG(INFO) << "GPU board: " << remaining[i] << ":" << remaining[j];
-            remaining.erase(remaining.begin() + j);
-            break;
-          }
+  for (int i = 0; i < remaining.size(); ++i) {
+    for (int j = i + 1; j < remaining.size(); ++j) {
+      cudaDeviceProp a, b;
+      CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
+      CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
+      if (a.isMultiGpuBoard && b.isMultiGpuBoard) {
+        if (a.multiGpuBoardGroupID == b.multiGpuBoardGroupID) {
+          pairs->push_back(DevicePair(remaining[i], remaining[j]));
+          DLOG(INFO) << "GPU board: " << remaining[i] << ":" << remaining[j];
+          remaining.erase(remaining.begin() + j);
+          break;
         }
       }
     }
@@ -146,19 +142,15 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   DLOG(INFO) << "GPUs paired by boards, remaining: " << s.str();
 
   // Group by P2P accessibility
-  remaining_depth = ceil(log2(remaining.size()));
-  for (int d = 0; d < remaining_depth; ++d) {
-    for (int i = 0; i < remaining.size(); ++i) {
-      for (int j = i + 1; j < remaining.size(); ++j) {
-        int access;
-        CUDA_CHECK(
-            cudaDeviceCanAccessPeer(&access, remaining[i], remaining[j]));
-        if (access) {
-          pairs->push_back(DevicePair(remaining[i], remaining[j]));
-          DLOG(INFO) << "P2P pair: " << remaining[i] << ":" << remaining[j];
-          remaining.erase(remaining.begin() + j);
-          break;
-        }
+  for (int i = 0; i < remaining.size(); ++i) {
+    for (int j = i + 1; j < remaining.size(); ++j) {
+      int access;
+      CUDA_CHECK(cudaDeviceCanAccessPeer(&access, remaining[i], remaining[j]));
+      if (access) {
+        pairs->push_back(DevicePair(remaining[i], remaining[j]));
+        DLOG(INFO) << "P2P pair: " << remaining[i] << ":" << remaining[j];
+        remaining.erase(remaining.begin() + j);
+        break;
       }
     }
   }
@@ -169,19 +161,15 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   DLOG(INFO) << "GPUs paired by P2P access, remaining: " << s.str();
 
   // Group remaining
-  remaining_depth = ceil(log2(remaining.size()));
-  for (int d = 0; d < remaining_depth; ++d) {
-    for (int i = 0; i < remaining.size(); ++i) {
-      pairs->push_back(DevicePair(remaining[i], remaining[i + 1]));
-      DLOG(INFO) << "Remaining pair: " << remaining[i] << ":"
-                 << remaining[i + 1];
-      remaining.erase(remaining.begin() + i + 1);
+  for (int i = 0; i < remaining.size(); ++i) {
+    for (int j = i + 1; j < remaining.size(); ++j) {
+      pairs->push_back(DevicePair(remaining[i], remaining[j]));
+      DLOG(INFO) << "Remaining pair: " << remaining[i] << ":" << remaining[j];
+      remaining.erase(remaining.begin() + j);
+      break;
     }
   }
-
-  // Should only be the parent node remaining
   CHECK_EQ(remaining.size(), 1);
-
   pairs->insert(pairs->begin(), DevicePair(-1, remaining[0]));
 
   CHECK(pairs->size() == devices.size());
@@ -217,7 +205,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     solver_ = root_solver;
   } else {
     Caffe::set_root_solver(false);
-    solver_.reset(new WorkerSolver<Dtype>(param, root_solver.get()));
+    solver_.reset(new WorkerSolver<Dtype>(param));
     Caffe::set_root_solver(true);
   }
   this->configure(solver_.get());
@@ -284,7 +272,7 @@ void P2PSync<Dtype>::InternalThreadEntry() {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::on_start() {
+void P2PSync<Dtype>::on_start(Timer* timer, ostringstream* timing) {
 #ifndef CPU_ONLY
 #ifdef DEBUG
   int device;
@@ -296,12 +284,17 @@ void P2PSync<Dtype>::on_start() {
 
   // Wait for update from parent
   if (parent_) {
+    timer->Start();
     P2PSync<Dtype> *parent = queue_.pop();
     CHECK(parent == parent_);
+    *timing << " recv_param: " << timer->MilliSeconds();
   }
 
   // Update children
-  for (int i = children_.size() - 1; i >= 0; i--) {
+  if (children_.size()) {
+    timer->Start();
+  }
+  for (int i = 0; i < children_.size(); ++i) {
     Dtype* src = data_;
     Dtype* dst = children_[i]->data_;
 
@@ -313,16 +306,23 @@ void P2PSync<Dtype>::on_start() {
     CHECK(attributes.device == children_[i]->solver_->param().device_id());
 #endif
 
-    CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),
+    CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),  //
         cudaMemcpyDeviceToDevice, cudaStreamDefault));
+  }
+  if (children_.size()) {
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+  }
+  for (int i = 0; i < children_.size(); ++i) {
     children_[i]->queue_.push(this);
+  }
+  if (children_.size()) {
+    *timing << " send_param: " << timer->MilliSeconds();
   }
 #endif
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::on_gradients_ready() {
+void P2PSync<Dtype>::on_gradients_ready(Timer* timer, ostringstream* timing) {
 #ifndef CPU_ONLY
 #ifdef DEBUG
   int device;
@@ -332,6 +332,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
 
   // Sum children gradients as they appear in the queue
   for (int i = 0; i < children_.size(); ++i) {
+    timer->Start();
     P2PSync<Dtype> *child = queue_.pop();
     Dtype* src = child->parent_grads_;
     Dtype* dst = diff_;
@@ -352,10 +353,12 @@ void P2PSync<Dtype>::on_gradients_ready() {
 #endif
 
     caffe_gpu_add(size_, src, dst, dst);
+    *timing << " add_grad: " << timer->MilliSeconds();
   }
 
   // Send gradients to parent
   if (parent_) {
+    timer->Start();
     Dtype* src = diff_;
     Dtype* dst = parent_grads_;
 
@@ -371,6 +374,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
         cudaMemcpyDeviceToDevice, cudaStreamDefault));
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
     parent_->queue_.push(this);
+    *timing << " send_grad: " << timer->MilliSeconds();
   } else {
     // Loss functions divide gradients by the batch size, so to compensate
     // for split batch, the root solver divides by number of solvers.
@@ -435,3 +439,4 @@ INSTANTIATE_CLASS(GPUParams);
 INSTANTIATE_CLASS(P2PSync);
 
 }  // namespace caffe
+

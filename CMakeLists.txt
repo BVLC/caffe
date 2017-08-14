@@ -1,10 +1,4 @@
 cmake_minimum_required(VERSION 2.8.7)
-if(POLICY CMP0046)
-  cmake_policy(SET CMP0046 NEW)
-endif()
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
-endif()
 
 # ---[ Caffe project
 project(Caffe C CXX)
@@ -21,25 +15,24 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
-caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
+caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA support" OFF) # TODO: rename to USE_CUDA
+caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONLY)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
-set(python_version "2" CACHE STRING "Specify which Python version to use")
+set(python_version "2" CACHE STRING "Specify which python version to use")
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
-caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
-caffe_option(USE_OPENCV "Build with OpenCV support" ON)
-caffe_option(USE_LEVELDB "Build with levelDB" ON)
-caffe_option(USE_LMDB "Build with lmdb" ON)
-caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
+caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 
+list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-DVERBOSE")
+SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
+
 # ---[ Flags
 if(UNIX OR APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11")
 endif()
 
 if(USE_libstdcpp)
@@ -71,12 +64,6 @@ add_subdirectory(docs)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
-
-# ---[ pytest target
-if(BUILD_python)
-  add_custom_target(pytest COMMAND python${python_version} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )
-  add_dependencies(pytest pycaffe)
-endif()
 
 # ---[ Configuration summary
 caffe_print_configuration_summary()

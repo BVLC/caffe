@@ -1,8 +1,3 @@
-#ifdef WITH_PYTHON_LAYER
-#include "boost/python.hpp"
-namespace bp = boost::python;
-#endif
-
 #include <glog/logging.h>
 
 #include <cstring>
@@ -12,7 +7,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/util/signal_handler.h"
+
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -24,6 +19,28 @@ using caffe::string;
 using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
+
+vector<string> GOOGLENET_BLOBS={
+   "conv1/7x7_s2", "conv2/3x3_reduce", "conv2/3x3",
+   "inception_3a/1x1", "inception_3a/3x3_reduce", "inception_3a/3x3",
+       "inception_3a/5x5_reduce", "inception_3a/5x5", "inception_3a/pool_proj",
+   "inception_3b/1x1", "inception_3b/3x3_reduce", "inception_3b/3x3",
+       "inception_3b/5x5_reduce", "inception_3b/5x5", "inception_3b/pool_proj",
+   "inception_4a/1x1", "inception_4a/3x3_reduce", "inception_4a/3x3",
+       "inception_4a/5x5_reduce", "inception_4a/5x5", "inception_4a/pool_proj",
+   "inception_4b/1x1", "inception_4b/3x3_reduce", "inception_4b/3x3",
+       "inception_4b/5x5_reduce", "inception_4b/5x5", "inception_4b/pool_proj",
+   "inception_4c/1x1", "inception_4c/3x3_reduce", "inception_4c/3x3",
+       "inception_4c/5x5_reduce", "inception_4c/5x5", "inception_4c/pool_proj",
+   "inception_4d/1x1", "inception_4d/3x3_reduce", "inception_4d/3x3",
+       "inception_4d/5x5_reduce", "inception_4d/5x5", "inception_4d/pool_proj",
+   "inception_4e/1x1", "inception_4e/3x3_reduce", "inception_4e/3x3",
+       "inception_4e/5x5_reduce", "inception_4e/5x5", "inception_4e/pool_proj",
+   "inception_5a/1x1", "inception_5a/3x3_reduce", "inception_5a/3x3",
+       "inception_5a/5x5_reduce", "inception_5a/5x5", "inception_5a/pool_proj",
+   "inception_5b/1x1", "inception_5b/3x3_reduce", "inception_5b/3x3",
+       "inception_5b/5x5_reduce", "inception_5b/5x5", "inception_5b/pool_proj"
+};
 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
@@ -40,12 +57,6 @@ DEFINE_string(weights, "",
     "separated by ','. Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
-DEFINE_string(sigint_effect, "stop",
-             "Optional; action to take when a SIGINT signal is received: "
-              "snapshot, stop or none.");
-DEFINE_string(sighup_effect, "snapshot",
-             "Optional; action to take when a SIGHUP signal is received: "
-             "snapshot, stop or none.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -133,22 +144,6 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
   }
 }
 
-// Translate the signal effect the user specified on the command-line to the
-// corresponding enumeration.
-caffe::SolverAction::Enum GetRequestedAction(
-    const std::string& flag_value) {
-  if (flag_value == "stop") {
-    return caffe::SolverAction::STOP;
-  }
-  if (flag_value == "snapshot") {
-    return caffe::SolverAction::SNAPSHOT;
-  }
-  if (flag_value == "none") {
-    return caffe::SolverAction::NONE;
-  }
-  LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
-}
-
 // Train / Finetune a model.
 int train() {
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
@@ -157,24 +152,19 @@ int train() {
       "but not both.";
 
   caffe::SolverParameter solver_param;
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
+  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
   if (FLAGS_gpu.size() == 0
-      && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
-      if (solver_param.has_device_id()) {
-          FLAGS_gpu = ""  +
-              boost::lexical_cast<string>(solver_param.device_id());
-      } else {  // Set default GPU if unspecified
-          FLAGS_gpu = "" + boost::lexical_cast<string>(0);
-      }
+      && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU
+      && solver_param.has_device_id()) {
+    FLAGS_gpu = "" + boost::lexical_cast<string>(solver_param.device_id());
   }
 
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() == 0) {
-    LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   } else {
     ostringstream s;
@@ -189,14 +179,7 @@ int train() {
     Caffe::set_solver_count(gpus.size());
   }
 
-  caffe::SignalHandler signal_handler(
-        GetRequestedAction(FLAGS_sigint_effect),
-        GetRequestedAction(FLAGS_sighup_effect));
-
-  shared_ptr<caffe::Solver<float> >
-      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
-
-  solver->SetActionFunction(signal_handler.GetActionFunction());
+  shared_ptr<Solver<float> > solver(caffe::GetSolver<float>(solver_param));
 
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
@@ -208,6 +191,7 @@ int train() {
   if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     sync.run(gpus);
+    LOG(INFO) << "GPU size larger than 1";
   } else {
     LOG(INFO) << "Starting Optimization";
     solver->Solve();
@@ -262,6 +246,8 @@ int test() {
         const std::string& output_name = caffe_net.blob_names()[
             caffe_net.output_blob_indices()[j]];
         LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        for (int i=0; i<GOOGLENET_BLOBS.size(); i++)
+          caffe_net.show_blob_mean( GOOGLENET_BLOBS[i] );
       }
     }
   }
@@ -389,16 +375,7 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {
-#ifdef WITH_PYTHON_LAYER
-    try {
-#endif
-      return GetBrewFunction(caffe::string(argv[1]))();
-#ifdef WITH_PYTHON_LAYER
-    } catch (bp::error_already_set) {
-      PyErr_Print();
-      return 1;
-    }
-#endif
+    return GetBrewFunction(caffe::string(argv[1]))();
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }

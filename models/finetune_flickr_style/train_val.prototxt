@@ -370,6 +370,12 @@ layer {
   }
 }
 layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc8_flickr"
+  bottom: "label"
+}
+layer {
   name: "accuracy"
   type: "Accuracy"
   bottom: "fc8_flickr"
@@ -378,11 +384,4 @@ layer {
   include {
     phase: TEST
   }
-}
-layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
-  bottom: "fc8_flickr"
-  bottom: "label"
-  top: "loss"
 }

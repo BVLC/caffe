@@ -41,7 +41,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -78,18 +77,8 @@ class LayerRegistry {
     const string& type = param.type();
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
-        << " (known types: " << LayerTypeListString() << ")";
+        << " (known types: " << LayerTypeList() << ")";
     return registry[type](param);
-  }
-
-  static vector<string> LayerTypeList() {
-    CreatorRegistry& registry = Registry();
-    vector<string> layer_types;
-    for (typename CreatorRegistry::iterator iter = registry.begin();
-         iter != registry.end(); ++iter) {
-      layer_types.push_back(iter->first);
-    }
-    return layer_types;
   }
 
  private:
@@ -97,17 +86,17 @@ class LayerRegistry {
   // static variables.
   LayerRegistry() {}
 
-  static string LayerTypeListString() {
-    vector<string> layer_types = LayerTypeList();
-    string layer_types_str;
-    for (vector<string>::iterator iter = layer_types.begin();
-         iter != layer_types.end(); ++iter) {
-      if (iter != layer_types.begin()) {
-        layer_types_str += ", ";
+  static string LayerTypeList() {
+    CreatorRegistry& registry = Registry();
+    string layer_types;
+    for (typename CreatorRegistry::iterator iter = registry.begin();
+         iter != registry.end(); ++iter) {
+      if (iter != registry.begin()) {
+        layer_types += ", ";
       }
-      layer_types_str += *iter;
+      layer_types += iter->first;
     }
-    return layer_types_str;
+    return layer_types;
   }
 };
 

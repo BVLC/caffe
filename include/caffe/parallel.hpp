@@ -96,8 +96,8 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   void run(const vector<int>& gpus);
 
  protected:
-  void on_start();
-  void on_gradients_ready();
+  void on_start(Timer* timer, ostringstream* timing);
+  void on_gradients_ready(Timer* timer, ostringstream* timing);
 
   void InternalThreadEntry();
 
