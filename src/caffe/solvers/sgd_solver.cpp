@@ -212,10 +212,9 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
 #ifdef ENABLE_SGD_FUSION
   if (Caffe::mode() == Caffe::CPU) 
   {
-    //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Fusion for SGD";
-    Normalize_Regularize_ComputeUpdateValue_Fusion(param_id, rate);
-    this->net_->learnable_params()[param_id]->Update();
+    //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
+    //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
+    SGDFusion(param_id, rate);
     return;
   }
 #endif /* ENABLE_SGD_FUSION */
@@ -242,6 +241,8 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
 
 #ifdef ENABLE_SGD_FUSION
 //Math function for fusion
+//Function 1: axpy_axpby_copy
+//Start: For L1 Regularize_ComputeUpdateValue_Fusion
 template <typename Dtype>
 void axpy_axpby_copy(size_t count, const Dtype decay, const Dtype* net_params_data, Dtype *net_params_diff,
                      const Dtype rate, const Dtype momentum, Dtype* history_data);
@@ -258,8 +259,8 @@ void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_pa
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    history_data[i] =  temp_result;
-    net_params_diff[i] =  temp_result;
+    history_data[i] = temp_result;
+    net_params_diff[i] = temp_result;
   }
 }
 
@@ -275,14 +276,57 @@ void axpy_axpby_copy<double>(size_t count, const double decay, const double* net
 #endif  
   for (size_t i = 0; i < count; ++i) {
     temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    history_data[i] = temp_result;
+    net_params_diff[i] = temp_result;
+  }
+}
+//End: For L1 Regularize_ComputeUpdateValue_Fusion
+
+//Function 2: axpy_axpby_copy_axpy
+//Start: For L2 Regularize_ComputeUpdateValue_Update_Fusion
+template <typename Dtype>
+void axpy_axpby_copy_axpy(size_t count, const Dtype decay, Dtype* net_params_data, Dtype *net_params_diff,
+                     const Dtype rate, const Dtype momentum, Dtype* history_data, const Dtype update_param);
+
+template <>
+void axpy_axpby_copy_axpy<float>(size_t count, const float decay, float* net_params_data, float *net_params_diff,
+                            const float rate, const float momentum, float* history_data, const float update_param)
+{
+  float temp_result = 0.;
+#ifdef _OPENMP
+//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
+#pragma omp parallel for schedule(static)
+#pragma simd
+#endif  
+  for (size_t i = 0; i < count; ++i) {
+    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
     history_data[i] =  temp_result;
-    net_params_diff[i] =  temp_result;
+    net_params_diff[i] = temp_result;
+    net_params_data[i] = update_param * temp_result + net_params_data[i];
   }
 }
 
+template <>
+void axpy_axpby_copy_axpy<double>(size_t count, const double decay, double* net_params_data, double *net_params_diff,
+                             const double rate, const double momentum, double* history_data, const double update_param)
+{
+  double temp_result = 0.;
+#ifdef _OPENMP
+//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
+#pragma omp parallel for schedule(static)
+#pragma simd
+#endif  
+  for (size_t i = 0; i < count; ++i) {
+    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    net_params_diff[i] = temp_result;
+    net_params_data[i] = update_param * temp_result + net_params_data[i];
+  }
+}
+//End: For L2 Regularize_ComputeUpdateValue_Update_Fusion
+
 
 template <typename Dtype>
-void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_id, Dtype rate) {
+void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
 //LOG(INFO) << "Fusion: Param_id: " << param_id;
 
 //#pragma region 1. Common initialization
@@ -310,7 +354,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
   bool prv_diff_condition_flag = false;
   if (net_params[param_id]->prv_diff()
     && (net_params[param_id]->prv_diff_count()
-    == net_params[param_id]->count())) {
+    == net_params[param_id]->prv_data_count())) {
       prv_diff_condition_flag = true;
       //LOG(INFO) << "Common condition judgement: prv_diff_condition_flag = true.";
   }
@@ -329,7 +373,7 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
       
     if (prv_diff_condition_flag) {
       //LOG(INFO) << "Normalize stage: prv_diff_condition_flag = true.";
-      caffe_scal(net_params[param_id]->count(), accum_normalization,
+      caffe_scal(net_params[param_id]->prv_data_count(), accum_normalization,
         net_params[param_id]->mutable_prv_diff());
     }
     else {
@@ -349,8 +393,10 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
 //If prv_diff_condition_flag == false, then prv_data_condition_flag == false  (2)
 //Another case is local_decay == 0, prv_diff_condition_flag == false          (3)
 //So only need to consider the fusion in situations (1) and (2), set execute_separate_ComputeUpdateValue_stage_flag to false value
-//We can extend the fusion in L1 regularization
-  bool execute_separate_ComputeUpdateValue_stage_flag = true;
+//We can extend the fusion in L1 regularization by axpy_axpby_copy
+//We extend the fusion of Update stage in L2 regularization by axpy_axpby_copy_axpy,
+//then need to change execute_separate_ComputeUpdateValue_stage_flag to execute_separate_ComputeUpdateValue_Update_stage_flag
+  bool execute_separate_ComputeUpdateValue_Update_stage_flag = true;
   //Regularize stage (Fused ComputeUpdateValue_stage in some situations)
   if (local_decay) {
     if (regularization_type == "L2") {
@@ -381,28 +427,20 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                         history_[param_id]->cpu_data(),
                         net_params[param_id]->mutable_prv_diff());
             */
+            
+            if(net_params[param_id]->prv_data_count() != history_[param_id]->count())
+              history_[param_id]->Reshape(net_params[param_id]->shape());
 
-            axpy_axpby_copy(net_params[param_id]->count(), local_decay,
-                                net_params[param_id]->prv_data(), net_params[param_id]->mutable_prv_diff(),
-                                local_rate, momentum, history_[param_id]->mutable_cpu_data());
+            axpy_axpby_copy_axpy(net_params[param_id]->prv_data_count(), local_decay,
+                                net_params[param_id]->mutable_prv_data(), net_params[param_id]->mutable_prv_diff(),
+                                local_rate, momentum, history_[param_id]->mutable_cpu_data(), Dtype(-1));
 
-            execute_separate_ComputeUpdateValue_stage_flag = false;
+            execute_separate_ComputeUpdateValue_Update_stage_flag = false;
           }
           else
           {
             //Will not happen!
             //LOG(INFO) << "Cannot Fused ComputeUpdateValue stage: prv_diff_condition_flag = false.";
-            caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-                      net_params[param_id]->cpu_diff(), momentum,
-                      history_[param_id]->mutable_cpu_data());
-
-            caffe_copy(net_params[param_id]->count(),
-                        history_[param_id]->cpu_data(),
-                        net_params[param_id]->mutable_cpu_diff());
-
-            execute_separate_ComputeUpdateValue_stage_flag = false;
-            //You can set the flag to true value, and not execute caffe_cpu_axpby and caffe_copy
-            //But set to false value and execute caffe_cpu_axpby and caffe_copy inside will save one condition judgement time
           }
       } else {
         //LOG(INFO) << "Regularize stage: prv_data_condition_flag = false.";
@@ -426,27 +464,18 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                       net_params[param_id]->mutable_cpu_diff());
           */
 
-          axpy_axpby_copy(net_params[param_id]->count(), local_decay,
-                                net_params[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
-                                local_rate, momentum, history_[param_id]->mutable_cpu_data());
+          axpy_axpby_copy_axpy(net_params[param_id]->count(), local_decay,
+                                net_params[param_id]->mutable_cpu_data(), net_params[param_id]->mutable_cpu_diff(),
+                                local_rate, momentum, history_[param_id]->mutable_cpu_data(), Dtype(-1));
 
-          execute_separate_ComputeUpdateValue_stage_flag = false;
+          execute_separate_ComputeUpdateValue_Update_stage_flag = false;
         }
         else
         {
           //Will not happen!
           //LOG(INFO) << "Cannot Fused ComputeUpdateValue stage: prv_diff_condition_flag = true.";
-          caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-                          net_params[param_id]->prv_diff(), momentum,
-                          history_[param_id]->mutable_cpu_data());
-
-          caffe_copy(net_params[param_id]->count(),
-                      history_[param_id]->cpu_data(),
-                      net_params[param_id]->mutable_prv_diff());
-
-          execute_separate_ComputeUpdateValue_stage_flag = false;
-          //You can set the flag to true value, and not execute caffe_cpu_axpby and caffe_copy
-          //But set to false value and execute caffe_cpu_axpby and caffe_copy inside will save one condition judgement time
+          if(net_params[param_id]->prv_data_count() != history_[param_id]->count())
+              history_[param_id]->Reshape(net_params[param_id]->shape());
         }        
       }
     } else if (regularization_type == "L1") {
@@ -466,14 +495,17 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                                 temp_[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data());
       
-      execute_separate_ComputeUpdateValue_stage_flag = false;
+      execute_separate_ComputeUpdateValue_Update_stage_flag = false;
+      
+      //Update stage (separate)
+      net_params[param_id]->Update();
     } else {
       LOG(FATAL) << "Unknown regularization type: " << regularization_type;
     }
   }
   
-  //ComputeUpdateValue stage (separate)
-  if (execute_separate_ComputeUpdateValue_stage_flag == true)
+  //ComputeUpdateValue_Update stage (separate)
+  if (execute_separate_ComputeUpdateValue_Update_stage_flag == true)
   {
     //Include the situation: regularization_type == "Unknown"
     //Include situations (3): local_decay == 0
@@ -481,11 +513,13 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
     //ComputeUpdateValue stage
     if (prv_diff_condition_flag) {
       //LOG(INFO) << "ComputeUpdateValue stage: prv_diff_condition_flag = true.";
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+      if(net_params[param_id]->prv_data_count() != history_[param_id]->count())
+        history_[param_id]->Reshape(net_params[param_id]->shape());
+      caffe_cpu_axpby(net_params[param_id]->prv_data_count(), local_rate,
                       net_params[param_id]->prv_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
 
-      caffe_copy(net_params[param_id]->count(),
+      caffe_copy(net_params[param_id]->prv_data_count(),
                   history_[param_id]->cpu_data(),
                   net_params[param_id]->mutable_prv_diff());
     } else {
@@ -498,6 +532,9 @@ void SGDSolver<Dtype>::Normalize_Regularize_ComputeUpdateValue_Fusion(int param_
                   history_[param_id]->cpu_data(),
                   net_params[param_id]->mutable_cpu_diff());
     }
+
+    //Update stage (separate)
+    net_params[param_id]->Update();
   }
 
 }
