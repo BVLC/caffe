@@ -396,7 +396,8 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
 //We can extend the fusion in L1 regularization by axpy_axpby_copy
 //We extend the fusion of Update stage in L2 regularization by axpy_axpby_copy_axpy,
 //then need to change execute_separate_ComputeUpdateValue_stage_flag to execute_separate_ComputeUpdateValue_Update_stage_flag
-  bool execute_separate_ComputeUpdateValue_Update_stage_flag = true;
+//Simplify the execute_separate_ComputeUpdateValue_Update_stage_flag to is_separate_ComputeUpdateValue_Update
+  bool is_separate_ComputeUpdateValue_Update = true;
   //Regularize stage (Fused ComputeUpdateValue_stage in some situations)
   if (local_decay) {
     if (regularization_type == "L2") {
@@ -435,7 +436,7 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
                                 net_params[param_id]->mutable_prv_data(), net_params[param_id]->mutable_prv_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data(), Dtype(-1));
 
-            execute_separate_ComputeUpdateValue_Update_stage_flag = false;
+            is_separate_ComputeUpdateValue_Update = false;
           }
           else
           {
@@ -468,7 +469,7 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
                                 net_params[param_id]->mutable_cpu_data(), net_params[param_id]->mutable_cpu_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data(), Dtype(-1));
 
-          execute_separate_ComputeUpdateValue_Update_stage_flag = false;
+          is_separate_ComputeUpdateValue_Update = false;
         }
         else
         {
@@ -495,7 +496,7 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
                                 temp_[param_id]->cpu_data(), net_params[param_id]->mutable_cpu_diff(),
                                 local_rate, momentum, history_[param_id]->mutable_cpu_data());
       
-      execute_separate_ComputeUpdateValue_Update_stage_flag = false;
+      is_separate_ComputeUpdateValue_Update = false;
       
       //Update stage (separate)
       net_params[param_id]->Update();
@@ -505,7 +506,7 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
   }
   
   //ComputeUpdateValue_Update stage (separate)
-  if (execute_separate_ComputeUpdateValue_Update_stage_flag == true)
+  if (is_separate_ComputeUpdateValue_Update == true)
   {
     //Include the situation: regularization_type == "Unknown"
     //Include situations (3): local_decay == 0
