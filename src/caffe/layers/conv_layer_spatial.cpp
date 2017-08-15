@@ -1614,6 +1614,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     }
 
     // Create WINOGRAD Kernels.
+#if 0
     if (!std::is_same<Dtype, double>::value &&this->group_ == 1 &&
         this->stride_w_ == 1 && this->stride_h_ == 1 &&
         this->dilation_w_ == 1 && this->dilation_h_ == 1 &&
@@ -1621,6 +1622,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
       int simd_size = 8;
       create_convolution_kernel(bottom, top, ConvType::WINOGRAD, 4, 4, simd_size);
     }
+#endif
     //Create GEMM like kernels.
     if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
       create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 1, 8, 32);
@@ -1823,7 +1825,6 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-
   if (this->num_ == 0)
     return;
   weight = this->blobs_[0]->gpu_data();
