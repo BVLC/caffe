@@ -997,7 +997,7 @@ message DetectionEvaluateParameter {
   optional uint32 num_classes = 1;
   // Label id for background class. Needed for sanity check so that
   // background class is neither in the ground truth nor the detections.
-  optional uint32 background_label_id = 2 [default = 0];
+  optional int32 background_label_id = 2 [default = 0];
   // Threshold for deciding true/false positive.
   optional float overlap_threshold = 3 [default = 0.5];
   // If true, also consider difficult ground truth for evaluation.
