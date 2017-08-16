@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os,sys
+caffe_python = os.path.dirname(os.path.realpath(__file__)) + '/../../python'
+sys.path.insert(0, caffe_python)
 import caffe
 import numpy as np
 #import utils as ut
