@@ -15,7 +15,6 @@ namespace bp = boost::python;
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/device.hpp"
-#include "caffe/util/bbox_util.hpp"
 #include "caffe/util/signal_handler.h"
 
 #ifdef USE_LIBDNN

@@ -145,6 +145,22 @@ using std::vector;
 // Currently it initializes google flags and google logging.
 void GlobalInit(int* pargc, char*** pargv);
 
+// Compute average precision given true positive and false positive vectors.
+//    tp: contains pairs of scores and true positive.
+//    num_pos: number of positives.
+//    fp: contains pairs of scores and false positive.
+//    ap_version: different ways of computing Average Precision.
+//      Check https://sanchom.wordpress.com/tag/average-precision/ for details.
+//      11point: the 11-point interpolated average precision. Used in VOC2007.
+//      MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
+//      Integral: the natural integral of the precision-recall curve.
+//    prec: stores the computed precisions.
+//    rec: stores the computed recalls.
+//    ap: the computed Average Precision.
+void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
+               const vector<pair<float, int> >& fp, const string ap_version,
+               vector<float>* prec, vector<float>* rec, float* ap);
+
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
 class Caffe {

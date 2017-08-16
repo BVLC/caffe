@@ -64,9 +64,6 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized = true);
 void CumSum(const vector<pair<float, int_tp> >& pairs, vector<int_tp>* cumsum);
-void ComputeAP(const vector<pair<float, int_tp> >& tp, int_tp num_pos,
-               const vector<pair<float, int_tp> >& fp, string ap_version,
-               vector<float>* prec, vector<float>* rec, float* ap);
                      
 template <typename Dtype>
 void setNormalizedBBox(NormalizedBBox& bbox, Dtype x, Dtype y, Dtype w, Dtype h)
@@ -648,22 +645,6 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
-
-// Compute average precision given true positive and false positive vectors.
-//    tp: contains pairs of scores and true positive.
-//    num_pos: number of positives.
-//    fp: contains pairs of scores and false positive.
-//    ap_version: different ways of computing Average Precision.
-//      Check https://sanchom.wordpress.com/tag/average-precision/ for details.
-//      11point: the 11-point interpolated average precision. Used in VOC2007.
-//      MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
-//      Integral: the natural integral of the precision-recall curve.
-//    prec: stores the computed precisions.
-//    rec: stores the computed recalls.
-//    ap: the computed Average Precision.
-void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
-               const vector<pair<float, int> >& fp, const string ap_version,
-               vector<float>* prec, vector<float>* rec, float* ap);
 
 #ifndef CPU_ONLY  // GPU
 #ifdef USE_CUDA
