@@ -1,4 +1,5 @@
 #include <functional>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -69,22 +70,33 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, num_labels);
-      // Top-k accuracy
-      std::vector<std::pair<Dtype, int> > bottom_data_vector;
-      for (int k = 0; k < num_labels; ++k) {
-        bottom_data_vector.push_back(std::make_pair(
-            bottom_data[i * dim + k * inner_num_ + j], k));
+      // Top-k accuracy using priority queue
+      typedef std::pair<Dtype, int> Dpair;
+      std::priority_queue<Dpair,
+                          vector<Dpair>,
+                          std::greater<Dpair> > top_scores;
+      std::greater<Dpair> greater_;
+      // fill the first k elements
+      for (int k = 0; k < top_k_; ++k) {
+        const Dtype score = bottom_data[i * dim + k * inner_num_ + j];
+        top_scores.push(std::make_pair(score, k));
       }
-      std::partial_sort(
-          bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
-          bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
+      // only push new element if it's greater than the current smallest
+      for (int k = top_k_; k < num_labels; ++k) {
+        const Dtype score = bottom_data[i * dim + k * inner_num_ + j];
+        if (greater_(std::make_pair(score, k), top_scores.top())) {
+          top_scores.pop();
+          top_scores.push(std::make_pair(score, k));
+        }
+      }
       // check if true label is in top k predictions
-      for (int k = 0; k < top_k_; k++) {
-        if (bottom_data_vector[k].second == label_value) {
+      while (!top_scores.empty()) {
+        if (top_scores.top().second == label_value) {
           ++accuracy;
           if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
           break;
         }
+        top_scores.pop();
       }
       ++count;
     }
