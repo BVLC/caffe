@@ -62,6 +62,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/multinode/mlsl.hpp"
 #include "caffe/multinode/apply_mn_param.hpp"
 #include "caffe/util/remove_batch_norm.hpp"
+#include "caffe/util/apply_bn_stats_batch_size.hpp"
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -145,6 +146,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
   for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
     this->kept_bn_layers_.push_back(param.compile_net_state().kept_bn_layers(idx));
+  }
+
+  NetParameter param_with_stats_batch_size;
+  if (param.has_bn_stats_batch_size()) {
+    ApplyBnStatsBatchSize(param, &param_with_stats_batch_size);
+    param = param_with_stats_batch_size;
   }
 
 #ifdef USE_MLSL
