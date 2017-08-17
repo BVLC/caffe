@@ -60,10 +60,12 @@
 #define ATOMICS_32_AVAILABLE
 #endif
 
-#ifdef cl_intel_subgroups
-#ifndef HAS_INTEL_SUBGROUPS
+#if  defined(cl_intel_subgroups) && !defined(HAS_INTEL_SUBGROUPS)
 #undef cl_intel_subgroups
 #endif
+
+#if defined(HAS_INTEL_SUBGROUPS) && !defined(cl_intel_subgroups)
+#define cl_intel_subgroups
 #endif
 
 #ifndef NULL

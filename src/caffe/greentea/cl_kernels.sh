@@ -232,6 +232,13 @@ echo "  }" >> $SOURCE
 
 echo "  if (std::is_same<Dtype, half_float::half>::value) { // NOLINT" >> $SOURCE
 echo "  ss << \"#if defined(HALF_SUPPORT_AVAILABLE) && defined(HAS_HALF_SUPPORT)\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  if (ctx->devices()[0].extensions().find(\"cl_intel_subgroups\")!= std::string::npos   // NOLINT" >> $SOURCE
+echo "      && ctx->devices()[0].extensions().find(\"cl_intel_subgroups_short\")== std::string::npos) { // NOLINT" >> $SOURCE
+echo "    std::cerr << \"Fatal error: Intel iGPU device found but doesn\'t support cl_intel_subgroups_short.\" << std::endl; // NOLINT" >> $SOURCE
+echo "    std::cerr << \"Please upgrade the GPU driver and OpenCL SDK.\" << std::endl; // NOLINT" >> $SOURCE
+echo "    std::cerr << \"For iGPU platforms before Gen9, fp16 is not supported.\" << std::endl; // NOLINT" >> $SOURCE
+echo "    exit(-1);" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  ss << \"#define Dtype half\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype2 half2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype4 half4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
