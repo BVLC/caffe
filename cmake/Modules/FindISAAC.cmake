@@ -4,21 +4,41 @@ SET(ISAAC_INCLUDE_SEARCH_PATHS
   /opt/isaac/include
   $ENV{ISAAC_HOME}
   $ENV{ISAAC_HOME}/include
+  $ENV{ISAAC_HOME}/include/external
+  ../isaac/include
+  ../isaac/include/external
+  ../../isaac/include
+  ../../isaac/include/external
 )
 
 SET(ISAAC_LIB_SEARCH_PATHS
-        /lib
-        /lib64
-        /usr/lib
-        /usr/lib64
-        /usr/local/lib
-        /usr/local/lib64
-        /opt/isaac/lib
-        $ENV{ISAAC_HOME}
-        $ENV{ISAAC_HOME}/lib
+     /lib
+     /lib64
+     /usr/lib
+     /usr/lib64
+     /usr/local/lib
+     /usr/local/lib64
+     /opt/isaac/lib
+     $ENV{ISAAC_HOME}/build/lib
+     $ENV{ISAAC_HOME}/lib
+     ../isaac/lib
+     ../../isaac/lib
+     ../isaac/build/lib
+     ../../isaac/build/lib
  )
 
-FIND_LIBRARY(ISAAC_LIBRARY NAMES isaac PATHS ${ISAAC_LIB_SEARCH_PATHS})
+FIND_PATH(ISAAC_INCLUDE_DIR NAMES clBLAS.h PATHS ${ISAAC_INCLUDE_SEARCH_PATHS})
+
+IF (WIN32)
+  FIND_LIBRARY(ISAAC_LIBRARY
+               NAMES isaac
+               PATHS ${ISAAC_LIB_SEARCH_PATHS}
+	       PATH_SUFFIXES Release Debug)
+ELSE (WIN32)
+  FIND_LIBRARY(ISAAC_LIBRARY
+               NAMES isaac
+               PATHS ${ISAAC_LIB_SEARCH_PATHS})
+ENDIF (WIN32)
 
 SET(ISAAC_FOUND ON)
 

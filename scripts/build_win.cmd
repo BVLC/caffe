@@ -107,6 +107,7 @@ if DEFINED APPVEYOR (
     if NOT DEFINED USE_INDEX64 set USE_INDEX64=0
     :: Use Intel spatial kernels acceleration for forward convolution on Intel iGPUs
     if NOT DEFINED USE_INTEL_SPATIAL set USE_INTEL_SPATIAL=0
+    if NOT DEFINED USE_ISAAC set USE_ISAAC=0
 )
 
 :: Set the appropriate CMake generator
@@ -141,6 +142,7 @@ echo INFO: USE_LIBDNN                 = !USE_LIBDNN!
 echo INFO: USE_OPENMP                 = !USE_OPENMP!
 echo INFO: USE_INDEX64                = !USE_INDEX_64!
 echo INFO: USE_INTEL_SPATIAL          = !USE_INTEL_SPATIAL!
+echo INFO: USE_ISAAC                  = !USE_ISAAC!
 echo INFO: CMAKE_CONFIG               = !CMAKE_CONFIG!
 echo INFO: USE_NCCL                   = !USE_NCCL!
 echo INFO: CMAKE_BUILD_SHARED_LIBS    = !CMAKE_BUILD_SHARED_LIBS!
@@ -191,6 +193,7 @@ cmake -G"!CMAKE_GENERATOR!" ^
       -DCOPY_PREREQUISITES:BOOL=1 ^
       -DINSTALL_PREREQUISITES:BOOL=1 ^
       -DUSE_NCCL:BOOL=!USE_NCCL! ^
+      -DUSE_ISAAC:BOOL=%USE_ISAAC% ^
       "%~dp0\.."
 
 if ERRORLEVEL 1 (

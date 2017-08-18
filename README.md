@@ -313,17 +313,35 @@ We have provided the latest models that are trained from different datasets. To 
 * CMake
 * ViennaCL - put it in the same directory as Caffe's source code.
 * Python 2.7
+* ISAAC - Please see below detail instructions
+
+Open a Git Bash console on Windows and do the following instructions to build both dlfcn-win32 and isaac. Please put both dlfcn-win32 and isaac at the same directory as caffe.
+
+
+  ```Shell
+  git clone https://github.com/dlfcn-win32/dlfcn-win32
+  cd dlfcn-win32
+  cmake -G "Visual Studio 14 2015 Win64" .
+  cmake --build . --config Release
+  cd ..
+  git clone https://github.com/ptillet/isaac.git
+  mkdir -p isaac/build
+  cd build
+  cmake -G "Visual Studio 14 2015 Win64" ..
+  cmake --build . --config Release
+  ```
 
 ## How to build
 
   ```Shell
   Open a Windows command prompt console (cmd)
-  # cd caffe_source_dir
-  # set BUILD_PYTHON=0
-  # set BUILD_PYTHON_LAYER=0
-  # set USE_INTEL_SPATIAL=1
-  # scripts\build_win.cmd
-  If you also want to run the test suite
-  # set RUN_TESTS=1
-  Please be noted that, after building finished successfully, when you try to run the test suite or the application, it may encounter missing DLL files. If that is the case, you may have to copy those DLL to the directory of the executable file you are running now.
+  cd caffe_source_dir
+  set BUILD_PYTHON=0
+  set BUILD_PYTHON_LAYER=0
+  set USE_INTEL_SPATIAL=1
+  set USE_GREENTEA=1
+  set USE_ISAAC=1
+  set RUN_TESTS=1
+  scripts\build_win.cmd
   ```
+  Please be noted that, after the building finished successfully, before you try to run the application, you need to copy the dl.dll (dlfcn) and isaac.dll (isaac) into the same directory or put them into a system directory.
