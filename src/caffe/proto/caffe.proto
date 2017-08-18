@@ -208,6 +208,9 @@ message NetParameter {
 
   optional string engine = 9 [default = ""];
 
+  // Batch size used for BatchNorm statistics, 0 would use the batch size of bottom blob
+  optional uint32 bn_stats_batch_size = 11 [default = 0];
+
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
@@ -900,6 +903,8 @@ message BatchNormParameter {
   optional bool bias_term = 6 [default = true]; // whether to have bias terms
   optional FillerParameter filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
+  // Batch size used for statistics, 0 would use the batch size of bottom blob
+  optional uint32 stats_batch_size = 9 [default = 0];
 }
 
 message SplitParameter {

@@ -81,13 +81,22 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(bottom[0]->shape(1), channels_);
   top[0]->ReshapeLike(*bottom[0]);
 
+  num_stats_batches_ = 1;
+  stats_batch_size_ = bottom[0]->shape(0);
+  BatchNormParameter param = this->layer_param_.batch_norm_param();
+  if (!use_global_stats_ && param.stats_batch_size() > 0) {
+    CHECK_EQ(bottom[0]->shape(0) % param.stats_batch_size(), 0);
+    num_stats_batches_ = bottom[0]->shape(0) / param.stats_batch_size();
+    stats_batch_size_ = param.stats_batch_size();
+  }
+
   vector<int> sz;
   sz.push_back(channels_);
   mean_.Reshape(sz);
   variance_.Reshape(sz);
   temp_.ReshapeLike(*bottom[0]);
   x_norm_.ReshapeLike(*bottom[0]);
-  sz[0]=bottom[0]->shape(0);
+  sz[0]=stats_batch_size_;
   batch_sum_multiplier_.Reshape(sz);
 
   int spatial_dim = bottom[0]->count(2);
@@ -99,7 +108,7 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     caffe_set(spatial_sum_multiplier_.count(), Dtype(1), multiplier_data);
   }
 
-  int numbychans = channels_*bottom[0]->shape(0);
+  int numbychans = channels_*stats_batch_size_;
   if (num_by_chans_.num_axes() == 0 ||
       num_by_chans_.shape(0) != numbychans) {
     sz[0] = numbychans;
@@ -149,18 +158,20 @@ void BatchNormLayer<Dtype>::replicate_to_op(Dtype* buffer_to_write,
   }
 }
 
-
-
 template <typename Dtype>
-void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = top[0]->mutable_cpu_data();
-  int num = bottom[0]->shape(0);
+void BatchNormLayer<Dtype>::ForwardStatsBatch_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top, int stats_batch_idx) {
+  long data_stats_count = stats_batch_size_ * bottom[0]->count(1);
+  long data_offset = stats_batch_idx * data_stats_count;
+  const Dtype* bottom_data = bottom[0]->cpu_data() + data_offset;
+  Dtype* top_data = top[0]->mutable_cpu_data() + data_offset;
+  Dtype* temp_data = temp_.mutable_cpu_data() + data_offset;
+  Dtype* x_norm_data = x_norm_.mutable_cpu_data() + data_offset;
+  int num = stats_batch_size_;
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
 
   if (bottom[0] != top[0]) {
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
+    caffe_copy(data_stats_count, bottom_data, top_data);
   }
 
   if (use_global_stats_) {
@@ -192,10 +203,10 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   if (!use_global_stats_) {
     // compute variance using var(X) = E((X-EX)^2)
-    caffe_powx(top[0]->count(), top_data, Dtype(2),
-        temp_.mutable_cpu_data());  // (X-EX)^2
+    caffe_powx(data_stats_count, top_data, Dtype(2),
+        temp_data);  // (X-EX)^2
     caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
-        1. / (num * spatial_dim), temp_.cpu_data(),
+        1. / (num * spatial_dim), temp_data,
         spatial_sum_multiplier_.cpu_data(), 0.,
         num_by_chans_.mutable_cpu_data());
     caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
@@ -220,37 +231,40 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
              variance_.mutable_cpu_data());
 
   // replicate variance to input size
-  this->replicate(temp_.mutable_cpu_data(),
+  this->replicate(temp_data,
                   num,
                   spatial_dim*channels_,
                   spatial_dim,
                   variance_.cpu_data());
 
-  caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
+  caffe_div(data_stats_count, top_data, temp_data, top_data);
   // TODO(cdoersch): The caching is only needed because later in-place layers
   //                 might clobber the data.  Can we skip this if they won't?
-  caffe_copy(x_norm_.count(), top_data,
-      x_norm_.mutable_cpu_data());
+  caffe_copy(data_stats_count, top_data,
+      x_norm_data);
 }
 
 template <typename Dtype>
-void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+void BatchNormLayer<Dtype>::BackwardStatsBatch_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom,
+    int stats_batch_idx) {
+  long data_stats_count = stats_batch_size_ * bottom[0]->count(1);
+  long data_offset = stats_batch_idx * data_stats_count;
   const Dtype* top_diff;
   if (bottom[0] != top[0]) {
-    top_diff = top[0]->cpu_diff();
+    top_diff = top[0]->cpu_diff() + data_offset;
   } else {
-    caffe_copy(x_norm_.count(), top[0]->cpu_diff(), x_norm_.mutable_cpu_diff());
-    top_diff = x_norm_.cpu_diff();
+    caffe_copy(data_stats_count, top[0]->cpu_diff() + data_offset,
+               x_norm_.mutable_cpu_diff() + data_offset);
+    top_diff = x_norm_.cpu_diff() + data_offset;
   }
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff() + data_offset;
   if (use_global_stats_) {
-    caffe_div(temp_.count(), top_diff, temp_.cpu_data(), bottom_diff);
+    caffe_div(data_stats_count, top_diff, temp_.cpu_data() + data_offset, bottom_diff);
     return;
   }
-  const Dtype* top_data = x_norm_.cpu_data();
-  int num = bottom[0]->shape()[0];
+  const Dtype* top_data = x_norm_.cpu_data() + data_offset;
+  int num = stats_batch_size_;
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
   // if Y = (X-mean(X))/(sqrt(var(X)+eps)), then
   //
@@ -265,7 +279,7 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // dimensions except the channels dimension where required.
 
   // sum(dE/dY \cdot Y)
-  caffe_mul(temp_.count(), top_data, top_diff, bottom_diff);
+  caffe_mul(data_stats_count, top_data, top_diff, bottom_diff);
   caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim, 1.,
       bottom_diff, spatial_sum_multiplier_.cpu_data(), 0.,
       num_by_chans_.mutable_cpu_data());
@@ -280,7 +294,7 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                   mean_.cpu_data());
 
   // sum(dE/dY \cdot Y) \cdot Y
-  caffe_mul(temp_.count(), top_data, bottom_diff, bottom_diff);
+  caffe_mul(data_stats_count, top_data, bottom_diff, bottom_diff);
 
   // sum(dE/dY)-sum(dE/dY \cdot Y) \cdot Y
   caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim, 1.,
@@ -300,12 +314,29 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                   std::plus<Dtype>());
 
   // dE/dY - mean(dE/dY)-mean(dE/dY \cdot Y) \cdot Y
-  caffe_cpu_axpby(temp_.count(), Dtype(1), top_diff,
+  caffe_cpu_axpby(data_stats_count, Dtype(1), top_diff,
       Dtype(-1. / (num * spatial_dim)), bottom_diff);
 
   // note: temp_ still contains sqrt(var(X)+eps), computed during the forward
   // pass.
-  caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
+  caffe_div(data_stats_count, bottom_diff, temp_.cpu_data() + data_offset, bottom_diff);
+}
+
+template <typename Dtype>
+void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < num_stats_batches_; i++) {
+    ForwardStatsBatch_cpu(bottom, top, i);
+  }
+}
+
+template <typename Dtype>
+void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  for (int i = 0; i < num_stats_batches_; i++) {
+    BackwardStatsBatch_cpu(top, propagate_down, bottom, i);
+  }
 }
 
 
