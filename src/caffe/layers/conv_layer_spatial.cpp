@@ -438,10 +438,10 @@ void ConvolutionLayerSpatial<Dtype>::winogradWeights() {
     desc.image_type = CL_MEM_OBJECT_IMAGE2D;
     if(this->channels_ > 256) {
       desc.image_width = 9*this->channels_/2;
-      desc.image_height = 2*ALIGN(this->num_output_, 16);
+      desc.image_height = 2*ALIGN(this->num_output_, 8);
     } else {
       desc.image_width = 9*this->channels_;
-      desc.image_height = ALIGN(this->num_output_, 16);
+      desc.image_height = ALIGN(this->num_output_, 8);
     }
     desc.image_depth = 1;
     desc.image_array_size = 0;
@@ -477,7 +477,7 @@ void ConvolutionLayerSpatial<Dtype>::winogradWeights() {
   oclk_winograd_weights.arg(argIdx++, WrapHandle((cl_mem)this->blobs()[0]->gpu_data(), &ctx));
   oclk_winograd_weights.arg(argIdx++, WrapHandle(winograd_weights_image_, &ctx));
   oclk_winograd_weights.arg(argIdx++, (int_tp)this->channels_);
-  oclk_winograd_weights.arg(argIdx++, (int_tp)this->num_output_);
+  oclk_winograd_weights.arg(argIdx++, ALIGN((int_tp)this->num_output_, 8));
   size_t global_work_size_U[2] = {(size_t)this->channels_, (size_t)this->num_output_};
 
 
@@ -1612,9 +1612,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     if(dwconv_) {
       create_convolution_kernel(bottom, top, ConvType::DWCONV, 1, 1, 1);
     }
-
     // Create WINOGRAD Kernels.
-#if 0
     if (!std::is_same<Dtype, double>::value &&this->group_ == 1 &&
         this->stride_w_ == 1 && this->stride_h_ == 1 &&
         this->dilation_w_ == 1 && this->dilation_h_ == 1 &&
@@ -1622,7 +1620,6 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
       int simd_size = 8;
       create_convolution_kernel(bottom, top, ConvType::WINOGRAD, 4, 4, simd_size);
     }
-#endif
     //Create GEMM like kernels.
     if (this->group_ == 1 && ((M_ % 8 == 0) && (M_ % 32 != 24))) {
       create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 1, 8, 32);
