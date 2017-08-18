@@ -267,7 +267,7 @@ class Net {
                    const int param_id);
 
   /// @brief Helper for displaying debug info in Forward.
-  void ForwardDebugInfo(const int layer_id);
+  void ForwardDebugInfo(const int layer_id) const;
   /// @brief Helper for displaying debug info in Backward.
   void BackwardDebugInfo(const int layer_id);
   /// @brief Helper for displaying debug info in Update.

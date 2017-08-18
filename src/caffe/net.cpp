@@ -583,7 +583,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
+void Net<Dtype>::ForwardDebugInfo(const int layer_id) const {
   for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
     const Blob<Dtype>& blob = *top_vecs_[layer_id][top_id];
     const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
