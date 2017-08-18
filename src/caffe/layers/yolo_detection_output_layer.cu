@@ -79,6 +79,13 @@ void YoloDetectionOutputLayer<Dtype>::Forward_gpu(
       top_data[start_pos+i*7+4] = predicts[b][idxes[b][i]].y;
       top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].w;
       top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].h;
+      if(ssd_format_) {
+        top_data[start_pos+i*7+1] += 1;
+        top_data[start_pos+i*7+3] = predicts[b][idxes[b][i]].x - predicts[b][idxes[b][i]].w / 2.0;
+        top_data[start_pos+i*7+4] = predicts[b][idxes[b][i]].y - predicts[b][idxes[b][i]].h / 2.0;
+        top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].x + predicts[b][idxes[b][i]].w / 2.0;
+        top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].y + predicts[b][idxes[b][i]].h / 2.0;
+      }
     }
 	start_pos += idxes[b].size()*7;
   }
@@ -88,7 +95,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_gpu(
     this->data_transformer_->TransformInv(bottom[1], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_, save_file_, true);
+        label_to_display_name_, save_file_, !ssd_format_);
 #endif
   }  
 }

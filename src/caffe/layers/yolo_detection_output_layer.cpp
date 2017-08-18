@@ -52,6 +52,7 @@ void YoloDetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bot
     }
   }
   visualize_ = yolo_detection_output_param.visualize();
+  ssd_format_ = yolo_detection_output_param.ssd_format();
   if (visualize_) {
     visualize_threshold_ = 0.3;
     if (yolo_detection_output_param.has_visualize_threshold()) {
@@ -97,7 +98,6 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
   Blob<Dtype> swap;
   swap.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(),
                num_box_, (bottom[0]->channels() + num_box_ - 1) / num_box_);
-  //std::cout<<"4"<<std::endl;  
   Dtype* swap_data = swap.mutable_cpu_data();
   int_tp index = 0;
   for (int_tp b = 0; b < bottom[0]->num(); ++b)
@@ -153,6 +153,13 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
       top_data[start_pos+i*7+4] = predicts[b][idxes[b][i]].y;
       top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].w;
       top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].h;
+      if(ssd_format_) {
+        top_data[start_pos+i*7+1] += 1;
+        top_data[start_pos+i*7+3] = predicts[b][idxes[b][i]].x - predicts[b][idxes[b][i]].w / 2.0;
+        top_data[start_pos+i*7+4] = predicts[b][idxes[b][i]].y - predicts[b][idxes[b][i]].h / 2.0;
+        top_data[start_pos+i*7+5] = predicts[b][idxes[b][i]].x + predicts[b][idxes[b][i]].w / 2.0;
+        top_data[start_pos+i*7+6] = predicts[b][idxes[b][i]].y + predicts[b][idxes[b][i]].h / 2.0;
+      }
     }
     start_pos += idxes[b].size()*7;
   }
@@ -162,7 +169,7 @@ void YoloDetectionOutputLayer<Dtype>::Forward_cpu(
     this->data_transformer_->TransformInv(bottom[1], &cv_imgs);
     vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
     VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
-        label_to_display_name_, save_file_, true);
+        label_to_display_name_, save_file_, !ssd_format_);
 #endif
   }  
 }
