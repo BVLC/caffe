@@ -132,12 +132,12 @@ void Detector::Detect(cv::Mat& img) {
 	}
     if (left < 0)
         left = 0;
-    if (right > w)
-        right = w;
+    if (right > w-1)
+        right = w-1;
     if (top < 0)
         top = 0;
-    if (bot > h)
-        bot = h;
+    if (bot > h-1)
+        bot = h-1;
 	cv::rectangle(img,cvPoint(left,top),cvPoint(right,bot),cv::Scalar(255, 242, 35));
 	std::stringstream ss;  
 	ss << classid << "/" << confidence;  
@@ -172,11 +172,9 @@ void Detector::Preprocess(const cv::Mat& img,
   else if (img.channels() == 4 && num_channels_ == 1)
     cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
   else if (img.channels() == 4 && num_channels_ == 3)
-    cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
+    cv::cvtColor(img, sample, cv::COLOR_BGRA2RGB);
   else if (img.channels() == 1 && num_channels_ == 3)
-    cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
-//  else if (img.channels() == 3 && num_channels_ == 3)
-//    cv::cvtColor(img, sample, cv::COLOR_RGB2BGR);
+    cv::cvtColor(img, sample, cv::COLOR_GRAY2RGB);
   else
     sample = img;
 
@@ -215,9 +213,13 @@ void Detector::Preprocess(const cv::Mat& img,
 
   cv::Mat sample_normalized;
   cv::divide(sample_float, 255.0, sample_normalized);
-  if(dx!=0 || dy!=0)   //yolo will set all init with 0.5 , but maybe 0 is also ok
-  	for(int i=0;i< num_channels_;i++)
-  		memset(input_channels[i],0,input_geometry_.width*input_geometry_.height*sizeof(Dtype));
+  if(dx!=0 || dy!=0) {
+    for(int i=0;i< num_channels_;i++) {
+      for(int pos = 0; pos < input_geometry_.width*input_geometry_.height; ++pos) {
+        input_channels[i][pos] = 0.5;
+      }
+    }
+  }
 
   for( int i = 0; i < input_newwh_.height; i++) {
     for( int j = 0; j < input_newwh_.width; j++) {
