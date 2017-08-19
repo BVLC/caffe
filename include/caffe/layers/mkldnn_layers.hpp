@@ -68,7 +68,6 @@ public:
         , fwd_top_data(), fwd_bottom_data()
         , bwd_top_diff(), bwd_bottom_diff()
         , BatchNormFwd_pd(), BatchNormBwd_pd()
-        , mean_memory(), variance_memory()
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
         , output_memory(), bwd_bottom_diff_memory()
         , input_primitive(), bwd_top_diff_primitive()
@@ -96,22 +95,29 @@ private:
     void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,
             const vector<bool>& propagate_down,
             const vector<Blob<Dtype>*>& bottom);
+    void InitBatchNormFwdPrimitive(int stats_batch_idx);
+    void InitBatchNormBwdPrimitive(int stats_batch_idx);
+    template <bool diff> shared_ptr<memory> GetStatsBatchMemory(
+      shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_data, int idx);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
     shared_ptr<batch_normalization_backward::primitive_desc> BatchNormBwd_pd;
 
-    MKLDNNPrimitive<Dtype> BatchNormFwd, BatchNormBwd;
-    shared_ptr<memory> mean_memory, variance_memory;
+    vector<MKLDNNPrimitive<Dtype> > BatchNormFwd, BatchNormBwd;
+    vector<shared_ptr<memory> > mean_memory, variance_memory;
 
     shared_ptr<memory> scaleshift_memory, bwd_scaleshift_diff_memory;
     shared_ptr<memory> output_memory, bwd_bottom_diff_memory;
+    vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats;
 
     shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 
     int32_t num_, width_, height_, channels_;
     Dtype eps_, moving_average_fraction_;
     bool use_weight_bias_, bias_term_, use_global_stats_;
+    int num_stats_batches_;
+    int stats_batch_size_;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);

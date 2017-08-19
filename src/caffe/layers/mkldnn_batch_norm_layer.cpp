@@ -130,6 +130,15 @@ void MKLDNNBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     this->num_ = bottom[0]->num();
     this->channels_ = bottom[0]->channels();
 
+    num_stats_batches_ = 1;
+    stats_batch_size_ = bottom[0]->shape(0);
+    BatchNormParameter param = this->layer_param_.batch_norm_param();
+    if (!use_global_stats_ && param.stats_batch_size() > 0) {
+      CHECK_EQ(bottom[0]->shape(0) % param.stats_batch_size(), 0);
+      num_stats_batches_ = bottom[0]->shape(0) / param.stats_batch_size();
+      stats_batch_size_ = param.stats_batch_size();
+    }
+
     //Fix: should reshape the top blob with the real size of bottom blob
     //top[0]->Reshape(this->num_, this->channels_, this->height_, this->width_);
 #ifdef DEBUG
@@ -159,8 +168,9 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     memory::data_type mpcsn = memory::data_type::f32;
     
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> input_md, output_md, scaleshift_md;
-    shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd, scaleshift_mpd;
+    shared_ptr<memory::desc> input_md, input_stats_md, output_md, scaleshift_md;
+    shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd;
+    shared_ptr<memory::primitive_desc> scaleshift_mpd;
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
@@ -172,9 +182,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
     output_md = input_md;
+    input_stats_md.reset(new memory::desc(*input_md));
+    CHECK(input_stats_md->data.ndims > 0 &&
+          input_stats_md->data.dims[0] == this->num_);
+    input_stats_md->data.dims[0] = stats_batch_size_;
 
     // ---- Initialize BatchNorm primitive descriptor -------------
-    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_md, eps_, flags);
+    batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_stats_md, eps_, flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines == "" || subengines == "MKLDNN")
@@ -206,44 +220,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, top[0], this));
     output_memory = fwd_top_data->create_output_memory();
 
-    // ---- Create BatchNorm --------------------
-    if (this->phase_ == TEST && !use_global_stats_) {
-        if (use_weight_bias_) {
-            BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                    *input_primitive, *scaleshift_memory, *output_memory));
-        } else {
-            BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                    *input_primitive, *output_memory));
-        }
-    } else {
-        mean_memory.reset(new memory(BatchNormFwd_pd->mean_primitive_desc()));
-        variance_memory.reset(new memory(BatchNormFwd_pd->variance_primitive_desc()));
-
-        if (use_global_stats_) {
-            caffe_copy<Dtype>(this->channels_, this->blobs_[0]->cpu_data(),
-                static_cast<Dtype *>(mean_memory->get_data_handle()));
-            caffe_copy<Dtype>(this->channels_, this->blobs_[1]->cpu_data(),
-               static_cast<Dtype *>(variance_memory->get_data_handle()));
-            if (use_weight_bias_) {
-                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_primitive, (const primitive::at)*mean_memory,
-                        (const primitive::at)*variance_memory, *scaleshift_memory,
-                        *output_memory));
-            } else {
-                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_primitive, (const primitive::at)*mean_memory,
-                        (const primitive::at)*variance_memory, *output_memory));
-            }
-        } else {
-            if (use_weight_bias_) {
-                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_primitive, *scaleshift_memory, *output_memory,
-                        *mean_memory, *variance_memory));
-            } else {
-                BatchNormFwd.reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_primitive, *output_memory, *mean_memory, *variance_memory));
-            }
-        }
+    mean_memory.resize(num_stats_batches_);
+    variance_memory.resize(num_stats_batches_);
+    input_stats.resize(num_stats_batches_);
+    output_stats.resize(num_stats_batches_);
+    BatchNormFwd.resize(num_stats_batches_);
+    for (int i = 0; i < num_stats_batches_; i++) {
+      InitBatchNormFwdPrimitive(i);
     }
 
     //fwd_bottom_data->set_mkldnn_primitive(BatchNormFwd);  //Wrong passed primitive! (TODO: Checking!)
@@ -272,6 +255,70 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     }
 }
 
+template <typename Dtype>
+template <bool diff>
+shared_ptr<memory> MKLDNNBatchNormLayer<Dtype>::GetStatsBatchMemory(
+  shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_mem, int idx) {
+    long data_offset =
+      idx * stats_batch_size_ * this->channels_ * this->width_ * this->height_;
+    engine cpu_engine = CpuEngine::Instance().get_engine();
+    shared_ptr<memory::desc> stats_md = mkldnn_mem->get_memory_desc();
+    CHECK(stats_md->data.ndims > 0 &&
+          stats_md->data.dims[0] == this->num_);
+    stats_md->data.dims[0] = stats_batch_size_;
+    shared_ptr<memory::primitive_desc> stats_mpd(
+      new memory::primitive_desc(*stats_md, cpu_engine));
+    shared_ptr<memory> stats(
+      new memory(*stats_mpd, mkldnn_mem->get_memory_ptr(data_offset)));
+    return stats;
+}
+
+template <typename Dtype>
+void MKLDNNBatchNormLayer<Dtype>::InitBatchNormFwdPrimitive(int idx) {
+    input_stats[idx] = GetStatsBatchMemory<false>(fwd_bottom_data, idx);
+    output_stats[idx] = GetStatsBatchMemory<false>(fwd_top_data, idx);
+
+    // ---- Create BatchNorm --------------------
+    if (this->phase_ == TEST && !use_global_stats_) {
+        if (use_weight_bias_) {
+            BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                    *input_stats[idx], *scaleshift_memory,
+                    *output_stats[idx]));
+        } else {
+            BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                    *input_stats[idx], *output_stats[idx]));
+        }
+    } else {
+        mean_memory[idx].reset(new memory(BatchNormFwd_pd->mean_primitive_desc()));
+        variance_memory[idx].reset(new memory(BatchNormFwd_pd->variance_primitive_desc()));
+
+        if (use_global_stats_) {
+            caffe_copy<Dtype>(this->channels_, this->blobs_[0]->cpu_data(),
+                static_cast<Dtype *>(mean_memory[idx]->get_data_handle()));
+            caffe_copy<Dtype>(this->channels_, this->blobs_[1]->cpu_data(),
+               static_cast<Dtype *>(variance_memory[idx]->get_data_handle()));
+            if (use_weight_bias_) {
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *mean_memory[idx],
+                        *variance_memory[idx], *scaleshift_memory,
+                        *output_stats[idx]));
+            } else {
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *mean_memory[idx],
+                        *variance_memory[idx], *output_stats[idx]));
+            }
+        } else {
+            if (use_weight_bias_) {
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *scaleshift_memory, *output_stats[idx],
+                        *mean_memory[idx], *variance_memory[idx]));
+            } else {
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *output_stats[idx], *mean_memory[idx], *variance_memory[idx]));
+            }
+        }
+    }
+}
 
 template <typename Dtype>
 void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
@@ -289,20 +336,21 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
-    if (use_global_stats_) {
+    for (int stats_batch_idx = 0; stats_batch_idx < num_stats_batches_; stats_batch_idx++) {
+      if (use_global_stats_) {
         // use the stored mean/variance estimates.
         const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
             0 : 1 / this->blobs_[2]->cpu_data()[0];
-        Dtype *mean_buffer_ = (Dtype *)(mean_memory->get_data_handle());
-        Dtype *variance_buffer_ = (Dtype *)(variance_memory->get_data_handle());
+        Dtype *mean_buffer_ = (Dtype *)(mean_memory[stats_batch_idx]->get_data_handle());
+        Dtype *variance_buffer_ = (Dtype *)(variance_memory[stats_batch_idx]->get_data_handle());
 
         //TODO: optimize, do this operation in the InitBatchNorm, so no need to calculate each time
         caffe_cpu_scale(this->blobs_[0]->count(), scale_factor,
                     this->blobs_[0]->cpu_data(), mean_buffer_);
         caffe_cpu_scale(this->blobs_[1]->count(), scale_factor,
                     this->blobs_[1]->cpu_data(), variance_buffer_);
-    }
-    if (use_weight_bias_) {
+      }
+      if (use_weight_bias_) {
         Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
         // Fill ScaleShift buffer
         for (int i = 0; i < this->channels_; i++) {
@@ -312,26 +360,27 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                 scaleShift_buffer_[channels_ + i] = this->blobs_[4]->cpu_data()[i];
             }
         }
-    }
+      }
 
-    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
-    PERFORMANCE_MEASUREMENT_BEGIN();
-    BatchNormFwd.submit();
-    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
+      PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+      PERFORMANCE_MEASUREMENT_BEGIN();
+      BatchNormFwd[stats_batch_idx].submit();
+      PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 
-    if (this->phase_ == TRAIN && !use_global_stats_) {
+      if (this->phase_ == TRAIN && !use_global_stats_) {
         // compute and save moving average
-        Dtype *mean_buffer_ = (Dtype *)(mean_memory->get_data_handle());
-        Dtype *variance_buffer_ = (Dtype *)(variance_memory->get_data_handle());
+        Dtype *mean_buffer_ = (Dtype *)(mean_memory[stats_batch_idx]->get_data_handle());
+        Dtype *variance_buffer_ = (Dtype *)(variance_memory[stats_batch_idx]->get_data_handle());
         this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
         this->blobs_[2]->mutable_cpu_data()[0] += 1;
         caffe_cpu_axpby<Dtype>(this->channels_, Dtype(1), mean_buffer_,
             moving_average_fraction_, this->blobs_[0]->mutable_cpu_data());
-        int m = bottom[0]->count()/channels_;
+        int m = bottom[0]->count()/num_stats_batches_/channels_;
         Dtype bias_correction_factor = m > 1 ? Dtype(m)/(m-1) : 1;
         caffe_cpu_axpby<Dtype>(this->channels_, bias_correction_factor,
             variance_buffer_, moving_average_fraction_,
             this->blobs_[1]->mutable_cpu_data());
+      }
     }
 
 }
@@ -359,7 +408,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     memory::data_type mpcsn = memory::data_type::f32;
 
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> top_diff_md, top_data_md;
+    shared_ptr<memory::desc> top_diff_md, top_diff_stats_md, top_data_md, output_stats_md;
     shared_ptr<memory::primitive_desc> usr_diff_mpd(NULL), prv_diff_mpd(NULL);
     if (top_diff_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, true> > mem_descr
@@ -371,10 +420,18 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
         top_diff_md.reset(new memory::desc({{n, c, h, w}}, mpcsn, memory::format::nchw));   //MKLDNN batch norm only support 4D memory descriptor!
         usr_diff_mpd.reset(new memory::primitive_desc(*top_diff_md, cpu_engine));
     }
+    top_diff_stats_md.reset(new memory::desc(*top_diff_md));
+    CHECK(top_diff_stats_md->data.ndims > 0 &&
+          top_diff_stats_md->data.dims[0] == this->num_);
+    top_diff_stats_md->data.dims[0] = stats_batch_size_;
+    output_stats_md.reset(new memory::desc(output_memory->get_primitive_desc().desc()));
+    CHECK(output_stats_md->data.ndims > 0 &&
+          output_stats_md->data.dims[0] == this->num_);
+    output_stats_md->data.dims[0] = stats_batch_size_;
 
     // ---- Initialize bnrm primitive descriptor -------------
     batch_normalization_backward::desc BatchNormBwd_desc(prop_kind::backward,
-            *top_diff_md, output_memory->get_primitive_desc().desc(), eps_,
+            *top_diff_stats_md, *output_stats_md, eps_,
             flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
@@ -396,6 +453,11 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
 
     CHECK(BatchNormBwd_pd);
 
+    if (use_weight_bias_) {
+        bwd_scaleshift_diff_memory.reset(new memory(
+                    BatchNormFwd_pd->weights_primitive_desc()));
+    }
+
     // ---  init primitive and prv_memory descriptors ----------------------
     bwd_top_diff.reset(new MKLDNNDiff<Dtype>(usr_diff_mpd, prv_diff_mpd, top[0], this));
     bwd_top_diff->name = "bwd_top_diff_data   @ " + this->layer_param_.name();
@@ -405,17 +467,11 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     bwd_bottom_diff->name = "bwd_bottom_diff_data   @ " + this->layer_param_.name();
     bwd_bottom_diff_memory = bwd_bottom_diff->create_output_memory(inplace);
 
-    if (use_weight_bias_) {
-        bwd_scaleshift_diff_memory.reset(new memory(
-                    BatchNormFwd_pd->weights_primitive_desc()));
-        BatchNormBwd.reset(new batch_normalization_backward(*BatchNormBwd_pd,
-                    *input_primitive, *mean_memory, *variance_memory,
-                    *bwd_top_diff_primitive, *scaleshift_memory,
-                    *bwd_bottom_diff_memory, *bwd_scaleshift_diff_memory));
-    } else {
-        BatchNormBwd.reset(new batch_normalization_backward(*BatchNormBwd_pd,
-                    *input_primitive, *mean_memory, *variance_memory,
-                    *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
+    top_diff_stats.resize(num_stats_batches_);
+    bottom_diff_stats.resize(num_stats_batches_);
+    BatchNormBwd.resize(num_stats_batches_);
+    for (int i = 0; i < num_stats_batches_; i++) {
+      InitBatchNormBwdPrimitive(i);
     }
 
     //bwd_top_diff->set_mkldnn_primitive(BatchNormBwd);     //Wrong passed primitive! (TODO: Checking!)
@@ -425,6 +481,23 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     //bwd_bottom_diff->set_mkldnn_primitive(BatchNormBwd);  //Wrong passed primitive! (TODO: Checking!)
     MKLDNNPrimitive<Dtype> bwd_bottom_diff_memory_transfer(bwd_bottom_diff_memory);
     bwd_bottom_diff->set_mkldnn_primitive(bwd_bottom_diff_memory_transfer);
+}
+
+template <typename Dtype>
+void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwdPrimitive(int idx) {
+    top_diff_stats[idx] = GetStatsBatchMemory<true>(bwd_top_diff, idx);
+    bottom_diff_stats[idx] = GetStatsBatchMemory<true>(bwd_bottom_diff, idx);
+
+    if (use_weight_bias_) {
+        BatchNormBwd[idx].reset(new batch_normalization_backward(*BatchNormBwd_pd,
+                    *input_stats[idx], *mean_memory[idx], *variance_memory[idx],
+                    *top_diff_stats[idx], *scaleshift_memory,
+                    *bottom_diff_stats[idx], *bwd_scaleshift_diff_memory));
+    } else {
+        BatchNormBwd[idx].reset(new batch_normalization_backward(*BatchNormBwd_pd,
+                    *input_stats[idx], *mean_memory[idx], *variance_memory[idx],
+                    *top_diff_stats[idx], *bottom_diff_stats[idx]));
+    }
 }
 
 template <typename Dtype>
@@ -443,53 +516,56 @@ void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // update bottom that head at prv
     bwd_bottom_diff->sync_before_write();
 
-    PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
-    PERFORMANCE_MEASUREMENT_BEGIN();
-#ifdef DEBUG
-    if (bottom[0]->prv_data() != NULL)
-    {
-        LOG(INFO) << "Debug: Bottom prv data: " << *bottom[0]->prv_data();
-    }
-    else
-    {
-        LOG(INFO) << "Debug: Bottom prv data is NULL!";
-    }
+    for (int stats_batch_idx = 0; stats_batch_idx < num_stats_batches_; stats_batch_idx++) {
 
-    if (top[0]->prv_diff() != NULL)
-    {
+      PERFORMANCE_EVENT_ID_INIT(perf_id_bw_, PERFORMANCE_MKLDNN_NAME("BW"));
+      PERFORMANCE_MEASUREMENT_BEGIN();
+#ifdef DEBUG
+      if (bottom[0]->prv_data() != NULL)
+      {
+        LOG(INFO) << "Debug: Bottom prv data: " << *bottom[0]->prv_data();
+      }
+      else
+      {
+        LOG(INFO) << "Debug: Bottom prv data is NULL!";
+      }
+      
+      if (top[0]->prv_diff() != NULL)
+      {
         LOG(INFO) << "Debug: Top prv diff: " << *top[0]->prv_diff();
-    }
-    else
-    {
+      }
+      else
+      {
         LOG(INFO) << "Debug: Top prv diff is NULL!";
         LOG(INFO) << "Debug: Top cpu diff: " << *top[0]->cpu_diff();
-    }
+      }
 #endif
-    BatchNormBwd.submit();
+      BatchNormBwd[stats_batch_idx].submit();
 #ifdef DEBUG
-    if (bottom[0]->prv_diff() != NULL)
-    {
+      if (bottom[0]->prv_diff() != NULL)
+      {
         LOG(INFO) << "Debug: Bottom prv diff: " << *bottom[0]->prv_diff();
-    }
-    else
-    {
+      }
+      else
+      {
         LOG(INFO) << "Debug: Bottom prv diff is NULL!";
         LOG(INFO) << "Debug: Bottom cpu diff: " << *bottom[0]->cpu_diff();
-    }
+      }
 #endif
-    PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
+      PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
 
-    /* FIXME: this wouldn't work with lazy stream */
-    if (use_weight_bias_) {
+      /* FIXME: this wouldn't work with lazy stream */
+      if (use_weight_bias_) {
         Dtype* dw = (Dtype *)(bwd_scaleshift_diff_memory->get_data_handle());
         for (int i = 0; i < this->channels_; i++)
-            this->blobs_[3]->mutable_cpu_diff()[i] = dw[i];
+            this->blobs_[3]->mutable_cpu_diff()[i] += dw[i];
 
         if (bias_term_) {
             dw += channels_;
             for (int i = 0; i < this->channels_; i++)
-                this->blobs_[4]->mutable_cpu_diff()[i] = dw[i];
+                this->blobs_[4]->mutable_cpu_diff()[i] += dw[i];
         }
+      }
     }
 }
 
