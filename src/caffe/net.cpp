@@ -78,6 +78,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
+
+  forward_dependency_layers_.resize(param.layer_size());
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -429,6 +431,16 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
     need_backward = layer_param.propagate_down(bottom_id);
   }
   bottom_need_backward_[layer_id].push_back(need_backward);
+
+  //查找对应的top blob所在的层
+  for(int prev_layer_id=layer_id-1;prev_layer_id>=0;prev_layer_id--) {
+    if(std::find(top_id_vecs_[prev_layer_id].cbegin(),top_id_vecs_[prev_layer_id].cend(),blob_id)!=top_id_vecs_[prev_layer_id].cend()) {
+      forward_dependency_layers_[layer_id].push_back(prev_layer_id);
+      //std::cout<<prev_layer_id<<"=>"<<layer_id<<std::endl;
+      break;
+    }
+  }
+
   return blob_id;
 }
 
@@ -592,15 +604,76 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     CUDA_CHECK( cudaMemGetInfo( &free_byte, &total_byte ) );
   }
 
+  /*
   for (int i = start; i <= end; ++i) {
     for (int c = 0; c < before_forward_.size(); ++c) {
       before_forward_[c]->run(i);
     }
-    layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+    layers_[i]->forward(bottom_vecs_[i], top_vecs_[i]);
     for (int c = 0; c < after_forward_.size(); ++c) {
       after_forward_[c]->run(i);
     }
   }
+  */
+
+
+
+  auto tmp_forward_dependency_layers_=forward_dependency_layers_;
+  while(true) {
+
+    vector<int> stage_layers;
+
+    for (int i = start; i <= end; ++i) {
+      if (tmp_forward_dependency_layers_[i].empty()) {
+	stage_layers.push_back(i);
+      }
+    }
+
+    if(stage_layers.empty()) {
+      break;
+    }
+
+
+    for(int layer_id:stage_layers) {
+      std::cout<< "process Layer type=" << layers_[layer_id]->type()<<std::endl;
+      layers_[layer_id]->Forward(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+    }
+
+
+    for(int layer_id:stage_layers) {
+      //回收内存
+      /*
+      for(auto const & bottom_blob :   bottom_vecs_[layer_id]) {
+	bottom_blob->Reshape(0,0,0,0);
+      }
+      */
+
+      tmp_forward_dependency_layers_[layer_id]={-1};
+
+      for (int j = start; j <= end; ++j) {
+	auto it=std::find(tmp_forward_dependency_layers_[j].begin(),tmp_forward_dependency_layers_[j].end(),layer_id);
+	if(it!=tmp_forward_dependency_layers_[j].end()) {
+	  tmp_forward_dependency_layers_[j].erase(it);
+	}
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   if(cnt==1) {
     cudaProfilerStop();

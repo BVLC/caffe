@@ -299,6 +299,8 @@ class Net {
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
   vector<vector<string> > top_blob_names_;
+  /// direct before layers when forward.
+  vector<vector<int>> forward_dependency_layers_;
   /// Vector of weight in the loss (or objective) function of each net blob,
   /// indexed by blob_id.
   vector<Dtype> blob_loss_weights_;
