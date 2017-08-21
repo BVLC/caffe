@@ -872,6 +872,7 @@ message YoloDetectionOutputParameter {
   optional bool visualize = 9 [default = false];
   optional float visualize_threshold = 10 [default = 0.4];
   optional string save_file = 11;
+  optional bool ssd_format = 12 [default = false];
 }
 message ConvolutionParameter {
   optional uint64 num_output = 1; // The number of outputs for the layer

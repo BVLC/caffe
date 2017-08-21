@@ -93,6 +93,7 @@ class YoloDetectionOutputLayer : public Layer<Dtype> {
   float visualize_threshold_;
   string save_file_;
   bool visualize_;
+  bool ssd_format_;
 };
 
 }  // namespace caffe
