@@ -433,13 +433,6 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
-    for (int top_id = 0; top_id < top.size(); ++top_id) {
-      if (!this->loss(top_id)) { continue; }
-      const int count = top[top_id]->count();
-      const Dtype* data = top[top_id]->cpu_data();
-      const Dtype* loss_weights = top[top_id]->cpu_diff();
-      loss += caffe_cpu_dot(count, data, loss_weights);
-    }
     break;
   case Caffe::GPU:
     begin_ms=get_current_time_ms();
@@ -448,22 +441,6 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     if(end_ms-begin_ms>10) {
       //std::cout<<"Forward_gpu use ms="<<end_ms-begin_ms<<std::endl;
     }
-#ifndef CPU_ONLY
-    begin_ms=get_current_time_ms();
-    for (int top_id = 0; top_id < top.size(); ++top_id) {
-      if (!this->loss(top_id)) { continue; }
-      const int count = top[top_id]->count();
-      const Dtype* data = top[top_id]->gpu_data();
-      const Dtype* loss_weights = top[top_id]->gpu_diff();
-      Dtype blob_loss = 0;
-      caffe_gpu_dot(count, data, loss_weights, &blob_loss);
-      loss += blob_loss;
-    }
-    end_ms=get_current_time_ms();
-    if(end_ms-begin_ms>10) {
-    std::cout<<"caffe_gpu_dot use ms="<<end_ms-begin_ms<<std::endl;
-    }
-#endif
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";

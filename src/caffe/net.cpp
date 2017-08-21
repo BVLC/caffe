@@ -6,6 +6,7 @@
 #include <vector>
 #include <chrono>
 #include <omp.h>
+#include <cuda_profiler_api.h>
 
 #include "hdf5.h"
 
@@ -579,17 +580,41 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
+
+  static size_t cnt;
+  static size_t free_byte;
+  static size_t total_byte;
+
+  if(cnt==1)
+  {
+    cudaProfilerStart();
+  } else  if(cnt==0) {
+    CUDA_CHECK( cudaMemGetInfo( &free_byte, &total_byte ) );
+  }
+
   for (int i = start; i <= end; ++i) {
     for (int c = 0; c < before_forward_.size(); ++c) {
       before_forward_[c]->run(i);
     }
-    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
-    loss += layer_loss;
-    if (debug_info_) { ForwardDebugInfo(i); }
+    layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     for (int c = 0; c < after_forward_.size(); ++c) {
       after_forward_[c]->run(i);
     }
   }
+
+  if(cnt==1) {
+    cudaProfilerStop();
+  } else if(cnt==0) {
+    size_t cur_free_byte;
+    size_t cur_total_byte;
+    CUDA_CHECK( cudaMemGetInfo( &cur_free_byte, &cur_total_byte ) );
+    if(cur_free_byte<free_byte) {
+      std::cout<<"use more memory ="<<(free_byte-cur_free_byte)/1024/1024<<std::endl;
+    } else {
+      std::cout<<"use less memory ="<<(cur_free_byte-free_byte)/1024/1024<<std::endl;
+    }
+  }
+  cnt++;
   return loss;
 }
 
