@@ -54,6 +54,7 @@ class Net {
   Dtype ForwardFromTo(int start, int end);
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
+  void ParallelForwardTo(int end,std::map<std::string,shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names);
   /// @brief DEPRECATED; set input blobs then use Forward() instead.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
       Dtype* loss = NULL);
@@ -293,9 +294,11 @@ class Net {
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
   vector<vector<bool> > bottom_need_backward_;
+  vector<vector<string> > bottom_blob_names_;
   /// top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
+  vector<vector<string> > top_blob_names_;
   /// Vector of weight in the loss (or objective) function of each net blob,
   /// indexed by blob_id.
   vector<Dtype> blob_loss_weights_;

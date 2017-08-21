@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <chrono>
+#include <omp.h>
 
 #include "hdf5.h"
 
@@ -16,6 +18,13 @@
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+
+static inline uint64_t get_current_time_ms() {
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+          .count());
+}
 
 namespace caffe {
 
@@ -62,7 +71,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // For each layer, set up its input and output
   bottom_vecs_.resize(param.layer_size());
   top_vecs_.resize(param.layer_size());
+  top_blob_names_.resize(param.layer_size());
   bottom_id_vecs_.resize(param.layer_size());
+  bottom_blob_names_.resize(param.layer_size());
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
@@ -368,6 +379,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
         << layer_param->name() << " -> " << blob_name << " (in-place)";
     top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
     top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
+    top_blob_names_[layer_id].push_back(blob_name);
   } else if (blob_name_to_idx &&
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
@@ -387,6 +399,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     top_id_vecs_[layer_id].push_back(blob_id);
     top_vecs_[layer_id].push_back(blob_pointer.get());
+    top_blob_names_[layer_id].push_back(blob_name);
   }
   if (available_blobs) { available_blobs->insert(blob_name); }
 }
@@ -407,6 +420,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
       << layer_names_[layer_id] << " <- " << blob_name;
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
+  bottom_blob_names_[layer_id].push_back(blob_name);
   available_blobs->erase(blob_name);
   bool need_backward = blob_need_backward_[blob_id];
   // Check if the backpropagation on bottom_id should be skipped
@@ -510,6 +524,54 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
       }
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ParallelForwardTo(int end,std::map<std::string,shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names) {
+  CHECK_LT(end, layers_.size());
+
+
+  for (int i = 0; i <= end; ++i) {
+    auto begin_ms=get_current_time_ms();
+    vector<Blob<Dtype>*> bottom_vec;
+    vector<Blob<Dtype>*> top_vec;
+
+    for(auto const & blob_name : bottom_blob_names_[i]) {
+      auto it=input_blobs.find(blob_name);
+      if(it==input_blobs.end()) {
+	LOG(FATAL) << "Unknown bottom blob '" << blob_name;
+      }
+      bottom_vec.push_back(it->second.get());
+    }
+
+    for(auto const & blob_name : top_blob_names_[i]) {
+      auto it=input_blobs.find(blob_name);
+      if(it!=input_blobs.end()) {
+	top_vec.push_back(it->second.get());
+      } else {
+	auto & blob_pointer =input_blobs[blob_name];
+	blob_pointer.reset(new Blob<Dtype>());
+	top_vec.push_back(blob_pointer.get());
+      }
+    }
+    auto end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+      std::cout<<"alloc blob ms="<<end_ms-begin_ms<<std::endl;
+    }
+
+    begin_ms=get_current_time_ms();
+
+    layers_[i]->Forward(bottom_vec, top_vec);
+    //std::cout<<"process layer " <<i<< "  "<<layers_[i]->layer_param().type()<<std::endl;
+    //CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+    end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+      //std::cout<<"use in caffe ms="<<end_ms-begin_ms<<std::endl;
+    }
+  }
+  //std::cout<<"finish time="<<get_current_time_ms()<<std::endl;
+
+  return;
 }
 
 template <typename Dtype>

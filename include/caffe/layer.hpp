@@ -2,6 +2,7 @@
 #define CAFFE_LAYER_H_
 
 #include <algorithm>
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -412,8 +413,23 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+  auto get_current_time_ms=[]()->uint64_t {
+    return static_cast<uint64_t>(
+	std::chrono::duration_cast<std::chrono::milliseconds>(
+	  std::chrono::system_clock::now().time_since_epoch())
+	.count());
+  };
+
+
   Dtype loss = 0;
+    auto begin_ms=get_current_time_ms();
   Reshape(bottom, top);
+    auto end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+    std::cout<<"reshape layer use ms="<<end_ms-begin_ms<<std::endl;
+    }
+
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
@@ -426,8 +442,14 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case Caffe::GPU:
+    begin_ms=get_current_time_ms();
     Forward_gpu(bottom, top);
+    end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+      //std::cout<<"Forward_gpu use ms="<<end_ms-begin_ms<<std::endl;
+    }
 #ifndef CPU_ONLY
+    begin_ms=get_current_time_ms();
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
       const int count = top[top_id]->count();
@@ -436,6 +458,10 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       Dtype blob_loss = 0;
       caffe_gpu_dot(count, data, loss_weights, &blob_loss);
       loss += blob_loss;
+    }
+    end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+    std::cout<<"caffe_gpu_dot use ms="<<end_ms-begin_ms<<std::endl;
     }
 #endif
     break;
