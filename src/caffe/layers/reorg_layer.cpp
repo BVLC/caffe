@@ -12,6 +12,11 @@ namespace caffe {
         CHECK_EQ(reorg_param.has_stride(), true) << this->type() << " Layer needs stride param.";
         reverse_ = reorg_param.reverse();
         stride_ = reorg_param.stride();
+    }
+
+    template<typename Dtype>
+    void ReorgLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
+                                    const vector<Blob<Dtype> *> &top) {
         channels_ = bottom[0]->channels();
         height_ = bottom[0]->height();
         width_ = bottom[0]->width();
@@ -28,11 +33,6 @@ namespace caffe {
             reorged_height_ = height_ / stride_;
             reorged_width_ = width_ / stride_;
         }
-    }
-
-    template<typename Dtype>
-    void ReorgLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
-                                    const vector<Blob<Dtype> *> &top) {
         top[0]->Reshape(batch_num_, reorged_channels_,
                         reorged_height_, reorged_width_);
     }
