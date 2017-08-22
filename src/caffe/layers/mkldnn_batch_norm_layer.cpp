@@ -62,6 +62,8 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     bias_term_ = this->layer_param_.batch_norm_param().bias_term();
     moving_average_fraction_ = this->layer_param_.batch_norm_param().moving_average_fraction();
     use_global_stats_ = this->phase_ == TEST;
+    if (this->layer_param_.batch_norm_param().has_use_global_stats())
+      use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
 
     this->blobs_.resize(3 + (use_weight_bias_ ? 1:0) + (use_weight_bias_ && bias_term_ ? 1:0));
 
@@ -299,13 +301,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormFwdPrimitive(int idx) {
                static_cast<Dtype *>(variance_memory[idx]->get_data_handle()));
             if (use_weight_bias_) {
                 BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_stats[idx], *mean_memory[idx],
-                        *variance_memory[idx], *scaleshift_memory,
+                        *input_stats[idx], (const primitive::at)*mean_memory[idx],
+                        (const primitive::at)*variance_memory[idx], *scaleshift_memory,
                         *output_stats[idx]));
             } else {
                 BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
-                        *input_stats[idx], *mean_memory[idx],
-                        *variance_memory[idx], *output_stats[idx]));
+                        *input_stats[idx], (const primitive::at)*mean_memory[idx],
+                        (const primitive::at)*variance_memory[idx], *output_stats[idx]));
             }
         } else {
             if (use_weight_bias_) {
