@@ -1,6 +1,6 @@
 # Windows Caffe
 
-**This is an experimental, communtity based branch led by Guillaume Dumont (@willyd). It is a work-in-progress.**
+**This is an experimental, community based branch led by Guillaume Dumont (@willyd). It is a work-in-progress.**
 
 This branch of Caffe ports the framework to Windows.
 
@@ -28,6 +28,7 @@ Prebuilt binaries can be downloaded from the latest CI build on appveyor for the
 ### Requirements
 
  - Visual Studio 2013 or 2015
+     - Technically only the VS C/C++ compiler is required (cl.exe)
  - [CMake](https://cmake.org/) 3.4 or higher (Visual Studio and [Ninja](https://ninja-build.org/) generators are supported)
 
 ### Optional Dependencies
@@ -49,7 +50,17 @@ C:\Projects\caffe> git checkout windows
 :: Edit any of the options inside build_win.cmd to suit your needs
 C:\Projects\caffe> scripts\build_win.cmd
 ```
-The `build_win.cmd` script will download the dependencies, create the Visual Studio project files (or the ninja build files) and build the Release configuration. By default all the required DLLs will be copied (or hard linked when possible) next to the consuming binaries. If you wish to disable this option, you can by changing the command line option `-DCOPY_PREREQUISITES=0`. The prebuilt libraries also provide a `prependpath.bat` batch script that can temporarily modify your `PATH` envrionment variable to make the required DLLs available.
+The `build_win.cmd` script will download the dependencies, create the Visual Studio project files (or the ninja build files) and build the Release configuration. By default all the required DLLs will be copied (or hard linked when possible) next to the consuming binaries. If you wish to disable this option, you can by changing the command line option `-DCOPY_PREREQUISITES=0`. The prebuilt libraries also provide a `prependpath.bat` batch script that can temporarily modify your `PATH` environment variable to make the required DLLs available.
+
+If you have GCC installed (e.g. through MinGW), then Ninja will detect it before detecting the Visual Studio compiler, causing errors.  In this case you have several options:
+
+- [Pass CMake the path](https://cmake.org/Wiki/CMake_FAQ#How_do_I_use_a_different_compiler.3F) (Set `CMAKE_C_COMPILER=your/path/to/cl.exe` and `CMAKE_CXX_COMPILER=your/path/to/cl.exe`)
+- or Use the Visual Studio Generator by setting `WITH_NINJA` to 0 (This is slower, but may work even if Ninja is failing.)
+- or uninstall your copy of GCC 
+
+The path to cl.exe is usually something like 
+`"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/your_processor_architecture/cl.exe".`
+If you don't want to install Visual Studio, Microsoft's C/C++ compiler [can be obtained here](http://landinghub.visualstudio.com/visual-cpp-build-tools). 
 
 Below is a more complete description of some of the steps involved in building caffe.
 
@@ -112,7 +123,7 @@ When working with ninja you don't have the Visual Studio solutions as ninja is m
 
 ### Building a shared library
 
-CMake can be used to build a shared library instead of the default static library. To do so follow the above procedure and use `-DBUILD_SHARED_LIBS=ON`. Please note however, that some tests (more specifically the solver related tests) will fail since both the test exectuable and caffe library do not share static objects contained in the protobuf library.
+CMake can be used to build a shared library instead of the default static library. To do so follow the above procedure and use `-DBUILD_SHARED_LIBS=ON`. Please note however, that some tests (more specifically the solver related tests) will fail since both the test executable and caffe library do not share static objects contained in the protobuf library.
 
 ### Troubleshooting
 
