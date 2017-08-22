@@ -1,5 +1,6 @@
 #ifdef USE_CUDNN
 #include <vector>
+#include <chrono>
 
 #include "caffe/layers/cudnn_conv_layer.hpp"
 
@@ -7,9 +8,16 @@ namespace caffe {
 
 __global__ void sync_conv_groups() { }
 
+static inline uint64_t get_current_time_ms() {
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch())
+          .count());
+}
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    auto begin_ms=get_current_time_ms();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -43,11 +51,16 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
   }
+    auto end_ms=get_current_time_ms();
+    if(end_ms-begin_ms>10) {
+      std::cout<<"process  CuDNNConvolutionLayer ms="<< end_ms-begin_ms<<std::endl;
+    }
 }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  /*
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {
@@ -110,6 +123,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);

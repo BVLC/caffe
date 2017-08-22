@@ -53,6 +53,7 @@ template <typename Dtype>
 void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  /*
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -101,6 +102,7 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             temp_.mutable_gpu_data());
     caffe_gpu_add(temp_.count(), top_diff, temp_.gpu_data(), bottom_diff);
   }
+  */
 }
 
 

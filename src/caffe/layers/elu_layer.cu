@@ -41,6 +41,7 @@ template <typename Dtype>
 void ELULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+/*
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
@@ -53,6 +54,7 @@ void ELULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, top_diff, top_data, bottom_data, bottom_diff, alpha);
     CUDA_POST_KERNEL_CHECK;
   }
+  */
 }
 
 

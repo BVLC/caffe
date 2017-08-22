@@ -69,6 +69,7 @@ template <typename Dtype>
 void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  /*
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
   const int count = bottom[0]->count();
@@ -119,6 +120,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         div_factor);
     CUDA_POST_KERNEL_CHECK;
   }
+  */
 }
 
 

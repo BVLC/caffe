@@ -31,6 +31,7 @@ void LogLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LogLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+/*
   if (!propagate_down[0]) { return; }
     const int count = bottom[0]->count();
     const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -48,6 +49,7 @@ void LogLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       caffe_gpu_scal(count, backward_num_scale_, bottom_diff);
     }
     caffe_gpu_mul(count, top_diff, bottom_diff, bottom_diff);
+    */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(LogLayer);

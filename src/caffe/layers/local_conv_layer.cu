@@ -196,6 +196,7 @@ template<typename Dtype>
 void LocalConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 	const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
 {
+/*
 	const Dtype* weight = this->blobs_[0]->gpu_data();
 	Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 
@@ -292,6 +293,7 @@ void LocalConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 			realign_bottom_diff_gpu(loc_bottom_diff_buffer, single_bottom_diff);
 		}//for (int n = 0; n < top[i]->num(); n++)   
 	}//for (int i = 0; i < top.size(); ++i)
+*/
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(LocalConvolutionLayer);

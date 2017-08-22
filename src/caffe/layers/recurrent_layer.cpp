@@ -283,7 +283,7 @@ void RecurrentLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // backprop to inputs and parameters unconditionally, as either the inputs or
   // the parameters do need backward (or Net would have set
   // layer_needs_backward_[i] == false for this layer).
-  unrolled_net_->BackwardFrom(last_layer_index_);
+//  unrolled_net_->BackwardFrom(last_layer_index_);
 }
 
 #ifdef CPU_ONLY

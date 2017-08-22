@@ -32,6 +32,7 @@ void BiasLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+/*
   if (propagate_down[0] && bottom[0] != top[0]) {
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
@@ -52,6 +53,7 @@ void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       accum = true;
     }
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BiasLayer);

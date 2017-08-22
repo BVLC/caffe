@@ -415,7 +415,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
-    .def("_backward", &Net<Dtype>::BackwardFromTo)
+   // .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
     .def("clear_param_diffs", &Net<Dtype>::ClearParamDiffs)
     // The cast is to select a particular overload.

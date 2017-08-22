@@ -35,7 +35,7 @@ void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  bottom[0]->ShareDiff(*top[0]);
+ // bottom[0]->ShareDiff(*top[0]);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

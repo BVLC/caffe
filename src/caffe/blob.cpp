@@ -40,7 +40,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   if (count_ > capacity_) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+   // diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
   }
 }
 
@@ -93,7 +93,7 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
     data_.reset(new SyncedMemory(size));
-    diff_.reset(new SyncedMemory(size));
+    //diff_.reset(new SyncedMemory(size));
   }
   data_->set_cpu_data(data);
 }
@@ -111,11 +111,12 @@ void Blob<Dtype>::set_gpu_data(Dtype* data) {
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
     data_.reset(new SyncedMemory(size));
-    diff_.reset(new SyncedMemory(size));
+    //diff_.reset(new SyncedMemory(size));
   }
   data_->set_gpu_data(data);
 }
 
+/*
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
@@ -127,6 +128,7 @@ const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->gpu_data();
 }
+*/
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
@@ -139,7 +141,7 @@ Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
-
+/*
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
@@ -151,6 +153,7 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
+*/
 
 template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
@@ -158,12 +161,15 @@ void Blob<Dtype>::ShareData(const Blob& other) {
   data_ = other.data();
 }
 
+/*
 template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
 }
+*/
 
+/*
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int> or Blob<unsigned int>.
@@ -339,6 +345,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   }
   return sumsq;
 }
+*/
 
 template <> void Blob<unsigned int>::scale_data(unsigned int scale_factor) {
   NOT_IMPLEMENTED;
@@ -373,6 +380,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
   }
 }
 
+/*
 template <> void Blob<unsigned int>::scale_diff(unsigned int scale_factor) {
   NOT_IMPLEMENTED;
 }
@@ -405,6 +413,8 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
 }
+*/
+
 
 template <typename Dtype>
 bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
@@ -551,6 +561,21 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
       proto->add_diff(diff_vec[i]);
     }
   }
+}
+
+template <typename Dtype>
+void Blob<Dtype>::release() {
+
+  if(shape_data_) {
+    int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
+    for (int i = 0; i < shape_.size(); ++i) {
+      shape_[i] = 0;
+      shape_data[i] = 0;
+    }
+  }
+  count_= 0;
+  capacity_ = 0;
+  data_.reset();
 }
 
 INSTANTIATE_CLASS(Blob);

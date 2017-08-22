@@ -49,7 +49,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom_count_sum, top[0]->count());
   if (bottom.size() == 1) {
     top[0]->ShareData(*bottom[0]);
-    top[0]->ShareDiff(*bottom[0]);
+    //top[0]->ShareDiff(*bottom[0]);
   }
 }
 

@@ -82,6 +82,7 @@ __global__ void CLLBackward(const int count, const int channels,
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  /*
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const int count = bottom[0]->count();
@@ -102,6 +103,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       CUDA_POST_KERNEL_CHECK;
     }
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ContrastiveLossLayer);

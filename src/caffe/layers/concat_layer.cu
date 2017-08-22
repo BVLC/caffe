@@ -60,6 +60,7 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  /*
   if (bottom.size() == 1) { return; }
   const Dtype* top_diff = top[0]->gpu_diff();
   int offset_concat_axis = 0;
@@ -78,6 +79,7 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     }
     offset_concat_axis += bottom_concat_axis;
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ConcatLayer);

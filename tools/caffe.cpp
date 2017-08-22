@@ -236,7 +236,7 @@ int train() {
   shared_ptr<caffe::Solver<float> >
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
-  solver->SetActionFunction(signal_handler.GetActionFunction());
+  //solver->SetActionFunction(signal_handler.GetActionFunction());
 
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
@@ -364,7 +364,7 @@ int time() {
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
   LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
+  //caffe_net.Backward();
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();

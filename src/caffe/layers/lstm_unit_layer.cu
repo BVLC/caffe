@@ -124,6 +124,7 @@ template <typename Dtype>
 void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  /*
   CHECK(!propagate_down[2]) << "Cannot backpropagate to sequence indicators.";
   if (!propagate_down[0] && !propagate_down[1]) { return; }
 
@@ -147,6 +148,7 @@ void LSTMUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       <<<CAFFE_GET_BLOCKS(X_count), CAFFE_CUDA_NUM_THREADS>>>(
       X_count, hidden_dim_, X_acts, X_acts_diff, X_diff);
   CUDA_POST_KERNEL_CHECK;
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(LSTMUnitLayer);

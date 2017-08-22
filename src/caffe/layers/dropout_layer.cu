@@ -47,6 +47,7 @@ template <typename Dtype>
 void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+/*
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
@@ -63,6 +64,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       caffe_copy(top[0]->count(), top_diff, bottom_diff);
     }
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(DropoutLayer);

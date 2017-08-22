@@ -24,7 +24,8 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+       : data_(), //diff_(), 
+       count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -193,18 +194,22 @@ class Blob {
     return cpu_data()[offset(n, c, h, w)];
   }
 
+  /*
   inline Dtype diff_at(const int n, const int c, const int h,
       const int w) const {
     return cpu_diff()[offset(n, c, h, w)];
   }
+  */
 
   inline Dtype data_at(const vector<int>& index) const {
     return cpu_data()[offset(index)];
   }
 
+  /*
   inline Dtype diff_at(const vector<int>& index) const {
     return cpu_diff()[offset(index)];
   }
+  */
 
   inline const shared_ptr<SyncedMemory>& data() const {
     CHECK(data_);
@@ -221,16 +226,25 @@ class Blob {
   const int* gpu_shape() const;
   const Dtype* gpu_data() const;
   void set_gpu_data(Dtype* data);
-  const Dtype* cpu_diff() const;
-  const Dtype* gpu_diff() const;
+    const Dtype* cpu_diff() const {
+    return nullptr;
+    }
+  const Dtype* gpu_diff() const {
+    return nullptr;
+  }
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
-  Dtype* mutable_cpu_diff();
-  Dtype* mutable_gpu_diff();
-  void Update();
+    Dtype* mutable_cpu_diff() {
+      return nullptr;
+    }
+  Dtype* mutable_gpu_diff() {
+    return nullptr;
+  }
+  //void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
+  /*
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
   /// @brief Compute the sum of absolute values (L1 norm) of the diff.
@@ -239,11 +253,12 @@ class Blob {
   Dtype sumsq_data() const;
   /// @brief Compute the sum of squares (L2 norm squared) of the diff.
   Dtype sumsq_diff() const;
+  */
 
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
-  void scale_diff(Dtype scale_factor);
+  //void scale_diff(Dtype scale_factor);
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
@@ -262,9 +277,13 @@ class Blob {
    * This deallocates the SyncedMemory holding this Blob's diff_, as
    * shared_ptr calls its destructor when reset with the "=" operator.
    */
-  void ShareDiff(const Blob& other);
+  void ShareDiff(const Blob& other) {
+  }
 
   bool ShapeEquals(const BlobProto& other);
+
+  void release();
+
 
  protected:
   shared_ptr<SyncedMemory> data_;

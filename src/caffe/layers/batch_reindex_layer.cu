@@ -54,6 +54,7 @@ template<typename Dtype>
 void BatchReindexLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  /*
   CHECK(!propagate_down[1]) << "Cannot backprop to index.";
   if (!propagate_down[0]) {
     return;
@@ -99,6 +100,7 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
       top[0]->gpu_diff(), top_indexes.gpu_data(), begins.gpu_data(),
       counts.gpu_data(), bottom[0]->mutable_gpu_diff());
   CUDA_POST_KERNEL_CHECK;
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BatchReindexLayer);

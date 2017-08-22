@@ -381,6 +381,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     LOG_IF(INFO, Caffe::root_solver())
         << layer_param->name() << " -> " << blob_name << " (in-place)";
     top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
+    bottom_blob_cnt_[top_vecs_[layer_id].back()]++;
     top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
     top_blob_names_[layer_id].push_back(blob_name);
   } else if (blob_name_to_idx &&
@@ -402,6 +403,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     top_id_vecs_[layer_id].push_back(blob_id);
     top_vecs_[layer_id].push_back(blob_pointer.get());
+    bottom_blob_cnt_[top_vecs_[layer_id].back()]++;
     top_blob_names_[layer_id].push_back(blob_name);
   }
   if (available_blobs) { available_blobs->insert(blob_name); }
@@ -422,6 +424,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
   LOG_IF(INFO, Caffe::root_solver())
       << layer_names_[layer_id] << " <- " << blob_name;
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
+  bottom_blob_cnt_[blobs_[blob_id].get()]++;
   bottom_id_vecs_[layer_id].push_back(blob_id);
   bottom_blob_names_[layer_id].push_back(blob_name);
   available_blobs->erase(blob_name);
@@ -619,6 +622,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 
 
   auto tmp_forward_dependency_layers_=forward_dependency_layers_;
+  auto blob_cnt=bottom_blob_cnt_;
   while(true) {
 
     vector<int> stage_layers;
@@ -642,11 +646,23 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 
     for(int layer_id:stage_layers) {
       //回收内存
+
       /*
-      for(auto const & bottom_blob :   bottom_vecs_[layer_id]) {
-	bottom_blob->Reshape(0,0,0,0);
+      if(layers_[layer_id]->type()!="Split") {
+      for(size_t i=0;i<bottom_vecs_[layer_id].size();i++) {
+	if(i>=top_vecs_[layer_id].size() || top_vecs_[layer_id][i]!=bottom_vecs_[layer_id][i]) 
+	  bottom_vecs_[layer_id][i]->release();
+      }
       }
       */
+
+      for(auto const & bottom_blob :   bottom_vecs_[layer_id]) {
+	  blob_cnt[bottom_blob]--;
+	if(blob_cnt[bottom_blob]==0) {
+	  std::cout<<"release"<<std::endl;
+	  bottom_blob->release();
+	} 
+      }
 
       tmp_forward_dependency_layers_[layer_id]={-1};
 
@@ -723,6 +739,7 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
   return Forward(loss);
 }
 
+/*
 template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_GE(end, 0);
@@ -853,6 +870,8 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
   }
 }
 
+*/
+/*
 template <typename Dtype>
 void Net<Dtype>::BackwardFrom(int start) {
   BackwardFromTo(start, 0);
@@ -881,6 +900,7 @@ void Net<Dtype>::Backward() {
                << "L2 norm = (" << l2norm_data << ", " << l2norm_diff << ")";
   }
 }
+*/
 
 template <typename Dtype>
 void Net<Dtype>::Reshape() {
@@ -1066,7 +1086,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 template <typename Dtype>
 void Net<Dtype>::Update() {
   for (int i = 0; i < learnable_params_.size(); ++i) {
-    learnable_params_[i]->Update();
+ //   learnable_params_[i]->Update();
   }
 }
 

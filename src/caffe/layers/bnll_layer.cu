@@ -41,6 +41,7 @@ template <typename Dtype>
 void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+/*
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
@@ -51,6 +52,7 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, top_diff, bottom_data, bottom_diff);
     CUDA_POST_KERNEL_CHECK;
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BNLLLayer);

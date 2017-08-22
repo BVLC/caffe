@@ -24,6 +24,7 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  /*
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -38,6 +39,7 @@ void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         cudnn::dataType<Dtype>::zero,
         bottom_desc_, bottom_diff,
         NULL) );
+	*/
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNLCNLayer);

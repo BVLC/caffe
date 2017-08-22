@@ -26,6 +26,7 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+/*
   if (propagate_down[bottom.size() - 1]) {
     LOG(FATAL) << this->type()
                << "Layer cannot backpropagate to filter index inputs";
@@ -62,6 +63,7 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(FilterLayer);

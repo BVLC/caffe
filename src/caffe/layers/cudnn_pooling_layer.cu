@@ -20,6 +20,7 @@ void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+/*
   if (!propagate_down[0]) {
     return;
   }
@@ -33,6 +34,7 @@ void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         bottom_desc_, bottom_data,
         cudnn::dataType<Dtype>::zero,
         bottom_desc_, bottom_diff));
+	*/
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNPoolingLayer);

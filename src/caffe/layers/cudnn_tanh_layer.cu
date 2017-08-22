@@ -31,6 +31,7 @@ template <typename Dtype>
 void CuDNNTanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+/*
   if (!propagate_down[0]) {
     return;
   }
@@ -57,6 +58,7 @@ void CuDNNTanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         cudnn::dataType<Dtype>::zero,
         this->bottom_desc_, bottom_diff));
 #endif
+*/
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNTanHLayer);

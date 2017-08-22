@@ -16,6 +16,8 @@ void AbsValLayer<Dtype>::Forward_gpu(
 template <typename Dtype>
 void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+
+  /*
   const int count = top[0]->count();
   const Dtype* top_diff = top[0]->gpu_diff();
   if (propagate_down[0]) {
@@ -24,6 +26,7 @@ void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     caffe_gpu_sign(count, bottom_data, bottom_diff);
     caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
   }
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(AbsValLayer);

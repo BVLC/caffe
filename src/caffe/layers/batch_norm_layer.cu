@@ -93,6 +93,7 @@ template <typename Dtype>
 void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  /*
   const Dtype* top_diff;
   if (bottom[0] != top[0]) {
     top_diff = top[0]->gpu_diff();
@@ -163,6 +164,7 @@ void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   // note: temp_ still contains sqrt(var(X)+eps), computed during the forward
   // pass.
   caffe_gpu_div(temp_.count(), bottom_diff, temp_.gpu_data(), bottom_diff);
+  */
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BatchNormLayer);

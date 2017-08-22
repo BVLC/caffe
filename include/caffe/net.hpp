@@ -69,11 +69,11 @@ class Net {
    * The network backward should take no input and output, since it solely
    * computes the gradient w.r.t the parameters, and the data has already been
    * provided during the forward pass.
-   */
   void Backward();
   void BackwardFromTo(int start, int end);
   void BackwardFrom(int start);
   void BackwardTo(int end);
+   */
 
   /**
    * @brief Reshape all layers from bottom to top.
@@ -83,12 +83,14 @@ class Net {
    */
   void Reshape();
 
+  /*
   Dtype ForwardBackward() {
     Dtype loss;
     Forward(&loss);
     Backward();
     return loss;
   }
+  */
 
   /// @brief Updates the network weights based on the diff values computed.
   void Update();
@@ -292,6 +294,7 @@ class Net {
   /// They don't actually host the blobs (blobs_ does), so we simply store
   /// pointers.
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
+  map<Blob<Dtype>*,size_t > bottom_blob_cnt_;
   vector<vector<int> > bottom_id_vecs_;
   vector<vector<bool> > bottom_need_backward_;
   vector<vector<string> > bottom_blob_names_;
