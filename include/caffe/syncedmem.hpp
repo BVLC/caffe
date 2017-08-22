@@ -2,9 +2,10 @@
 #define CAFFE_SYNCEDMEM_HPP_
 
 #include <cstdlib>
+#include <unordered_map>
 
 #ifdef USE_MKL
-  #include "mkl.h"
+#include "mkl.h"
 #endif
 
 #include "caffe/common.hpp"
@@ -16,7 +17,7 @@ namespace caffe {
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
-inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
+inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     CUDA_CHECK(cudaMallocHost(ptr, size));
@@ -25,7 +26,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   }
 #endif
 #ifdef USE_MKL
-  *ptr = mkl_malloc(size ? size:1, 64);
+  *ptr = mkl_malloc(size ? size : 1, 64);
 #else
   *ptr = malloc(size);
 #endif
@@ -33,7 +34,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
-inline void CaffeFreeHost(void* ptr, bool use_cuda) {
+inline void CaffeFreeHost(void *ptr, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
     CUDA_CHECK(cudaFreeHost(ptr));
@@ -47,7 +48,6 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #endif
 }
 
-
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
  *        and device (GPU).
@@ -55,31 +55,31 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
  * TODO(dox): more thorough description.
  */
 class SyncedMemory {
- public:
+public:
   SyncedMemory();
   explicit SyncedMemory(size_t size);
   ~SyncedMemory();
-  const void* cpu_data();
-  void set_cpu_data(void* data);
-  const void* gpu_data();
-  void set_gpu_data(void* data);
-  void* mutable_cpu_data();
-  void* mutable_gpu_data();
+  const void *cpu_data();
+  void set_cpu_data(void *data);
+  const void *gpu_data();
+  void set_gpu_data(void *data);
+  void *mutable_cpu_data();
+  void *mutable_gpu_data();
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 
 #ifndef CPU_ONLY
-  void async_gpu_push(const cudaStream_t& stream);
+  void async_gpu_push(const cudaStream_t &stream);
 #endif
 
- private:
+private:
   void check_device();
 
   void to_cpu();
   void to_gpu();
-  void* cpu_ptr_;
-  void* gpu_ptr_;
+  void *cpu_ptr_;
+  void *gpu_ptr_;
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
@@ -87,9 +87,12 @@ class SyncedMemory {
   bool own_gpu_data_;
   int device_;
 
+  static void *gpu_malloc(size_t size);
+  static void gpu_free(void *data, size_t size);
+  static std::unordered_multimap<size_t, void *> cached_gpu_blobs;
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
-};  // class SyncedMemory
+}; // class SyncedMemory
 
-}  // namespace caffe
+} // namespace caffe
 
-#endif  // CAFFE_SYNCEDMEM_HPP_
+#endif // CAFFE_SYNCEDMEM_HPP_
