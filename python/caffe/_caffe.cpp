@@ -152,15 +152,6 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
   return net;
 }
 
-void Net_Save(const Net<Dtype>& net, string filename) {
-  NetParameter net_param;
-  net.ToProto(&net_param, false);
-  WriteProtoToBinaryFile(net_param, filename.c_str());
-}
-
-void Net_SaveHDF5(const Net<Dtype>& net, string filename) {
-  net.ToHDF5(filename);
-}
 
 void Net_LoadHDF5(Net<Dtype>* net, string filename) {
   net->CopyTrainedLayersFromHDF5(filename.c_str());
@@ -319,6 +310,8 @@ class NetCallback: public Net<Dtype>::Callback {
   }
   bp::object run_;
 };
+
+/*
 void Net_before_forward(Net<Dtype>* net, bp::object run) {
   net->add_before_forward(new NetCallback<Dtype>(run));
 }
@@ -331,6 +324,7 @@ void Net_before_backward(Net<Dtype>* net, bp::object run) {
 void Net_after_backward(Net<Dtype>* net, bp::object run) {
   net->add_after_backward(new NetCallback<Dtype>(run));
 }
+*/
 
 void Net_add_nccl(Net<Dtype>* net
 #ifdef USE_NCCL
@@ -414,10 +408,7 @@ BOOST_PYTHON_MODULE(_caffe) {
             bp::arg("weights")=bp::object())))
     // Legacy constructor
     .def("__init__", bp::make_constructor(&Net_Init_Load))
-    .def("_forward", &Net<Dtype>::ForwardFromTo)
-   // .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
-    .def("clear_param_diffs", &Net<Dtype>::ClearParamDiffs)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
@@ -438,19 +429,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_inputs", bp::make_function(&Net<Dtype>::input_blob_indices,
         bp::return_value_policy<bp::copy_const_reference>()))
-    .add_property("_outputs",
-        bp::make_function(&Net<Dtype>::output_blob_indices,
-        bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
-        bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
-    .def("save", &Net_Save)
-    .def("save_hdf5", &Net_SaveHDF5)
-    .def("load_hdf5", &Net_LoadHDF5)
-    .def("before_forward", &Net_before_forward)
-    .def("after_forward", &Net_after_forward)
-    .def("before_backward", &Net_before_backward)
-    .def("after_backward", &Net_after_backward)
-    .def("after_backward", &Net_add_nccl);
+        bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >());
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(

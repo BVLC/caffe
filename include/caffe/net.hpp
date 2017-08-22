@@ -31,49 +31,8 @@ class Net {
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
 
-  /**
-   * @brief Run Forward and return the result.
-   *
-   */
-  const vector<Blob<Dtype>*>& Forward(Dtype* loss = NULL);
-  /// @brief DEPRECATED; use Forward() instead.
-  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL) {
-    LOG_EVERY_N(WARNING, 1000) << "DEPRECATED: ForwardPrefilled() "
-        << "will be removed in a future version. Use Forward().";
-    return Forward(loss);
-  }
-
-  /**
-   * The From and To variants of Forward and Backward operate on the
-   * (topological) ordering by which the net is specified. For general DAG
-   * networks, note that (1) computing from one layer to another might entail
-   * extra computation on unrelated branches, and (2) computation starting in
-   * the middle may be incorrect if all of the layers of a fan-in are not
-   * included.
-   */
-  Dtype ForwardFromTo(int start, int end);
-  Dtype ForwardFrom(int start);
-  Dtype ForwardTo(int end);
-  void ParallelForwardTo(int end,std::map<std::string,shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names);
-  /// @brief DEPRECATED; set input blobs then use Forward() instead.
-  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
-      Dtype* loss = NULL);
-
-  /**
-   * @brief Zeroes out the diffs of all net parameters.
-   *        Should be run before Backward.
-   */
-  void ClearParamDiffs();
-
-  /**
-   * The network backward should take no input and output, since it solely
-   * computes the gradient w.r.t the parameters, and the data has already been
-   * provided during the forward pass.
-  void Backward();
-  void BackwardFromTo(int start, int end);
-  void BackwardFrom(int start);
-  void BackwardTo(int end);
-   */
+  Dtype ForwardTo(int end=-1);
+  std::map<std::string,shared_ptr<Blob<Dtype>>> ParallelForwardTo(std::map<std::string,shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names);
 
   /**
    * @brief Reshape all layers from bottom to top.
@@ -117,10 +76,6 @@ class Net {
   void CopyTrainedLayersFrom(const string trained_filename);
   void CopyTrainedLayersFromBinaryProto(const string trained_filename);
   void CopyTrainedLayersFromHDF5(const string trained_filename);
-  /// @brief Writes the net to a proto.
-  void ToProto(NetParameter* param, bool write_diff = false) const;
-  /// @brief Writes the net to an HDF5 file.
-  void ToHDF5(const string& filename, bool write_diff = false) const;
 
   /// @brief returns the network name.
   inline const string& name() const { return name_; }
@@ -199,18 +154,13 @@ class Net {
   }
   /// @brief Input and output blob numbers
   inline int num_inputs() const { return net_input_blobs_.size(); }
-  inline int num_outputs() const { return net_output_blobs_.size(); }
+  //inline int num_outputs() const { return net_output_blobs_.size(); }
   inline const vector<Blob<Dtype>*>& input_blobs() const {
     return net_input_blobs_;
   }
-  inline const vector<Blob<Dtype>*>& output_blobs() const {
-    return net_output_blobs_;
-  }
+
   inline const vector<int>& input_blob_indices() const {
     return net_input_blob_indices_;
-  }
-  inline const vector<int>& output_blob_indices() const {
-    return net_output_blob_indices_;
   }
   bool has_blob(const string& blob_name) const;
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
@@ -238,22 +188,7 @@ class Net {
     template <typename T>
     friend class Net;
   };
-  const vector<Callback*>& before_forward() const { return before_forward_; }
-  void add_before_forward(Callback* value) {
-    before_forward_.push_back(value);
-  }
-  const vector<Callback*>& after_forward() const { return after_forward_; }
-  void add_after_forward(Callback* value) {
-    after_forward_.push_back(value);
-  }
-  const vector<Callback*>& before_backward() const { return before_backward_; }
-  void add_before_backward(Callback* value) {
-    before_backward_.push_back(value);
-  }
-  const vector<Callback*>& after_backward() const { return after_backward_; }
-  void add_after_backward(Callback* value) {
-    after_backward_.push_back(value);
-  }
+
 
  protected:
   // Helpers for Init.
