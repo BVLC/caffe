@@ -1,4 +1,3 @@
-#include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -14,8 +13,10 @@
 #include <chrono>
 #include <thread>
 #include <math.h>
+#include "caffe/data_transformer.hpp"
+#include <caffe/caffe.hpp>
 
-#if defined(USE_OPENCV) && defined(HAS_HALF_SUPPORT)
+#if defined(USE_OPENCV)
 using namespace caffe;  // NOLINT(build/namespaces)
 #define MAX_FRAMES 1024
 
@@ -29,11 +30,6 @@ struct detect_result {
   float bottom;
 };
 
-enum DetectionModel {
-  SSD = 1,
-  YOLO = 2
-};
-
 template <typename Dtype>
 class Detector {
 public:
@@ -45,21 +41,19 @@ public:
 
   void Detect(vector<vector<detect_result>> &result,
               int iter_count,
-              bool visualize = false);
+              bool visualize = false,
+              bool step_mode = false);
 
   void ShowResult(const vector<cv::Mat> &imgs,
-                     const vector<vector<detect_result>> objects);
+                  const vector<vector<detect_result>> objects,
+                  bool step_mode);
   ~Detector() {
     for (int i = 0; i < input_blobs_.size(); i++)
       delete input_blobs_[i];
+    delete data_transformer_;
   }
 
 private:
-  void Preprocess(const cv::Mat& img,
-                  std::vector<Dtype *> input_channels);
-  void WrapInputLayer(std::vector<Dtype *> &input_channels,
-                      Blob<Dtype>* blob,
-                      int batch_id);
 
   shared_ptr<Net<Dtype> > net_;
   cv::Size input_blob_size_;
@@ -67,9 +61,9 @@ private:
   int num_channels_;
   int batch_size_;
   bool use_yolo_format_;
-  DetectionModel model_;
   vector<Blob<Dtype>*> input_blobs_;
-  const vector<cv::Mat> * origin_imgs_;
+  const vector<cv::Mat> *origin_imgs_;
+  DataTransformer<Dtype> *data_transformer_;
 };
 
 template <typename Dtype>
@@ -101,90 +95,47 @@ Detector<Dtype>::Detector(const string& model_file,
     << "Input layer should have 1 or 3 channels.";
   input_blob_size_ = cv::Size(input_layer->width(), input_layer->height());
 
-  // Check whether we are SSD or yolo.
+  // Check whether the model we will using.
+  // Different models need different preprocessing parameters.
   const shared_ptr<Layer<Dtype>> output_layer = net_->layers().back();
+  TransformationParameter transform_param;
+  caffe::ResizeParameter *resize_param = transform_param.mutable_resize_param();
   if (output_layer->layer_param().type() == "YoloDetectionOutput") {
     use_yolo_format_ = !output_layer->layer_param().
                         yolo_detection_output_param().ssd_format();
-    model_ = YOLO;
+    resize_param->set_resize_mode(caffe::ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
+    resize_param->add_pad_value(127.5);
+    transform_param.set_scale(1./255.);
+    transform_param.set_force_color(true);
+    std::cout << "Using Yolo: " << net_->name() << std::endl;
   } else if (output_layer->layer_param().type() == "DetectionOutput") {
-    model_ = SSD;
     use_yolo_format_ = false;
+    resize_param->set_resize_mode(caffe::ResizeParameter_Resize_mode_WARP);
+    if (net_->name().find("MobileNet") != std::string::npos) {
+      transform_param.add_mean_value(127.5);
+      transform_param.add_mean_value(127.5);
+      transform_param.add_mean_value(127.5);
+      transform_param.set_scale(1./127.5);
+      std::cout << "Using SSD(MobileNet)." << std::endl;
+    } else {
+      // For standard SSD VGG or DSOD
+      transform_param.add_mean_value(104);
+      transform_param.add_mean_value(117);
+      transform_param.add_mean_value(123);
+      std::cout << "Using SSD : " << net_->name() << std::endl;
+    }
   } else {
     std::cerr << "The model is not a valid object detection model."
               << std::endl;
     exit(-1);
   }
-}
-
-/* Wrap the input layer of the network in separate cv::Mat objects
-* (one per channel). This way we save one memcpy operation and we
-* don't need to rely on cudaMemcpy2D. The last preprocessing
-* operation will write the separate channels directly to the input
-* layer. */
-template <typename Dtype>
-void Detector<Dtype>::WrapInputLayer(std::vector<Dtype *> &input_channels,
-                                     Blob<Dtype>* blob,
-                                     int batch_id) {
-  int width = blob->width();
-  int height = blob->height();
-  Dtype* input_data = blob->mutable_cpu_data();
-  input_data += batch_id * width * height * blob->channels();
-  for (int i = 0; i < blob->channels(); ++i) {
-    input_channels.push_back(input_data);
-    input_data += width * height;
-  }
-}
-
-template <typename Dtype>
-void Detector<Dtype>::Preprocess(const cv::Mat& img,
-  std::vector<Dtype *> input_channels) {
-  /* Convert the input image to the input image format of the network. */
-  cv::Mat sample;
-  if (img.channels() == 3 && num_channels_ == 1)
-    cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
-  else if (img.channels() == 4 && num_channels_ == 1)
-    cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
-  else if (img.channels() == 4 && num_channels_ == 3)
-    cv::cvtColor(img, sample,
-                 model_ == YOLO ?
-                 cv::COLOR_BGRA2RGB : cv::COLOR_BGRA2BGR);
-  else if (img.channels() == 1 && num_channels_ == 3)
-    cv::cvtColor(img, sample,
-                 model_ == YOLO ?
-                 cv::COLOR_GRAY2RGB : cv::COLOR_GRAY2BGR);
-  else
-    sample = img;
-  cv::Mat sample_resized;
-  if (sample.size() != input_blob_size_)
-    cv::resize(sample, sample_resized, input_blob_size_);
-  else
-    sample_resized = sample;
-  cv::Mat sample_float;
-  if (num_channels_ == 3)
-    sample_resized.convertTo(sample_float, CV_32FC3);
-  else
-    sample_resized.convertTo(sample_float, CV_32FC1);
-  cv::Mat sample_normalized;
-  if (model_ == YOLO)
-    cv::divide(sample_float, 255.0, sample_normalized);
-  else
-    sample_normalized = sample_float;
-  for (int_tp i = 0; i < input_blob_size_.height; i++) {
-    for (int_tp j = 0; j < input_blob_size_.width; j++) {
-      int pos = i * input_blob_size_.width + j;
-      if (num_channels_ == 3) {
-        cv::Vec3f pixel = sample_normalized.at<cv::Vec3f>(i, j);
-        input_channels[0][pos] = pixel.val[0];
-        input_channels[1][pos] = pixel.val[1];
-        input_channels[2][pos] = pixel.val[2];
-      }
-      else {
-        cv::Scalar pixel = sample_normalized.at<float>(i, j);
-        input_channels[0][pos] = pixel.val[0];
-      }
-    }
-  }
+  resize_param->set_width(input_blob_size_.width);
+  resize_param->set_height(input_blob_size_.height);
+  resize_param->set_prob(1.0);
+  resize_param->add_interp_mode(caffe::ResizeParameter_Interp_mode_LINEAR);
+  data_transformer_ = new DataTransformer<Dtype>(transform_param,
+                                                 TEST,
+                                                 Caffe::GetDefaultDevice());
 }
 
 template <typename Dtype>
@@ -205,13 +156,10 @@ void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
                   num_channels_,
                   input_blob_size_.height,
                   input_blob_size_.width);
-    for (int j = 0; j < batch_size_; j++) {
-      assert(image_size_.width == imgs[batch_id * batch_size_ + j].cols);
-      assert(image_size_.height == imgs[batch_id * batch_size_ + j].rows);
-      std::vector<Dtype *> input_channels;
-      WrapInputLayer(input_channels, blob, j);
-      Preprocess(imgs[batch_id * batch_size_ + j], input_channels);
-    }
+    int pos = batch_id * batch_size_;
+    const vector<cv::Mat> batch_imgs(imgs.begin() + pos,
+                                     imgs.begin() + pos + batch_size_);
+    data_transformer_->Transform(batch_imgs, blob);
     input_blobs_.push_back(blob);
   }
 
@@ -221,20 +169,18 @@ void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
                   num_channels_,
                   input_blob_size_.height,
                   input_blob_size_.width);
-    for (int i = batch_id * batch_size_, j = 0; i < imgs.size(); j++, i++) {
-      assert(image_size_.width == imgs[batch_id * batch_size_ + j].cols);
-      assert(image_size_.height == imgs[batch_id * batch_size_ + j].rows);
-      vector<Dtype *> input_channels;
-      WrapInputLayer(input_channels, blob, j);
-      Preprocess(imgs[batch_id * batch_size_ + j], input_channels);
-    }
+    int pos = batch_id * batch_size_;
+    int batch_size = imgs.size() - batch_id * batch_size_;
+    const vector<cv::Mat> batch_imgs(imgs.begin() + pos,
+                                     imgs.begin() + pos + batch_size);
     input_blobs_.push_back(blob);
   }
 }
 
 template <typename Dtype>
 void Detector<Dtype>::ShowResult(const vector<cv::Mat> &imgs,
-                                    const vector<vector<detect_result>> objects)
+                                 const vector<vector<detect_result>> objects,
+                                 bool step_mode)
 {
     for (int i = 0; i < objects.size(); i++) {
       if (objects[i].size() == 0)
@@ -258,16 +204,18 @@ void Detector<Dtype>::ShowResult(const vector<cv::Mat> &imgs,
                     cv::Scalar(0, 255, 255));
       }
       cv::imshow("detections", img);
-      if (cv::waitKey(static_cast<char>(1)) == 27) {
-        exit(0);
-      }
+      int wait_ms = step_mode ? 0 : 1;
+      int key = cv::waitKey(static_cast<char>(wait_ms));
+      if (key == 'q')
+        exit(1);
     }
 }
 
 template <typename Dtype>
 void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
                              int iter_count,
-                             bool visualize) {
+                             bool visualize,
+                             bool step_mode) {
   Blob<Dtype>* input_layer = net_->input_blobs()[0];
   input_layer->ReshapeLike(*input_blobs_[0]);
   net_->Reshape();
@@ -312,27 +260,23 @@ void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
       objects[result[k + 0]].push_back(object);
     }
     if (visualize)
-      ShowResult(*origin_imgs_, objects);
+      ShowResult(*origin_imgs_, objects, step_mode);
     all_objects.insert(all_objects.end(), objects.begin(), objects.end());
   }
 }
 
 int main(int argc, char** argv) {
 
-  if (argc < 3) {
-    return 1;
-  }
-
 #if CV_MAJOR_VERSION >= 3
   const char* keys =
-    "{ model model_file      | <none> | model file            }"
-    "{ weights weights_file  | <none> | weights file            }"
-    "{ img image             | <none> | path to image }"
+    "{ model model_file      | <none> | model file }"
+    "{ weights weights_file  | <none> | weights file }"
+    //"{ img image             | <none> | path to image }"
     "{ video                 | <none> | path to video }"
-    "{ out out_file          |        | output image file          }"
-    "{ f fps                 | 1200   | target fps (0 for unlimited) }"
+    //"{ out out_file          |        | output image file }"
+    "{ s step                | false  | true for step mode }"
     "{ i iter                | 1      | iterations to be run }"
-    "{ v visualize           | true   | visualize output }"
+    "{ v visualize           | false   | visualize output }"
     "{ g gpu                 | 0      | gpu device }"
     "{ c cpu                 | false  | use cpu device }"
     "{ fp16 use_fp16         | false  | use fp16 forward engine. }"
@@ -341,14 +285,14 @@ int main(int argc, char** argv) {
     ;
 #else
   const char* keys =
-    "{ model   | model_file      | <none> | model file            }"
-    "{ weights | weights_file    | <none> | weights file            }"
-    "{ img     | image           | <none> | path to image }"
+    "{ model   | model_file      | <none> | model file }"
+    "{ weights | weights_file    | <none> | weights file }"
+    //"{ img     | image           | <none> | path to image }"
     "{ video   | video           | <none> | path to video }"
-    "{ out     | out_file        |        | output image file          }"
-    "{ f       | fps             | 1200   | target fps (0 for unlimited) }"
+    //"{ out     | out_file        |        | output image file }"
+    "{ s       | step            | false  | true for step mode }"
     "{ i       | iter            | 1      | iterations to be run }"
-    "{ v       | visualize       | true   | visualize output }"
+    "{ v       | visualize       | false   | visualize output }"
     "{ g       | gpu             | 0     | gpu device }"
     "{ c       | cpu             | false | use cpu device }"
     "{ fp16    | use_fp16        | false  | use fp16 forward engine. }"
@@ -358,56 +302,57 @@ int main(int argc, char** argv) {
 #endif
 
   cv::CommandLineParser parser(argc, argv, keys);
-
   const string model_file = parser.get<std::string>("model_file");
   const string weights_file = parser.get<std::string>("weights_file");
   const string video_file = parser.get<std::string>("video");
-  const string image_file = parser.get<std::string>("image");
-  const string out_file = parser.get<std::string>("out_file");
   int iter = parser.get<int>("iter");
-  int targetFPS = parser.get<int>("fps");
   bool visualize = parser.get<bool>("visualize");
   int gpu = parser.get<int>("gpu");
   bool cpu = parser.get<bool>("cpu");
   int batch_size = parser.get<int>("batch_size");
   bool use_fp16 = parser.get<bool>("use_fp16");
+  bool step_mode = parser.get<bool>("step");
+
+  if (model_file == "" ||
+      weights_file == "" ||
+      video_file == "") {
+#if CV_MAJOR_VERSION >= 3
+    parser.printMessage();
+#else
+    parser.printParams();
+#endif
+    exit(-1);
+  }
 
   if (cpu)
     gpu = -1;
   std::streambuf* buf = std::cout.rdbuf();
   std::ostream out(buf);
-  bool loadVideo = false;
   vector<cv::Mat> imgCache;
   cv::VideoCapture cap_;
   int total_frames = 0;
-  double delayMilliSeconds = targetFPS == 0 ? 1.0 : 1000.0 / targetFPS;
-  std::cout << "\ndelayMillisSeconds value = " << delayMilliSeconds << "\n";
   cv::Mat tmpMat;
-  if (video_file != "")
-  {
-      loadVideo = true;
-      if (!cap_.open(video_file))
-      {
-          LOG(FATAL) << "Failed to open video: " << video_file;
-      }
-      total_frames = cap_.get(CV_CAP_PROP_FRAME_COUNT);
-      total_frames = (total_frames > MAX_FRAMES) ? MAX_FRAMES : total_frames;
-      std::cout << "\nTotal frame number = " << total_frames;
-      for (int i = 0; i < total_frames; i++)
-      {
-          //if (i % total_frames == 0)
-          //{
-          //    cap_.set(CV_CAP_PROP_POS_FRAMES, 0);
-          //}
-          cap_ >> tmpMat;
-          imgCache.push_back(tmpMat.clone());
-      }
+
+  if (!cap_.open(video_file))
+    LOG(FATAL) << "Failed to open video: " << video_file;
+
+  total_frames = cap_.get(CV_CAP_PROP_FRAME_COUNT);
+  total_frames = (total_frames > MAX_FRAMES) ? MAX_FRAMES : total_frames;
+  // For benchmark mode, we limit the frames to 8
+  if (!visualize && total_frames > 8)
+    total_frames = 8;
+  std::cout << "\nTotal frame number = " << total_frames;
+  for (int i = 0; i < total_frames; i++) {
+    cap_ >> tmpMat;
+    imgCache.push_back(tmpMat.clone());
   }
+
   vector<vector<struct detect_result>> objects;
   double warm_up_time = 0;
   double detect_time = 0;
   // Initialize the network.
   if (use_fp16) {
+#ifdef HAS_HALF_SUPPORT
     Detector<half> detector(model_file, weights_file, gpu, batch_size);
     Timer warm_up_timer, detect_timer;
     detector.Preprocess(imgCache);
@@ -420,9 +365,12 @@ int main(int argc, char** argv) {
     warm_up_time = warm_up_timer.MilliSeconds();
 
     detect_timer.Start();
-    detector.Detect(objects, iter, visualize);
+    detector.Detect(objects, iter, visualize, step_mode);
     detect_timer.Stop();
     detect_time = detect_timer.MilliSeconds();
+#else
+    std::cout << "fp16 is not supported." << std::endl;
+#endif
   } else {
     Detector<float> detector(model_file, weights_file, gpu, batch_size);
     Timer warm_up_timer, detect_timer;
@@ -434,7 +382,7 @@ int main(int argc, char** argv) {
     objects.clear();
     warm_up_time = warm_up_timer.MilliSeconds();
     detect_timer.Start();
-    detector.Detect(objects, iter, visualize);
+    detector.Detect(objects, iter, visualize, step_mode);
     detect_timer.Stop();
     detect_time = detect_timer.MilliSeconds();
   }
