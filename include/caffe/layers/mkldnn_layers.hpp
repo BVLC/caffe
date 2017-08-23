@@ -71,6 +71,7 @@ public:
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
         , output_memory(), bwd_bottom_diff_memory()
         , input_primitive(), bwd_top_diff_primitive()
+        , scaleshift_combination()
         {
           PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
           PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -118,6 +119,7 @@ private:
     bool use_weight_bias_, bias_term_, use_global_stats_;
     int num_stats_batches_;
     int stats_batch_size_;
+    shared_ptr<Blob<Dtype>> scaleshift_combination;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);

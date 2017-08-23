@@ -78,6 +78,19 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
             this->blobs_[i]->mutable_cpu_data());
     }
 
+    //IntelCaffe treat scale and shift as different blobs, so current MKL-DNN integration has additional copies from Caffe to MKL-DNN buffer on fwd pass and from MKL-DNN to Caffe buffer on bwd pass.
+    //Optimization: use the temp blob to combine the scale and shift together. Avoid the additional copies.
+    // Initialize scale and shift combination blob
+    vector<int> scaleshift_combination_shape(1);
+    scaleshift_combination_shape[0] = 2*channels_;
+    this->scaleshift_combination.reset(new Blob<Dtype>(scaleshift_combination_shape));
+    //Should initialize the scaleshift_combine buffer to 0, because when bias_term_ == false, need to pass zero bias to MKLDNN
+    caffe_set(scaleshift_combination_shape[0], static_cast<Dtype>(0),
+              scaleshift_combination->mutable_cpu_data());
+    //Not so necessary, because the diff will initialize to 0 automatically
+    caffe_set(scaleshift_combination_shape[0], static_cast<Dtype>(0),
+              scaleshift_combination->mutable_cpu_diff());
+
     if (use_weight_bias_) {
         // Initialize scale and shift
         vector<int> scaleshift_shape(1);
@@ -85,6 +98,8 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: channels_  = " << channels_;
 
         this->blobs_[3].reset(new Blob<Dtype>(scaleshift_shape));
+        this->blobs_[3]->set_cpu_data(scaleshift_combination->mutable_cpu_data());
+        this->blobs_[3]->set_cpu_diff(scaleshift_combination->mutable_cpu_diff());
         FillerParameter filler_param(this->layer_param_.batch_norm_param().filler());
         if (!this->layer_param_.batch_norm_param().has_filler()) {
             filler_param.set_type("constant");
@@ -94,8 +109,10 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::LayerSetUp: scaleshift " << __LINE__ << ":" << this->layer_param_.name();
         filler->Fill(this->blobs_[3].get());
 
-        if ( bias_term_ ) {
+        if (bias_term_) {
             this->blobs_[4].reset(new Blob<Dtype>(scaleshift_shape));
+            this->blobs_[4]->set_cpu_data(scaleshift_combination->mutable_cpu_data() + scaleshift_combination->offset(channels_));
+            this->blobs_[4]->set_cpu_diff(scaleshift_combination->mutable_cpu_diff() + scaleshift_combination->offset(channels_));
             FillerParameter bias_filler_param(this->layer_param_.batch_norm_param().bias_filler());
             if (!this->layer_param_.batch_norm_param().has_bias_filler()) {
                 bias_filler_param.set_type("constant");
@@ -212,7 +229,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
 
     // ---- Create memory  ---------------------
     if (use_weight_bias_) {
-        scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc()));
+        scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc(), this->scaleshift_combination->mutable_cpu_data()));
     }
 
     // ---  init primitive and prv_memory descriptors ----------------------
@@ -352,18 +369,7 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
         caffe_cpu_scale(this->blobs_[1]->count(), scale_factor,
                     this->blobs_[1]->cpu_data(), variance_buffer_);
       }
-      if (use_weight_bias_) {
-        Dtype* scaleShift_buffer_ = (Dtype *)(scaleshift_memory->get_data_handle());
-        // Fill ScaleShift buffer
-        for (int i = 0; i < this->channels_; i++) {
-            scaleShift_buffer_[i] = this->blobs_[3]->cpu_data()[i];
-            scaleShift_buffer_[channels_ + i] = 0;
-            if (bias_term_) {
-                scaleShift_buffer_[channels_ + i] = this->blobs_[4]->cpu_data()[i];
-            }
-        }
-      }
-
+      
       PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
       PERFORMANCE_MEASUREMENT_BEGIN();
       BatchNormFwd[stats_batch_idx].submit();
@@ -457,7 +463,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
 
     if (use_weight_bias_) {
         bwd_scaleshift_diff_memory.reset(new memory(
-                    BatchNormFwd_pd->weights_primitive_desc()));
+                    BatchNormFwd_pd->weights_primitive_desc(), this->scaleshift_combination->mutable_cpu_diff()));
     }
 
     // ---  init primitive and prv_memory descriptors ----------------------
@@ -555,19 +561,6 @@ void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
 #endif
       PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
-
-      /* FIXME: this wouldn't work with lazy stream */
-      if (use_weight_bias_) {
-        Dtype* dw = (Dtype *)(bwd_scaleshift_diff_memory->get_data_handle());
-        for (int i = 0; i < this->channels_; i++)
-            this->blobs_[3]->mutable_cpu_diff()[i] += dw[i];
-
-        if (bias_term_) {
-            dw += channels_;
-            for (int i = 0; i < this->channels_; i++)
-                this->blobs_[4]->mutable_cpu_diff()[i] += dw[i];
-        }
-      }
     }
 }
 
