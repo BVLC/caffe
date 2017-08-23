@@ -445,7 +445,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 152 (last added: selu_dropout_param)
+// LayerParameter next available layer-specific ID: 155 (last added: selu_dropout_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -453,7 +453,7 @@ message LayerParameter {
   repeated string top = 4; // the name of each top blob
 
   // for shufflenet
-  optional ShuffleChannelParameter shuffle_channel_param = 164;
+  optional ShuffleChannelParameter shuffle_channel_param = 154;
 
   // The train / test phase for computation.
   optional Phase phase = 10;
@@ -558,7 +558,7 @@ message LayerParameter {
   optional TileParameter tile_param = 138;
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
-  optional UpsampleParameter upsample_param = 149;
+  optional UpsampleParameter upsample_param = 152;
   optional DenseImageDataParameter dense_image_data_param = 46;
 }
 
