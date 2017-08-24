@@ -18,7 +18,6 @@
 
 #if defined(USE_OPENCV)
 using namespace caffe;  // NOLINT(build/namespaces)
-#define MAX_FRAMES 1024
 
 struct detect_result {
   int imgid;
@@ -138,6 +137,30 @@ Detector<Dtype>::Detector(const string& model_file,
                                                  Caffe::GetDefaultDevice());
 }
 
+static void
+FixupChannels(vector <cv::Mat> &imgs, int num_channels) {
+  for (int i = 0; i < imgs.size(); i++) {
+    /* Convert the input image to the input image format of the network. */
+    cv::Mat img = imgs[i];
+    if (img.channels() != num_channels) {
+      cv::Mat sample;
+      if (img.channels() == 3 && num_channels == 1)
+        cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
+      else if (img.channels() == 4 && num_channels == 1)
+        cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
+      else if (img.channels() == 4 && num_channels == 3)
+        cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
+      else if (img.channels() == 1 && num_channels == 3)
+        cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
+      else {
+        // Should not enter here, just in case.
+        sample = img;
+      }
+      imgs[i] = sample;
+    }
+  }
+}
+
 template <typename Dtype>
 void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
 
@@ -157,8 +180,9 @@ void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
                   input_blob_size_.height,
                   input_blob_size_.width);
     int pos = batch_id * batch_size_;
-    const vector<cv::Mat> batch_imgs(imgs.begin() + pos,
-                                     imgs.begin() + pos + batch_size_);
+    vector<cv::Mat> batch_imgs(imgs.begin() + pos,
+                               imgs.begin() + pos + batch_size_);
+    FixupChannels(batch_imgs, num_channels_);
     data_transformer_->Transform(batch_imgs, blob);
     input_blobs_.push_back(blob);
   }
@@ -281,6 +305,7 @@ int main(int argc, char** argv) {
     "{ c cpu                 | false  | use cpu device }"
     "{ fp16 use_fp16         | false  | use fp16 forward engine. }"
     "{ bs batch_size         | 1      | batch size }"
+    "{ frame_count f         | 1024   | process frame count in the video}"
     "{ help                  | false  | display this help and exit  }"
     ;
 #else
@@ -297,6 +322,7 @@ int main(int argc, char** argv) {
     "{ c       | cpu             | false | use cpu device }"
     "{ fp16    | use_fp16        | false  | use fp16 forward engine. }"
     "{ bs      | batch_size      | 1      | batch size }"
+    "{ f       | frame_count     | 1024   | process frame count in the video}"
     "{ h       | help            | false  | display this help and exit  }"
     ;
 #endif
@@ -312,6 +338,7 @@ int main(int argc, char** argv) {
   int batch_size = parser.get<int>("batch_size");
   bool use_fp16 = parser.get<bool>("use_fp16");
   bool step_mode = parser.get<bool>("step");
+  int max_frame_count = parser.get<int>("frame_count");
 
   if (model_file == "" ||
       weights_file == "" ||
@@ -328,7 +355,6 @@ int main(int argc, char** argv) {
     gpu = -1;
   std::streambuf* buf = std::cout.rdbuf();
   std::ostream out(buf);
-  vector<cv::Mat> imgCache;
   cv::VideoCapture cap_;
   int total_frames = 0;
   cv::Mat tmpMat;
@@ -337,14 +363,15 @@ int main(int argc, char** argv) {
     LOG(FATAL) << "Failed to open video: " << video_file;
 
   total_frames = cap_.get(CV_CAP_PROP_FRAME_COUNT);
-  total_frames = (total_frames > MAX_FRAMES) ? MAX_FRAMES : total_frames;
+  total_frames = (total_frames > max_frame_count) ?
+                  max_frame_count : total_frames;
   // For benchmark mode, we limit the frames to 8
   if (!visualize && total_frames > 8)
     total_frames = 8;
   std::cout << "\nTotal frame number = " << total_frames;
+  vector<cv::Mat> imgCache(total_frames);
   for (int i = 0; i < total_frames; i++) {
-    cap_ >> tmpMat;
-    imgCache.push_back(tmpMat.clone());
+    cap_ >> imgCache[i];
   }
 
   vector<vector<struct detect_result>> objects;
