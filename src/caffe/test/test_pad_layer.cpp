@@ -121,7 +121,7 @@ TYPED_TEST(PadLayerTest, ForwardZeroPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::ZERO);
+  layer_param.mutable_pad_param()->set_type(PadParameter::ZERO);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -157,7 +157,7 @@ TYPED_TEST(PadLayerTest, ForwardZeroPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2, replicate
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::ZERO);
+  layer_param.mutable_pad_param()->set_type(PadParameter::ZERO);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -197,7 +197,7 @@ TYPED_TEST(PadLayerTest, ForwardReplPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REPLICATE);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REPLICATE);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -232,7 +232,7 @@ TYPED_TEST(PadLayerTest, ForwardReplPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2, replicate
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REPLICATE);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REPLICATE);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -283,7 +283,7 @@ TYPED_TEST(PadLayerTest, ForwardReflectPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -318,7 +318,7 @@ TYPED_TEST(PadLayerTest, ForwardReflectPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -361,7 +361,7 @@ TYPED_TEST(PadLayerTest, ForwardReflect101Pad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT_101);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT_101);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_big_vec_, this->blob_top_vec_);
@@ -396,7 +396,7 @@ TYPED_TEST(PadLayerTest, ForwardReflect101Pad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT_101);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT_101);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_big_vec_, this->blob_top_vec_);
@@ -443,7 +443,7 @@ TYPED_TEST(PadLayerTest, GradientZeroPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::ZERO);
+  layer_param.mutable_pad_param()->set_type(PadParameter::ZERO);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -457,7 +457,7 @@ TYPED_TEST(PadLayerTest, GradientReplPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REPLICATE);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REPLICATE);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -471,7 +471,7 @@ TYPED_TEST(PadLayerTest, GradientReflectPad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -485,7 +485,7 @@ TYPED_TEST(PadLayerTest, GradientReflect101Pad1) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 1
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT_101);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT_101);
   layer_param.mutable_pad_param()->set_pad(1);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -499,7 +499,7 @@ TYPED_TEST(PadLayerTest, GradientZeroPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::ZERO);
+  layer_param.mutable_pad_param()->set_type(PadParameter::ZERO);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -513,7 +513,7 @@ TYPED_TEST(PadLayerTest, GradientReplPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REPLICATE);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REPLICATE);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -527,7 +527,7 @@ TYPED_TEST(PadLayerTest, GradientReflectPad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_small_vec_, this->blob_top_vec_);
@@ -541,7 +541,7 @@ TYPED_TEST(PadLayerTest, GradientReflect101Pad2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Pad width of 2
-  layer_param.mutable_pad_param()->set_padtype(PadParameter::REFLECT_101);
+  layer_param.mutable_pad_param()->set_type(PadParameter::REFLECT_101);
   layer_param.mutable_pad_param()->set_pad(2);
   PadLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_big_vec_, this->blob_top_vec_);

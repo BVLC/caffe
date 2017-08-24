@@ -20,7 +20,7 @@ void PadLayer<Dtype>::LayerSetUp(const std::vector<Blob<Dtype>*>& bottom,
   // bottom[0] supplies the data
   const PadParameter& param = this->layer_param_.pad_param();
 
-  PAD_TYPE_ = param.padtype();
+  PAD_TYPE_ = param.type();
   PAD_ = param.pad();
   CHECK_EQ(bottom.size(), 1) << "Pad Layer takes a single blob as input.";
   CHECK_EQ(top.size(), 1) << "Pad Layer takes a single blob as output.";

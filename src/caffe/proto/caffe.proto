@@ -909,7 +909,7 @@ message PadParameter {
     // ODD = 4;
     // ODD_101 = 5;
   }
-  optional PadType padtype = 1 [default = ZERO]; // The padding method
+  optional PadType type = 1 [default = ZERO]; // The padding method
   optional uint32 pad = 2 [default = 0]; // Width of padding
 }
 
