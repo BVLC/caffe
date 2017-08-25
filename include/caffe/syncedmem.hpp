@@ -69,6 +69,7 @@ public:
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 
+  static size_t get_used_size();
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t &stream);
 #endif
@@ -89,7 +90,6 @@ private:
 
   static void *gpu_malloc(size_t size);
   static void gpu_free(void *data, size_t size);
-  static std::unordered_multimap<size_t, void *> cached_gpu_blobs;
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory
 

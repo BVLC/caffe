@@ -13,6 +13,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
+#include "caffe/syncedmem.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/hdf5.hpp"
@@ -50,6 +51,10 @@ Net<Dtype>::Net(const string &param_file, Phase phase, const int level,
 }
 
 template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
+  size_t free_byte;
+  size_t total_byte;
+
+    CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -222,25 +227,7 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
       }
     }
   }
-  // Handle force_backward if needed.
-  if (param.force_backward()) {
-    for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
-      layer_need_backward_[layer_id] = true;
-      for (int bottom_id = 0;
-           bottom_id < bottom_need_backward_[layer_id].size(); ++bottom_id) {
-        bottom_need_backward_[layer_id][bottom_id] =
-            bottom_need_backward_[layer_id][bottom_id] ||
-            layers_[layer_id]->AllowForceBackward(bottom_id);
-        blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] =
-            blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] ||
-            bottom_need_backward_[layer_id][bottom_id];
-      }
-      for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
-           ++param_id) {
-        layers_[layer_id]->set_param_propagate_down(param_id, true);
-      }
-    }
-  }
+
   // In the end, all remaining blobs are considered output blobs.
   for (set<string>::iterator it = available_blobs.begin();
        it != available_blobs.end(); ++it) {
@@ -257,6 +244,19 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   }
   debug_info_ = param.debug_info();
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
+
+    size_t cur_free_byte;
+    size_t cur_total_byte;
+    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
+      std::cout << "init cur_free_byte="
+                << (cur_free_byte) / 1024 / 1024 << std::endl;
+    if (cur_free_byte < free_byte) {
+      std::cout << "init use more memory ="
+                << (free_byte - cur_free_byte) / 1024 / 1024 << std::endl;
+    } else {
+      std::cout << "init use less memory ="
+                << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
+    }
 }
 
 template <typename Dtype>
@@ -356,6 +356,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
       return false;
     }
   }
+
   return true;
 }
 
@@ -546,16 +547,27 @@ void Net<Dtype>::AppendParam(const NetParameter &param, const int layer_id,
 }
 
 template <typename Dtype>
-std::map<std::string, shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
-    std::map<std::string, shared_ptr<Blob<Dtype>>> &input_blobs,
+std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
+    std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names) {
+
+  std::cout<<"sync used size="<<SyncedMemory::get_used_size()<<std::endl;
+  static size_t free_byte;
+  static size_t total_byte;
+
+  {
+    CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
+      std::cout << "before  alloc blob free_byte="
+                << (free_byte) / 1024 / 1024 << std::endl;
+  }
+
 
   auto begin_ms = get_current_time_ms();
   int end = -1;
 
-  std::map<int, std::vector<shared_ptr<Blob<Dtype>>>> bottom_blobs;
-  std::map<int, std::vector<shared_ptr<Blob<Dtype>>>> top_blobs;
-  std::map<std::string, shared_ptr<Blob<Dtype>>> output_blobs;
+  std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> bottom_blobs;
+  std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> top_blobs;
+  std::map<std::string, std::shared_ptr<Blob<Dtype>>> output_blobs;
 
   for (int i = 0; i < layers_.size(); ++i) {
     for (auto const &blob_name : bottom_blob_names_[i]) {
@@ -563,9 +575,11 @@ std::map<std::string, shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
       if (it == input_blobs.end()) {
         auto &blob_pointer = input_blobs[blob_name];
         blob_pointer.reset(new Blob<Dtype>());
+	blob_pointer->set_name(blob_name);
         bottom_blobs[i].emplace_back(blob_pointer);
       } else {
         bottom_blobs[i].emplace_back(it->second);
+	it->second->set_name(blob_name);
       }
     }
 
@@ -574,9 +588,11 @@ std::map<std::string, shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
       if (it == input_blobs.end()) {
         auto &blob_pointer = input_blobs[blob_name];
         blob_pointer.reset(new Blob<Dtype>());
+	blob_pointer->set_name(blob_name);
         top_blobs[i].emplace_back(blob_pointer);
       } else {
         top_blobs[i].emplace_back(it->second);
+	it->second->set_name(blob_name);
       }
 
       bool is_output_blob =
@@ -592,27 +608,28 @@ std::map<std::string, shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
 
   CHECK_GE(end, 0);
 
-  static size_t cnt;
-  static size_t free_byte;
-  static size_t total_byte;
-
-  if (cnt >= 1) {
+  {
     cudaProfilerStart();
-  } else if (cnt == 0) {
     CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
+      std::cout << "before forward free_byte="
+                << (free_byte) / 1024 / 1024 << std::endl;
   }
 
   for (int i = 0; i <= end; ++i) {
+    std::cout<<"forward layer"<<i<<std::endl;
     layers_[i]->Forward(bottom_blobs[i], top_blobs[i]);
     bottom_blobs.erase(i);
+    top_blobs.erase(i);
+    std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
   }
 
-  if (cnt >= 1) {
+  {
     cudaProfilerStop();
-  } else if (cnt == 0) {
     size_t cur_free_byte;
     size_t cur_total_byte;
     CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
+      std::cout << "cur_free_byte="
+                << (cur_free_byte) / 1024 / 1024 << std::endl;
     if (cur_free_byte < free_byte) {
       std::cout << "use more memory aaaaaaaaaaa ="
                 << (free_byte - cur_free_byte) / 1024 / 1024 << std::endl;
@@ -621,7 +638,6 @@ std::map<std::string, shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
                 << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
     }
   }
-  cnt++;
   auto end_ms = get_current_time_ms();
   std::cout << "use ms =" << end_ms - begin_ms << std::endl;
   return output_blobs;
@@ -661,8 +677,8 @@ template <typename Dtype> Dtype Net<Dtype>::ForwardTo(int end) {
     }
 
     for (int layer_id : stage_layers) {
-      std::cout << "process Layer type=" << layers_[layer_id]->type()
-                << std::endl;
+      //std::cout << "process Layer type=" << layers_[layer_id]->type()
+       //         << std::endl;
       layers_[layer_id]->Forward(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     }
 

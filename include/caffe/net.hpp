@@ -32,7 +32,7 @@ class Net {
   void Init(const NetParameter& param);
 
   Dtype ForwardTo(int end=-1);
-  std::map<std::string,shared_ptr<Blob<Dtype>>> ParallelForwardTo(std::map<std::string,shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names);
+  std::map<std::string,std::shared_ptr<Blob<Dtype>>> ParallelForwardTo(std::map<std::string,std::shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names);
 
   /**
    * @brief Reshape all layers from bottom to top.

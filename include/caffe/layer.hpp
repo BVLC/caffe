@@ -91,6 +91,8 @@ public:
   virtual void LayerSetUp(const vector<Blob<Dtype> *> &bottom,
                           const vector<Blob<Dtype> *> &top) {}
 
+  void LayerSetUp2(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                       const vector<std::shared_ptr<Blob<Dtype>>> &top);
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
    *        the shapes of the bottom blobs.
@@ -126,8 +128,8 @@ public:
   inline Dtype Forward(const vector<Blob<Dtype> *> &bottom,
                        const vector<Blob<Dtype> *> &top);
 
-  inline Dtype Forward(const vector<shared_ptr<Blob<Dtype>>> &bottom,
-                       const vector<shared_ptr<Blob<Dtype>>> &top);
+  inline Dtype Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                       const vector<std::shared_ptr<Blob<Dtype>>> &top);
   /**
    * @brief Given the top blob error gradients, compute the bottom blob error
    *        gradients.
@@ -410,8 +412,8 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
 // functions.
 template <typename Dtype>
 inline Dtype
-Layer<Dtype>::Forward(const vector<shared_ptr<Blob<Dtype>>> &bottom,
-                      const vector<shared_ptr<Blob<Dtype>>> &top) {
+Layer<Dtype>::Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                      const vector<std::shared_ptr<Blob<Dtype>>> &top) {
 
   vector<Blob<Dtype> *> bottom_;
   vector<Blob<Dtype> *> top_;
@@ -424,6 +426,24 @@ Layer<Dtype>::Forward(const vector<shared_ptr<Blob<Dtype>>> &bottom,
   }
 
   return Forward(bottom_, top_);
+}
+
+
+template <typename Dtype>
+void Layer<Dtype>::LayerSetUp2(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                      const vector<std::shared_ptr<Blob<Dtype>>> &top) {
+
+  vector<Blob<Dtype> *> bottom_;
+  vector<Blob<Dtype> *> top_;
+  for (auto const &ptr : bottom) {
+    bottom_.push_back(ptr.get());
+  }
+
+  for (auto const &ptr : top) {
+    top_.push_back(ptr.get());
+  }
+
+  return LayerSetUp(bottom_, top_);
 }
 
 template <typename Dtype>

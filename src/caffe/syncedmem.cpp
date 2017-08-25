@@ -2,12 +2,16 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include <deepir/cuda_buddy.hpp>
 #include <cub/util_allocator.cuh>
 
-static cub::CachingDeviceAllocator g_allocator(4, 3, 8, 100 * 1024 * 1024,
-                                               true);
+static cub::CachingDeviceAllocator g_allocator(2, 6, 22, -1, false, true);
+static   deepir::cuda_buddy buddy_allocator(30);
 
 namespace caffe {
+  size_t SyncedMemory::get_used_size() {
+    return buddy_allocator.used_size;
+  }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
@@ -37,8 +41,7 @@ SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
     // CUDA_CHECK(cudaFree(gpu_ptr_));
-    // CUDA_CHECK(g_allocator.DeviceFree(gpu_ptr_));
-    gpu_free(gpu_ptr_, size_);
+     gpu_free(gpu_ptr_, size_);
   }
 #endif // CPU_ONLY
 }
@@ -76,8 +79,6 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    // CUDA_CHECK(g_allocator.DeviceAllocate(&gpu_ptr_, size_));
-
     gpu_ptr_ = gpu_malloc(size_);
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
@@ -86,7 +87,6 @@ inline void SyncedMemory::to_gpu() {
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
       // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-      // CUDA_CHECK(g_allocator.DeviceAllocate(&gpu_ptr_, size_));
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
@@ -136,7 +136,6 @@ void SyncedMemory::set_gpu_data(void *data) {
   CHECK(data);
   if (own_gpu_data_) {
     // CUDA_CHECK(cudaFree(gpu_ptr_));
-    // CUDA_CHECK(g_allocator.DeviceFree(gpu_ptr_));
     gpu_free(gpu_ptr_, size_);
   }
   gpu_ptr_ = data;
@@ -173,7 +172,6 @@ void SyncedMemory::async_gpu_push(const cudaStream_t &stream) {
   if (gpu_ptr_ == NULL) {
     // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     gpu_ptr_ = gpu_malloc(size_);
-    CUDA_CHECK(g_allocator.DeviceAllocate(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
@@ -199,24 +197,37 @@ void SyncedMemory::check_device() {
 }
 
 void *SyncedMemory::gpu_malloc(size_t size) {
+  void *ptr;
 
-  auto search = cached_gpu_blobs.find(2);
+  ptr=buddy_allocator.alloc(size);
+
+  if(!ptr) {
+    abort();
+  }
+  return ptr;
+
+  /*
+  CUDA_CHECK(g_allocator.DeviceAllocate(&ptr, size));
+  return ptr;
+
+  auto search = cached_gpu_blobs.find(size);
   if (search != cached_gpu_blobs.end()) {
     auto ptr = search->second;
     cached_gpu_blobs.erase(search);
     return ptr;
   }
 
-  void *ptr;
   CUDA_CHECK(cudaMalloc(&ptr, size));
   return ptr;
+  */
 }
 
 void SyncedMemory::gpu_free(void *data, size_t size) {
+  buddy_allocator.free(data);
+ // CUDA_CHECK(g_allocator.DeviceFree(data));
+ // return;
 
-  cached_gpu_blobs.insert({size, data});
+ // cached_gpu_blobs.insert({size, data});
 }
-
-std::unordered_multimap<size_t, void *> SyncedMemory::cached_gpu_blobs;
 
 } // namespace caffe
