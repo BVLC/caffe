@@ -22,22 +22,6 @@ void ExpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-/*
-  if (!propagate_down[0]) { return; }
-  const int count = bottom[0]->count();
-  const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-  caffe_gpu_mul(count, top_data, top_diff, bottom_diff);
-  if (inner_scale_ != Dtype(1)) {
-    caffe_gpu_scal(count, inner_scale_, bottom_diff);
-  }
-  */
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(ExpLayer);
 
 

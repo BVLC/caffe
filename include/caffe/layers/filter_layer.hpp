@@ -63,10 +63,6 @@ class FilterLayer : public Layer<Dtype> {
    * @param bottom input Blob vector (length 2+), into which the top error
    *        gradient is copied
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool first_reshape_;
   vector<int> indices_to_forward_;

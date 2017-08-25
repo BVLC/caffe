@@ -34,23 +34,6 @@ void TileLayer<Dtype>::Forward_cpu(
   }
 }
 
-template <typename Dtype>
-void TileLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) { return; }
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  for (int i = 0; i < outer_dim_; ++i) {
-    caffe_copy(inner_dim_, top_diff, bottom_diff);
-    top_diff += inner_dim_;
-    for (int t = 1; t < tiles_; ++t) {
-      caffe_axpy(inner_dim_, Dtype(1), top_diff, bottom_diff);
-      top_diff += inner_dim_;
-    }
-    bottom_diff += inner_dim_;
-  }
-}
-
 #ifdef CPU_ONLY
 STUB_GPU(TileLayer);
 #endif

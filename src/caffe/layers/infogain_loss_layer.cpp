@@ -164,60 +164,6 @@ void InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[1]) {
-    LOG(FATAL) << this->type()
-               << " Layer cannot backpropagate to label inputs.";
-  }
-  if (propagate_down.size() > 2 && propagate_down[2]) {
-    LOG(FATAL) << this->type()
-               << " Layer cannot backpropagate to infogain inputs.";
-  }
-  if (propagate_down[0]) {
-    const Dtype* prob_data = prob_.cpu_data();
-    const Dtype* bottom_label = bottom[1]->cpu_data();
-    const Dtype* infogain_mat = NULL;
-    if (bottom.size() < 3) {
-      infogain_mat = infogain_.cpu_data();
-    } else {
-      infogain_mat = bottom[2]->cpu_data();
-      // H is provided as a "bottom" and might change. sum rows every time.
-      sum_rows_of_H(bottom[2]);
-    }
-    const Dtype* sum_rows_H = sum_rows_H_.cpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    const int dim = bottom[0]->count() / outer_num_;
-    int count = 0;
-    for (int i = 0; i < outer_num_; ++i) {
-      for (int j = 0; j < inner_num_; ++j) {
-        const int label_value =
-          static_cast<int>(bottom_label[i * inner_num_ + j]);
-        DCHECK_GE(label_value, 0);
-        DCHECK_LT(label_value, num_labels_);
-        if (has_ignore_label_ && label_value == ignore_label_) {
-          for (int l = 0; l < num_labels_; ++l) {
-            bottom_diff[i * dim + l * inner_num_ + j] = 0;
-          }
-        } else {
-          for (int l = 0; l < num_labels_; ++l) {
-            bottom_diff[i * dim + l * inner_num_ + j] =
-               prob_data[i*dim + l*inner_num_ + j]*sum_rows_H[label_value]
-               - infogain_mat[label_value * num_labels_ + l];
-          }
-          ++count;
-        }
-      }
-    }
-    // Scale gradient
-    Dtype loss_weight = top[0]->cpu_diff()[0] /
-                        get_normalizer(normalization_, count);
-    caffe_scal(bottom[0]->count(), loss_weight, bottom_diff);
-  }
-}
-
 INSTANTIATE_CLASS(InfogainLossLayer);
 REGISTER_LAYER_CLASS(InfogainLoss);
 }  // namespace caffe

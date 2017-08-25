@@ -124,12 +124,6 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  NOT_IMPLEMENTED;
-}
-
 
 #ifdef CPU_ONLY
 STUB_GPU(ROIPoolingLayer);

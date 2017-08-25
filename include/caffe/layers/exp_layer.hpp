@@ -67,10 +67,6 @@ class ExpLayer : public NeuronLayer<Dtype> {
    *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
    *      @f$ if propagate_down[0]
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   Dtype inner_scale_, outer_scale_;
 };

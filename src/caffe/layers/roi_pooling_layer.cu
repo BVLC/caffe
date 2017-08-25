@@ -164,25 +164,6 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
   }
 }
 
-template <typename Dtype>
-void ROIPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) {
-    return;
-  }
-  const Dtype* bottom_rois = bottom[1]->gpu_data();
-  const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-  const int count = bottom[0]->count();
-  caffe_gpu_set(count, Dtype(0.), bottom_diff);
-  const int* argmax_data = max_idx_.gpu_data();
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  ROIPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, top_diff, argmax_data, top[0]->num(), spatial_scale_, channels_,
-      height_, width_, pooled_height_, pooled_width_, bottom_diff, bottom_rois);
-  CUDA_POST_KERNEL_CHECK;
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(ROIPoolingLayer);
 
 }  // namespace caffe

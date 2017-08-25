@@ -47,20 +47,6 @@ __global__ void TileBackward(const int nthreads, const Dtype* top_diff,
   }
 }
 
-template <typename Dtype>
-void TileLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) { return; }
-  const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-  const int bottom_tile_axis = bottom[0]->shape(axis_);
-  const int tile_size = inner_dim_ / bottom_tile_axis;
-  const int nthreads = bottom[0]->count();
-  TileBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-      <<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
-      nthreads, top_diff, tile_size, tiles_, bottom_tile_axis, bottom_diff);
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(TileLayer);
 
 }  // namespace caffe

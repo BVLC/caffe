@@ -60,10 +60,6 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
    *            = \frac{\partial E}{\partial y} y (1 - y)
    *      @f$ if propagate_down[0]
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 }  // namespace caffe

@@ -52,8 +52,6 @@ class FlattenLayer : public Layer<Dtype> {
    * @param bottom input Blob vector (length K), into which the top error
    *        gradient is (virtually) copied
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 }  // namespace caffe

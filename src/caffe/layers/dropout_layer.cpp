@@ -45,26 +45,6 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[0]) {
-    const Dtype* top_diff = top[0]->cpu_diff();
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    if (this->phase_ == TRAIN) {
-      const unsigned int* mask = rand_vec_.cpu_data();
-      const int count = bottom[0]->count();
-      for (int i = 0; i < count; ++i) {
-        bottom_diff[i] = top_diff[i] * mask[i] * scale_;
-      }
-    } else {
-      caffe_copy(top[0]->count(), top_diff, bottom_diff);
-    }
-  }
-}
-
-
 #ifdef CPU_ONLY
 STUB_GPU(DropoutLayer);
 #endif

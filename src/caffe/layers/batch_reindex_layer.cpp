@@ -48,26 +48,6 @@ void BatchReindexLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template<typename Dtype>
-void BatchReindexLayer<Dtype>::Backward_cpu(
-    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  CHECK(!propagate_down[1]) << "Cannot backprop to index.";
-  if (!propagate_down[0]) {
-    return;
-  }
-  int inner_dim = bottom[0]->count() / bottom[0]->shape(0);
-  Dtype* bot_diff = bottom[0]->mutable_cpu_diff();
-  const Dtype* permut = bottom[1]->cpu_data();
-  const Dtype* top_diff = top[0]->cpu_diff();
-  caffe_set(bottom[0]->count(), Dtype(0), bot_diff);
-  for (int index = 0; index < top[0]->count(); ++index) {
-    int n = index / (inner_dim);
-    int in_n = static_cast<int>(permut[n]);
-    bot_diff[in_n * (inner_dim) + index % (inner_dim)] += top_diff[index];
-  }
-}
-
 #ifdef CPU_ONLY
 STUB_GPU(BatchReindexLayer);
 #endif

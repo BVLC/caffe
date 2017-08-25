@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "caffe/syncedmem.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer_factory.hpp"
@@ -91,8 +92,6 @@ public:
   virtual void LayerSetUp(const vector<Blob<Dtype> *> &bottom,
                           const vector<Blob<Dtype> *> &top) {}
 
-  void LayerSetUp2(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
-                       const vector<std::shared_ptr<Blob<Dtype>>> &top);
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
    *        the shapes of the bottom blobs.
@@ -301,25 +300,6 @@ protected:
   }
 
   /**
-   * @brief Using the CPU device, compute the gradients for any parameters and
-   *        for the bottom blobs if propagate_down is true.
-   */
-  virtual void Backward_cpu(const vector<Blob<Dtype> *> &top,
-                            const vector<bool> &propagate_down,
-                            const vector<Blob<Dtype> *> &bottom) = 0;
-  /**
-   * @brief Using the GPU device, compute the gradients for any parameters and
-   *        for the bottom blobs if propagate_down is true.
-   *        Fall back to Backward_cpu() if unavailable.
-   */
-  virtual void Backward_gpu(const vector<Blob<Dtype> *> &top,
-                            const vector<bool> &propagate_down,
-                            const vector<Blob<Dtype> *> &bottom) {
-    // LOG(WARNING) << "Using CPU code as backup.";
-    Backward_cpu(top, propagate_down, bottom);
-  }
-
-  /**
    * Called by the parent Layer's SetUp to check that the number of bottom
    * and top Blobs provided as input match the expected numbers specified by
    * the {ExactNum,Min,Max}{Bottom,Top}Blobs() functions.
@@ -388,6 +368,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
   if (end_ms - begin_ms > 10) {
     std::cout << "reshape layer use ms=" << end_ms - begin_ms << std::endl;
   }
+  std::cout<<" reshape used size="<<SyncedMemory::get_used_size()<<std::endl;
 
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -400,6 +381,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
     if (end_ms - begin_ms > 10) {
       // std::cout<<"Forward_gpu use ms="<<end_ms-begin_ms<<std::endl;
     }
+    std::cout<<" Forward_gpu used size="<<SyncedMemory::get_used_size()<<std::endl;
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
@@ -428,39 +410,6 @@ Layer<Dtype>::Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
   return Forward(bottom_, top_);
 }
 
-
-template <typename Dtype>
-void Layer<Dtype>::LayerSetUp2(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
-                      const vector<std::shared_ptr<Blob<Dtype>>> &top) {
-
-  vector<Blob<Dtype> *> bottom_;
-  vector<Blob<Dtype> *> top_;
-  for (auto const &ptr : bottom) {
-    bottom_.push_back(ptr.get());
-  }
-
-  for (auto const &ptr : top) {
-    top_.push_back(ptr.get());
-  }
-
-  return LayerSetUp(bottom_, top_);
-}
-
-template <typename Dtype>
-inline void Layer<Dtype>::Backward(const vector<Blob<Dtype> *> &top,
-                                   const vector<bool> &propagate_down,
-                                   const vector<Blob<Dtype> *> &bottom) {
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    Backward_cpu(top, propagate_down, bottom);
-    break;
-  case Caffe::GPU:
-    Backward_gpu(top, propagate_down, bottom);
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
-  }
-}
 
 
 } // namespace caffe

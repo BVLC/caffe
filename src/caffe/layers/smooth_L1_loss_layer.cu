@@ -76,42 +76,6 @@ __global__ void SmoothL1Backward(const int n, const Dtype* in, Dtype* out,
   }
 }
 
-template <typename Dtype>
-void SmoothL1LossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  // after forwards, diff_ holds w_in * (b0 - b1)
-  int count = diff_.count();
-  SmoothL1Backward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, diff_.gpu_data(), diff_.mutable_gpu_data(), sigma2_);
-  CUDA_POST_KERNEL_CHECK;
-  for (int i = 0; i < 2; ++i) {
-    if (propagate_down[i]) {
-      const Dtype sign = (i == 0) ? 1 : -1;
-      const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
-      caffe_gpu_axpby(
-          count,                           // count
-          alpha,                           // alpha
-          diff_.gpu_data(),                // x
-          Dtype(0),                        // beta
-          bottom[i]->mutable_gpu_diff());  // y
-      if (has_weights_) {
-        // Scale by "inside" weight
-        caffe_gpu_mul(
-            count,
-            bottom[2]->gpu_data(),
-            bottom[i]->gpu_diff(),
-            bottom[i]->mutable_gpu_diff());
-        // Scale by "outside" weight
-        caffe_gpu_mul(
-            count,
-            bottom[3]->gpu_data(),
-            bottom[i]->gpu_diff(),
-            bottom[i]->mutable_gpu_diff());
-      }
-    }
-  }
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(SmoothL1LossLayer);
 
 }  // namespace caffe

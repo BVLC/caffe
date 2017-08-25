@@ -103,23 +103,6 @@ template void LRNLayer<double>::CrossChannelForward_gpu(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top);
 
 
-template <typename Dtype>
-void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-/*
-  switch (this->layer_param_.lrn_param().norm_region()) {
-  case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    CrossChannelBackward_gpu(top, propagate_down, bottom);
-    break;
-  case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    WithinChannelBackward(top, propagate_down, bottom);
-    break;
-  default:
-    LOG(FATAL) << "Unknown normalization region.";
-  }
-  */
-}
-
 
 template <typename Dtype>
 __global__ void LRNComputeDiff(const int nthreads,
@@ -179,6 +162,7 @@ __global__ void LRNComputeDiff(const int nthreads,
   }
 }
 
+/*
 template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
@@ -197,6 +181,7 @@ template void LRNLayer<float>::CrossChannelBackward_gpu(
 template void LRNLayer<double>::CrossChannelBackward_gpu(
     const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<double>*>& bottom);
+    */
 
 
 

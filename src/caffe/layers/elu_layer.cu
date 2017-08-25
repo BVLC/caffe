@@ -37,26 +37,6 @@ __global__ void ELUBackward(const int n, const Dtype* in_diff,
   }
 }
 
-template <typename Dtype>
-void ELULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-/*
-  if (propagate_down[0]) {
-    const Dtype* bottom_data = bottom[0]->gpu_data();
-    const Dtype* top_diff = top[0]->gpu_diff();
-    const Dtype* top_data = top[0]->gpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const int count = bottom[0]->count();
-    Dtype alpha = this->layer_param_.elu_param().alpha();
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    ELUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, top_data, bottom_data, bottom_diff, alpha);
-    CUDA_POST_KERNEL_CHECK;
-  }
-  */
-}
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(ELULayer);
 

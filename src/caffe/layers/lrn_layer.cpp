@@ -161,75 +161,7 @@ void LRNLayer<Dtype>::WithinChannelForward(
   product_layer_->Forward(product_bottom_vec_, top);
 }
 
-template <typename Dtype>
-void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  switch (this->layer_param_.lrn_param().norm_region()) {
-  case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    CrossChannelBackward_cpu(top, propagate_down, bottom);
-    break;
-  case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    WithinChannelBackward(top, propagate_down, bottom);
-    break;
-  default:
-    LOG(FATAL) << "Unknown normalization region.";
-  }
-}
 
-template <typename Dtype>
-void LRNLayer<Dtype>::CrossChannelBackward_cpu(
-    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* scale_data = scale_.cpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_);
-  Blob<Dtype> accum_ratio(1, 1, height_, width_);
-  Dtype* padded_ratio_data = padded_ratio.mutable_cpu_data();
-  Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
-  // We hack a little bit by using the diff() to store an additional result
-  Dtype* accum_ratio_times_bottom = accum_ratio.mutable_cpu_diff();
-  caffe_set(padded_ratio.count(), Dtype(0), padded_ratio_data);
-  Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
-
-  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
-  caffe_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
-
-  // go through individual data
-  int inverse_pre_pad = size_ - (size_ + 1) / 2;
-  for (int n = 0; n < num_; ++n) {
-    int block_offset = scale_.offset(n);
-    // first, compute diff_i * y_i / s_i
-    caffe_mul<Dtype>(channels_ * height_ * width_,
-        top_diff + block_offset, top_data + block_offset,
-        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
-    caffe_div<Dtype>(channels_ * height_ * width_,
-        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad),
-        scale_data + block_offset,
-        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
-    // Now, compute the accumulated ratios and the bottom diff
-    caffe_set(accum_ratio.count(), Dtype(0), accum_ratio_data);
-    for (int c = 0; c < size_ - 1; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, 1.,
-          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
-    }
-    for (int c = 0; c < channels_; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, 1.,
-          padded_ratio_data + padded_ratio.offset(0, c + size_ - 1),
-          accum_ratio_data);
-      // compute bottom diff
-      caffe_mul<Dtype>(height_ * width_,
-          bottom_data + top[0]->offset(n, c),
-          accum_ratio_data, accum_ratio_times_bottom);
-      caffe_axpy<Dtype>(height_ * width_, -cache_ratio_value,
-          accum_ratio_times_bottom, bottom_diff + top[0]->offset(n, c));
-      caffe_axpy<Dtype>(height_ * width_, -1.,
-          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
-    }
-  }
-}
 
 template <typename Dtype>
 void LRNLayer<Dtype>::WithinChannelBackward(
@@ -249,7 +181,6 @@ void LRNLayer<Dtype>::WithinChannelBackward(
 #ifdef CPU_ONLY
 STUB_GPU(LRNLayer);
 STUB_GPU_FORWARD(LRNLayer, CrossChannelForward);
-STUB_GPU_BACKWARD(LRNLayer, CrossChannelBackward);
 #endif
 
 INSTANTIATE_CLASS(LRNLayer);

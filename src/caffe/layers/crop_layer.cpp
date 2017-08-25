@@ -128,20 +128,6 @@ void CropLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       true);
 }
 
-template <typename Dtype>
-void CropLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-
-  if (propagate_down[0]) {
-    caffe_set(bottom[0]->count(), static_cast<Dtype>(0), bottom_diff);
-    std::vector<int> indices(top[0]->num_axes(), 0);
-    crop_copy(bottom, top, offsets.cpu_data(), indices, 0, top_diff,
-        bottom_diff, false);
-  }
-}
-
 #ifdef CPU_ONLY
 STUB_GPU(CropLayer);
 #endif

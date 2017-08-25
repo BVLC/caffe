@@ -100,35 +100,6 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   top[0]->mutable_cpu_data()[0] = loss / normalizer_;
 }
 
-template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
-    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[1]) {
-    LOG(FATAL) << this->type()
-               << " Layer cannot backpropagate to label inputs.";
-  }
-  if (propagate_down[0]) {
-    // First, compute the diff
-    const int count = bottom[0]->count();
-    const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
-    const Dtype* target = bottom[1]->cpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    caffe_sub(count, sigmoid_output_data, target, bottom_diff);
-    // Zero out gradient of ignored targets.
-    if (has_ignore_label_) {
-      for (int i = 0; i < count; ++i) {
-        const int target_value = static_cast<int>(target[i]);
-        if (target_value == ignore_label_) {
-          bottom_diff[i] = 0;
-        }
-      }
-    }
-    // Scale down gradient
-    Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer_;
-    caffe_scal(count, loss_weight, bottom_diff);
-  }
-}
 
 #ifdef CPU_ONLY
 STUB_GPU(SigmoidCrossEntropyLossLayer);
