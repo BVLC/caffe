@@ -134,6 +134,10 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
+
+    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
+      AppendParam(param, layer_id, param_id);
+    }
   }
 
   // In the end, all remaining blobs are considered output blobs.
@@ -500,11 +504,12 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
   for (int i = 0; i <= end; ++i) {
     //std::cout<<"forward layer"<<i<<std::endl;
     layers_[i]->Forward(bottom_blobs[i], top_blobs[i]);
+
     bottom_blobs.erase(i);
     top_blobs.erase(i);
-    //std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
   }
 
+  std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
   {
     cudaProfilerStop();
     size_t cur_free_byte;

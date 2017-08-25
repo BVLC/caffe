@@ -24,7 +24,7 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), //diff_(), 
+       : data_(), 
        count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
@@ -194,32 +194,16 @@ class Blob {
     return cpu_data()[offset(n, c, h, w)];
   }
 
-  /*
-  inline Dtype diff_at(const int n, const int c, const int h,
-      const int w) const {
-    return cpu_diff()[offset(n, c, h, w)];
-  }
-  */
 
   inline Dtype data_at(const vector<int>& index) const {
     return cpu_data()[offset(index)];
   }
-
-  /*
-  inline Dtype diff_at(const vector<int>& index) const {
-    return cpu_diff()[offset(index)];
-  }
-  */
 
   inline const shared_ptr<SyncedMemory>& data() const {
     CHECK(data_);
     return data_;
   }
 
-  inline const shared_ptr<SyncedMemory>& diff() const {
-    CHECK(diff_);
-    return diff_;
-  }
 
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
@@ -240,20 +224,7 @@ class Blob {
   Dtype* mutable_gpu_diff() {
     return nullptr;
   }
-  //void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
-  void ToProto(BlobProto* proto, bool write_diff = false) const;
-
-  /*
-  /// @brief Compute the sum of absolute values (L1 norm) of the data.
-  Dtype asum_data() const;
-  /// @brief Compute the sum of absolute values (L1 norm) of the diff.
-  Dtype asum_diff() const;
-  /// @brief Compute the sum of squares (L2 norm squared) of the data.
-  Dtype sumsq_data() const;
-  /// @brief Compute the sum of squares (L2 norm squared) of the diff.
-  Dtype sumsq_diff() const;
-  */
 
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
@@ -281,8 +252,6 @@ class Blob {
   }
 
   bool ShapeEquals(const BlobProto& other);
-
-  void release();
 
  protected:
   shared_ptr<SyncedMemory> data_;
