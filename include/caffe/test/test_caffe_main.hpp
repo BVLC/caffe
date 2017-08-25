@@ -65,6 +65,8 @@ typedef ::testing::Types<CPUDevice<float>,
 typedef ::testing::Types<CPUDevice<float> >
                          TestFloatAndDevices;
 
+typedef TestDtypesAndDevices TestDtypesNoHalfAndDevices;
+typedef TestFloatAndDevices TestFloatNoHalfAndDevices;
 #else
 
 template <typename TypeParam>
@@ -76,6 +78,14 @@ struct GPUDevice {
 template <typename Dtype>
 class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
+
+typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
+                         GPUDevice<float>, GPUDevice<double> >
+                         TestDtypesNoHalfAndDevices;
+
+typedef ::testing::Types<CPUDevice<float>,
+                         GPUDevice<float>>
+                         TestFloatNoHalfAndDevices;
 
 #ifdef HAS_HALF_SUPPORT
 typedef ::testing::Types<CPUDevice<half>, CPUDevice<float>, CPUDevice<double>,

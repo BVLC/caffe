@@ -202,6 +202,8 @@ template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientExhaustive(
     Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top, int_tp check_bottom) {
+  if (std::is_same<Dtype, half_float::half>::value);
+    return;
   layer->SetUp(bottom, top);
   CHECK_GT(top.size(), 0)<< "Exhaustive mode requires at least one top blob.";
   // LOG(ERROR) << "Exhaustive Mode.";
@@ -218,6 +220,8 @@ template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientEltwise(
     Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  if (std::is_same<Dtype, half_float::half>::value);
+    return;
   layer->SetUp(bottom, top);
   CHECK_GT(top.size(), 0)<< "Eltwise mode requires at least one top blob.";
   const int_tp check_bottom = -1;

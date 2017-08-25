@@ -616,7 +616,7 @@ class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(SGDSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SGDSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -752,7 +752,7 @@ class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -851,7 +851,7 @@ class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(NesterovSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(NesterovSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -984,7 +984,7 @@ class AdaDeltaSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(AdaDeltaSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(AdaDeltaSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(AdaDeltaSolverTest, TestAdaDeltaLeastSquaresUpdate) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1118,7 +1118,7 @@ class AdamSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(AdamSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(AdamSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdate) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1218,7 +1218,7 @@ class RMSPropSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(RMSPropSolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(RMSPropSolverTest, TestDtypesNoHalfAndDevices);
 
 TYPED_TEST(RMSPropSolverTest, TestRMSPropLeastSquaresUpdateWithWeightDecay) {
   typedef typename TypeParam::Dtype Dtype;
