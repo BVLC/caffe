@@ -190,8 +190,6 @@ def parse_args():
 def generate_weights(in_model, args):
     in_net = caffe.Net(args.indefinition, args.inmodel ,caffe.TEST)
     #required for working with the fused layers
-    caffe.set_device(0)
-    caffe.set_mode_gpu()
     out_net =caffe.Net(args.outdefinition,caffe.TEST)
     tocopy=out_net.params
 
