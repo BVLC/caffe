@@ -32,13 +32,6 @@ class Blob {
       const int width);
   explicit Blob(const vector<int>& shape);
 
-  ~Blob() {
-    if(name) {
-  std::cout<<"remove blob name="<<name<<std::endl;
-    } else {
-  std::cout<<"remove blob "<<std::endl;
-    }
-  }
   /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
   void Reshape(const int num, const int channels, const int height,
       const int width);
@@ -291,8 +284,6 @@ class Blob {
 
   void release();
 
-  void set_name(const std::string &name_) {name=strdup(name_.c_str());}
-
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
@@ -301,7 +292,6 @@ class Blob {
   int count_;
   int capacity_;
 
-  char * name{nullptr};
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
 

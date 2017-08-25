@@ -413,8 +413,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
-    .add_property("_blob_loss_weights", bp::make_function(
-        &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
+  //  .add_property("_blob_loss_weights", bp::make_function(
+   //     &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
     .def("_bottom_ids", bp::make_function(&Net<Dtype>::bottom_ids,
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_top_ids", bp::make_function(&Net<Dtype>::top_ids,
@@ -427,8 +427,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_layer_names", bp::make_function(&Net<Dtype>::layer_names,
         bp::return_value_policy<bp::copy_const_reference>()))
-    .add_property("_inputs", bp::make_function(&Net<Dtype>::input_blob_indices,
-        bp::return_value_policy<bp::copy_const_reference>()))
+  //  .add_property("_inputs", bp::make_function(&Net<Dtype>::input_blob_indices,
+   //     bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >());
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);

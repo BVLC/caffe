@@ -80,9 +80,7 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   bottom_blob_names_.resize(param.layer_size());
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
-  bottom_need_backward_.resize(param.layer_size());
 
-  forward_dependency_layers_.resize(param.layer_size());
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -99,25 +97,17 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     layer_names_.push_back(layer_param.name());
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating Layer " << layer_param.name();
-    bool need_backward = false;
 
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
       const int blob_id = AppendBottom(param, layer_id, bottom_id,
                                        &available_blobs, &blob_name_to_idx);
-      // If a blob needs backward, this layer should provide it.
-      need_backward |= blob_need_backward_[blob_id];
     }
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
       // Collect Input layer tops as Net inputs.
-      if (layer_param.type() == "Input") {
-        const int blob_id = blobs_.size() - 1;
-        net_input_blob_indices_.push_back(blob_id);
-        net_input_blobs_.push_back(blobs_[blob_id].get());
-      }
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
     // specified fewer than the required number (as specified by
@@ -137,95 +127,13 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     LOG_IF(INFO, Caffe::root_solver())
         << "Setting up " << layer_names_[layer_id];
-    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
-      if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
-        blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
-      }
-      LOG_IF(INFO, Caffe::root_solver())
-          << "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
-      memory_used_ += top_vecs_[layer_id][top_id]->count();
-    }
+
     LOG_IF(INFO, Caffe::root_solver())
         << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int param_size = layer_param.param_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
-    ParamSpec default_param_spec;
-    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
-      const ParamSpec *param_spec = (param_id < param_size)
-                                        ? &layer_param.param(param_id)
-                                        : &default_param_spec;
-      const bool param_need_backward = param_spec->lr_mult() != 0;
-      need_backward |= param_need_backward;
-      layers_[layer_id]->set_param_propagate_down(param_id,
-                                                  param_need_backward);
-    }
-    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
-      AppendParam(param, layer_id, param_id);
-    }
-    // Finally, set the backward flag
-    layer_need_backward_.push_back(need_backward);
-    if (need_backward) {
-      for (int top_id = 0; top_id < top_id_vecs_[layer_id].size(); ++top_id) {
-        blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
-      }
-    }
-  }
-  // Go through the net backwards to determine which blobs contribute to the
-  // loss.  We can skip backward computation for blobs that don't contribute
-  // to the loss.
-  // Also checks if all bottom blobs don't need backward computation (possible
-  // because the skip_propagate_down param) and so we can skip bacward
-  // computation for the entire layer
-  set<string> blobs_under_loss;
-  set<string> blobs_skip_backp;
-  for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
-    bool layer_contributes_loss = false;
-    bool layer_skip_propagate_down = true;
-    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
-      const string &blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
-      if (blobs_skip_backp.find(blob_name) == blobs_skip_backp.end()) {
-        layer_skip_propagate_down = false;
-      }
-      if (layer_contributes_loss && !layer_skip_propagate_down)
-        break;
-    }
-    // If this layer can skip backward computation, also all his bottom blobs
-    // don't need backpropagation
-    if (layer_need_backward_[layer_id] && layer_skip_propagate_down) {
-      layer_need_backward_[layer_id] = false;
-      for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
-           ++bottom_id) {
-        bottom_need_backward_[layer_id][bottom_id] = false;
-      }
-    }
-    if (!layer_contributes_loss) {
-      layer_need_backward_[layer_id] = false;
-    }
-    if (Caffe::root_solver()) {
-      if (layer_need_backward_[layer_id]) {
-        LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
-      } else {
-        LOG(INFO) << layer_names_[layer_id]
-                  << " does not need backward computation.";
-      }
-    }
-    for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
-         ++bottom_id) {
-      if (layer_contributes_loss) {
-        const string &blob_name =
-            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
-        blobs_under_loss.insert(blob_name);
-      } else {
-        bottom_need_backward_[layer_id][bottom_id] = false;
-      }
-      if (!bottom_need_backward_[layer_id][bottom_id]) {
-        const string &blob_name =
-            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
-        blobs_skip_backp.insert(blob_name);
-      }
-    }
   }
 
   // In the end, all remaining blobs are considered output blobs.
@@ -233,8 +141,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
        it != available_blobs.end(); ++it) {
     LOG_IF(INFO, Caffe::root_solver())
         << "This network produces output " << *it;
-    net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
-    net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
   }
   for (size_t blob_id = 0; blob_id < blob_names_.size(); ++blob_id) {
     blob_names_index_[blob_names_[blob_id]] = blob_id;
@@ -244,6 +150,8 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   }
   debug_info_ = param.debug_info();
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
+
+  blobs_.clear();
 
     size_t cur_free_byte;
     size_t cur_total_byte;
@@ -377,7 +285,6 @@ void Net<Dtype>::AppendTop(const NetParameter &param, const int layer_id,
     LOG_IF(INFO, Caffe::root_solver())
         << layer_param->name() << " -> " << blob_name << " (in-place)";
     top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
-    bottom_blob_cnt_[top_vecs_[layer_id].back()]++;
     top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
     top_blob_names_[layer_id].push_back(blob_name);
   } else if (blob_name_to_idx &&
@@ -395,13 +302,11 @@ void Net<Dtype>::AppendTop(const NetParameter &param, const int layer_id,
     const int blob_id = blobs_.size();
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
-    blob_need_backward_.push_back(false);
     if (blob_name_to_idx) {
       (*blob_name_to_idx)[blob_name] = blob_id;
     }
     top_id_vecs_[layer_id].push_back(blob_id);
     top_vecs_[layer_id].push_back(blob_pointer.get());
-    bottom_blob_cnt_[top_vecs_[layer_id].back()]++;
     top_blob_names_[layer_id].push_back(blob_name);
   }
   if (available_blobs) {
@@ -424,27 +329,9 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
   LOG_IF(INFO, Caffe::root_solver())
       << layer_names_[layer_id] << " <- " << blob_name;
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
-  bottom_blob_cnt_[blobs_[blob_id].get()]++;
   bottom_id_vecs_[layer_id].push_back(blob_id);
   bottom_blob_names_[layer_id].push_back(blob_name);
   available_blobs->erase(blob_name);
-  bool need_backward = blob_need_backward_[blob_id];
-  // Check if the backpropagation on bottom_id should be skipped
-  if (layer_param.propagate_down_size() > 0) {
-    need_backward = layer_param.propagate_down(bottom_id);
-  }
-  bottom_need_backward_[layer_id].push_back(need_backward);
-
-  //查找对应的top blob所在的层
-  for (int prev_layer_id = layer_id - 1; prev_layer_id >= 0; prev_layer_id--) {
-    if (std::find(top_id_vecs_[prev_layer_id].cbegin(),
-                  top_id_vecs_[prev_layer_id].cend(),
-                  blob_id) != top_id_vecs_[prev_layer_id].cend()) {
-      forward_dependency_layers_[layer_id].push_back(prev_layer_id);
-      // std::cout<<prev_layer_id<<"=>"<<layer_id<<std::endl;
-      break;
-    }
-  }
 
   return blob_id;
 }
@@ -551,7 +438,6 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names) {
 
-  std::cout<<"sync used size="<<SyncedMemory::get_used_size()<<std::endl;
   static size_t free_byte;
   static size_t total_byte;
 
@@ -575,11 +461,9 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
       if (it == input_blobs.end()) {
         auto &blob_pointer = input_blobs[blob_name];
         blob_pointer.reset(new Blob<Dtype>());
-	blob_pointer->set_name(blob_name);
         bottom_blobs[i].emplace_back(blob_pointer);
       } else {
         bottom_blobs[i].emplace_back(it->second);
-	it->second->set_name(blob_name);
       }
     }
 
@@ -588,11 +472,9 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
       if (it == input_blobs.end()) {
         auto &blob_pointer = input_blobs[blob_name];
         blob_pointer.reset(new Blob<Dtype>());
-	blob_pointer->set_name(blob_name);
         top_blobs[i].emplace_back(blob_pointer);
       } else {
         top_blobs[i].emplace_back(it->second);
-	it->second->set_name(blob_name);
       }
 
       bool is_output_blob =
@@ -616,11 +498,11 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
   }
 
   for (int i = 0; i <= end; ++i) {
-    std::cout<<"forward layer"<<i<<std::endl;
+    //std::cout<<"forward layer"<<i<<std::endl;
     layers_[i]->Forward(bottom_blobs[i], top_blobs[i]);
     bottom_blobs.erase(i);
     top_blobs.erase(i);
-    std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
+    //std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
   }
 
   {
@@ -641,96 +523,6 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
   auto end_ms = get_current_time_ms();
   std::cout << "use ms =" << end_ms - begin_ms << std::endl;
   return output_blobs;
-}
-
-template <typename Dtype> Dtype Net<Dtype>::ForwardTo(int end) {
-  if (end == -1) {
-    end = layers_.size() - 1;
-  }
-  CHECK_LT(end, layers_.size());
-  Dtype loss = 0;
-
-  static size_t cnt;
-  static size_t free_byte;
-  static size_t total_byte;
-
-  if (cnt == 1) {
-    cudaProfilerStart();
-  } else if (cnt == 0) {
-    CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
-  }
-
-  auto tmp_forward_dependency_layers_ = forward_dependency_layers_;
-  auto blob_cnt = bottom_blob_cnt_;
-  while (true) {
-
-    vector<int> stage_layers;
-
-    for (int i = 0; i <= end; ++i) {
-      if (tmp_forward_dependency_layers_[i].empty()) {
-        stage_layers.push_back(i);
-      }
-    }
-
-    if (stage_layers.empty()) {
-      break;
-    }
-
-    for (int layer_id : stage_layers) {
-      //std::cout << "process Layer type=" << layers_[layer_id]->type()
-       //         << std::endl;
-      layers_[layer_id]->Forward(bottom_vecs_[layer_id], top_vecs_[layer_id]);
-    }
-
-    for (int layer_id : stage_layers) {
-      //回收内存
-
-      /*
-      if(layers_[layer_id]->type()!="Split") {
-      for(size_t i=0;i<bottom_vecs_[layer_id].size();i++) {
-        if(i>=top_vecs_[layer_id].size() ||
-      top_vecs_[layer_id][i]!=bottom_vecs_[layer_id][i])
-          bottom_vecs_[layer_id][i]->release();
-      }
-      }
-      */
-
-      for (auto const &bottom_blob : bottom_vecs_[layer_id]) {
-        blob_cnt[bottom_blob]--;
-        if (blob_cnt[bottom_blob] == 0) {
-          std::cout << "release" << std::endl;
-          bottom_blob->release();
-        }
-      }
-
-      tmp_forward_dependency_layers_[layer_id] = {-1};
-
-      for (int j = 0; j <= end; ++j) {
-        auto it = std::find(tmp_forward_dependency_layers_[j].begin(),
-                            tmp_forward_dependency_layers_[j].end(), layer_id);
-        if (it != tmp_forward_dependency_layers_[j].end()) {
-          tmp_forward_dependency_layers_[j].erase(it);
-        }
-      }
-    }
-  }
-
-  if (cnt == 1) {
-    cudaProfilerStop();
-  } else if (cnt == 0) {
-    size_t cur_free_byte;
-    size_t cur_total_byte;
-    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
-    if (cur_free_byte < free_byte) {
-      std::cout << "use more memory ="
-                << (free_byte - cur_free_byte) / 1024 / 1024 << std::endl;
-    } else {
-      std::cout << "use less memory ="
-                << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
-    }
-  }
-  cnt++;
-  return loss;
 }
 
 template <typename Dtype> void Net<Dtype>::Reshape() {
