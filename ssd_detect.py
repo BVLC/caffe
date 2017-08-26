@@ -35,7 +35,6 @@ def get_labelname(labelmap, labels):
     return labelnames
 
 class CaffeDetection:
-    '''使用caffe作检测'''
     def __init__(self, gpu_id, model_def, model_weights, image_resize, labelmap_file):
         caffe.set_device(gpu_id)
         caffe.set_mode_gpu()
