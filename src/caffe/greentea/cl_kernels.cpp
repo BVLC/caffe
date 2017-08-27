@@ -923,6 +923,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "//Begin IDLF kernels below here",    // NOLINT
 "#ifdef IDLF",    // NOLINT
 "",    // NOLINT
+"#if TYPE == TYPE_HALF",    // NOLINT
+"#define VLOAD4(_v, _p) do { (_v).s0 = *(_p); (_v).s1 = *(_p + 1); (_v).s2 = *(_p + 2); (_v).s3 = *(_p + 3); } while(0)",    // NOLINT
+"#else",    // NOLINT
+"#define VLOAD4(_v, _p) do { _v = vload4(0, _p); } while(0)",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "#define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)",    // NOLINT
 "",    // NOLINT
 "// Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.",    // NOLINT
@@ -1006,7 +1012,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "in_buf.in_vec[reg].s2 = 0;",    // NOLINT
 "in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);",    // NOLINT
 "} else {",    // NOLINT
-"in_buf.in_vec[reg] = vload4(0, (inputs + in_offset)); // read 16 elements",    // NOLINT
+"VLOAD4(in_buf.in_vec[reg], inputs + in_offset);",    // NOLINT
 "if (curr_x + 1 >= input_width + INPUT_PAD_W)",    // NOLINT
 "in_buf.in_vec[reg].s1 = 0;",    // NOLINT
 "if (curr_x + 2 >= input_width + INPUT_PAD_W)",    // NOLINT
@@ -1019,7 +1025,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "curr_y += TILE_Y_STRIDE;",    // NOLINT
 "#else",    // NOLINT
-"in_buf.in_vec[reg] = vload4(0, (inputs + in_offset)); // read 16 elements",    // NOLINT
+"VLOAD4(in_buf.in_vec[reg], inputs + in_offset);",    // NOLINT
 "#endif",    // NOLINT
 "}",    // NOLINT
 "in_offset += input_width * TILE_Y_STRIDE;",    // NOLINT

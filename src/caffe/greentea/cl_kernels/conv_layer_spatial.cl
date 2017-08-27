@@ -211,6 +211,12 @@ __kernel void DWCONV(
 //Begin IDLF kernels below here
 #ifdef IDLF
 
+#if TYPE == TYPE_HALF
+#define VLOAD4(_v, _p) do { (_v).s0 = *(_p); (_v).s1 = *(_p + 1); (_v).s2 = *(_p + 2); (_v).s3 = *(_p + 3); } while(0)
+#else
+#define VLOAD4(_v, _p) do { _v = vload4(0, _p); } while(0)
+#endif
+
 #define OUT_BLOCK_SIZE (OUT_BLOCK_WIDTH*OUT_BLOCK_HEIGHT)
 
 // Each work-item computes a OUT_BLOCK_WIDTH * OUT_BLOCK_HEIGHT region of one output map.
@@ -294,7 +300,7 @@ convolve_simd(
               in_buf.in_vec[reg].s2 = 0;
             in_buf.in_vec[reg].s3 = *(inputs + in_offset + 3);
           } else {
-            in_buf.in_vec[reg] = vload4(0, (inputs + in_offset)); // read 16 elements
+            VLOAD4(in_buf.in_vec[reg], inputs + in_offset);
             if (curr_x + 1 >= input_width + INPUT_PAD_W)
               in_buf.in_vec[reg].s1 = 0;
             if (curr_x + 2 >= input_width + INPUT_PAD_W)
@@ -307,7 +313,7 @@ convolve_simd(
         }
         curr_y += TILE_Y_STRIDE;
 #else
-        in_buf.in_vec[reg] = vload4(0, (inputs + in_offset)); // read 16 elements
+        VLOAD4(in_buf.in_vec[reg], inputs + in_offset);
 #endif
         }
         in_offset += input_width * TILE_Y_STRIDE;
