@@ -163,6 +163,7 @@ void LRNLayer<Dtype>::WithinChannelForward(
 
 
 
+/*
 template <typename Dtype>
 void LRNLayer<Dtype>::WithinChannelBackward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
@@ -177,6 +178,7 @@ void LRNLayer<Dtype>::WithinChannelBackward(
     split_layer_->Backward(split_top_vec_, propagate_down, bottom);
   }
 }
+*/
 
 #ifdef CPU_ONLY
 STUB_GPU(LRNLayer);

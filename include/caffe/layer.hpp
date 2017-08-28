@@ -149,11 +149,11 @@ public:
    * top blob diffs.
    *
    * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
-   */
   inline void Backward(const vector<Blob<Dtype> *> &top,
                        const vector<bool> &propagate_down,
                        const vector<Blob<Dtype> *> &bottom);
 
+   */
   /**
    * @brief Returns the vector of learnable parameter blobs.
    */
@@ -354,34 +354,15 @@ template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
                                    const vector<Blob<Dtype> *> &top) {
 
-  auto get_current_time_ms = []() -> uint64_t {
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch())
-            .count());
-  };
-
   Dtype loss = 0;
-  auto begin_ms = get_current_time_ms();
   Reshape(bottom, top);
-  auto end_ms = get_current_time_ms();
-  if (end_ms - begin_ms > 10) {
-    std::cout << "reshape layer use ms=" << end_ms - begin_ms << std::endl;
-  }
-  std::cout<<" reshape used size="<<SyncedMemory::get_used_size()<<std::endl;
 
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
     break;
   case Caffe::GPU:
-    begin_ms = get_current_time_ms();
     Forward_gpu(bottom, top);
-    end_ms = get_current_time_ms();
-    if (end_ms - begin_ms > 10) {
-      // std::cout<<"Forward_gpu use ms="<<end_ms-begin_ms<<std::endl;
-    }
-    std::cout<<" Forward_gpu used size="<<SyncedMemory::get_used_size()<<std::endl;
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";

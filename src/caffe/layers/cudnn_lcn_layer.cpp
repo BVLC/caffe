@@ -42,12 +42,18 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (totalSizeInBytes > tempDataSize) {
     tempDataSize = totalSizeInBytes;
 
-    cudaFree(tempData1);
-    cudaFree(tempData2);
+    //cudaFree(tempData1);
+    //cudaFree(tempData2);
+    SyncedMemory::gpu_free(tempData1);
+    SyncedMemory::gpu_free(tempData2);
 
     // allocate new buffers
-    CUDA_CHECK(cudaMalloc(&tempData1, totalSizeInBytes));
-    CUDA_CHECK(cudaMalloc(&tempData2, totalSizeInBytes));
+    //CUDA_CHECK(cudaMalloc(&tempData1, totalSizeInBytes));
+    //CUDA_CHECK(cudaMalloc(&tempData2, totalSizeInBytes));
+
+    tempData1 = SyncedMemory::gpu_malloc(totalSizeInBytes);
+    tempData2 = SyncedMemory::gpu_malloc(totalSizeInBytes);
+
   }
 }
 
@@ -63,8 +69,10 @@ CuDNNLCNLayer<Dtype>::~CuDNNLCNLayer() {
   cudnnDestroy(handle_);
 
   // free temp buffers
-  cudaFree(tempData1);
-  cudaFree(tempData2);
+  //cudaFree(tempData1);
+  //cudaFree(tempData2);
+  SyncedMemory::gpu_free(tempData1);
+  SyncedMemory::gpu_free(tempData2);
 }
 
 INSTANTIATE_CLASS(CuDNNLCNLayer);

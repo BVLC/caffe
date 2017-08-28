@@ -74,6 +74,9 @@ public:
   void async_gpu_push(const cudaStream_t &stream);
 #endif
 
+  static void *gpu_malloc(size_t size);
+  static void gpu_free(void *data);
+
 private:
   void check_device();
 
@@ -88,8 +91,6 @@ private:
   bool own_gpu_data_;
   int device_;
 
-  static void *gpu_malloc(size_t size);
-  static void gpu_free(void *data, size_t size);
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory
 

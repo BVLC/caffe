@@ -21,7 +21,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = bottom[0]->count(axis);
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
-    LOG(INFO) << "Skipping parameter initialization";
+    //LOG(INFO) << "Skipping parameter initialization";
   } else {
     if (bias_term_) {
       this->blobs_.resize(2);
@@ -58,9 +58,7 @@ template <typename Dtype>
 void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-
   this->LayerSetUp(bottom,top);
-
 
   // Figure out the dimensions
   const int axis = bottom[0]->CanonicalAxisIndex(

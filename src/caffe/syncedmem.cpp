@@ -2,11 +2,11 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#include <deepir/cuda_buddy.hpp>
+#include <deepir/cuda_buddy_pool.hpp>
 #include <cub/util_allocator.cuh>
 
-static cub::CachingDeviceAllocator g_allocator(2, 6, 22, -1, false, true);
-static   deepir::cuda_buddy buddy_allocator(30);
+static   deepir::cuda_buddy_pool buddy_allocator(4,28);
+//static   deepir::cuda_buddy buddy_allocator(30);
 
 namespace caffe {
   size_t SyncedMemory::get_used_size() {
@@ -41,7 +41,7 @@ SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
     // CUDA_CHECK(cudaFree(gpu_ptr_));
-     gpu_free(gpu_ptr_, size_);
+     gpu_free(gpu_ptr_);
   }
 #endif // CPU_ONLY
 }
@@ -136,7 +136,7 @@ void SyncedMemory::set_gpu_data(void *data) {
   CHECK(data);
   if (own_gpu_data_) {
     // CUDA_CHECK(cudaFree(gpu_ptr_));
-    gpu_free(gpu_ptr_, size_);
+    gpu_free(gpu_ptr_);
   }
   gpu_ptr_ = data;
   head_ = HEAD_AT_GPU;
@@ -205,29 +205,10 @@ void *SyncedMemory::gpu_malloc(size_t size) {
     abort();
   }
   return ptr;
-
-  /*
-  CUDA_CHECK(g_allocator.DeviceAllocate(&ptr, size));
-  return ptr;
-
-  auto search = cached_gpu_blobs.find(size);
-  if (search != cached_gpu_blobs.end()) {
-    auto ptr = search->second;
-    cached_gpu_blobs.erase(search);
-    return ptr;
-  }
-
-  CUDA_CHECK(cudaMalloc(&ptr, size));
-  return ptr;
-  */
 }
 
-void SyncedMemory::gpu_free(void *data, size_t size) {
+void SyncedMemory::gpu_free(void *data) {
   buddy_allocator.free(data);
- // CUDA_CHECK(g_allocator.DeviceFree(data));
- // return;
-
- // cached_gpu_blobs.insert({size, data});
 }
 
 } // namespace caffe

@@ -21,13 +21,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-static inline uint64_t get_current_time_ms() {
-  return static_cast<uint64_t>(
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())
-          .count());
-}
-
 namespace caffe {
 
 template <typename Dtype> Net<Dtype>::Net(const NetParameter &param) {
@@ -105,6 +98,16 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
                                        &available_blobs, &blob_name_to_idx);
     }
     int num_top = layer_param.top_size();
+
+    /*
+  {
+    size_t cur_free_byte;
+    size_t cur_total_byte;
+    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
+      std::cout << "before setup cur_free_byte="
+                << (cur_free_byte) / 1024 / 1024 << std::endl;
+  }
+*/
     for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
       // Collect Input layer tops as Net inputs.
@@ -140,6 +143,16 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     }
   }
 
+  /*
+  {
+    size_t cur_free_byte;
+    size_t cur_total_byte;
+    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
+      std::cout << "after setup cur_free_byte="
+                << (cur_free_byte) / 1024 / 1024 << std::endl;
+  }
+  */
+
   // In the end, all remaining blobs are considered output blobs.
   for (set<string>::iterator it = available_blobs.begin();
        it != available_blobs.end(); ++it) {
@@ -157,6 +170,8 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
 
   blobs_.clear();
 
+  /*
+  {
     size_t cur_free_byte;
     size_t cur_total_byte;
     CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
@@ -169,6 +184,8 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
       std::cout << "init use less memory ="
                 << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
     }
+  }
+  */
 }
 
 template <typename Dtype>
@@ -442,17 +459,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names) {
 
-  static size_t free_byte;
-  static size_t total_byte;
 
-  {
-    CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
-      std::cout << "before  alloc blob free_byte="
-                << (free_byte) / 1024 / 1024 << std::endl;
-  }
-
-
-  auto begin_ms = get_current_time_ms();
   int end = -1;
 
   std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> bottom_blobs;
@@ -494,22 +501,15 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
 
   CHECK_GE(end, 0);
 
-  {
-    cudaProfilerStart();
-    CUDA_CHECK(cudaMemGetInfo(&free_byte, &total_byte));
-      std::cout << "before forward free_byte="
-                << (free_byte) / 1024 / 1024 << std::endl;
-  }
 
   for (int i = 0; i <= end; ++i) {
-    //std::cout<<"forward layer"<<i<<std::endl;
     layers_[i]->Forward(bottom_blobs[i], top_blobs[i]);
 
     bottom_blobs.erase(i);
     top_blobs.erase(i);
   }
 
-  std::cout<<"used size="<<SyncedMemory::get_used_size()<<std::endl;
+  /*
   {
     cudaProfilerStop();
     size_t cur_free_byte;
@@ -525,8 +525,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
                 << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
     }
   }
-  auto end_ms = get_current_time_ms();
-  std::cout << "use ms =" << end_ms - begin_ms << std::endl;
+  */
   return output_blobs;
 }
 
