@@ -622,8 +622,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_cpu_diff());
 
-      if (net_params[param_id]->prv_diff_count()
-             != net_params[param_id]->count()) {
+      if (net_params[param_id]->prv_diff() 
+          && (net_params[param_id]->prv_diff_count()
+              != net_params[param_id]->count())) {
           net_params[param_id]->mutable_prv_diff();
       }
     }
