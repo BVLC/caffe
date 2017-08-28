@@ -2,8 +2,6 @@
 #define CAFFE_SYNCEDMEM_HPP_
 
 #include <cstdlib>
-#include <unordered_map>
-#include <deepir/cuda_buddy_pool.hpp>
 
 #ifdef USE_MKL
 #include "mkl.h"

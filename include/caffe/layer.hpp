@@ -2,7 +2,7 @@
 #define CAFFE_LAYER_H_
 
 #include <algorithm>
-#include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 
