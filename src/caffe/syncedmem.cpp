@@ -2,15 +2,62 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#include <deepir/cuda_buddy_pool.hpp>
-#include <cub/util_allocator.cuh>
 
-static   deepir::cuda_buddy_pool buddy_allocator(4,28);
-//static   deepir::cuda_buddy buddy_allocator(30);
+static   deepir::cuda_buddy_pool device_allocator(4,28,deepir::cuda_buddy_pool::alloc_location::device);
+static   deepir::cuda_buddy_pool host_allocator(8,27,deepir::cuda_buddy_pool::alloc_location::host);
 
 namespace caffe {
+
+// If CUDA is available and in GPU mode, host memory will be allocated pinned,
+// using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
+// The improvement in performance seems negligible in the single GPU case,
+// but might be more significant for parallel training. Most importantly,
+// it improved stability for large models on many GPUs.
+static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaMallocHost(ptr, size));
+   
+      *use_cuda = true;
+      return;
+    /*
+    *ptr=host_allocator.alloc(size);
+    if(*ptr) {
+      *use_cuda = true;
+      return;
+     *
+    } else {
+      std::cout<<"no malloc failed"<<std::endl;
+    }
+    */
+  }
+#endif
+#ifdef USE_MKL
+  *ptr = mkl_malloc(size ? size : 1, 64);
+#else
+  *ptr = malloc(size);
+#endif
+  *use_cuda = false;
+  CHECK(*ptr) << "host allocation of size " << size << " failed";
+}
+
+static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
+#ifndef CPU_ONLY
+  if (use_cuda) {
+       CUDA_CHECK(cudaFreeHost(ptr));
+ //   host_allocator.free(ptr);
+    return;
+  }
+#endif
+#ifdef USE_MKL
+  mkl_free(ptr);
+#else
+  free(ptr);
+#endif
+}
+
   size_t SyncedMemory::get_used_size() {
-    return buddy_allocator.used_size;
+    return device_allocator.used_size;
   }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
@@ -61,7 +108,8 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
-    caffe_gpu_memcpy_sync(size_, gpu_ptr_, cpu_ptr_);
+    //caffe_gpu_memcpy_sync(size_, gpu_ptr_, cpu_ptr_);
+    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
     head_ = SYNCED;
 #else
     NO_GPU;
@@ -199,7 +247,7 @@ void SyncedMemory::check_device() {
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr;
 
-  ptr=buddy_allocator.alloc(size);
+  ptr=device_allocator.alloc(size);
 
   if(!ptr) {
     abort();
@@ -208,7 +256,7 @@ void *SyncedMemory::gpu_malloc(size_t size) {
 }
 
 void SyncedMemory::gpu_free(void *data) {
-  buddy_allocator.free(data);
+  device_allocator.free(data);
 }
 
 } // namespace caffe

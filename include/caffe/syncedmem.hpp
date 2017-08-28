@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <unordered_map>
+#include <deepir/cuda_buddy_pool.hpp>
 
 #ifdef USE_MKL
 #include "mkl.h"
@@ -11,42 +12,6 @@
 #include "caffe/common.hpp"
 
 namespace caffe {
-
-// If CUDA is available and in GPU mode, host memory will be allocated pinned,
-// using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
-// The improvement in performance seems negligible in the single GPU case,
-// but might be more significant for parallel training. Most importantly,
-// it improved stability for large models on many GPUs.
-inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
-#ifndef CPU_ONLY
-  if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaMallocHost(ptr, size));
-    *use_cuda = true;
-    return;
-  }
-#endif
-#ifdef USE_MKL
-  *ptr = mkl_malloc(size ? size : 1, 64);
-#else
-  *ptr = malloc(size);
-#endif
-  *use_cuda = false;
-  CHECK(*ptr) << "host allocation of size " << size << " failed";
-}
-
-inline void CaffeFreeHost(void *ptr, bool use_cuda) {
-#ifndef CPU_ONLY
-  if (use_cuda) {
-    CUDA_CHECK(cudaFreeHost(ptr));
-    return;
-  }
-#endif
-#ifdef USE_MKL
-  mkl_free(ptr);
-#else
-  free(ptr);
-#endif
-}
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
