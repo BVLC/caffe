@@ -16,7 +16,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     Dtype* top_data = top[i]->mutable_gpu_data();
 
     // Forward through cuDNN in parallel over groups.
-#if CUDNN_VERSION_MIN(7,0,0)
+#if CUDNN_VERSION_MIN(7, 0, 0)
     for (int g = 0; g < 1; g++) {
 #else
     for (int g = 0; g < this->group_; g++) {
@@ -65,14 +65,14 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     // Backward through cuDNN in parallel over groups and gradients.
-#if CUDNN_VERSION_MIN(7,0,0)
+#if CUDNN_VERSION_MIN(7, 0, 0)
     for (int g = 0; g < 1; g++) {
 #else
     for (int g = 0; g < this->group_; g++) {
 #endif
       // Gradient w.r.t. bias.
       if (this->bias_term_ && this->param_propagate_down_[1]) {
-#if CUDNN_VERSION_MIN(7,0,0)
+#if CUDNN_VERSION_MIN(7, 0, 0)
         CUDNN_CHECK(cudnnConvolutionBackwardBias(handle_[g],
               cudnn::dataType<Dtype>::one,
               top_descs_[i],  top_diff + top_offset_ * g,
@@ -90,7 +90,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
         const Dtype* bottom_data = bottom[i]->gpu_data();
-#if CUDNN_VERSION_MIN(7,0,0)
+#if CUDNN_VERSION_MIN(7, 0, 0)
         CUDNN_CHECK(cudnnConvolutionBackwardFilter(
               handle_[1*1 + g],
               cudnn::dataType<Dtype>::one,
@@ -121,7 +121,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           weight = this->blobs_[0]->gpu_data();
         }
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-#if CUDNN_VERSION_MIN(7,0,0)
+#if CUDNN_VERSION_MIN(7, 0, 0)
         CUDNN_CHECK(cudnnConvolutionBackwardData(
               handle_[2*1 + g],
               cudnn::dataType<Dtype>::one,
