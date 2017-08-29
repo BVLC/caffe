@@ -542,6 +542,8 @@ message LayerParameter {
   optional ReshapeParameter reshape_param = 133;
   optional ScaleParameter scale_param = 142;
   optional SigmoidParameter sigmoid_param = 124;
+  optional ROIPoolingParameter roi_pooling_param = 8266711;
+  optional SimplerNMSParameter simpler_nms_param = 8266712;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
@@ -1569,6 +1571,17 @@ message ReLUParameter {
   optional Engine engine = 2 [default = DEFAULT];
 }
 
+// Message that stores parameters used by ROIPoolingLayer
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
+}
+
 message ReshapeParameter {
   // Specify the output dimensions. If some of the dimensions are set to 0,
   // the corresponding dimension from the bottom layer is used (unchanged).
@@ -1677,6 +1690,18 @@ message SigmoidParameter {
     CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
+}
+
+// Message that stores parameters used by SimplerNMSLayer
+message SimplerNMSParameter {
+  optional float cls_threshold = 1 [default = 0.5];
+  optional uint32 max_num_proposals = 2 [default = 300];
+  optional float iou_threshold = 3 [default = 0.7];
+  optional uint32 min_bbox_size = 4 [default = 16];
+  optional uint32 feat_stride = 5 [default = 16];
+  optional uint32 pre_nms_topn = 6 [default = 6000];
+  optional uint32 post_nms_topn = 7 [default = 300];
+  repeated float scale = 8;
 }
 
 message SliceParameter {
