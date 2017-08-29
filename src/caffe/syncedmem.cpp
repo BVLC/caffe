@@ -6,7 +6,6 @@
 
 
 static   deepir::cuda_buddy_pool device_allocator(4,28,deepir::cuda_buddy_pool::alloc_location::device);
-static   deepir::cuda_buddy_pool host_allocator(8,27,deepir::cuda_buddy_pool::alloc_location::host);
 
 namespace caffe {
 
@@ -19,19 +18,8 @@ static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     CUDA_CHECK(cudaMallocHost(ptr, size));
-   
-      *use_cuda = true;
-      return;
-    /*
-    *ptr=host_allocator.alloc(size);
-    if(*ptr) {
-      *use_cuda = true;
-      return;
-     *
-    } else {
-      std::cout<<"no malloc failed"<<std::endl;
-    }
-    */
+    *use_cuda = true;
+    return;
   }
 #endif
 #ifdef USE_MKL
@@ -46,8 +34,7 @@ static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
-       CUDA_CHECK(cudaFreeHost(ptr));
- //   host_allocator.free(ptr);
+    CUDA_CHECK(cudaFreeHost(ptr));
     return;
   }
 #endif
