@@ -5,7 +5,7 @@
 #include "caffe/util/math_functions.hpp"
 
 static deepir::cuda_buddy_pool
-    device_allocator(4, 28, deepir::cuda_buddy_pool::alloc_location::device);
+    device_allocator(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
 
 namespace caffe {
 
@@ -234,13 +234,16 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr;
 
   ptr = device_allocator.alloc(size);
-
   if (!ptr) {
-    abort();
+    CUDA_CHECK(cudaMalloc(&ptr, size));
   }
   return ptr;
 }
 
-void SyncedMemory::gpu_free(void *data) { device_allocator.free(data); }
+void SyncedMemory::gpu_free(void *data) {
+  if (!device_allocator.free(data)) {
+    CUDA_CHECK(cudaFree(data));
+  }
+}
 
 } // namespace caffe
