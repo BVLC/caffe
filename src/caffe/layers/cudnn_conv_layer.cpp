@@ -39,7 +39,11 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   // workspace data
   workspaceSizeInBytes = 0;
   workspaceData = NULL;
+#if CUDNN_VERSION_MIN(7,0,0)
+  workspace = new void*[CUDNN_STREAMS_PER_GROUP];
+#else
   workspace = new void*[this->group_ * CUDNN_STREAMS_PER_GROUP];
+#endif
 
   for (size_t i = 0; i < bottom.size(); ++i) {
     // initialize all to default algorithms
@@ -253,7 +257,11 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       }
 
       // NULL out all workspace pointers
-      for (int g = 0; g < (/*this->group_ * */CUDNN_STREAMS_PER_GROUP); g++) {
+#if CUDNN_VERSION_MIN(7,0,0)
+      for (int g = 0; g < (CUDNN_STREAMS_PER_GROUP); g++) {
+#else
+      for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
+#endif
         workspace[g] = NULL;
       }
       // NULL out underlying data
