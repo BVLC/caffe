@@ -1,11 +1,11 @@
 #include <deepir/cuda_buddy_pool.hpp>
 
-#include "caffe/syncedmem.hpp"
 #include "caffe/common.hpp"
+#include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-
-static   deepir::cuda_buddy_pool device_allocator(4,28,deepir::cuda_buddy_pool::alloc_location::device);
+static deepir::cuda_buddy_pool
+    device_allocator(4, 28, deepir::cuda_buddy_pool::alloc_location::device);
 
 namespace caffe {
 
@@ -16,7 +16,7 @@ namespace caffe {
 // it improved stability for large models on many GPUs.
 static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
-  if (Caffe::mode() == Caffe::GPU) {
+  if (Caffe::mode() == Caffe::GPU && size <= 128) {
     CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
     return;
@@ -45,9 +45,7 @@ static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
 #endif
 }
 
-  size_t SyncedMemory::get_used_size() {
-    return device_allocator.used_size;
-  }
+size_t SyncedMemory::get_used_size() { return device_allocator.used_size; }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
@@ -77,7 +75,7 @@ SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
     // CUDA_CHECK(cudaFree(gpu_ptr_));
-     gpu_free(gpu_ptr_);
+    gpu_free(gpu_ptr_);
   }
 #endif // CPU_ONLY
 }
@@ -235,16 +233,14 @@ void SyncedMemory::check_device() {
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr;
 
-  ptr=device_allocator.alloc(size);
+  ptr = device_allocator.alloc(size);
 
-  if(!ptr) {
+  if (!ptr) {
     abort();
   }
   return ptr;
 }
 
-void SyncedMemory::gpu_free(void *data) {
-  device_allocator.free(data);
-}
+void SyncedMemory::gpu_free(void *data) { device_allocator.free(data); }
 
 } // namespace caffe
