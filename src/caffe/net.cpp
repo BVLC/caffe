@@ -219,36 +219,30 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
   if (rule.has_phase()) {
     if (rule.phase() != state.phase()) {
 
-      /*
-      LOG_IF(INFO, Caffe::root_solver())
+      LOG(INFO)
           << "The NetState phase (" << state.phase()
           << ") differed from the phase (" << rule.phase()
           << ") specified by a rule in layer " << layer_name;
-	  */
       return false;
     }
   }
   // Check whether the rule is broken due to min level.
   if (rule.has_min_level()) {
     if (state.level() < rule.min_level()) {
-      /*
-      LOG_IF(INFO, Caffe::root_solver())
+      LOG(INFO)
           << "The NetState level (" << state.level()
           << ") is above the min_level (" << rule.min_level()
           << ") specified by a rule in layer " << layer_name;
-	  */
       return false;
     }
   }
   // Check whether the rule is broken due to max level.
   if (rule.has_max_level()) {
     if (state.level() > rule.max_level()) {
-      /*
-      LOG_IF(INFO, Caffe::root_solver())
+      LOG(INFO)
           << "The NetState level (" << state.level()
           << ") is above the max_level (" << rule.max_level()
           << ") specified by a rule in layer " << layer_name;
-	  */
       return false;
     }
   }
@@ -263,11 +257,9 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
       }
     }
     if (!has_stage) {
-      /*
-      LOG_IF(INFO, Caffe::root_solver())
+      LOG(INFO)
           << "The NetState did not contain stage '" << rule.stage(i)
           << "' specified by a rule in layer " << layer_name;
-	  */
       return false;
     }
   }
@@ -282,11 +274,9 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
       }
     }
     if (has_stage) {
-      /*
-      LOG_IF(INFO, Caffe::root_solver())
+      LOG(INFO)
           << "The NetState contained a not_stage '" << rule.not_stage(i)
           << "' specified by a rule in layer " << layer_name;
-	  */
       return false;
     }
   }
