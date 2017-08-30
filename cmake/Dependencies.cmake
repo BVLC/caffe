@@ -46,36 +46,6 @@ list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
 # ---[ Google-protobuf
 include(cmake/ProtoBuf.cmake)
 
-# ---[ HDF5
-find_package(HDF5 COMPONENTS HL REQUIRED)
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
-
-# ---[ LMDB
-if(USE_LMDB)
-  find_package(LMDB REQUIRED)
-  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${LMDB_INCLUDE_DIR})
-  list(APPEND Caffe_LINKER_LIBS PUBLIC ${LMDB_LIBRARIES})
-  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LMDB)
-  if(ALLOW_LMDB_NOLOCK)
-    list(APPEND Caffe_DEFINITIONS PRIVATE -DALLOW_LMDB_NOLOCK)
-  endif()
-endif()
-
-# ---[ LevelDB
-if(USE_LEVELDB)
-  find_package(LevelDB REQUIRED)
-  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${LevelDB_INCLUDES})
-  list(APPEND Caffe_LINKER_LIBS PUBLIC ${LevelDB_LIBRARIES})
-  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LEVELDB)
-endif()
-
-# ---[ Snappy
-if(USE_LEVELDB)
-  find_package(Snappy REQUIRED)
-  list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Snappy_INCLUDE_DIR})
-  list(APPEND Caffe_LINKER_LIBS PRIVATE ${Snappy_LIBRARIES})
-endif()
 
 # ---[ CUDA
 include(cmake/Cuda.cmake)

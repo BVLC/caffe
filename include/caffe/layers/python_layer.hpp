@@ -18,12 +18,6 @@ class PythonLayer : public Layer<Dtype> {
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    // Disallow PythonLayer in MultiGPU training stage, due to GIL issues
-    // Details: https://github.com/BVLC/caffe/issues/2936
-    if (this->phase_ == TRAIN && Caffe::solver_count() > 1
-        && !Caffe::multiprocess()) {
-      LOG(FATAL) << "PythonLayer does not support CLI Multi-GPU, use train.py";
-    }
     self_.attr("param_str") = bp::str(
         this->layer_param_.python_param().param_str());
     self_.attr("phase") = static_cast<int>(this->phase_);

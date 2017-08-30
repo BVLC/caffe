@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "hdf5.h"
 
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
@@ -16,7 +15,6 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
@@ -585,11 +583,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter &param) {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
-  if (H5Fis_hdf5(trained_filename.c_str())) {
-    CopyTrainedLayersFromHDF5(trained_filename);
-  } else {
-    CopyTrainedLayersFromBinaryProto(trained_filename);
-  }
+  CopyTrainedLayersFromBinaryProto(trained_filename);
 }
 
 template <typename Dtype>
@@ -598,55 +592,6 @@ void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
   NetParameter param;
   ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
   CopyTrainedLayersFrom(param);
-}
-
-template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
-  hid_t file_hid =
-      H5Fopen(trained_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  CHECK_GE(file_hid, 0) << "Couldn't open " << trained_filename;
-  hid_t data_hid = H5Gopen2(file_hid, "data", H5P_DEFAULT);
-  CHECK_GE(data_hid, 0) << "Error reading weights from " << trained_filename;
-  int num_layers = hdf5_get_num_links(data_hid);
-  for (int i = 0; i < num_layers; ++i) {
-    string source_layer_name = hdf5_get_name_by_idx(data_hid, i);
-    if (!layer_names_index_.count(source_layer_name)) {
-      LOG(INFO) << "Ignoring source layer " << source_layer_name;
-      continue;
-    }
-    int target_layer_id = layer_names_index_[source_layer_name];
-    DLOG(INFO) << "Copying source layer " << source_layer_name;
-    vector<shared_ptr<Blob<Dtype>>> &target_blobs =
-        layers_[target_layer_id]->blobs();
-    hid_t layer_hid =
-        H5Gopen2(data_hid, source_layer_name.c_str(), H5P_DEFAULT);
-    CHECK_GE(layer_hid, 0) << "Error reading weights from " << trained_filename;
-    // Check that source layer doesn't have more params than target layer
-    int num_source_params = hdf5_get_num_links(layer_hid);
-    CHECK_LE(num_source_params, target_blobs.size())
-        << "Incompatible number of blobs for layer " << source_layer_name;
-    for (int j = 0; j < target_blobs.size(); ++j) {
-      ostringstream oss;
-      oss << j;
-      string dataset_name = oss.str();
-      int target_net_param_id = param_id_vecs_[target_layer_id][j];
-      if (!H5Lexists(layer_hid, dataset_name.c_str(), H5P_DEFAULT)) {
-        // Target param doesn't exist in source weights...
-        if (param_owners_[target_net_param_id] != -1) {
-          // ...but it's weight-shared in target, so that's fine.
-          continue;
-        } else {
-          LOG(FATAL) << "Incompatible number of blobs for layer "
-                     << source_layer_name;
-        }
-      }
-      hdf5_load_nd_dataset(layer_hid, dataset_name.c_str(), 0, kMaxBlobAxes,
-                           target_blobs[j].get());
-    }
-    H5Gclose(layer_hid);
-  }
-  H5Gclose(data_hid);
-  H5Fclose(file_hid);
 }
 
 template <typename Dtype>

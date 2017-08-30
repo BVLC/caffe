@@ -153,10 +153,6 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
 }
 
 
-void Net_LoadHDF5(Net<Dtype>* net, string filename) {
-  net->CopyTrainedLayersFromHDF5(filename.c_str());
-}
-
 void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
