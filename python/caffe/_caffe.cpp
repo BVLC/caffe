@@ -17,7 +17,6 @@
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
-#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -185,11 +184,6 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
-Solver<Dtype>* GetSolverFromFile(const string& filename) {
-  SolverParameter param;
-  ReadSolverParamsFromTextFileOrDie(filename, &param);
-  return SolverRegistry<Dtype>::CreateSolver(param);
-}
 
 struct NdarrayConverterGenerator {
   template <typename T> struct apply;
@@ -259,41 +253,7 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
-template<typename Dtype>
-class SolverCallback: public Solver<Dtype>::Callback {
- protected:
-  bp::object on_start_, on_gradients_ready_;
 
- public:
-  SolverCallback(bp::object on_start, bp::object on_gradients_ready)
-    : on_start_(on_start), on_gradients_ready_(on_gradients_ready) { }
-  virtual void on_gradients_ready() {
-    on_gradients_ready_();
-  }
-  virtual void on_start() {
-    on_start_();
-  }
-};
-template<typename Dtype>
-void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
-  bp::object on_gradients_ready) {
-  solver->add_callback(new SolverCallback<Dtype>(on_start, on_gradients_ready));
-}
-
-// Seems boost cannot call the base method directly
-void Solver_add_nccl(Solver<Dtype>* solver
-#ifdef USE_NCCL
-  , NCCL<Dtype>* nccl
-#endif
-) {
-#ifdef USE_NCCL
-  solver->add_callback(nccl);
-#endif
-}
-
-void share_weights(Solver<Dtype>* solver, Net<Dtype>* net) {
-  net->ShareTrainedLayersWith(solver->net().get());
-}
 
 template<typename Dtype>
 class NetCallback: public Net<Dtype>::Callback {
@@ -331,13 +291,6 @@ void Net_add_nccl(Net<Dtype>* net
   net->add_after_backward(nccl);
 #endif
 }
-#ifndef USE_NCCL
-template<typename Dtype>
-class NCCL {
- public:
-  NCCL(shared_ptr<Solver<Dtype> > solver, const string& uid) {}
-};
-#endif
 
 bool HasNCCL() {
 #ifdef USE_NCCL
@@ -368,7 +321,6 @@ bp::object NCCL_New_Uid() {
 }
 #endif
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
@@ -449,51 +401,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Layer<Dtype>);
 
-  bp::class_<SolverParameter>("SolverParameter", bp::no_init)
-    .add_property("max_iter", &SolverParameter::max_iter)
-    .add_property("display", &SolverParameter::display)
-    .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce);
   bp::class_<LayerParameter>("LayerParameter", bp::no_init);
-
-  bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
-    "Solver", bp::no_init)
-    .add_property("net", &Solver<Dtype>::net)
-    .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
-          bp::return_internal_reference<>()))
-    .add_property("iter", &Solver<Dtype>::iter)
-    .def("add_callback", &Solver_add_callback<Dtype>)
-    .def("add_callback", &Solver_add_nccl)
-    .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
-          &Solver<Dtype>::Solve), SolveOverloads())
-    .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore)
-    .def("snapshot", &Solver<Dtype>::Snapshot)
-    .def("share_weights", &share_weights)
-    .add_property("param", bp::make_function(&Solver<Dtype>::param,
-              bp::return_value_policy<bp::copy_const_reference>()));
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
-
-  bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
-        "SGDSolver", bp::init<string>());
-  bp::class_<NesterovSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<NesterovSolver<Dtype> >, boost::noncopyable>(
-        "NesterovSolver", bp::init<string>());
-  bp::class_<AdaGradSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<AdaGradSolver<Dtype> >, boost::noncopyable>(
-        "AdaGradSolver", bp::init<string>());
-  bp::class_<RMSPropSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<RMSPropSolver<Dtype> >, boost::noncopyable>(
-        "RMSPropSolver", bp::init<string>());
-  bp::class_<AdaDeltaSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<AdaDeltaSolver<Dtype> >, boost::noncopyable>(
-        "AdaDeltaSolver", bp::init<string>());
-  bp::class_<AdamSolver<Dtype>, bp::bases<Solver<Dtype> >,
-    shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>(
-        "AdamSolver", bp::init<string>());
-
-  bp::def("get_solver", &GetSolverFromFile,
-      bp::return_value_policy<bp::manage_new_object>());
 
   // vector wrappers for all the vector types we use
   bp::class_<vector<shared_ptr<Blob<Dtype> > > >("BlobVec")
@@ -514,16 +422,12 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<bool> >("BoolVec")
     .def(bp::vector_indexing_suite<vector<bool> >());
 
-  bp::class_<NCCL<Dtype>, shared_ptr<NCCL<Dtype> >,
-    boost::noncopyable>("NCCL",
-                        bp::init<shared_ptr<Solver<Dtype> >, const string&>())
 #ifdef USE_NCCL
     .def("new_uid", NCCL_New_Uid).staticmethod("new_uid")
     .def("bcast", &NCCL<Dtype>::Broadcast)
 #endif
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
-  BP_REGISTER_SHARED_PTR_TO_PYTHON(NCCL<Dtype>);
 
   bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
     "Timer", bp::init<>())
