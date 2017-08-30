@@ -56,11 +56,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
-  /*
-  LOG_IF(INFO, Caffe::root_solver())
-      << "Initializing net from parameters: " << std::endl
-      << filtered_param.DebugString();
-      */
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
@@ -75,7 +70,7 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   top_blob_names_.resize(param.layer_size());
   bottom_id_vecs_.resize(param.layer_size());
   bottom_blob_names_.resize(param.layer_size());
-  param_id_vecs_.resize(param.layer_size());
+  //param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
 
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
@@ -96,8 +91,8 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
-      const int blob_id = AppendBottom(param, layer_id, bottom_id,
-                                       &available_blobs, &blob_name_to_idx);
+      AppendBottom(param, layer_id, bottom_id,
+	  &available_blobs, &blob_name_to_idx);
     }
     int num_top = layer_param.top_size();
 
@@ -137,9 +132,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
 
-    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
-      AppendParam(param, layer_id, param_id);
-    }
   }
 
   /*
@@ -345,102 +337,6 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
   return blob_id;
 }
 
-template <typename Dtype>
-void Net<Dtype>::AppendParam(const NetParameter &param, const int layer_id,
-                             const int param_id) {
-  const LayerParameter &layer_param = layers_[layer_id]->layer_param();
-  const int param_size = layer_param.param_size();
-  string param_name =
-      (param_size > param_id) ? layer_param.param(param_id).name() : "";
-  if (param_name.size()) {
-    param_display_names_.push_back(param_name);
-  } else {
-    ostringstream param_display_name;
-    param_display_name << param_id;
-    param_display_names_.push_back(param_display_name.str());
-  }
-  const int net_param_id = params_.size();
-  params_.push_back(layers_[layer_id]->blobs()[param_id]);
-  param_id_vecs_[layer_id].push_back(net_param_id);
-  param_layer_indices_.push_back(make_pair(layer_id, param_id));
-  ParamSpec default_param_spec;
-  const ParamSpec *param_spec = (layer_param.param_size() > param_id)
-                                    ? &layer_param.param(param_id)
-                                    : &default_param_spec;
-  if (!param_size || !param_name.size() ||
-      (param_name.size() &&
-       param_names_index_.find(param_name) == param_names_index_.end())) {
-    // This layer "owns" this parameter blob -- it is either anonymous
-    // (i.e., not given a param_name) or explicitly given a name that we
-    // haven't already seen.
-    param_owners_.push_back(-1);
-    if (param_name.size()) {
-      param_names_index_[param_name] = net_param_id;
-    }
-    const int learnable_param_id = learnable_params_.size();
-    learnable_params_.push_back(params_[net_param_id].get());
-    learnable_param_ids_.push_back(learnable_param_id);
-    has_params_lr_.push_back(param_spec->has_lr_mult());
-    has_params_decay_.push_back(param_spec->has_decay_mult());
-    params_lr_.push_back(param_spec->lr_mult());
-    params_weight_decay_.push_back(param_spec->decay_mult());
-  } else {
-    // Named param blob with name we've seen before: share params
-    const int owner_net_param_id = param_names_index_[param_name];
-    param_owners_.push_back(owner_net_param_id);
-    const pair<int, int> &owner_index =
-        param_layer_indices_[owner_net_param_id];
-    const int owner_layer_id = owner_index.first;
-    const int owner_param_id = owner_index.second;
-    LOG(INFO)
-        << "Sharing parameters '" << param_name << "' owned by "
-        << "layer '" << layer_names_[owner_layer_id] << "', param "
-        << "index " << owner_param_id;
-    Blob<Dtype> *this_blob = layers_[layer_id]->blobs()[param_id].get();
-    Blob<Dtype> *owner_blob =
-        layers_[owner_layer_id]->blobs()[owner_param_id].get();
-    const int param_size = layer_param.param_size();
-    if (param_size > param_id && (layer_param.param(param_id).share_mode() ==
-                                  ParamSpec_DimCheckMode_PERMISSIVE)) {
-      // Permissive dimension checking -- only check counts are the same.
-      CHECK_EQ(this_blob->count(), owner_blob->count())
-          << "Cannot share param '" << param_name << "' owned by layer '"
-          << layer_names_[owner_layer_id] << "' with layer '"
-          << layer_names_[layer_id] << "'; count mismatch.  Owner layer param "
-          << "shape is " << owner_blob->shape_string() << "; sharing layer "
-          << "shape is " << this_blob->shape_string();
-    } else {
-      // Strict dimension checking -- all dims must be the same.
-      CHECK(this_blob->shape() == owner_blob->shape())
-          << "Cannot share param '" << param_name << "' owned by layer '"
-          << layer_names_[owner_layer_id] << "' with layer '"
-          << layer_names_[layer_id] << "'; shape mismatch.  Owner layer param "
-          << "shape is " << owner_blob->shape_string() << "; sharing layer "
-          << "expects shape " << this_blob->shape_string();
-    }
-    const int learnable_param_id = learnable_param_ids_[owner_net_param_id];
-    learnable_param_ids_.push_back(learnable_param_id);
-    if (param_spec->has_lr_mult()) {
-      if (has_params_lr_[learnable_param_id]) {
-        CHECK_EQ(param_spec->lr_mult(), params_lr_[learnable_param_id])
-            << "Shared param '" << param_name << "' has mismatched lr_mult.";
-      } else {
-        has_params_lr_[learnable_param_id] = true;
-        params_lr_[learnable_param_id] = param_spec->lr_mult();
-      }
-    }
-    if (param_spec->has_decay_mult()) {
-      if (has_params_decay_[learnable_param_id]) {
-        CHECK_EQ(param_spec->decay_mult(),
-                 params_weight_decay_[learnable_param_id])
-            << "Shared param '" << param_name << "' has mismatched decay_mult.";
-      } else {
-        has_params_decay_[learnable_param_id] = true;
-        params_weight_decay_[learnable_param_id] = param_spec->decay_mult();
-      }
-    }
-  }
-}
 
 template <typename Dtype>
 std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
