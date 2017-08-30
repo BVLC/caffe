@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cuda_profiler_api.h>
-#include <map>
 #include <omp.h>
 #include <set>
 #include <string>
@@ -13,7 +12,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
