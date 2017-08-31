@@ -64,13 +64,8 @@ class WeightedEuclideanLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   /**
-   * @brief Computes the Euclidean error gradient w.r.t. the inputs.
+   * @brief Computes the Weighted Euclidean error gradient w.r.t. the inputs.
    *
-   * Unlike other children of LossLayer, EuclideanLossLayer \b can compute
-   * gradients with respect to the label inputs bottom[1] (but still only will
-   * if propagate_down[1] is set, due to being produced by learnable parameters
-   * or if force_backward is set). In fact, this layer is "commutative" -- the
-   * result is the same regardless of the order of the two bottoms.
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
@@ -88,12 +83,12 @@ class WeightedEuclideanLossLayer : public LossLayer<Dtype> {
    *      the predictions @f$\hat{y}@f$; Backward fills their diff with
    *      gradients @f$
    *        \frac{\partial E}{\partial \hat{y}} =
-   *            \frac{1}{n} \sum\limits_{n=1}^N (\hat{y}_n - y_n)
+   *            \frac{1}{n} \sum\limits_{n=1}^N w_n (\hat{y}_n - y_n)
    *      @f$ if propagate_down[0]
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the targets @f$y@f$; Backward fills their diff with gradients
    *      @f$ \frac{\partial E}{\partial y} =
-   *          \frac{1}{n} \sum\limits_{n=1}^N (y_n - \hat{y}_n)
+   *          \frac{1}{n} \sum\limits_{n=1}^N w_n (y_n - \hat{y}_n)
    *      @f$ if propagate_down[1]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,

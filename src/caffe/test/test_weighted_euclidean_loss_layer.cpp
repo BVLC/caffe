@@ -24,14 +24,16 @@ class WeightedEuclideanLossLayerTest : public CPUDeviceTest<TypeParam> {
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
-    GaussianFiller<Dtype> filler(filler_param);
-    filler.Fill(this->blob_bottom_data_);
+    filler_param.set_min(0);
+    filler_param.set_max(1);
+    GaussianFiller<Dtype> gaussian_filler(filler_param);
+    gaussian_filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    filler.Fill(this->blob_bottom_label_);
+    gaussian_filler.Fill(this->blob_bottom_label_);
     blob_bottom_vec_.push_back(blob_bottom_label_);
-    filler.Fill(this->blob_bottom_certainty_);
+    UniformFiller<Dtype> uniform_filler(filler_param);
+    uniform_filler.Fill(this->blob_bottom_certainty_);
     blob_bottom_vec_.push_back(blob_bottom_certainty_);
-
     blob_top_vec_.push_back(blob_top_loss_);
   }
   virtual ~WeightedEuclideanLossLayerTest() {
@@ -45,24 +47,20 @@ class WeightedEuclideanLossLayerTest : public CPUDeviceTest<TypeParam> {
     // Get the loss without a specified objective weight -- should be
     // equivalent to explicitly specifying a weight of 1.
     LayerParameter layer_param;
-    WeightedEuclideanLossLayer<Dtype> layer_weight_1(layer_param);
-    layer_weight_1.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-    const Dtype loss_weight_1 =
-        layer_weight_1.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-
-    // Get the loss again with a different objective weight; check that it is
-    // scaled appropriately.
-    const Dtype kLossWeight = 3.7;
-    layer_param.add_loss_weight(kLossWeight);
-    WeightedEuclideanLossLayer<Dtype> layer_weight_2(layer_param);
-    layer_weight_2.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-    const Dtype loss_weight_2 =
-        layer_weight_2.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    const Dtype kErrorMargin = 1e-5;
-    EXPECT_NEAR(loss_weight_1 * kLossWeight, loss_weight_2, kErrorMargin);
-    // Make sure the loss is non-trivial.
-    const Dtype kNonTrivialAbsThresh = 1e-1;
-    EXPECT_GE(fabs(loss_weight_1), kNonTrivialAbsThresh);
+    WeightedEuclideanLossLayer<Dtype> layer_weight(layer_param);
+    layer_weight.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    const Dtype loss =
+        layer_weight.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    Dtype expected_loss = 0;
+    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+      Dtype actual_label = this->blob_bottom_data_->cpu_data()[i];
+      Dtype expected_label = this->blob_bottom_label_->cpu_data()[i];
+      Dtype weight = this->blob_bottom_certainty_->cpu_data()[i];
+      Dtype discrepancy = actual_label - expected_label;
+      expected_loss += weight * discrepancy * discrepancy;
+    }
+    expected_loss /= (this->blob_bottom_data_->num() * Dtype(2)); 
+    EXPECT_NEAR(loss, expected_loss, 1e-6);
   }
 
   Blob<Dtype>* const blob_bottom_data_;
