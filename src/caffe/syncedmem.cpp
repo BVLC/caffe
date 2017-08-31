@@ -45,7 +45,7 @@ static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
 #endif
 }
 
-size_t SyncedMemory::get_used_size() { return device_allocator.used_size; }
+size_t SyncedMemory::get_used_size() { return 0;}
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
@@ -233,7 +233,7 @@ void SyncedMemory::check_device() {
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr;
 
-  ptr = device_allocator.alloc(size);
+  ptr = device_allocator.alloc_with_lock(size);
   if (!ptr) {
     CUDA_CHECK(cudaMalloc(&ptr, size));
   }
@@ -241,7 +241,7 @@ void *SyncedMemory::gpu_malloc(size_t size) {
 }
 
 void SyncedMemory::gpu_free(void *data) {
-  if (!device_allocator.free(data)) {
+  if (!device_allocator.free_with_lock(data)) {
     CUDA_CHECK(cudaFree(data));
   }
 }

@@ -10,8 +10,8 @@ list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
 
 find_package(DeepirBuddyAllocator REQUIRED)
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${DeepirBuddyAllocator_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${DeepirBuddyAllocator_LIBRARIES})
+list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${DeepirBuddyAllocator_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS PRIVATE ${DeepirBuddyAllocator_LIBRARIES})
 
 # ---[ Threads
 find_package(Threads REQUIRED)
