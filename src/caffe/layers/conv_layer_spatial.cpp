@@ -1703,21 +1703,15 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
           && !(this->group_ == 1 || M_ % 16 == 0))
         continue;
       int width_max, height_max, block_size_max;
-      if (simd_size == 8) {
-        width_max = 16;
-        height_max = 16;
-        block_size_max = 48;
-      } else {
-        width_max = 14;
-        height_max = 14;
-        block_size_max = 32;
-      }
+      width_max = 14;
+      height_max = 14;
+      block_size_max = 32;
       for (uint32_t width = width_max; width > 0; width--) {
         int candidate = 0;
         if (width > output_w_)
           continue;
         for (uint32_t height = height_max; height > 0; height--) {
-          if (width * height > block_size_max || height > output_h_)
+          if (height > output_h_)
             continue;
           // Only when the work items count is less than the device
           // max work items or the M_ is less than 16, we will tune
@@ -1728,10 +1722,16 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
                    static_cast<float>(width * height))
                  >= max_compute_units * 7 * 16))
             continue;
-          int tile_x = (kernel_w_ * dilation_w_
-                       + (width - 1) * stride_w_ + 3) & ~3;
+          int actual_tile_x = kernel_w_ * dilation_w_
+                              + (width - 1) * stride_w_ ;
+          int tile_x = (actual_tile_x + 3) & ~3;
+          if (actual_tile_x % 4 != 0)
+            continue;
           int tile_y = kernel_h_ * dilation_h_ + (height - 1) * stride_h_;
           if (tile_x > (4 * simd_size))
+            continue;
+          if ((width * height +
+             (tile_x * tile_y + simd_size - 1)/ simd_size) > block_size_max)
             continue;
           int tile_y_stride = (4 * simd_size) / tile_x;
 
@@ -1746,6 +1746,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
         if (kernelCnt >= 12 && width == 2)
           break;
       }
+      printf("kernelCnt = %d \n", kernelCnt);
     }
   }
 
