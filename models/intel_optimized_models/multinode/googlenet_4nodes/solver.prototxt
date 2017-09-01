@@ -19,7 +19,7 @@ average_loss: 40
 base_lr: 0.04
 lr_policy: "poly"
 power: 0.5
-max_iter: 350000
+max_iter: 450000
 momentum: 0.9
 weight_decay: 0.0002
 snapshot: 50000
