@@ -1,0 +1,15 @@
+net: "models/intel_optimized_models/multinode/googlenet_v2_8nodes/train_val.prototxt"
+test_iter: 1000
+test_interval: 10000
+test_initialization: false
+base_lr: 0.06
+display: 40
+max_iter: 182000
+lr_policy: "poly"
+power: 0.5
+momentum: 0.9
+weight_decay: 0.0002
+snapshot: 10000
+snapshot_prefix: "models/intel_optimized_models/multinode/googlenet_v2_8nodes/default_googlenet_v2"
+solver_mode: CPU
+average_loss: 40
