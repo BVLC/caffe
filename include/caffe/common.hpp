@@ -134,12 +134,20 @@ class Caffe {
   // into the program since that may cause allocation of pinned memory being
   // freed in a non-pinned way, which may cause problems - I haven't verified
   // it personally but better to note it here in the header file.
-  inline static void set_mode(Brew mode) { Get().mode_ = mode; }
+  inline static void set_mode(Brew mode) {
+    Get().mode_ = mode;
+    if (Get().device_id_ == -1 && mode == GPU) {
+      Get().device_id_ = 0;
+    }
+  }
   // Sets the random seed of both boost and curand
   static void set_random_seed(const unsigned int seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  static int GetDevice() {
+    return Get().device_id_;
+  }
   // Prints the current GPU status.
   static void DeviceQuery();
   // Check if specified device is available
@@ -156,6 +164,7 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
+  int device_id_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

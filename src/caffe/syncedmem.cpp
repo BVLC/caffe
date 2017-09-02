@@ -1,11 +1,14 @@
 #include <deepir/cuda_buddy_pool.hpp>
+#include <map>
+#include <memory>
 
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-static deepir::cuda_buddy_pool
-    device_allocator(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
+static std::array<std::unique_ptr<deepir::cuda_buddy_pool>,32> device_gpu_pools;
+static std::mutex pool_mutex;
+//device_allocator(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
 
 namespace caffe {
 
@@ -231,9 +234,16 @@ void SyncedMemory::check_device() {
 }
 
 void *SyncedMemory::gpu_malloc(size_t size) {
-  void *ptr;
+  auto device_id=Caffe::GetDevice();
+  CHECK(device_id>=0 && device_id<device_gpu_pools.size());
+  if (!device_gpu_pools[device_id]) {
+    std::lock_guard<std::mutex> lock(pool_mutex);
+    if(!device_gpu_pools[device_id]) {
+      device_gpu_pools[device_id]=std::make_unique<deepir::cuda_buddy_pool>(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
+    }
+  }
 
-  ptr = device_allocator.alloc_with_lock(size);
+  void *ptr = device_gpu_pools[device_id]->alloc_with_lock(size);
   if (!ptr) {
     CUDA_CHECK(cudaMalloc(&ptr, size));
   }
@@ -241,7 +251,12 @@ void *SyncedMemory::gpu_malloc(size_t size) {
 }
 
 void SyncedMemory::gpu_free(void *data) {
-  if (!device_allocator.free_with_lock(data)) {
+  if(!data) {
+    return;
+  }
+  auto device_id=Caffe::GetDevice();
+  CHECK(device_id>=0 && device_id<device_gpu_pools.size());
+  if (!device_gpu_pools[device_id]->free_with_lock(data)) {
     CUDA_CHECK(cudaFree(data));
   }
 }

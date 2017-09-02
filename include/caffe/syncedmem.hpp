@@ -52,7 +52,6 @@ private:
   bool own_cpu_data_;
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
-  int device_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory
