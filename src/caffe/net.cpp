@@ -345,8 +345,10 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
 
   static size_t cnt;
 
+  /*
   if(cnt!=0)
     cudaProfilerStart();
+    */
 
   int end = -1;
 
@@ -397,10 +399,10 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
     top_blobs.erase(i);
   }
 
+  /*
   if(cnt!=0)
     cudaProfilerStop();
   cnt++;
-  /*
   {
     cudaProfilerStop();
     size_t cur_free_byte;
