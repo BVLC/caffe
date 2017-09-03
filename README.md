@@ -12,5 +12,6 @@ Improvements and new features include:
 - SSD: Single Shot MultiBox Detector for object detection in images
 - Support for lightweight nets via accelerated depthwise convolutions (https://github.com/BVLC/caffe/pull/5665) and shufflenet layer (https://github.com/farmingyard/ShuffleNet).
 - Support for image segmentation, via PSPNet, U-Net, SegNet, etc...
+- Support for Squeeze & Excitation Nets (https://github.com/hujie-frank/SENet).
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors, train from text or sparse data, need built-in image detection.
