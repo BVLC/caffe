@@ -131,13 +131,22 @@ inline bool ReadFileToDatum(const string& filename, Datum* datum) {
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
-    const bool is_color, const std::string & encoding, Datum* datum);
+		      const bool is_color, const bool nearest_neighbour_interp,
+		      const std::string & encoding, Datum* datum);
+
+inline bool ReadImageToDatum(const string& filename, const int label,
+		      const int height, const int width, const int min_dim, const int max_dim,
+		      const bool is_color, const std::string & encoding, Datum* datum)
+{
+  return ReadImageToDatum(filename, label, height, width, min_dim, max_dim,
+			  is_color, false, encoding, datum);
+}
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
     const bool is_color, Datum* datum) {
   return ReadImageToDatum(filename, label, height, width, min_dim, max_dim,
-                          is_color, "", datum);
+                          is_color, false, "", datum);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
@@ -251,14 +260,20 @@ inline bool MapLabelToDisplayName(const LabelMap& map,
 }
 
 #ifdef USE_OPENCV
-cv::Mat ReadImageToCVMat(const string& filename, const int height,
-    const int width, const int min_dim, const int max_dim, const bool is_color);
+  /*cv::Mat ReadImageToCVMat(const string& filename, const int height,
+    const int width, const int min_dim, const int max_dim, const bool is_color);*/
 
 cv::Mat ReadImageToCVMat(const string& filename, const int height,
     const int width, const int min_dim, const int max_dim);
 
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width, const bool is_color);
+			 const int height, const int width, const int min_dim, const int max_dim,
+			 const bool is_color,
+			 const bool nearest_neighbour_interp = false);
+
+cv::Mat ReadImageToCVMat(const string& filename,
+			 const int height, const int width, const bool is_color, 
+			 const bool nearest_neighbour_interp = false);
 
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width);
