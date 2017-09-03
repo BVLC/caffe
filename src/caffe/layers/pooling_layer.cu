@@ -80,6 +80,31 @@ __global__ void AvePoolForward(const int nthreads,
 }
 
 template <typename Dtype>
+__global__ void GlobalAvePoolForward(const int spatial_dim, 
+    const Dtype* bottom_data, Dtype* top_data) {
+  __shared__ Dtype buffer[CAFFE_CUDA_NUM_THREADS];
+  unsigned int tid = threadIdx.x;
+  buffer[tid] = 0;
+  __syncthreads();
+
+  for (int j = tid; j < spatial_dim; j += blockDim.x) {
+    buffer[tid] += bottom_data[blockIdx.x * spatial_dim + j];
+  }
+  __syncthreads();
+
+  for (int i = blockDim.x / 2; i > 0; i >>= 1) {
+    if (tid < i) {
+      buffer[threadIdx.x] += buffer[threadIdx.x + i];
+    }
+    __syncthreads();
+  }
+
+  if (tid == 0) {
+    top_data[blockIdx.x] = buffer[0] / spatial_dim;
+  }
+}
+
+template <typename Dtype>
 __global__ void StoPoolForwardTrain(const int nthreads,
     const Dtype* const bottom_data,
     const int num, const int channels, const int height,
@@ -179,11 +204,17 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         mask, top_mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
+    if (this->layer_param_.pooling_param().global_pooling()) {
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      GlobalAvePoolForward<Dtype><<<bottom[0]->count(0, 2), CAFFE_CUDA_NUM_THREADS>>>(
+          bottom[0]->count(2), bottom_data, top_data);
+    } else { 
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, bottom_data, bottom[0]->num(), channels_,
+          height_, width_, pooled_height_, pooled_width_, kernel_h_,
+          kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
+    }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (this->phase_ == TRAIN) {
@@ -295,6 +326,14 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* const top_diff,
   }
 }
 
+template <typename Dtype> 
+__global__ void GlobalAvePoolBackward(const int nthreads, const int spatial_dim, 
+    const Dtype* top_diff, Dtype* bottom_diff) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    const int n = index / spatial_dim;
+    bottom_diff[index] = top_diff[n] / spatial_dim;
+  }
+}
 
 template <typename Dtype>
 __global__ void StoPoolBackward(const int nthreads,
@@ -359,14 +398,21 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         bottom_diff);
     break;
   case PoolingParameter_PoolMethod_AVE:
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, top[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
+    if (this->layer_param_.pooling_param().global_pooling()) {
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      GlobalAvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, bottom[0]->count(2), 
+          top_diff, bottom_diff);
+    } else {
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, top_diff, top[0]->num(), channels_,
+          height_, width_, pooled_height_, pooled_width_, kernel_h_,
+          kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
+    }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    // NOLINT_NEXT_LINE(whitespace/operators)
+      // NOLINT_NEXT_LINE(whitespace/operators)
     StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, rand_idx_.gpu_data(), top_diff,
         top[0]->num(), channels_, height_, width_, pooled_height_,
