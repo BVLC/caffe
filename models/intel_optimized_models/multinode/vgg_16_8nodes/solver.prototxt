@@ -1,0 +1,14 @@
+net: "models/intel_optimized_models/multinode/vgg_16_8nodes/train_val.prototxt"
+test_iter: 1563
+test_interval: 10000
+momentum: 0.9
+weight_decay: 0.0005
+base_lr: 0.01
+lr_policy: "poly"
+power: 2
+max_iter: 300000
+display: 40
+snapshot: 100000
+solver_mode: CPU
+snapshot_prefix: "models/intel_optimized_models/multinode/vgg_16_8nodes"
+
