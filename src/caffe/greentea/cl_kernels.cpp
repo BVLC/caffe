@@ -1367,6 +1367,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
 "const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
@@ -1529,6 +1532,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
 "const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
@@ -1752,6 +1758,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
 "const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
@@ -1963,6 +1972,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype4 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype4*)bias;",    // NOLINT
 "*bias_vec = as_Dtype4(SUB_GROUP_BLOCK_READ4((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1] + bias[2] + bias[3];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
 "const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
@@ -2144,8 +2156,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
 "*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
-"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"const Dtype bias[2] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out_offset, 0);",    // NOLINT
@@ -2334,8 +2349,11 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype2 *bias_vec;",    // NOLINT
 "bias_vec = (Dtype2*)bias;",    // NOLINT
 "*bias_vec = as_Dtype2(SUB_GROUP_BLOCK_READ2((__global INT_TYPE *)biases_base + group_x * TILE_N));",    // NOLINT
+"if (group_x > 0xFFFFFFFEul) {",    // NOLINT
+"dst[0] = bias[0] + bias[1];",    // NOLINT
+"}",    // NOLINT
 "#else",    // NOLINT
-"const Dtype bias[4] = {0, 0, 0, 0};",    // NOLINT
+"const Dtype bias[2] = {0, 0, 0, 0};",    // NOLINT
 "#endif",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out0_offset, 0);",    // NOLINT
 "INTERLEAVED_SIMD16_OUTPUT(dst, out1_offset, 1);",    // NOLINT
