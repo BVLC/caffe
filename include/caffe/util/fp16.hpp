@@ -2,7 +2,7 @@
 #define CAFFE_UTIL_FP16_H_
 
 #include <boost/shared_ptr.hpp>
-#include "3rdparty/half/half.hpp"
+#include "caffe/3rdparty/half/half.hpp"
 using half_float::half;
 
 #ifdef _MSC_VER
