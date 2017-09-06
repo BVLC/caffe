@@ -261,12 +261,19 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context
                                 (this->device_->id());
+
   std::string prefix = ctx.current_device().name()
                   + ctx.current_device().vendor()
                   + ctx.current_device().driver_version()
                   + std::to_string(ctx.current_device().max_compute_units());
-  key_ = viennacl::tools::sha1(prefix + keyBuilder.str());
-  short_key_ = keyBuilder.str();
+
+  std::string relax_prefix = ctx.current_device().name()
+                  + ctx.current_device().vendor()
+                  + std::to_string(ctx.current_device().max_compute_units());
+
+  old_key_ = viennacl::tools::sha1(prefix + keyBuilder.str());
+  key_ = viennacl::tools::sha1(relax_prefix + keyBuilder.str());
+  key_text_ = keyBuilder.str();
 }
 
 template<typename Dtype>
@@ -274,7 +281,7 @@ std::string ConvolutionLayerSpatial<Dtype>::generate_specific_key(
     ConvType type, int_tp blockWidth, int_tp blockHeight, int_tp blockDepth) {
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
   std::stringstream keyBuilder;
-  keyBuilder << short_key_
+  keyBuilder << key_text_
              << "_" << static_cast<int_tp>(type)
              << "_" << blockWidth
              << "_" << blockHeight
@@ -1933,6 +1940,10 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   string outputFile;
   outputFile = cache_path_.str() + key_;
   std::ifstream cachedKernel(outputFile.c_str());
+  if (!cachedKernel) {
+    outputFile = cache_path_.str() + old_key_;
+    cachedKernel.open(outputFile.c_str());
+  }
   if (cachedKernel) {
     int_tp x, y, z, type;
     cachedKernel >> x;

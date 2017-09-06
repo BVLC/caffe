@@ -268,8 +268,9 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   bool tuned_;
   bool dwconv_;
 
+  std::string old_key_;
   std::string key_;
-  std::string short_key_;
+  std::string key_text_;
   std::string kernel_name_;
   std::stringstream cache_path_;
 
