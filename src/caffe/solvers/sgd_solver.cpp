@@ -251,16 +251,14 @@ template <>
 void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_params_data, float *net_params_diff,
                             const float rate, const float momentum, float* history_data)
 {
-  float temp_result = 0.;
 #ifdef _OPENMP
 //#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
 #pragma omp parallel for schedule(static)
 #pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
-    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    history_data[i] = temp_result;
-    net_params_diff[i] = temp_result;
+    history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    net_params_diff[i] = history_data[i];
   }
 }
 
@@ -268,16 +266,14 @@ template <>
 void axpy_axpby_copy<double>(size_t count, const double decay, const double* net_params_data, double *net_params_diff,
                              const double rate, const double momentum, double* history_data)
 {
-  double temp_result = 0.;
 #ifdef _OPENMP
 //#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
 #pragma omp parallel for schedule(static)
 #pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
-    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    history_data[i] = temp_result;
-    net_params_diff[i] = temp_result;
+    history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    net_params_diff[i] = history_data[i];
   }
 }
 //End: For L1 Regularize_ComputeUpdateValue_Fusion
@@ -292,17 +288,15 @@ template <>
 void axpy_axpby_copy_axpy<float>(size_t count, const float decay, float* net_params_data, float *net_params_diff,
                             const float rate, const float momentum, float* history_data, const float update_param)
 {
-  float temp_result = 0.;
 #ifdef _OPENMP
 //#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
 #pragma omp parallel for schedule(static)
 #pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
-    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    history_data[i] =  temp_result;
-    net_params_diff[i] = temp_result;
-    net_params_data[i] = update_param * temp_result + net_params_data[i];
+    history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    net_params_diff[i] = history_data[i];
+    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
   }
 }
 
@@ -310,16 +304,15 @@ template <>
 void axpy_axpby_copy_axpy<double>(size_t count, const double decay, double* net_params_data, double *net_params_diff,
                              const double rate, const double momentum, double* history_data, const double update_param)
 {
-  double temp_result = 0.;
 #ifdef _OPENMP
 //#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
 #pragma omp parallel for schedule(static)
 #pragma simd
 #endif  
   for (size_t i = 0; i < count; ++i) {
-    temp_result = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    net_params_diff[i] = temp_result;
-    net_params_data[i] = update_param * temp_result + net_params_data[i];
+    history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
+    net_params_diff[i] = history_data[i];
+    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
   }
 }
 //End: For L2 Regularize_ComputeUpdateValue_Update_Fusion
