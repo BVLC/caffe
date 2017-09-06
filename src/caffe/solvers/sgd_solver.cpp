@@ -210,7 +210,7 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   }
 
 #ifdef ENABLE_SGD_FUSION
-  if (Caffe::mode() == Caffe::CPU) 
+  if ((Caffe::mode() == Caffe::CPU) && (this->type() == string("SGD")))
   {
     //VLOG(1) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
     //LOG(INFO) << "Use Normalize_Regularize_ComputeUpdateValue_Update_Fusion for SGD";
