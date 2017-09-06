@@ -29,6 +29,11 @@ struct detect_result {
   float bottom;
 };
 
+enum ColorFormat {
+  VA_RGB = 0,
+  VA_BGR = 1
+};
+
 template <typename Dtype>
 class Detector {
 public:
@@ -63,6 +68,7 @@ private:
   vector<Blob<Dtype>*> input_blobs_;
   const vector<cv::Mat> *origin_imgs_;
   DataTransformer<Dtype> *data_transformer_;
+  ColorFormat input_color_format_;
 };
 
 template <typename Dtype>
@@ -107,6 +113,7 @@ Detector<Dtype>::Detector(const string& model_file,
     transform_param.set_scale(1./255.);
     transform_param.set_force_color(true);
     std::cout << "Using Yolo: " << net_->name() << std::endl;
+    input_color_format_ = VA_RGB;
   } else if (output_layer->layer_param().type() == "DetectionOutput") {
     use_yolo_format_ = false;
     resize_param->set_resize_mode(caffe::ResizeParameter_Resize_mode_WARP);
@@ -123,6 +130,7 @@ Detector<Dtype>::Detector(const string& model_file,
       transform_param.add_mean_value(123);
       std::cout << "Using SSD : " << net_->name() << std::endl;
     }
+    input_color_format_ = VA_BGR;
   } else {
     std::cerr << "The model is not a valid object detection model."
               << std::endl;
@@ -138,7 +146,8 @@ Detector<Dtype>::Detector(const string& model_file,
 }
 
 static void
-FixupChannels(vector <cv::Mat> &imgs, int num_channels) {
+FixupChannels(vector <cv::Mat> &imgs, int num_channels,
+              enum ColorFormat color_format) {
   for (int i = 0; i < imgs.size(); i++) {
     /* Convert the input image to the input image format of the network. */
     cv::Mat img = imgs[i];
@@ -149,12 +158,19 @@ FixupChannels(vector <cv::Mat> &imgs, int num_channels) {
       else if (img.channels() == 4 && num_channels == 1)
         cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
       else if (img.channels() == 4 && num_channels == 3)
-        cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
+        cv::cvtColor(img, sample,
+                     color_format == VA_BGR ?
+                     cv::COLOR_BGRA2BGR : cv::COLOR_BGRA2RGB);
       else if (img.channels() == 1 && num_channels == 3)
-        cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
+        cv::cvtColor(img, sample,
+                     color_format == VA_BGR ?
+                     cv::COLOR_GRAY2BGR : cv::COLOR_BGRA2RGB);
       else {
         // Should not enter here, just in case.
-        sample = img;
+        if (color_format == VA_BGR)
+          sample = img;
+        else
+          cv::cvtColor(img, sample, cv::COLOR_BGR2RGB);
       }
       imgs[i] = sample;
     }
@@ -182,7 +198,7 @@ void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
     int pos = batch_id * batch_size_;
     vector<cv::Mat> batch_imgs(imgs.begin() + pos,
                                imgs.begin() + pos + batch_size_);
-    FixupChannels(batch_imgs, num_channels_);
+    FixupChannels(batch_imgs, num_channels_, input_color_format_);
     data_transformer_->Transform(batch_imgs, blob);
     input_blobs_.push_back(blob);
   }
