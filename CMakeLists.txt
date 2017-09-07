@@ -68,6 +68,8 @@ if(UNIX OR APPLE)
     # GCC specific flags.
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector-strong")
+      # auto enable SGD FUSION if gcc version >= 4.9
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
     else()
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fstack-protector")
     endif()
@@ -79,6 +81,8 @@ if(UNIX OR APPLE)
     # though it uses -pie linker option that require -fPIE during compilation. Checksec
     # shows that it generates correct PIE anyway if only -pie is provided.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
+    # auto enable SGD Fusion if use intel compiler
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
   endif()
   
   # Generic flags.

@@ -318,6 +318,11 @@ else ifeq ($(UNAME), Darwin)
 	OSX_MINOR_VERSION := $(shell sw_vers -productVersion | cut -f 2 -d .)
 endif
 
+# Custom compiler
+ifdef CUSTOM_CXX
+	CXX := $(CUSTOM_CXX)
+endif
+
 # Linux
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
@@ -365,19 +370,19 @@ else
 	ORIGIN := \$$ORIGIN
 endif
 
-# Custom compiler
-ifdef CUSTOM_CXX
-	CXX := $(CUSTOM_CXX)
-endif
-
 # Compiler flags
 ifneq (,$(findstring icpc,$(CXX)))
 	CXX_HARDENING_FLAGS += -fstack-protector
+	#Enable SGD FUSION if use intel compiler
+	COMMON_FLAGS += -DENABLE_SGD_FUSION
+
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 else ifneq (,$(findstring g++,$(CXX)))
-	ifeq ($(shell echo | awk '{exit $(GCCVERSION) >= 4.9;}'), 1)
+	ifeq ($(shell echo | awk '{ print $(GCCVERSION) >= 4.9 }'), 1)
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector-strong
+		#Enable SGD FUSION if gcc version >= 4.9
+		COMMON_FLAGS += -DENABLE_SGD_FUSION
 	else
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 	endif	
@@ -547,10 +552,6 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
-##########SGD FUSION#######################
-ifeq ($(ENABLE_SGD_FUSION), 1)
-        COMMON_FLAGS += -DENABLE_SGD_FUSION
-endif
 ###########################################
 #
 # Complete build flags.
