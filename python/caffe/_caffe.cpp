@@ -267,21 +267,6 @@ class NetCallback: public Net<Dtype>::Callback {
   bp::object run_;
 };
 
-/*
-void Net_before_forward(Net<Dtype>* net, bp::object run) {
-  net->add_before_forward(new NetCallback<Dtype>(run));
-}
-void Net_after_forward(Net<Dtype>* net, bp::object run) {
-  net->add_after_forward(new NetCallback<Dtype>(run));
-}
-void Net_before_backward(Net<Dtype>* net, bp::object run) {
-  net->add_before_backward(new NetCallback<Dtype>(run));
-}
-void Net_after_backward(Net<Dtype>* net, bp::object run) {
-  net->add_after_backward(new NetCallback<Dtype>(run));
-}
-*/
-
 void Net_add_nccl(Net<Dtype>* net
 #ifdef USE_NCCL
   , NCCL<Dtype>* nccl
