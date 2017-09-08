@@ -1,5 +1,4 @@
 #!/bin/sh
- set -x
 
 benchmark_mode="all"
 
@@ -7,7 +6,7 @@ benchmark_mode="all"
 mode="train"
 
 # it's assigned by detect_cpu
-cpu_model=skx
+cpu_model="skx"
 
 # a list of nodes
 host_file=""
@@ -32,6 +31,8 @@ engine="MKL2017"
 
 result_dir=""
 debug="off"
+mpibench_bin="IMB-MPI1"
+mpibench_param="allreduce"
 
 function usage
 {
@@ -44,6 +45,8 @@ function usage
     echo "               [--snapshot snapshot.caffemodel]"
     echo "               [--num_mlsl_servers num_mlsl_servers]"
     echo "               [--output output_folder]"
+    echo "               [--mpibench_bin mpibench_bin]"
+    echo "               [--mpibench_param mpibench_param]"
     echo ""
     echo "  Parameters:"
     echo "    host: host file includes list of nodes."
@@ -61,6 +64,8 @@ function usage
     echo "    snapshot: only used if mode is resume_train"
     echo "    num_mlsl_servers: number of MLSL ep servers"
     echo "    output_folder: output folder for storing results"
+    echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
+    echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
 }
 
 declare -a cpu_list=("Intel Xeon E5-26xx (Broadwell)" "Intel Xeon Phi 72xx (Knight Landing)" 
@@ -71,14 +76,15 @@ function detect_cpu
     # detect cpu model
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
     if [[ $model_string == *"72"* ]]; then
-        cpu_model=knl
+        cpu_model="knl"
     elif [[ $model_string == *"8180"* ]]; then
-        cpu_model=skx
+        cpu_model="skx"
     elif [[ $model_string == *"6148"* ]]; then
-        cpu_model=skx
+        cpu_model="skx"
     elif [[ $model_string == *"E5-26"* ]]; then
-        cpu_model=bdw
+        cpu_model="bdw"
     else
+        cpu_model="unknown"
         echo "CPU model: $model_string"
         echo "  Use default settings, which may not be optimal ones."
     fi
@@ -143,8 +149,8 @@ function clear_shm
     clear_command="rm -rf /dev/shm/*"
     check_shm_command="df -h | grep shm"
 
-    # TODO: check if 50G is the minimum shm size?
-    min_shm_size=50
+    # TODO: check if 40G is the minimum shm size?
+    min_shm_size=40
     shm_unit="G"
 
     for node in "${nodenames[@]}"
@@ -157,10 +163,9 @@ function clear_shm
         if [ "$unit" == "$shm_unit" ] && [ $shm_size -ge ${min_shm_size} ]; then
             continue
         else
-            echo "Error: /dev/shm size = ${shm_size}${unit}, on node: ${node}."
-            echo "       It's less than minimum size: ${min_shm_size}${shm_unit}."
-            echo "       Please clean or enlarge it."
-            exit 1
+            echo "Warning: /dev/shm free size = ${shm_size}${unit}, on node: ${node}."
+            echo "       Better to larger than ${min_shm_size}${shm_unit}."
+            echo "       Please clean or enlarge the partition."
         fi
     done
 }
@@ -186,10 +191,10 @@ function set_mlsl_vars
         if [ ${numnodes} -eq 1 ]; then
             numservers=0
         else
-            if [ ${cpu_model} == knl ]; then
-                numservers=4
-            else
+            if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
                 numservers=2
+            else
+                numservers=4
             fi
         fi
     else
@@ -200,10 +205,10 @@ function set_mlsl_vars
     export MLSL_NUM_SERVERS=${numservers}
 
     if [ ${numservers} -gt 0 ]; then
-        if [ ${cpu_model} == knl ]; then
-            listep=6,7,8,9,10,11,12,13
-        else
+        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
             listep=6,7,8,9
+        else
+            listep=6,7,8,9,10,11,12,13
         fi
         export MLSL_SERVER_AFFINITY="${listep}"
         echo "MLSL_SERVER_AFFINITY: ${listep}"
@@ -220,6 +225,7 @@ function set_mlsl_vars
 function set_env_vars
 {
     set_mlsl_vars
+    init_mpi_envs
 
     ppncpu=1
     threadspercore=1
@@ -245,10 +251,10 @@ function execute_command
     local xeonbin_=$1
     local result_dir_=$2
 
-    if [ ${cpu_model} == knl ]; then
-        exec_command="numactl --preferred=$numanode $xeonbin_"
-    else
+    if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
         exec_command="$xeonbin_"
+    else
+        exec_command="numactl --preferred=$numanode $xeonbin_"
     fi
 
     if [ ${numnodes} -gt 1 ]; then
@@ -278,7 +284,6 @@ function execute_command
     if [ ${numnodes} -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command >${log_file} 2>&1
     else
-        init_mpi_envs
         exec_command="-l -configfile $cfile_"
         time GLOG_minloglevel=0 mpiexec.hydra $exec_command >${log_file} 2>&1 
     fi
@@ -335,14 +340,15 @@ function run_qperf_bench
 function run_mpi_bench
 {
     # MPI benchmark
-    mpibench_bin="IMB-MPI1"
     check_dependency $mpibench_bin
     if [ $? -ne 0 ]; then
         echo "Skip MPI benchmark..."
         return
     fi
 
-    xeonbin="$mpibench_bin allreduce"
+    xeonbin="$mpibench_bin $mpibench_param"
+
+    mpibench_bin_bname=`basename $mpibench_bin`
 
     declare -a adjust_values=(1 2 3 5 7 8 9 0)
     declare -a collective_values=('tmi' 'none')
@@ -367,7 +373,7 @@ function run_mpi_bench
             echo "I_MPI_ADJUST_ALLREDUCE=$I_MPI_ADJUST_ALLREDUCE"
             echo "I_MPI_COLLECTIVE_DEFAULTS=$I_MPI_COLLECTIVE_DEFAULTS"
 
-            test_result_dir=$result_dir/mpibench-${adjust_values[$i]}-${collective_values[$j]}
+            test_result_dir=$result_dir/mpibench-${mpibench_bin_bname}-${mpibench_param}-${adjust_values[$i]}-${collective_values[$j]}
             mkdir -p $test_result_dir
             execute_command "$xeonbin" $test_result_dir
         done
@@ -477,6 +483,14 @@ do
             result_dir=$2
             shift
             ;;
+        --mpibench_bin)
+            mpibench_bin=$2
+            shift
+            ;;
+        --mpibench_param)
+            mpibench_param=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -577,7 +591,7 @@ echo "Number of nodes: $numnodes"
 
 detect_cpu
 
-if [ $cpu_model == knl ]; then
+if [ "$cpu_model" == "knl" ]; then
     set_numa_node
 fi
 
