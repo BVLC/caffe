@@ -228,6 +228,12 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
             == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
   }
 
+  bool IsFusedWithEltwise() const {
+    return IsFusedWithEltwiseReLU() ||
+           (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE);
+  }
+
 #endif
 #endif
 

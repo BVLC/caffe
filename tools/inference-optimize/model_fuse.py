@@ -14,11 +14,24 @@ import argparse
 from google.protobuf import text_format
 from pdb import set_trace
 
+class FuseMode(object):
+    UNFUSED = 0
+    CONV_MAX_POOLING_RELU = 1
+    CONV_RELU = 2
+    CONV_ELTWISE_RELU = 3
+    CONV_ELTWISE = 4
+    CONV_BN_SCALE = 5
+    CONV_FUSE_MAX = 5
+    LRN_POOLING_MAX = 11
+
 def is_conv_fusion(mode):
-    return mode < 5 and mode > 0
+    return mode <= FuseMode.CONV_FUSE_MAX and mode > FuseMode.UNFUSED
 
 def is_lrn_fusion(mode):
-    return mode == 5
+    return mode == FuseMode.LRN_POOLING_MAX
+
+def has_relu(mode):
+    return mode > FuseMode.UNFUSED and mode < FuseMode.CONV_ELTWISE
 
 def is_used(in_model, start_index, blob):
     for in_index in range(start_index, len(in_model.layer)):
@@ -30,7 +43,7 @@ def is_used(in_model, start_index, blob):
 
 # If any top blob is used in other layers, we have to fallback.
 def fixup_fuse_mode(in_model, in_index, fuse_mode, fused_layer_count):
-    if fuse_mode == 0:
+    if fuse_mode == FuseMode.UNFUSED:
         return (fuse_mode, fused_layer_count)
     for index in range(in_index, in_index + fused_layer_count):
         check_list = list();
@@ -51,12 +64,12 @@ def fixup_fuse_mode(in_model, in_index, fuse_mode, fused_layer_count):
     return (fuse_mode, fused_layer_count)
 
 def check_fuse_type(model, cur_index):
-    (fuse_mode, fused_layer_count) = (0, 0)
+    (fuse_mode, fused_layer_count) = (FuseMode.UNFUSED, 0)
     if model.layer[cur_index].type == 'Convolution':
         cur_conv_index = cur_index
         maxindex = len(model.layer)-1
         if cur_conv_index+1>maxindex:
-            (fuse_mode, fused_layer_count) = (0,0) #UNFUSED
+            (fuse_mode, fused_layer_count) = (FuseMode.UNFUSED, 0) #UNFUSED
         elif  cur_conv_index+2>maxindex:
             actual = [model.layer[cur_conv_index+1].type, 'xxx', 'xxx', 'xxx']
         elif  cur_conv_index+3>maxindex:
@@ -69,18 +82,24 @@ def check_fuse_type(model, cur_index):
         resnet_merged = ['ReLU']
         resnet_elt = ['BatchNorm', 'Scale', 'Eltwise', 'ReLU']
         resnet_elt_merged = ['Eltwise', 'ReLU']
-        (fuse_mode, fused_layer_count) = (0, 0)
-        if actual[:1] == resnet_merged:
-            (fuse_mode, fused_layer_count) = (2, 1)
-        if actual[:3] == resnet:
-            (fuse_mode, fused_layer_count) = (2, 3)
-        if actual[:2] == resnet_elt_merged:
-            (fuse_mode, fused_layer_count) = (3, 2)
+        resnet_elt_no_relu = ['BatchNorm', 'Scale', 'Eltwise']
+        resnet_scale = ['BatchNorm', 'Scale']
+        (fuse_mode, fused_layer_count) = (FuseMode.UNFUSED, 0)
         if actual == resnet_elt:
-            (fuse_mode, fused_layer_count) = (3, 4)
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_RELU, 4)
+        elif actual[:3] == resnet:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_RELU, 3)
+        elif actual[:3] == resnet_elt_no_relu:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE, 3)
+        elif actual[:2] == resnet_elt_merged:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_RELU, 2)
+        elif actual[:2] == resnet_scale:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_BN_SCALE, 2)
+        elif actual[:1] == resnet_merged:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_RELU, 1)
     if model.layer[cur_index].type == 'LRN' and model.layer[cur_index + 1].type == 'Pooling' and model.layer[
        cur_index + 1].pooling_param.pool == 0:
-        (fuse_mode, fused_layer_count) = (5, 1)
+        (fuse_mode, fused_layer_count) = (FuseMode.LRN_POOLING_MAX, 1)
     return fixup_fuse_mode(model, cur_index, fuse_mode, fused_layer_count)
 
 def set_input(in_model, out_model):
@@ -98,13 +117,17 @@ def fuse_layer(in_model, in_index, out_model, new_index):
     if is_conv_fusion(fuse_mode):
         if len(in_model.layer)>in_index+2 and [in_model.layer[in_index+1].type, in_model.layer[in_index+2].type] == ['BatchNorm', 'Scale']:
             out_model.layer[new_index].convolution_param.bias_term = True
-        out_model.layer[new_index].convolution_param.fuse_type = fuse_mode
+        # For CONV + BN + SCALE, after we transfer the conv parameters, it is just a normal conv layer for caffe.
+        if fuse_mode != FuseMode.CONV_BN_SCALE:
+            out_model.layer[new_index].convolution_param.fuse_type = fuse_mode
         new_top = in_model.layer[in_index + fused_layer_count].top[0]
         out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
         out_model.layer[new_index].top.append(new_top)
-        if fuse_mode == 3:
-            out_model.layer[new_index].bottom.append(in_model.layer[in_index + 3].bottom[0])
-        if in_model.layer[in_index + fused_layer_count].relu_param.negative_slope != 0:
+        if fuse_mode == FuseMode.CONV_ELTWISE_RELU:
+            out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count - 1].bottom[0])
+        if fuse_mode == FuseMode.CONV_ELTWISE:
+            out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count].bottom[0])
+        if has_relu(fuse_mode) and in_model.layer[in_index + fused_layer_count].relu_param.negative_slope != 0:
             out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].relu_param.negative_slope
     if is_lrn_fusion(fuse_mode):
         new_top = in_model.layer[in_index + 1].top[0]
@@ -203,7 +226,9 @@ def generate_weights(in_model, args):
 
     for i,(k,prm) in enumerate(param_list):
         (fuse_mode, fused_layer_count) = check_fuse_type(in_model, k)
-        if fuse_mode == 0 or fuse_mode == 5 or (fused_layer_count == 1 and fuse_mode == 2):
+        if fuse_mode == FuseMode.UNFUSED or fuse_mode == FuseMode.LRN_POOLING_MAX \
+           or (fuse_mode == FuseMode.CONV_ELTWISE and fused_layer_count == 2)     \
+           or (fuse_mode == FuseMode.CONV_RELU and fused_layer_count == 1):
             print '    Copying ' + prm
             for i in range(0,len(in_net.params[prm])):
                 out_net.params[prm][i].data[...]=np.copy(in_net.params[prm][i].data[...])

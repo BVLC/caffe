@@ -75,7 +75,7 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
 
   dwconv_ = (this->num_output_ == this->channels_ && this->channels_ == this->group_);
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     CHECK_EQ(
       this->layer_param().convolution_param().eltwise_param().coeff_size(),
       0);
@@ -117,7 +117,7 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     const vector<Blob<Dtype>*> bottom_image(bottom.begin(), bottom.end() - 1);
     BaseConvolutionLayer<Dtype>::Reshape(bottom_image, top);
   } else {
@@ -166,7 +166,7 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  CHECK_EQ(IsFusedWithEltwiseReLU() == false && IsFusedWithReLU() == false,
+  CHECK_EQ(IsFusedWithEltwise() == false && IsFusedWithReLU() == false,
            true);
   for (int_tp i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -559,7 +559,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
                 << " -D " << kernelDef.c_str() << " -D CFMultiNoPadding="
                 << kernel_name_;
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
@@ -666,7 +666,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       int_tp kernel_offset = kernel_h_ * kernel_w_
                              * (this->channels_ / this->group_) * M_ * g;
       cl_uint argIdx = 0;
-      if (IsFusedWithEltwiseReLU())
+      if (IsFusedWithEltwise())
         kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
       if (IsFusedWithReLU())
         kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
@@ -748,7 +748,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     oclk_data_transform.arg(6, (int)num_w_tiles);
 
     cl_uint argIdx = 0;
-    if (IsFusedWithEltwiseReLU())
+    if (IsFusedWithEltwise())
       kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
     if (IsFusedWithReLU())
       kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
@@ -807,7 +807,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       int_tp output_image_offset = output_w_ * output_h_ * M_ * g;
 
       cl_uint argIdx = 0;
-      if (IsFusedWithEltwiseReLU())
+      if (IsFusedWithEltwise())
         kernel.arg(argIdx++, WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
       if (IsFusedWithReLU())
         kernel.arg(argIdx++, fixup_arg_type(negative_slope_));
@@ -893,7 +893,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
   } else if (config->kernelType == ConvType::DWCONV) {
 
       cl_uint argIdx = 0;
-      if (IsFusedWithEltwiseReLU())
+      if (IsFusedWithEltwise())
         kernel.arg(argIdx++,
                      WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
       if (IsFusedWithReLU())
@@ -932,7 +932,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
             + output_w_ * output_h_ * M_ * g;
 
         cl_uint argIdx = 0;
-        if (IsFusedWithEltwiseReLU())
+        if (IsFusedWithEltwise())
           kernel.arg(argIdx++,
                      WrapHandle((cl_mem) bottom[1]->gpu_data(), &ctx));
         if (IsFusedWithReLU())
@@ -1159,7 +1159,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
         " -DTILE_N_LAST_DIV8=" << (M_ % 32) / 8 <<
         " -D APPLY_BIAS=" << this->bias_term_;
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
@@ -1259,7 +1259,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
                 << " -DTOTAL_NUM_FILTERS=" << (num_batches * ALIGN(num_output_maps, simd_size))
                 << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
@@ -1343,7 +1343,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
                 << " -D " << kernelDef.c_str() << " -D DWCONV="
                 << kernel_name_;
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
@@ -1441,7 +1441,7 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
 
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
 
-  if (IsFusedWithEltwiseReLU()) {
+  if (IsFusedWithEltwise()) {
     optionsString << " -DFUSED_CONV_ELTWISE=1";
   }
 
@@ -1837,7 +1837,7 @@ void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
     bias_ = this->blobs_[1]->gpu_data();
 
   int bottom_size = bottom.size();
-  if (IsFusedWithEltwiseReLU())
+  if (IsFusedWithEltwise())
     bottom_size = 1;
   for (int_tp i = 0; i < bottom_size; ++i) {
     bottom_index_ = i;

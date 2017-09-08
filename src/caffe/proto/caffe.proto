@@ -934,6 +934,7 @@ message ConvolutionParameter {
     FUSED_CONV_MAX_POOLING_RELU = 1;
     FUSED_CONV_RELU = 2;
     FUSED_CONV_ELTWISE_RELU = 3;
+    FUSED_CONV_ELTWISE = 4;
   }
   optional FuseType fuse_type = 19 [default = UNFUSED]; // Whether to fuse convolution with other layers
   optional EltwiseParameter eltwise_param = 20;
