@@ -1973,18 +1973,42 @@ void ConvolutionLayerSpatial<Dtype>::Backward_gpu(
 }
 
 template<typename Dtype>
+bool ConvolutionLayerSpatial<Dtype>::need_swizzle(
+       const kernelConfig &prev,
+       const kernelConfig &cur) {
+  // For IDLF kernel or GEMM_LIKE kernel if kernel type changed
+  // we need to do swizzle again.
+  if (prev.kernelType != cur.kernelType &&
+      (cur.kernelType == ConvType::IDLF ||
+       cur.kernelType == ConvType::GEMM_LIKE))
+    return true;
+  // For IDLF kernel or GEMM_LIKE kernel when the kernel type
+  // remains the same, but the simd size changed, we need to
+  // do swizzle again.
+  if (prev.kernelType == cur.kernelType) {
+    if (cur.kernelType == ConvType::IDLF &&
+        cur.workItem_output[2] != prev.workItem_output[2])
+      return true;
+    if (cur.kernelType == ConvType::GEMM_LIKE &&
+        cur.workItem_output[1] != prev.workItem_output[1])
+      return true;
+  }
+  return false;
+}
+
+template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // Generates static key_
   std::string previous_key = key_;
   generate_key();
-  ConvType prev_kernel_type = ConvType::BASIC;
+  kernelConfig prev_kernel_config;
   if (tuned_) {
     if (key_.compare(previous_key) == 0)
       return;
     tuned_ = false;
-    prev_kernel_type = bestKernelConfig->kernelType;
+    prev_kernel_config = *bestKernelConfig;
     viennacl::ocl::current_context().
       delete_program(bestKernelConfig->kernelName);
     delete bestKernelConfig;
@@ -2041,11 +2065,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     cachedKernel >> foo;
     cachedKernel >> bestKernelConfig->use_null_local;
     tuned_ = true;
-    // If kernel type changed to type IDLF or GEMMLIKE, we need to reset the swizzled
-    // weights pointer to invalidate the previous swizzled weights data.
-    if (prev_kernel_type != bestKernelConfig->kernelType &&
-        (bestKernelConfig->kernelType == ConvType::IDLF ||
-         bestKernelConfig->kernelType == ConvType::GEMM_LIKE))
+    if (need_swizzle(prev_kernel_config, *bestKernelConfig))
       swizzled_weights_ = NULL;
   }
   return;

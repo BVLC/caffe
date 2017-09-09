@@ -109,9 +109,10 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     ConvType kernelType;
 
     kernelConfig() {
+      kernelType = ConvType::BASIC;
     }
     kernelConfig(string name, size_t* global_size, size_t* local_size,
-    int_tp* workItem,
+                 int_tp* workItem,
                  bool tune, bool swizzle, bool null_local,
                  ConvType type = ConvType::BASIC) {
       kernelName = name;
@@ -192,6 +193,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                      size_t* localSizes, size_t* globalSizes);
   void load_cached_kernels(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
+  bool need_swizzle(const kernelConfig &prev,
+                    const kernelConfig &cur);
   void SetUp(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top, caffe::Backend backend);
   void setBufferKernelArg(const vector<Blob<Dtype>*>& bottom,
@@ -244,7 +247,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
            (this->layer_param_.convolution_param().fuse_type()
             == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE);
   }
-
 #endif
 #endif
 
