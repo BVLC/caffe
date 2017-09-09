@@ -8,7 +8,6 @@
 
 static std::array<std::unique_ptr<deepir::cuda_buddy_pool>,32> device_gpu_pools;
 static std::mutex pool_mutex;
-//device_allocator(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
 
 namespace caffe {
 
@@ -239,7 +238,7 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   if (!device_gpu_pools[device_id]) {
     std::lock_guard<std::mutex> lock(pool_mutex);
     if(!device_gpu_pools[device_id]) {
-      device_gpu_pools[device_id]=std::make_unique<deepir::cuda_buddy_pool>(3, 28, deepir::cuda_buddy_pool::alloc_location::device);
+      device_gpu_pools[device_id]=std::make_unique<deepir::cuda_buddy_pool>(4, 27, deepir::cuda_buddy_pool::alloc_location::device);
     }
   }
 
