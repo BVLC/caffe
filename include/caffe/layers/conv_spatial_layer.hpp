@@ -65,7 +65,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return 1;
   }
   virtual inline bool EqualNumBottomTopBlobs() const {
-    return IsFusedWithEltwiseReLU() ? false : true;
+    return (IsFusedWithEltwise() || IsFusedWithPReLU()) ? false : true;
   }
 
 #ifdef USE_GREENTEA
@@ -222,14 +222,25 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
             == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
   }
 
+  bool IsFusedWithEltwisePReLU() const {
+    return (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_PRELU);
+  }
+
   bool IsFusedWithReLU() const {
     return IsFusedWithEltwiseReLU() ||
            (this->layer_param_.convolution_param().fuse_type()
             == ConvolutionParameter_FuseType_FUSED_CONV_RELU);
   }
 
+  bool IsFusedWithPReLU() const {
+    return IsFusedWithEltwisePReLU() ||
+           (this->layer_param_.convolution_param().fuse_type()
+            == ConvolutionParameter_FuseType_FUSED_CONV_PRELU);
+  }
+
   bool IsFusedWithEltwise() const {
-    return IsFusedWithEltwiseReLU() ||
+    return IsFusedWithEltwiseReLU() || IsFusedWithEltwisePReLU() ||
            (this->layer_param_.convolution_param().fuse_type()
             == ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE);
   }

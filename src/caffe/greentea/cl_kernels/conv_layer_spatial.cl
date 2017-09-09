@@ -7,18 +7,23 @@ __kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(KERNEL_ARG_DTYPE arg) {
 }
 
 #ifdef FUSED_CONV_RELU
-#define ACTIVATION_RELU_FUNCTION(x) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))
+#define ACTIVATION_RELU_FUNCTION(x, c) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))
 #define NEGATIVE_SLOPE_ARG KERNEL_ARG_DTYPE negative_slope,
 #else
-#define ACTIVATION_RELU_FUNCTION(x) (x)
+#ifdef FUSED_CONV_PRELU
+#define ACTIVATION_RELU_FUNCTION(x, c) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope[c])))
+#define NEGATIVE_SLOPE_ARG __global const Dtype *negative_slope,
+#else
+#define ACTIVATION_RELU_FUNCTION(x, c) (x)
 #define NEGATIVE_SLOPE_ARG
+#endif
 #endif
 
 #ifdef FUSED_CONV_ELTWISE
-#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)
+#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_, _channel_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_), _channel_);} while(0)
 #define ELTWISE_DATA_ARG __global Dtype* eltwise_data,
 #else
-#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)
+#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_, _channel_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_, _channel_);} while(0)
 #define ELTWISE_DATA_ARG
 #endif
 
@@ -79,7 +84,7 @@ __kernel void CFMultiNoPadding(
     const int_tp org_y = outputY * STRIDE_H - pad_h;
     const int_tp org_x = outputX * STRIDE_W - pad_w;
     const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;
-    const int_tp biasIndex=bias_offset + kernelNum;
+    const int_tp biasIndex=bias_offset + (kernelNum % TOTAL_OUTPUT_DEPTH);
     const int_tp local_image_offset = org_y*input_width + org_x;
     const int_tp imageSize = input_width*input_height;
 
@@ -113,7 +118,7 @@ __kernel void CFMultiNoPadding(
       if(kernelNum+kern < OUTPUT_Z)
       {
         int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
-        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);
+        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern], biasIndex + kern);
       }
     }
     #else
@@ -122,7 +127,7 @@ __kernel void CFMultiNoPadding(
       if(kernelNum+kern < OUTPUT_Z)
       {
         int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;
-        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);
+        ACTIVATION_FUNCTION(convolved_image, offset, sum[kern], biasIndex + kern);
       }
     }
     #endif
@@ -177,10 +182,10 @@ __kernel void DWCONV(
 
     #if APPLY_BIAS
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex]);
+    ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);
     #else
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum);
+    ACTIVATION_FUNCTION(convolved_image, offset, biasIndex);
     #endif
   }
 }
@@ -410,7 +415,7 @@ convolve_simd(
       for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {
         if (c + oc >= output_width) break;
         // this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.
-          ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);
+          ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c], fm);
       }
     }
   }
@@ -689,10 +694,10 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         {
             for (int i = 0; i < 8; i++)
             {
-                ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));
-                ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));
-                ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));
-                ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));
+                ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + 8 + i);
+                ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + 16 + i);
+                ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + 24 + i);
             }
         }
     }
@@ -854,10 +859,10 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         {
             for (int i = 0; i < 8; i++)
             {
-                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i));
-                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i));
-                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i));
-                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i));
+                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);
+                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);
+                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);
             }
         }
     }
@@ -1091,20 +1096,20 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         {
             for( int i = 0; i < 8; i++ )
             {
-                ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));
-                ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));
-                ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));
-                ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));
+                ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);
+                ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);
+                ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);
             }
         }
         if( global_y * TILE_M + 1 < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {
-                ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i));
-                ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i));
-                ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i));
-                ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i));
+                ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);
+                ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);
+                ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);
             }
         }
     }    
@@ -1305,20 +1310,20 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         {
             for( int i = 0; i < 8; i++ )
             {
-                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i));
-                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i));
-                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i));
-                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i));
+                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);
+                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);
+                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);
             }
         }
         if( global_y * TILE_M + 1 < output_width * output_height )
         {
             for( int i = 0; i < 8; i++ )
             {
-                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i));
-                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i));
-                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i));
-                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i));
+                if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);
+                if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);
+                if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);
+                if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);
             }
         }
     }
@@ -1333,22 +1338,22 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
       if ( ( OUT_DEPTH % TILE_N ) == 0 ) {\
         for (int i = 0; i < 16; i++) \
         { \
-          ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i)); \
-          ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i)); \
+          ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
+          ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16); \
         } \
       } \
       else if( ( OUT_DEPTH % 16 ) == 0 ) { \
         if ( ( global_x + 1 ) < get_global_size(0) ) { \
           for ( int i = 0; i < 16; i++ ) \
           { \
-            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i)); \
-            ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i)); \
+            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
+            ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16); \
           } \
         } \
         else { \
           for (int i = 0; i < 16; i++) \
           { \
-            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i)); \
+            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
           } \
         } \
       } \
@@ -1357,25 +1362,25 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
         { \
           for ( int i = 0; i < 16; i++ ) \
           { \
-            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i)); \
-            ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i)); \
+            ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
+            ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16); \
           } \
         } \
         else { \
           if ( (OUT_DEPTH % TILE_N) > 16 ) { \
             for (int i = 0; i < 16 ; i++) \
             { \
-              ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i)); \
+              ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
             } \
             for (int i = 0; i < OUT_DEPTH % 16 ; i++) \
             { \
-              ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i)); \
+              ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16); \
             } \
           } \
           else { \
             for (int i = 0; i < OUT_DEPTH % 16 ; i++) \
             { \
-              ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i)); \
+              ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i); \
             } \
           } \
         } \
@@ -2086,7 +2091,8 @@ winograd_4x4(
     uint_tp out_addr = fm * output_width * output_height;
     out_addr += or * output_width + oc;
 #if APPLY_BIAS
-    Dtype bias = biases_base[(fm % ALIGNED_NUM_FILTERS)];
+    fm = fm % ALIGNED_NUM_FILTERS;
+    Dtype bias = biases_base[fm];
 #else
     Dtype bias = 0.;
 #endif
@@ -2112,13 +2118,13 @@ winograd_4x4(
         Dtype y05 = sum[5] + sum[11] + sum[17] + sum[23] + sum[29];
 
         if(oc < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04);
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04, fm);
         if(oc+1< output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04);
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04, fm);
         if(oc+2 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04);
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04, fm);
         if(oc+3 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05);
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05, fm);
       }
 
       if(or + 1 < output_height) {
@@ -2131,13 +2137,13 @@ winograd_4x4(
 
         out_addr += output_width;
         if(oc < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14);
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14, fm);
         if(oc+1< output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14);
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14, fm);
         if(oc+2 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14);
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14, fm);
         if(oc+3 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15);
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15, fm);
       }
 
       if(or+2 < output_height) {
@@ -2150,13 +2156,13 @@ winograd_4x4(
 
         out_addr += output_width;
         if(oc < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24);
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24, fm);
         if(oc+1< output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24);
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24, fm);
         if(oc+2 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24);
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24, fm);
         if(oc+3 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25);
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25, fm);
       }
 
       if(or+3 < output_height) {
@@ -2169,13 +2175,13 @@ winograd_4x4(
 
         out_addr += output_width;
         if(oc < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34);
+          ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34, fm);
         if(oc+1< output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34);
+          ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34, fm);
         if(oc+2 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34);
+          ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34, fm);
         if(oc+3 < output_width)
-          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35);
+          ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35, fm);
       }
   }
 }

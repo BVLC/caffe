@@ -935,10 +935,13 @@ message ConvolutionParameter {
     FUSED_CONV_RELU = 2;
     FUSED_CONV_ELTWISE_RELU = 3;
     FUSED_CONV_ELTWISE = 4;
+    FUSED_CONV_PRELU = 5;
+    FUSED_CONV_ELTWISE_PRELU = 6;
   }
   optional FuseType fuse_type = 19 [default = UNFUSED]; // Whether to fuse convolution with other layers
   optional EltwiseParameter eltwise_param = 20;
   optional ReLUParameter relu_param = 30;
+  optional PReLUParameter prelu_param = 31;
 }
 
 message CropParameter {

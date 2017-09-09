@@ -719,18 +719,23 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "",    // NOLINT
 "#ifdef FUSED_CONV_RELU",    // NOLINT
-"#define ACTIVATION_RELU_FUNCTION(x) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x, c) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope)))",    // NOLINT
 "#define NEGATIVE_SLOPE_ARG KERNEL_ARG_DTYPE negative_slope,",    // NOLINT
 "#else",    // NOLINT
-"#define ACTIVATION_RELU_FUNCTION(x) (x)",    // NOLINT
+"#ifdef FUSED_CONV_PRELU",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x, c) ((Dtype)(x) > 0 ? (Dtype)(x) : ((Dtype)(x) * (Dtype)(negative_slope[c])))",    // NOLINT
+"#define NEGATIVE_SLOPE_ARG __global const Dtype *negative_slope,",    // NOLINT
+"#else",    // NOLINT
+"#define ACTIVATION_RELU_FUNCTION(x, c) (x)",    // NOLINT
 "#define NEGATIVE_SLOPE_ARG",    // NOLINT
+"#endif",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "#ifdef FUSED_CONV_ELTWISE",    // NOLINT
-"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_));} while(0)",    // NOLINT
+"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_, _channel_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(eltwise_data[(_offset_)] + (_data_), _channel_);} while(0)",    // NOLINT
 "#define ELTWISE_DATA_ARG __global Dtype* eltwise_data,",    // NOLINT
 "#else",    // NOLINT
-"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_);} while(0)",    // NOLINT
+"#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_, _channel_) do { (_dst_)[(_offset_)] = ACTIVATION_RELU_FUNCTION(_data_, _channel_);} while(0)",    // NOLINT
 "#define ELTWISE_DATA_ARG",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
@@ -791,7 +796,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const int_tp org_y = outputY * STRIDE_H - pad_h;",    // NOLINT
 "const int_tp org_x = outputX * STRIDE_W - pad_w;",    // NOLINT
 "const int_tp currentKernelOffset = kernel_offset + kernelNum*KERNEL_H*KERNEL_W*CHANNELS;",    // NOLINT
-"const int_tp biasIndex=bias_offset + kernelNum;",    // NOLINT
+"const int_tp biasIndex=bias_offset + (kernelNum % TOTAL_OUTPUT_DEPTH);",    // NOLINT
 "const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
 "const int_tp imageSize = input_width*input_height;",    // NOLINT
 "",    // NOLINT
@@ -825,7 +830,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
 "{",    // NOLINT
 "int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern]);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern] + bias[biasIndex +kern], biasIndex + kern);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#else",    // NOLINT
@@ -834,7 +839,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "if(kernelNum+kern < OUTPUT_Z)",    // NOLINT
 "{",    // NOLINT
 "int_tp offset = convolved_image_offset + (kernelNum+kern)*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern]);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum[kern], biasIndex + kern);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
@@ -889,10 +894,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex]);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);",    // NOLINT
 "#else",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, biasIndex);",    // NOLINT
 "#endif",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1122,7 +1127,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "for(uint_tp c = 0; c < OUT_BLOCK_WIDTH; c++) {",    // NOLINT
 "if (c + oc >= output_width) break;",    // NOLINT
 "// this does a scattered write to SIMD_SIZE different feature maps, so that data within one map is contiguous, thus ready for input to next layer.",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c]);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr + r * output_width + c, bias + out[r * OUT_BLOCK_WIDTH + c], fm);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1377,10 +1382,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 0 + i ) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 8 + i ) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + 8 + i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 16 + i ) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + 16 + i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out_offset + ( 24 + i ) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + 24 + i);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1542,10 +1547,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for (int i = 0; i < 8; i++)",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out_offset + ( 0+i) * out_pitch_y, blockC[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out_offset + ( 8+i) * out_pitch_y, blockC[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out_offset + (16+i) * out_pitch_y, blockC[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out_offset + (24+i) * out_pitch_y, blockC[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1769,20 +1774,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC00[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC10[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC20[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC30[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC01[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC11[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC21[i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);",    // NOLINT
+"ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC31[i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -1983,20 +1988,20 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 0+i) * out_pitch_y, blockC0[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out0_offset + ( 8+i) * out_pitch_y, blockC0[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out0_offset + (16+i) * out_pitch_y, blockC0[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out0_offset + (24+i) * out_pitch_y, blockC0[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "if( global_y * TILE_M + 1 < output_width * output_height )",    // NOLINT
 "{",    // NOLINT
 "for( int i = 0; i < 8; i++ )",    // NOLINT
 "{",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i));",    // NOLINT
-"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i));",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 0 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 0+i) * out_pitch_y, blockC1[0][i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 1 ) ACTIVATION_FUNCTION(dst, out1_offset + ( 8+i) * out_pitch_y, blockC1[1][i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 8);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 2 ) ACTIVATION_FUNCTION(dst, out1_offset + (16+i) * out_pitch_y, blockC1[2][i] + intel_sub_group_shuffle(bias[2], i), group_x * TILE_N + i + 16);",    // NOLINT
+"if ( TILE_N_LAST_DIV8 > 3 ) ACTIVATION_FUNCTION(dst, out1_offset + (24+i) * out_pitch_y, blockC1[3][i] + intel_sub_group_shuffle(bias[3], i), group_x * TILE_N + i + 24);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
@@ -2005,7 +2010,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif",    // NOLINT
 "#if defined(GEMM_LIKE_CONV_32_2_SIMD16) || defined(GEMM_LIKE_CONV_32_1_SIMD16)",    // NOLINT
 "",    // NOLINT
-"#define INTERLEAVED_SIMD16_OUTPUT(_out_, _offset_,  _m_) do {    if (global_y * TILE_M < output_width * output_height )     {       if ( ( OUT_DEPTH % TILE_N ) == 0 ) {        for (int i = 0; i < 16; i++)         {           ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i));           ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i));         }       }       else if( ( OUT_DEPTH % 16 ) == 0 ) {         if ( ( global_x + 1 ) < get_global_size(0) ) {           for ( int i = 0; i < 16; i++ )           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i));             ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i));           }         }         else {           for (int i = 0; i < 16; i++)           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i));           }         }       }       else {         if ( ( global_x + 1 ) < get_global_size(0) )         {           for ( int i = 0; i < 16; i++ )           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i));             ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i));           }         }         else {           if ( (OUT_DEPTH % TILE_N) > 16 ) {             for (int i = 0; i < 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i));             }             for (int i = 0; i < OUT_DEPTH % 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i));             }           }           else {             for (int i = 0; i < OUT_DEPTH % 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i));             }           }         }       }     }  }while(0)",    // NOLINT
+"#define INTERLEAVED_SIMD16_OUTPUT(_out_, _offset_,  _m_) do {    if (global_y * TILE_M < output_width * output_height )     {       if ( ( OUT_DEPTH % TILE_N ) == 0 ) {        for (int i = 0; i < 16; i++)         {           ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);           ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16);         }       }       else if( ( OUT_DEPTH % 16 ) == 0 ) {         if ( ( global_x + 1 ) < get_global_size(0) ) {           for ( int i = 0; i < 16; i++ )           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);             ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_ [i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16);           }         }         else {           for (int i = 0; i < 16; i++)           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_ [i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);           }         }       }       else {         if ( ( global_x + 1 ) < get_global_size(0) )         {           for ( int i = 0; i < 16; i++ )           {             ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);             ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16);           }         }         else {           if ( (OUT_DEPTH % TILE_N) > 16 ) {             for (int i = 0; i < 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);             }             for (int i = 0; i < OUT_DEPTH % 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + (16+i) * out_pitch_y, blockC1 ##_m_[i] + intel_sub_group_shuffle(bias[1], i), group_x * TILE_N + i + 16);             }           }           else {             for (int i = 0; i < OUT_DEPTH % 16 ; i++)             {               ACTIVATION_FUNCTION(_out_, _offset_ + ( 0+i) * out_pitch_y, blockC0 ##_m_[i] + intel_sub_group_shuffle(bias[0], i), group_x * TILE_N + i);             }           }         }       }     }  }while(0)",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
 "#ifdef GEMM_LIKE_CONV_32_1_SIMD16",    // NOLINT
@@ -2674,7 +2679,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
-"Dtype bias = biases_base[(fm % ALIGNED_NUM_FILTERS)];",    // NOLINT
+"fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
+"Dtype bias = biases_base[fm];",    // NOLINT
 "#else",    // NOLINT
 "Dtype bias = 0.;",    // NOLINT
 "#endif",    // NOLINT
@@ -2700,13 +2706,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "Dtype y05 = sum[5] + sum[11] + sum[17] + sum[23] + sum[29];",    // NOLINT
 "",    // NOLINT
 "if(oc < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y00+y01+y02+y03+y04, fm);",    // NOLINT
 "if(oc+1< output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y01-y02+2*y03-2*y04, fm);",    // NOLINT
 "if(oc+2 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y01+y02+4*y03+4*y04, fm);",    // NOLINT
 "if(oc+3 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y01-y02+8*y03-8*y04+y05, fm);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(or + 1 < output_height) {",    // NOLINT
@@ -2719,13 +2725,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "out_addr += output_width;",    // NOLINT
 "if(oc < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y10+y11+y12+y13+y14, fm);",    // NOLINT
 "if(oc+1< output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y11-y12+2*y13-2*y14, fm);",    // NOLINT
 "if(oc+2 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y11+y12+4*y13+4*y14, fm);",    // NOLINT
 "if(oc+3 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y11-y12+8*y13-8*y14+y15, fm);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(or+2 < output_height) {",    // NOLINT
@@ -2738,13 +2744,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "out_addr += output_width;",    // NOLINT
 "if(oc < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y20+y21+y22+y23+y24, fm);",    // NOLINT
 "if(oc+1< output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y21-y22+2*y23-2*y24, fm);",    // NOLINT
 "if(oc+2 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y21+y22+4*y23+4*y24, fm);",    // NOLINT
 "if(oc+3 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y21-y22+8*y23-8*y24+y25, fm);",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
 "if(or+3 < output_height) {",    // NOLINT
@@ -2757,13 +2763,13 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "out_addr += output_width;",    // NOLINT
 "if(oc < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr, bias+y30+y31+y32+y33+y34, fm);",    // NOLINT
 "if(oc+1< output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+1, bias+y31-y32+2*y33-2*y34, fm);",    // NOLINT
 "if(oc+2 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+2, bias+y31+y32+4*y33+4*y34, fm);",    // NOLINT
 "if(oc+3 < output_width)",    // NOLINT
-"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35);",    // NOLINT
+"ACTIVATION_FUNCTION(outputs, out_addr+3, bias+y31-y32+8*y33-8*y34+y35, fm);",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT

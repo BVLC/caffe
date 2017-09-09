@@ -20,8 +20,10 @@ class FuseMode(object):
     CONV_RELU = 2
     CONV_ELTWISE_RELU = 3
     CONV_ELTWISE = 4
-    CONV_BN_SCALE = 5
-    CONV_FUSE_MAX = 5
+    CONV_PRELU = 5
+    CONV_ELTWISE_PRELU = 6
+    CONV_BN_SCALE = 7 # must be the last conv fuse id.
+    CONV_FUSE_MAX = 7
     LRN_POOLING_MAX = 11
 
 def is_conv_fusion(mode):
@@ -32,6 +34,9 @@ def is_lrn_fusion(mode):
 
 def has_relu(mode):
     return mode > FuseMode.UNFUSED and mode < FuseMode.CONV_ELTWISE
+
+def has_prelu(mode):
+    return mode >= FuseMode.CONV_PRELU and mode <= FuseMode.CONV_ELTWISE_PRELU
 
 def is_used(in_model, start_index, blob):
     for in_index in range(start_index, len(in_model.layer)):
@@ -78,25 +83,37 @@ def check_fuse_type(model, cur_index):
             actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, model.layer[cur_conv_index+3].type, 'xxx']
         else:
             actual = [model.layer[cur_conv_index+1].type, model.layer[cur_conv_index+2].type, model.layer[cur_conv_index+3].type, model.layer[cur_conv_index+4].type]
-        resnet = ['BatchNorm', 'Scale', 'ReLU']
-        resnet_merged = ['ReLU']
-        resnet_elt = ['BatchNorm', 'Scale', 'Eltwise', 'ReLU']
-        resnet_elt_merged = ['Eltwise', 'ReLU']
-        resnet_elt_no_relu = ['BatchNorm', 'Scale', 'Eltwise']
-        resnet_scale = ['BatchNorm', 'Scale']
+        bn_scale_relu = ['BatchNorm', 'Scale', 'ReLU']
+        relu = ['ReLU']
+        bn_scale_elt_relu = ['BatchNorm', 'Scale', 'Eltwise', 'ReLU']
+        elt_relu = ['Eltwise', 'ReLU']
+        bn_scale_elt = ['BatchNorm', 'Scale', 'Eltwise']
+        bn_scale_prelu = ['BatchNorm', 'Scale', 'PReLU']
+        prelu = ['PReLU']
+        bn_scale_elt_prelu = ['BatchNorm', 'Scale', 'Eltwise', 'PReLU']
+        elt_prelu = ['Eltwise', 'PReLU']
+        bn_scale = ['BatchNorm', 'Scale']
         (fuse_mode, fused_layer_count) = (FuseMode.UNFUSED, 0)
-        if actual == resnet_elt:
+        if actual == bn_scale_elt_relu:
             (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_RELU, 4)
-        elif actual[:3] == resnet:
+        elif actual[:3] == bn_scale_relu:
             (fuse_mode, fused_layer_count) = (FuseMode.CONV_RELU, 3)
-        elif actual[:3] == resnet_elt_no_relu:
+        elif actual == bn_scale_elt_prelu:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_PRELU, 4)
+        elif actual[:3] == bn_scale_prelu:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_PRELU, 3)
+        elif actual[:3] == bn_scale_elt:
             (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE, 3)
-        elif actual[:2] == resnet_elt_merged:
+        elif actual[:2] == elt_relu:
             (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_RELU, 2)
-        elif actual[:2] == resnet_scale:
-            (fuse_mode, fused_layer_count) = (FuseMode.CONV_BN_SCALE, 2)
-        elif actual[:1] == resnet_merged:
+        elif actual[:2] == elt_prelu:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_ELTWISE_PRELU, 2)
+        elif actual[:1] == relu:
             (fuse_mode, fused_layer_count) = (FuseMode.CONV_RELU, 1)
+        elif actual[:1] == prelu:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_PRELU, 1)
+        elif actual[:2] == bn_scale:
+            (fuse_mode, fused_layer_count) = (FuseMode.CONV_BN_SCALE, 2)
     if model.layer[cur_index].type == 'LRN' and model.layer[cur_index + 1].type == 'Pooling' and model.layer[
        cur_index + 1].pooling_param.pool == 0:
         (fuse_mode, fused_layer_count) = (FuseMode.LRN_POOLING_MAX, 1)
@@ -123,12 +140,14 @@ def fuse_layer(in_model, in_index, out_model, new_index):
         new_top = in_model.layer[in_index + fused_layer_count].top[0]
         out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
         out_model.layer[new_index].top.append(new_top)
-        if fuse_mode == FuseMode.CONV_ELTWISE_RELU:
+        if fuse_mode == FuseMode.CONV_ELTWISE_RELU or fuse_mode == FuseMode.CONV_ELTWISE_PRELU:
             out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count - 1].bottom[0])
         if fuse_mode == FuseMode.CONV_ELTWISE:
             out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count].bottom[0])
         if has_relu(fuse_mode) and in_model.layer[in_index + fused_layer_count].relu_param.negative_slope != 0:
             out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].relu_param.negative_slope
+        if has_prelu(fuse_mode) and in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared != False:
+            out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared
     if is_lrn_fusion(fuse_mode):
         new_top = in_model.layer[in_index + 1].top[0]
         out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
@@ -226,12 +245,23 @@ def generate_weights(in_model, args):
 
     for i,(k,prm) in enumerate(param_list):
         (fuse_mode, fused_layer_count) = check_fuse_type(in_model, k)
+        if in_model.layer[k + fused_layer_count].type in {'PReLU'}:
+            isPrelu = True
+            prelu_prm = in_model.layer[k + fused_layer_count].name
+
         if fuse_mode == FuseMode.UNFUSED or fuse_mode == FuseMode.LRN_POOLING_MAX \
            or (fuse_mode == FuseMode.CONV_ELTWISE and fused_layer_count == 2)     \
-           or (fuse_mode == FuseMode.CONV_RELU and fused_layer_count == 1):
+           or ((fuse_mode == FuseMode.CONV_RELU or fuse_mode == FuseMode.CONV_PRELU) and fused_layer_count == 1):
             print '    Copying ' + prm
             for i in range(0,len(in_net.params[prm])):
                 out_net.params[prm][i].data[...]=np.copy(in_net.params[prm][i].data[...])
+            if has_prelu(fuse_mode):
+                if not isPrelu:
+                    print 'Incorrect fusion detected for Prelu, aborting'
+                    exit(-1)
+                out_net.params[prm].add_blob()
+                out_net.params[prm][-1].reshape(in_net.params[prelu_prm][0].shape[0])
+                out_net.params[prm][-1].data[:] = in_net.params[prelu_prm][0].data[:]
             continue
         print '    Processing ' + prm + ' with fusion mode %r, fusing the following layers' % fuse_mode
         for i in range(0, fused_layer_count):
@@ -292,6 +322,13 @@ def generate_weights(in_model, args):
             out_net.params[prm][1].data[:] = bias1
         else:
             out_net.params[prm][1].data[:] = bias1 + out_net.params[prm][1].data[:]
+        if has_prelu(fuse_mode):
+            if not isPrelu:
+                print 'Incorrect fusion detected for Prelu, aborting'
+                exit(-1)
+            out_net.params[prm].add_blob()
+            out_net.params[prm][-1].reshape(in_net.params[prelu_prm][0].shape[0])
+            out_net.params[prm][-1].data[:] = in_net.params[prelu_prm][0].data[:]
     print 'New caffemodel generated successfully.'
     out_net.save(args.outmodel);
 
