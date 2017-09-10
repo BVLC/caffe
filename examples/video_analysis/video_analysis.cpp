@@ -251,6 +251,14 @@ void Detector<Dtype>::ShowResult(const vector<cv::Mat> &imgs,
     }
 }
 
+// Normalized coordinate fixup for yolo
+float fixup_norm_coord(float coord, float ratio) {
+  if (ratio >= 1)
+    return coord;
+  else
+    return (coord - (1. - ratio)/2) / ratio;
+}
+
 template <typename Dtype>
 void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
                              int iter_count,
@@ -283,10 +291,14 @@ void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
       object.classid = (int)result[k + 1];
       object.confidence = result[k + 2];
       if (use_yolo_format_) {
-        object.left = (int)((result[k + 3] - result[k + 5] / 2.0) * w);
-        object.right = (int)((result[k + 3] + result[k + 5] / 2.0) * w);
-        object.top = (int)((result[k + 4] - result[k + 6] / 2.0) * h);
-        object.bottom = (int)((result[k + 4] + result[k + 6] / 2.0) * h);
+        object.left = (int)(fixup_norm_coord((result[k + 3] -
+                         result[k + 5] / 2.0), float(w) / h) * w);
+        object.right = (int)(fixup_norm_coord((result[k + 3] +
+                         result[k + 5] / 2.0), float(w) / h) * w);
+        object.top = (int)(fixup_norm_coord((result[k + 4] -
+                        result[k + 6] / 2.0), float(h) / w) * h);
+        object.bottom = (int)(fixup_norm_coord((result[k + 4] +
+                           result[k + 6] / 2.0), float(h) / w) * h);
       } else {
         object.left = (int)(result[k + 3] * w);
         object.top = (int)(result[k + 4] * h);
