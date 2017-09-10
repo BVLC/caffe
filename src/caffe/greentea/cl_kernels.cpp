@@ -8642,7 +8642,7 @@ viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {
   string options;
   ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(kernel_program,
-      "kernel_program");
+      "common_kernel_program");
   return program;
 }
 template <typename Dtype>
@@ -8774,6 +8774,10 @@ viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx);
 template<typename Dtype>
 viennacl::ocl::program & submit_conv_spatial_program(
 viennacl::ocl::context *ctx, string name, string options) {
+  if (ctx->has_program(name)) {
+    viennacl::ocl::program &p = ctx->get_program(name);
+    return p;
+  }
   static const char* float_core_defines =
   "#define Dtype float\n"
   "#define Dtype2 float2\n"

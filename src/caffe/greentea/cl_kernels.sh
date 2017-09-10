@@ -142,7 +142,7 @@ echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
 echo "  string options;" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
-echo "      \"kernel_program\");" >> $SOURCE
+echo "      \"common_kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
 
@@ -297,6 +297,10 @@ echo "viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *c
 echo "template<typename Dtype>" >> $SOURCE
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $SOURCE
 echo "viennacl::ocl::context *ctx, string name, string options) {" >> $SOURCE
+echo "  if (ctx->has_program(name)) {" >> $SOURCE
+echo "    viennacl::ocl::program &p = ctx->get_program(name);" >> $SOURCE
+echo "    return p;" >> $SOURCE
+echo "  }" >> $SOURCE
 echo "  static const char* float_core_defines =" >> $SOURCE
 echo "  \"#define Dtype float\n\"" >> $SOURCE
 echo "  \"#define Dtype2 float2\n\"" >> $SOURCE
