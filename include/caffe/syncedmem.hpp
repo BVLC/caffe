@@ -56,7 +56,6 @@ private:
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory
 
-void set_gpu_allocator(size_t memory_bytes);
 } // namespace caffe
 
 #endif // CAFFE_SYNCEDMEM_HPP_

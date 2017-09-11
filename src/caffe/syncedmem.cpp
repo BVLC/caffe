@@ -5,6 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
+#include "caffe/gpu_memory_pool.hpp"
 #include "caffe/util/math_functions.hpp"
 
 static std::array<std::unique_ptr<deepir::cuda_buddy_pool>,32> device_gpu_pools;
@@ -12,7 +13,7 @@ static std::shared_timed_mutex pool_mutex;
 
 namespace caffe {
 
-void set_gpu_allocator(size_t memory_bytes) {
+void set_gpu_memory_pool(size_t memory_bytes) {
   size_t max_level = 27;
   size_t num = memory_bytes / ((size_t)1 << max_level);
   if (num == 0) {
@@ -29,7 +30,7 @@ void set_gpu_allocator(size_t memory_bytes) {
   }
 }
 
-static deepir::cuda_buddy_pool * get_gpu_pool() {
+static inline deepir::cuda_buddy_pool * get_gpu_pool() {
   auto device_id=Caffe::GetDevice();
   CHECK(device_id>=0 && device_id<device_gpu_pools.size());
   std::shared_lock<std::shared_timed_mutex> lock(pool_mutex);
