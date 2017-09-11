@@ -61,7 +61,8 @@ CpuInfo::CpuInfo() {
 }
 
 CpuInfo::CpuInfo(const char *content) {
-  loadContent(content);
+  std::string str_content(content);
+  loadContent(str_content);
 }
 
 void CpuInfo::loadContentFromFile(const char *fileName) {
@@ -70,13 +71,13 @@ void CpuInfo::loadContentFromFile(const char *fileName) {
     (std::istreambuf_iterator<char>(file)),
     (std::istreambuf_iterator<char>()));
 
-  loadContent(content.c_str());
+  loadContent(content);
 }
 
-void CpuInfo::loadContent(const char *content) {
-  size_t contentLength = strlen(content);
+void CpuInfo::loadContent(std::string &content) {
+  size_t contentLength = content.length();
   char *contentCopy = new char[contentLength + 1];
-  snprintf(contentCopy, contentLength + 1, "%s", content);
+  snprintf(contentCopy, contentLength + 1, "%s", content.c_str());
 
   parseLines(contentCopy);
 

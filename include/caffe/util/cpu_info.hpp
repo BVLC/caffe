@@ -83,7 +83,7 @@ class CpuInfo : public CpuInfoInterface {
   const char *currentLine;
 
   void loadContentFromFile(const char *fileName);
-  void loadContent(const char *content);
+  void loadContent(std::string &content);
   void parseLines(char *content);
 };
 
