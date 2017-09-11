@@ -1039,7 +1039,7 @@ float ConvolutionLayerSpatial<Dtype>::timed_convolve(
   timer.initted();
   timer.Start();
   cl_int err;
-  dbgPrint(std::cout << "Bechmarking kernel: " << config->kernelName
+  dbgPrint(std::cout << "Benchmarking kernel: " << config->kernelName
            << std::endl);
   tuned_ = true;
   double out_w = output_w_;
@@ -1725,7 +1725,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
           int actual_tile_x = kernel_w_ * dilation_w_
                               + (width - 1) * stride_w_ ;
           int tile_x = (actual_tile_x + 3) & ~3;
-          if (actual_tile_x % 4 != 0)
+          if (actual_tile_x % 4 != 0 && kernelCnt >= 2)
             continue;
           int tile_y = kernel_h_ * dilation_h_ + (height - 1) * stride_h_;
           if (tile_x > (4 * simd_size))
@@ -1746,7 +1746,6 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
         if (kernelCnt >= 12 && width == 2)
           break;
       }
-      printf("kernelCnt = %d \n", kernelCnt);
     }
   }
 
