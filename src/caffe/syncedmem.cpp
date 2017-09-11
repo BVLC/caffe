@@ -4,37 +4,41 @@
 #include <stdexcept>
 
 #include "caffe/common.hpp"
-#include "caffe/syncedmem.hpp"
 #include "caffe/gpu_memory_pool.hpp"
+#include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-static std::array<std::unique_ptr<deepir::cuda_buddy_pool>,32> device_gpu_pools;
+static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, 32>
+    device_gpu_pools;
 static std::shared_timed_mutex pool_mutex;
 
 namespace caffe {
 
 void set_gpu_memory_pool(size_t memory_bytes) {
-  size_t max_level = 27;
+  uint8_t max_level = 27;
   size_t num = memory_bytes / ((size_t)1 << max_level);
   if (num == 0) {
     num++;
   }
 
-  auto device_id=Caffe::GetDevice();
-  CHECK(device_id>=0 && device_id<device_gpu_pools.size());
+  auto device_id = Caffe::GetDevice();
+  CHECK(device_id >= 0 && device_id < device_gpu_pools.size());
   std::lock_guard<std::shared_timed_mutex> lock(pool_mutex);
   if (!device_gpu_pools[device_id]) {
-      device_gpu_pools[device_id]=std::make_unique<deepir::cuda_buddy_pool>(num, max_level, deepir::cuda_buddy_pool::alloc_location::device);
+    device_gpu_pools[device_id] = std::make_unique<deepir::cuda_buddy_pool>(
+        num, max_level, deepir::cuda_buddy_pool::alloc_location::device);
   } else {
-    throw std::runtime_error(std::string("caffe has gpu allocator on device ")+std::to_string(device_id));
+    throw std::runtime_error(std::string("caffe has gpu allocator on device ") +
+                             std::to_string(device_id));
   }
 }
 
-static inline deepir::cuda_buddy_pool * get_gpu_pool() {
-  auto device_id=Caffe::GetDevice();
-  CHECK(device_id>=0 && device_id<device_gpu_pools.size());
+static inline deepir::cuda_buddy_pool *get_gpu_pool() {
+  auto device_id = Caffe::GetDevice();
+  CHECK(device_id >= 0 && device_id < device_gpu_pools.size());
   std::shared_lock<std::shared_timed_mutex> lock(pool_mutex);
-  return device_gpu_pools[device_id]?device_gpu_pools[device_id].get():nullptr;
+  return device_gpu_pools[device_id] ? device_gpu_pools[device_id].get()
+                                     : nullptr;
 }
 
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
@@ -73,7 +77,7 @@ static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
 #endif
 }
 
-size_t SyncedMemory::get_used_size() { return 0;}
+size_t SyncedMemory::get_used_size() { return 0; }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
@@ -260,10 +264,10 @@ void SyncedMemory::check_device() {
 
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr = nullptr;
- 
-  auto pool=get_gpu_pool();
-  if(pool) {
-    ptr=pool->alloc_with_lock(size);
+
+  auto pool = get_gpu_pool();
+  if (pool) {
+    ptr = pool->alloc_with_lock(size);
   }
 
   if (!ptr) {
@@ -273,11 +277,11 @@ void *SyncedMemory::gpu_malloc(size_t size) {
 }
 
 void SyncedMemory::gpu_free(void *data) {
-  if(!data) {
+  if (!data) {
     return;
   }
-  auto pool=get_gpu_pool();
-  if(!pool || !pool->free_with_lock(data))  {
+  auto pool = get_gpu_pool();
+  if (!pool || !pool->free_with_lock(data)) {
     CUDA_CHECK(cudaFree(data));
   }
 }
