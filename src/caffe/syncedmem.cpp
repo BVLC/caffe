@@ -2,15 +2,22 @@
 #include <memory>
 #include <shared_mutex>
 #include <stdexcept>
+#include <unordered_map>
 
 #include "caffe/common.hpp"
 #include "caffe/gpu_memory_pool.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, 32>
-    device_gpu_pools;
-static std::shared_timed_mutex pool_mutex;
+static constexpr size_t device_max_num = 32;
+static constexpr size_t pinned_memory_max_size = 128;
+
+static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num> device_gpu_pools;
+
+static std::shared_timed_mutex gpu_pool_mutex;
+
+static std::array<std::unordered_multimap<size_t, void *>, device_max_num> pinned_memory_pools;
+static std::mutex pinned_pool_mutex;
 
 namespace caffe {
 
@@ -22,8 +29,8 @@ void set_gpu_memory_pool(size_t memory_bytes) {
   }
 
   auto device_id = Caffe::GetDevice();
-  CHECK(device_id >= 0 && device_id < device_gpu_pools.size());
-  std::lock_guard<std::shared_timed_mutex> lock(pool_mutex);
+  CHECK(device_id >= 0 && device_id < device_max_num);
+  std::lock_guard<std::shared_timed_mutex> lock(gpu_pool_mutex);
   if (!device_gpu_pools[device_id]) {
     device_gpu_pools[device_id] = std::make_unique<deepir::cuda_buddy_pool>(
         num, max_level, deepir::cuda_buddy_pool::alloc_location::device);
@@ -33,10 +40,10 @@ void set_gpu_memory_pool(size_t memory_bytes) {
   }
 }
 
-static inline deepir::cuda_buddy_pool *get_gpu_pool() {
+static inline deepir::cuda_buddy_pool *get_gpu_memory_pool() {
   auto device_id = Caffe::GetDevice();
-  CHECK(device_id >= 0 && device_id < device_gpu_pools.size());
-  std::shared_lock<std::shared_timed_mutex> lock(pool_mutex);
+  CHECK(device_id >= 0 && device_id < device_max_num);
+  std::shared_lock<std::shared_timed_mutex> lock(gpu_pool_mutex);
   return device_gpu_pools[device_id] ? device_gpu_pools[device_id].get()
                                      : nullptr;
 }
@@ -48,10 +55,25 @@ static inline deepir::cuda_buddy_pool *get_gpu_pool() {
 // it improved stability for large models on many GPUs.
 static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
-  if (Caffe::mode() == Caffe::GPU && size <= 128) {
-    CUDA_CHECK(cudaMallocHost(ptr, size));
-    *use_cuda = true;
-    return;
+  if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
+    // auto device_id = Caffe::GetDevice();
+    // CHECK(device_id >= 0 && device_id <  device_max_num);
+    /*
+    {
+      std::lock_guard<std::mutex> lock(pinned_pool_mutex);
+      auto it=pinned_memory_pools[device_id].find(size);
+      if(it!=pinned_memory_pools[device_id].end()) {
+        *ptr=it->second;
+        pinned_memory_pools[device_id].erase(it);
+        *use_cuda = true;
+        return;
+      }
+    }
+    */
+    if (cudaMallocHost(ptr, size) == cudaSuccess) {
+      *use_cuda = true;
+      return;
+    }
   }
 #endif
 #ifdef USE_MKL
@@ -63,9 +85,17 @@ static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
-static inline void CaffeFreeHost(void *ptr, bool use_cuda) {
+static inline void CaffeFreeHost(void *ptr, size_t size, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
+    // auto device_id = Caffe::GetDevice();
+    // CHECK(device_id >= 0 && device_id <  device_max_num);
+    /*
+    {
+      std::lock_guard<std::mutex> lock(pinned_pool_mutex);
+      pinned_memory_pools[device_id].insert({size,ptr});
+    }
+    */
     CUDA_CHECK(cudaFreeHost(ptr));
     return;
   }
@@ -101,7 +131,7 @@ SyncedMemory::SyncedMemory(size_t size)
 SyncedMemory::~SyncedMemory() {
   check_device();
   if (cpu_ptr_ && own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
+    CaffeFreeHost(cpu_ptr_, size_, cpu_malloc_use_cuda_);
   }
 
 #ifndef CPU_ONLY
@@ -127,7 +157,8 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
-    caffe_gpu_memcpy_sync(size_, gpu_ptr_, cpu_ptr_);
+    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     head_ = SYNCED;
 #else
     NO_GPU;
@@ -144,7 +175,6 @@ inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
   case UNINITIALIZED:
-    // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     gpu_ptr_ = gpu_malloc(size_);
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
@@ -152,7 +182,6 @@ inline void SyncedMemory::to_gpu() {
     break;
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
-      // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
@@ -178,7 +207,7 @@ void SyncedMemory::set_cpu_data(void *data) {
   check_device();
   CHECK(data);
   if (own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
+    CaffeFreeHost(cpu_ptr_, size_, cpu_malloc_use_cuda_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
@@ -201,7 +230,6 @@ void SyncedMemory::set_gpu_data(void *data) {
 #ifndef CPU_ONLY
   CHECK(data);
   if (own_gpu_data_) {
-    // CUDA_CHECK(cudaFree(gpu_ptr_));
     gpu_free(gpu_ptr_);
   }
   gpu_ptr_ = data;
@@ -236,7 +264,6 @@ void SyncedMemory::async_gpu_push(const cudaStream_t &stream) {
   check_device();
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
-    // CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     gpu_ptr_ = gpu_malloc(size_);
     own_gpu_data_ = true;
   }
@@ -265,7 +292,7 @@ void SyncedMemory::check_device() {
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr = nullptr;
 
-  auto pool = get_gpu_pool();
+  auto pool = get_gpu_memory_pool();
   if (pool) {
     ptr = pool->alloc_with_lock(size);
   }
@@ -280,7 +307,7 @@ void SyncedMemory::gpu_free(void *data) {
   if (!data) {
     return;
   }
-  auto pool = get_gpu_pool();
+  auto pool = get_gpu_memory_pool();
   if (!pool || !pool->free_with_lock(data)) {
     CUDA_CHECK(cudaFree(data));
   }

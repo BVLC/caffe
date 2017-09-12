@@ -175,13 +175,7 @@ void caffe_gpu_memcpy_sync(const size_t N, const void *X, void *Y);
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
 
-inline void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
-#ifndef CPU_ONLY
-  CUDA_CHECK(cudaMemsetAsync(X, alpha, N));  // NOLINT(caffe/alt_fn)
-#else
-  NO_GPU;
-#endif
-}
+void caffe_gpu_memset(const size_t N, const int alpha, void* X);
 
 template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
