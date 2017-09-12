@@ -76,12 +76,7 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
-    CUDA_CHECK(cudaMemcpyAsync(Y, X, N, cudaMemcpyDefault, 0));  // NOLINT(caffe/alt_fn)
-  }
-}
-
-void caffe_gpu_memcpy_sync(const size_t N, const void* X, void* Y) {
-  if (X != Y) {
+    //CUDA_CHECK(cudaMemcpyAsync(Y, X, N, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
     CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
 }
@@ -176,7 +171,8 @@ __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    CUDA_CHECK(cudaMemsetAsync(Y, 0, sizeof(Dtype) * N, 0));  // NOLINT(caffe/alt_fn)
+    //CUDA_CHECK(cudaMemsetAsync(Y, 0, sizeof(Dtype) * N, 0));  // NOLINT(caffe/alt_fn)
+    CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
     return;
   }
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -190,7 +186,8 @@ template void caffe_gpu_set<double>(const int N, const double alpha, double* Y);
 
 void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaMemsetAsync(X, alpha, N, 0));  // NOLINT(caffe/alt_fn)
+  //CUDA_CHECK(cudaMemsetAsync(X, alpha, N, 0));  // NOLINT(caffe/alt_fn)
+  CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
 #else
   NO_GPU;
 #endif

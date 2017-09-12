@@ -2,7 +2,6 @@
 #include <memory>
 #include <shared_mutex>
 #include <stdexcept>
-#include <unordered_map>
 
 #include "caffe/common.hpp"
 #include "caffe/gpu_memory_pool.hpp"
@@ -16,8 +15,6 @@ static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num> devi
 
 static std::shared_timed_mutex gpu_pool_mutex;
 
-static std::array<std::unordered_multimap<size_t, void *>, device_max_num> pinned_memory_pools;
-static std::mutex pinned_pool_mutex;
 
 namespace caffe {
 
@@ -56,20 +53,6 @@ static inline deepir::cuda_buddy_pool *get_gpu_memory_pool() {
 static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
-    // auto device_id = Caffe::GetDevice();
-    // CHECK(device_id >= 0 && device_id <  device_max_num);
-    /*
-    {
-      std::lock_guard<std::mutex> lock(pinned_pool_mutex);
-      auto it=pinned_memory_pools[device_id].find(size);
-      if(it!=pinned_memory_pools[device_id].end()) {
-        *ptr=it->second;
-        pinned_memory_pools[device_id].erase(it);
-        *use_cuda = true;
-        return;
-      }
-    }
-    */
     if (cudaMallocHost(ptr, size) == cudaSuccess) {
       *use_cuda = true;
       return;
@@ -88,14 +71,6 @@ static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 static inline void CaffeFreeHost(void *ptr, size_t size, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
-    // auto device_id = Caffe::GetDevice();
-    // CHECK(device_id >= 0 && device_id <  device_max_num);
-    /*
-    {
-      std::lock_guard<std::mutex> lock(pinned_pool_mutex);
-      pinned_memory_pools[device_id].insert({size,ptr});
-    }
-    */
     CUDA_CHECK(cudaFreeHost(ptr));
     return;
   }
@@ -136,7 +111,6 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
-    // CUDA_CHECK(cudaFree(gpu_ptr_));
     gpu_free(gpu_ptr_);
   }
 #endif // CPU_ONLY
@@ -157,8 +131,7 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
-    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
-    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+    CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault));
     head_ = SYNCED;
 #else
     NO_GPU;
@@ -176,7 +149,7 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     gpu_ptr_ = gpu_malloc(size_);
-    caffe_gpu_memset(size_, 0, gpu_ptr_);
+    CUDA_CHECK(cudaMemset(gpu_ptr_,0, size_));
     head_ = HEAD_AT_GPU;
     own_gpu_data_ = true;
     break;
@@ -185,7 +158,7 @@ inline void SyncedMemory::to_gpu() {
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
-    caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
+    CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault));
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
@@ -258,21 +231,6 @@ void *SyncedMemory::mutable_gpu_data() {
   return NULL;
 #endif
 }
-
-#ifndef CPU_ONLY
-void SyncedMemory::async_gpu_push(const cudaStream_t &stream) {
-  check_device();
-  CHECK(head_ == HEAD_AT_CPU);
-  if (gpu_ptr_ == NULL) {
-    gpu_ptr_ = gpu_malloc(size_);
-    own_gpu_data_ = true;
-  }
-  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
-  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
-  // Assume caller will synchronize on the stream before use
-  head_ = SYNCED;
-}
-#endif
 
 void SyncedMemory::check_device() {
 #ifndef CPU_ONLY

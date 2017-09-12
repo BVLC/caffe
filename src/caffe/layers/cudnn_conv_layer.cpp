@@ -161,11 +161,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     workspaceSizeInBytes = total_max_workspace;
 
     // free the existing workspace and allocate a new (larger) one
-    //cudaFree(this->workspaceData);
     SyncedMemory::gpu_free(this->workspaceData);
 
-   // cudaError_t err = cudaMalloc(&(this->workspaceData), workspaceSizeInBytes);
-   // if (err != cudaSuccess) {
     this->workspaceData = SyncedMemory::gpu_malloc(workspaceSizeInBytes);
     if (!this->workspaceData) {
       // force zero memory path

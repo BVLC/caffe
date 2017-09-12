@@ -33,9 +33,7 @@ public:
   size_t size() { return size_; }
 
   static size_t get_used_size();
-#ifndef CPU_ONLY
-  void async_gpu_push(const cudaStream_t &stream);
-#endif
+
 
   static void *gpu_malloc(size_t size);
   static void gpu_free(void *data);
