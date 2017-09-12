@@ -43,6 +43,8 @@
 
 namespace caffe {
   namespace mn {
+    int nGroup = 1;
+    int nServer = 0;
     boost::mutex distrib_lock;
     std::map<std::pair<int,int>, boost::shared_ptr<Distribution>> *distrib_map;
 
@@ -53,6 +55,18 @@ namespace caffe {
           MLSL::Environment::GetEnv().Init(argc, argv);
           distrib_map =
             new std::map<std::pair<int,int>, boost::shared_ptr<Distribution>>();
+          if (use_param_server()) {
+            if (is_param_server()) {
+              // this is for paramter servers
+              MLSL::Environment::GetEnv().Configure("color=0");
+            }
+            else {
+              // this is for workers
+              int group_id = get_group_id();
+              std::string config_str = "color=" + std::to_string(group_id + 1);
+              MLSL::Environment::GetEnv().Configure(config_str.c_str());
+            }
+          }
         }
         ~initialize() {
           delete distrib_map;
@@ -61,6 +75,18 @@ namespace caffe {
       } __init{ argc, argv };
     }
     
+    template<>  
+    MPI_Datatype DtypeToMPIDtype<float>() { return MPI_FLOAT; }
+
+    template<> 
+    MPI_Datatype DtypeToMPIDtype<double>() { return MPI_DOUBLE; }
+
+    template<>  
+    MLSL::DataType DtypeToMLSLDtype<float>() { return MLSL::DT_FLOAT; }
+
+    template<> 
+    MLSL::DataType DtypeToMLSLDtype<double>() { return MLSL::DT_DOUBLE; }
+
     shared_ptr<Distribution> create_distrib(
       int dataParts, int modelParts, int dataColor, int modelColor,
       int dataColorMax, int modelColorMax) {

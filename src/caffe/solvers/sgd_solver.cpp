@@ -465,7 +465,6 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
   //LOG(INFO) << "Normalize stage: Normalize stage is not skipped.";
   // Scale gradient to counterbalance accumulation.
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  
   const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
 
   switch (Caffe::mode()) {
