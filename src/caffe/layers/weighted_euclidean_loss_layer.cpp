@@ -12,6 +12,9 @@ void WeightedEuclideanLossLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
       << "Inputs must have the same dimension.";
   diff_.ReshapeLike(*bottom[0]);
+  sqrt_weight_.ReshapeLike(*bottom[0]);
+  sqrt_weight_diff_.ReshapeLike(*bottom[0]);
+  temp_.ReshapeLike(*bottom[0]);
 }
 
 template <typename Dtype>
@@ -24,12 +27,9 @@ void WeightedEuclideanLossLayer<Dtype>::Forward_cpu(
       bottom[0]->cpu_data(),
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
-
-  Dtype wdot(0.0);
-  for (int i = 0; i < count; ++i) {
-    wdot += bottom[2]->cpu_data()[i] *
-      diff_.cpu_data()[i] * diff_.cpu_data()[i];
-  }
+  caffe_sqrt(count, bottom[2]->cpu_data(), sqrt_weight_.mutable_cpu_data());
+  caffe_mul(count, sqrt_weight_.cpu_data(), diff_.cpu_data(), sqrt_weight_diff_.mutable_cpu_data());
+  Dtype wdot = caffe_cpu_dot(count, sqrt_weight_diff_.cpu_data(), sqrt_weight_diff_.cpu_data());
 
   Dtype loss = wdot / bottom[0]->num() / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
@@ -49,14 +49,13 @@ void WeightedEuclideanLossLayer<Dtype>::Backward_cpu(
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
       caffe_cpu_axpby(
-          bottom[i]->count(),              // count
-          alpha,                              // alpha
-          diff_.cpu_data(),                   // a
-          Dtype(0),                           // beta
-          bottom[i]->mutable_cpu_diff());  // b
-      for (int j = 0; j < bottom[i]->count(); ++j) {
-        bottom[i]->mutable_cpu_diff()[j] *= bottom[2]->cpu_data()[j];
-      }
+          bottom[i]->count(),   // count
+          alpha,                // alpha
+          diff_.cpu_data(),     // a
+          Dtype(0),             // beta
+          temp_.mutable_cpu_data());               // b
+
+      caffe_mul(bottom[i]->count(), temp_.cpu_data(), bottom[2]->cpu_data(), bottom[i]->mutable_cpu_diff());
     }
   }
 }

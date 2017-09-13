@@ -29,7 +29,8 @@ namespace caffe {
  *          \frac{1}{2n} \sum\limits_{n=1}^N \w_n \left| \left| \hat{y}_n - y_n
  *        \right| \right|_2^2 @f$
  *
- * This can be used for least-squares regression tasks.  An InnerProductLayer
+ * This can be used for least-squares regression tasks with different weights
+ * for different labels.  An InnerProductLayer
  * input to a EuclideanLossLayer exactly formulates a linear least squares
  * regression problem. With non-zero weight decay the problem becomes one of
  * ridge regression -- see src/caffe/test/test_sgd_solver.cpp for a concrete
@@ -95,6 +96,9 @@ class WeightedEuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   Blob<Dtype> diff_;
+  Blob<Dtype> sqrt_weight_;
+  Blob<Dtype> sqrt_weight_diff_;
+  Blob<Dtype> temp_;
 };
 
 }  // namespace caffe
