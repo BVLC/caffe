@@ -69,7 +69,7 @@ public:
         , bwd_top_diff(), bwd_bottom_diff()
         , BatchNormFwd_pd(), BatchNormBwd_pd()
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
-        , output_memory(), bwd_bottom_diff_memory()
+        , output_memory(), bwd_bottom_diff_memory(), inplace_buffer_memory()
         , input_primitive(), bwd_top_diff_primitive()
         {
           PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
@@ -95,10 +95,12 @@ private:
     void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,
             const vector<bool>& propagate_down,
             const vector<Blob<Dtype>*>& bottom);
-    void InitBatchNormFwdPrimitive(int stats_batch_idx);
-    void InitBatchNormBwdPrimitive(int stats_batch_idx);
+    void InitBatchNormFwdPrimitive(int stats_batch_idx, bool inplace);
+    void InitBatchNormBwdPrimitive(int stats_batch_idx, bool inplace);
     template <bool diff> shared_ptr<memory> GetStatsBatchMemory(
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_data, int idx);
+    template <bool diff> shared_ptr<memory> GetStatsBatchMemoryInplace(
+      shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_data, int idx, shared_ptr<memory > buffer_memory);
     void InitStatsBatchVars(int batch_size);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
@@ -110,7 +112,8 @@ private:
 
     shared_ptr<memory> scaleshift_memory, bwd_scaleshift_diff_memory;
     shared_ptr<memory> output_memory, bwd_bottom_diff_memory;
-    vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats;
+    shared_ptr<memory> inplace_buffer_memory;
+    vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats, input_inplace_buffer;
 
     shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 

@@ -721,10 +721,10 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
 template <typename Dtype>
 void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
-                             NetParameter* param_compiled) {
+                                      NetParameter* param_compiled) {
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
-          (const_cast<NetParameter&>(param)).mutable_layer(i);
+        (const_cast<NetParameter&>(param)).mutable_layer(i);
 
     // Optimization rule 3:
     // - If we are having engine MKL2017 and Batch Normalization
@@ -734,25 +734,22 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
 
     // If current layer is BatchNorm of MKL2017 engine..
     if (((layer_param->type().compare("BatchNorm") == 0) &&
-        ((layer_param->batch_norm_param().engine() ==
-         BatchNormParameter_Engine_MKL2017 || layer_param->batch_norm_param().engine() ==
-         BatchNormParameter_Engine_MKLDNN)
-        || ((layer_param->batch_norm_param().engine() ==
-           BatchNormParameter_Engine_DEFAULT) &&
-            (param.engine().compare("MKL2017") == 0 || param.engine().compare("MKLDNN") == 0)))) &&
+         (layer_param->batch_norm_param().engine() ==
+              BatchNormParameter_Engine_MKL2017 ||
+          ((layer_param->batch_norm_param().engine() ==
+            BatchNormParameter_Engine_DEFAULT) &&
+           param.engine().compare("MKL2017") == 0))) &&
         (layer_param->top(0) == layer_param->bottom(0))) {
       std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
       std::vector<const LayerParameter*> consumer_layer_params;
-      GetBlobConsumers(consumer_layer_params,
-                       batch_norm_top,
-                       param,
-                       i+1 < param.layer_size() ? i+1 : i);
+      GetBlobConsumers(consumer_layer_params, batch_norm_top, param,
+                       i + 1 < param.layer_size() ? i + 1 : i);
 
       for (std::vector<const LayerParameter*>::iterator it =
-        consumer_layer_params.begin();
-        it != consumer_layer_params.end(); ++it) {
+               consumer_layer_params.begin();
+           it != consumer_layer_params.end(); ++it) {
         // If consumer is computing inplace then modify top as well
-        if (((*it)->top_size() > 0 ) &&
+        if (((*it)->top_size() > 0) &&
             ((*it)->bottom(0).compare((*it)->top(0)) == 0)) {
           // Modify consumer top
           const_cast<string&>((*it)->top(0)).append("_x");
@@ -770,8 +767,64 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
       // Modify top so it is diffrent from bottom
       batch_norm_top.append("_x");
     }
+
     param_compiled->add_layer()->CopyFrom(*layer_param);
   }
+
+  //Keep the mapping of the inplace blob's name and the layer's index
+  //E.g if the xth layer's has in-place blob, we keep the blob's name as the key
+  //while the layer's index as value.
+  std::map<string, int> inplace_blob_name_to_index;
+  //Keep the mapping of the input blob's name and the layer's index.
+  //e.g, save the Eltwise's bottom blob's name as the key while keep the eltwise's
+  //layer index as the value.
+  std::map<string, int> specified_layer_blob_name_to_index;
+  //Keep paired bottom-top layers which need to modify blob's postfix
+  //eg. the BN is bottom layer while the eltwise is a top layer.
+  vector<vector<const LayerParameter*>> layer_pairs;
+  //Keep the input blob's name of which layer raised non-inplace, e.g Eltwise
+  vector<vector<string>> specified_layer_input_blob_names;
+
+  vector<string> raise_non_inplace_layer_type_list;
+
+  // we may add other layers later, Eltwise calls shareDiff() which will raise
+  // in-place issue, so we add it into the list.
+  raise_non_inplace_layer_type_list.push_back("Eltwise");
+
+
+  for (auto layer_type : raise_non_inplace_layer_type_list) {
+    specified_layer_input_blob_names.clear();
+    inplace_blob_name_to_index.clear();
+    layer_pairs.clear();
+
+    ParseNetInplaceStatus(
+        inplace_blob_name_to_index, specified_layer_blob_name_to_index,
+        specified_layer_input_blob_names, param_compiled, layer_type);
+
+    for (auto each_blob_list : specified_layer_input_blob_names) {
+      GetNeedToCancelInplaceLayers(
+          layer_pairs, specified_layer_blob_name_to_index,
+          inplace_blob_name_to_index, each_blob_list, *param_compiled);
+
+      for (auto each_layer_pair : layer_pairs) {
+        std::string& layer_top =
+            const_cast<string&>((each_layer_pair[0])->top(0));
+
+        for (unsigned int i = 0; i < each_layer_pair[1]->bottom_size(); ++i) {
+          if (each_layer_pair[1]->bottom(i).compare(layer_top) == 0) {
+            const_cast<string&>(each_layer_pair[1]->bottom(i)).append("_x");
+          }
+        }
+        if (((each_layer_pair[0])->top_size() > 0) &&
+            ((each_layer_pair[0])
+                 ->bottom(0)
+                 .compare((each_layer_pair[0])->top(0)) == 0)) {
+          const_cast<string&>((each_layer_pair[0])->top(0)).append("_x");
+        }
+      }
+    }
+  }
+
   return;
 }
 
@@ -794,6 +847,69 @@ void Net<Dtype>::GetBlobConsumers(
         consumer_blobs.push_back(&param.layer(i));
       }
     }
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ParseNetInplaceStatus(
+    std::map<string, int>& inplace_blob_name_to_index,
+    std::map<string, int>& specified_layer_blob_name_to_index,
+    vector<vector<string>>& specified_layer_input_blob_names,
+    NetParameter* param, const string& specified_layer_type) {
+  for (int layer_index = 0; layer_index < param->layer_size(); ++layer_index) {
+    LayerParameter* layer_param =
+        (const_cast<NetParameter&>(*param)).mutable_layer(layer_index);
+
+    if (!specified_layer_type.empty() &&
+        layer_param->type().compare(specified_layer_type) != 0 &&
+        layer_param->bottom_size() == 1 && layer_param->top_size() == 1 &&
+        layer_param->bottom(0) == layer_param->top(0)) {
+      inplace_blob_name_to_index[layer_param->bottom(0)] = layer_index;
+    }
+
+    if (!specified_layer_type.empty() &&
+        layer_param->type().compare(specified_layer_type) == 0) {
+      vector<string> blob_names;
+      for (unsigned int blob_index = 0; blob_index < layer_param->bottom_size();
+           blob_index++) {
+        specified_layer_blob_name_to_index[layer_param->bottom(blob_index)] =
+            layer_index;
+        blob_names.push_back(layer_param->bottom(blob_index));
+      }
+      specified_layer_input_blob_names.push_back(blob_names);
+    }
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::GetNeedToCancelInplaceLayers(
+    vector<vector<const LayerParameter*>>& layer_pairs,
+    std::map<string, int>& specified_layer_blob_name_to_index,
+    std::map<string, int>& inplace_blob_name_to_index,
+    vector<string>& each_blob_list, const NetParameter& param) {
+  if (param.engine().compare("MKLDNN") != 0 || each_blob_list.size() == 1)
+    return;
+  
+  layer_pairs.clear();
+  
+  vector<const LayerParameter*> each_layer_pair;
+
+  each_blob_list.erase(each_blob_list.begin());
+
+  std::reverse(each_blob_list.begin(), each_blob_list.end());
+
+  for (auto blob_name : each_blob_list) {
+    each_layer_pair.clear();
+    LayerParameter* bottom_layer =
+        (const_cast<NetParameter&>(param))
+            .mutable_layer(inplace_blob_name_to_index[blob_name]);
+    LayerParameter* top_layer =
+        (const_cast<NetParameter&>(param))
+            .mutable_layer(specified_layer_blob_name_to_index[blob_name]);
+    each_layer_pair.push_back(bottom_layer);
+    each_layer_pair.push_back(top_layer);
+
+    layer_pairs.push_back(each_layer_pair);
   }
 }
 

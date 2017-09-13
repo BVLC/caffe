@@ -310,6 +310,19 @@ class Net {
                                                 const NetParameter& param,
                                                 int layer_id);
 
+  static void GetNeedToCancelInplaceLayers(
+      vector<vector<const LayerParameter*>>& layer_pairs,    
+      std::map<string, int>& specified_layer_blob_name_to_index,      
+      std::map<string, int>& inplace_blob_name_to_index,
+      vector<string>& each_blob_list,
+      const NetParameter& param);
+
+  static void ParseNetInplaceStatus(
+      std::map<string, int>& inplace_blob_name_to_index,
+      std::map<string, int>& specified_layer_blob_name_to_index,      
+      vector<vector<string>>& specified_layer_input_blob_names,
+      NetParameter* param, const string& specified_layer_type);
+
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
