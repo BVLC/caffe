@@ -4,6 +4,7 @@ import os,sys
 caffe_python = os.path.dirname(os.path.realpath(__file__)) + '/../../python'
 sys.path.insert(0, caffe_python)
 import caffe
+from caffe.proto import caffe_pb2
 import numpy as np
 #import utils as ut
 import csv,math
@@ -171,17 +172,36 @@ def set_layers(in_model, out_model):
         next_in_index = in_index + step + 1;
 
 def create_new_model(in_model):
-    out_model = caffe.proto.caffe_pb2.NetParameter()
+    out_model = caffe_pb2.NetParameter()
     set_input(in_model, out_model)
     set_layers(in_model, out_model)
     return out_model
 
-def load_model(filename):
-    model = caffe.proto.caffe_pb2.NetParameter()
+def load_model(filename, phase = None):
+    model = caffe_pb2.NetParameter()
     input_file = open(filename, 'r')
     text_format.Merge(str(input_file.read()), model)
     input_file.close()
-    return model
+    if phase is None:
+        return model
+    else:
+        out_model = caffe_pb2.NetParameter()
+        set_input(model, out_model)
+        for layer in model.layer:
+            included = False
+            if len(layer.include) == 0:
+                included = True
+            if len(layer.include) > 0 and len(layer.exclude) > 0:
+                raise ValueError('layer ' + layer.name + ' has both include '
+                               'and exclude specified.')
+            for layer_phase in layer.include:
+                included = included or layer_phase.phase == phase
+            for layer_phase in layer.exclude:
+                included = included and not layer_phase.phase == phase
+            if not included:
+                continue
+            out_model.layer.extend([layer])
+        return out_model
 
 def save_model(model, filename):
     output_file = open(filename, 'w')
@@ -338,7 +358,7 @@ def generate_prototxt(in_proto, args):
     print 'New proto generated successfully.'
 
 def generate_new_model(args):
-    in_model = load_model(args.indefinition)
+    in_model = load_model(args.indefinition, caffe_pb2.Phase.Value('TEST'))
     generate_prototxt(in_model, args)
     if not args.proto_only:
         generate_weights(in_model, args)
