@@ -40,11 +40,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
               top_descs_[i], top_data + top_offset_ * g));
       }
     }
-
-    // Synchronize the work across groups, each of which went into its own
-    // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
   }
 }
 
