@@ -11,10 +11,10 @@
 static constexpr size_t device_max_num = 32;
 static constexpr size_t pinned_memory_max_size = 128;
 
-static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num> device_gpu_pools;
+static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num>
+    device_gpu_pools;
 
 static std::shared_timed_mutex gpu_pool_mutex;
-
 
 namespace caffe {
 
@@ -131,7 +131,8 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
-    CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault));
+    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     head_ = SYNCED;
 #else
     NO_GPU;
@@ -149,7 +150,7 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     gpu_ptr_ = gpu_malloc(size_);
-    CUDA_CHECK(cudaMemset(gpu_ptr_,0, size_));
+    CUDA_CHECK(cudaMemsetAsync(gpu_ptr_, 0, size_, cudaStreamPerThread));
     head_ = HEAD_AT_GPU;
     own_gpu_data_ = true;
     break;
@@ -158,7 +159,7 @@ inline void SyncedMemory::to_gpu() {
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
-    CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault));
+    caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:

@@ -154,24 +154,3 @@ if(BUILD_python)
     endif()
   endif()
 endif()
-
-# ---[ Matlab
-if(BUILD_matlab)
-  find_package(MatlabMex)
-  if(MATLABMEX_FOUND)
-    set(HAVE_MATLAB TRUE)
-  endif()
-
-  # sudo apt-get install liboctave-dev
-  find_program(Octave_compiler NAMES mkoctfile DOC "Octave C++ compiler")
-
-  if(HAVE_MATLAB AND Octave_compiler)
-    set(Matlab_build_mex_using "Matlab" CACHE STRING "Select Matlab or Octave if both detected")
-    set_property(CACHE Matlab_build_mex_using PROPERTY STRINGS "Matlab;Octave")
-  endif()
-endif()
-
-# ---[ Doxygen
-if(BUILD_docs)
-  find_package(Doxygen)
-endif()

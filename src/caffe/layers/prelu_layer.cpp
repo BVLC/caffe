@@ -43,12 +43,6 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(this->blobs_[0]->count(), channels)
         << "Negative slope size is inconsistent with prototxt config";
   }
-
-  // Propagate gradients to the parameters (as directed by backward pass).
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
-  multiplier_.Reshape(vector<int>(1, bottom[0]->count(1)));
-  backward_buff_.Reshape(vector<int>(1, bottom[0]->count(1)));
-  caffe_set(multiplier_.count(), Dtype(1), multiplier_.mutable_cpu_data());
 }
 
 template <typename Dtype>
@@ -57,10 +51,6 @@ void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   top[0]->ReshapeLike(*bottom[0]);
-  if (bottom[0] == top[0]) {
-    // For in-place computation
-    bottom_memory_.ReshapeLike(*bottom[0]);
-  }
 }
 
 template <typename Dtype>
@@ -72,11 +62,6 @@ void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int dim = bottom[0]->count(2);
   const int channels = bottom[0]->channels();
   const Dtype* slope_data = this->blobs_[0]->cpu_data();
-
-  // For in-place computation
-  if (bottom[0] == top[0]) {
-    caffe_copy(count, bottom_data, bottom_memory_.mutable_cpu_data());
-  }
 
   // if channel_shared, channel index in the following computation becomes
   // always zero.
