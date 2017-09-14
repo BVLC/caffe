@@ -59,7 +59,9 @@ namespace bp = boost::python;
 #include "caffe/util/bbox_util.hpp"
 
 #ifdef USE_MLSL
+#include "caffe/multinode/mlsl.hpp"
 #include "caffe/multinode/multi_sync.hpp"
+#include "caffe/multinode/async_param_server.hpp"
 #endif /* USE_MLSL */
 
 using caffe::Blob;
@@ -118,6 +120,10 @@ DEFINE_bool(fast_compare, false,
 DEFINE_int32(fast_compare_max, 50,
     "Optional; Max errors for fast_compare");
 DEFINE_double(buffer_filler, std::nanf(""), "Buffer filler for compare tool");
+DEFINE_int32(n_group, 1, "Optional; if given, it specifies how many trees"
+             " we want in the async forest");
+DEFINE_int32(n_server, 0, "Optional; if given, it specifies how many parts"
+             "The model is splited to. I.e. how many process you have for param server");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -315,10 +321,17 @@ int train() {
 
 #ifdef USE_MLSL
   if (caffe::mn::is_multinode()) {
+    MPI_Barrier(MPI_COMM_WORLD);
     LOG(INFO) << "Configuring multinode setup";
-    caffe::MultiSync<float> sync(solver);
-    LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
-    sync.run();
+    if (!caffe::mn::is_param_server()) {
+      caffe::MultiSync<float> sync(solver);
+      LOG(INFO) << "Starting Multi-node Optimization in MLSL environment";
+      sync.run();
+    } else {
+      caffe::mn::AsyncParamServer<float> aps(solver);
+      LOG(INFO) << "Starting Parameter Server";
+      aps.Run();
+    }
   } else
 #endif /* USE_MLSL */
 
@@ -709,7 +722,20 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
 #ifdef USE_MLSL
+  caffe::mn::nGroup = FLAGS_n_group;
+  caffe::mn::nServer = FLAGS_n_server;
   caffe::mn::init(&argc, &argv);
+  CHECK_EQ(caffe::mn::get_world_size(),
+           caffe::mn::nGroup * caffe::mn::get_group_size() + caffe::mn::nServer);
+  if (caffe::mn::nGroup > 1) {
+    CHECK_GE(caffe::mn::nServer, 1)
+      << "Expect there exists parameter server to support multiple groups";
+  }
+  if (caffe::mn::get_node_rank() == 0) {
+    LOG(INFO) << "Number of groups: " << caffe::mn::nGroup
+              << ", group size: " << caffe::mn::get_group_size()
+              << ", number of parameter servers: " << caffe::mn::nServer;
+  }
 #endif
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER

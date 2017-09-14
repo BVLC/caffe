@@ -46,7 +46,12 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
         : solver(boost::make_shared<MultiSolver<Dtype> >(root_solver)),
           layers(root_solver->net()->layers()),
           net(root_solver->net()),
-          net_params(root_solver->net()->learnable_params()) {
+          net_params(root_solver->net()->learnable_params()),
+          reduce_req_vec(net_params.size(), NULL),
+          irecv_req_vec(net_params.size(), MPI_REQUEST_NULL),
+          broadcast_req_vec(net_params.size(), NULL),
+          irecv_done(net_params.size(), true),
+          broadcast_launched(net_params.size(), true) {
   root_solver->param().set_disabled_update(true);
 
   if (root_solver->iter() == 0)

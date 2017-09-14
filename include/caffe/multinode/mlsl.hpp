@@ -41,6 +41,7 @@
 #ifdef USE_MLSL
 
 #include <mlsl.hpp>
+#include <mpi.h>
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -66,19 +67,73 @@ namespace caffe {
       return MLSL::Environment::GetEnv().GetProcessCount();
     }
 
-    inline int get_group_id(int data_parts, int model_parts) {
+    inline int get_global_part_id(int data_parts, int model_parts) {
       int node_id = get_node_id();
       int num_nodes = get_nodes_count();
       return (node_id % (num_nodes / data_parts)) / model_parts;
     }
 
+    inline bool is_root() {
+      return mn::get_node_id() == 0;
+    }
+
+    template <typename Dtype>
+    MPI_Datatype DtypeToMPIDtype();
+
+    template <typename Dtype>
+    MLSL::DataType DtypeToMLSLDtype();
+
+    extern int nGroup;
+    extern int nServer;
+
+    inline bool use_param_server() {
+      return nServer > 0;
+    }
+
+    inline int get_world_size() {
+      int size = 0;
+      MPI_Comm_size(MPI_COMM_WORLD, &size);
+      return size;
+    }
+
+    inline int get_node_rank() {
+      int rank = -1;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      return rank;
+    }
+
     inline bool is_multinode() {
-      static bool multinode{ get_nodes_count() > 1 };
+      static bool multinode{ get_world_size() > 1 };
       return multinode;
     }
 
-    inline bool is_root() {
-      return mn::get_node_id() == 0;
+    inline int get_num_groups() {
+      return nGroup;
+    }
+
+    inline int get_group_size() {
+      return (get_world_size() - nServer) / nGroup;
+    }
+
+    inline int get_group_id() {
+      return get_node_rank() / get_group_size();
+    }
+
+    inline int world_rank_to_root_rank(int world_rank) {
+      int group_size = get_group_size();
+      return world_rank / group_size * group_size;
+    }
+
+    inline int get_group_root_rank(int group_id, int part_id = 0, int num_parts = 1) {
+      return group_id * get_group_size() + part_id;
+    }
+
+    inline int param_to_server_rank(int layer_id, int param_id) {
+      return (param_id % nServer) + nGroup * get_group_size();
+    }
+
+    inline bool is_param_server() {
+      return get_node_rank() >= nGroup * get_group_size();
     }
 
     namespace detail {
@@ -128,11 +183,21 @@ namespace caffe {
         MLSL::CommReq *rqts = distrib_->Reduce((void *)sendBuffer, (void*)recvBuffer, count, detail::dtype<Dtype>(), Rtype, rootIdx, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
       }
+      template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
+      MLSL::CommReq* reduce_async(Dtype *sendBuffer, Dtype *recvBuffer, size_t count, size_t rootIdx = 0) {
+        if (skip_comm(Gtype)) return NULL;
+        return distrib_->Reduce((void *)sendBuffer, (void*)recvBuffer, count, detail::dtype<Dtype>(), Rtype, rootIdx, Gtype);
+      }
       template <typename Dtype, MLSL::GroupType Gtype>
       void bcast(Dtype *buffer, size_t count, int rootId = 0) {
         if (skip_comm(Gtype)) return;
         MLSL::CommReq *rqts = distrib_->Bcast((void *)buffer, count, detail::dtype<Dtype>(), rootId, Gtype);
         MLSL::Environment::GetEnv().Wait(rqts);
+      }
+      template <typename Dtype, MLSL::GroupType Gtype>
+      MLSL::CommReq* bcast_async(Dtype *buffer, size_t count, int rootId = 0) {
+        if (skip_comm(Gtype)) return NULL;
+        return distrib_->Bcast((void *)buffer, count, detail::dtype<Dtype>(), rootId, Gtype);
       }
       template <typename Dtype, MLSL::ReductionType Rtype, MLSL::GroupType Gtype>
       void allreduce(Dtype *sendBuffer, Dtype *recvBuffer, size_t count) {
@@ -190,14 +255,23 @@ namespace caffe {
         if (skip_comm(Gtype)) return;
         distrib_->Barrier(Gtype);
       }
+      inline int get_node_id(MLSL::GroupType Gtype = MLSL::GroupType::GT_GLOBAL) {
+        return distrib_->GetProcessIdx(Gtype);
+      }
+      inline int get_nodes_count(MLSL::GroupType Gtype = MLSL::GroupType::GT_GLOBAL) {
+        return distrib_->GetProcessCount(Gtype);
+      }
+      inline int is_root(MLSL::GroupType Gtype = MLSL::GroupType::GT_GLOBAL) {
+        return get_node_id(Gtype) == 0;
+      }
       inline int get_data_parts() {
         return data_parts_;
       }
       inline int get_model_parts() {
         return model_parts_;
       }
-      inline int get_group_id() {
-        return mn::get_group_id(data_parts_, model_parts_);
+      inline int get_global_part_id() {
+        return mn::get_global_part_id(data_parts_, model_parts_);
       }
     private:
       inline bool skip_comm(MLSL::GroupType Gtype) {
@@ -205,7 +279,7 @@ namespace caffe {
           return data_color_ > data_color_max_;
         } else if (Gtype == MLSL::GT_MODEL && model_color_max_ != MLSL_DEFAULT_COLOR) {
           return model_color_ > model_color_max_;
-        } else return get_group_id() > 0;
+        } else return get_global_part_id() > 0;
       }
 
       MLSL::Distribution *distrib_{ nullptr };
@@ -218,7 +292,7 @@ namespace caffe {
     };
 
     inline void GetCanonicalMnParam(int &num_nodes, int &model_parts) {
-      if (num_nodes == 0) num_nodes = mn::get_nodes_count();
+      if (num_nodes == 0) num_nodes = mn::get_group_size();
       if (model_parts == 0 || model_parts > num_nodes) model_parts = num_nodes;
     }
 

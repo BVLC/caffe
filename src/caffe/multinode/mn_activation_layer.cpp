@@ -239,7 +239,7 @@ void MnActivationLayer<Dtype>::Pack(const Dtype *src, Dtype *dst, int N, int C, 
 template <typename Dtype>
 bool MnActivationLayer<Dtype>::Bypass(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  return distrib_in_->get_group_id() > 0 && distrib_out_->get_group_id() > 0;
+  return distrib_in_->get_global_part_id() > 0 && distrib_out_->get_global_part_id() > 0;
 }
 
 #ifdef CPU_ONLY

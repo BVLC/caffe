@@ -152,6 +152,10 @@ void ApplyMultinodeParams(const NetParameter& param,
   //         insert activation layers if needed
   param_with_mn->CopyFrom(param);
   param_with_mn->clear_layer();
+  if (mn::is_param_server()) {
+    // do not insert activation layers when loaded on param servers
+    blob_param_map.clear();
+  }
   for (int i = 0; i < param.layer_size(); i++) {
     const LayerParameter& orig_layer_param = param.layer(i);
     map<int, string> updated_blob_idx_to_name;
@@ -186,7 +190,7 @@ void ApplyMultinodeParams(const NetParameter& param,
     int num_nodes = mn_layer_param.num_nodes();
     int model_parts = mn_layer_param.model_parts();
     mn::GetCanonicalMnParam(num_nodes, model_parts);
-    if (model_parts > 1) {
+    if (model_parts > 1 && !mn::is_param_server()) {
       // TODO: support transpose
       // TODO: support undividible num_output
       if (layer_param->type() == "Convolution") {
