@@ -27,15 +27,15 @@ void WeightedEuclideanLossLayer<Dtype>::Forward_cpu(
       bottom[0]->cpu_data(),
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
-  caffe_sqrt(count, 
-             bottom[2]->cpu_data(), 
+  caffe_sqrt(count,
+             bottom[2]->cpu_data(),
              sqrt_weight_.mutable_cpu_data());
-  caffe_mul(count, 
-            sqrt_weight_.cpu_data(), 
-            diff_.cpu_data(), 
+  caffe_mul(count,
+            sqrt_weight_.cpu_data(),
+            diff_.cpu_data(),
             sqrt_weight_diff_.mutable_cpu_data());
-  Dtype wdot = caffe_cpu_dot(count, 
-                             sqrt_weight_diff_.cpu_data(), 
+  Dtype wdot = caffe_cpu_dot(count,
+                             sqrt_weight_diff_.cpu_data(),
                              sqrt_weight_diff_.cpu_data());
 
   Dtype loss = wdot / bottom[0]->num() / Dtype(2);
@@ -62,9 +62,9 @@ void WeightedEuclideanLossLayer<Dtype>::Backward_cpu(
           Dtype(0),             // beta
           temp_.mutable_cpu_data());               // b
 
-      caffe_mul(bottom[i]->count(), 
-                temp_.cpu_data(), 
-                bottom[2]->cpu_data(), 
+      caffe_mul(bottom[i]->count(),
+                temp_.cpu_data(),
+                bottom[2]->cpu_data(),
                 bottom[i]->mutable_cpu_diff());
     }
   }
