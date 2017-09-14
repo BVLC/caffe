@@ -321,7 +321,12 @@ void Solver<Dtype>::Step(int iters) {
         const string& output_name =
             net_->blob_names()[net_->output_blob_indices()[j]];
         const Dtype loss_weight =
-            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+            net_->blob_loss_weights()[net_->output_blob_indices()[j]]
+#ifdef USE_MLSL
+            * mn::get_distrib()->get_data_parts()
+#endif
+              ;
+
         for (int k = 0; k < result[j]->count(); ++k) {
           ostringstream loss_msg_stream;
           if (loss_weight) {
@@ -928,6 +933,10 @@ void Solver<Dtype>::Restore(const char* state_file) {
 template <typename Dtype>
 void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
     int average_loss) {
+#ifdef USE_MLSL
+  loss *= mn::get_distrib()->get_data_parts();
+#endif
+
   if (losses_.size() < average_loss) {
     losses_.push_back(loss);
     int size = losses_.size();

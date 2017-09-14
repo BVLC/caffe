@@ -215,10 +215,6 @@ namespace caffe {
     }
 
     void on_iter_finished(int layer_id) {
-#ifdef FW_OVERLAP_OPT
-      solver->set_layer_finished_flag(layer_id, false);
-#endif
-
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
       if (layer->layerOp == nullptr) {
         return;

@@ -62,6 +62,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/multinode/mlsl.hpp"
 #include "caffe/multinode/apply_mn_param.hpp"
 #include "caffe/util/remove_batch_norm.hpp"
+#include "caffe/util/apply_bn_stats_batch_size.hpp"
 
 PERFORMANCE_CREATE_MONITOR();
 
@@ -145,6 +146,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   int kept_bn_layers_num = param.compile_net_state().kept_bn_layers_size();
   for (int idx = 0; idx < kept_bn_layers_num; ++idx) {
     this->kept_bn_layers_.push_back(param.compile_net_state().kept_bn_layers(idx));
+  }
+
+  NetParameter param_with_stats_batch_size;
+  if (param.has_bn_stats_batch_size()) {
+    ApplyBnStatsBatchSize(param, &param_with_stats_batch_size);
+    param = param_with_stats_batch_size;
   }
 
 #ifdef USE_MLSL
@@ -628,13 +635,24 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
     // Note: Currently merging of convolution and relu layers is feasible
     // If current layer is Convolution of MKLDNN engine..
     if ((layer_param->type().compare("Convolution") == 0) &&
-       ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN)
-       || (((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
-            (param.engine().compare(0, 6, "MKLDNN") == 0
-            && param.engine().find(":DLA", 6) == string::npos)) ||
-            (param.engine() == "" &&
-              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos)))) {
+        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine().compare(0, 6, "MKLDNN") == 0) &&
+          (layer_param->engine().find(":DLA", 6) == string::npos)) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine() == "") &&
+          (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+           param.engine().find(":DLA", 6) == string::npos)))) {
+      // check if Dialation is larger than 1. if yes, don't fuse the following Relu layer with this conv layer
+      // as MKLDNN doesn't support dilation convolution yet.
+      bool dilation = false;
+      for (int i = 0; i < layer_param->convolution_param().dilation_size(); ++i) {
+        if (layer_param->convolution_param().dilation(i) > 1) {
+          dilation = true;
+          break;
+        }
+      }
+
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -644,14 +662,16 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 
       // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
-      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
-        ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN)
-        || (((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
-            (param.engine().compare(0, 6, "MKLDNN") == 0
-            && param.engine().find(":DLA", 6) == string::npos)) ||
-            (param.engine() == "" &&
-              layer_param->engine().compare(0, 6, "MKLDNN") == 0 &&
-              layer_param->engine().find(":DLA", 6) == string::npos)))) {
+      if (!dilation &&
+          (consumer_layer_param.type().compare("ReLU") == 0) &&
+          ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             consumer_layer_param.engine().find(":DLA", 6) == string::npos)) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine() == "") &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             param.engine().find(":DLA", 6) == string::npos)))) {
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
 
@@ -715,11 +735,12 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
     // If current layer is BatchNorm of MKL2017 engine..
     if (((layer_param->type().compare("BatchNorm") == 0) &&
         ((layer_param->batch_norm_param().engine() ==
-         BatchNormParameter_Engine_MKL2017)
+         BatchNormParameter_Engine_MKL2017 || layer_param->batch_norm_param().engine() ==
+         BatchNormParameter_Engine_MKLDNN)
         || ((layer_param->batch_norm_param().engine() ==
            BatchNormParameter_Engine_DEFAULT) &&
-            param.engine().compare("MKL2017") == 0))) &&
-        (layer_param->top(0) == layer_param->bottom(0) )) {
+            (param.engine().compare("MKL2017") == 0 || param.engine().compare("MKLDNN") == 0)))) &&
+        (layer_param->top(0) == layer_param->bottom(0))) {
       std::string& batch_norm_top = const_cast<string&>(layer_param->top(0));
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,

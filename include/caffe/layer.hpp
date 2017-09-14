@@ -55,8 +55,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOG_BLOB(layer, blob, part, blob_id, description)              \
   do                                                                   \
   {                                                                    \
-      int elems_to_log = std::min(MAX_ELEMS_TO_LOG, blob->count());    \
-      for (int idx = 0; idx < elems_to_log; idx++)                     \
+      long elems_to_log = std::min(static_cast<long>(MAX_ELEMS_TO_LOG), blob->count());    \
+      for (long idx = 0; idx < elems_to_log; idx++)                     \
       {                                                                \
           LOG_LAYER(layer) << description                              \
                            << ", blob_id " << blob_id                  \
@@ -68,8 +68,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOG_PARAM_BLOB(blob, part, blob_id, description)               \
   do                                                                   \
   {                                                                    \
-      int elems_to_log = std::min(MAX_ELEMS_TO_LOG, blob->count());    \
-      for (int idx = 0; idx < elems_to_log; idx++)                     \
+      long elems_to_log = std::min(static_cast<long>(MAX_ELEMS_TO_LOG), blob->count());    \
+      for (long idx = 0; idx < elems_to_log; idx++)                     \
       {                                                                \
           DLOG(INFO) << description                                    \
                      << ", blob_id " << blob_id                        \
@@ -521,7 +521,12 @@ protected:
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
           "unspecified or specified once per top blob.";
       for (int top_id = 0; top_id < top.size(); ++top_id) {
+#ifdef USE_MLSL
+        const Dtype loss_weight = layer_param_.loss_weight(top_id) /
+          GetDistribution().get_data_parts();
+#else
         const Dtype loss_weight = layer_param_.loss_weight(top_id);
+#endif
         if (loss_weight == Dtype(0)) { continue; }
         this->set_loss(top_id, loss_weight);
         const int count = top[top_id]->count();

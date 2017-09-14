@@ -1,5 +1,5 @@
 CAFFE_ROOTDIR := $(shell pwd)
-MKLDNN_ROOTDIR := external/mkldnn
+MKLDNN_ROOTDIR := $(CAFFE_ROOTDIR)/external/mkldnn
 MKLDNN_TMPDIR := $(MKLDNN_ROOTDIR)/tmp
 MKLDNN_SRCDIR := $(MKLDNN_ROOTDIR)/src
 MKLDNN_BUILDDIR := $(MKLDNN_ROOTDIR)/build
@@ -22,7 +22,7 @@ ifneq (,$(findstring ccache,$(CC)))
 endif
 
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
-MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(CAFFE_ROOTDIR)/$(MKLDNN_INSTALLDIR) -DMKLROOT=${MKL_ROOTDIR} -B$(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
+MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(MKLDNN_INSTALLDIR) -DMKLROOT=${MKL_ROOTDIR} -B$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
 
 ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
 mkldnn_download:
@@ -32,8 +32,8 @@ mkldnn_download:
 
 mkldnn_build: mkldnn_download
 	cmake $(MKLDNN_CMAKE_FLAGS)
-	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) -j$(shell cat /proc/cpuinfo |grep 'processor'|wc -l)
-	make -C $(CAFFE_ROOTDIR)/$(MKLDNN_BUILDDIR) install
+	make -C $(MKLDNN_BUILDDIR) -j$(shell cat /proc/cpuinfo |grep 'processor'|wc -l)
+	make -C $(MKLDNN_BUILDDIR) install
 else
 mkldnn_download:
 mkldnn_build:

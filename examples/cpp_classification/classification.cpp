@@ -285,6 +285,10 @@ int main(int argc, char** argv) {
     engine = argv[6];
   }
 
+#ifdef USE_MLSL
+  caffe::mn::init(&argc,&argv);
+#endif
+
   Classifier classifier(model_file, trained_file, mean_file, label_file, engine);
 
 

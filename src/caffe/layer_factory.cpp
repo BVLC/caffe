@@ -92,6 +92,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   for (int i = 0; i < conv_param.dilation_size(); ++i) {
     if (conv_param.dilation(i) > 1) {
       use_dilation = true;
+      break;
     }
   }
 #endif

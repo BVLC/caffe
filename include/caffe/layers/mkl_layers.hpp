@@ -481,12 +481,12 @@ class MKLBatchNormLayer : public Layer<Dtype> {
         batchNormFwd(static_cast<dnnPrimitive_t>(NULL)),
         batchNormFwdInference(static_cast<dnnPrimitive_t>(NULL)),
         batchNormBwd(static_cast<dnnPrimitive_t>(NULL)),
-        mean_buffer_(static_cast<Dtype*>(NULL)),
-        variance_buffer_(static_cast<Dtype*>(NULL)),
         scaleShift_buffer_(static_cast<Dtype*>(NULL)),
         diffScaleShift_buffer_(static_cast<Dtype*>(NULL)),
         layout_usr_(static_cast<dnnLayout_t>(NULL)),
-        use_global_stats_(false)
+        use_global_stats_(false),
+        num_stats_batches_(1),
+        stats_batch_size_(0)
       {
         PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
         PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -515,6 +515,12 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void ForwardStatsBatch_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top, int stats_batch_idx);
+  void BackwardStatsBatch_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom,
+      int stats_batch_idx);
+
   void Init(const vector<Blob<Dtype>*>& bottom,
             const vector<Blob<Dtype>*>& top);
 
@@ -534,12 +540,14 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_bottom_diff;
   Blob<Dtype> temp_;
   dnnPrimitive_t batchNormFwd, batchNormFwdInference, batchNormBwd;
-  Dtype *mean_buffer_;
-  Dtype *variance_buffer_;
+  vector<Dtype *> mean_buffers_;
+  vector<Dtype *> variance_buffers_;
   Dtype *scaleShift_buffer_;
   Dtype *diffScaleShift_buffer_;
   dnnLayout_t layout_usr_;
   bool use_global_stats_;
+  int num_stats_batches_;
+  int stats_batch_size_;
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);

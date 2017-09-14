@@ -117,11 +117,19 @@ class BatchNormLayer : public Layer<Dtype> {
                        const Dtype* data_to_be_replicated,
                        FuncTy op_func);
 
+  void ForwardStatsBatch_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top, int stats_batch_idx);
+  void BackwardStatsBatch_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom,
+      int stats_batch_idx);
+
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;
   int channels_;
   Dtype eps_;
+  int num_stats_batches_;
+  int stats_batch_size_;
 
   // extra temporarary variables is used to carry out sums/broadcasting
   // using BLAS

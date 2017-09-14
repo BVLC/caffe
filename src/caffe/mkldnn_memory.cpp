@@ -212,8 +212,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<prim
     CHECK(aprimitive);
     if(this->_reorder_extprv2prv_pd == NULL)
         return;
-    if (this->_extprv_memory_pd->desc().data.format == this->_prv_memory_pd->desc().data.format &&
-        this->_extprv_memory_pd->desc().data.data_type == this->_prv_memory_pd->desc().data.data_type)
+    if (*this->_extprv_memory_pd == *this->_prv_memory_pd)
     {
 #ifdef DEBUG
         LOG(INFO) << "The format and data_type of _extprv_memory_pd and _prv_memory_pd is same, no need do conversion.";
@@ -451,6 +450,32 @@ shared_ptr<memory> MKLDNNMemoryDescriptor<Dtype, is_diff>::create_output_memory(
     }
     */
     return omem;
+}
+
+template <typename Dtype, bool is_diff>
+Dtype* MKLDNNMemoryDescriptor<Dtype, is_diff>::get_memory_ptr(long offset) {
+    if (this->conversion_needed()) {
+      // TODO: support DFP16 offset
+      if (this->prv_ptr() != NULL) return (Dtype*)this->prv_ptr() + offset;
+      // when _internal_ptr is null, having same private layout as _blob
+      else return is_diff ?
+             (Dtype*)this->_blob->prv_diff() + offset :
+             (Dtype*)this->_blob->prv_data() + offset;
+    } else {
+      return const_cast<Dtype*>(
+        is_diff ? this->_blob->cpu_diff() + offset : this->_blob->cpu_data() + offset);
+    }
+}
+
+template <typename Dtype, bool is_diff>
+shared_ptr<memory::desc> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_memory_desc() {
+    shared_ptr<memory::desc> desc;
+    if (this->conversion_needed()) {
+        desc.reset(new memory::desc(this->prv_memory_pd()->desc()));
+    } else {
+        desc.reset(new memory::desc(this->usr_memory_pd()->desc()));
+    }
+    return desc;
 }
 
 template <typename Dtype, bool is_diff>

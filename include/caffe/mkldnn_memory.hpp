@@ -94,6 +94,7 @@ public:
         if (_prv_memory == NULL) allocate();
         return _internal_ptr;
     }
+
     shared_ptr<primitive>  reorder_usr2prv() { return _reorder_usr2prv.aprimitive; }
     shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.aprimitive; }
     shared_ptr<primitive>  reorder_extprv2prv() { return _reorder_extprv2prv.aprimitive; }
@@ -201,6 +202,8 @@ public:
     shared_ptr<memory> create_output_memory(Blob<Dtype> * blob, bool inplace = false);
     shared_ptr<primitive> create_input(bool set_prv_ptr);
     shared_ptr<memory> create_output_memory(bool inplace = false);
+    Dtype* get_memory_ptr(long offset = 0);
+    shared_ptr<memory::desc> get_memory_desc();
 
     void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.aprimitive); _mkldnn_primitive = mprimitive;  }
     MKLDNNPrimitive<Dtype>&  mkldnn_primitive() { return _mkldnn_primitive; }

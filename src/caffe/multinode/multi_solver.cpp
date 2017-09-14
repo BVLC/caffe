@@ -105,12 +105,15 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef FW_OVERLAP_OPT
-    if (first && IsSkipWaitGradient(i) == false) {
+    if (first) {
       while (layer_finished_flags_[i] == false) {
+        if (IsSkipWaitGradient(i))
+         break;
         WaitAndUpdateGradient(i);
         if (layer_finished_flags_[i])
           break;
 
+        // wait and update gradient for next layers
         for (int k=i+1; k<layers.size(); k++) {
           if (layer_finished_flags_[k] || IsSkipWaitGradient(k)) {
             layer_finished_flags_[k] = true;
@@ -121,6 +124,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
             break;
         }
       }
+      layer_finished_flags_[i] = false;
     }
 #endif
 
@@ -128,6 +132,11 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     loss += net.ForwardFromTo(i, i);
     LAYER_TIMING_STOP(forward, i);
   }
+
+  // Clear parameter diffs after communication is finished (that is, after 
+  // calling WaitGradientComm)
+  if (first)
+    root_solver_->net()->ClearParamDiffs();
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     if (!layer_need_backward[i]) {
@@ -160,6 +169,10 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   if (last) {
 #endif
       for (int i = 0; i < layers.size(); ++i) {
+#ifdef FW_OVERLAP_OPT
+        if (layer_finished_flags_[i])
+          continue;
+#endif
         if (IsSkipWaitGradient(i)) {
 #ifdef FW_OVERLAP_OPT
           finished_count++;
@@ -167,10 +180,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #endif
           continue;
         }
-#ifdef FW_OVERLAP_OPT
-        if (layer_finished_flags_[i])
-          continue;
-#endif
 
         WaitAndUpdateGradient(i);
 #ifdef FW_OVERLAP_OPT
@@ -190,7 +199,6 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 template <typename Dtype>
 Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
-  root_solver_->net()->ClearParamDiffs();
   for (int i = 0; i < iter_size; ++i) {
     loss += ForwardBackwardImpl(
       (i == 0), (i + 1 == iter_size));

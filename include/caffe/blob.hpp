@@ -109,7 +109,7 @@ class Blob {
     return shape_[CanonicalAxisIndex(index)];
   }
   inline int num_axes() const { return shape_.size(); }
-  inline int count() const { return count_; }
+  inline long count() const { return count_; }
 
   /**
    * @brief Compute the volume of a slice; i.e., the product of dimensions
@@ -332,8 +332,8 @@ class Blob {
   shared_ptr<SyncedMemory> shape_data_;
 #endif
   vector<int> shape_;
-  int count_;
-  int capacity_;
+  long count_;
+  long capacity_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
