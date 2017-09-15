@@ -6,6 +6,7 @@
 // ------------------------------------------------------------------
 
 #include "caffe/layers/fast_rcnn_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 

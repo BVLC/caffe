@@ -10,7 +10,6 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 
@@ -88,21 +87,6 @@ class Net {
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const { return phase_; }
 
-  /*
-  /// @brief returns the ids of the top blobs of layer i
-  inline const vector<int> & top_ids(int i) const {
-    CHECK_GE(i, 0) << "Invalid layer id";
-    CHECK_LT(i, top_id_vecs_.size()) << "Invalid layer id";
-    return top_id_vecs_[i];
-  }
-  /// @brief returns the ids of the bottom blobs of layer i
-  inline const vector<int> & bottom_ids(int i) const {
-    CHECK_GE(i, 0) << "Invalid layer id";
-    CHECK_LT(i, bottom_id_vecs_.size()) << "Invalid layer id";
-    return bottom_id_vecs_[i];
-  }
-  */
-
   bool has_blob(const string& blob_name) const;
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
@@ -120,16 +104,6 @@ class Net {
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
-
-  // Invoked at specific points during an iteration
-  class Callback {
-   protected:
-    virtual void run(int layer) = 0;
-
-    template <typename T>
-    friend class Net;
-  };
-
 
  protected:
   // Helpers for Init.

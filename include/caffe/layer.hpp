@@ -6,12 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "caffe/syncedmem.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer_factory.hpp"
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/util/math_functions.hpp"
 
 
 namespace caffe {

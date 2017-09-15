@@ -8,6 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/layers/crop_layer.hpp"
 #include "caffe/net.hpp"
+#include "caffe/util/math_functions.hpp"
 
 
 namespace caffe {

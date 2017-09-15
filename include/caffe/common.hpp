@@ -2,7 +2,7 @@
 #define CAFFE_COMMON_HPP_
 
 #include <memory>
-#include <gflags/gflags.h>
+//#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <climits>
@@ -22,6 +22,7 @@
 #define STRINGIFY(m) #m
 #define AS_STRING(m) STRINGIFY(m)
 
+/*
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
@@ -30,6 +31,7 @@
 #ifndef GFLAGS_GFLAGS_H_
 namespace gflags = google;
 #endif  // GFLAGS_GFLAGS_H_
+*/
 
 // Disable the copy and assignment operator for a class.
 #define DISABLE_COPY_AND_ASSIGN(classname) \
