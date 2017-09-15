@@ -8,6 +8,7 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifndef CPU_ONLY
 static constexpr size_t device_max_num = 32;
 static constexpr size_t pinned_memory_max_size = 128;
 
@@ -15,9 +16,11 @@ static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num>
     device_gpu_pools;
 
 static std::shared_timed_mutex gpu_pool_mutex;
+#endif
 
 namespace caffe {
 
+#ifndef CPU_ONLY
 void set_gpu_memory_pool(size_t memory_bytes) {
   uint8_t max_level = 27;
   size_t num = memory_bytes / ((size_t)1 << max_level);
@@ -44,6 +47,7 @@ static inline deepir::cuda_buddy_pool *get_gpu_memory_pool() {
   return device_gpu_pools[device_id] ? device_gpu_pools[device_id].get()
                                      : nullptr;
 }
+#endif
 
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
@@ -248,6 +252,7 @@ void SyncedMemory::check_device() {
 #endif
 }
 
+#ifndef CPU_ONLY
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr = nullptr;
 
@@ -271,5 +276,6 @@ void SyncedMemory::gpu_free(void *data) {
     CUDA_CHECK(cudaFree(data));
   }
 }
+#endif
 
 } // namespace caffe

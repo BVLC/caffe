@@ -3,6 +3,9 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#ifdef _WIN32
+#include <process.h>
+#endif
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"

@@ -15,6 +15,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"

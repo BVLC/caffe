@@ -1,7 +1,8 @@
 #include <algorithm>
 #include <chrono>
+#ifndef CPU_ONLY
 #include <cuda_profiler_api.h>
-#include <omp.h>
+#endif
 #include <set>
 #include <string>
 #include <utility>

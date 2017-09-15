@@ -5,9 +5,13 @@ set(Caffe_DEFINITIONS "")
 set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
-find_package(Boost 1.54 REQUIRED COMPONENTS system thread filesystem)
+find_package(Boost REQUIRED COMPONENTS system thread filesystem)
+if(WIN32)
+LINK_DIRECTORIES(C:/local/boost_1_64_0/lib32-msvc-14.1)
+endif()
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${Boost_LIBRARIES})
+message(status "${Boost_LIBRARIES}")
 
 find_package(DeepirBuddyAllocator REQUIRED)
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${DeepirBuddyAllocator_INCLUDE_DIRS})
@@ -34,12 +38,22 @@ if(USE_OPENMP)
 endif()
 
 # ---[ Google-glog
-include("cmake/External/glog.cmake")
+if (WIN32)
+ set(GLOG_INCLUDE_DIRS "C:/Program Files (x86)/glog/include")
+ set(GLOG_LIBRARIES "C:/Program Files (x86)/glog/lib/glog.lib")
+else ()
+  include("cmake/External/glog.cmake")
+endif()
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GLOG_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${GLOG_LIBRARIES})
 
 # ---[ Google-gflags
-include("cmake/External/gflags.cmake")
+if (WIN32)
+  set(GFLAGS_INCLUDE_DIRS "C:/Program Files (x86)/gflags/include")
+  set(GFLAGS_LIBRARIES "C:/Program Files (x86)/gflags/lib/gflags.lib")
+else ()
+  include("cmake/External/gflags.cmake")
+endif()
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GFLAGS_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
 

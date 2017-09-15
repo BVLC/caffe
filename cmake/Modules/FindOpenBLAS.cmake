@@ -22,14 +22,17 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         /usr/local/lib
         /usr/local/lib64
         /opt/OpenBLAS/lib
-        $ENV{OpenBLAS}cd
         $ENV{OpenBLAS}/lib
         $ENV{OpenBLAS_HOME}
         $ENV{OpenBLAS_HOME}/lib
  )
 
 FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS})
-FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS})
+IF(WIN32)
+  set(OpenBLAS_LIB "C:/code/OpenBLAS-v0.2.19-Win32/lib/libopenblas.a")
+ELSE()
+  FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS})
+ENDIF()
 
 SET(OpenBLAS_FOUND ON)
 

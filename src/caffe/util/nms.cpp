@@ -32,8 +32,8 @@ Dtype iou(const Dtype A[], const Dtype B[])
   return area / (A_area + B_area - area);
 }
 
-template static float iou(const float A[], const float B[]);
-template static double iou(const double A[], const double B[]);
+template  float iou(const float A[], const float B[]);
+template  double iou(const double A[], const double B[]);
 
 template <typename Dtype>
 void nms_cpu(const int num_boxes,
