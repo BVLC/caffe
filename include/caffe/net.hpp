@@ -81,6 +81,10 @@ class Net {
   inline const vector<shared_ptr<Layer<Dtype> > >& layers() const {
     return layers_;
   }
+  /// @brief returns the layers
+  inline vector<shared_ptr<Layer<Dtype> > >& mutable_layers() {
+    return layers_;
+  }
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const { return phase_; }
 

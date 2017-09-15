@@ -3,7 +3,7 @@
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <boost/make_shared.hpp>
+#include <boost/python.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -155,9 +155,8 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
 void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
-  shared_ptr<MemoryDataLayer<Dtype> > md_layer =
-    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
-  if (!md_layer) {
+  auto md_layer=dynamic_cast<MemoryDataLayer<Dtype> *> (net->mutable_layers()[0].get());
+  if (md_layer) {
     throw std::runtime_error("set_input_arrays may only be called if the"
         " first layer is a MemoryDataLayer");
   }
