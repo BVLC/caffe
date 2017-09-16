@@ -409,12 +409,14 @@ BOOST_PYTHON_MODULE(_caffe) {
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
 
+    /*
   bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
     "Timer", bp::init<>())
     .def("start", &Timer::Start)
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
+  */
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
