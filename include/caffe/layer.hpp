@@ -251,16 +251,6 @@ public:
                ? param_propagate_down_[param_id]
                : false;
   }
-  /**
-   * @brief Sets whether the layer should compute gradients w.r.t. a
-   *        parameter at a particular index given by param_id.
-   */
-  inline void set_param_propagate_down(const int param_id, const bool value) {
-    if (param_propagate_down_.size() <= param_id) {
-      param_propagate_down_.resize(param_id + 1, true);
-    }
-    param_propagate_down_[param_id] = value;
-  }
 
 protected:
   /** The protobuf that stores the layer parameters */

@@ -17,6 +17,8 @@ void InputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < num_top; ++i) {
       const int shape_index = (param.shape_size() == 1) ? 0 : i;
       top[i]->Reshape(param.shape(shape_index));
+      heights_.push_back(param.shape(shape_index).dim(2));
+      widths_.push_back(param.shape(shape_index).dim(3));
     }
   }
 }

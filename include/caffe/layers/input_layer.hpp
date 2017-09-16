@@ -30,9 +30,17 @@ class InputLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
 
+  const std::vector<int> &heights() { return heights_; }
+  const std::vector<int> &widths() { return widths_; }
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+
+ private:
+  std::vector<int> heights_;
+  std::vector<int> widths_;
+
 };
 
 }  // namespace caffe

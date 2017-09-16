@@ -65,8 +65,6 @@ namespace cv { class Mat; }
 
 namespace caffe {
 
-// We will use the boost shared_ptr instead of the new C++11 one mainly
-// because cuda does not work (at least now) well with C++11 features.
 using std::shared_ptr;
 
 // Common functions and classes from std that caffe often uses.
@@ -94,9 +92,6 @@ class Caffe {
  public:
   ~Caffe();
 
-  // Thread local context for Caffe. Moved to common.cpp instead of
-  // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
-  // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
   enum Brew { CPU, GPU };

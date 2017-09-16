@@ -161,25 +161,6 @@ void LRNLayer<Dtype>::WithinChannelForward(
   product_layer_->Forward(product_bottom_vec_, top);
 }
 
-
-
-/*
-template <typename Dtype>
-void LRNLayer<Dtype>::WithinChannelBackward(
-    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[0]) {
-    vector<bool> product_propagate_down(2, true);
-    product_layer_->Backward(top, product_propagate_down, product_bottom_vec_);
-    power_layer_->Backward(power_top_vec_, propagate_down, pool_top_vec_);
-    pool_layer_->Backward(pool_top_vec_, propagate_down, square_top_vec_);
-    square_layer_->Backward(square_top_vec_, propagate_down,
-                            square_bottom_vec_);
-    split_layer_->Backward(split_top_vec_, propagate_down, bottom);
-  }
-}
-*/
-
 #ifdef CPU_ONLY
 STUB_GPU(LRNLayer);
 STUB_GPU_FORWARD(LRNLayer, CrossChannelForward);
