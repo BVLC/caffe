@@ -204,7 +204,7 @@ public:
     shared_ptr<memory> create_output_memory(bool inplace = false);
     Dtype* get_memory_ptr(long offset = 0);
     shared_ptr<memory::desc> get_memory_desc();
-
+    size_t get_memory_count();
     void set_mkldnn_primitive(MKLDNNPrimitive<Dtype>& mprimitive) { CHECK(mprimitive.aprimitive); _mkldnn_primitive = mprimitive;  }
     MKLDNNPrimitive<Dtype>&  mkldnn_primitive() { return _mkldnn_primitive; }
     shared_ptr<primitive> aprimitive() const { return _mkldnn_primitive.aprimitive; }
