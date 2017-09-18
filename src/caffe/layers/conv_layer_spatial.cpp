@@ -1705,7 +1705,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
       int width_max, height_max, block_size_max;
       width_max = 14;
       height_max = 14;
-      block_size_max = 32;
+      block_size_max = 48;
       for (uint32_t width = width_max; width > 0; width--) {
         int candidate = 0;
         if (width > output_w_)
@@ -1725,7 +1725,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
           int actual_tile_x = kernel_w_ * dilation_w_
                               + (width - 1) * stride_w_ ;
           int tile_x = (actual_tile_x + 3) & ~3;
-          if (actual_tile_x % 4 != 0 && kernelCnt >= 2)
+          if ((actual_tile_x % 4 != 0 && kernelCnt >= 2) && width < 13)
             continue;
           int tile_y = kernel_h_ * dilation_h_ + (height - 1) * stride_h_;
           if (tile_x > (4 * simd_size))
