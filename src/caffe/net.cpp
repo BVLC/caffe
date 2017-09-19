@@ -771,6 +771,8 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
     param_compiled->add_layer()->CopyFrom(*layer_param);
   }
 
+  if(param.state().phase() == TEST) return;
+
   //Keep the mapping of the inplace blob's name and the layer's index
   //E.g if the xth layer's has in-place blob, we keep the blob's name as the key
   //while the layer's index as value.
@@ -815,12 +817,8 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
             const_cast<string&>(each_layer_pair[1]->bottom(i)).append("_x");
           }
         }
-        if (((each_layer_pair[0])->top_size() > 0) &&
-            ((each_layer_pair[0])
-                 ->bottom(0)
-                 .compare((each_layer_pair[0])->top(0)) == 0)) {
-          const_cast<string&>((each_layer_pair[0])->top(0)).append("_x");
-        }
+
+        const_cast<string&>((each_layer_pair[0])->top(0)).append("_x");
       }
     }
   }
@@ -895,8 +893,6 @@ void Net<Dtype>::GetNeedToCancelInplaceLayers(
   vector<const LayerParameter*> each_layer_pair;
 
   each_blob_list.erase(each_blob_list.begin());
-
-  std::reverse(each_blob_list.begin(), each_blob_list.end());
 
   for (auto blob_name : each_blob_list) {
     each_layer_pair.clear();
