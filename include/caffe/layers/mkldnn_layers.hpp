@@ -219,6 +219,11 @@ private:
                     , bwdd_top_diff_primitive, bwdd_weights_data_primitive
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t w_, h_;
+    
+    /* In case of (iter_size > 1) we need additional buffers */
+    shared_ptr<MKLDNNDiff<Dtype> > bwdw_weights_diff_iter, bwdw_bias_diff_iter;
+    shared_ptr<memory> bwdw_weights_diff_memory_iter, bwdw_bias_diff_memory_iter;
+    shared_ptr<Blob<Dtype> > bwdw_weights_diff_iter_blob, bwdw_bias_diff_iter_blob;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
