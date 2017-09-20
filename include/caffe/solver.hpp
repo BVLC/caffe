@@ -93,9 +93,6 @@ class Solver {
     return test_nets_;
   }
   int iter() const { return iter_; }
-  const vector<int>& mean_scores_output_ids(const int test_net_id) const {
-    return mean_scores_output_ids_[test_net_id];
-  }
   const vector<Dtype>& mean_scores(const int test_net_id) const {
     return mean_scores_[test_net_id];
   }
@@ -147,7 +144,6 @@ class Solver {
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
-  vector<vector<int> > mean_scores_output_ids_;
   vector<vector<Dtype> > mean_scores_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;

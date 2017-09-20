@@ -180,7 +180,6 @@ void Solver<Dtype>::InitTestNets() {
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
   mean_scores_.resize(num_test_net_instances);
-  mean_scores_output_ids_.resize(num_test_net_instances);
 }
 
 template <typename Dtype>
@@ -349,10 +348,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
             << ", Testing net (#" << test_net_id << ")";
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
       ShareTrainedLayersWith(net_.get());
-  vector<Dtype>& test_score = mean_scores_[test_net_id];
-  vector<int>& test_score_output_id = mean_scores_output_ids_[test_net_id];
-  test_score.clear();
-  test_score_output_id.clear();
+  vector<Dtype> test_score;
+  vector<int> test_score_output_id;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
@@ -403,6 +400,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+  vector<Dtype>& mean_scores = mean_scores_[test_net_id];
+  mean_scores.clear();
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -410,7 +409,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
-    test_score[i] = mean_score;  // Updates mean_scores_[test_net_id][i]
+    mean_scores.push_back(mean_score);
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
