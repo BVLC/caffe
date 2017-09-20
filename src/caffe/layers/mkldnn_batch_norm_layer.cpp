@@ -325,7 +325,7 @@ shared_ptr<memory> MKLDNNBatchNormLayer<Dtype>::GetStatsBatchMemoryInplace(
     shared_ptr<memory::primitive_desc> stats_mpd(
       new memory::primitive_desc(*stats_md, cpu_engine));
     shared_ptr<memory> stats(
-      new memory(*stats_mpd, buffer_memory->get_data_handle() + data_offset));
+      new memory(*stats_mpd, static_cast<Dtype*>(buffer_memory->get_data_handle()) + data_offset));
         return stats;
 }
 
