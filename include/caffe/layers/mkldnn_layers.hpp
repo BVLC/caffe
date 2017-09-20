@@ -178,6 +178,11 @@ private:
     int  pad_w_, pad_h_;
     mkldnn::algorithm  conv_algorithm;
 
+    /* In case of (iter_size > 1) we need additional buffers */
+    shared_ptr<MKLDNNDiff<Dtype> > bwdw_weights_diff_iter, bwdw_bias_diff_iter;
+    shared_ptr<memory> bwdw_weights_diff_memory_iter, bwdw_bias_diff_memory_iter;
+    shared_ptr<Blob<Dtype> > bwdw_weights_diff_iter_blob, bwdw_bias_diff_iter_blob;
+
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_weights_);
