@@ -155,9 +155,8 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
       DLOG(INFO) << "Using layout of " << mem_descr->name
               << " as input layout for " << this->layer_param_.name();
-      // copy shared_ptr
-      fwd_bottom_data_ = mem_descr;
 
+      fwd_bottom_data_->create_internal_layout(reluFwd_, dnnResourceSrc);
       fwd_top_data_   ->create_internal_layout(reluFwd_, dnnResourceDst);
       bwd_top_diff_   ->create_internal_layout(reluFwd_, dnnResourceDst);
       bwd_bottom_diff_->create_internal_layout(reluFwd_, dnnResourceSrc);

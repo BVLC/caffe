@@ -1,0 +1,16 @@
+train_net: "models/pascal_voc/VGG16/faster_rcnn_end2end/train.prototxt"
+base_lr: 0.001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 50000
+display: 20
+average_loss: 100
+# iter_size: 1
+momentum: 0.9
+weight_decay: 0.0005
+# We disable standard caffe solver snapshotting and implement our own snapshot
+# function
+snapshot: 0
+# We still use the snapshot prefix, though
+snapshot_prefix: "vgg16_faster_rcnn"
+iter_size: 2

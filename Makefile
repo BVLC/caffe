@@ -506,7 +506,7 @@ ifeq ($(MKL_EXTERNAL), 1)
 	MKL_LDFLAGS+=-Wl,-rpath,$(MKLROOT)/lib
 endif
 
-	COMMON_FLAGS += -DUSE_MKL
+	COMMON_FLAGS += -DUSE_MKL -DMKL_ILP64
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 
