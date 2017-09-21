@@ -55,6 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
+#include "caffe/layers/deconv_layer.hpp"
 #ifdef MKL2017_SUPPORTED
 #include "caffe/layers/mkl_layers.hpp"
 #endif
