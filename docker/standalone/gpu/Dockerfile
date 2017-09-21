@@ -1,6 +1,9 @@
 FROM nvidia/cuda:7.5-cudnn5-devel-ubuntu14.04
 MAINTAINER caffe-maint@googlegroups.com
 
+#ENV http_proxy proxy:port
+#ENV https_proxy proxy:port
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cmake \
