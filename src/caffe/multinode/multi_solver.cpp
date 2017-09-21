@@ -151,7 +151,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
         && layers[i]->layerOp->HasParameterSets()) {
       LAYER_TIMING_START();
       for (int j = 0; j < callbacks_.size(); ++j) {
-        callbacks_[j]->on_backward_finished(i, last);
+        callbacks_[j]->on_backward_finished(i);
       }
       LAYER_TIMING_STOP(startcomm, i);
     }

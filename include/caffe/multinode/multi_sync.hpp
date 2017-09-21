@@ -234,7 +234,7 @@ namespace caffe {
       DLOG(INFO) << "started iteration " << solver->root_solver()->iter();
     }
 
-    void launch_allreduce(int layer_id, int param_id) {
+    void launch_allreduce(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
       if (layer->layerOp == nullptr) {
         return;
@@ -250,10 +250,11 @@ namespace caffe {
       for (int i = 0; i < param_ids.size(); ++i) {
         if (!layer->ParamNeedReduce(i)) continue;
         if (CAN_USE_PRV_DIFF(net_params[param_ids[i]])) {
-          layer->layerOp->GetParameterSet(i)->StartGradientComm((void *) net_params[param_ids[i]]->mutable_prv_diff());
+          layer->layerOp->GetParameterSet(i)->StartGradientComm(
+              (void *) net_params[param_ids[i]]->mutable_prv_diff());
         } else {
           layer->layerOp->GetParameterSet(i)->StartGradientComm(
-            (void *) net_params[param_ids[i]]->mutable_cpu_diff());
+              (void *) net_params[param_ids[i]]->mutable_cpu_diff());
         }
       }
     }
@@ -394,28 +395,28 @@ namespace caffe {
       }
     }
 
-    void on_backward_finished(int layer_id, bool last) {
+    void on_backward_finished(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      mn::Distribution &distrib = layer->GetDistribution();
       if (layer->layerOp == nullptr) {
         return;
       }
 
-      std::vector<int> &param_ids = layer_param_ids[layer_id];
-      // TODO: descending is faster?
-      for (int i = param_ids.size() - 1; i >= 0; --i) {
-        if (!layer->ParamNeedReduce(i)) continue;
-        if (mn::use_param_server()) {
+      if (mn::use_param_server()) {
+        std::vector<int> &param_ids = layer_param_ids[layer_id];
+        // TODO: descending is faster?
+        for (int i = param_ids.size() - 1; i >= 0; --i) {
+          if (!layer->ParamNeedReduce(i)) continue;
           launch_reduce(layer_id, param_ids[i]);
+          mn::Distribution &distrib = layer->GetDistribution();
           if (distrib.is_root(MLSL::GroupType::GT_DATA)) {
             check_and_launch_comm_to_ps();
             check_and_launch_broadcast();
           } else {
             launch_param_broadcast(layer_id, param_ids[i]);
           }
-        } else {
-          launch_allreduce(layer_id, param_ids[i]);
         }
+      } else {
+        launch_allreduce(layer_id);
       }
     }
 
