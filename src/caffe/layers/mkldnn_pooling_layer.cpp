@@ -117,7 +117,7 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     width_out_ = static_cast<int>(ceil(static_cast<float>(
         bottom[0]->width() + pad_r_ + pad_l_ - kernel_w_) / stride_w_)) + 1;
 
-    if (pad_t_ || pad_b_ || pad_r_ || pad_l_) {
+    if (pad_t_ || pad_b_ || pad_r_ || pad_l_ || kernel_h_ == 1 || kernel_w_ == 1) {
         // If we have padding, ensure that the last pooling starts strictly
         // inside the image (instead of at the padding); otherwise clip the last.
         if ((height_out_ - 1) * stride_h_ >= bottom[0]->height() + pad_t_) {
