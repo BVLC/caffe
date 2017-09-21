@@ -1,76 +1,49 @@
-# Caffe
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+# Building Caffe using standalone Dockerfile
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
+The `standalone` subfolder contains docker files for generating both CPU and GPU executable images for Caffe. The images can be built using make, or by running:
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+```
+docker build -t caffe:cpu standalone/cpu-ubuntu
+```
+for example. (Here `ubuntu` can be substituted for `centos`, `gpu` can be substituted for `cpu`, but to keep the readme simple, only the `cpu` case will be discussed in detail).
 
-and step-by-step examples.
+Note that the GPU standalone requires a CUDA 7.5 capable driver to be installed on the system and [nvidia-docker] for running the Docker containers. Here it is generally sufficient to use `nvidia-docker` instead of `docker` in any of the commands mentioned.
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Running Caffe using the docker image
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+In order to test the Caffe image, run:
+```
+docker run -ti caffe:cpu caffe --version
+```
+which should show a message like:
+```
+caffe version 1.0.0-rc3
+```
 
-Happy brewing!
+One can also build and run the Caffe tests in the image using:
+```
+docker run -ti caffe:cpu bash -c "cd /opt/caffe/build; make runtest"
+```
 
+In order to get the most out of the caffe image, some more advanced `docker run` options could be used. For example, running:
+```
+docker run -ti caffe:cpu caffe time -model /opt/caffe/models/bvlc_alexnet/deploy.prototxt -engine MKLDNN
+```
+will measure the performance of AlexNet. You can also run caffe train as well. Note that docker runs all commands as root by default, and thus any output files (e.g. snapshots) generated will be owned by the root user. In order to ensure that the current user is used instead, the following command can be used:
+```
+docker run -ti --volume=$(pwd):/workspace -u $(id -u):$(id -g) caffe:cpu caffe train --solver=/opt/caffe/models/bvlc_alexnet/solver.prototxt -engine MKLDNN
+```
+where the `-u` Docker command line option runs the commands in the container as the specified user, and the shell command `id` is used to determine the user and group ID of the current user. Note that the Caffe docker images have `/workspace` defined as the default working directory. This can be overridden using the `--workdir=` Docker command line option. Note that you need to prepare dataset before training.
 
-# SSD: Single Shot MultiBox Detector
-This repository contains merged code issued as pull request to BVLC caffe written by:
-[Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](https://www.linkedin.com/in/dragomiranguelov), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/), [Cheng-Yang Fu](http://www.cs.unc.edu/~cyfu/), [Alexander C. Berg](http://acberg.com).
+# Other use-cases
 
-Original branch can be found at https://github.com/weiliu89/caffe/tree/ssd.
+Although running the `caffe` command in the docker containers as described above serves many purposes, the container can also be used for more interactive use cases. For example, specifying `bash` as the command instead of `caffe` yields a shell that can be used for interactive tasks. (Since the caffe build requirements are included in the container, this can also be used to build and run local versions of caffe).
 
-Read our [wiki page](https://github.com/intel/caffe/wiki/SSD:-Single-Shot-MultiBox-Detector) for more details.
+Another use case is to run python scripts that depend on `caffe`'s Python modules. Using the `python` command instead of `bash` or `caffe` will allow this, and an interactive interpreter can be started by running:
+```
+docker run -ti caffe:cpu python
+```
+(`ipython` is also available in the container).
 
-# Intel® Distribution of Caffe*
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
-
-## Building
-Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
-When OpenMP is available will be used automatically.
-
-## Running
-Run procedure is the same as on bvlc-caffe-master branch.
-
-Current implementation uses OpenMP threads. By default the number of OpenMP threads is set
-to the number of CPU cores. Each one thread is bound to a single core to achieve best
-performance results. It is however possible to use own configuration by providing right
-one through OpenMP environmental variables like OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
-
-If some system tool like numactl is used to control CPU affinity, by default caffe will prevent
-to use more than one thread per core. When less than required cores are specified, caffe will
-limit execution of OpenMP threads to specified cores only.
-
-## Best performance solution
-Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
-
-## Multinode Training
-Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
-
-To understand how it works and read some tutorials, go to our Wiki. Start from [Multinode guide](https://github.com/intel/caffe/wiki/Multinode-guide).
-
-## License and Citation
-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BVLC reference models are released for unrestricted use.
-
-Please cite Caffe in your publications if it helps your research:
-
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
-
-***
- *Other names and brands may be claimed as the property of others
-
-
+Since the `caffe/python` folder is also added to the path, the utility executable scripts defined there can also be used as executables. This includes `draw_net.py`, `classify.py`, and `detect.py`
 
