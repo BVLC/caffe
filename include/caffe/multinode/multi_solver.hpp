@@ -74,7 +74,7 @@ class MultiSolver {
   protected:
     virtual ~Callback() {
     }
-    virtual void on_backward_finished(int layer_id, bool last) = 0;
+    virtual void on_backward_finished(int layer_id) = 0;
     virtual void on_delwt_wait(int layer_id) = 0;
     virtual void apply_updates(int layer_id) = 0;
 
