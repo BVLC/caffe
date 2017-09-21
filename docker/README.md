@@ -1,11 +1,11 @@
-# Caffe standalone Dockerfiles.
+# Building Caffe using standalone Dockerfile
 
 The `standalone` subfolder contains docker files for generating both CPU and GPU executable images for Caffe. The images can be built using make, or by running:
 
 ```
-docker build -t caffe:cpu standalone/cpu
+docker build -t caffe:cpu standalone/cpu-ubuntu
 ```
-for example. (Here `gpu` can be substituted for `cpu`, but to keep the readme simple, only the `cpu` case will be discussed in detail).
+for example. (Here `ubuntu` can be substituted for `centos`, `gpu` can be substituted for `cpu`, but to keep the readme simple, only the `cpu` case will be discussed in detail).
 
 Note that the GPU standalone requires a CUDA 7.5 capable driver to be installed on the system and [nvidia-docker] for running the Docker containers. Here it is generally sufficient to use `nvidia-docker` instead of `docker` in any of the commands mentioned.
 
@@ -17,7 +17,6 @@ docker run -ti caffe:cpu caffe --version
 ```
 which should show a message like:
 ```
-libdc1394 error: Failed to initialize libdc1394
 caffe version 1.0.0-rc3
 ```
 
@@ -28,15 +27,13 @@ docker run -ti caffe:cpu bash -c "cd /opt/caffe/build; make runtest"
 
 In order to get the most out of the caffe image, some more advanced `docker run` options could be used. For example, running:
 ```
-docker run -ti --volume=$(pwd):/workspace caffe:cpu caffe train --solver=example_solver.prototxt
+docker run -ti caffe:cpu caffe time -model /opt/caffe/models/bvlc_alexnet/deploy.prototxt -engine MKLDNN
 ```
-will train a network defined in the `example_solver.prototxt` file in the current directory (`$(pwd)` is maped to the container volume `/workspace` using the `--volume=` Docker flag).
-
-Note that docker runs all commands as root by default, and thus any output files (e.g. snapshots) generated will be owned by the root user. In order to ensure that the current user is used instead, the following command can be used:
+will measure the performance of AlexNet. You can also run caffe train as well. Note that docker runs all commands as root by default, and thus any output files (e.g. snapshots) generated will be owned by the root user. In order to ensure that the current user is used instead, the following command can be used:
 ```
-docker run -ti --volume=$(pwd):/workspace -u $(id -u):$(id -g) caffe:cpu caffe train --solver=example_solver.prototxt
+docker run -ti --volume=$(pwd):/workspace -u $(id -u):$(id -g) caffe:cpu caffe train --solver=/opt/caffe/models/bvlc_alexnet/solver.prototxt -engine MKLDNN
 ```
-where the `-u` Docker command line option runs the commands in the container as the specified user, and the shell command `id` is used to determine the user and group ID of the current user. Note that the Caffe docker images have `/workspace` defined as the default working directory. This can be overridden using the `--workdir=` Docker command line option.
+where the `-u` Docker command line option runs the commands in the container as the specified user, and the shell command `id` is used to determine the user and group ID of the current user. Note that the Caffe docker images have `/workspace` defined as the default working directory. This can be overridden using the `--workdir=` Docker command line option. Note that you need to prepare dataset before training.
 
 # Other use-cases
 
