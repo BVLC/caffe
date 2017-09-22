@@ -121,7 +121,7 @@ public:
 
     virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
         const vector<Blob<Dtype>*>& top) {
-        top[0]->Reshape(std::vector<int>{ 1, 1, max_proposals_, 5 });
+        top[0]->Reshape(std::vector<int>{ max_proposals_, 5 });
     }
 
     virtual inline const char* type() const { return "SimplerNMS"; }
