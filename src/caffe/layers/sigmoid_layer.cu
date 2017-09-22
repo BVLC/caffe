@@ -29,14 +29,6 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
 
-template <typename Dtype>
-__global__ void SigmoidBackward(const int n, const Dtype* in_diff,
-    const Dtype* out_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n) {
-    const Dtype sigmoid_x = out_data[index];
-    out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);
-  }
-}
 
 INSTANTIATE_LAYER_GPU_FUNCS(SigmoidLayer);
 

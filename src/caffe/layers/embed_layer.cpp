@@ -42,7 +42,6 @@ void EmbedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
   }  // parameter initialization
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 template <typename Dtype>

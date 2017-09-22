@@ -67,18 +67,6 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-__global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
-    const int blob_idx, const int* mask, Dtype* bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads) {
-    Dtype gradient = 0;
-    if (mask[index] == blob_idx) {
-      gradient += top_diff[index];
-    }
-    bottom_diff[index] = gradient;
-  }
-}
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(EltwiseLayer);
 

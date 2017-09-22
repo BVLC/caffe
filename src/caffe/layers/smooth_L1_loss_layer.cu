@@ -61,21 +61,6 @@ void SmoothL1LossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->mutable_cpu_data()[0] = loss / bottom[0]->num();
 }
 
-template <typename Dtype>
-__global__ void SmoothL1Backward(const int n, const Dtype* in, Dtype* out,
-    Dtype sigma2) {
-  // f'(x) = sigma * sigma * x         if |x| < 1 / sigma / sigma
-  //       = sign(x)                   otherwise
-  CUDA_KERNEL_LOOP(index, n) {
-    Dtype val = in[index];
-    Dtype abs_val = abs(val);
-    if (abs_val < 1.0 / sigma2) {
-      out[index] = sigma2 * val;
-    } else {
-      out[index] = (Dtype(0) < val) - (val < Dtype(0));
-    }
-  }
-}
 
 INSTANTIATE_LAYER_GPU_FUNCS(SmoothL1LossLayer);
 

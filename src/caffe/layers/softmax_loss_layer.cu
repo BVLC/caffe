@@ -63,30 +63,6 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   }
 }
 
-template <typename Dtype>
-__global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
-          const Dtype* label, Dtype* bottom_diff, const int num, const int dim,
-          const int spatial_dim, const bool has_ignore_label_,
-          const int ignore_label_, Dtype* counts) {
-  const int channels = dim / spatial_dim;
-
-  CUDA_KERNEL_LOOP(index, nthreads) {
-    const int n = index / spatial_dim;
-    const int s = index % spatial_dim;
-    const int label_value = static_cast<int>(label[n * spatial_dim + s]);
-
-    if (has_ignore_label_ && label_value == ignore_label_) {
-      for (int c = 0; c < channels; ++c) {
-        bottom_diff[n * dim + c * spatial_dim + s] = 0;
-      }
-      counts[index] = 0;
-    } else {
-      bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;
-      counts[index] = 1;
-    }
-  }
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxWithLossLayer);
 
 }  // namespace caffe

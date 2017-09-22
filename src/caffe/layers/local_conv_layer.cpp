@@ -315,7 +315,6 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
   }
 
   this->loc_idx_to_offset_.Reshape(this->local_region_num_h_, this->local_region_num_w_, 2, 1);
-  this->param_propagate_down_.resize(this->blobs_.size(),true);
 }
 
 template <typename Dtype>

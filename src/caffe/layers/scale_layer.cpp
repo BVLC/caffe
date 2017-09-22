@@ -69,7 +69,6 @@ void ScaleLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     bias_propagate_down_.resize(1, false);
   }
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 template <typename Dtype>

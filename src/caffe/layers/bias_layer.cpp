@@ -33,7 +33,6 @@ void BiasLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(param.filler()));
     filler->Fill(this->blobs_[0].get());
   }
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 template <typename Dtype>

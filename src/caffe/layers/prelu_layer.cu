@@ -17,32 +17,6 @@ __global__ void PReLUForward(const int n, const int channels, const int dim,
   }
 }
 
-// CUDA kernel for bottom backward
-template <typename Dtype>
-__global__ void PReLUBackward(const int n, const int channels, const int dim,
-    const Dtype* in_diff, const Dtype* in_data, Dtype* out_diff,
-    const Dtype* slope_data, const int div_factor) {
-  CUDA_KERNEL_LOOP(index, n) {
-    int c = (index / dim) % channels / div_factor;
-    out_diff[index] = in_diff[index] * ((in_data[index] > 0)
-        + (in_data[index] <= 0) * slope_data[c]);
-  }
-}
-
-// CUDA kernel for element-wise parameter backward
-template <typename Dtype>
-__global__ void PReLUParamBackward(const int n,
-    const int rows, const int rowPitch, const Dtype* in_diff,
-    const Dtype* in_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
-    for ( int k = 1; k < rows; k++ ) {
-        out_diff[index] += in_diff[index + k*rowPitch]
-           * in_data[index + k*rowPitch] * (in_data[index + k*rowPitch] <= 0);
-    }
-  }
-}
-
 template <typename Dtype>
 void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {

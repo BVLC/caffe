@@ -27,16 +27,6 @@ void ELULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   CUDA_POST_KERNEL_CHECK;
 }
 
-template <typename Dtype>
-__global__ void ELUBackward(const int n, const Dtype* in_diff,
-    const Dtype* out_data, const Dtype* in_data,
-    Dtype* out_diff, Dtype alpha) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_data[index] > 0 ? in_diff[index] :
-        in_diff[index] * (out_data[index] + alpha);
-  }
-}
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(ELULayer);
 

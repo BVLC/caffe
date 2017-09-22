@@ -120,31 +120,6 @@ public:
   inline Dtype Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
                        const vector<std::shared_ptr<Blob<Dtype>>> &top);
   /**
-   * @brief Given the top blob error gradients, compute the bottom blob error
-   *        gradients.
-   *
-   * @param top
-   *     the output blobs, whose diff fields store the gradient of the error
-   *     with respect to themselves
-   * @param propagate_down
-   *     a vector with equal length to bottom, with each index indicating
-   *     whether to propagate the error gradients down to the bottom blob at
-   *     the corresponding index
-   * @param bottom
-   *     the input blobs, whose diff fields will store the gradient of the error
-   *     with respect to themselves after Backward is run
-   *
-   * The Backward wrapper calls the relevant device wrapper function
-   * (Backward_cpu or Backward_gpu) to compute the bottom blob diffs given the
-   * top blob diffs.
-   *
-   * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
-  inline void Backward(const vector<Blob<Dtype> *> &top,
-                       const vector<bool> &propagate_down,
-                       const vector<Blob<Dtype> *> &bottom);
-
-   */
-  /**
    * @brief Returns the vector of learnable parameter blobs.
    */
   vector<shared_ptr<Blob<Dtype>>> &blobs() { return blobs_; }
@@ -239,19 +214,6 @@ public:
     return true;
   }
 
-  /**
-   * @brief Specifies whether the layer should compute gradients w.r.t. a
-   *        parameter at a particular index given by param_id.
-   *
-   * You can safely ignore false values and always compute gradients
-   * for all parameters, but possibly with wasteful computation.
-   */
-  inline bool param_propagate_down(const int param_id) {
-    return (param_propagate_down_.size() > param_id)
-               ? param_propagate_down_[param_id]
-               : false;
-  }
-
 protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
@@ -259,8 +221,6 @@ protected:
   Phase phase_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype>>> blobs_;
-  /** Vector indicating whether to compute the diff of each param blob. */
-  vector<bool> param_propagate_down_;
 
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */

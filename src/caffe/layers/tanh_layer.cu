@@ -26,15 +26,6 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   CUDA_POST_KERNEL_CHECK;
 }
 
-template <typename Dtype>
-__global__ void TanHBackward(const int n, const Dtype* in_diff,
-    const Dtype* out_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n) {
-    Dtype tanhx = out_data[index];
-    out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);
-  }
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(TanHLayer);
 
 

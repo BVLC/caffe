@@ -31,15 +31,6 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
 
-template <typename Dtype>
-__global__ void ReLUBackward(const int n, const Dtype* in_diff,
-    const Dtype* in_data, Dtype* out_diff, Dtype negative_slope) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_diff[index] * ((in_data[index] > 0)
-        + (in_data[index] <= 0) * negative_slope);
-  }
-}
-
 INSTANTIATE_LAYER_GPU_FUNCS(ReLULayer);
 
 

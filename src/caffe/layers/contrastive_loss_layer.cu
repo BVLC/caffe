@@ -50,35 +50,6 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
-template <typename Dtype>
-__global__ void CLLBackward(const int count, const int channels,
-    const Dtype margin, const bool legacy_version, const Dtype alpha,
-    const Dtype* y, const Dtype* diff, const Dtype* dist_sq,
-    Dtype *bottom_diff) {
-  CUDA_KERNEL_LOOP(i, count) {
-    int n = i / channels;  // the num index, to access y and dist_sq
-    if (static_cast<int>(y[n])) {  // similar pairs
-      bottom_diff[i] = alpha * diff[i];
-    } else {  // dissimilar pairs
-      Dtype mdist(0.0);
-      Dtype beta(0.0);
-      if (legacy_version) {
-        mdist = (margin - dist_sq[n]);
-        beta = -alpha;
-      } else {
-        Dtype dist = sqrt(dist_sq[n]);
-        mdist = (margin - dist);
-        beta = -alpha * mdist / (dist + Dtype(1e-4)) * diff[i];
-      }
-      if (mdist > 0.0) {
-        bottom_diff[i] = beta;
-      } else {
-        bottom_diff[i] = 0;
-      }
-    }
-  }
-}
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(ContrastiveLossLayer);
 

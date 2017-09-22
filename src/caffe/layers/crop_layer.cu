@@ -35,20 +35,6 @@ __global__ void crop_kernel_forward(const int nthreads,
 }
 
 template <typename Dtype>
-__global__ void crop_kernel_backward(const int nthreads,
-    const int ndims,
-    const int* src_strides,
-    const int* dest_strides,
-    const int* offsets,
-    Dtype* src, const Dtype* dest) {
-  CUDA_KERNEL_LOOP(index, nthreads) {
-    int src_index = compute_uncropped_index(
-        index, ndims, src_strides, dest_strides, offsets);
-    src[src_index] = dest[index];
-  }
-}
-
-template <typename Dtype>
 void CropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
