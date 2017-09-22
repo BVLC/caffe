@@ -81,8 +81,10 @@ if(UNIX OR APPLE)
     # though it uses -pie linker option that require -fPIE during compilation. Checksec
     # shows that it generates correct PIE anyway if only -pie is provided.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
-    # auto enable SGD Fusion if use intel compiler
+    # Auto enable SGD Fusion if use intel compiler
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
+    # Enable processor-specific optimization
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST")
   endif()
   
   # Generic flags.
