@@ -86,7 +86,7 @@ static void CheckBlob(const Blob<Dtype>& blob, const Blob<Dtype>& ref,
 }
 
 static float rpn_cls_prob_reshape_data[] = {
-                //featuremap0,  ft1,    ft2,    ft3
+                //feature@00,  ft@01,  ft@10,  ft@11
 //not an object, do not care, just fill with zero
     /*anchor0*/    0,           0,      0,      0,
     /*anchor1*/    0,           0,      0,      0,
@@ -98,7 +98,7 @@ static float rpn_cls_prob_reshape_data[] = {
 };
 
 static float rpn_bbox_pred_data[] = {
-            //featuremap0,  ft1,    ft2,    ft3
+            //feature@00,  ft@01,  ft@10,  ft@11
 //anchor0:
     /*dx0*/   0.9,        0.01,   0,      0.02,
     /*dy0*/   0.03,        -0.02,  0.1,    0.01,
