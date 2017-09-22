@@ -284,7 +284,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             batch_size = layer_param.memory_data_param().batch_size();
         else if (!layer_param.type().compare("WindowData"))
             batch_size = layer_param.window_data_param().batch_size();
-        else if (!layer_param.type().compare("Input"))
+        else if (!layer_param.type().compare("Input")
+            && layer_param.input_param().shape(0).dim().size())
             batch_size = layer_param.input_param().shape(0).dim(0);
 
         if (caffe::TRAIN == param.state().phase()) {
