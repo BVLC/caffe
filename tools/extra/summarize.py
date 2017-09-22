@@ -10,7 +10,7 @@ computation you expect.
 """
 
 from caffe.proto import caffe_pb2
-from google import protobuf
+from google.protobuf import text_format
 import re
 import argparse
 
@@ -22,7 +22,7 @@ DISCONNECTED_COLOR = '41'
 def read_net(filename):
     net = caffe_pb2.NetParameter()
     with open(filename) as f:
-        protobuf.text_format.Parse(f.read(), net)
+        text_format.Parse(f.read(), net)
     return net
 
 def format_param(param):
