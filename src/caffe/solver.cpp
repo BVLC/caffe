@@ -705,7 +705,12 @@ void Solver<Dtype>::TestClassification(const int test_net_id) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
     const string& output_name = test_net->blob_names()[output_blob_index];
-    const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
+    const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index]
+#ifdef USE_MLSL
+      * mn::get_distrib()->get_data_parts()
+#endif
+      ;
+
     ostringstream loss_msg_stream;
 #ifdef USE_MLSL
     const Dtype mean_score =
