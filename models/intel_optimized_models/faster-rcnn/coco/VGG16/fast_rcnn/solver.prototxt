@@ -1,4 +1,4 @@
-train_net: "models/coco/VGG16/fast_rcnn/train.prototxt"
+train_net: "../../models/intel_optimized_models/faster-rcnn/coco/VGG16/fast_rcnn/train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1

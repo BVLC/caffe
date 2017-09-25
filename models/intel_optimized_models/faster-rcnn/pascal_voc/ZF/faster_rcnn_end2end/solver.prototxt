@@ -1,4 +1,4 @@
-train_net: "models/pascal_voc/ZF/faster_rcnn_end2end/train.prototxt"
+train_net: "../../models/intel_optimized_models/faster-rcnn/pascal_voc/ZF/faster_rcnn_end2end/train.prototxt"
 
 base_lr: 0.001
 lr_policy: "step"

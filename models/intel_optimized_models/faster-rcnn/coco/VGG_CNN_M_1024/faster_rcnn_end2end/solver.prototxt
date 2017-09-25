@@ -1,8 +1,8 @@
-train_net: "models/coco/VGG_CNN_M_1024/fast_rcnn/train.prototxt"
+train_net: "../../models/intel_optimized_models/faster-rcnn/coco/VGG_CNN_M_1024/faster_rcnn_end2end/train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
-stepsize: 200000
+stepsize: 350000
 display: 20
 average_loss: 100
 momentum: 0.9
@@ -11,5 +11,4 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "vgg_cnn_m_1024_fast_rcnn"
-#debug_info: true
+snapshot_prefix: "vgg_cnn_m_1024_faster_rcnn"
