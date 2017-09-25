@@ -272,6 +272,7 @@ void SyncedMemory::gpu_free(void *data) {
     return;
   }
   auto pool = get_gpu_memory_pool();
+  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
   if (!pool || !pool->free_with_lock(data)) {
     CUDA_CHECK(cudaFree(data));
   }
