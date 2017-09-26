@@ -8136,6 +8136,88 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#include \"header.cl\"",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT
+"void TEMPLATE(BBoxTransformInv, Dtype)(global float *box, Dtype *delta, int anchor_shift_x,",    // NOLINT
+"int anchor_shift_y, Dtype *pred_box /*output: corrected bboxes*/)",    // NOLINT
+"{",    // NOLINT
+"float width = box[2] - box[0] + 1;",    // NOLINT
+"float height = box[3] - box[1] + 1;",    // NOLINT
+"float ctr_x = box[0] + 0.5f * width;",    // NOLINT
+"float ctr_y = box[1] + 0.5f * height;",    // NOLINT
+"",    // NOLINT
+"float pred_ctr_x = delta[0] * width + ctr_x + anchor_shift_x;",    // NOLINT
+"float pred_ctr_y = delta[1] * height + ctr_y + anchor_shift_y;",    // NOLINT
+"float pred_w = exp(delta[2]) * width;",    // NOLINT
+"float pred_h = exp(delta[3]) * height;",    // NOLINT
+"",    // NOLINT
+"pred_box[0] = pred_ctr_x - 0.5f * pred_w; // right",    // NOLINT
+"pred_box[1] = pred_ctr_y - 0.5f * pred_h; // top",    // NOLINT
+"pred_box[2] = pred_ctr_x + 0.5f * pred_w; // left",    // NOLINT
+"pred_box[3] = pred_ctr_y + 0.5f * pred_h; // bottom",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"void TEMPLATE(ClipBoxes, Dtype)(Dtype *pred_box, int img_width, int img_height)",    // NOLINT
+"{",    // NOLINT
+"//TODO: handle scale (im_info[3])",    // NOLINT
+"pred_box[0] = fmax(fmin(pred_box[0], (Dtype)img_width - (Dtype)1), (Dtype)0); // right >= 0",    // NOLINT
+"pred_box[1] = fmax(fmin(pred_box[1], (Dtype)img_height - (Dtype)1), (Dtype)0); // top >= 0",    // NOLINT
+"pred_box[2] = fmax(fmin(pred_box[2], (Dtype)img_width - (Dtype)1), (Dtype)0); // bottom < im_shape[1]",    // NOLINT
+"pred_box[3] = fmax(fmin(pred_box[3], (Dtype)img_height - (Dtype)1), (Dtype)0); // left < im_shape[0]",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(proposalForward, Dtype)(",    // NOLINT
+"global Dtype * bottom_deltas,",    // NOLINT
+"global float *anchors,",    // NOLINT
+"global Dtype *probs,",    // NOLINT
+"int image_height,",    // NOLINT
+"int image_width,",    // NOLINT
+"int num_anchors,",    // NOLINT
+"int feat_stride,",    // NOLINT
+"int feature_map_size,",    // NOLINT
+"int feature_map_width,",    // NOLINT
+"int min_bbox_size,",    // NOLINT
+"global Dtype *outProposal)",    // NOLINT
+"{",    // NOLINT
+"int col_index = get_global_id(0);",    // NOLINT
+"int row_index = get_global_id(1);",    // NOLINT
+"int anchor_index = get_global_id(2);",    // NOLINT
+"int anchor_shift_y = row_index * feat_stride;",    // NOLINT
+"int anchor_shift_x = col_index * feat_stride;",    // NOLINT
+"{",    // NOLINT
+"int location_index = feature_map_size * anchor_index * 4 + row_index *  feature_map_width + col_index;",    // NOLINT
+"global Dtype *bottom_ptr = bottom_deltas + location_index;",    // NOLINT
+"Dtype bbox_delta[4];",    // NOLINT
+"bbox_delta[0] = bottom_ptr[0];",    // NOLINT
+"bbox_delta[1] = bottom_ptr[feature_map_size];",    // NOLINT
+"bbox_delta[2] = bottom_ptr[feature_map_size * 2];",    // NOLINT
+"bbox_delta[3] = bottom_ptr[feature_map_size * 3];",    // NOLINT
+"",    // NOLINT
+"int prob_index = anchor_index * feature_map_size + row_index * feature_map_width + col_index + num_anchors * feature_map_size;",    // NOLINT
+"Dtype proposal_confidence = probs[prob_index];",    // NOLINT
+"",    // NOLINT
+"global float * anchor = anchors + anchor_index * 4;",    // NOLINT
+"Dtype proposals[4];",    // NOLINT
+"TEMPLATE(BBoxTransformInv, Dtype)(anchor, bbox_delta, anchor_shift_x, anchor_shift_y, proposals); //shift anchor and add delta fix",    // NOLINT
+"TEMPLATE(ClipBoxes, Dtype)(proposals, image_width, image_height);",    // NOLINT
+"",    // NOLINT
+"Dtype bbox_w = proposals[2] - proposals[0] + 1;",    // NOLINT
+"Dtype bbox_h = proposals[3] - proposals[1] + 1;",    // NOLINT
+"int outI = anchor_index * feature_map_size + row_index * feature_map_width + col_index;",    // NOLINT
+"if (bbox_w < min_bbox_size || bbox_h < min_bbox_size) {",    // NOLINT
+"outProposal[outI * 5 + 1] = -1;",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"outProposal[outI * 5] = proposal_confidence;",    // NOLINT
+"outProposal[outI * 5 + 1] = proposals[0];",    // NOLINT
+"outProposal[outI * 5 + 2] = proposals[1];",    // NOLINT
+"outProposal[outI * 5 + 3] = proposals[2];",    // NOLINT
+"outProposal[outI * 5 + 4] = proposals[3];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(reorg, Dtype)(const int_tp n,__global const Dtype* x,",    // NOLINT
 "int_tp w, int_tp h, int_tp c,",    // NOLINT
 "int_tp batch, int_tp stride, int_tp forward,",    // NOLINT
@@ -8174,6 +8256,157 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+""},   // NOLINT
+    {"#ifndef __OPENCL_VERSION__",    // NOLINT
+"#include \"header.cl\"",    // NOLINT
+"#endif",    // NOLINT
+"",    // NOLINT
+"#define OCL_KERNEL_LOOP(i, n)  for (int i = get_global_id(0); i < (n); i += get_global_size(0))",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ROIPoolForward, Dtype)(",    // NOLINT
+"const int nthreads, const __global Dtype* bottom_data,",    // NOLINT
+"const KERNEL_ARG_DTYPE spatial_scale, const int channels, const int height,",    // NOLINT
+"const int width, const int pooled_height, const int pooled_width,",    // NOLINT
+"__global Dtype* bottom_rois, __global Dtype* top_data, __global int* argmax_data) {",    // NOLINT
+"OCL_KERNEL_LOOP(index, nthreads) {",    // NOLINT
+"int pw = index % pooled_width;",    // NOLINT
+"int ph = (index / pooled_width) % pooled_height;",    // NOLINT
+"int c = (index / pooled_width / pooled_height) % channels;",    // NOLINT
+"int n = index / pooled_width / pooled_height / channels;",    // NOLINT
+"",    // NOLINT
+"bottom_rois += n * 5;",    // NOLINT
+"int roi_batch_ind = bottom_rois[0];",    // NOLINT
+"int roi_start_w = round(bottom_rois[1] * spatial_scale);",    // NOLINT
+"int roi_start_h = round(bottom_rois[2] * spatial_scale);",    // NOLINT
+"int roi_end_w = round(bottom_rois[3] * spatial_scale);",    // NOLINT
+"int roi_end_h = round(bottom_rois[4] * spatial_scale);",    // NOLINT
+"",    // NOLINT
+"// Force malformed ROIs to be 1x1",    // NOLINT
+"int roi_width = max(roi_end_w - roi_start_w + 1, 1);",    // NOLINT
+"int roi_height = max(roi_end_h - roi_start_h + 1, 1);",    // NOLINT
+"",    // NOLINT
+"// The following computation of hstart, wstart, hend, wend is",    // NOLINT
+"// done with integers due to floating precision errors.",    // NOLINT
+"// As the floating point computing on GPU is not identical to CPU,",    // NOLINT
+"// integer computing is used as a workaround.",    // NOLINT
+"// The following approach also works but requires a rigorous analysis:",    // NOLINT
+"// int hstart = (int)(floor(((float)ph * (float)(roi_height)) /",    // NOLINT
+"//                           (float)(pooled_height)));",    // NOLINT
+"// int wstart = (int)(floor(((float)pw * (float)(roi_width)) /",    // NOLINT
+"//                           (float)(pooled_width)));",    // NOLINT
+"// int hend = (int)(ceil(((float)(ph + 1) * (float)(roi_height)) /",    // NOLINT
+"//                        (float)(pooled_height)));",    // NOLINT
+"// int wend = (int)(ceil(((float)(pw + 1) * (float)(roi_width)) /",    // NOLINT
+"//                        (float)(pooled_width)));",    // NOLINT
+"",    // NOLINT
+"int hstart = (ph * roi_height) / pooled_height;",    // NOLINT
+"if ( (hstart * pooled_height) > (ph * roi_height) ) {",    // NOLINT
+"--hstart;",    // NOLINT
+"}",    // NOLINT
+"int wstart = (pw * roi_width) / pooled_width;",    // NOLINT
+"if ( (wstart * pooled_width) > (pw * roi_width) ) {",    // NOLINT
+"--wstart;",    // NOLINT
+"}",    // NOLINT
+"int hend = ((ph + 1) * roi_height) / pooled_height;",    // NOLINT
+"if ( (hend * pooled_height) < ((ph + 1) * roi_height) ) {",    // NOLINT
+"++hend;",    // NOLINT
+"}",    // NOLINT
+"int wend = ((pw + 1) * roi_width) / pooled_width;",    // NOLINT
+"if ( (wend * pooled_width) < ((pw + 1) * roi_width) ) {",    // NOLINT
+"++wend;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"hstart = min(max(hstart + roi_start_h, 0), height);",    // NOLINT
+"hend = min(max(hend + roi_start_h, 0), height);",    // NOLINT
+"wstart = min(max(wstart + roi_start_w, 0), width);",    // NOLINT
+"wend = min(max(wend + roi_start_w, 0), width);",    // NOLINT
+"bool is_empty = (hend <= hstart) || (wend <= wstart);",    // NOLINT
+"",    // NOLINT
+"float maxval = is_empty ? 0 : -FLT_MAX;",    // NOLINT
+"int maxidx = -1;",    // NOLINT
+"const __global Dtype* input = bottom_data + (roi_batch_ind * channels + c) * height * width;",    // NOLINT
+"for (int h = hstart; h < hend; ++h) {",    // NOLINT
+"for (int w = wstart; w < wend; ++w) {",    // NOLINT
+"int bottom_index = h * width + w;",    // NOLINT
+"if (input[bottom_index] > maxval) {",    // NOLINT
+"maxval = input[bottom_index];",    // NOLINT
+"maxidx = bottom_index;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"top_data[index] = maxval;",    // NOLINT
+"argmax_data[index] = maxidx;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"__kernel void TEMPLATE(ROIPoolBackward, Dtype)(const int nthreads, __global const Dtype* top_diff,",    // NOLINT
+"__global int* argmax_data, const int num_rois, const KERNEL_ARG_DTYPE spatial_scale,",    // NOLINT
+"const int channels, const int height, const int width,",    // NOLINT
+"const int pooled_height, const int pooled_width, __global Dtype* bottom_diff,",    // NOLINT
+"__global Dtype* bottom_rois) {",    // NOLINT
+"OCL_KERNEL_LOOP(index, nthreads) {",    // NOLINT
+"int w = index % width;",    // NOLINT
+"int h = (index / width) % height;",    // NOLINT
+"int c = (index / width / height) % channels;",    // NOLINT
+"int n = index / width / height / channels;",    // NOLINT
+"",    // NOLINT
+"Dtype gradient = 0;",    // NOLINT
+"// Accumulate gradient over all ROIs that pooled this element",    // NOLINT
+"for (int roi_n = 0; roi_n < num_rois; ++roi_n) {",    // NOLINT
+"__global Dtype* offset_bottom_rois = bottom_rois + roi_n * 5;",    // NOLINT
+"int roi_batch_ind = offset_bottom_rois[0];",    // NOLINT
+"// Skip if ROI's batch index doesn't match n",    // NOLINT
+"if (n != roi_batch_ind) {",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int roi_start_w = round(offset_bottom_rois[1] * spatial_scale);",    // NOLINT
+"int roi_start_h = round(offset_bottom_rois[2] * spatial_scale);",    // NOLINT
+"int roi_end_w = round(offset_bottom_rois[3] * spatial_scale);",    // NOLINT
+"int roi_end_h = round(offset_bottom_rois[4] * spatial_scale);",    // NOLINT
+"",    // NOLINT
+"// Skip if ROI doesn't include (h, w)",    // NOLINT
+"const bool in_roi = (w >= roi_start_w && w <= roi_end_w &&",    // NOLINT
+"h >= roi_start_h && h <= roi_end_h);",    // NOLINT
+"if (!in_roi) {",    // NOLINT
+"continue;",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
+"int offset = (roi_n * channels + c) * pooled_height * pooled_width;",    // NOLINT
+"__global const Dtype* offset_top_diff = top_diff + offset;",    // NOLINT
+"__global int* offset_argmax_data = argmax_data + offset;",    // NOLINT
+"",    // NOLINT
+"// Compute feasible set of pooled units that could have pooled",    // NOLINT
+"// this bottom unit",    // NOLINT
+"",    // NOLINT
+"// Force malformed ROIs to be 1x1",    // NOLINT
+"int roi_width = max(roi_end_w - roi_start_w + 1, 1);",    // NOLINT
+"int roi_height = max(roi_end_h - roi_start_h + 1, 1);",    // NOLINT
+"",    // NOLINT
+"float bin_size_h = (float)(roi_height) / (float)(pooled_height);",    // NOLINT
+"float bin_size_w = (float)(roi_width) / (float)(pooled_width);",    // NOLINT
+"",    // NOLINT
+"int phstart = floor((float)(h - roi_start_h) / bin_size_h);",    // NOLINT
+"int phend   = ceil ((float)(h - roi_start_h + 1) / bin_size_h);",    // NOLINT
+"int pwstart = floor((float)(w - roi_start_w) / bin_size_w);",    // NOLINT
+"int pwend   = ceil ((float)(w - roi_start_w + 1) / bin_size_w);",    // NOLINT
+"",    // NOLINT
+"phstart = min(max(phstart, 0), pooled_height);",    // NOLINT
+"phend = min(max(phend, 0), pooled_height);",    // NOLINT
+"pwstart = min(max(pwstart, 0), pooled_width);",    // NOLINT
+"pwend = min(max(pwend, 0), pooled_width);",    // NOLINT
+"",    // NOLINT
+"for (int ph = phstart; ph < phend; ++ph) {",    // NOLINT
+"for (int pw = pwstart; pw < pwend; ++pw) {",    // NOLINT
+"if (offset_argmax_data[ph * pooled_width + pw] == (h * width + w)) {",    // NOLINT
+"gradient += offset_top_diff[ph * pooled_width + pw];",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"bottom_diff[index] = gradient;",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
 ""},   // NOLINT
     {"#ifndef __OPENCL_VERSION__",    // NOLINT
 "#include \"header.cl\"",    // NOLINT
@@ -8622,7 +8855,9 @@ static std::string cl_kernel_names[] = {
     "pooling",   // NOLINT
     "pooling_nd",   // NOLINT
     "pooling_sk",   // NOLINT
+    "proposal",   // NOLINT
     "reorg",   // NOLINT
+    "roipooling_layer",   // NOLINT
     "slice",   // NOLINT
     "softmax_loss",   // NOLINT
     "solvers",   // NOLINT
