@@ -404,11 +404,9 @@ void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   if (this->reshape == true) {
     // when reshape happens, sync weight and bias data/diff to cpu.
-    if (this->blobs_[0]) {
-      this->blobs_[0]->mutable_cpu_data();
-      this->blobs_[0]->mutable_cpu_diff();
-    }
-    if (this->blobs_[1]) {
+    this->blobs_[0]->mutable_cpu_data();
+    this->blobs_[0]->mutable_cpu_diff();
+    if (this->bias_term_) {
       this->blobs_[1]->mutable_cpu_data();
       this->blobs_[1]->mutable_cpu_diff();
     }
