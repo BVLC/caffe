@@ -197,7 +197,7 @@ void DecodeBBoxesGPU(const int nthreads,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          const bool clip_bbox, Dtype* bbox_data) {
+          const bool clip_bbox, const Dtype clip_w, const Dtype clip_h, Dtype* bbox_data) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
@@ -223,6 +223,9 @@ void DecodeBBoxesGPU(const int nthreads,
     case PriorBoxParameter_CodeType_CORNER_SIZE:
       kernel_name = CL_KERNEL_SELECT("DecodeBBoxesCORNER_SIZE");
       break;
+    case PriorBoxParameter_CodeType_CENTER_SIZE_FASTER_RCNN:
+      kernel_name = CL_KERNEL_SELECT("DecodeBBoxesCENTER_SIZE_FASTER_RCNN");
+      break;
     default:
       break;
     }
@@ -237,6 +240,8 @@ void DecodeBBoxesGPU(const int nthreads,
         num_loc_classes,
         background_label_id,
         (int)clip_bbox,
+        fixup_arg_type(clip_w),
+        fixup_arg_type(clip_h),
         WrapHandle((cl_mem)bbox_data, &ctx)),
         ctx.get_queue());
 
@@ -250,20 +255,20 @@ template void DecodeBBoxesGPU(const int nthreads,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          const bool clip_bbox, half* bbox_data);
+          const bool clip_bbox, const half clip_w, const half clip_h, half* bbox_data);
 #endif
 template void DecodeBBoxesGPU(const int nthreads,
           const float* loc_data, const float* prior_data,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          const bool clip_bbox, float* bbox_data);
+          const bool clip_bbox, const float clip_w, const float clip_h, float* bbox_data);
 template void DecodeBBoxesGPU(const int nthreads,
           const double* loc_data, const double* prior_data,
           const CodeType code_type, const bool variance_encoded_in_target,
           const int num_priors, const bool share_location,
           const int num_loc_classes, const int background_label_id,
-          const bool clip_bbox, double* bbox_data);
+          const bool clip_bbox,  const double clip_w, const double clip_h, double* bbox_data);
 
 #ifdef USE_CUDA
 template <typename Dtype>

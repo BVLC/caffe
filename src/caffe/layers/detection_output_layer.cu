@@ -28,7 +28,7 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   const bool clip_bbox = false;
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
-      num_loc_classes_, background_label_id_, clip_bbox, bbox_data);
+      num_loc_classes_, background_label_id_, clip_bbox, 1.0, 1.0, bbox_data);
   // Retrieve all decoded location predictions.
   const Dtype* bbox_cpu_data;
   if (!share_location_) {

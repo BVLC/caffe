@@ -284,7 +284,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const int variance_encoded_in_target,",    // NOLINT
 "const int num_priors, const int share_location,",    // NOLINT
 "const int num_loc_classes, const int background_label_id,",    // NOLINT
-"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {",    // NOLINT
 "",    // NOLINT
 "for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
 "const int i = index % 4;",    // NOLINT
@@ -316,7 +316,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const int variance_encoded_in_target,",    // NOLINT
 "const int num_priors, const int share_location,",    // NOLINT
 "const int num_loc_classes, const int background_label_id,",    // NOLINT
-"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {",    // NOLINT
 "",    // NOLINT
 "for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
 "const int i = index % 4;",    // NOLINT
@@ -383,12 +383,74 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "}",    // NOLINT
 "}",    // NOLINT
 "",    // NOLINT
+"__kernel void TEMPLATE(DecodeBBoxesCENTER_SIZE_FASTER_RCNN, Dtype)(const int nthreads,",    // NOLINT
+"__global const Dtype* loc_data, __global const Dtype* prior_data,",    // NOLINT
+"const int variance_encoded_in_target,",    // NOLINT
+"const int num_priors, const int share_location,",    // NOLINT
+"const int num_loc_classes, const int background_label_id,",    // NOLINT
+"const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {",    // NOLINT
+"",    // NOLINT
+"for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
+"const int i = index % 4;",    // NOLINT
+"const int c = (index / 4) % num_loc_classes;",    // NOLINT
+"const int d = (index / 4 / num_loc_classes) % num_priors;",    // NOLINT
+"if (!share_location && c == background_label_id) {",    // NOLINT
+"// Ignore background class if not share_location.",    // NOLINT
+"return;",    // NOLINT
+"}",    // NOLINT
+"const int pi = d * 5;",    // NOLINT
+"const Dtype p_xmin = prior_data[pi + 1];",    // NOLINT
+"const Dtype p_ymin = prior_data[pi + 2];",    // NOLINT
+"const Dtype p_xmax = prior_data[pi + 3];",    // NOLINT
+"const Dtype p_ymax = prior_data[pi + 4];",    // NOLINT
+"const Dtype prior_width = p_xmax - p_xmin + (Dtype)1.0;",    // NOLINT
+"const Dtype prior_height = p_ymax - p_ymin + (Dtype)1.0;",    // NOLINT
+"const Dtype prior_center_x = p_xmin + prior_width / 2.;",    // NOLINT
+"const Dtype prior_center_y = p_ymin + prior_height / 2.;",    // NOLINT
+"",    // NOLINT
+"const Dtype xmin = loc_data[index - i];",    // NOLINT
+"const Dtype ymin = loc_data[index - i + 1];",    // NOLINT
+"const Dtype xmax = loc_data[index - i + 2];",    // NOLINT
+"const Dtype ymax = loc_data[index - i + 3];",    // NOLINT
+"",    // NOLINT
+"Dtype decode_bbox_center_x, decode_bbox_center_y;",    // NOLINT
+"Dtype decode_bbox_width, decode_bbox_height;",    // NOLINT
+"decode_bbox_center_x = xmin * prior_width + prior_center_x;",    // NOLINT
+"decode_bbox_center_y = ymin * prior_height + prior_center_y;",    // NOLINT
+"decode_bbox_width = exp(xmax) * prior_width;",    // NOLINT
+"decode_bbox_height = exp(ymax) * prior_height;",    // NOLINT
+"",    // NOLINT
+"Dtype clip_value = 1.;",    // NOLINT
+"switch (i) {",    // NOLINT
+"case 0:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_x - decode_bbox_width / 2.;",    // NOLINT
+"clip_value = clip_w;",    // NOLINT
+"break;",    // NOLINT
+"case 1:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_y - decode_bbox_height / 2.;",    // NOLINT
+"clip_value = clip_h;",    // NOLINT
+"break;",    // NOLINT
+"case 2:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_x + decode_bbox_width / 2.;",    // NOLINT
+"clip_value = clip_w;",    // NOLINT
+"break;",    // NOLINT
+"case 3:",    // NOLINT
+"bbox_data[index] = decode_bbox_center_y + decode_bbox_height / 2.;",    // NOLINT
+"clip_value = clip_h;",    // NOLINT
+"break;",    // NOLINT
+"}",    // NOLINT
+"if (clip_bbox) {",    // NOLINT
+"bbox_data[index] = max(min(bbox_data[index], clip_value), (Dtype)0.);",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"}",    // NOLINT
+"",    // NOLINT
 "__kernel void TEMPLATE(DecodeBBoxesCORNER_SIZE, Dtype)(const int nthreads,",    // NOLINT
 "__global const Dtype* loc_data, __global const Dtype* prior_data,",    // NOLINT
 "const int variance_encoded_in_target,",    // NOLINT
 "const int num_priors, const int share_location,",    // NOLINT
 "const int num_loc_classes, const int background_label_id,",    // NOLINT
-"const int clip_bbox, __global Dtype* bbox_data) {",    // NOLINT
+"const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {",    // NOLINT
 "",    // NOLINT
 "for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {",    // NOLINT
 "const int i = index % 4;",    // NOLINT

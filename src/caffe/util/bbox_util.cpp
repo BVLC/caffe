@@ -453,7 +453,7 @@ void EncodeBBox(
 void DecodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const bool clip_bbox, const NormalizedBBox& bbox,
+    const bool clip_bbox, const float clip_w, const float clip_h, const NormalizedBBox& bbox,
     NormalizedBBox* decode_bbox) {
   if (code_type == PriorBoxParameter_CodeType_CORNER) {
     if (variance_encoded_in_target) {
@@ -530,13 +530,28 @@ void DecodeBBox(
       decode_bbox->set_ymax(
           prior_bbox.ymax() + prior_variance[3] * bbox.ymax() * prior_height);
     }
+  } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE_FASTER_RCNN) {
+    float prior_width = prior_bbox.xmax() - prior_bbox.xmin() + 1.0f;
+    float prior_height = prior_bbox.ymax() - prior_bbox.ymin() + 1.0f;
+    float prior_center_x = prior_bbox.xmin() + prior_width / 2.;
+    float prior_center_y = prior_bbox.ymin() + prior_height / 2.;
+
+    float decode_bbox_center_x = bbox.xmin() * prior_width + prior_center_x;
+    float decode_bbox_center_y = bbox.ymin() * prior_height + prior_center_y;
+    float decode_bbox_width = exp(bbox.xmax()) * prior_width;
+    float decode_bbox_height = exp(bbox.ymax()) * prior_height;
+
+    decode_bbox->set_xmin(decode_bbox_center_x - decode_bbox_width / 2.);
+    decode_bbox->set_ymin(decode_bbox_center_y - decode_bbox_height / 2.);
+    decode_bbox->set_xmax(decode_bbox_center_x + decode_bbox_width / 2.);
+    decode_bbox->set_ymax(decode_bbox_center_y + decode_bbox_height / 2.);
   } else {
     LOG(FATAL) << "Unknown LocLossType.";
   }
   float bbox_size = BBoxSize(*decode_bbox);
   decode_bbox->set_size(bbox_size);
   if (clip_bbox) {
-    ClipBBox(*decode_bbox, decode_bbox);
+    ClipBBox(*decode_bbox, clip_h, clip_w, decode_bbox);
   }
 }
 
@@ -544,19 +559,16 @@ void DecodeBBoxes(
     const vector<NormalizedBBox>& prior_bboxes,
     const vector<vector<float> >& prior_variances,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const bool clip_bbox, const vector<NormalizedBBox>& bboxes,
+    const bool clip_bbox, const float clip_w, const float clip_h, const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes) {
   CHECK_EQ(prior_bboxes.size(), prior_variances.size());
   CHECK_EQ(prior_bboxes.size(), bboxes.size());
   int num_bboxes = prior_bboxes.size();
-  if (num_bboxes >= 1) {
-    CHECK_EQ(prior_variances[0].size(), 4);
-  }
   decode_bboxes->clear();
   for (int i = 0; i < num_bboxes; ++i) {
     NormalizedBBox decode_bbox;
     DecodeBBox(prior_bboxes[i], prior_variances[i], code_type,
-               variance_encoded_in_target, clip_bbox, bboxes[i], &decode_bbox);
+               variance_encoded_in_target, clip_bbox, clip_w, clip_h, bboxes[i], &decode_bbox);
     decode_bboxes->push_back(decode_bbox);
   }
 }
@@ -567,7 +579,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
     const int num, const bool share_location,
     const int num_loc_classes, const int background_label_id,
     const CodeType code_type, const bool variance_encoded_in_target,
-    const bool clip, vector<LabelBBox>* all_decode_bboxes) {
+    const bool clip, const float clip_w, const float clip_h, vector<LabelBBox>* all_decode_bboxes) {
   CHECK_EQ(all_loc_preds.size(), num);
   all_decode_bboxes->clear();
   all_decode_bboxes->resize(num);
@@ -587,7 +599,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
       const vector<NormalizedBBox>& label_loc_preds =
           all_loc_preds[i].find(label)->second;
       DecodeBBoxes(prior_bboxes, prior_variances,
-                   code_type, variance_encoded_in_target, clip,
+                   code_type, variance_encoded_in_target, clip, clip_w, clip_h,
                    label_loc_preds, &(decode_bboxes[label]));
     }
   }
@@ -781,7 +793,7 @@ void FindMatches(const vector<LabelBBox>& all_loc_preds,
         vector<NormalizedBBox> loc_bboxes;
         bool clip_bbox = false;
         DecodeBBoxes(prior_bboxes, prior_variances,
-                     code_type, encode_variance_in_target, clip_bbox,
+                     code_type, encode_variance_in_target, clip_bbox, 1.0f, 1.0f,
                      all_loc_preds[i].find(label)->second, &loc_bboxes);
         MatchBBox(gt_bboxes, loc_bboxes, label, match_type,
                   overlap_threshold, ignore_cross_boundary_bbox,
@@ -998,7 +1010,7 @@ void MineHardExamples(const Blob<Dtype>& conf_blob,
           vector<NormalizedBBox> loc_bboxes;
           bool clip_bbox = false;
           DecodeBBoxes(prior_bboxes, prior_variances,
-                       code_type, encode_variance_in_target, clip_bbox,
+                       code_type, encode_variance_in_target, clip_bbox, 1.0f, 1.0f,
                        all_loc_preds[i].find(label)->second, &loc_bboxes);
           for (int m = 0; m < match_indices[label].size(); ++m) {
             if (IsEligibleMining(mining_type, match_indices[label][m],
@@ -1263,7 +1275,7 @@ void EncodeLocPrediction(const vector<LabelBBox>& all_loc_preds,
           if (!use_prior_for_matching) {
             const bool clip_bbox = false;
             DecodeBBox(prior_bboxes[j], prior_variances[j], code_type,
-                       encode_variance_in_target, clip_bbox, loc_pred[j],
+                       encode_variance_in_target, clip_bbox, 1.0f, 1.0f, loc_pred[j],
                        &match_bbox);
           }
           // When a dimension of match_bbox is outside of image region, use
@@ -1732,6 +1744,23 @@ template void EncodeConfPrediction(const double* conf_data, const int num,
       double* conf_pred_data, double* conf_gt_data);
 
 template <typename Dtype>
+void GetRoiBBoxes(const Dtype* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes) {
+  prior_bboxes->clear();
+  for (int i = 0; i < num_priors; ++i) {
+    int start_idx = i * 5;
+    NormalizedBBox bbox;
+    bbox.set_xmin(prior_data[start_idx + 1]);
+    bbox.set_ymin(prior_data[start_idx + 2]);
+    bbox.set_xmax(prior_data[start_idx + 3]);
+    bbox.set_ymax(prior_data[start_idx + 4]);
+    float bbox_size = BBoxSize(bbox);
+    bbox.set_size(bbox_size);
+    prior_bboxes->push_back(bbox);
+  }
+}
+
+template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances) {
@@ -1764,6 +1793,8 @@ void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
 template void GetPriorBBoxes(const half* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+template void GetRoiBBoxes(const half* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes);
 #endif
 template void GetPriorBBoxes(const float* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
@@ -1771,6 +1802,10 @@ template void GetPriorBBoxes(const float* prior_data, const int num_priors,
 template void GetPriorBBoxes(const double* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+template void GetRoiBBoxes(const float* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes);
+template void GetRoiBBoxes(const double* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes);
 
 template <typename Dtype>
 void GetDetectionResults(const Dtype* det_data, const int num_det,
