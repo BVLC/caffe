@@ -29,6 +29,9 @@ solver_file=""
 # specify engine for running caffe
 engine="MKL2017"
 
+#default numa node if needed
+numanode=0
+
 result_dir=""
 debug="off"
 mpibench_bin="IMB-MPI1"
@@ -38,7 +41,7 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name --host host_file [--solver solver_file]"
+    echo "  $script_name [--host host_file] [--solver solver_file]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
     echo "               [--mode train/resume_train/time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
@@ -49,14 +52,14 @@ function usage
     echo "               [--mpibench_param mpibench_param]"
     echo ""
     echo "  Parameters:"
-    echo "    host: host file includes list of nodes."
+    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
     echo ""
     echo "  Optional parameters:"
-    echo "    solver: specify solver file if mode is train/resume_train"
+    echo "    host: host file includes list of nodes. Only used when you're running multinodes mode"
+    echo "    solver: need to be specified a solver file if mode is train/resume_train"
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
-    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
     echo "    benchmark: all(default). Includes qperf, all-reduce performance"
     echo "      Dependency: user needs to install qperf, IMB-MPI1;"
     echo "                  and add them in system path."
@@ -85,8 +88,8 @@ function detect_cpu
         cpu_model="bdw"
     else
         cpu_model="unknown"
-        echo "CPU model: $model_string"
-        echo "  Use default settings, which may not be optimal ones."
+        echo "CPU model :$model_string is unknown."
+        echo "Will use default settings, which may not be the optimal one."
     fi
 }
 
@@ -188,7 +191,7 @@ function clear_envs
 function set_mlsl_vars
 {
     if [ "${num_mlsl_servers}" -eq -1 ]; then
-        if [ ${numnodes} -eq 1 ]; then
+        if [ "${numnodes}" -eq 1 ]; then
             numservers=0
         else
             if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
@@ -254,10 +257,11 @@ function execute_command
     if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
         exec_command="$xeonbin_"
     else
+        
         exec_command="numactl --preferred=$numanode $xeonbin_"
     fi
 
-    if [ ${numnodes} -gt 1 ]; then
+    if [ "${numnodes}" -gt 1 ]; then
         # Produce the configuration file for mpiexec. 
         # Each line of the config file contains a # host, environment, binary name.
         cfile_=nodeconfig-${cpu_model}-${numnodes}.txt
@@ -268,9 +272,9 @@ function execute_command
             echo "-host ${node} -n $ppncpu $exec_command" >> $cfile_
         done
     fi
+    log_file=outputCluster-${cpu_model}-${numnodes}.txt
 
     clear_envs
-    log_file=outputCluster-${cpu_model}-${numnodes}.txt
 
     sensors_bin="sensors"
     check_dependency $sensors_bin
@@ -281,7 +285,7 @@ function execute_command
         mv $sensor_log_file $result_dir_/
     fi
     
-    if [ ${numnodes} -eq 1 ]; then
+    if [ "${numnodes}" -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command >${log_file} 2>&1
     else
         exec_command="-l -configfile $cfile_"
@@ -294,6 +298,35 @@ function execute_command
         mv $sensor_log_file $result_dir_/
     fi
     mv $log_file $cfile_ $result_dir_/
+}
+
+# used to calculate images / s
+function obtain_average_fwd_bwd_time
+{
+    result_file="${result_dir}/${log_file}"
+    if [ -f $result_file ]; then
+        average_time_line=`cat $result_file | grep "Average Forward-Backward"`
+        average_time=`echo $average_time_line | awk -F ' ' '{print $(NF-1)}'`
+        echo "average time : ${average_time} ms"
+    else
+        echo "Error: result file $result_file does not exist..."
+        exit 1
+    fi
+}
+
+# used to calculate images / s
+function obtain_batch_size
+{
+    batch_size=`cat $model_file | grep shape | sed -n "3, 1p" | awk '{print $4}'`
+    echo "batch size : $batch_size"
+}
+
+function calculate_images_per_second 
+{
+    obtain_batch_size
+    obtain_average_fwd_bwd_time
+    speed=`echo "$batch_size*1000/$average_time" | bc`
+    echo "benchmark speed : $speed images/s"
 }
 
 function run_qperf_bench
@@ -403,7 +436,9 @@ function run_benchmark
 
 function run_caffe
 {
-    echo "Run caffe with ${numnodes} nodes..."
+    if [[ $host_file != "" ]]; then
+        echo "Run caffe with ${numnodes} nodes..."
+    fi
 
     if [ ${mode} == "time" ]; then
         xeonbin="$caffe_bin time --iterations $iteration --model $model_file  -engine=$engine"
@@ -414,8 +449,13 @@ function run_caffe
         fi
     fi
 
-    set_env_vars
+    if [[ $host_file != "" ]]; then 
+        set_env_vars
+    fi
     execute_command "$xeonbin" $result_dir
+    if [ ${mode} == "time" ]; then
+        calculate_images_per_second 
+    fi
 }
 
 
@@ -426,7 +466,6 @@ fi
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 result_dir=${root_dir}/"result-`date +%Y%m%d%H%M%S`"
-
 while [[ $# -gt 1 ]]
 do
     key="$1"
@@ -500,16 +539,6 @@ do
     shift
 done
 
-# check parameters
-if [ "$host_file" == "" ]; then
-    echo "Error: host file is NOT specified."
-    exit 1
-fi
-if [ ! -f $host_file ]; then
-    echo "Error: host file does NOT exist."
-    exit 1
-fi
-
 echo ""
 echo "CPUs with optimal settings:"
 for ((i=0; i<${#cpu_list[@]}; i++))
@@ -581,13 +610,18 @@ if [ "$network" == "tcp" ]; then
 fi
 
 # Names to configfile, binary (executable) files #
-nodenames=( `cat $host_file | sort | uniq ` )
-if [ ${#nodenames[@]} -eq 0 ]; then
-    echo "Error: empty host file! Exit."
-    exit 0
+# Add check for host_file's existence to support single node
+if [[ $host_file != "" ]]; then
+    nodenames=( `cat $host_file | sort | uniq ` )
+    if [ ${#nodenames[@]} -eq 0 ]; then
+        echo "Error: empty host file! Exit."
+        exit 0
+    fi
+    numnodes=${#nodenames[@]}
+else
+    numnodes=1
 fi
-numnodes=${#nodenames[@]}
-echo "Number of nodes: $numnodes"
+echo "    Number of nodes: $numnodes"
 
 detect_cpu
 
@@ -596,7 +630,7 @@ if [ "$cpu_model" == "knl" ]; then
 fi
 
 if [ ! -d $result_dir ]; then
-    echo "Create result directory: $result_dir"
+    #echo "Create result directory: $result_dir"
     mkdir -p $result_dir
 fi
 
