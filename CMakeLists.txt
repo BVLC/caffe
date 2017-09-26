@@ -83,8 +83,6 @@ if(UNIX OR APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
     # Auto enable SGD Fusion if use intel compiler
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
-    # Enable processor-specific optimization
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST")
   endif()
   
   # Generic flags.
