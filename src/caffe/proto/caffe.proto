@@ -509,6 +509,7 @@ message LayerParameter {
   optional DataParameter data_param = 107;
   optional DetectionEvaluateParameter detection_evaluate_param = 205;
   optional DetectionOutputParameter detection_output_param = 207;
+  optional FasterRcnnDetectionOutputParameter faster_rcnn_detection_output_param = 208;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -1087,6 +1088,20 @@ message DetectionOutputParameter {
   optional string save_file = 12;
 }
 
+// Message that store parameters used by FasterRcnnDetectionOutputLayer
+message FasterRcnnDetectionOutputParameter {
+  // Number of classes to be predicted. Required!
+  optional uint32 num_classes = 1;
+  // Background label id. If there is no background class,
+  // set it as -1.
+  optional int32 background_label_id = 3 [default = 0];
+  // Parameters used for non maximum suppression.
+  optional NonMaximumSuppressionParameter nms_param = 4;
+  // Only consider detections whose confidences are larger than a threshold.
+  // If not provided, consider all boxes.
+  optional float confidence_threshold = 9;
+}
+
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
   optional bool scale_train = 2 [default = true];  // scale train or test phase
@@ -1458,6 +1473,7 @@ message PriorBoxParameter {
     CORNER = 1;
     CENTER_SIZE = 2;
     CORNER_SIZE = 3;
+    CENTER_SIZE_FASTER_RCNN = 4;
   }
   // Minimum box size (in pixels). Required!
   repeated float min_size = 1;

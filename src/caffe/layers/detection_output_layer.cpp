@@ -206,7 +206,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   const bool clip_bbox = false;
   DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
                   share_location_, num_loc_classes_, background_label_id_,
-                  code_type_, variance_encoded_in_target_, clip_bbox,
+                  code_type_, variance_encoded_in_target_, clip_bbox, 1.0f, 1.0f,
                   &all_decode_bboxes);
 
   int num_kept = 0;

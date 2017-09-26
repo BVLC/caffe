@@ -7,7 +7,7 @@ __kernel void TEMPLATE(DecodeBBoxesCORNER, Dtype)(const int nthreads,
           const int variance_encoded_in_target,
           const int num_priors, const int share_location,
           const int num_loc_classes, const int background_label_id,
-          const int clip_bbox, __global Dtype* bbox_data) {
+          const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {
 
   for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
     const int i = index % 4;
@@ -39,7 +39,7 @@ __kernel void TEMPLATE(DecodeBBoxesCENTER_SIZE, Dtype)(const int nthreads,
           const int variance_encoded_in_target,
           const int num_priors, const int share_location,
           const int num_loc_classes, const int background_label_id,
-          const int clip_bbox, __global Dtype* bbox_data) {
+          const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {
 
   for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
     const int i = index % 4;
@@ -106,12 +106,74 @@ __kernel void TEMPLATE(DecodeBBoxesCENTER_SIZE, Dtype)(const int nthreads,
   }
 }
 
+__kernel void TEMPLATE(DecodeBBoxesCENTER_SIZE_FASTER_RCNN, Dtype)(const int nthreads,
+          __global const Dtype* loc_data, __global const Dtype* prior_data,
+          const int variance_encoded_in_target,
+          const int num_priors, const int share_location,
+          const int num_loc_classes, const int background_label_id,
+          const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {
+
+  for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
+    const int i = index % 4;
+    const int c = (index / 4) % num_loc_classes;
+    const int d = (index / 4 / num_loc_classes) % num_priors;
+    if (!share_location && c == background_label_id) {
+      // Ignore background class if not share_location.
+      return;
+    }
+    const int pi = d * 5;
+    const Dtype p_xmin = prior_data[pi + 1];
+    const Dtype p_ymin = prior_data[pi + 2];
+    const Dtype p_xmax = prior_data[pi + 3];
+    const Dtype p_ymax = prior_data[pi + 4];
+    const Dtype prior_width = p_xmax - p_xmin + (Dtype)1.0;
+    const Dtype prior_height = p_ymax - p_ymin + (Dtype)1.0;
+    const Dtype prior_center_x = p_xmin + prior_width / 2.;
+    const Dtype prior_center_y = p_ymin + prior_height / 2.;
+
+    const Dtype xmin = loc_data[index - i];
+    const Dtype ymin = loc_data[index - i + 1];
+    const Dtype xmax = loc_data[index - i + 2];
+    const Dtype ymax = loc_data[index - i + 3];
+
+    Dtype decode_bbox_center_x, decode_bbox_center_y;
+    Dtype decode_bbox_width, decode_bbox_height;
+    decode_bbox_center_x = xmin * prior_width + prior_center_x;
+    decode_bbox_center_y = ymin * prior_height + prior_center_y;
+    decode_bbox_width = exp(xmax) * prior_width;
+    decode_bbox_height = exp(ymax) * prior_height;
+
+    Dtype clip_value = 1.;
+    switch (i) {
+      case 0:
+        bbox_data[index] = decode_bbox_center_x - decode_bbox_width / 2.;
+        clip_value = clip_w;
+        break;
+      case 1:
+        bbox_data[index] = decode_bbox_center_y - decode_bbox_height / 2.;
+        clip_value = clip_h;
+        break;
+      case 2:
+        bbox_data[index] = decode_bbox_center_x + decode_bbox_width / 2.;
+        clip_value = clip_w;
+        break;
+      case 3:
+        bbox_data[index] = decode_bbox_center_y + decode_bbox_height / 2.;
+        clip_value = clip_h;
+        break;
+    }
+    if (clip_bbox) {
+      bbox_data[index] = max(min(bbox_data[index], clip_value), (Dtype)0.);
+    }
+  }
+}
+
 __kernel void TEMPLATE(DecodeBBoxesCORNER_SIZE, Dtype)(const int nthreads,
           __global const Dtype* loc_data, __global const Dtype* prior_data,
           const int variance_encoded_in_target,
           const int num_priors, const int share_location,
           const int num_loc_classes, const int background_label_id,
-          const int clip_bbox, __global Dtype* bbox_data) {
+          const int clip_bbox, const KERNEL_ARG_DTYPE clip_w, const KERNEL_ARG_DTYPE clip_h, __global Dtype* bbox_data) {
 
   for (int index = get_global_id(0); index < nthreads; index += get_global_size(0)) {
     const int i = index % 4;
