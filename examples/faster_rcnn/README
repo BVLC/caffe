@@ -1,0 +1,4 @@
+command line looks like:
+./faster_rcnn_detect --visualize --img=/your_path/yourfile.jpg --weights_file=/your_path/VGG16_faster_rcnn_final.caffemodel --model_file=/your_path/faster_rcnn_test.pt
+
+please refer https://github.com/rbgirshick/py-faster-rcnn/blob/master/data/scripts/fetch_faster_rcnn_models.sh to get the weights file
