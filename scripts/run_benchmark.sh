@@ -22,7 +22,7 @@ result_dir=""
 caffe_bin="./scripts/run_intelcaffe.sh"
 
 # Iterations to run benchmark
-iterations=100
+iterations=5
 
 function usage
 {
@@ -74,12 +74,10 @@ function run_specific_model
 
 function run_benchmark
 {
-    detect_cpu
     echo "Cpu model : $model_string"
     if [[ $topology = "all" ]]; then
        for ((i=0; i<${#model_list[@]}; i++))
        do
-          echo "    ${model_list[$i]}"
           model=${model_list[$i]}
           run_specific_model
        done
@@ -121,5 +119,7 @@ fi
 # check if input topology is supported
 is_supported_topology
 
+detect_cpu
+
 # start running benchmark
-run_benchmark
+run_benchmark 

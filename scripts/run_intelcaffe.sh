@@ -95,6 +95,13 @@ function detect_cpu
 
 function set_numa_node
 {
+    numa_bin="numactl -H"
+    # check if os has 'libnuma' package ready
+    check_dependency $numa_bin
+    if [ $? -ne 0 ]; then
+       echo "No numactl command support."
+       return
+    fi 
     # detect numa mode: cache and flat mode for KNL
     numa_node=($(numactl -H | grep "available" | awk -F ' ' '{print $2}'))
     if [ $numa_node -eq 1 ]; then
@@ -191,7 +198,7 @@ function clear_envs
 function set_mlsl_vars
 {
     if [ "${num_mlsl_servers}" -eq -1 ]; then
-        if [ "${numnodes}" -eq 1 ]; then
+        if [ ${numnodes} -eq 1 ]; then
             numservers=0
         else
             if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
@@ -257,11 +264,18 @@ function execute_command
     if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
         exec_command="$xeonbin_"
     else
-        
-        exec_command="numactl --preferred=$numanode $xeonbin_"
+        numa_bin="numactl --preferred=$numanode"
+        # check if os has 'libnuma' package ready
+        check_dependency $numa_bin
+        if [ $? -ne 0 ]; then
+           echo "No numactl command support."
+           exec_command="$xeonbin_"
+        else
+           exec_command="$numa_bin $xeonbin_"
+        fi
     fi
 
-    if [ "${numnodes}" -gt 1 ]; then
+    if [ ${numnodes} -gt 1 ]; then
         # Produce the configuration file for mpiexec. 
         # Each line of the config file contains a # host, environment, binary name.
         cfile_=nodeconfig-${cpu_model}-${numnodes}.txt
@@ -285,7 +299,7 @@ function execute_command
         mv $sensor_log_file $result_dir_/
     fi
     
-    if [ "${numnodes}" -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command >${log_file} 2>&1
     else
         exec_command="-l -configfile $cfile_"
@@ -317,7 +331,8 @@ function obtain_average_fwd_bwd_time
 # used to calculate images / s
 function obtain_batch_size
 {
-    batch_size=`cat $model_file | grep shape | sed -n "3, 1p" | awk '{print $4}'`
+    # catch batch size of training
+    batch_size=`cat $model_file | grep shape | sed -n "1, 1p" | awk '{print $4}'`
     echo "batch size : $batch_size"
 }
 
