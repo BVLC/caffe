@@ -221,9 +221,7 @@ void MKLPoolingLayer<Dtype>::Init(
   }
 
 
-  size_t dim = 4;
-  size_t src_sizes[4], src_strides[4];
-  size_t dst_sizes[4], dst_strides[4];
+  dim = 4;
 
   src_sizes[0] = bottom[0]->width();
   src_sizes[1] = bottom[0]->height();
@@ -260,7 +258,6 @@ void MKLPoolingLayer<Dtype>::Init(
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
 
-  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides, false);
   fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides, false);
   bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides, false);
   bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides, false);
@@ -285,9 +282,10 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width() &&
       num_ == bottom[0]->num()) {
+    reshape = false;
     return;
   }
-
+  reshape = true;
   Init(bottom, top);
 }
 
@@ -312,8 +310,9 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (NULL == bottom_data) {
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
-    if (NULL == poolingFwd) {
+    if (NULL == poolingFwd || reshape) {
       // Now create poolingFwd
+      fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides, false);
       status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
               this->algorithm, fwd_bottom_data->layout_usr,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
@@ -325,7 +324,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
     }
-  } else if (NULL == poolingFwd) {
+  } else if (NULL == poolingFwd || reshape) {
     // Is it the first pass? Create a primitive.
     CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(),
             PrvMemDescr::PRV_DESCR_MKL2017);
@@ -336,19 +335,20 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     DLOG(INFO) << "Using layout of " << mem_descr->name
             << " as input layout for " << this->layer_param_.name();
+    // copy shared_ptr
+    fwd_bottom_data = mem_descr;
 
     // Now create poolingFwd
     status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
-            this->algorithm, mem_descr->layout_int, kernel_size,
+            this->algorithm, fwd_bottom_data->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 
-    fwd_bottom_data->create_internal_layout(poolingFwd, dnnResourceSrc);
     fwd_top_data->create_internal_layout(poolingFwd, dnnResourceDst);
 
     // Now create poolingBwd
     status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL,
-            this->algorithm, mem_descr->layout_int, kernel_size,
+            this->algorithm, fwd_bottom_data->layout_int, kernel_size,
             kernel_stride, src_offset, dnnBorderZeros);
     CHECK_EQ(status, E_SUCCESS);
 

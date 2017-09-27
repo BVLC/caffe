@@ -373,6 +373,10 @@ class MKLPoolingLayer : public Layer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
 
   dnnPrimitive_t poolingFwd, poolingBwd;
+  bool   reshape;
+  size_t dim;
+  size_t src_sizes[4], src_strides[4];
+  size_t dst_sizes[4], dst_strides[4];
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -433,6 +437,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   dnnPrimitive_t reluFwd_, reluBwd_;
   vector<size_t> sizes_;
   vector<size_t> strides_;
+  bool           reshape;
+  size_t         dim;
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
