@@ -408,7 +408,7 @@ public:
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
             concatFwd_pd(), fwd_output_memory(),
             bwd_reorder_input_memory(), bwd_reorder_output_memory(),
-            fwd_top_data(), fwd_bottom_data(), split_channels() {
+            fwd_top_data(), fwd_bottom_data(), split_dims() {
               PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
               PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
@@ -440,7 +440,7 @@ private:
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff;
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_bottom_diff;
     vector<MKLDNNPrimitive<Dtype> > reorders;
-    vector<int> split_channels;
+    vector<int> split_dims;
 
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;
