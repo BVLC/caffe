@@ -113,7 +113,7 @@ void Detector<Dtype>::Preprocess(const string& img_file) {
   int img_size_max = std::max(ori_img.rows, ori_img.cols);
   float scale = SCALE_SIZE * 1.0 / img_size_min;
   if (scale * img_size_max > MAX_SIZE)
-    scale = MAX_SIZE / img_size_max;
+    scale = MAX_SIZE * 1.0 / img_size_max;
 
   cv::Size image_scaled_size;
   image_scaled_size.width = (int)(scale * ori_img.cols);
