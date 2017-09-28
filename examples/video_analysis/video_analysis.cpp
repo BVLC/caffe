@@ -65,6 +65,7 @@ private:
   int num_channels_;
   int batch_size_;
   bool use_yolo_format_;
+  bool faster_rcnn;
   vector<Blob<Dtype>*> input_blobs_;
   const vector<cv::Mat> *origin_imgs_;
   DataTransformer<Dtype> *data_transformer_;
@@ -91,7 +92,6 @@ Detector<Dtype>::Detector(const string& model_file,
   net_.reset(new Net<Dtype>(model_file, TEST, Caffe::GetDefaultDevice()));
   net_->CopyTrainedLayersFrom(weights_file);
 
-  CHECK_EQ(net_->num_inputs(), 1) << "Network should have exactly one input.";
   CHECK_EQ(net_->num_outputs(), 1) << "Network should have exactly one output.";
 
   Blob<Dtype>* input_layer = net_->input_blobs()[0];
@@ -105,7 +105,15 @@ Detector<Dtype>::Detector(const string& model_file,
   const shared_ptr<Layer<Dtype>> output_layer = net_->layers().back();
   TransformationParameter transform_param;
   caffe::ResizeParameter *resize_param = transform_param.mutable_resize_param();
-  if (output_layer->layer_param().type() == "YoloDetectionOutput") {
+  faster_rcnn = false;
+  if (output_layer->layer_param().type() == "FasterRcnnDetectionOutput") {
+    faster_rcnn = true;
+    input_color_format_ = VA_BGR;
+    std::cout << "Using Faster RCNN: " << net_->name() << std::endl;
+    CHECK(num_channels_ == 3) << "Input layer should have 3 channels.";
+    CHECK(batch_size_ == 1) << "batch size should be 1.";
+    return;
+  } else if (output_layer->layer_param().type() == "YoloDetectionOutput") {
     use_yolo_format_ = !output_layer->layer_param().
                         yolo_detection_output_param().ssd_format();
     resize_param->set_resize_mode(caffe::ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
@@ -189,6 +197,35 @@ void Detector<Dtype>::Preprocess(const vector<cv::Mat> &imgs) {
   image_size_.height = imgs[0].rows;
   int batch_count = imgs.size() / batch_size_;
 
+  if (faster_rcnn) {
+    static int MAX_SIZE = 1000;
+    static int SCALE_SIZE = 600;
+    int img_size_min = std::min(image_size_.width, image_size_.height);
+    int img_size_max = std::max(image_size_.width, image_size_.height);
+    float scale = SCALE_SIZE * 1.0 / img_size_min;
+    if (scale * img_size_max > MAX_SIZE)
+      scale = MAX_SIZE * 1.0 / img_size_max;
+
+    input_blob_size_.width = (int)(scale * image_size_.width);
+    input_blob_size_.height = (int)(scale * image_size_.height);
+
+    TransformationParameter transform_param;
+    caffe::ResizeParameter *resize_param = transform_param.mutable_resize_param();
+
+    transform_param.add_mean_value(102.9801);
+    transform_param.add_mean_value(115.9465);
+    transform_param.add_mean_value(122.7717);
+
+    resize_param->set_resize_mode(caffe::ResizeParameter_Resize_mode_WARP);
+    resize_param->set_width(input_blob_size_.width);
+    resize_param->set_height(input_blob_size_.height);
+    resize_param->set_prob(1.0);
+    resize_param->add_interp_mode(caffe::ResizeParameter_Interp_mode_LINEAR);
+    data_transformer_ = new DataTransformer<Dtype>(transform_param,
+                                                 TEST,
+                                                 Caffe::GetDefaultDevice());
+  }
+
   for (batch_id = 0; batch_id < batch_count; batch_id++) {
     Blob<Dtype> * blob = new Blob<Dtype>;
     blob->Reshape(batch_size_,
@@ -264,16 +301,28 @@ void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
                              int iter_count,
                              bool visualize,
                              bool step_mode) {
-  Blob<Dtype>* input_layer = net_->input_blobs()[0];
-  input_layer->ReshapeLike(*input_blobs_[0]);
-  net_->Reshape();
-
   int batch_to_detect = iter_count * input_blobs_.size();
   // iter_count 0 is for warm up to handle only 1 batch.
   if (batch_to_detect == 0)
     batch_to_detect = 1;
   int w = image_size_.width;
   int h = image_size_.height;
+
+  Blob<Dtype>* input_layer = net_->input_blobs()[0];
+  input_layer->ReshapeLike(*input_blobs_[0]);
+
+  Blob<Dtype> * iminfo_blob = new Blob<Dtype>;
+  if (faster_rcnn) {
+    iminfo_blob->Reshape(std::vector<int>{1, 3});
+    Dtype* data = iminfo_blob->mutable_cpu_data();
+    data[0] = input_blobs_[0]->height();
+    data[1] = input_blobs_[0]->width();
+    data[2] = input_blobs_[0]->width() * 1.0 / w;
+    (net_->input_blobs()[1])->ReshapeLike(*iminfo_blob);
+    (net_->input_blobs()[1])->ShareData(*iminfo_blob);
+  }
+
+  net_->Reshape();
 
   for (int batch_id = 0; batch_id < batch_to_detect; batch_id++) {
     int real_batch_id = batch_id % input_blobs_.size();
@@ -290,31 +339,40 @@ void Detector<Dtype>::Detect(vector<vector<detect_result>> &all_objects,
       object.imgid = (int)result[k + 0] + real_batch_id * batch_size;
       object.classid = (int)result[k + 1];
       object.confidence = result[k + 2];
-      if (use_yolo_format_) {
-        object.left = (int)(fixup_norm_coord((result[k + 3] -
-                         result[k + 5] / 2.0), float(w) / h) * w);
-        object.right = (int)(fixup_norm_coord((result[k + 3] +
-                         result[k + 5] / 2.0), float(w) / h) * w);
-        object.top = (int)(fixup_norm_coord((result[k + 4] -
-                        result[k + 6] / 2.0), float(h) / w) * h);
-        object.bottom = (int)(fixup_norm_coord((result[k + 4] +
-                           result[k + 6] / 2.0), float(h) / w) * h);
+      if (faster_rcnn) {
+        object.left = (int)(result[k + 3]);
+        object.top = (int)(result[k + 4]);
+        object.right = (int)(result[k + 5]);
+        object.bottom = (int)(result[k + 6]);
       } else {
-        object.left = (int)(result[k + 3] * w);
-        object.top = (int)(result[k + 4] * h);
-        object.right = (int)(result[k + 5] * w);
-        object.bottom = (int)(result[k + 6] * h);
+        if (use_yolo_format_) {
+          object.left = (int)(fixup_norm_coord((result[k + 3] -
+                           result[k + 5] / 2.0), float(w) / h) * w);
+          object.right = (int)(fixup_norm_coord((result[k + 3] +
+                           result[k + 5] / 2.0), float(w) / h) * w);
+          object.top = (int)(fixup_norm_coord((result[k + 4] -
+                          result[k + 6] / 2.0), float(h) / w) * h);
+          object.bottom = (int)(fixup_norm_coord((result[k + 4] +
+                             result[k + 6] / 2.0), float(h) / w) * h);
+        } else {
+          object.left = (int)(result[k + 3] * w);
+          object.top = (int)(result[k + 4] * h);
+          object.right = (int)(result[k + 5] * w);
+          object.bottom = (int)(result[k + 6] * h);
+        }
+        if (object.left < 0) object.left = 0;
+        if (object.top < 0) object.top = 0;
+        if (object.right >= w) object.right = w - 1;
+        if (object.bottom >= h) object.bottom = h - 1;
       }
-      if (object.left < 0) object.left = 0;
-      if (object.top < 0) object.top = 0;
-      if (object.right >= w) object.right = w - 1;
-      if (object.bottom >= h) object.bottom = h - 1;
       objects[result[k + 0]].push_back(object);
     }
     if (visualize)
       ShowResult(*origin_imgs_, objects, step_mode);
     all_objects.insert(all_objects.end(), objects.begin(), objects.end());
   }
+
+  delete iminfo_blob;
 }
 
 int main(int argc, char** argv) {
