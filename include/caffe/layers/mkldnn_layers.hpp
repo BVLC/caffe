@@ -444,6 +444,7 @@ private:
 
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;
+    bool reshape;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);

@@ -160,6 +160,47 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   VLOG(1) << "MKLDNNConcatLayer<Dtype>::Reshape: "  << this->layer_param_.name();
 
+  if (concat_dimension == 0)
+  {
+    if (this->channels_ == bottom[0]->channels() &&
+      this->height_ == bottom[0]->height() &&
+      this->width_ == bottom[0]->width()) {
+        reshape = false;
+    } else {
+      reshape = true;
+    }
+  }
+  else if (concat_dimension == 1)
+  {
+    if (this->num_ == bottom[0]->num() &&
+      this->height_ == bottom[0]->height() &&
+      this->width_ == bottom[0]->width()) {
+        reshape = false;
+    } else {
+      reshape = true;
+    }
+  }
+  else if (concat_dimension == 2)
+  {
+    if (this->num_ == bottom[0]->num() &&
+      this->channels_ == bottom[0]->channels() &&
+      this->width_ == bottom[0]->width()) {
+        reshape = false;
+    } else {
+      reshape = true;
+    }
+  }
+  else if (concat_dimension == 3)
+  {
+    if (this->num_ == bottom[0]->num() &&
+      this->channels_ == bottom[0]->channels() &&
+      this->height_ == bottom[0]->height()) {
+        reshape = false;
+    } else {
+      reshape = true;
+    }
+  }
+
   top[0]->Reshape(num_, channels_, height_, width_);
 }
 
@@ -368,7 +409,7 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-  if (NULL == concatFwd_pd)
+  if ((NULL == concatFwd_pd) || (true == reshape))
     InitConcatFwd(bottom, top);
   for (auto i = 0; i < num_concats_; i++) {
     // making reorders if needed.
@@ -393,7 +434,7 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-  if (reorders.size() == 0)
+  if ((reorders.size() == 0) || (true == reshape))
     InitConcatBwd(top, propagate_down, bottom);
   bwd_top_diff->sync_before_read();
   for (auto i = 0; i < num_concats_; ++i) {
