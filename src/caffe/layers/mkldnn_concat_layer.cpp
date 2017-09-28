@@ -79,24 +79,28 @@ void MKLDNNConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
       CHECK_EQ(bottom[0]->height(), bottom[i]->height());
       CHECK_EQ(bottom[0]->width(), bottom[i]->width());
+      break;
     }
     else if (concat_dimension == 1)
     {
       CHECK_EQ(bottom[0]->num(), bottom[i]->num());
       CHECK_EQ(bottom[0]->height(), bottom[i]->height());
       CHECK_EQ(bottom[0]->width(), bottom[i]->width());
+      break;
     }
     else if (concat_dimension == 2)
     {
       CHECK_EQ(bottom[0]->num(), bottom[i]->num());
       CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
       CHECK_EQ(bottom[0]->width(), bottom[i]->width());
+      break;
     }
     else if (concat_dimension == 3)
     {
       CHECK_EQ(bottom[0]->num(), bottom[i]->num());
       CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
       CHECK_EQ(bottom[0]->height(), bottom[i]->height());
+      break;
     }
   }
 
