@@ -64,6 +64,11 @@ endif
 #################### MLSL ####################
 
 ifeq ($(USE_MLSL), 1)
+
+ifeq ($(CPU_ONLY), 0)
+$(error Multi-node is not supported if CPU_ONLY is disabled. Please set CPU_ONLY=1 if USE_MLSL=1)
+endif
+
 	RETURN_STRING=$(shell ./external/mlsl/prepare_mlsl.sh)
 	MLSL_ROOT=$(firstword $(RETURN_STRING))
 	MLSL_LDFLAGS=$(lastword $(RETURN_STRING))	
