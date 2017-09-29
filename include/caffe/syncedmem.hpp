@@ -151,6 +151,7 @@ class SyncedMemory {
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
   ~SyncedMemory();
+  void swap(shared_ptr<SyncedMemory> other);
   const void* cpu_data();
   void set_cpu_data(void* data);
   const void* gpu_data();

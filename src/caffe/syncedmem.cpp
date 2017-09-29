@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
-
 SyncedMemory::~SyncedMemory() {
   if (cpu_ptr_ && own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
@@ -245,4 +244,11 @@ void* SyncedMemory::mutable_prv_data() {
   return prv_descriptor_->prv_ptr();
 }
 
+void SyncedMemory::swap(shared_ptr<SyncedMemory> other) {
+  std::swap(other->cpu_ptr_, this->cpu_ptr_);
+  std::swap(other->head_, this->head_);
+  std::swap(other->own_cpu_data_, this->own_cpu_data_);
+  std::swap(other->own_prv_data_, this->own_prv_data_);
+  std::swap(other->prv_descriptor_, this->prv_descriptor_);
+}
 }  // namespace caffe
