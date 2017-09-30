@@ -295,8 +295,7 @@ void axpy_axpby_copy_axpy<float>(size_t count, const float decay, float* net_par
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    net_params_diff[i] = history_data[i];
-    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
+    net_params_data[i] = update_param * history_data[i] + net_params_data[i];
   }
 }
 
@@ -311,8 +310,7 @@ void axpy_axpby_copy_axpy<double>(size_t count, const double decay, double* net_
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    net_params_diff[i] = history_data[i];
-    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
+    net_params_data[i] = update_param * history_data[i] + net_params_data[i];
   }
 }
 //End: For L2 Regularize_ComputeUpdateValue_Update_Fusion
