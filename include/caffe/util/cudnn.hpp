@@ -45,6 +45,8 @@ inline const char* cudnnGetErrorString(cudnnStatus_t status) {
     case CUDNN_STATUS_RUNTIME_PREREQUISITE_MISSING:
       return "CUDNN_STATUS_RUNTIME_PREREQUISITE_MISSING";
 #endif
+    default:
+      return "Unknown cudnn status";
   }
   return "Unknown cudnn status";
 }
