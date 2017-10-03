@@ -25,6 +25,11 @@ class AccuracyLayer : public Layer<Dtype> {
    *     Sets the maximum rank @f$ k @f$ at which a prediction is considered
    *     correct.  For example, if @f$ k = 5 @f$, a prediction is counted
    *     correct if the correct label is among the top 5 predicted labels.
+   *   - type (\b optional, default REC).
+   *     Compute with different types of relevance, such as recall (REC),
+   *     precision (PRE) or jaccard index (JAC). The jaccard index corresponds
+   *     to the intersection over union. The layer name is only symbolic and not
+   *     to be confused with the "rand accuracy" or "rand index".
    */
   explicit AccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -82,12 +87,12 @@ class AccuracyLayer : public Layer<Dtype> {
 
   int top_k_;
 
+  AccuracyParameter_AccuracyType type_;
+
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
-  /// Keeps counts of the number of samples per class.
-  Blob<Dtype> nums_buffer_;
 };
 
 }  // namespace caffe
