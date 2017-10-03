@@ -5,7 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
+//#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -236,9 +236,11 @@ void caffe_abs<double>(const int n, const double* a, double* y) {
     vdAbs(n, a, y);
 }
 
+/*
 unsigned int caffe_rng_rand() {
   return (*caffe_rng())();
 }
+*/
 
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b) {
@@ -252,6 +254,7 @@ float caffe_nextafter(const float b);
 template
 double caffe_nextafter(const double b);
 
+/*
 template <typename Dtype>
 void caffe_rng_uniform(const int n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK_GE(n, 0);
@@ -334,6 +337,7 @@ void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
 
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
+*/
 
 template <>
 float caffe_cpu_strided_dot<float>(const int n, const float* x, const int incx,
