@@ -27,7 +27,7 @@ snapshot=""
 solver_file=""
 
 # specify engine for running caffe
-engine="MKL2017"
+engine="MKLDNN"
 
 #default numa node if needed
 numanode=0

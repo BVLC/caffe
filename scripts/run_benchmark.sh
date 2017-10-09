@@ -13,7 +13,7 @@ declare -a model_list=("alexnet" "googlenet" "googlenet_v2" "resnet_50")
 cpu_model="skx"
 
 # specify default engine for running caffe benchmarks
-engine="MKL2017"
+engine="MKLDNN"
 
 # directory path to save results
 result_dir=""
