@@ -7,7 +7,7 @@ set(Caffe_COMPILE_OPTIONS "")
 # ---[ Boost
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 if(WIN32)
-LINK_DIRECTORIES(C:/local/boost_1_64_0/lib32-msvc-14.1)
+  LINK_DIRECTORIES(C:/local/boost_1_64_0/lib32-msvc-14.1)
 endif()
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${Boost_LIBRARIES})
