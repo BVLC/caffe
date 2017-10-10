@@ -92,7 +92,7 @@ class Classifier(caffe.Net):
 
         # For oversampling, average predictions across crops.
         if oversample:
-            predictions = predictions.reshape((len(predictions) / 10, 10, -1))
+            predictions = predictions.reshape((len(predictions) // 10, 10, -1))
             predictions = predictions.mean(1)
 
         return predictions
