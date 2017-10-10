@@ -48,7 +48,7 @@ int64_t cluster_seedgen(void) {
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
-    : random_generator_(), mode_(Caffe::CPU), device_id_(-1)
+    :  mode_(Caffe::CPU), device_id_(-1)
 {
 
 puts("cpu onlu");
