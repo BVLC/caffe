@@ -47,10 +47,6 @@ void WeightedEuclideanLossLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[2]) {
-    LOG(FATAL) << this->type() <<
-     "Weighted Euclidean loss layer cannot backpropagate to certainty inputs.";
-  }
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
@@ -67,6 +63,14 @@ void WeightedEuclideanLossLayer<Dtype>::Backward_cpu(
                 bottom[2]->cpu_data(),
                 bottom[i]->mutable_cpu_diff());
     }
+  }
+  // Propagate to weight layer
+  if (propagate_down[2]) {
+    caffe_mul(
+        bottom[0]->count(),
+        diff_.cpu_data(),
+        diff_.cpu_data(),
+        bottom[2]->mutable_cpu_diff());
   }
 }
 
