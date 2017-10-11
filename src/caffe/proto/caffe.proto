@@ -405,6 +405,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional MultiStageMeanfieldParameter multi_stage_meanfield_param = 1000;
 }
 
 // Message that stores parameters used to apply transformation
@@ -457,6 +458,26 @@ message LossParameter {
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+}
+
+// Message that stores parameters used by MultiStageMeanfieldLayer
+message MultiStageMeanfieldParameter {
+  enum Mode {
+    POTTS = 0;
+  }
+  optional Mode compatibility_mode = 1 [default = POTTS];
+  optional float threshold = 2;
+
+  required float theta_alpha = 3 [default = 10.];
+  required float theta_beta = 4 [default = 10.];
+  required float theta_gamma = 5 [default = 10.];
+
+  required uint32 num_iterations = 6 [default = 1];
+
+  optional string spatial_filter_weights_str = 19 [default=""];
+  optional string bilateral_filter_weights_str = 20 [default=""];
+
+  optional bool force_cpu=29 [default=false];//Force CPU meanfield to use, even though GPU is available
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -959,7 +980,7 @@ message RecurrentParameter {
   // blobs.  The number of additional bottom/top blobs required depends on the
   // recurrent architecture -- e.g., 1 for RNNs, 2 for LSTMs.
   optional bool expose_hidden = 5 [default = false];
-}
+} 
 
 // Message that stores parameters used by ReductionLayer
 message ReductionParameter {

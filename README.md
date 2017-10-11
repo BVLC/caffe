@@ -1,7 +1,18 @@
-# Caffe
+# Caffe upstream for CRF-RNN
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+
+
+Tutorial on how to compile the code:
+```
+mkdir build && cmake ../ && make all -j"$(nproc)" && make -j"$(nproc)" pycaffe
+```
+How to use the python demo code:
+Assume you download caffemodel and save it at $CAFFE_ROOT/example/crfasrnn_segmentation/
+```
+python /opt/caffe/example/crfasrnn_segmentation/crfasrnn_demo.py
+``` 
 
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu))/The Berkeley Vision and Learning Center (BVLC) and community contributors.
