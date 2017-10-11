@@ -1546,36 +1546,52 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
 
 template <typename Dtype>
 void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
-  hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
+  hid_t file_hid = -1;
+  hid_t data_hid = -1;
+  hid_t diff_hid = -1;
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
+  file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
       H5P_DEFAULT);
   CHECK_GE(file_hid, 0)
       << "Couldn't open " << filename << " to save weights.";
-  hid_t data_hid = H5Gcreate2(file_hid, "data", H5P_DEFAULT, H5P_DEFAULT,
+  data_hid = H5Gcreate2(file_hid, "data", H5P_DEFAULT, H5P_DEFAULT,
       H5P_DEFAULT);
   CHECK_GE(data_hid, 0) << "Error saving weights to " << filename << ".";
-  hid_t diff_hid = -1;
   if (write_diff) {
     diff_hid = H5Gcreate2(file_hid, "diff", H5P_DEFAULT, H5P_DEFAULT,
         H5P_DEFAULT);
     CHECK_GE(diff_hid, 0) << "Error saving weights to " << filename << ".";
   }
+#ifdef USE_MLSL
+  }
+#endif
+
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
     const LayerParameter& layer_param = layers_[layer_id]->layer_param();
 #ifdef USE_MLSL
     if (layer_param.type() == "MnActivation") continue;
 #endif
-    string layer_name = layer_param.name();
-    hid_t layer_data_hid = H5Gcreate2(data_hid, layer_name.c_str(),
-        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    CHECK_GE(layer_data_hid, 0)
-        << "Error saving weights to " << filename << ".";
+    hid_t layer_data_hid = -1;
     hid_t layer_diff_hid = -1;
-    if (write_diff) {
-      layer_diff_hid = H5Gcreate2(diff_hid, layer_name.c_str(),
+#ifdef USE_MLSL
+    if (mn::is_root()) {
+#endif
+      string layer_name = layer_param.name();
+      layer_data_hid = H5Gcreate2(data_hid, layer_name.c_str(),
           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      CHECK_GE(layer_diff_hid, 0)
+      CHECK_GE(layer_data_hid, 0)
+        << "Error saving weights to " << filename << ".";
+      if (write_diff) {
+        layer_diff_hid = H5Gcreate2(diff_hid, layer_name.c_str(),
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        CHECK_GE(layer_diff_hid, 0)
           << "Error saving weights to " << filename << ".";
+      }
+#ifdef USE_MLSL
     }
+#endif
     int num_params = layers_[layer_id]->blobs().size();
     for (int param_id = 0; param_id < num_params; ++param_id) {
       ostringstream dataset_name;
@@ -1612,15 +1628,17 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
                      new_blob.mutable_cpu_diff());
         }
       }
-      if (param_owners_[net_param_id] == -1) {
-        // Only save params that own themselves
-        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
-            new_blob);
-      }
-      if (write_diff) {
-        // Write diffs regardless of weight-sharing
-        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
-            new_blob, true);
+      if (mn::is_root()) {
+        if (param_owners_[net_param_id] == -1) {
+          // Only save params that own themselves
+          hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+              new_blob);
+        }
+        if (write_diff) {
+          // Write diffs regardless of weight-sharing
+          hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+              new_blob, true);
+        }
       }
 #else
       if (param_owners_[net_param_id] == -1) {
@@ -1635,16 +1653,28 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
       }
 #endif
     }
+#ifdef USE_MLSL
+    if (mn::is_root()) {
+#endif
     H5Gclose(layer_data_hid);
     if (write_diff) {
       H5Gclose(layer_diff_hid);
     }
+#ifdef USE_MLSL
+    }
+#endif
   }
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
   H5Gclose(data_hid);
   if (write_diff) {
     H5Gclose(diff_hid);
   }
   H5Fclose(file_hid);
+#ifdef USE_MLSL
+  }
+#endif
 }
 
 template <typename Dtype>
