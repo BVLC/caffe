@@ -32,7 +32,7 @@ We may install the dependencies by merely one line
     sudo apt build-dep caffe-cuda       # dependencies for CUDA version
 
 It requires a `deb-src` line in your `sources.list`.
-Continue with [compilation](installation.html#compilation).
+Continue with [compilation](installation.md#compilation).
 
 ### For Ubuntu (\< 17.04)
 
@@ -79,4 +79,4 @@ These dependencies need manual installation in 12.04.
 
 Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.
 
-Continue with [compilation](installation.html#compilation).
+Continue with [compilation](installation.md#compilation).
