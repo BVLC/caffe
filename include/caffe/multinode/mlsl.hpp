@@ -293,6 +293,7 @@ namespace caffe {
 
     inline void GetCanonicalMnParam(int &num_nodes, int &model_parts) {
       if (num_nodes == 0) num_nodes = mn::get_group_size();
+      if (is_param_server()) num_nodes = 1;
       if (model_parts == 0 || model_parts > num_nodes) model_parts = num_nodes;
     }
 
