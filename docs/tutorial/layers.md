@@ -87,7 +87,7 @@ Layers:
 * [ELU](layers/elu.html) - exponential linear rectification.
 * [Sigmoid](layers/sigmoid.html)
 * [TanH](layers/tanh.html)
-* [Absolute Value](layers/abs.html)
+* [Absolute Value](layers/absval.html)
 * [Power](layers/power.html) - f(x) = (shift + scale * x) ^ power.
 * [Exp](layers/exp.html) - f(x) = base ^ (shift + scale * x).
 * [Log](layers/log.html) - f(x) = log(x).
