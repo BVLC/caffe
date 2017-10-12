@@ -794,7 +794,6 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
   // in-place issue, so we add it into the list.
   raise_non_inplace_layer_type_list.push_back("Eltwise");
 
-
   for (auto layer_type : raise_non_inplace_layer_type_list) {
     specified_layer_input_blob_names.clear();
     inplace_blob_name_to_index.clear();
@@ -897,6 +896,13 @@ void Net<Dtype>::GetNeedToCancelInplaceLayers(
 
   for (auto blob_name : each_blob_list) {
     each_layer_pair.clear();
+    if (inplace_blob_name_to_index.find(blob_name) ==
+            inplace_blob_name_to_index.end() ||
+        specified_layer_blob_name_to_index.find(blob_name) ==
+            specified_layer_blob_name_to_index.end()) {
+      continue;
+    }
+
     LayerParameter* bottom_layer =
         (const_cast<NetParameter&>(param))
             .mutable_layer(inplace_blob_name_to_index[blob_name]);
