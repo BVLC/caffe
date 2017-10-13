@@ -445,7 +445,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 155 (last added: selu_dropout_param)
+// LayerParameter next available layer-specific ID: 156 (last added: focal_loss_parm)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -549,6 +549,7 @@ message LayerParameter {
   optional SigmoidParameter sigmoid_param = 124;
   optional SmoothL1LossParameter smooth_l1_loss_param = 148;
   optional SoftmaxParameter softmax_param = 125;
+  optional FocalLossParameter focal_loss_param = 156;
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
@@ -1745,6 +1746,22 @@ message SoftmaxParameter {
   // Any other axes will be evaluated as independent softmaxes.
   optional int32 axis = 2 [default = 1];
 }
+
+message FocalLossParameter {
+  enum Engine {
+      DEFAULT = 0;
+      CAFFE = 1;
+      CUDNN = 2;
+  }
+  optional Engine engine = 1 [default = DEFAULT];
+
+  // The axis along which to perform the softmax -- may be negative to index
+  // from the end (e.g., -1 for the last axis).
+  // Any other axes will be evaluated as independent softmaxes.
+  optional int32 axis = 2 [default = 1];
+  optional float alpha = 3 [default = 0.25];
+  optional float gamma = 4 [default = 2.0];
+}    
 
 // Message that stores parameters used by TanHLayer
 message TanHParameter {

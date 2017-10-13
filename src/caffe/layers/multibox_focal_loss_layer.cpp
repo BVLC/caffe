@@ -3,13 +3,13 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/layers/multibox_loss_layer.hpp"
+#include "caffe/layers/multibox_focal_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MultiBoxFocalLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   if (this->layer_param_.propagate_down_size() == 0) {
@@ -18,6 +18,10 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->layer_param_.add_propagate_down(false);
     this->layer_param_.add_propagate_down(false);
   }
+
+  alpha_ = this->layer_param_.focal_loss_param().alpha();
+  gamma_ = this->layer_param_.focal_loss_param().gamma();
+
   const MultiBoxLossParameter& multibox_loss_param =
       this->layer_param_.multibox_loss_param();
   multibox_loss_param_ = this->layer_param_.multibox_loss_param();
@@ -97,13 +101,15 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(background_label_id_, num_classes_)
         << "background_label_id should be within [0, num_classes) for Softmax.";
     LayerParameter layer_param;
-    layer_param.set_name(this->layer_param_.name() + "_softmax_conf");
-    layer_param.set_type("SoftmaxWithLoss");
+    layer_param.set_name(this->layer_param_.name() + "_focal_conf");
+    layer_param.set_type("FocalLoss");
     layer_param.add_loss_weight(Dtype(1.));
     layer_param.mutable_loss_param()->set_normalization(
         LossParameter_NormalizationMode_NONE);
-    SoftmaxParameter* softmax_param = layer_param.mutable_softmax_param();
-    softmax_param->set_axis(1);
+    FocalLossParameter* faocal_param = layer_param.mutable_focal_loss_param();
+    faocal_param->set_axis(1);
+    faocal_param->set_alpha(alpha_);
+    faocal_param->set_gamma(gamma_);
     // Fake reshape.
     vector<int> conf_shape(1, 1);
     conf_gt_.Reshape(conf_shape);
@@ -129,7 +135,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MultiBoxFocalLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
   num_ = bottom[0]->num();
@@ -138,12 +144,12 @@ void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[0]->channels())
       << "Number of priors must match number of location predictions.";
-   CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
+  CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
       << "Number of priors must match number of confidence predictions.";
 }
 
 template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MultiBoxFocalLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* loc_data = bottom[0]->cpu_data();
   const Dtype* conf_data = bottom[1]->cpu_data();
@@ -253,7 +259,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MultiBoxFocalLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
 
@@ -369,7 +375,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   all_neg_indices_.clear();
 }
 
-INSTANTIATE_CLASS(MultiBoxLossLayer);
-REGISTER_LAYER_CLASS(MultiBoxLoss);
+INSTANTIATE_CLASS(MultiBoxFocalLossLayer);
+REGISTER_LAYER_CLASS(MultiBoxFocalLoss);
 
 }  // namespace caffe
