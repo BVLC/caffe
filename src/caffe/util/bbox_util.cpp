@@ -1911,6 +1911,49 @@ inline int clamp(const int v, const int a, const int b) {
   return v < a ? a : v > b ? b : v;
 }
 
+void ApplySoftNMSFast(const vector<NormalizedBBox>& bboxes,
+		      const vector<float>& scores, const float score_threshold,
+		      const float nms_threshold, const float eta, const float theta, const int top_k,
+		      vector<int>* indices) {
+  // Sanity check.
+  CHECK_EQ(bboxes.size(), scores.size())
+      << "bboxes and scores have different size.";
+
+  // Get top_k scores (with corresponding indices).
+  vector<pair<float, int> > score_index_vec;
+  GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
+
+  // Do nms.
+  float adaptive_threshold = nms_threshold;
+  indices->clear();
+  while (score_index_vec.size() != 0) {
+    const int idx = score_index_vec.front().second;
+    float cscore = score_index_vec.front().first;
+    bool keep = true;
+    for (int k = 0; k < indices->size(); ++k) {
+      if (keep) {
+        const int kept_idx = (*indices)[k];
+        float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
+	float nscore = cscore * exp(-(overlap*overlap)/theta);
+	score_index_vec.push_back(std::make_pair(nscore,idx));
+	score_index_vec.erase(score_index_vec.begin());
+	std::stable_sort(score_index_vec.begin(), score_index_vec.end(),
+			 SortScorePairDescend<int>);
+        keep = overlap <= adaptive_threshold;
+      } else {
+        break;
+      }
+    }
+    if (keep) {
+      indices->push_back(idx);
+    }
+    score_index_vec.erase(score_index_vec.begin());
+    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+      adaptive_threshold *= eta;
+    }
+  }
+}
+  
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const vector<float>& scores, const float score_threshold,
       const float nms_threshold, const float eta, const int top_k,
@@ -1948,6 +1991,45 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   }
 }
 
+template <typename Dtype>
+void ApplySoftNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+		      const float eta, const float theta, const int top_k, vector<int>* indices) {
+  // Get top_k scores (with corresponding indices).
+  vector<pair<Dtype, int> > score_index_vec;
+  GetMaxScoreIndex(scores, num, score_threshold, top_k, &score_index_vec);
+
+  // Do nms.
+  float adaptive_threshold = nms_threshold;
+  indices->clear();
+  while (score_index_vec.size() != 0) {
+    const int idx = score_index_vec.front().second;
+    float cscore = score_index_vec.front().first;
+    bool keep = true;
+    for (int k = 0; k < indices->size(); ++k) {
+      if (keep) {
+        const int kept_idx = (*indices)[k];
+        float overlap = JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4);
+	float nscore = cscore * exp(-(overlap*overlap)/theta);
+	score_index_vec.push_back(std::make_pair(nscore,idx));
+	score_index_vec.erase(score_index_vec.begin());
+	std::stable_sort(score_index_vec.begin(), score_index_vec.end(),
+			 SortScorePairDescend<int>);
+        keep = overlap <= adaptive_threshold;
+      } else {
+        break;
+      }
+    }
+    if (keep) {
+      indices->push_back(idx);
+    }
+    score_index_vec.erase(score_index_vec.begin());
+    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+      adaptive_threshold *= eta;
+    }
+  }
+}
+  
 template <typename Dtype>
 void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,

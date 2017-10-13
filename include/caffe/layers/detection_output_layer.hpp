@@ -85,10 +85,12 @@ class DetectionOutputLayer : public Layer<Dtype> {
   int num_;
   int num_priors_;
 
+  bool soft_nms_ = false;
   float nms_threshold_;
   int top_k_;
   float eta_;
-
+  float theta_; // for softNMS
+  
   bool need_save_;
   string output_directory_;
   string output_name_prefix_;

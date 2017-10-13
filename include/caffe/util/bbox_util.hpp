@@ -417,6 +417,11 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const float nms_threshold, const float eta, const int top_k,
       vector<int>* indices);
 
+void ApplySoftNMSFast(const vector<NormalizedBBox>& bboxes,
+      const vector<float>& scores, const float score_threshold,
+      const float nms_threshold, const float eta, const float theta,
+      const int top_k, vector<int>* indices);
+  
 // Do non maximum suppression based on raw bboxes and scores data.
 // Inspired by Piotr Dollar's NMS implementation in EdgeBox.
 // https://goo.gl/jV3JYS
@@ -432,6 +437,11 @@ template <typename Dtype>
 void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,
       const float eta, const int top_k, vector<int>* indices);
+
+template <typename Dtype>
+void ApplySoftNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+		      const float eta, const float theta, const int top_k, vector<int>* indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);

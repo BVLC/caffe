@@ -1010,6 +1010,10 @@ message NonMaximumSuppressionParameter {
   optional int32 top_k = 2;
   // Parameter for adaptive nms.
   optional float eta = 3 [default = 1.0];
+  // Whether to use SoftNMS
+  optional bool soft_nms = 4 [default = false];
+  // Theta variance for SoftNMS
+  optional float theta = 5 [default = 0.5];
 }
 
 message SaveOutputParameter {
