@@ -2072,6 +2072,15 @@ void ApplyNMSFast(const double* bboxes, const double* scores, const int num,
       const float score_threshold, const float nms_threshold,
       const float eta, const int top_k, vector<int>* indices);
 
+template
+void ApplySoftNMSFast(const float* bboxes, const float* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+      const float eta, const float theta, const int top_k, vector<int>* indices);
+template
+void ApplySoftNMSFast(const double* bboxes, const double* scores, const int num,
+      const float score_threshold, const float nms_threshold,
+      const float eta, const float theta, const int top_k, vector<int>* indices);
+
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum) {
   // Sort the pairs based on first item of the pair.
   vector<pair<float, int> > sort_pairs = pairs;
