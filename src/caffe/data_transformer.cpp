@@ -8,7 +8,7 @@
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
+//#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -45,7 +45,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool do_mirror = param_.mirror() ;//&& Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
@@ -81,10 +81,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     height = crop_size;
     width = crop_size;
     // We only do random crop when we do training.
+    /*
     if (phase_ == TRAIN) {
       h_off = Rand(datum_height - crop_size + 1);
       w_off = Rand(datum_width - crop_size + 1);
-    } else {
+    } else */ {
       h_off = (datum_height - crop_size) / 2;
       w_off = (datum_width - crop_size) / 2;
     }
@@ -241,7 +242,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool do_mirror = param_.mirror() ;//&& Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -274,10 +275,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
+    /*
     if (phase_ == TRAIN) {
       h_off = Rand(img_height - crop_size + 1);
       w_off = Rand(img_width - crop_size + 1);
-    } else {
+    } else */ {
       h_off = (img_height - crop_size) / 2;
       w_off = (img_width - crop_size) / 2;
     }
@@ -355,7 +357,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool do_mirror = param_.mirror() ;//&& Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -365,10 +367,11 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
+    /*
     if (phase_ == TRAIN) {
       h_off = Rand(input_height - crop_size + 1);
       w_off = Rand(input_width - crop_size + 1);
-    } else {
+    } else */ {
       h_off = (input_height - crop_size) / 2;
       w_off = (input_width - crop_size) / 2;
     }
@@ -516,6 +519,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 }
 #endif  // USE_OPENCV
 
+/*
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
@@ -536,6 +540,7 @@ int DataTransformer<Dtype>::Rand(int n) {
       static_cast<caffe::rng_t*>(rng_->generator());
   return ((*rng)() % n);
 }
+*/
 
 INSTANTIATE_CLASS(DataTransformer);
 

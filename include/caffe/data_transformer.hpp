@@ -23,7 +23,7 @@ class DataTransformer {
    * @brief Initialize the Random number generations if needed by the
    *    transformation.
    */
-  void InitRand();
+//  void InitRand();
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -136,14 +136,14 @@ class DataTransformer {
    * @return
    *    A uniformly random integer value from ({0, 1, ..., n-1}).
    */
-  virtual int Rand(int n);
+  //virtual int Rand(int n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
 
 
-  shared_ptr<Caffe::RNG> rng_;
+ // shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;

@@ -98,6 +98,7 @@ class Caffe {
 
   // This random number generator facade hides boost and CUDA rng
   // implementation from one another (for cross-platform compatibility).
+  /*
   class RNG {
    public:
     RNG();
@@ -117,11 +118,15 @@ class Caffe {
     }
     return *(Get().random_generator_);
   }
+  */
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
+
+  /*
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+  */
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -138,7 +143,7 @@ class Caffe {
     }
   }
   // Sets the random seed of both boost and curand
-  static void set_random_seed(const unsigned int seed);
+  //static void set_random_seed(const unsigned int seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
@@ -156,9 +161,9 @@ class Caffe {
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
-  curandGenerator_t curand_generator_;
+  //curandGenerator_t curand_generator_;
 #endif
-  shared_ptr<RNG> random_generator_;
+ // shared_ptr<RNG> random_generator_;
 
   Brew mode_;
   int device_id_;
