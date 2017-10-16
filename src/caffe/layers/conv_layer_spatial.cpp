@@ -256,15 +256,19 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
 #define TUNING_SIZE(x) ((x) > 256 ? 256 : (ALIGN(x, 16)))
 #define TUNING_BATCH_SIZE(x) ((x) > 32 ? 32 : ((x < 4) ? x : (ALIGN(x, 4))))
 
-
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::generate_key() {
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
   std::stringstream keyBuilder;
-  if (std::is_same<Dtype, float>::value)
+  if (std::is_same<Dtype, float>::value) {
     keyBuilder << "float_";
-  else
+    pretuned_key_.data_type = 1;
+  }
+  else {
     keyBuilder << "half_";
+    pretuned_key_.data_type = 0;
+  }
+
   keyBuilder << this->layer_param_.convolution_param().fuse_type() << "_"
              << kernel_w_ << "_"
              << kernel_h_ << "_"
@@ -284,6 +288,14 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context
                                 (this->device_->id());
+
+  pretuned_key_.set(ctx.current_device().max_compute_units(),
+                    kernel_w_, kernel_h_, pad_w_, pad_h_, stride_w_, stride_h_,
+                    dilation_w_, dilation_h_, this->group_, this->channels_,
+                    TUNING_SIZE(width_), TUNING_SIZE(height_),
+                    TUNING_BATCH_SIZE(this->num_), M_,
+                    this->layer_param_.convolution_param().fuse_type(),
+                    this->bias_term_);
 
   std::string prefix = ctx.current_device().name()
                   + ctx.current_device().vendor()
@@ -1860,6 +1872,29 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
 
   tuned_ = true;
 
+  {
+    // be careful in pretune stage, following code does not consider multiple-thread/process
+    PretunedValue v;
+    v.set(bestKernelConfig->workItem_output[0], bestKernelConfig->workItem_output[1], bestKernelConfig->workItem_output[2],
+          bestKernelConfig->local_work_size[0], bestKernelConfig->local_work_size[1], bestKernelConfig->local_work_size[2],
+          static_cast<int>(bestKernelConfig->kernelType));
+
+    static std::map<PretunedKey, PretunedValue> saved;
+    if (saved.find(pretuned_key_) != saved.end()) {
+      CHECK(saved[pretuned_key_] == v);
+    } else {
+      string fname = cache_path_.str() + "pretunedkv.txt";
+      std::ofstream f(fname.c_str(), ios::app);
+      //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
+      f << "{";
+      f << pretuned_key_.str() << ",";
+      f << v.str();
+      f << "}," << std::endl;
+      f.close();
+      saved[pretuned_key_] = v;
+    }
+  }
+
   string outputFile;
   outputFile = cache_path_.str() + key_;
   std::ifstream cachedKernel(outputFile.c_str());
@@ -2002,8 +2037,48 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& top) {
   // Generates static key_
   std::string previous_key = key_;
+  PretunedKey previouse_pt_key = pretuned_key_;
   generate_key();
   kernelConfig prev_kernel_config;
+
+  if (pretuned_kv.find(pretuned_key_) != pretuned_kv.end()) {
+    if (bestKernelConfig != NULL) {
+      CHECK(tuned_);
+      if (previouse_pt_key == pretuned_key_) {
+        return;
+      } else {
+        prev_kernel_config = *bestKernelConfig;
+        viennacl::ocl::current_context().
+          delete_program(bestKernelConfig->kernelName);
+        delete bestKernelConfig;
+        bestKernelConfig = NULL;
+      }
+    }
+
+    PretunedValue& v = pretuned_kv[pretuned_key_];
+    create_convolution_kernel(bottom, top,
+                              static_cast<ConvType>(v.kernel_type),
+                              v.block_w, v.block_h, v.block_d);
+    int_tp kernel_index_ = kernelQueue.size() - 1;
+    if (kernel_index_ == -1) {
+      std::cerr << "Failed to get kernel from pretuned configurations. Just ignore it."
+                << std::endl;
+      std::cerr << "Try pre-tune again..."
+                << std::endl;
+      tuned_ = false;
+    } else {
+      bestKernelConfig = kernelQueue[kernel_index_];
+      kernelQueue.clear();
+      bestKernelConfig->local_work_size[0] = v.local_size_x;
+      bestKernelConfig->local_work_size[1] = v.local_size_y;
+      bestKernelConfig->local_work_size[2] = v.local_size_z;
+      tuned_ = true;
+      if (need_swizzle(prev_kernel_config, *bestKernelConfig))
+        swizzled_weights_ = NULL;
+      return;
+    }
+  }
+
   if (tuned_) {
     if (key_.compare(previous_key) == 0)
       return;
