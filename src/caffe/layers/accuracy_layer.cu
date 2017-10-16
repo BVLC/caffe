@@ -71,16 +71,11 @@ void AccuracyLayer<Dtype>::Forward_gpu(
   const int dim = bottom[0]->count() / outer_num_;
   const int num_labels = bottom[0]->shape(label_axis_);
   const int nthreads = outer_num_ * inner_num_;
-  // Since this memory is not used for anything,
-  // we use it here to avoid having to allocate new GPU
-  // memory to accumulate intermediate results in the kernel.
-  Dtype* acc_data = bottom[0]->mutable_gpu_diff();
+  Dtype* acc_data = gpu_buffer_.mutable_gpu_data();
   if (top.size() == 1) {
     // simple case - report only global accuracy.
 
-    // Similarly, this memory is never used elsewhere, and thus we can use it
-    // to avoid having to allocate additional GPU memory.
-    Dtype* counts = bottom[1]->mutable_gpu_diff();
+    Dtype* counts = gpu_buffer_.mutable_gpu_diff();
     // NOLINT_NEXT_LINE(whitespace/operators)
     AccuracyForwardGPU<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
         CAFFE_CUDA_NUM_THREADS>>>(nthreads, bottom_data, bottom_label,
@@ -113,7 +108,7 @@ void AccuracyLayer<Dtype>::Forward_gpu(
 
     // get the overall accuracy
     Dtype acc;
-    caffe_gpu_asum(bottom[0]->count(), acc_data, &acc);
+    caffe_gpu_asum(gpu_buffer_.count(), acc_data, &acc);
     Dtype valid_count;
     caffe_gpu_asum(nums_buffer_.count(), counts, &valid_count);
     if (valid_count > 0) {
