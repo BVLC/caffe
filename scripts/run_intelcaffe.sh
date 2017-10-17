@@ -300,35 +300,6 @@ function execute_command
     mv $log_file $cfile_ $result_dir_/
 }
 
-# used to calculate images / s
-function obtain_average_fwd_bwd_time
-{
-    result_file="${result_dir}/${log_file}"
-    if [ -f $result_file ]; then
-        average_time_line=`cat $result_file | grep "Average Forward-Backward"`
-        average_time=`echo $average_time_line | awk -F ' ' '{print $(NF-1)}'`
-        echo "average time : ${average_time} ms"
-    else
-        echo "Error: result file $result_file does not exist..."
-        exit 1
-    fi
-}
-
-# used to calculate images / s
-function obtain_batch_size
-{
-    batch_size=`cat $model_file | grep shape | sed -n "3, 1p" | awk '{print $4}'`
-    echo "batch size : $batch_size"
-}
-
-function calculate_images_per_second 
-{
-    obtain_batch_size
-    obtain_average_fwd_bwd_time
-    speed=`echo "$batch_size*1000/$average_time" | bc`
-    echo "benchmark speed : $speed images/s"
-}
-
 function run_qperf_bench
 {
     qperf_bin="qperf"
@@ -453,9 +424,6 @@ function run_caffe
         set_env_vars
     fi
     execute_command "$xeonbin" $result_dir
-    if [ ${mode} == "time" ]; then
-        calculate_images_per_second 
-    fi
 }
 
 
