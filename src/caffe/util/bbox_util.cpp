@@ -274,6 +274,46 @@ void ExtrapolateBBox(const ResizeParameter& param, const int height,
   }
 }
 
+void RotateBBox(const int rangle, const NormalizedBBox& bbox, NormalizedBBox* rbbox)
+{
+  // images and bbox are already scaled
+  int width = 1.0;
+  int height = 1.0;
+  //std::cerr << "initial bbox / xmin=" << bbox.xmin() << " / ymin=" << bbox.ymin() << " / xmax=" << bbox.xmax() << " / ymax=" << bbox.ymax() << std::endl;
+  if (rangle == 0)
+    {
+      rbbox->set_xmin(bbox.xmin());
+      rbbox->set_ymin(bbox.ymin());
+      rbbox->set_xmax(bbox.xmax());
+      rbbox->set_ymax(bbox.ymax());
+    }
+  else if (rangle == 1) // 90
+    {
+      rbbox->set_xmin(bbox.ymin());
+      rbbox->set_ymin(height-bbox.xmax());
+      rbbox->set_xmax(bbox.ymax());
+      rbbox->set_ymax(height-bbox.xmin());
+    }
+  else if (rangle == 2) // 180
+    {
+      rbbox->set_xmin(width-bbox.xmax());
+      rbbox->set_ymin(height-bbox.ymax());
+      rbbox->set_xmax(width-bbox.xmin());
+      rbbox->set_ymax(height-bbox.ymin());
+    }
+  else if (rangle == 3) // 270
+    {
+      rbbox->set_xmin(height-bbox.ymax());
+      rbbox->set_ymin(bbox.xmin());
+      rbbox->set_xmax(height-bbox.ymin());
+      rbbox->set_ymax(bbox.xmax());
+    }
+  rbbox->clear_size();
+  rbbox->set_size(BBoxSize(*rbbox));
+  rbbox->set_difficult(bbox.difficult());
+  //std::cerr << "rangle=" << rangle << " / output bbox / xmin=" << rbbox->xmin() << " / ymin=" << rbbox->ymin() << " / xmax=" << rbbox->xmax() << " / ymax=" << rbbox->ymax() << std::endl;
+}
+  
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized) {
   NormalizedBBox intersect_bbox;

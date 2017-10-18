@@ -92,6 +92,9 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
 void ExtrapolateBBox(const ResizeParameter& param, const int height,
     const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox);
 
+// Rotate bbox by a 90, 180 or 270 deg angle.
+void RotateBBox(const int rangle, const NormalizedBBox& bbox, NormalizedBBox* rbbox);
+  
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized = true);
