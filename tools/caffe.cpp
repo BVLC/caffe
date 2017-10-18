@@ -13,6 +13,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/layers/confusion_matrix_layer.hpp"
 #include "caffe/util/signal_handler.h"
 
 using caffe::Blob;
@@ -314,6 +315,18 @@ int test() {
       }
     }
   }
+
+  vector<shared_ptr<Layer<float> > > layers = caffe_net.layers();
+  for (int layer_i = 0; layer_i < layers.size(); layer_i++) {
+    if (layers[layer_i]->type() ==
+        caffe::ConfusionMatrixLayer<float>::GetType()) {
+      shared_ptr<caffe::ConfusionMatrixLayer<float> > ptr =
+        boost::dynamic_pointer_cast<caffe::ConfusionMatrixLayer<float> >(
+          layers[layer_i]);
+      ptr->PrintConfusionMatrix(true);
+    }
+  }
+
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int i = 0; i < test_score.size(); ++i) {
