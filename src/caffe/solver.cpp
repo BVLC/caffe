@@ -8,7 +8,7 @@
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-
+#include "caffe/layers/confusion_matrix_layer.hpp"
 namespace caffe {
 
 template<typename Dtype>
@@ -383,6 +383,16 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+
+  vector<shared_ptr<Layer<Dtype> > > layers = test_net->layers();
+  for (int layer_i = 0; layer_i < layers.size(); layer_i++) {
+    if (layers[layer_i]->type() == ConfusionMatrixLayer<Dtype>::GetType()) {
+      shared_ptr<ConfusionMatrixLayer<Dtype> > ptr =
+              boost::dynamic_pointer_cast<ConfusionMatrixLayer<Dtype> >(layers[layer_i]);
+      ptr->Print_confusion_matrix(true);
+    }
+  }
+
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
