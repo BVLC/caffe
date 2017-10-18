@@ -405,6 +405,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional ConfusionMatrixParameter confusion_matrix_param = 147;
 }
 
 // Message that stores parameters used to apply transformation
@@ -479,6 +480,23 @@ message AccuracyParameter {
   optional int32 ignore_label = 3;
 }
 
+message ConfusionMatrixParameter {
+  // When computing accuracy, count as correct by comparing the true label to
+  // the top k scoring classes.  By default, only compare to the top scoring
+  // class (i.e. argmax).
+
+  // The "label" axis of the prediction blob, whose argmax corresponds to the
+  // predicted label -- may be negative to index from the end (e.g., -1 for the
+  // last axis).  For example, if axis == 1 and the predictions are
+  // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
+  // labels with integer values in {0, 1, ..., C-1}.
+  optional int32 axis = 1 [default = 1];
+
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 2;
+
+  optional int32 test_iter = 3 [default = 100];
+}
 message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
