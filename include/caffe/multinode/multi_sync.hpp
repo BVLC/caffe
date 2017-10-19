@@ -102,6 +102,7 @@ namespace caffe {
     vector<bool> irecv_done;
     vector<bool> broadcast_launched;
     std::list<mn::TaskRequest> irecv_req_list;
+    boost::shared_ptr<mn::Distribution> distrib_bcast;
 
 #ifdef PERFORMANCE_MONITORING
     #define STATS_OUTPUT_FILE "mlsl_stats.txt"
@@ -340,24 +341,22 @@ namespace caffe {
     }
 
     void launch_param_broadcast(int layer_id, int param_id) {
-      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      mn::Distribution &distrib = layer->GetDistribution();
       Dtype* buff;
       if (CAN_USE_PRV_DATA(net_params[param_id])) {
-        if (distrib.is_root(MLSL::GroupType::GT_DATA))
+        if (distrib_bcast->is_root(MLSL::GroupType::GT_DATA))
           buff = (Dtype*)net_params[param_id]->prv_data();
         else
           buff = net_params[param_id]->mutable_prv_data();
       }
       else {
-        if (distrib.is_root(MLSL::GroupType::GT_DATA))
+        if (distrib_bcast->is_root(MLSL::GroupType::GT_DATA))
           buff = (Dtype*)net_params[param_id]->cpu_data();
         else
           buff = net_params[param_id]->mutable_cpu_data();
       }
       size_t buf_size = net_params[param_id]->count();
       broadcast_req_vec[param_id] =
-        distrib.bcast_async<Dtype,MLSL::GroupType::GT_DATA>(buff, buf_size);
+          distrib_bcast->bcast_async<Dtype,MLSL::GroupType::GT_DATA>(buff, buf_size);
     }
 
     void check_and_launch_broadcast() {
@@ -449,6 +448,9 @@ namespace caffe {
           broadcast_launched[param_id] = false;
         }
       }
+#ifdef FW_OVERLAP_OPT
+      solver->set_layer_finished_flag(layer_id, true);
+#endif
     }
 
     void delwt_wait_no_ps(int layer_id) {

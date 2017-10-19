@@ -67,12 +67,6 @@ namespace caffe {
       return MLSL::Environment::GetEnv().GetProcessCount();
     }
 
-    inline int get_global_part_id(int data_parts, int model_parts) {
-      int node_id = get_node_id();
-      int num_nodes = get_nodes_count();
-      return (node_id % (num_nodes / data_parts)) / model_parts;
-    }
-
     inline bool is_root() {
       return mn::get_node_id() == 0;
     }
@@ -113,6 +107,12 @@ namespace caffe {
 
     inline int get_group_size() {
       return (get_world_size() - nServer) / nGroup;
+    }
+
+    inline int get_global_part_id(int data_parts, int model_parts) {
+      int node_id = get_node_id();
+      int num_nodes = get_group_size();
+      return (node_id % (num_nodes / data_parts)) / model_parts;
     }
 
     inline int get_group_id() {
@@ -293,13 +293,16 @@ namespace caffe {
 
     inline void GetCanonicalMnParam(int &num_nodes, int &model_parts) {
       if (num_nodes == 0) num_nodes = mn::get_group_size();
-      if (is_param_server()) num_nodes = 1;
       if (model_parts == 0 || model_parts > num_nodes) model_parts = num_nodes;
     }
 
     shared_ptr<Distribution> create_distrib(
-      int dataParts, int modelParts, int dataColor = MLSL_DEFAULT_COLOR, int modelColor = MLSL_DEFAULT_COLOR,
-      int dataColorMax = MLSL_DEFAULT_COLOR, int modelColorMax = MLSL_DEFAULT_COLOR);
+      int dataParts, int modelParts, int dataColor, int modelColor,
+      int dataColorMax = MLSL_DEFAULT_COLOR,
+      int modelColorMax = MLSL_DEFAULT_COLOR);
+    boost::shared_ptr<Distribution> create_distrib(int dataParts, int modelParts);
+    boost::shared_ptr<Distribution> create_distrib();
+
     Distribution * get_distrib(int dataParts, int modelParts);
     Distribution * get_distrib();
 

@@ -87,30 +87,37 @@ namespace caffe {
     template<> 
     MLSL::DataType DtypeToMLSLDtype<double>() { return MLSL::DT_DOUBLE; }
 
-    shared_ptr<Distribution> create_distrib(
+    boost::shared_ptr<Distribution> create_distrib(
       int dataParts, int modelParts, int dataColor, int modelColor,
       int dataColorMax, int modelColorMax) {
-      return shared_ptr<Distribution>(
+      return boost::shared_ptr<Distribution>(
         new Distribution(dataParts, modelParts, dataColor, modelColor,
-                         dataColorMax, modelColorMax));
+          dataColorMax, modelColorMax));
+    }
+
+    boost::shared_ptr<Distribution> create_distrib(int dataParts, int modelParts) {
+      int node_id = get_node_id();
+      int num_nodes = get_group_size();
+      int modelColor = node_id / modelParts;
+      int dataColor = node_id % (num_nodes / dataParts);
+      return create_distrib(dataParts, modelParts, dataColor, modelColor);
+    }
+
+    boost::shared_ptr<Distribution> create_distrib() {
+      return create_distrib(get_group_size(), 1);
     }
 
     Distribution * get_distrib(int dataParts, int modelParts) {
       boost::mutex::scoped_lock l(distrib_lock);
       std::pair<int,int> key = std::make_pair(dataParts, modelParts);
       if (distrib_map->find(key) == distrib_map->end()) {
-        int node_id = get_node_id();
-        int num_nodes = get_nodes_count();
-        int modelColor = node_id / modelParts;
-        int dataColor = node_id % (num_nodes / dataParts);
-        (*distrib_map)[key] = boost::shared_ptr<Distribution>(
-          new Distribution(dataParts, modelParts, dataColor, modelColor));
+        (*distrib_map)[key] = create_distrib(dataParts, modelParts);
       }
       return (*distrib_map)[key].get();
     }
 
     Distribution * get_distrib() {
-      return get_distrib(get_nodes_count(), 1);
+      return get_distrib(get_group_size(), 1);
     }
   }
 }

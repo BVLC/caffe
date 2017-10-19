@@ -105,8 +105,7 @@ namespace caffe {
           }
         }
       }
-      total_update_ = total_send_ =
-        caffe::mn::get_num_groups() * recv_tasks_.size() * solver_->param().max_iter();
+      total_update_ = total_send_ = recv_tasks_.size() * (solver_->param().max_iter() - 1);
     }
 
     template <typename Dtype>

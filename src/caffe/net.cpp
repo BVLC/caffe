@@ -291,10 +291,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         if (caffe::TRAIN == param.state().phase()) {
             LOG(WARNING) << "SetMinibatchSize " << batch_size;
             if (global_batch_size < 0) {
-              global_batch_size = batch_size * mn::get_nodes_count();
+              global_batch_size = batch_size * mn::get_group_size();
               mn::train::set_global_minibatch_size(global_batch_size);
             } else {
-              CHECK_EQ(global_batch_size, batch_size * mn::get_nodes_count());
+              CHECK_EQ(global_batch_size, batch_size * mn::get_group_size());
             }
         }
     }

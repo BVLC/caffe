@@ -688,7 +688,7 @@ void Solver<Dtype>::TestClassification(const int test_net_id) {
   if (param_.test_compute_loss()) {
 #ifdef USE_MLSL
     mn::allreduce(&loss, 1);
-    loss /= (param_.test_iter(test_net_id) * mn::get_nodes_count());
+    loss /= (param_.test_iter(test_net_id) * mn::get_group_size());
     if (mn::get_node_id() == 0) {
       LOG(INFO) << "Test loss: " << loss;
     }
@@ -714,7 +714,7 @@ void Solver<Dtype>::TestClassification(const int test_net_id) {
     ostringstream loss_msg_stream;
 #ifdef USE_MLSL
     const Dtype mean_score =
-      test_score[i] / (param_.test_iter(test_net_id) * mn::get_nodes_count());
+      test_score[i] / (param_.test_iter(test_net_id) * mn::get_group_size());
 #else /* !USE_MLSL */
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
 #endif /* USE_MLSL */
