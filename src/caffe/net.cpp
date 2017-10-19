@@ -344,9 +344,9 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names) {
 
-  static size_t cnt;
 
   /*
+  static size_t cnt;
   if(cnt!=0)
     cudaProfilerStart();
     */

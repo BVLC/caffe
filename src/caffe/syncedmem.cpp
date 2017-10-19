@@ -1,10 +1,13 @@
-#include <deepir/cuda_buddy_pool.hpp>
 #include <memory>
 #include <shared_mutex>
 #include <stdexcept>
 
-#include "caffe/common.hpp"
+#ifndef CPU_ONLY
+#include <deepir/cuda_buddy_pool.hpp>
 #include "caffe/gpu_memory_pool.hpp"
+#endif
+
+#include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
