@@ -51,17 +51,10 @@ Caffe::Caffe()
     :  mode_(Caffe::CPU), device_id_(-1)
 {
 
-puts("cpu onlu");
 }
 
 Caffe::~Caffe() { }
 
-/*
-void Caffe::set_random_seed(const unsigned int seed) {
-  // RNG seed
-  Get().random_generator_.reset(new RNG(seed));
-}
-*/
 
 void Caffe::SetDevice(const int device_id) {
   NO_GPU;
@@ -81,30 +74,6 @@ int Caffe::FindDevice(const int start_id) {
   return -1;
 }
 
-/*
-class Caffe::RNG::Generator {
- public:
-  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
-  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
-  caffe::rng_t* rng() { return rng_.get(); }
- private:
-  shared_ptr<caffe::rng_t> rng_;
-};
-
-Caffe::RNG::RNG() : generator_(new Generator()) { }
-
-Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
-
-Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
-  generator_ = other.generator_;
-  return *this;
-}
-
-void* Caffe::RNG::generator() {
-  return static_cast<void*>(generator_->rng());
-}
-*/
-
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
@@ -121,45 +90,11 @@ Caffe::Caffe()
   }
   CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
 
-  /*
-  // Try to create a curand handler.
-  if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
-      != CURAND_STATUS_SUCCESS ||
-      curandSetPseudoRandomGeneratorSeed(curand_generator_, cluster_seedgen())
-      != CURAND_STATUS_SUCCESS) {
-    LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
-  }
-  */
 }
 
 Caffe::~Caffe() {
   if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
-  /*
-  if (curand_generator_) {
-    CURAND_CHECK(curandDestroyGenerator(curand_generator_));
-  }
-  */
 }
-
-/*
-void Caffe::set_random_seed(const unsigned int seed) {
-  // Curand seed
-  static bool g_curand_availability_logged = false;
-  if (Get().curand_generator_) {
-    CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
-        seed));
-    CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
-  } else {
-    if (!g_curand_availability_logged) {
-        LOG(ERROR) <<
-            "Curand not available. Skipping setting the curand seed.";
-        g_curand_availability_logged = true;
-    }
-  }
-  // RNG seed
-  Get().random_generator_.reset(new RNG(seed));
-}
-*/
 
 void Caffe::SetDevice(const int device_id) {
   int current_device;
@@ -172,17 +107,8 @@ void Caffe::SetDevice(const int device_id) {
   CUDA_CHECK(cudaSetDevice(device_id));
   Get().device_id_ = device_id;
   if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
-//  if (Get().curand_generator_) {
-//    CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
- // }
   CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
 
-  /*
-  CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
-      CURAND_RNG_PSEUDO_DEFAULT));
-  CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
-      cluster_seedgen()));
-      */
 }
 
 void Caffe::DeviceQuery() {
