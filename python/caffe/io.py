@@ -1,7 +1,5 @@
 import numpy as np
-import skimage.io
-from scipy.ndimage import zoom
-from skimage.transform import resize
+import cv2
 
 try:
     # Python3 will most likely not be able to load protobuf
@@ -128,6 +126,7 @@ class Transformer:
         - reorder channels (for instance color to BGR)
         - scale raw input (e.g. from [0, 1] to [0, 255] for ImageNet models)
         - subtract mean
+        - center crop
         - scale feature
 
         Parameters
@@ -141,22 +140,33 @@ class Transformer:
         """
         self.__check_input(in_)
         caffe_in = data.astype(np.float32, copy=False)
+        caffe_in_dims = caffe_in.shape[:2]
         transpose = self.transpose.get(in_)
         channel_swap = self.channel_swap.get(in_)
         raw_scale = self.raw_scale.get(in_)
         mean = self.mean.get(in_)
         input_scale = self.input_scale.get(in_)
         in_dims = self.inputs[in_][2:]
-        if caffe_in.shape[:2] != in_dims:
+        if mean is not None and mean.shape[1:] > (1,1):
+            if caffe_in_dims != mean.shape[1:]:
+                caffe_in = resize_image(caffe_in, mean.shape[1:])
+                caffe_in_dims = mean.shape[1:]
+        else:
             caffe_in = resize_image(caffe_in, in_dims)
-        if transpose is not None:
-            caffe_in = caffe_in.transpose(transpose)
+            caffe_in_dims = in_dims
         if channel_swap is not None:
-            caffe_in = caffe_in[channel_swap, :, :]
+            caffe_in = caffe_in[:, :, channel_swap]
         if raw_scale is not None:
             caffe_in *= raw_scale
         if mean is not None:
-            caffe_in -= mean
+            caffe_in -= mean.transpose(1,2,0)
+        if caffe_in_dims > in_dims:
+            caffe_in = caffe_in[(mean.shape[1]-in_dims[0])/2:(mean.shape[1]+in_dims[0])/2,
+                                (mean.shape[2]-in_dims[1])/2:(mean.shape[2]+in_dims[1])/2]
+        elif caffe_in_dims < in_dims:
+            caffe_in = resize_image(caffe_in, in_dims)
+        if transpose is not None:
+            caffe_in = caffe_in.transpose(transpose)
         if input_scale is not None:
             caffe_in *= input_scale
         return caffe_in
@@ -167,6 +177,7 @@ class Transformer:
         """
         self.__check_input(in_)
         decaf_in = data.copy().squeeze()
+        decaf_in_dims = decaf_in.shape[1:]
         transpose = self.transpose.get(in_)
         channel_swap = self.channel_swap.get(in_)
         raw_scale = self.raw_scale.get(in_)
@@ -174,14 +185,25 @@ class Transformer:
         input_scale = self.input_scale.get(in_)
         if input_scale is not None:
             decaf_in /= input_scale
+        if transpose is not None:
+            decaf_in = decaf_in.transpose(np.argsort(transpose))
         if mean is not None:
-            decaf_in += mean
+            if decaf_in_dims < mean.shape[1:]:
+                mean = mean.transpose(1,2,0)[(mean.shape[1]-decaf_in_dims[0])/2:(mean.shape[1]+decaf_in_dims[0])/2,
+                                             (mean.shape[2]-decaf_in_dims[1])/2:(mean.shape[2]+decaf_in_dims[1])/2]
+                decaf_in += mean
+            elif decaf_in_dims == mean.shape[1:]:
+                mean = mean.transpose(1, 2, 0)
+                decaf_in += mean
+            else:
+                decaf_in = resize_image(decaf_in, mean.shape[1:])
+                decaf_in += mean.transpose(1, 2, 0)
+                decaf_in = resize_image(decaf_in, decaf_in_dims)
         if raw_scale is not None:
             decaf_in /= raw_scale
         if channel_swap is not None:
-            decaf_in = decaf_in[np.argsort(channel_swap), :, :]
-        if transpose is not None:
-            decaf_in = decaf_in.transpose(np.argsort(transpose))
+            decaf_in = decaf_in[:, :, np.argsort(channel_swap)]
+
         return decaf_in
 
     def set_transpose(self, in_, order):
@@ -255,8 +277,6 @@ class Transformer:
                 ms = (1,) + ms
             if len(ms) != 3:
                 raise ValueError('Mean shape invalid')
-            if ms != self.inputs[in_][1:]:
-                raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
     def set_input_scale(self, in_, scale):
@@ -293,14 +313,12 @@ def load_image(filename, color=True):
         of size (H x W x 3) in RGB or
         of size (H x W x 1) in grayscale.
     """
-    img = skimage.img_as_float(skimage.io.imread(filename, as_grey=not color)).astype(np.float32)
-    if img.ndim == 2:
+    if color:
+        img = cv2.imread(filename, cv2.IMREAD_COLOR)[:,:,(2,1,0)]
+    else:
+        img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
         img = img[:, :, np.newaxis]
-        if color:
-            img = np.tile(img, (1, 1, 3))
-    elif img.shape[2] == 4:
-        img = img[:, :, :3]
-    return img
+    return img.astype(np.float32)/255
 
 
 def resize_image(im, new_dims, interp_order=1):
@@ -311,30 +329,13 @@ def resize_image(im, new_dims, interp_order=1):
     ----------
     im : (H x W x K) ndarray
     new_dims : (height, width) tuple of new dimensions.
-    interp_order : interpolation order, default is linear.
+    interp_order : interpolation order, default is bilinear.
 
     Returns
     -------
     im : resized ndarray with shape (new_dims[0], new_dims[1], K)
     """
-    if im.shape[-1] == 1 or im.shape[-1] == 3:
-        im_min, im_max = im.min(), im.max()
-        if im_max > im_min:
-            # skimage is fast but only understands {1,3} channel images
-            # in [0, 1].
-            im_std = (im - im_min) / (im_max - im_min)
-            resized_std = resize(im_std, new_dims, order=interp_order)
-            resized_im = resized_std * (im_max - im_min) + im_min
-        else:
-            # the image is a constant -- avoid divide by 0
-            ret = np.empty((new_dims[0], new_dims[1], im.shape[-1]),
-                           dtype=np.float32)
-            ret.fill(im_min)
-            return ret
-    else:
-        # ndimage interpolates anything but more slowly.
-        scale = tuple(np.array(new_dims, dtype=float) / np.array(im.shape[:2]))
-        resized_im = zoom(im, scale + (1,), order=interp_order)
+    resized_im = cv2.resize(im, new_dims, interpolation=interp_order)
     return resized_im.astype(np.float32)
 
 
@@ -380,4 +381,84 @@ def oversample(images, crop_dims):
             crops[ix] = im[crop[0]:crop[2], crop[1]:crop[3], :]
             ix += 1
         crops[ix-5:ix] = crops[ix-5:ix, :, ::-1, :]  # flip for mirrors
+    return crops
+
+def oversample_google(images, crop_dims, interp_order=1):
+    """
+    Producing 144 crops as described in https://www.cs.unc.edu/~wliu/papers/GoogLeNet.pdf
+
+    Parameters
+    ----------
+    images : iterable of (H x W x K) ndarrays
+    crop_dims : (height, width) tuple for the crops. Must be <= (256,256)
+    interp_order : interpolation order, default is bilinear.
+
+    Returns
+    -------
+    crops : (144*N x H x W x K) ndarray of crops for number of inputs N.
+    """
+
+    crops = np.empty((144 * len(images), crop_dims[0], crop_dims[1],
+                      images[0].shape[-1]), dtype=np.float32)
+
+    idx = 0
+    for img in images:
+        size = img.shape[:2]
+
+        for i in [256, 288, 320, 352]:
+            ratio = float(i) / min(size)
+            new_size = (int(round(size[0] * ratio)), int(round(size[1] * ratio)))
+            img_resized = cv2.resize(img, new_size, interpolation=interp_order)
+
+            for j in [0, (max(new_size) - i) / 2, max(new_size) - i]:
+                # Landscape
+                if new_size[0] > new_size[1]:
+                    img_area = img_resized[:, j:j + i]
+
+                # Portrait
+                else:
+                    img_area = img_resized[j:j + i, :]
+
+                img_area_resized = cv2.resize(img_area, crop_dims, interpolation=interp_order)
+                crops[idx] = img_area_resized
+                idx += 1
+                img_area_resized_mirror = cv2.flip(img_area_resized, 1)
+                crops[idx] = img_area_resized_mirror
+                idx += 1
+
+                img_area_center = img_area[(i - crop_dims[0]) / 2:(i + crop_dims[0]) / 2, (i - crop_dims[1]) / 2:(i + crop_dims[1]) / 2]
+                crops[idx] = img_area_center
+                idx += 1
+                img_area_center_mirror = cv2.flip(img_area_center, 1)
+                crops[idx] = img_area_center_mirror
+                idx += 1
+
+                img_area_top_left = img_area[:crop_dims[0], :crop_dims[1]]
+                crops[idx] = img_area_top_left
+                idx += 1
+                img_area_top_left_mirror = cv2.flip(img_area_top_left, 1)
+                crops[idx] = img_area_top_left_mirror
+                idx += 1
+
+                img_area_top_right = img_area[:crop_dims[0], i - crop_dims[1]:]
+                crops[idx] = img_area_top_right
+                idx += 1
+                img_area_top_right_mirror = cv2.flip(img_area_top_right, 1)
+                crops[idx] = img_area_top_right_mirror
+                idx += 1
+
+                img_area_bottom_left = img_area[i - crop_dims[0]:, :crop_dims[1]]
+                crops[idx] = img_area_bottom_left
+                idx += 1
+                img_area_bottom_left_mirror = cv2.flip(img_area_bottom_left, 1)
+                crops[idx] = img_area_bottom_left_mirror
+                idx += 1
+
+                img_area_bottom_right = img_area[i - crop_dims[0]:, i - crop_dims[1]:]
+                crops[idx] = img_area_bottom_right
+                idx += 1
+                img_area_bottom_right_mirror = cv2.flip(img_area_bottom_right, 1)
+                crops[idx] = img_area_bottom_right_mirror
+                idx += 1
+
     return crops
