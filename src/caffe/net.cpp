@@ -413,6 +413,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
   if (layer_param.propagate_down_size() > 0) {
     need_backward = layer_param.propagate_down(bottom_id);
   }
+  blob_need_backward_[blob_id] = need_backward;
   bottom_need_backward_[layer_id].push_back(need_backward);
   return blob_id;
 }
