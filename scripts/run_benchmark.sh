@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # model path
 model_path="models/intel_optimized_models"
