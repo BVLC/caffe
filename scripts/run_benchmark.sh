@@ -67,12 +67,12 @@ function is_supported_topology
 function calculate_numnodes
 {
     if [[ $host_file != "" ]]; then
-        nodenames=( `cat $host_file | sort | uniq ` )
-        if [ ${#nodenames[@]} -eq 0 ]; then
-           echo "Error: empty host file! Exit."
-           exit 0
+        host_list=(`cat $host_file | sort | uniq`)
+        numnodes=${#host_list[@]}
+        if [ $numnodes -eq 0 ]; then
+            echo "Error: empty host list. Exit."
+            exit 1
         fi
-        numnodes=${#nodenames[@]}
     fi
     echo "Number of nodes: $numnodes"
 }
@@ -140,7 +140,6 @@ function obtain_intelcaffe_log
 function obtain_average_fwd_bwd_time
 {
     result_file=$1
-
     if [ ! -f $result_file ]; then
         echo "Error: result file $result_file does not exist..."
         exit 1
@@ -163,12 +162,22 @@ function obtain_average_fwd_bwd_time
 
         average_time=`echo "$total_time*1000/$iteration_num" | bc`
     fi
+    echo "average time: ${average_time}"
 }
 
 function obtain_batch_size
 {
     log_file=$1
-    batch_size=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    if [ ! -f $log_file ]; then
+        echo "Error: log file $log_file does not exist..."
+        exit 1
+    fi
+    if [ $numnodes -eq 1 ]; then
+        batch_size=`cat $log_file | grep shape | sed -n "3, 1p" | awk '{print $(NF-4)}'`
+    else
+        batch_size=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    fi
+    echo "batch size: $batch_size"
 }
 
 function calculate_images_per_second 
