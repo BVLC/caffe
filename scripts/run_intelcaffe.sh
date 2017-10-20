@@ -1,6 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
-benchmark_mode="all"
+benchmark_mode="none"
+
+# by default, run intel caffe on single node
+numnodes=1
+
 
 # time/train/resume_train
 mode="train"
@@ -52,16 +56,14 @@ function usage
     echo "               [--mpibench_param mpibench_param]"
     echo ""
     echo "  Parameters:"
-    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
-    echo ""
-    echo "  Optional parameters:"
     echo "    host: host file includes list of nodes. Only used when you're running multinodes mode"
     echo "    solver: need to be specified a solver file if mode is train/resume_train"
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
-    echo "    benchmark: all(default). Includes qperf, all-reduce performance"
-    echo "      Dependency: user needs to install qperf, IMB-MPI1;"
+    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
+    echo "    benchmark: none(disabled by default). Includes qperf, all-reduce performance"
+    echo "      Dependency: user needs to install qperf, Intel MPI library (including IMB-MPI1);"
     echo "                  and add them in system path."
     echo "    iteration and model_file: only used if mode is time (caffe time)"
     echo "    snapshot: only used if mode is resume_train"
@@ -71,7 +73,7 @@ function usage
     echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
 }
 
-declare -a cpu_list=("Intel Xeon E5-26xx (Broadwell)" "Intel Xeon Phi 72xx (Knight Landing)" 
+declare -a cpu_list=("Intel Xeon E5-26xx (Broadwell)" "Intel Xeon Phi 72xx (Knights Landing)" 
                      "Intel Xeon Platinum 8180 (Skylake)" "Intel Xeon 6148 (Skylake)")
 
 function detect_cpu
@@ -89,12 +91,17 @@ function detect_cpu
     else
         cpu_model="unknown"
         echo "CPU model :$model_string is unknown."
-        echo "Will use default settings, which may not be the optimal one."
+        echo "    Use default settings, which may not be the optimal one."
     fi
 }
 
 function set_numa_node
 {
+    check_dependency numactl
+    if [ $? -ne 0 ]; then
+        return
+    fi
+
     # detect numa mode: cache and flat mode for KNL
     numa_node=($(numactl -H | grep "available" | awk -F ' ' '{print $2}'))
     if [ $numa_node -eq 1 ]; then
@@ -122,6 +129,10 @@ function check_dependency
 
 function init_mpi_envs
 {
+    if [ ${numnodes} -eq 1 ]; then
+        return
+    fi
+
     # IMPI configuration
     if [ "$network" == "opa" ]; then
         export I_MPI_FABRICS=tmi
@@ -190,8 +201,8 @@ function clear_envs
 
 function set_mlsl_vars
 {
-    if [ "${num_mlsl_servers}" -eq -1 ]; then
-        if [ "${numnodes}" -eq 1 ]; then
+    if [ ${num_mlsl_servers} -eq -1 ]; then
+        if [ ${numnodes} -eq 1 ]; then
             numservers=0
         else
             if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
@@ -254,17 +265,18 @@ function execute_command
     local xeonbin_=$1
     local result_dir_=$2
 
-    if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
+    if [ "${cpu_model}" == "bdw" ]; then
         exec_command="$xeonbin_"
+    elif [ "${cpu_model}" == "skx" ]; then
+        exec_command="numactl -l $xeonbin_"
     else
-        
         exec_command="numactl --preferred=$numanode $xeonbin_"
     fi
 
-    if [ "${numnodes}" -gt 1 ]; then
+    if [ ${numnodes} -gt 1 ]; then
         # Produce the configuration file for mpiexec. 
         # Each line of the config file contains a # host, environment, binary name.
-        cfile_=nodeconfig-${cpu_model}-${numnodes}.txt
+        cfile_=$result_dir_/nodeconfig-${cpu_model}-${numnodes}.txt
         rm -f $cfile_
 
         for node in "${nodenames[@]}"
@@ -272,7 +284,7 @@ function execute_command
             echo "-host ${node} -n $ppncpu $exec_command" >> $cfile_
         done
     fi
-    log_file=outputCluster-${cpu_model}-${numnodes}.txt
+    log_file=$result_dir_/outputCluster-${cpu_model}-${numnodes}.txt
 
     clear_envs
 
@@ -280,24 +292,21 @@ function execute_command
     check_dependency $sensors_bin
     has_sensors=$?
     if [ $has_sensors -eq 0 ]; then
-        sensor_log_file=sensors-${cpu_model}-${numnodes}-start.log
+        sensor_log_file=$result_dir_/sensors-${cpu_model}-${numnodes}-start.log
         $sensors_bin >$sensor_log_file
-        mv $sensor_log_file $result_dir_/
     fi
     
-    if [ "${numnodes}" -eq 1 ]; then
-        time GLOG_minloglevel=0 $exec_command >${log_file} 2>&1
+    if [ ${numnodes} -eq 1 ]; then
+        time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
         exec_command="-l -configfile $cfile_"
-        time GLOG_minloglevel=0 mpiexec.hydra $exec_command >${log_file} 2>&1 
+        time GLOG_minloglevel=0 mpiexec.hydra $exec_command 2>&1 | tee ${log_file}
     fi
 
     if [ $has_sensors -eq 0 ]; then
-        sensor_log_file=sensors-${cpu_model}-${numnodes}-end.log
+        sensor_log_file=$result_dir_/sensors-${cpu_model}-${numnodes}-end.log
         $sensors_bin >$sensor_log_file
-        mv $sensor_log_file $result_dir_/
     fi
-    mv $log_file $cfile_ $result_dir_/
 }
 
 function run_qperf_bench
@@ -354,8 +363,13 @@ function run_mpi_bench
 
     mpibench_bin_bname=`basename $mpibench_bin`
 
-    declare -a adjust_values=(1 2 3 5 7 8 9 0)
-    declare -a collective_values=('tmi' 'none')
+    if [ "${benchmark_mode}" == "all" ]; then
+        declare -a adjust_values=(1 2 3 5 7 8 9 0)
+        declare -a collective_values=('tmi' 'none')
+    else
+        declare -a adjust_values=(0)
+        declare -a collective_values=('none')
+    fi
 
     echo "Start mpi bench..."
     for ((i=0; i<${#adjust_values[@]}; i++))
@@ -398,7 +412,7 @@ function run_benchmark
             run_qperf_bench
         fi
 
-        if [ "$benchmark_mode" == "all" ] || [ "$benchmark_mode == mpi" ]; then
+        if [ "$benchmark_mode" == "all" ] || [ "$benchmark_mode" == "mpi" ]; then
             set_env_vars
             run_mpi_bench
         fi
@@ -407,9 +421,7 @@ function run_benchmark
 
 function run_caffe
 {
-    if [[ $host_file != "" ]]; then
-        echo "Run caffe with ${numnodes} nodes..."
-    fi
+    echo "Run caffe with ${numnodes} nodes..."
 
     if [ ${mode} == "time" ]; then
         xeonbin="$caffe_bin time --iterations $iteration --model $model_file  -engine=$engine"
@@ -420,9 +432,7 @@ function run_caffe
         fi
     fi
 
-    if [[ $host_file != "" ]]; then 
-        set_env_vars
-    fi
+    set_env_vars
     execute_command "$xeonbin" $result_dir
 }
 
@@ -543,7 +553,7 @@ if [ "$mode" == "train" ] || [ "$mode" == "resume_train" ]; then
             exit 1
         fi
         if [ ! -f $snapshot ]; then
-            echo "Eror: snapshot file does NOT exist."
+            echo "Error: snapshot file does NOT exist."
             exit 1
         fi
         echo "    Snapshot for resuming train: $snapshot"
@@ -556,7 +566,7 @@ if [ "$mode" == "time" ]; then
         exit 1
     fi
     if [ ! -f $model_file ]; then
-        echo "Eror: model file does NOT exist."
+        echo "Error: model file does NOT exist."
         exit 1
     fi
 
@@ -586,19 +596,15 @@ if [[ $host_file != "" ]]; then
         exit 0
     fi
     numnodes=${#nodenames[@]}
-else
-    numnodes=1
 fi
 echo "    Number of nodes: $numnodes"
 
 detect_cpu
 
-if [ "$cpu_model" == "knl" ]; then
-    set_numa_node
-fi
+set_numa_node
 
 if [ ! -d $result_dir ]; then
-    #echo "Create result directory: $result_dir"
+    echo "Create result directory: $result_dir"
     mkdir -p $result_dir
 fi
 
