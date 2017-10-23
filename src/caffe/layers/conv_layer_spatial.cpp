@@ -1880,9 +1880,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
           static_cast<int>(bestKernelConfig->kernelType));
 
     static std::map<PretunedKey, PretunedValue> saved;
-    if (saved.find(pretuned_key_) != saved.end()) {
-      CHECK(saved[pretuned_key_] == v);
-    } else {
+    if (saved.find(pretuned_key_) == saved.end()) {
       string fname = cache_path_.str() + "pretunedkv.txt";
       std::ofstream f(fname.c_str(), ios::app);
       //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
